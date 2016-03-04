@@ -172,12 +172,12 @@ finally:
     print('finally2')";
 
             SnapshotOutlineTest(content,
-                new ExpectedTag(7, 43, "\r\n    print('try')\r\n    print('try')"),
+                new ExpectedTag(6, 43, " \r\n    print('try')\r\n    print('try')"),
                 new ExpectedTag(62, 110, "\r\n    print('TypeError')\r\n    print('TypeError')"),
                 new ExpectedTag(129, 177, "\r\n    print('NameError')\r\n    print('NameError')"),
                 new ExpectedTag(232, 276, "\r\n    print('finally')\r\n    print('finally')"),
                 new ExpectedTag(184, 222, "\r\n    print('else')\r\n    print('else')"),
-                new ExpectedTag(285, 323, "\r\n    print('try2')\r\n    print('try2')"),
+                new ExpectedTag(284, 323, " \r\n    print('try2')\r\n    print('try2')"),
                 new ExpectedTag(333, 379, "\r\n    print('finally2')\r\n    print('finally2')"));
         }
 

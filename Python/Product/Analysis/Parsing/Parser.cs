@@ -2314,13 +2314,15 @@ namespace Microsoft.PythonTools.Parsing {
             Statement else_ = null;
             string elseWhiteSpace = null;
             int end = body.EndIndex;
+            int elseIndex = -1;
             if (MaybeEat(TokenKind.KeywordElse)) {
+                elseIndex = _lookahead.Span.End;
                 elseWhiteSpace = _tokenWhiteSpace;
                 else_ = ParseSuite();
                 end = else_.EndIndex;
             }
             WhileStatement ret = new WhileStatement(expr, body, else_);
-            ret.SetLoc(start, mid, end);
+            ret.SetLoc(start, mid, end, elseIndex);
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, whileWhiteSpace);
                 if (elseWhiteSpace != null) {
@@ -2407,7 +2409,7 @@ namespace Microsoft.PythonTools.Parsing {
             Expression list;
             Statement body, else_;
             bool incomplete = false;
-            int header;
+            int header, elseIndex = -1;
             string newlineWhiteSpace = "";
             int end;
             if ((lhs is ErrorExpression && MaybeEatNewLine(out newlineWhiteSpace)) || !Eat(TokenKind.KeywordIn)) {                
@@ -2417,7 +2419,7 @@ namespace Microsoft.PythonTools.Parsing {
                 list = null;
                 body = null;
                 lhs = Error(newlineWhiteSpace, lhs);
-                incomplete = true;                
+                incomplete = true;
             } else {
                 inWhiteSpace = _tokenWhiteSpace;
                 list = ParseTestListAsExpr();
@@ -2426,6 +2428,7 @@ namespace Microsoft.PythonTools.Parsing {
                 else_ = null;
                 end = body.EndIndex;
                 if (MaybeEat(TokenKind.KeywordElse)) {
+                    elseIndex = _lookahead.Span.End;
                     elseWhiteSpace = _tokenWhiteSpace;
                     else_ = ParseSuite();
                     end = else_.EndIndex;
@@ -2446,6 +2449,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
             }
             ret.HeaderIndex = header;
+            ret.ElseIndex = elseIndex;
             ret.SetLoc(start, end);
             return ret;
         }
@@ -2505,8 +2509,10 @@ namespace Microsoft.PythonTools.Parsing {
 
             Statement else_ = null;
             string elseWhiteSpace = null;
+            int elseIndex = -1;
             if (MaybeEat(TokenKind.KeywordElse)) {
                 elseWhiteSpace = _tokenWhiteSpace;
+                elseIndex = _lookahead.Span.End;
                 else_ = ParseSuite();
             }
 
@@ -2520,6 +2526,7 @@ namespace Microsoft.PythonTools.Parsing {
                     AddListWhiteSpace(ret, itemWhiteSpace.ToArray());
                 }
             }
+            ret.ElseIndex = elseIndex;
             ret.SetLoc(start, else_ != null ? else_.EndIndex : tests[tests.Length - 1].EndIndex);
             return ret;
         }
@@ -2554,21 +2561,22 @@ namespace Microsoft.PythonTools.Parsing {
             Eat(TokenKind.KeywordTry);
             string tryWhiteSpace = _tokenWhiteSpace;
             var start = GetStart();
-            var mid = GetEnd();
+            var mid = _lookahead.Span.End;
+            int elseIndex = -1, finallyIndex = -1;
             Statement body = ParseSuite();
             Statement finallySuite = null;
             Statement elseSuite = null;
-            Statement ret;
+            TryStatement ret;
             int end;
 
             string finallyWhiteSpace = null, elseWhiteSpace = null;
             if (MaybeEat(TokenKind.KeywordFinally)) {
                 finallyWhiteSpace = _tokenWhiteSpace;
+                finallyIndex = _lookahead.Span.End;
                 finallySuite = ParseFinallySuite(finallySuite);
                 end = finallySuite.EndIndex;
-                TryStatement tfs = new TryStatement(body, null, elseSuite, finallySuite);
-                tfs.HeaderIndex = mid;
-                ret = tfs;
+                ret = new TryStatement(body, null, elseSuite, finallySuite);
+                ret.HeaderIndex = mid;
             } else {
                 List<TryStatementHandler> handlers = new List<TryStatementHandler>();
                 TryStatementHandler dh = null;
@@ -2592,6 +2600,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                 if (MaybeEat(TokenKind.KeywordElse)) {
                     elseWhiteSpace = _tokenWhiteSpace;
+                    elseIndex = _lookahead.Span.End;
                     elseSuite = ParseSuite();
                     end = elseSuite.EndIndex;
                 }
@@ -2599,14 +2608,16 @@ namespace Microsoft.PythonTools.Parsing {
                 if (MaybeEat(TokenKind.KeywordFinally)) {
                     // If this function has an except block, then it can set the current exception.
                     finallyWhiteSpace = _tokenWhiteSpace;
+                    finallyIndex = _lookahead.Span.End;
                     finallySuite = ParseFinallySuite(finallySuite);
                     end = finallySuite.EndIndex;
                 }
 
-                TryStatement ts = new TryStatement(body, handlers.ToArray(), elseSuite, finallySuite);
-                ts.HeaderIndex = mid;
-                ret = ts;
+                ret = new TryStatement(body, handlers.ToArray(), elseSuite, finallySuite);
+                ret.HeaderIndex = mid;
             }
+            ret.ElseIndex = elseIndex;
+            ret.FinallyIndex = finallyIndex;
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, tryWhiteSpace);
                 if (elseWhiteSpace != null) {
@@ -2617,6 +2628,7 @@ namespace Microsoft.PythonTools.Parsing {
                 }
             }
             ret.SetLoc(start, end);
+            
             return ret;
         }
 
@@ -2660,7 +2672,7 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                 }
             }
-            var mid = GetEnd();
+            var mid = _lookahead.Span.End;
             Statement body = ParseSuite();
             TryStatementHandler ret = new TryStatementHandler(test1, test2, body);
             ret.HeaderIndex = mid;
@@ -4811,7 +4823,7 @@ namespace Microsoft.PythonTools.Parsing {
                 _parser = parser;
             }
 
-            public override void Add(string message, int[] lineLocations, int startIndex, int endIndex, int errorCode, Severity severity) {
+            public override void Add(string message, NewLineLocation[] lineLocations, int startIndex, int endIndex, int errorCode, Severity severity) {
                 if (_parser._errorCode == 0 && (severity == Severity.Error || severity == Severity.FatalError)) {
                     _parser._errorCode = errorCode;
                 }
@@ -4906,7 +4918,7 @@ namespace Microsoft.PythonTools.Parsing {
             } catch (EncoderFallbackException ex) {
                 errors.Add(
                     ex.Message,
-                    new int[0],
+                    new NewLineLocation[0],
                     ex.Index,
                     ex.Index + 1,
                     ErrorCodes.SyntaxError,
@@ -4916,16 +4928,18 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
-        private static int[] GetEncodingLineNumbers(IList<byte> readBytes) {
-            int[] lineNos = new int[2];
+        private static NewLineLocation[] GetEncodingLineNumbers(IList<byte> readBytes) {
+            NewLineLocation[] lineNos = new NewLineLocation[2];
             for (int i = 0, lineCount = 0; i < readBytes.Count && lineCount < 2; i++) {
                 if (readBytes[i] == '\r') {
-                    lineNos[lineCount++] = i;
                     if (i + 1 < readBytes.Count && readBytes[i + 1] == '\n') {
+                        lineNos[lineCount++] = new NewLineLocation(i, NewLineKind.CarriageReturnLineFeed);
                         i++;
+                    } else {
+                        lineNos[lineCount++] = new NewLineLocation(i, NewLineKind.CarriageReturn);
                     }
                 } else if (readBytes[i] == '\n') {
-                    lineNos[lineCount++] = i;
+                    lineNos[lineCount++] = new NewLineLocation(i, NewLineKind.LineFeed);
                 }
             }
             return lineNos;

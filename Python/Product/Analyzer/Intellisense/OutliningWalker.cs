@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Intellisense {
         // Compound Statements: if, while, for, try, with, func, class, decorated
         public override bool Walk(IfStatement node) {
             if (node.ElseStatement != null) {
-                AddTagIfNecessaryShowLineAbove(node, node.ElseStatement);
+                AddTagIfNecessary(node.ElseStatement, node.ElseIndex);
             }
 
             return base.Walk(node);
@@ -56,12 +56,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 AddTagIfNecessary(
                     node.StartIndex,
                     node.Body.EndIndex,
-                    node.HeaderIndex
+                    _ast.GetLineEndFromPosition(node.StartIndex)
                 );
                 node.Body.Walk(this);
             }
             if (node.ElseStatement != null) {
-                AddTagIfNecessaryShowLineAbove(node, node.ElseStatement);
+                AddTagIfNecessary(node.ElseStatement, node.ElseIndex);
                 node.ElseStatement.Walk(this);
             }
             return false;
@@ -70,16 +70,17 @@ namespace Microsoft.PythonTools.Intellisense {
         public override bool Walk(ForStatement node) {
             // Walk for statements manually so we don't traverse the list.  
             // This prevents the list and/or left from being collapsed ever.
+            
             if (node.Body != null) {
                 AddTagIfNecessary(
                     node.StartIndex,
                     node.Body.EndIndex,
-                    node.HeaderIndex
+                    _ast.GetLineEndFromPosition(node.StartIndex)
                 );
                 node.Body.Walk(this);
             }
             if (node.Else != null) {
-                AddTagIfNecessaryShowLineAbove(node, node.Else);
+                AddTagIfNecessary(node.Else, node.ElseIndex);
                 node.Else.Walk(this);
             }
             return false;
@@ -87,18 +88,18 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public override bool Walk(TryStatement node) {
             if (node.Body != null) {
-                AddTagIfNecessaryShowLineAbove(node, node.Body);
+                AddTagIfNecessary(node.StartIndex, node.Body.EndIndex, node.HeaderIndex);
             }
             if (node.Handlers != null) {
                 foreach (var h in node.Handlers) {
-                    AddTagIfNecessaryShowLineAbove(node, h);
+                    AddTagIfNecessary(h, h.HeaderIndex);
                 }
             }
             if (node.Finally != null) {
-                AddTagIfNecessaryShowLineAbove(node, node.Finally);
+                AddTagIfNecessary(node.FinallyIndex, node.Finally.EndIndex, node.FinallyIndex);
             }
             if (node.Else != null) {
-                AddTagIfNecessaryShowLineAbove(node, node.Else);
+                AddTagIfNecessary(node.ElseIndex, node.Else.EndIndex, node.ElseIndex);
             }
 
             return base.Walk(node);
@@ -192,17 +193,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     headerIndex = headerIndex
                 };
                 TagSpans.Add(tagSpan);
-            }
-        }
-
-        private void AddTagIfNecessaryShowLineAbove(Node parent, Node node) {
-            var parentLocation = _ast.IndexToLocation(parent.EndIndex);
-            var childLocation = _ast.IndexToLocation(node.StartIndex);
-
-            if (parentLocation.Line == childLocation.Line) {
-                AddTagIfNecessary(node.StartIndex, node.EndIndex);
-            } else {
-                AddTagIfNecessary(parent.StartIndex, node.EndIndex);
             }
         }
 

@@ -76,19 +76,13 @@ namespace Microsoft.PythonTools.Navigation {
 
             _serviceProvider = serviceProvider;
             _projectEntry = pythonProjectEntry;
-            _projectEntry.ParseComplete += ParserOnNewParseTree;
+            textView.TextBuffer.RegisterForParseTree(ParserOnNewParseTree);
             _textView = textView;
-            _textView.TextBuffer.RegisterForNewAnalysisEntry(OnNewAnalysisEntry);
             _dispatcher = Dispatcher.CurrentDispatcher;
             _textView.Caret.PositionChanged += CaretPositionChanged;
             for (int i = 0; i < NavigationLevels; i++) {
                 _curSelection[i] = -1;
             }
-        }
-
-        private void OnNewAnalysisEntry() {
-            _projectEntry = _textView.TextBuffer.GetAnalysisEntry();
-            _projectEntry.ParseComplete += ParserOnNewParseTree;
         }
 
         internal int Register(IVsDropdownBarManager manager) {
@@ -117,7 +111,6 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         internal int Unregister(IVsDropdownBarManager manager) {
-            //_projectEntry.OnNewParseTree -= ParserOnNewParseTree;
             _textView.Caret.PositionChanged -= CaretPositionChanged;
 
             // A buffer may have multiple DropDownBarClients, given one may open multiple CodeWindows
@@ -477,7 +470,7 @@ namespace Microsoft.PythonTools.Navigation {
         /// Wired to parser event for when the parser has completed parsing a new tree and we need
         /// to update the navigation bar with the new data.
         /// </summary>
-        private async void ParserOnNewParseTree(object sender, EventArgs e) {
+        private async void ParserOnNewParseTree(AnalysisEntry entry) {
             var dropDownBar = _dropDownBar;
             if (dropDownBar != null) {
 

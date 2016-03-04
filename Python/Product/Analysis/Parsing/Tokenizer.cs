@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Parsing {
         private ErrorSink _errors;
         private Severity _indentationInconsistencySeverity;
         private bool _endContinues, _printFunction, _unicodeLiterals, _withStatement;
-        private List<int> _newLineLocations;
+        private List<NewLineLocation> _newLineLocations;
         private SourceLocation _initialLocation;
         private TextReader _reader;
         private char[] _buffer;
@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public SourceLocation IndexToLocation(int index) {
-            int match = _newLineLocations.BinarySearch(index);
+            int match = _newLineLocations.BinarySearch(new NewLineLocation(index, NewLineKind.None));
             if (match < 0) {
                 // If our index = -1, it means we're on the first line.
                 if (match == -1) {
@@ -147,7 +147,7 @@ namespace Microsoft.PythonTools.Parsing {
                 match = ~match - 1;
             }
 
-            return new SourceLocation(index + _initialLocation.Index, match + 2 + _initialLocation.Line - 1, index - _newLineLocations[match] + _initialLocation.Column);
+            return new SourceLocation(index + _initialLocation.Index, match + 2 + _initialLocation.Line - 1, index - _newLineLocations[match].EndIndex + _initialLocation.Column);
         }
 
         internal ErrorSink ErrorSink {
@@ -208,7 +208,7 @@ namespace Microsoft.PythonTools.Parsing {
                 _buffer = new char[bufferCapacity];
             }
 
-            _newLineLocations = new List<int>();
+            _newLineLocations = new List<NewLineLocation>();
             _tokenEnd = -1;
             _multiEolns = !_disableLineFeedLineSeparator;
             _initialLocation = initialLocation;
@@ -498,7 +498,7 @@ namespace Microsoft.PythonTools.Parsing {
                         NewLineKind nlKind;
                         var nextChar = NextChar();
                         if ((nlKind = ReadEolnOpt(nextChar)) != NewLineKind.None) {
-                            _newLineLocations.Add(CurrentIndex);
+                            _newLineLocations.Add(new NewLineLocation(CurrentIndex, nlKind));
 
                             if ((_options & TokenizerOptions.VerbatimCommentsAndLineJoins) != 0) {
                                 // report the explicit line join
@@ -593,7 +593,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                     default:
                         if ((nlKind = ReadEolnOpt(ch)) > 0) {
-                            _newLineLocations.Add(CurrentIndex);
+                            _newLineLocations.Add(new NewLineLocation(CurrentIndex, nlKind));
                             // token marked by the callee:
                             if (ReadIndentationAfterNewLine(nlKind)) {
                                 return NewLineKindToToken(nlKind, _state.LastNewLine);
@@ -807,7 +807,7 @@ namespace Microsoft.PythonTools.Parsing {
             int end_add = 0;
             NewLineKind nlKind;
 
-            for (; ; ) {
+            for (;;) {
                 int ch = NextChar();
 
                 if (ch == EOF) {
@@ -856,7 +856,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                         return new IncompleteStringErrorToken("<eof> while reading string", incompleteContents);
                     } else if ((nlKind = ReadEolnOpt(ch)) > 0) {
-                        _newLineLocations.Add(CurrentIndex);
+                        _newLineLocations.Add(new NewLineLocation(CurrentIndex, nlKind));
 
                         // skip \<eoln> unless followed by EOF:
                         if (Peek() == EOF) {
@@ -876,7 +876,7 @@ namespace Microsoft.PythonTools.Parsing {
                     }
 
                 } else if ((nlKind = ReadEolnOpt(ch)) > 0) {
-                    _newLineLocations.Add(CurrentIndex);
+                    _newLineLocations.Add(new NewLineLocation(CurrentIndex, nlKind));
                     if (!isTriple) {
                         // backup over the eoln:
 
@@ -1240,7 +1240,7 @@ namespace Microsoft.PythonTools.Parsing {
                 ch = NextChar();
             }
 
-            for (var iter = 0; ;iter++ ) {
+            for (var iter = 0; ; iter++) {
                 switch (ch) {
                     case '0':
                     case '1':
@@ -1265,7 +1265,7 @@ namespace Microsoft.PythonTools.Parsing {
                             return new VerbatimConstantValueToken(ParseComplex(tokenStr), tokenStr);
                         }
                         return new ConstantValueToken(ParseComplex(tokenStr));
-                            
+
                     default:
                         if (iter <= 0) {
                             // CPython Issue 21642 allows entries such as 1else which should be
@@ -2041,7 +2041,7 @@ namespace Microsoft.PythonTools.Parsing {
             Console.WriteLine("{0} `{1}`", token.Kind, token.Image.Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t"));
         }
 
-        public int[] GetLineLocations() {
+        public NewLineLocation[] GetLineLocations() {
             return _newLineLocations.ToArray();
         }
 
@@ -2488,11 +2488,53 @@ namespace Microsoft.PythonTools.Parsing {
         #endregion
     }
 
-    enum NewLineKind {
+    public enum NewLineKind {
         None,
         LineFeed,
         CarriageReturn,
         CarriageReturnLineFeed
+    }
+
+    public struct NewLineLocation : IComparable<NewLineLocation> {
+        private int _endIndex;
+        private NewLineKind _kind;
+
+        public NewLineLocation(int lineEnd, NewLineKind kind) {
+            _endIndex = lineEnd;
+            _kind = kind;
+        }
+
+        /// <summary>
+        /// The end of of the line, including the line break.
+        /// </summary>
+        public int EndIndex => _endIndex;
+
+        /// <summary>
+        /// The type of new line which terminated the line.
+        /// </summary>
+        public NewLineKind Kind => _kind;
+
+        public int CompareTo(NewLineLocation other) {
+            return EndIndex - other.EndIndex;
+        }
+
+        public static SourceLocation IndexToLocation(NewLineLocation[] lineLocations, int index) {
+            if (lineLocations == null) {
+                return new SourceLocation(index, 1, 1);
+            }
+            int match = Array.BinarySearch(lineLocations, new NewLineLocation(index, NewLineKind.None));
+            if (match < 0) {
+                // If our index = -1, it means we're on the first line.
+                if (match == -1) {
+                    return new SourceLocation(index, 1, checked(index + 1));
+                }
+                // If we couldn't find an exact match for this line number, get the nearest
+                // matching line number less than this one
+                match = ~match - 1;
+            }
+
+            return new SourceLocation(index, match + 2, index - lineLocations[match].EndIndex + 1);
+        }
     }
 
     static class NewLineKindExtensions {

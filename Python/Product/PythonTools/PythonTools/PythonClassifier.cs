@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools {
             _version = analyzer.InterpreterFactory.GetLanguageVersion();
         }
 
-        private void NewAnalysisEntry() {
+        private void NewAnalysisEntry(AnalysisEntry entry) {
             var analyzer = _buffer.GetAnalyzer(_provider._serviceProvider);
             var newVersion = _version;
             if (newVersion != _version) {

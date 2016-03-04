@@ -55,8 +55,8 @@ namespace Microsoft.PythonTools {
         internal class OutliningTagger : ITagger<IOutliningRegionTag> {
             private readonly ITextBuffer _buffer;
             private readonly PythonToolsService _pyService;
-            private TagSpan[] _tags;
-            private bool _enabled, _eventHooked;
+            private TagSpan[] _tags = Array.Empty<TagSpan>();
+            private bool _enabled;
             private static readonly Regex _openingRegionRegex = new Regex(@"^\s*#\s*region($|\s+.*$)");
             private static readonly Regex _closingRegionRegex = new Regex(@"^\s*#\s*endregion($|\s+.*$)");
 
@@ -64,6 +64,7 @@ namespace Microsoft.PythonTools {
                 _pyService = pyService;
                 _buffer = buffer;
                 _buffer.Properties[typeof(OutliningTagger)] = this;
+                _buffer.RegisterForParseTree(OnNewParseTree);
                 _enabled = _pyService.AdvancedOptions.EnterOutliningModeOnOpen;
             }
 
@@ -94,33 +95,20 @@ namespace Microsoft.PythonTools {
             #region ITagger<IOutliningRegionTag> Members
 
             public IEnumerable<ITagSpan<IOutliningRegionTag>> GetTags(NormalizedSnapshotSpanCollection spans) {
-                AnalysisEntry entry;
-                if (_enabled && _buffer.TryGetPythonProjectEntry(out entry)) {
-                    if (!_eventHooked) {
-                        entry.ParseComplete += OnNewParseTree;
-                        _eventHooked = true;
-                    }
-
-                    return _tags;
-                }
-
-                return new ITagSpan<IOutliningRegionTag>[0];
+                return _tags;
             }
 
-            private async void OnNewParseTree(object sender, EventArgs e) {
-                AnalysisEntry entry;
-                if (_buffer.TryGetPythonProjectEntry(out entry)) {
-                    var snapshot = _buffer.CurrentSnapshot;
+            private async void OnNewParseTree(AnalysisEntry entry) {
+                var snapshot = _buffer.CurrentSnapshot;
 
-                    _tags = (await entry.Analyzer.GetOutliningTags(snapshot))
-                            .Concat(ProcessRegionTags(snapshot))
-                            .ToArray();
+                _tags = (await entry.Analyzer.GetOutliningTags(snapshot))
+                        .Concat(ProcessRegionTags(snapshot))
+                        .ToArray();
 
-                    TagsChanged(
-                        this,
-                        new SnapshotSpanEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length))
-                    );
-                }
+                TagsChanged(
+                    this,
+                    new SnapshotSpanEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length))
+                );
             }
 
             internal static IEnumerable<TagSpan> ProcessRegionTags(ITextSnapshot snapshot) {

@@ -38,11 +38,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Raised when a new analysis is available for this AnalyisEntry
         /// </summary>
         public event EventHandler AnalysisComplete;
-        /// <summary>
-        /// Raised when a new parse tree becomes available for this AnalysisEntry.
-        /// </summary>
-        public event EventHandler ParseComplete;
-
+        
         private static readonly object _searchPathEntryKey = new { Name = "SearchPathEntry" };
 
         public AnalysisEntry(VsProjectAnalyzer analyzer, string path, int fileId) {
@@ -60,7 +56,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 foreach (var buffer in bufferParser.Buffers) {
                     var events = buffer.GetNewAnalysisRegistrations();
                     foreach (var notify in events) {
-                        notify();
+                        notify(this);
                     }
                 }
             }
@@ -86,7 +82,15 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void OnParseComplete() {
-            ParseComplete?.Invoke(this, EventArgs.Empty);
+            var bufferParser = BufferParser;
+            if (bufferParser != null) {
+                foreach (var buffer in bufferParser.Buffers) {
+                    var events = buffer.GetParseTreeRegistrations();
+                    foreach (var notify in events) {
+                        notify(this);
+                    }
+                }
+            }
         }
 
         internal void OnNewAnalysisEntry() {
@@ -95,7 +99,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 foreach (var buffer in bufferParser.Buffers) {
                     var events = buffer.GetNewAnalysisEntryRegistrations();
                     foreach (var notify in events) {
-                        notify();
+                        notify(this);
                     }
                 }
             }

@@ -40,27 +40,19 @@ namespace Microsoft.PythonTools.Intellisense {
             _taskProvider = taskProvider;
         }
 
-        public void ListenForNextNewAnalysis(AnalysisEntry entry) {
-            if (entry != null && !string.IsNullOrEmpty(entry.Path)) {
-                entry.AnalysisComplete += OnNewAnalysis;
+        public void ListenForNextNewAnalysis(AnalysisEntry analysis, ITextBuffer buffer) {
+            if (analysis != null && !string.IsNullOrEmpty(analysis.Path)) {
+                buffer.RegisterForNewAnalysisEntry(OnNewAnalysis);
             }
         }
 
-        public void StopListening(AnalysisEntry entry) {
-            if (entry != null) {
-                entry.AnalysisComplete -= OnNewAnalysis;
-                _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
-            }
-        }
-
-        private async void OnNewAnalysis(object sender, EventArgs e) {
+        private async void OnNewAnalysis(AnalysisEntry entry) {
             if (!_alwaysCreateSquiggle) {
                 var service = _serviceProvider.GetPythonToolsService();
                 if (service == null || !service.GeneralOptions.UnresolvedImportWarning) {
                     return;
                 }
 
-                AnalysisEntry entry = sender as AnalysisEntry;
                 var missingImports = await entry.Analyzer.GetMissingImports(entry);
                 
                 foreach (var buffer in missingImports) {

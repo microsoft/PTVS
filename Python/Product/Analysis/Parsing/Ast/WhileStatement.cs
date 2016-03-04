@@ -19,7 +19,7 @@ using System.Text;
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class WhileStatement : Statement {
         // Marks the end of the condition of the while loop
-        private int _indexHeader;
+        private int _indexHeader, _elseIndex;
         private readonly Expression _test;
         private readonly Statement _body;
         private readonly Statement _else;
@@ -48,9 +48,16 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             }
         }
 
-        public void SetLoc(int start, int header, int end) {
+        public int ElseIndex {
+            get {
+                return _elseIndex;
+            }
+        }
+
+        public void SetLoc(int start, int header, int end, int elseIndex) {
             SetLoc(start, end);
             _indexHeader = header;
+            _elseIndex = elseIndex;
         }
 
         public override void Walk(PythonWalker walker) {

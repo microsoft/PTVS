@@ -1053,7 +1053,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             // line is 1 based, and index 0 in the array is the position of the 2nd line in the file.
             line -= 2;
-            return _unit.Tree._lineLocations[line];
+            return _unit.Tree._lineLocations[line].EndIndex;
         }
 
         /// <summary>

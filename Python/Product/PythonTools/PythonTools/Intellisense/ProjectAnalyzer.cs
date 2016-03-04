@@ -286,8 +286,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (buffers.Length > 0) {
                 _taskProvider.ClearErrorSource(oldParser._currentProjEntry, ParserTaskMoniker);
                 _taskProvider.ClearErrorSource(oldParser._currentProjEntry, UnresolvedImportMoniker);
-                _unresolvedSquiggles.StopListening(oldParser._currentProjEntry);
-
+                
                 foreach (var buffer in buffers) {
                     oldParser.UninitBuffer(buffer);
                 }
@@ -348,19 +347,19 @@ namespace Microsoft.PythonTools.Intellisense {
         /// as the text changes.
         /// </summary>
         internal async Task<MonitoredBufferResult> MonitorTextBuffer(ITextBuffer buffer) {
-            var projEntry = await CreateProjectEntry(buffer, new SnapshotCookie(buffer.CurrentSnapshot)).ConfigureAwait(false);
+            var entry = await CreateProjectEntry(buffer, new SnapshotCookie(buffer.CurrentSnapshot)).ConfigureAwait(false);
 
             if (!buffer.Properties.ContainsProperty(typeof(IInteractiveEvaluator))) {
-                ConnectErrorList(projEntry, buffer);
-                _taskProvider.AddBufferForErrorSource(projEntry, UnresolvedImportMoniker, buffer);
-                _unresolvedSquiggles.ListenForNextNewAnalysis(projEntry);
+                ConnectErrorList(entry, buffer);
+                _taskProvider.AddBufferForErrorSource(entry, UnresolvedImportMoniker, buffer);
+                _unresolvedSquiggles.ListenForNextNewAnalysis(entry, buffer);
             }
 
             // kick off initial processing on the buffer
             lock (_openFiles) {
-                var bufferParser = EnqueueBuffer(projEntry, buffer);
-                _openFiles[bufferParser] = projEntry;
-                return new MonitoredBufferResult(bufferParser, projEntry);
+                var bufferParser = EnqueueBuffer(entry, buffer);
+                _openFiles[bufferParser] = entry;
+                return new MonitoredBufferResult(bufferParser, entry);
             }
         }
 
@@ -369,8 +368,6 @@ namespace Microsoft.PythonTools.Intellisense {
             lock (_openFiles) {
                 _openFiles.Remove(bufferParser);
             }
-
-            _unresolvedSquiggles.StopListening(bufferParser._currentProjEntry);
 
             _taskProvider.ClearErrorSource(bufferParser._currentProjEntry, ParserTaskMoniker);
             _taskProvider.ClearErrorSource(bufferParser._currentProjEntry, UnresolvedImportMoniker);
@@ -1099,21 +1096,6 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async void UnloadFile(AnalysisEntry entry) {
             // TODO: Need to get file ID
             await SendRequestAsync(new AP.UnloadFileRequest() { fileId = entry.FileId }).ConfigureAwait(false);
-        }
-
-        internal void ClearParserTasks(AnalysisEntry entry) {
-            if (entry != null) {
-                _taskProvider.Clear(entry, ParserTaskMoniker);
-                _unresolvedSquiggles.StopListening(entry);
-
-                bool removed = false;
-                lock (_hasParseErrorsLock) {
-                    removed = _hasParseErrors.Remove(entry);
-                }
-                if (removed) {
-                    OnShouldWarnOnLaunchChanged(entry);
-                }
-            }
         }
 
         internal void ClearAllTasks() {

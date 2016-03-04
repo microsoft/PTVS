@@ -18,7 +18,7 @@ using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
     public class ForStatement : Statement {
-        private int _headerIndex;
+        private int _headerIndex, _elseIndex;
         private readonly Expression _left;
         private Expression _list;
         private Statement _body;
@@ -40,6 +40,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public int HeaderIndex {
             get { return _headerIndex;  }
             set { _headerIndex = value; }
+        }
+
+        public int ElseIndex {
+            get { return _elseIndex; }
+            set { _elseIndex = value; }
         }
 
         public Expression Left {

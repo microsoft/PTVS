@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Intellisense {
             /// </summary>
             internal ITextVersion _analysisVersion;
             public ITextSnapshot LastSentSnapshot;
-            internal int LastParsedVersion;
+            internal int LastParsedVersion = -1;
 
             public BufferInfo(ITextBuffer buffer, int id) {
                 Buffer = buffer;
@@ -478,7 +478,8 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     static class BufferParserExtensions {
-        private static object _newAnalysisKey = new object(), _newAnalysisEntryKey = new object();
+        private static object _newAnalysisKey = new object(), _newAnalysisEntryKey = new object(), _newParseTree = new object();
+
 
         /// <summary>
         /// Registers for when a new analysis is available for the text buffer.  This mechanism
@@ -488,19 +489,16 @@ namespace Microsoft.PythonTools.Intellisense {
         /// entry would result in keeping the classifier alive, which will keep the buffer alive,
         /// and the classifier would continue to receive new analysis events.
         /// </summary>
-        public static void RegisterForNewAnalysis(this ITextBuffer buffer, Action handler) {
-            HashSet<Action> actions;
-            if (!buffer.Properties.TryGetProperty(_newAnalysisKey, out actions)) {
-                buffer.Properties[_newAnalysisKey] = actions = new HashSet<Action>();
-            }
-            actions.Add(handler);
+        public static void RegisterForNewAnalysis(this ITextBuffer buffer, Action<AnalysisEntry> handler) {
+            buffer.RegisterFor(_newAnalysisKey, handler);
         }
 
-        public static void UnregisterForNewAnalysis(this ITextBuffer buffer, Action handler) {
-            HashSet<Action> actions;
-            if (buffer.Properties.TryGetProperty(_newAnalysisKey, out actions)) {
-                actions.Remove(handler);
-            }
+        public static void UnregisterForNewAnalysis(this ITextBuffer buffer, Action<AnalysisEntry> handler) {
+            buffer.UnregisterFor(_newAnalysisKey, handler);
+        }
+
+        public static IEnumerable<Action<AnalysisEntry>> GetNewAnalysisRegistrations(this ITextBuffer buffer) {
+            return buffer.GetRegistrations(_newAnalysisKey);
         }
 
         /// <summary>
@@ -511,35 +509,59 @@ namespace Microsoft.PythonTools.Intellisense {
         /// entry would result in keeping the classifier alive, which will keep the buffer alive,
         /// and the classifier would continue to receive new analysis events.
         /// </summary>
-        public static void RegisterForNewAnalysisEntry(this ITextBuffer buffer, Action handler) {
-            HashSet<Action> actions;
-            if (!buffer.Properties.TryGetProperty(_newAnalysisEntryKey, out actions)) {
-                buffer.Properties[_newAnalysisEntryKey] = actions = new HashSet<Action>();
+        public static void RegisterForNewAnalysisEntry(this ITextBuffer buffer, Action<AnalysisEntry> handler) {
+            buffer.RegisterFor(_newAnalysisEntryKey, handler);
+        }
+
+        public static void UnregisterForNewAnalysisEntry(this ITextBuffer buffer, Action<AnalysisEntry> handler) {
+            buffer.UnregisterFor(_newAnalysisEntryKey, handler);
+        }
+
+        public static IEnumerable<Action<AnalysisEntry>> GetNewAnalysisEntryRegistrations(this ITextBuffer buffer) {
+            return buffer.GetRegistrations(_newAnalysisEntryKey);
+        }
+
+        /// <summary>
+        /// Registers for when a new parse tree is available for the text buffer.  This mechanism
+        /// is suitable for handlers which have no clear cut way to disconnect from the text
+        /// buffer (e.g. classifiers).  This attachs the event to the active buffer so that the 
+        /// classifier and buffer go away when the buffer is closed.  Hooking to the project
+        /// entry would result in keeping the classifier alive, which will keep the buffer alive,
+        /// and the classifier would continue to receive new analysis events.
+        /// </summary>
+        public static void RegisterForParseTree(this ITextBuffer buffer, Action<AnalysisEntry> handler) {
+            buffer.RegisterFor(_newParseTree, handler);
+        }
+
+        public static void UnregisterForParseTree(this ITextBuffer buffer, Action<AnalysisEntry> handler) {
+            buffer.UnregisterFor(_newParseTree, handler);
+        }
+
+        public static IEnumerable<Action<AnalysisEntry>> GetParseTreeRegistrations(this ITextBuffer buffer) {
+            return buffer.GetRegistrations(_newParseTree);
+        }
+
+        private static void RegisterFor(this ITextBuffer buffer, object key, Action<AnalysisEntry> handler) {
+            HashSet<Action<AnalysisEntry>> actions;
+            if (!buffer.Properties.TryGetProperty(key, out actions)) {
+                buffer.Properties[key] = actions = new HashSet<Action<AnalysisEntry>>();
             }
             actions.Add(handler);
         }
 
-        public static void UnregisterForNewAnalysisEntry(this ITextBuffer buffer, Action handler) {
-            HashSet<Action> actions;
-            if (buffer.Properties.TryGetProperty(_newAnalysisEntryKey, out actions)) {
+        private static void UnregisterFor(this ITextBuffer buffer, object key, Action<AnalysisEntry> handler) {
+            HashSet<Action<AnalysisEntry>> actions;
+            if (buffer.Properties.TryGetProperty(key, out actions)) {
                 actions.Remove(handler);
             }
         }
 
-        public static IEnumerable<Action> GetNewAnalysisRegistrations(this ITextBuffer buffer) {
-            HashSet<Action> actions;
-            if (buffer.Properties.TryGetProperty(_newAnalysisKey, out actions)) {
+        private static IEnumerable<Action<AnalysisEntry>> GetRegistrations(this ITextBuffer buffer, object key) {
+            HashSet<Action<AnalysisEntry>> actions;
+            if (buffer.Properties.TryGetProperty(key, out actions)) {
                 return actions;
             }
-            return Array.Empty<Action>();
-        }
-
-        public static IEnumerable<Action> GetNewAnalysisEntryRegistrations(this ITextBuffer buffer) {
-            HashSet<Action> actions;
-            if (buffer.Properties.TryGetProperty(_newAnalysisEntryKey, out actions)) {
-                return actions;
-            }
-            return Array.Empty<Action>();
+            return Array.Empty<Action<AnalysisEntry>>();
         }
     }
 }

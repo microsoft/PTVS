@@ -1890,7 +1890,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     new SuiteStatement(
                         asts.Select(ast => ast.Body).ToArray()
                     ),
-                    new int[0],
+                    new NewLineLocation[0],
                     asts[0].LanguageVersion
                 );
             } else {

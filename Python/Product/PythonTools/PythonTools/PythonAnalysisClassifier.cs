@@ -55,13 +55,7 @@ namespace Microsoft.PythonTools {
             _buffer.RegisterForNewAnalysis(OnNewAnalysis);
         }
         
-        private async void OnNewAnalysis() {
-            var entry = _buffer.GetAnalysisEntry();
-            if (entry == null ||  !entry.IsAnalyzed) {
-                Debug.Fail("Project entry does not match expectation");
-                return;
-            }
-
+        private async void OnNewAnalysis(AnalysisEntry entry) {
             var pyService = _provider._serviceProvider.GetPythonToolsService();
             var options = pyService != null ? pyService.AdvancedOptions : null;
             if (options == null || options.ColorNames == false) {
