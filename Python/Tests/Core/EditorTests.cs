@@ -16,6 +16,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.PythonTools;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -345,7 +348,18 @@ string'''";
         private void SnapshotOutlineTest(string fileContents, params ExpectedTag[] expected) {
             var snapshot = new TestUtilities.Mocks.MockTextSnapshot(new TestUtilities.Mocks.MockTextBuffer(fileContents), fileContents);
             var ast = Parser.CreateParser(new TextSnapshotToTextReader(snapshot), PythonLanguageVersion.V34).ParseFile();
-            var tags = Microsoft.PythonTools.OutliningTaggerProvider.OutliningTagger.ProcessOutliningTags(ast, snapshot);
+            var walker = new OutliningWalker(ast);
+            ast.Walk(walker);
+            var protoTags = walker.GetTags();
+
+            var tags = protoTags.Select(x =>
+                OutliningTaggerProvider.OutliningTagger.GetTagSpan(
+                    snapshot,
+                    x.startIndex,
+                    x.endIndex,
+                    x.headerIndex
+                )
+            );
             VerifyTags(snapshot, tags, expected);
         }
 

@@ -23,11 +23,11 @@ using Microsoft.PythonTools.Parsing.Ast;
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
-    class MethodExtractor {
+    class OutOfProcMethodExtractor {
         private readonly PythonAst _ast;
         private readonly string _code;
 
-        public MethodExtractor(PythonAst ast, string code) {
+        public OutOfProcMethodExtractor(PythonAst ast, string code) {
             _code = code;
             _ast = ast;
         }
@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var targetScope = walker.Target.Parents[input.scope ?? 0];
-            var creator = new ExtractedMethodCreator(
+            var creator = new OutOfProcExtractedMethodCreator(
                 _ast,
                 walker.Target.Parents,
                 outputCollector._inputVars,

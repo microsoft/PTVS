@@ -32,6 +32,8 @@ using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsTests {
+    using AP = AnalysisProtocol;
+
     [TestClass]
     public class ExtractMethodTests {
         private const string ErrorReturn = "When the selection contains a return statement, all code paths must be terminated by a return statement too.";
@@ -1709,7 +1711,7 @@ async def f():
                     false
                 );
 
-                new MethodExtractor(serviceProvider, view).ExtractMethod(extractInput);
+                new MethodExtractor(serviceProvider, view).ExtractMethod(extractInput).Wait();
 
                 if (expected.IsError) {
                     Assert.AreEqual(expected.Text, extractInput.FailureReason);
@@ -1739,12 +1741,12 @@ async def f():
             }
 
             public ExtractMethodRequest GetExtractionInfo(ExtractedMethodCreator previewer) {
-                ScopeStatement scope = null;
+                AP.ScopeInfo scope = null;
                 if (_scopeName == null) {
-                    scope = previewer.Scopes[0];
+                    scope = previewer.LastExtraction.scopes[0];
                 } else {
-                    foreach (var foundScope in previewer.Scopes) {
-                        if (foundScope.Name == _scopeName) {
+                    foreach (var foundScope in previewer.LastExtraction.scopes) {
+                        if (foundScope.name == _scopeName) {
                             scope = foundScope;
                             break;
                         }
@@ -1753,7 +1755,7 @@ async def f():
 
                 Assert.AreNotEqual(null, scope);
                 var requestView = new ExtractMethodRequestView(PythonToolsTestUtilities.CreateMockServiceProvider(), previewer);
-                requestView.TargetScope = requestView.TargetScopes.Single(s => s == scope);
+                requestView.TargetScope = requestView.TargetScopes.Single(s => s.Scope == scope);
                 requestView.Name = _targetName;
                 foreach (var cv in requestView.ClosureVariables) {
                     cv.IsClosure = !_parameters.Contains(cv.Name);

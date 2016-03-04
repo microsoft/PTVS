@@ -71,8 +71,7 @@ namespace TestUtilities.Python {
                 () => new MockInteractiveWindowCommandsFactory()
             );
 
-            serviceProvider.AddService(typeof(ErrorTaskProvider), CreateTaskProviderService, true);
-            serviceProvider.AddService(typeof(CommentTaskProvider), CreateTaskProviderService, true);
+            serviceProvider.AddService(typeof(TaskProvider), CreateTaskProviderService, true);
             serviceProvider.AddService(typeof(UIThreadBase), new MockUIThread());
             var optionsService = new MockPythonToolsOptionsService();
             serviceProvider.AddService(typeof(IPythonToolsOptionsService), optionsService, true);
@@ -84,10 +83,8 @@ namespace TestUtilities.Python {
 
         private static object CreateTaskProviderService(IServiceContainer container, Type type) {
             var errorProvider = container.GetComponentModel().GetService<IErrorProviderFactory>();
-            if (type == typeof(ErrorTaskProvider)) {
-                return new ErrorTaskProvider(container, null, errorProvider);
-            } else if (type == typeof(CommentTaskProvider)) {
-                return new CommentTaskProvider(container, null, errorProvider);
+            if (type == typeof(TaskProvider)) {
+                return new TaskProvider(container, null, errorProvider);
             } else {
                 return null;
             }

@@ -39,6 +39,10 @@ namespace Microsoft.PythonTools.Intellisense {
             _curSession.Dismissed += CurSessionDismissed;
 
             var quickInfo = GetQuickInfo(_textBuffer);
+            AugmentQuickInfoWorker(quickInfoContent, quickInfo, out applicableToSpan);
+        }
+
+        internal static void AugmentQuickInfoWorker(System.Collections.Generic.IList<object> quickInfoContent, QuickInfo quickInfo, out ITrackingSpan applicableToSpan) {
             if (quickInfo != null) {
                 quickInfoContent.Add(quickInfo.Text);
                 applicableToSpan = quickInfo.Span;
@@ -53,7 +57,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static QuickInfo GetQuickInfo(ITextBuffer buffer) {
             QuickInfo quickInfo;
-            if (buffer.Properties.TryGetProperty<QuickInfo>(typeof(QuickInfo), out quickInfo)) {
+            if (buffer.Properties.TryGetProperty(typeof(QuickInfo), out quickInfo)) {
                 return quickInfo;
             }
             return null;

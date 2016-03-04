@@ -184,10 +184,12 @@ class Oar(object):
                 );
                 view.Selection.Select(selectionSpan, false);
 
-                new CodeFormatter(serviceProvider, view, options).FormatCode(
+                analyzer.FormatCode(
                     selectionSpan,
+                    view,
+                    options,
                     selectResult
-                );
+                ).Wait();
 
                 Assert.AreEqual(expected, view.TextBuffer.CurrentSnapshot.GetText());
                 if (expectedSelection != null) {

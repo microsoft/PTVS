@@ -106,13 +106,10 @@ namespace Microsoft.PythonTools.Language {
             var caret = _textView.GetCaretPosition();
             if (caret != null) {
 
-                var defs = await VsProjectAnalyzer.AnalyzeExpression(
-                    _textView.TextBuffer.CurrentSnapshot,
-                    caret.Value
-                );
+                var defs = await VsProjectAnalyzer.AnalyzeExpression(caret.Value);
 
                 Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
-                GetDefsRefsAndValues(_serviceProvider, defs.Text, defs.References, out definitions, out references, out values);
+                GetDefsRefsAndValues(_serviceProvider, defs.Expression, defs.Values, out definitions, out references, out values);
 
                 if ((values.Count + definitions.Count) == 1) {
                     if (values.Count != 0) {
@@ -127,17 +124,17 @@ namespace Microsoft.PythonTools.Language {
                         }
                     }
                 } else if (values.Count + definitions.Count == 0) {
-                    if (String.IsNullOrWhiteSpace(defs.Text)) {
+                    if (String.IsNullOrWhiteSpace(defs.Expression)) {
                         MessageBox.Show(String.Format("Cannot go to definition.  The cursor is not on a symbol."), "Python Tools for Visual Studio");
                     } else {
-                        MessageBox.Show(String.Format("Cannot go to definition \"{0}\"", defs.Text), "Python Tools for Visual Studio");
+                        MessageBox.Show(String.Format("Cannot go to definition \"{0}\"", defs.Expression), "Python Tools for Visual Studio");
                     }
                 } else if (definitions.Count == 0) {
-                    ShowFindSymbolsDialog(defs.Text, new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values));
+                    ShowFindSymbolsDialog(defs.Expression, new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values));
                 } else if (values.Count == 0) {
-                    ShowFindSymbolsDialog(defs.Text, new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values));
+                    ShowFindSymbolsDialog(defs.Expression, new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values));
                 } else {
-                    ShowFindSymbolsDialog(defs.Text,
+                    ShowFindSymbolsDialog(defs.Expression,
                         new LocationCategory("Goto Definition",
                             new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values),
                             new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values)
@@ -184,14 +181,11 @@ namespace Microsoft.PythonTools.Language {
 
             var caret = _textView.GetCaretPosition();
             if (caret != null) {
-                var references = await VsProjectAnalyzer.AnalyzeExpression(
-                    _textView.TextBuffer.CurrentSnapshot,
-                    caret.Value
-                );
+                var references = await VsProjectAnalyzer.AnalyzeExpression(caret.Value);
 
-                var locations = GetFindRefLocations(_serviceProvider, references.Text, references.References);
+                var locations = GetFindRefLocations(_serviceProvider, references.Expression, references.Values);
 
-                ShowFindSymbolsDialog(references.Text, locations);
+                ShowFindSymbolsDialog(references.Expression, locations);
             }
         }
 

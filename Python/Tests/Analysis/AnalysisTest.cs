@@ -621,7 +621,7 @@ x = a()
             var func = entry.GetValuesByIndex("a", 0).OfType<FunctionInfo>().FirstOrDefault();
             Assert.IsNotNull(func);
             var sb = new StringBuilder();
-            FunctionInfo.AddReturnTypeString(sb, func.GetReturnValue);
+            FunctionInfo.AddReturnTypeString((text, type) => sb.Append(text), func.GetReturnValue);
             Assert.AreEqual(" -> tuple", sb.ToString());
         }
 

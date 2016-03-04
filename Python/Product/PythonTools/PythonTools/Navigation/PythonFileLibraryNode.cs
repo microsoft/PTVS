@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Navigation {
                         new Parsing.SourceLocation(0, 1, 1)
                     ).Result;
 
-                    return EditFilter.GetFindRefLocations(_hierarchy.ProjectMgr.Site, expr, exprAnalysis.References);
+                    return EditFilter.GetFindRefLocations(_hierarchy.ProjectMgr.Site, expr, exprAnalysis.Values);
                 }
             }
 

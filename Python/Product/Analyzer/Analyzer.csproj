@@ -76,7 +76,8 @@
     <Compile Include="Intellisense\FlowChecker.cs" />
     <Compile Include="Intellisense\ImportRemover.cs" />
     <Compile Include="Intellisense\LinePreservingCodeReplacer.cs" />
-    <Compile Include="Intellisense\MethodExtractor.cs" />
+    <Compile Include="Intellisense\OutliningWalker.cs" />
+    <Compile Include="Intellisense\OutOfProcMethodExtractor.cs" />
     <Compile Include="Intellisense\OutOfProcProjectAnalyzer.cs" />
     <Compile Include="Intellisense\ProjectEntryExtensions.cs" />
     <Compile Include="Intellisense\ProjectEntryMap.cs" />

@@ -359,6 +359,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 );
 
+                _parser.OnAnalysisStarted();
 #if DEBUG
                 for (int i = 0; i < bufferInfos.Length; i++) {
                     var snapshot = snapshots[i];

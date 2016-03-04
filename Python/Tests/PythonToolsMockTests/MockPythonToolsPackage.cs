@@ -33,6 +33,8 @@ using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities.Python;
 
 namespace PythonToolsMockTests {
+    using TaskProvider = Microsoft.PythonTools.Intellisense.TaskProvider;
+
     [Export(typeof(IMockPackage))]
     sealed class MockPythonToolsPackage : IMockPackage {
         private readonly IServiceContainer _serviceContainer;
@@ -58,8 +60,7 @@ namespace PythonToolsMockTests {
             _serviceContainer.AddService(typeof(IClipboardService), new MockClipboardService());
             UIThread.EnsureService(_serviceContainer);
 
-            _serviceContainer.AddService(typeof(ErrorTaskProvider), CreateTaskProviderService, true);
-            _serviceContainer.AddService(typeof(CommentTaskProvider), CreateTaskProviderService, true);
+            _serviceContainer.AddService(typeof(TaskProvider), CreateTaskProviderService, true);
 
             var pyService = new PythonToolsService(_serviceContainer);
             _onDispose.Add(() => ((IDisposable)pyService).Dispose());
@@ -84,10 +85,8 @@ namespace PythonToolsMockTests {
 
         private static object CreateTaskProviderService(IServiceContainer container, Type type) {
             var errorProvider = container.GetComponentModel().GetService<IErrorProviderFactory>();
-            if (type == typeof(ErrorTaskProvider)) {
-                return new ErrorTaskProvider(container, null, errorProvider);
-            } else if (type == typeof(CommentTaskProvider)) {
-                return new CommentTaskProvider(container, null, errorProvider);
+            if (type == typeof(TaskProvider)) {
+                return new TaskProvider(container, null, errorProvider);
             } else {
                 return null;
             }

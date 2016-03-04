@@ -732,6 +732,7 @@ namespace Microsoft.PythonTools.Project {
                 return _designerContext;
             }
         }
+
         /*
         public PythonAnalyzer GetProjectAnalyzer() {
             return GetAnalyzer().Project;
@@ -742,9 +743,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public event EventHandler ProjectAnalyzerChanged;
-        public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging {
-            add { } remove { }
-        }
+        public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
 
         public override IProjectLauncher GetLauncher() {
             return PythonToolsPackage.GetLauncher(Site, this);
@@ -999,14 +998,13 @@ namespace Microsoft.PythonTools.Project {
                 var analyzer = CreateAnalyzer();
                 Debug.Assert(analyzer != null);
 
-                /*
                 var analyzerChanging = ProjectAnalyzerChanging;
                 if (analyzerChanging != null) {
                     analyzerChanging(this, new AnalyzerChangingEventArgs(
-                        _analyzer != null ? _analyzer.Project : null,
-                        analyzer != null ? analyzer.Project : null
+                        _analyzer,
+                        analyzer 
                     ));
-                }*/
+                }
 
                 Reanalyze(analyzer);
                 var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);

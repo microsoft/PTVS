@@ -100,6 +100,20 @@ namespace Microsoft.PythonTools.Intellisense {
 
         }
 
+        public sealed class ValueDescriptionRequest : Request<ValueDescriptionResponse> {
+            public const string Command = "valueDescriptions";
+
+            public int fileId;
+            public string expr;
+            public int line, column, index;
+
+            public override string command => Command;
+        }
+
+        public sealed class ValueDescriptionResponse : Response {
+            public string[] descriptions;
+        }
+
         public sealed class AddReferenceRequest : Request<AddReferenceResponse> {
             public const string Command = "addReference";
             public ProjectReference reference;
@@ -234,7 +248,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class FormatCodeResponse : Response {
             public ChangeInfo[] changes;
-            
+
             public int startIndex, endIndex, version;
         }
 
@@ -371,7 +385,7 @@ namespace Microsoft.PythonTools.Intellisense {
 #endif
         }
 
-        public sealed class UnresolvedImportsRequest  : Request<UnresolvedImportsResponse> {
+        public sealed class UnresolvedImportsRequest : Request<UnresolvedImportsResponse> {
             public const string Command = "unresolvedImports";
 
             public override string command => Command;
@@ -511,6 +525,25 @@ namespace Microsoft.PythonTools.Intellisense {
             public string[] variables;
         }
 
+        public sealed class ModuleImportsRequest : Request<ModuleImportsResponse> {
+            public const string Command = "moduleImports";
+
+            public string moduleName;
+            public bool includeUnresolved;
+
+            public override string command => Command;
+        }
+
+        public sealed class ModuleImportsResponse : Response {
+            public ModuleInfo[] modules;
+        }
+
+        public sealed class ModuleInfo {
+            public string moduleName;
+            public int fileId;
+            public string filename;
+        }
+
         public class EnqueueFileResponse : Response {
             public int fileId;
         }
@@ -552,7 +585,6 @@ namespace Microsoft.PythonTools.Intellisense {
         public class GetModulesRequest : Request<CompletionsResponse> {
             public const string Command = "getModules";
 
-            public int fileId;
             public bool topLevelOnly;
 
             public override string command => Command;

@@ -143,7 +143,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                 modules = modules.Concat(package.Length > 0 ? 
                     analysis.Analyzer.GetModuleMembers(analysis, package, !modulesOnly) :
-                    analysis.Analyzer.GetModules(analysis, true).Distinct(CompletionComparer.MemberEquality)
+                    analysis.Analyzer.GetModules(true).Distinct(CompletionComparer.MemberEquality)
                 );
             }
             if (replScopes != null) {

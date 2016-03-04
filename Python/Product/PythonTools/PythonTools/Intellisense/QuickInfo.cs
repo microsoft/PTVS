@@ -31,9 +31,9 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     public sealed class ExpressionAnalysis {
-        public readonly string Text;
+        public readonly string Expression;
         public readonly ITrackingSpan Span;
-        public readonly AnalysisVariable[] References;
+        public readonly AnalysisVariable[] Values;
         public readonly VsProjectAnalyzer Analyzer;
         public readonly string PrivatePrefix;
         public readonly string MemberName;
@@ -41,8 +41,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public ExpressionAnalysis(VsProjectAnalyzer analyzer, string text, ITrackingSpan span, AnalysisVariable[] references, string privatePrefix, string memberName) {
             Analyzer = analyzer;
             Span = span;
-            Text = text;
-            References = references;
+            Expression = text;
+            Values = references;
             PrivatePrefix = privatePrefix;
             MemberName = memberName;
         }

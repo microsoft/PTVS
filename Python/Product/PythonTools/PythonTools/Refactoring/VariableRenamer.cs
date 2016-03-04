@@ -43,15 +43,12 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             var caret = _view.GetCaretPosition();
-            var analysis = await VsProjectAnalyzer.AnalyzeExpression(
-                _view.TextBuffer.CurrentSnapshot,
-                caret.Value
-            );
+            var analysis = await VsProjectAnalyzer.AnalyzeExpression(caret.Value);
             
             string originalName = null;
             string privatePrefix = null;
             Expression expr = null;
-            if (!String.IsNullOrWhiteSpace(analysis.Text)) {
+            if (!String.IsNullOrWhiteSpace(analysis.Expression)) {
                 originalName = analysis.MemberName;
 
                 if (analysis.PrivatePrefix != null && originalName != null && originalName.StartsWith("_" + analysis.PrivatePrefix)) {
@@ -73,7 +70,7 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             bool hasVariables = false;
-            foreach (var variable in analysis.References) {
+            foreach (var variable in analysis.Values) {
                 if (variable.Type == VariableType.Definition || variable.Type == VariableType.Reference) {
                     hasVariables = true;
                     break;
@@ -91,7 +88,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
                 variables = paramVars;
             } else {
-                variables = analysis.References;
+                variables = analysis.Values;
 
             }
 
@@ -104,7 +101,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
             var info = input.GetRenameInfo(originalName, languageVersion);
             if (info != null) {
-                var engine = new PreviewChangesEngine(_serviceProvider, input, analysis.Text, info, originalName, privatePrefix, _view.GetAnalyzer(_serviceProvider), variables);
+                var engine = new PreviewChangesEngine(_serviceProvider, input, analysis.Expression, info, originalName, privatePrefix, _view.GetAnalyzer(_serviceProvider), variables);
                 if (info.Preview) {
                     previewChanges.PreviewChanges(engine);
                 } else {

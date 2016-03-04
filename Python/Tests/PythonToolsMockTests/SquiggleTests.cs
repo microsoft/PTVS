@@ -81,7 +81,7 @@ namespace PythonToolsMockTests {
                 var errorProvider = view.VS.ServiceProvider.GetComponentModel().GetService<IErrorProviderFactory>();
                 var tagger = errorProvider.GetErrorTagger(view.View.TextView.TextBuffer);
                 // Ensure all tasks have been updated
-                var taskProvider = (ErrorTaskProvider)view.VS.ServiceProvider.GetService(typeof(ErrorTaskProvider));
+                var taskProvider = (TaskProvider)view.VS.ServiceProvider.GetService(typeof(TaskProvider));
                 var time = taskProvider.FlushAsync().GetAwaiter().GetResult();
                 Console.WriteLine("TaskProvider.FlushAsync took {0}ms", time.TotalMilliseconds);
 
@@ -130,7 +130,7 @@ namespace PythonToolsMockTests {
                 var errorProvider = view.VS.ServiceProvider.GetComponentModel().GetService<IErrorProviderFactory>();
                 var tagger = errorProvider.GetErrorTagger(view.View.TextView.TextBuffer);
                 // Ensure all tasks have been updated
-                var taskProvider = (ErrorTaskProvider)view.VS.ServiceProvider.GetService(typeof(ErrorTaskProvider));
+                var taskProvider = (TaskProvider)view.VS.ServiceProvider.GetService(typeof(TaskProvider));
 
                 foreach (var testCase in testCases) {
                     view.Text = testCase.Item1;

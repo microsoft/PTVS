@@ -148,7 +148,7 @@ namespace IronPythonTests {
             using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), fact, new[] { fact })) {
                 replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
 
-                MemberResult[] names = null;
+                CompletionResult[] names = null;
                 for (int retries = 0; retries < 5 && names == null; retries += 1) {
                     names = replEval.GetMemberNames("t");
                 }

@@ -184,6 +184,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal event EventHandler<AbnormalAnalysisExitEventArgs> AbnormalAnalysisExit;
+        internal event EventHandler AnalysisStarted;
 
         private void ConnectionEventReceived(object sender, EventReceivedEventArgs e) {
             Debug.WriteLine(String.Format("Event received: {0}", e.Event.name));
@@ -264,6 +265,15 @@ namespace Microsoft.PythonTools.Intellisense {
             entry.Properties[_pathInZipFile] = value;
         }
 
+        internal async Task<AP.ModuleInfo[]> GetEntriesThatImportModule(string moduleName, bool includeUnresolved) {
+            return (await _conn.SendRequestAsync(
+                new AP.ModuleImportsRequest() {
+                    includeUnresolved = includeUnresolved,
+                    moduleName = moduleName
+                }
+            ).ConfigureAwait(false)).modules;
+        }
+
         private void OnModulesChanged(object sender, EventArgs e) {
             _conn.SendEventAsync(new AP.ModulesChangedEvent()).DoNotWait();
         }
@@ -320,13 +330,17 @@ namespace Microsoft.PythonTools.Intellisense {
             // only attach one parser to each buffer, we can get multiple enqueue's
             // for example if a document is already open when loading a project.
             BufferParser bufferParser;
-            if (!buffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out bufferParser)) {
+            if (!buffer.Properties.TryGetProperty(typeof(BufferParser), out bufferParser)) {
                 bufferParser = new BufferParser(projEntry, this, buffer);
             } else {
                 bufferParser.AttachedViews++;
             }
 
             return bufferParser;
+        }
+
+        internal void OnAnalysisStarted() {
+            AnalysisStarted?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -396,6 +410,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         path = path
                     }).ConfigureAwait(false);
 
+                OnAnalysisStarted();
+
                 var id = res.fileId;
 
                 entry = _projectFilesById[id] = _projectFiles[path] = new AnalysisEntry(this, path, id);
@@ -435,8 +451,24 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private void QueueDirectoryAnalysis(string path) {
-            AnalyzeDirectory(PathUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path))).DoNotWait();
+        internal static async Task<string[]> GetValueDescriptions(AnalysisEntry file, string expr, SnapshotPoint point) {
+            var analysis = GetApplicableExpression(point);
+
+            if (analysis != null) {
+                var location = analysis.Location;
+                var req = new AP.ValueDescriptionRequest() {
+                    expr = analysis.Text,
+                    column = location.Column,
+                    index = location.Index,
+                    line = location.Line,
+                    fileId = analysis.File.FileId
+                };
+
+                var res = await analysis.File.Analyzer.SendRequestAsync(req).ConfigureAwait(false);
+                return res.descriptions;
+            }
+
+            return Array.Empty<string>();
         }
 
         internal static async Task<ExpressionAnalysis> AnalyzeExpression(AnalysisEntry file, string expr, SourceLocation location) {
@@ -460,8 +492,8 @@ namespace Microsoft.PythonTools.Intellisense {
             );
         }
 
-        internal static async Task<ExpressionAnalysis> AnalyzeExpression(ITextSnapshot snapshot, SnapshotPoint point) {
-            var analysis = GetApplicableExpression(snapshot, point);
+        internal static async Task<ExpressionAnalysis> AnalyzeExpression(SnapshotPoint point) {
+            var analysis = GetApplicableExpression(point);
 
             if (analysis != null) {
                 var location = analysis.Location;
@@ -1043,7 +1075,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <param name="onFileAnalyzed">If specified, this callback is invoked for every <see cref="IProjectEntry"/>
         /// that is analyzed while analyzing this directory.</param>
         /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
-        public async Task AnalyzeDirectory(string dir, Action<AnalysisEntry> onFileAnalyzed = null) {
+        public async Task AnalyzeDirectory(string dir) {
             await SendRequestAsync(new AP.AddDirectoryRequest() { dir = dir }).ConfigureAwait(false);
         }
 
@@ -1054,11 +1086,10 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <param name="onFileAnalyzed">If specified, this callback is invoked for every <see cref="IProjectEntry"/>
         /// that is analyzed while analyzing this directory.</param>
         /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
-        public async Task AnalyzeZipArchive(string zipFileName, Action<AnalysisEntry> onFileAnalyzed = null) {
+        public async Task AnalyzeZipArchive(string zipFileName) {
             await SendRequestAsync(
                 new AP.AddZipArchiveRequest() { archive = zipFileName }
             ).ConfigureAwait(false);
-            // TODO: Need to deal with onFileAnalyzed event
         }
 
         internal async Task StopAnalyzingDirectory(string directory) {
@@ -1178,9 +1209,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal IEnumerable<CompletionResult> GetModules(AnalysisEntry file, bool topLevelOnly) {
+        internal IEnumerable<CompletionResult> GetModules(bool topLevelOnly) {
             var members = SendRequestAsync(new AP.GetModulesRequest() {
-                fileId = file.FileId,
                 topLevelOnly = topLevelOnly
             }).Result;
 
@@ -1566,8 +1596,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal static async Task<QuickInfo> GetQuickInfo(ITextSnapshot snapshot, SnapshotPoint point) {
-            var analysis = GetApplicableExpression(snapshot, point);
+        internal static async Task<QuickInfo> GetQuickInfo(SnapshotPoint point) {
+            var analysis = GetApplicableExpression(point);
 
             if (analysis != null) {
                 var location = analysis.Location;
@@ -1580,7 +1610,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 };
 
                 return new QuickInfo(
-                    (await analysis.File.Analyzer.SendRequestAsync(req)).text,
+                    (await analysis.File.Analyzer.SendRequestAsync(req).ConfigureAwait(false)).text,
                     analysis.Span
                 );
             }
@@ -1624,7 +1654,8 @@ namespace Microsoft.PythonTools.Intellisense {
             ApplyChanges(changes, file, file.BufferParser.GetBufferId(buffer), fromVersion);
         }
 
-        private static ApplicableExpression GetApplicableExpression(ITextSnapshot snapshot, SnapshotPoint point) {
+        private static ApplicableExpression GetApplicableExpression(SnapshotPoint point) {
+            var snapshot = point.Snapshot;
             var buffer = snapshot.TextBuffer;
             var span = snapshot.CreateTrackingSpan(
                 point.Position == snapshot.Length ?

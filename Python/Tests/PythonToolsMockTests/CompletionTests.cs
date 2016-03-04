@@ -1106,17 +1106,13 @@ async def g():
             var snapshot = view.CurrentSnapshot;
 
             for (int i = start; i < end; i++) {
-                var analysis = snapshot.AnalyzeExpression(
-                    view.VS.ServiceProvider,
-                    snapshot.CreateTrackingSpan(i, i == snapshot.Length ? 0 : 1, SpanTrackingMode.EdgeInclusive),
-                    false
-                );
-
                 List<object> quickInfo = new List<object>();
                 ITrackingSpan span;
                 QuickInfoSource.AugmentQuickInfoWorker(
-                    analysis,
                     quickInfo,
+                    VsProjectAnalyzer.GetQuickInfo(
+                        new SnapshotPoint(snapshot, start)
+                    ).Result,
                     out span
                 );
 

@@ -22,7 +22,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
-    class ExtractedMethodCreator {
+    class OutOfProcExtractedMethodCreator {
         private readonly PythonAst _ast;
         private readonly ScopeStatement[] _scopes;
         private readonly List<PythonVariable> _inputVars, _outputVars;
@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly string[] _parameters;
         private readonly ScopeStatement _targetScope;
 
-        public ExtractedMethodCreator(PythonAst ast, ScopeStatement[] scopes, HashSet<PythonVariable> inputVariables, HashSet<PythonVariable> outputVariables, SelectionTarget target, int indentSize, bool insertTabs, string newline, string name, string[] parameters, ScopeStatement targetScope) {
+        public OutOfProcExtractedMethodCreator(PythonAst ast, ScopeStatement[] scopes, HashSet<PythonVariable> inputVariables, HashSet<PythonVariable> outputVariables, SelectionTarget target, int indentSize, bool insertTabs, string newline, string name, string[] parameters, ScopeStatement targetScope) {
             _ast = ast;
             _scopes = scopes;
             _inputVars = new List<PythonVariable>(inputVariables);

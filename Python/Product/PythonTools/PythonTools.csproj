@@ -270,7 +270,6 @@
     <Compile Include="PythonTools\Intellisense\IIntellisenseCookie.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisEntry.cs" />
     <Compile Include="PythonTools\Intellisense\QuickInfo.cs" />
-    <Compile Include="PythonTools\Refactoring\SelectionTarget.cs" />
     <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
     <Compile Include="PythonTools\Repl\InlineReplAdornment.cs" />
     <Compile Include="PythonTools\Repl\InlineReplAdornmentManager.cs" />
@@ -485,9 +484,7 @@
     <Compile Include="PythonTools\Project\PythonProjectReferenceNode.cs" />
     <Compile Include="PythonTools\Project\PythonReferenceContainerNode.cs" />
     <Compile Include="PythonTools\ProvidePythonInterpreterFactoryProviderAttribute.cs" />
-    <Compile Include="PythonTools\Refactoring\EnclosingNodeWalker.cs" />
     <Compile Include="PythonTools\Refactoring\ExtractMethodRequestView.cs" />
-    <Compile Include="PythonTools\Refactoring\LinePreservingCodeReplacer.cs" />
     <Compile Include="PythonTools\Refactoring\RenameVariableRequestView.cs" />
     <Compile Include="PythonTools\Repl\BasePythonReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\DebugReplFrameCommand.cs" />
@@ -583,7 +580,6 @@
     <Compile Include="PythonTools\Project\DefaultPythonLauncher.cs" />
     <Compile Include="PythonTools\Project\CurrentWorkingDirectoryNode.cs" />
     <Compile Include="PythonTools\Project\PythonProjectNodeProperties.cs" />
-    <Compile Include="PythonTools\Refactoring\AssignmentWalker.cs" />
     <Compile Include="PythonTools\Refactoring\FilePreviewItem.cs" />
     <Compile Include="PythonTools\Refactoring\IPreviewItem.cs" />
     <Compile Include="PythonTools\Refactoring\LocationPreviewItem.cs" />
@@ -598,7 +594,6 @@
     <Compile Include="PythonTools\Refactoring\ExtractMethodRequest.cs" />
     <Compile Include="PythonTools\Refactoring\ExtractMethodResult.cs" />
     <Compile Include="PythonTools\Refactoring\ExtractMethodUserInput.cs" />
-    <Compile Include="PythonTools\Refactoring\FlowChecker.cs" />
     <Compile Include="PythonTools\Refactoring\IExtractMethodInput.cs" />
     <Compile Include="PythonTools\Refactoring\MethodExtractor.cs" />
     <Compile Include="PythonTools\Refactoring\RenameVariableDialog.xaml.cs">

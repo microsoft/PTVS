@@ -376,9 +376,14 @@ namespace PythonToolsUITests {
                 Thread.Sleep(5000);
 
                 // Ensure virtualenv_support is NOT available in the virtual environment.
-                var interp = project.GetPythonProject().GetInterpreter();
+                var interp = project.GetPythonProject().GetAnalyzer();
+                var module = interp
+                    .GetModules(true)
+                    .Select(x => x.Name)
+                    .Where(x => x == "virtualenv_support")
+                    .FirstOrDefault();
 
-                Assert.IsNull(interp.ImportModule("virtualenv_support"));
+                Assert.IsNull(module);
             }
         }
 

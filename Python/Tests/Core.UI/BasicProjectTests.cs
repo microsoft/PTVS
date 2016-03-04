@@ -973,7 +973,12 @@ namespace PythonToolsUITests {
         }
 
         private static IEnumerable<string> GetVariableDescriptions(string variable, ITextSnapshot snapshot) {
-            return GetVariableAnalysis(variable, snapshot).Values.Select(v => v.Description);
+            var index = snapshot.GetText().IndexOf(variable + " =");
+            return VsProjectAnalyzer.GetValueDescriptions(
+                snapshot.TextBuffer.GetAnalysisEntry(),
+                variable,
+                new SnapshotPoint(snapshot, index)
+            ).Result;
         }
 
         private static SignatureAnalysis GetSignatures(VisualStudioApp app, string text, ITextSnapshot snapshot) {
@@ -1027,10 +1032,8 @@ namespace PythonToolsUITests {
 
                 var doc = app.GetDocument(program.Document.FullName);
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-                var index = snapshot.GetText().IndexOf("a =");
-                var span = snapshot.CreateTrackingSpan(new Span(index, 1), SpanTrackingMode.EdgeInclusive);
-                var analysis = snapshot.AnalyzeExpression(app.ServiceProvider, span);
-                Assert.AreEqual(analysis.Values.First().Description, "int");
+                
+                Assert.AreEqual(GetVariableDescriptions("a", snapshot).First(), "int");
             }
         }
 
@@ -1070,10 +1073,10 @@ namespace PythonToolsUITests {
                     searchPaths = (project.GetPythonProject() as IPythonProject).GetSearchPaths().ToArray();
                 });
                 AssertUtil.ContainsExactly(searchPaths, TestData.GetPath(@"TestData\ProjectReference\Debug\"));
-                
+
                 var pyproj = project.GetPythonProject();
-                var interp = pyproj.GetInterpreter();
-                Assert.IsNotNull(interp.ImportModule("native_module"), "module was not loaded");
+                var analyzer = pyproj.GetAnalyzer();
+                Assert.IsNotNull(analyzer.GetModules(true).Where(x => x.Name == "native_module").FirstOrDefault(), "module was not loaded");
 
                 using (var evt = new AutoResetEvent(false)) {
                     pyproj.ProjectAnalyzerChanged += (s, e) => { try { evt.Set(); } catch { } };
@@ -1081,11 +1084,10 @@ namespace PythonToolsUITests {
                     Assert.IsTrue(evt.WaitOne(10000), "Timed out waiting for analyzer change");
                 }
 
-                interp = pyproj.GetInterpreter();
-                for (int retries = 10; retries > 0 && interp.ImportModule("native_module") == null; --retries) {
+                for (int retries = 10; retries > 0 && analyzer.GetModules(true).Where(x => x.Name == "native_module").FirstOrDefault() == null; --retries) {
                     Thread.Sleep(500);
                 }
-                Assert.IsNotNull(interp.ImportModule("native_module"), "module was not reloadod");
+                Assert.IsNotNull(analyzer.GetModules(true).Where(x => x.Name == "native_module").FirstOrDefault(), "module was not reloadod");
             }
         }
 
