@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private static readonly string[] KnownExceptions = new[] { "GeneratorExit", "KeyboardInterrupt", 
             "StopIteration", "SystemExit" };
 
-        private static bool IsExceptionType(MemberResult member) {
+        private static bool IsExceptionType(CompletionResult member) {
             switch (member.MemberType) {
                 case Interpreter.PythonMemberType.Class:
                     // Classes need further checking

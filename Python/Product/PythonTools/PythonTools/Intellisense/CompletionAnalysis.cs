@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return token.ClassificationType.Classification == PredefinedClassificationTypeNames.Keyword && token.Span.GetText() == keyword;
         }
 
-        internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, MemberResult memberResult) {
+        internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, CompletionResult memberResult) {
             return new DynamicallyVisibleCompletion(memberResult.Name, 
                 memberResult.Completion, 
                 () => memberResult.Documentation, 
@@ -119,10 +119,10 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        protected IEnumerable<MemberResult> GetModules(string[] package, bool modulesOnly = true) {
+        protected IEnumerable<CompletionResult> GetModules(string[] package, bool modulesOnly = true) {
             var analysis = GetAnalysisEntry();
             if (analysis == null) {
-                return Enumerable.Empty<MemberResult>();
+                return Enumerable.Empty<CompletionResult>();
             }
 
             IPythonReplIntellisense pyReplEval = null;
@@ -139,7 +139,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 package = new string[0];
             }
 
-            var modules = Enumerable.Empty<MemberResult>();
+            var modules = Enumerable.Empty<CompletionResult>();
             if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                 modules = modules.Concat(package.Length > 0 ? 
                     analysis.Analyzer.GetModuleMembers(analysis, package, !modulesOnly) :
@@ -155,14 +155,14 @@ namespace Microsoft.PythonTools.Intellisense {
             return modules;
         }
 
-        private static IEnumerable<MemberResult> GetModulesFromReplScope(
+        private static IEnumerable<CompletionResult> GetModulesFromReplScope(
             IEnumerable<KeyValuePair<string, bool>> scopes,
             string[] package
         ) {
             if (package == null || package.Length == 0) {
                 foreach (var scope in scopes) {
                     if (scope.Key.IndexOf('.') < 0) {
-                        yield return new MemberResult(
+                        yield return new CompletionResult(
                             scope.Key,
                             scope.Value ? PythonMemberType.Module : PythonMemberType.Namespace
                         );
@@ -173,7 +173,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     var parts = scope.Key.Split('.');
                     if (parts.Length - 1 == package.Length &&
                         parts.Take(parts.Length - 1).SequenceEqual(package, StringComparer.Ordinal)) {
-                        yield return new MemberResult(
+                        yield return new CompletionResult(
                             parts[parts.Length - 1],
                             scope.Value ? PythonMemberType.Module : PythonMemberType.Namespace
                         );

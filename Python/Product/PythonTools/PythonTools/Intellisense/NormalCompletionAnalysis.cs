@@ -81,8 +81,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var start1 = _stopwatch.ElapsedMilliseconds;
 
-            IEnumerable<MemberResult> members = null;
-            IEnumerable<MemberResult> replMembers = null;
+            IEnumerable<CompletionResult> members = null;
+            IEnumerable<CompletionResult> replMembers = null;
 
             IInteractiveEvaluator eval;
             IPythonReplIntellisense pyReplEval = null;
@@ -105,14 +105,14 @@ namespace Microsoft.PythonTools.Intellisense {
                             statementRange.Snapshot,
                             analysis
                         );
-                        var parameters = Enumerable.Empty<MemberResult>();
+                        var parameters = Enumerable.Empty<CompletionResult>();
                         var sigs = VsProjectAnalyzer.GetSignatures(_serviceProvider, _snapshot, Span).Result;
                         if (sigs.Signatures.Any()) {
                             parameters = sigs.Signatures
                                 .SelectMany(s => s.Parameters)
                                 .Select(p => p.Name)
                                 .Distinct()
-                                .Select(n => new MemberResult(n, PythonMemberType.Field));
+                                .Select(n => new CompletionResult(n, PythonMemberType.Field));
                         }
                         members = analysis.Analyzer.GetAllAvailableMembers(analysis, location, _options.MemberOptions)
                             .Union(parameters, CompletionComparer.MemberEquality);

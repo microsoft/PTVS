@@ -635,7 +635,27 @@ namespace Microsoft.PythonTools.Intellisense {
         public class Completion {
             public string name;
             public string completion;
+            public string doc;
             public PythonMemberType memberType;
+
+            public CompletionValue[] detailedValues;
+        }
+
+        public sealed class CompletionValue {
+            public DescriptionComponent[] description;
+            public string doc;
+        }
+        
+        public sealed class DescriptionComponent {
+            public string text, kind;
+
+            public DescriptionComponent() {
+            }
+
+            public DescriptionComponent(string text, string kind) {
+                this.text = text;
+                this.kind = kind;
+            }
         }
 
         public sealed class OptionsChangedEvent : Event {

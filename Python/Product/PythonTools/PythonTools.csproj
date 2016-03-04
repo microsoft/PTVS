@@ -263,6 +263,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
+    <Compile Include="PythonTools\Intellisense\CompletionResult.cs" />
     <Compile Include="PythonTools\Intellisense\LocationTracker.cs" />
     <Compile Include="PythonTools\Intellisense\NavigationInfo.cs" />
     <Compile Include="PythonTools\Intellisense\FileCookie.cs" />
@@ -509,7 +510,6 @@
     <Compile Include="PythonTools\Intellisense\DecoratorCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\XamlTextViewCreationListener.cs" />
     <Compile Include="PythonTools\IVsPython.cs" />
-    <Compile Include="PythonTools\Navigation\AssignmentScopeNode.cs" />
     <Compile Include="PythonTools\Navigation\PythonFileLibraryNode.cs" />
     <Compile Include="PythonTools\Navigation\WaitForCompleteAnalysisDialog.xaml.cs">
       <DependentUpon>WaitForCompleteAnalysisDialog.xaml</DependentUpon>
@@ -634,9 +634,6 @@
     <Compile Include="PythonTools\Intellisense\SignatureHelpSourceProvider.cs" />
     <Compile Include="PythonTools\Intellisense\SnapshotCookie.cs" />
     <Compile Include="PythonTools\Intellisense\StringLiteralCompletionList.cs" />
-    <Compile Include="PythonTools\Navigation\AstScopeNode.cs" />
-    <Compile Include="PythonTools\Navigation\ClassScopeNode.cs" />
-    <Compile Include="PythonTools\Navigation\FunctionScopeNode.cs" />
     <Compile Include="PythonTools\Options\PythonInterpreterOptionsPage.cs">
       <SubType>Component</SubType>
     </Compile>

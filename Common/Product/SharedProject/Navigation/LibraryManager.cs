@@ -189,7 +189,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
         /// 
         /// It is safe to call this method from any thread.
         /// </summary>
-        protected void FileParsed(LibraryTask task, IScopeNode scope) {
+        protected void FileParsed(LibraryTask task) {
             try {
                 var project = task.ModuleID.Hierarchy.GetProject().GetCommonProject();
 

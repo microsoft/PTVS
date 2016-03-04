@@ -332,8 +332,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return result;
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
-            var result = _mro.GetAllMembers(moduleContext);
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
+            IDictionary<string, IAnalysisSet> result;
+            if (options.HasFlag(GetMemberOptions.DeclaredOnly)) {
+                result = GetAllImmediateMembers(moduleContext);
+            } else {
+                result = _mro.GetAllMembers(moduleContext);
+            }
 
             if (_metaclass != null) {
                 foreach (var type in _metaclass.Types) {

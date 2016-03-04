@@ -156,10 +156,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
             process.Exited += OnAnalysisProcessExited;
             Task.Run(async () => {
-                while (!process.HasExited) {
-                    var line = await process.StandardError.ReadLineAsync();
-                    _stdErr.AppendLine(line);
-                    Debug.WriteLine("Analysis Std Err: " + line);
+                try {
+                    while (!process.HasExited) {
+                        var line = await process.StandardError.ReadLineAsync();
+                        _stdErr.AppendLine(line);
+                        Debug.WriteLine("Analysis Std Err: " + line);
+                    }
+                } catch (InvalidOperationException) {
+                    // can race with dispose of the process...
                 }
             });
             conn.EventReceived += _conn_EventReceived;
@@ -1127,7 +1131,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return await _conn.SendRequestAsync(request, _processExitedCancelSource.Token).ConfigureAwait(false);
         }
 
-        internal IEnumerable<MemberResult> GetAllAvailableMembers(AnalysisEntry file, SourceLocation location, GetMemberOptions options) {
+        internal IEnumerable<CompletionResult> GetAllAvailableMembers(AnalysisEntry file, SourceLocation location, GetMemberOptions options) {
             var members = Task.Run(() => SendRequestAsync(new AP.TopLevelCompletionsRequest() {
                 fileId = file.FileId,
                 options = options,
@@ -1140,16 +1144,17 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static MemberResult ToMemberResult(AP.Completion member) {
-            return new MemberResult(
+        private static CompletionResult ToMemberResult(AP.Completion member) {
+            return new CompletionResult(
                 member.name,
                 member.completion,
-                new AnalysisValue[0],
-                member.memberType
+                member.doc,
+                member.memberType,
+                member.detailedValues
             );
         }
 
-        internal async Task<IEnumerable<MemberResult>> GetMembers(AnalysisEntry file, string text, SourceLocation location, GetMemberOptions options) {
+        internal async Task<IEnumerable<CompletionResult>> GetMembers(AnalysisEntry file, string text, SourceLocation location, GetMemberOptions options) {
             var members = await SendRequestAsync(new AP.CompletionsRequest() {
                 fileId = file.FileId,
                 text = text,
@@ -1161,13 +1166,13 @@ namespace Microsoft.PythonTools.Intellisense {
             return ConvertMembers(members.completions);
         }
 
-        private IEnumerable<MemberResult> ConvertMembers(AP.Completion[] completions) {
+        private IEnumerable<CompletionResult> ConvertMembers(AP.Completion[] completions) {
             foreach (var member in completions) {
                 yield return ToMemberResult(member);
             }
         }
 
-        internal IEnumerable<MemberResult> GetModules(AnalysisEntry file, bool topLevelOnly) {
+        internal IEnumerable<CompletionResult> GetModules(AnalysisEntry file, bool topLevelOnly) {
             var members = SendRequestAsync(new AP.GetModulesRequest() {
                 fileId = file.FileId,
                 topLevelOnly = topLevelOnly
@@ -1179,7 +1184,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal IEnumerable<MemberResult> GetModuleMembers(AnalysisEntry file, string[] package, bool includeMembers) {
+        internal IEnumerable<CompletionResult> GetModuleMembers(AnalysisEntry file, string[] package, bool includeMembers) {
             var members = SendRequestAsync(new AP.GetModuleMembers() {
                 fileId = file.FileId,
                 package = package,

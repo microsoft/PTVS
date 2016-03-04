@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _classInfo = classInfo;
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             var res = new Dictionary<string, IAnalysisSet>();
             if (_instanceAttrs != null) {
                 foreach (var kvp in _instanceAttrs) {
@@ -47,29 +47,31 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             // check and see if it's defined in a base class instance as well...
-            foreach (var b in _classInfo.Bases) {
-                foreach (var ns in b) {
-                    if (ns.Push()) {
-                        try {
-                            ClassInfo baseClass = ns as ClassInfo;
-                            if (baseClass != null &&
-                                baseClass.Instance._instanceAttrs != null) {
-                                foreach (var kvp in baseClass.Instance._instanceAttrs) {
-                                    kvp.Value.ClearOldValues();
-                                    if (kvp.Value.VariableStillExists) {
-                                        MergeTypes(res, kvp.Key, kvp.Value.TypesNoCopy);
+            if (!options.HasFlag(GetMemberOptions.DeclaredOnly)) {
+                foreach (var b in _classInfo.Bases) {
+                    foreach (var ns in b) {
+                        if (ns.Push()) {
+                            try {
+                                ClassInfo baseClass = ns as ClassInfo;
+                                if (baseClass != null &&
+                                    baseClass.Instance._instanceAttrs != null) {
+                                    foreach (var kvp in baseClass.Instance._instanceAttrs) {
+                                        kvp.Value.ClearOldValues();
+                                        if (kvp.Value.VariableStillExists) {
+                                            MergeTypes(res, kvp.Key, kvp.Value.TypesNoCopy);
+                                        }
                                     }
                                 }
+                            } finally {
+                                ns.Pop();
                             }
-                        } finally {
-                            ns.Pop();
                         }
                     }
                 }
-            }
 
-            foreach (var classMem in _classInfo.GetAllMembers(moduleContext)) {
-                MergeTypes(res, classMem.Key, classMem.Value);
+                foreach (var classMem in _classInfo.GetAllMembers(moduleContext)) {
+                    MergeTypes(res, classMem.Key, classMem.Value);
+                }
             }
             return res;
         }

@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
@@ -37,8 +38,8 @@ namespace Microsoft.VisualStudioTools.Navigation {
         private readonly TextSpan _sourceSpan;
         private string _fileMoniker;
 
-        protected CommonLibraryNode(LibraryNode parent, string name, string fullName, IVsHierarchy hierarchy, uint itemId, LibraryNodeType type) :
-            base(parent, name, fullName, type) {
+        protected CommonLibraryNode(LibraryNode parent, string name, string fullName, IVsHierarchy hierarchy, uint itemId, LibraryNodeType type, IList<LibraryNode> children = null) :
+            base(parent, name, fullName, type, children: children) {
             _ownerHierarchy = hierarchy;
             _fileId = itemId;
 
@@ -66,11 +67,6 @@ namespace Microsoft.VisualStudioTools.Navigation {
             get {
                 return _sourceSpan;
             }
-        }
-
-        private static string GetLibraryNodeName(IScopeNode node, string namePrefix) {
-            namePrefix = namePrefix.Substring(namePrefix.LastIndexOf(':') + 1); // remove filename prefix
-            return node.NodeType == LibraryNodeType.Members ? node.Name : string.Format(CultureInfo.InvariantCulture, "{0}{1}", namePrefix, node.Name);
         }
 
         protected CommonLibraryNode(CommonLibraryNode node) :

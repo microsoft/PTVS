@@ -123,11 +123,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             if (_original == null) {
-                return base.GetAllMembers(moduleContext);
+                return base.GetAllMembers(moduleContext, options);
             }
-            return _original.GetAllMembers(moduleContext);
+            return _original.GetAllMembers(moduleContext, options);
         }
 
         public override object GetConstantValue() {

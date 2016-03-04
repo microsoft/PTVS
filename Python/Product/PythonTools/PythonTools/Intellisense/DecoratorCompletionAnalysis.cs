@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Intellisense {
             : base(span, textBuffer, options) {
         }
 
-        private static bool IsDecoratorType(MemberResult member) {
+        private static bool IsDecoratorType(CompletionResult member) {
             switch (member.MemberType) {
                 case Interpreter.PythonMemberType.Function:
                 case Interpreter.PythonMemberType.Class:

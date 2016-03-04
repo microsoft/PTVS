@@ -147,8 +147,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _builtinInfo.SetIndex(node, unit, index, value);
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
-            return _builtinInfo.GetAllMembers(moduleContext);
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
+            if (options.HasFlag(GetMemberOptions.DeclaredOnly)) {
+                return new Dictionary<string, IAnalysisSet>();
+            }
+
+            return _builtinInfo.GetAllMembers(moduleContext, options);
         }
 
         public override string Description {

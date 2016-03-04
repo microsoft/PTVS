@@ -54,7 +54,17 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Exclude built-in members when getting all members
         /// </summary>
-        ExcludeBuiltins = 0x10
+        ExcludeBuiltins = 0x10,
+
+        /// <summary>
+        /// Include detailed information including values of individual objects
+        /// </summary>
+        DetailedInformation = 0x20,
+
+        /// <summary>
+        /// Only include members which are directly declared
+        /// </summary>
+        DeclaredOnly = 0x40
     }
 
     internal static class GetMemberOptionsExtensions {

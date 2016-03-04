@@ -514,18 +514,26 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return ProjectState.ClassInfos[BuiltinTypeId.Function].GetMember(node, unit, name);
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
-            if (_functionAttrs == null || _functionAttrs.Count == 0) {
-                return ProjectState.ClassInfos[BuiltinTypeId.Function].GetAllMembers(moduleContext);
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
+            if (!options.HasFlag(GetMemberOptions.DeclaredOnly) && (_functionAttrs == null || _functionAttrs.Count == 0)) {
+                return ProjectState.ClassInfos[BuiltinTypeId.Function].GetAllMembers(moduleContext, options);
             }
 
-            var res = new Dictionary<string, IAnalysisSet>(ProjectState.ClassInfos[BuiltinTypeId.Function].Instance.GetAllMembers(moduleContext));
-            foreach (var variable in _functionAttrs) {
-                IAnalysisSet existing;
-                if (!res.TryGetValue(variable.Key, out existing)) {
-                    res[variable.Key] = variable.Value.Types;
-                } else {
-                    res[variable.Key] = existing.Union(variable.Value.TypesNoCopy);
+            Dictionary<string, IAnalysisSet> res;
+            if (options.HasFlag(GetMemberOptions.DeclaredOnly)) {
+                res = new Dictionary<string, IAnalysisSet>();
+            } else {
+                res = new Dictionary<string, IAnalysisSet>(ProjectState.ClassInfos[BuiltinTypeId.Function].Instance.GetAllMembers(moduleContext));
+            }
+
+            if (_functionAttrs != null) {
+                foreach (var variable in _functionAttrs) {
+                    IAnalysisSet existing;
+                    if (!res.TryGetValue(variable.Key, out existing)) {
+                        res[variable.Key] = variable.Value.Types;
+                    } else {
+                        res[variable.Key] = existing.Union(variable.Value.TypesNoCopy);
+                    }
                 }
             }
             return res;

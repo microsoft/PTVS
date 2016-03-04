@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Navigation {
                 // object browser (for example we could include base type information with
                 // links elsewhere in the object browser).
                 item.AnalysisComplete += (sender, args) => {
-                    _package.GetUIThread().InvokeAsync(() => FileParsed(task, null /*new AstScopeNode(item.Tree, item)*/))
+                    _package.GetUIThread().InvokeAsync(() => FileParsed(task))
                         .HandleAllExceptions(_package, GetType())
                         .DoNotWait();
                 };

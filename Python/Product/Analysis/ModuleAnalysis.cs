@@ -680,7 +680,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             if (namespaces.Count == 1) {
                 // optimize for the common case of only a single namespace
-                var newMembers = namespaces[0].GetAllMembers(GlobalScope.InterpreterContext);
+                var newMembers = namespaces[0].GetAllMembers(GlobalScope.InterpreterContext, options);
                 if (newMembers == null || newMembers.Count == 0) {
                     return new MemberResult[0];
                 }
@@ -698,7 +698,7 @@ namespace Microsoft.PythonTools.Analysis {
                     continue;
                 }
 
-                var newMembers = ns.GetAllMembers(GlobalScope.InterpreterContext);
+                var newMembers = ns.GetAllMembers(GlobalScope.InterpreterContext, options);
                 // IntersectMembers(members, memberSet, memberDict);
                 if (newMembers == null || newMembers.Count == 0) {
                     continue;

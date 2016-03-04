@@ -33,6 +33,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
     using System.Reflection;
+    using Analysis.Values;
     using AP = AnalysisProtocol;
 
     /// <summary>
@@ -1174,7 +1175,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return new AP.CompletionsResponse() {
-                completions = ToCompletions(members.ToArray())
+                completions = ToCompletions(members.ToArray(), topLevelCompletions.options)
             };
         }
 
@@ -1182,11 +1183,14 @@ namespace Microsoft.PythonTools.Intellisense {
             var getModuleMembers = (AP.GetModuleMembers)request;
 
             return new AP.CompletionsResponse() {
-                completions = ToCompletions(_pyAnalyzer.GetModuleMembers(
-                    _projectFiles[getModuleMembers.fileId].AnalysisContext,
-                    getModuleMembers.package,
-                    getModuleMembers.includeMembers
-                ))
+                completions = ToCompletions(
+                    _pyAnalyzer.GetModuleMembers(
+                        _projectFiles[getModuleMembers.fileId].AnalysisContext,
+                        getModuleMembers.package,
+                        getModuleMembers.includeMembers
+                    ), 
+                    GetMemberOptions.None
+                )
             };
         }
 
@@ -1194,9 +1198,10 @@ namespace Microsoft.PythonTools.Intellisense {
             var getModules = (AP.GetModulesRequest)request;
 
             return new AP.CompletionsResponse() {
-                completions = ToCompletions(_pyAnalyzer.GetModules(
-                    getModules.topLevelOnly
-                ))
+                completions = ToCompletions(
+                    _pyAnalyzer.GetModules(getModules.topLevelOnly), 
+                    GetMemberOptions.None
+                )
             };
         }
 
@@ -1217,7 +1222,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return new AP.CompletionsResponse() {
-                completions = ToCompletions(members.ToArray())
+                completions = ToCompletions(members.ToArray(), completions.options)
             };
         }
 
@@ -1240,16 +1245,128 @@ namespace Microsoft.PythonTools.Intellisense {
             ).ToArray();
         }
 
-        private AP.Completion[] ToCompletions(MemberResult[] memberResult) {
+        private AP.Completion[] ToCompletions(MemberResult[] memberResult, GetMemberOptions options) {
             AP.Completion[] res = new AP.Completion[memberResult.Length];
             for (int i = 0; i < memberResult.Length; i++) {
+                var member = memberResult[i];
+
                 res[i] = new AP.Completion() {
-                    name = memberResult[i].Name,
-                    completion = memberResult[i].Completion,
-                    memberType = memberResult[i].MemberType
+                    name = member.Name,
+                    completion = member.Completion,
+                    doc = member.Documentation,
+                    memberType = member.MemberType
                 };
+
+                if (options.HasFlag(GetMemberOptions.DetailedInformation)) {
+                    List<AP.CompletionValue> values = new List<AnalysisProtocol.CompletionValue>();
+
+                    foreach (var value in member.Values) {
+                        var descComps = new List<AP.DescriptionComponent>();
+                        if (value is FunctionInfo) {
+                            descComps.Add(new AP.DescriptionComponent("def ", "misc"));
+                            var def = ((FunctionInfo)value).FunctionDefinition;
+                            GetFunctionDescription(def, (text, kind) => {
+                                descComps.Add(new AP.DescriptionComponent(text, kind));
+                            });
+                            descComps.Add(new AP.DescriptionComponent("", "enddecl"));
+                            if (def.Body.Documentation != null) {
+                                descComps.Add(new AP.DescriptionComponent("    " + def.Body.Documentation, "misc"));
+                            }
+
+                        } else if (value is ClassInfo) {
+                            FillClassDescription(descComps, ((ClassInfo)value).ClassDefinition);
+                        }
+                        values.Add(
+                            new AP.CompletionValue() {
+                                description = descComps.ToArray(),
+                                doc = value.Documentation
+                            }
+                        );
+                    }
+                    res[i].detailedValues = values.ToArray();
+                }
             }
             return res;
+        }
+
+        private static void FillClassDescription(List<AP.DescriptionComponent> description, ClassDefinition classDef) {
+            description.Add(new AP.DescriptionComponent("class ", "misc"));
+            description.Add(new AP.DescriptionComponent(classDef.Name, "name"));
+            if (classDef.Bases.Count > 0) {
+                description.Add(new AP.DescriptionComponent("(", "misc"));
+                bool comma = false;
+                foreach (var baseClass in classDef.Bases) {
+                    if (comma) {
+                        description.Add(new AP.DescriptionComponent(", ", "misc"));
+                    }
+
+                    string baseStr = FormatExpression(baseClass.Expression);
+                    if (baseStr != null) {
+                        description.Add(new AP.DescriptionComponent(baseStr, "type"));
+                    }
+
+                    comma = true;
+                }
+                description.Add(new AP.DescriptionComponent(")", "misc"));
+            }
+
+            description.Add(new AP.DescriptionComponent("\n", "misc"));
+            description.Add(new AP.DescriptionComponent(null, "enddecl"));
+
+            if (!String.IsNullOrWhiteSpace(classDef.Body.Documentation)) {
+                description.Add(new AP.DescriptionComponent("    " + classDef.Body.Documentation, "misc"));
+            }
+        }
+
+        private static string FormatExpression(Expression baseClass) {
+            NameExpression ne = baseClass as NameExpression;
+            if (ne != null) {
+                return ne.Name;
+            }
+
+            MemberExpression me = baseClass as MemberExpression;
+            if (me != null) {
+                string expr = FormatExpression(me.Target);
+                if (expr != null) {
+                    return expr + "." + me.Name ?? string.Empty;
+                }
+            }
+
+            return null;
+        }
+
+        private void GetFunctionDescription(FunctionDefinition def, Action<string, string> addDescription) {
+            addDescription(def.Name, "name");
+            addDescription("(", "misc");
+
+            for (int i = 0; i < def.Parameters.Count; i++) {
+                if (i != 0) {
+                    addDescription(", ", "misc");
+                }
+
+                var curParam = def.Parameters[i];
+
+                string name = curParam.Name;
+                if (curParam.IsDictionary) {
+                    name = "**" + name;
+                } else if (curParam.IsList) {
+                    name = "*" + curParam.Name;
+                }
+
+                if (curParam.DefaultValue != null) {
+                    // TODO: Support all possible expressions for default values, we should
+                    // probably have a PythonAst walker for expressions or we should add ToCodeString()
+                    // onto Python ASTs so they can round trip
+                    ConstantExpression defaultValue = curParam.DefaultValue as ConstantExpression;
+                    if (defaultValue != null) {
+                        // FIXME: Use python repr
+                        name = name + " = " + defaultValue.GetConstantRepr(def.GlobalParent.LanguageVersion);
+                    }
+                }
+
+                addDescription(name, "param");
+            }
+            addDescription(")\n", "misc");
         }
 
         private Response AnalyzeFile(AP.AddFileRequest request) {
@@ -1449,10 +1566,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 throw new InvalidOperationException("Unknown project entry");
             }
 
-            return //TrySpecialCompletions(serviceProvider, snapshot, span, point, options) ??
-                GetNormalCompletions(file, request);
-            //return 
-            //         GetNormalCompletionContext(request);
+            return GetNormalCompletions(file, request);
         }
 
         internal Task ProcessMessages() {
@@ -1954,161 +2068,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return _stopwatch;
             }
         }
-#if PORT
-        private static SignatureAnalysis TryGetLiveSignatures(ITextSnapshot snapshot, int paramIndex, string text, ITrackingSpan applicableSpan, string lastKeywordArg) {
-            IInteractiveEvaluator eval;
-            IPythonReplIntellisense dlrEval;
-            if (snapshot.TextBuffer.Properties.TryGetProperty<IInteractiveEvaluator>(typeof(IInteractiveEvaluator), out eval) &&
-                (dlrEval = eval as IPythonReplIntellisense) != null) {
-                if (text.EndsWith("(")) {
-                    text = text.Substring(0, text.Length - 1);
-                }
-                var liveSigs = dlrEval.GetSignatureDocumentation(text);
 
-                if (liveSigs != null && liveSigs.Length > 0) {
-                    return new SignatureAnalysis(text, paramIndex, GetLiveSignatures(text, liveSigs, paramIndex, applicableSpan, lastKeywordArg), lastKeywordArg);
-                }
-            }
-            return null;
-        }
-
-        private static ISignature[] GetLiveSignatures(string text, ICollection<OverloadDoc> liveSigs, int paramIndex, ITrackingSpan span, string lastKeywordArg) {
-            ISignature[] res = new ISignature[liveSigs.Count];
-            int i = 0;
-            foreach (var sig in liveSigs) {
-                res[i++] = new PythonSignature(
-                    span,
-                    new LiveOverloadResult(text, sig.Documentation, sig.Parameters),
-                    paramIndex,
-                    lastKeywordArg
-                );
-            }
-            return res;
-        }
-
-        class LiveOverloadResult : IOverloadResult {
-            private readonly string _name, _doc;
-            private readonly ParameterResult[] _parameters;
-
-            public LiveOverloadResult(string name, string documentation, ParameterResult[] parameters) {
-                _name = name;
-                _doc = documentation;
-                _parameters = parameters;
-            }
-
-        #region IOverloadResult Members
-
-            public string Name {
-                get { return _name; }
-            }
-
-            public string Documentation {
-                get { return _doc; }
-            }
-
-            public ParameterResult[] Parameters {
-                get { return _parameters; }
-            }
-
-        #endregion
-        }
-
-        internal bool ShouldEvaluateForCompletion(string source) {
-            switch (_pyService.GetInteractiveOptions(_interpreterFactory).ReplIntellisenseMode) {
-                case ReplIntellisenseMode.AlwaysEvaluate: return true;
-                case ReplIntellisenseMode.NeverEvaluate: return false;
-                case ReplIntellisenseMode.DontEvaluateCalls:
-                    var parser = Parser.CreateParser(new StringReader(source), _interpreterFactory.GetLanguageVersion());
-
-                    var stmt = parser.ParseSingleStatement();
-                    var exprWalker = new ExprWalker();
-
-                    stmt.Walk(exprWalker);
-                    return exprWalker.ShouldExecute;
-                default: throw new InvalidOperationException();
-            }
-        }
-
-        class ExprWalker : PythonWalker {
-            public bool ShouldExecute = true;
-
-            public override bool Walk(CallExpression node) {
-                ShouldExecute = false;
-                return base.Walk(node);
-            }
-        }
-
-        private static CompletionAnalysis TrySpecialCompletions(AP.CompletionsRequest request) {
-            var snapSpan = span.GetSpan(snapshot);
-            var buffer = snapshot.TextBuffer;
-            var classifier = buffer.GetPythonClassifier();
-            if (classifier == null) {
-                return null;
-            }
-
-            var parser = new ReverseExpressionParser(snapshot, buffer, span);
-            var statementRange = parser.GetStatementRange();
-            if (!statementRange.HasValue) {
-                statementRange = snapSpan.Start.GetContainingLine().Extent;
-            }
-            if (snapSpan.Start < statementRange.Value.Start) {
-                return null;
-            }
-
-            var tokens = classifier.GetClassificationSpans(new SnapshotSpan(statementRange.Value.Start, snapSpan.Start));
-            if (tokens.Count > 0) {
-                // Check for context-sensitive intellisense
-                var lastClass = tokens[tokens.Count - 1];
-
-                if (lastClass.ClassificationType == classifier.Provider.Comment) {
-                    // No completions in comments
-                    return CompletionAnalysis.EmptyCompletionContext;
-                } else if (lastClass.ClassificationType == classifier.Provider.StringLiteral) {
-                    // String completion
-                    if (lastClass.Span.Start.GetContainingLine().LineNumber == lastClass.Span.End.GetContainingLine().LineNumber) {
-                        return new StringLiteralCompletionList(span, buffer, options);
-                    } else {
-                        // multi-line string, no string completions.
-                        return CompletionAnalysis.EmptyCompletionContext;
-                    }
-                } else if (lastClass.ClassificationType == classifier.Provider.Operator &&
-                    lastClass.Span.GetText() == "@") {
-
-                    if (tokens.Count == 1) {
-                        return new DecoratorCompletionAnalysis(span, buffer, options);
-                    }
-                    // TODO: Handle completions automatically popping up
-                    // after '@' when it is used as a binary operator.
-                } else if (CompletionAnalysis.IsKeyword(lastClass, "def")) {
-                    return new OverrideCompletionAnalysis(span, buffer, options);
-                }
-
-                // Import completions
-                var first = tokens[0];
-                if (CompletionAnalysis.IsKeyword(first, "import")) {
-                    return ImportCompletionAnalysis.Make(tokens, span, buffer, options);
-                } else if (CompletionAnalysis.IsKeyword(first, "from")) {
-                    return FromImportCompletionAnalysis.Make(tokens, span, buffer, options);
-                } else if (CompletionAnalysis.IsKeyword(first, "raise") || CompletionAnalysis.IsKeyword(first, "except")) {
-                    if (tokens.Count == 1 ||
-                        lastClass.ClassificationType.IsOfType(PythonPredefinedClassificationTypeNames.Comma) ||
-                        (lastClass.IsOpenGrouping() && tokens.Count < 3)) {
-                        return new ExceptionCompletionAnalysis(span, buffer, options);
-                    }
-                }
-                return null;
-            } else if ((tokens = classifier.GetClassificationSpans(snapSpan.Start.GetContainingLine().ExtentIncludingLineBreak)).Count > 0 &&
-               tokens[0].ClassificationType == classifier.Provider.StringLiteral) {
-                // multi-line string, no string completions.
-                return CompletionAnalysis.EmptyCompletionContext;
-            } else if (snapshot.IsReplBufferWithCommand()) {
-                return CompletionAnalysis.EmptyCompletionContext;
-            }
-
-            return null;
-        }
-#endif
-        private AP.CompletionsResponse GetNormalCompletions(IProjectEntry projectEntry, AP.CompletionsRequest request /*IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan applicableSpan, ITrackingPoint point, CompletionOptions options*/) {
+        private AP.CompletionsResponse GetNormalCompletions(IProjectEntry projectEntry, AP.CompletionsRequest request) {
             int version;
             var code = projectEntry.GetCurrentCode(request.bufferId, out version);
 
@@ -2130,7 +2091,7 @@ namespace Microsoft.PythonTools.Intellisense {
             );
 
             return new AP.CompletionsResponse() {
-                completions = ToCompletions(members.ToArray())
+                completions = ToCompletions(members.ToArray(), request.options)
             };
         }
 
