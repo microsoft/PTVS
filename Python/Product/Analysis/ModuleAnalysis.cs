@@ -362,7 +362,14 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             var unit = GetNearestEnclosingAnalysisUnit(scope);
-            var lookup = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true).Evaluate(expr);
+            var eval = new ExpressionEvaluator(unit.CopyForEval(), scope, mergeScopes: true);
+            IAnalysisSet lookup;
+            if (options.HasFlag(GetMemberOptions.NoMemberRecursion)) {
+                lookup = eval.EvaluateNoMemberRecursion(expr);
+            } else {
+                lookup = eval.Evaluate(expr);
+            }
+
             return GetMemberResults(lookup, scope, options);
         }
 

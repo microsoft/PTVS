@@ -43,6 +43,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         public event EventHandler ParseComplete;
 
+        private static readonly object _searchPathEntryKey = new { Name = "SearchPathEntry" };
+
         public AnalysisEntry(VsProjectAnalyzer analyzer, string path, int fileId) {
             _analyzer = analyzer;
             _path = path;
@@ -96,6 +98,17 @@ namespace Microsoft.PythonTools.Intellisense {
                         notify();
                     }
                 }
+            }
+        }
+
+        public string SearchPathEntry {
+            get {
+                object result;
+                Properties.TryGetValue(_searchPathEntryKey, out result);
+                return (string)result;
+            }
+            set {
+                Properties[_searchPathEntryKey] = value;
             }
         }
     }

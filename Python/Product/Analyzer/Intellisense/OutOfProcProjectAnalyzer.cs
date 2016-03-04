@@ -20,11 +20,13 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Cdp;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -32,8 +34,6 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using System.Reflection;
-    using Analysis.Values;
     using AP = AnalysisProtocol;
 
     /// <summary>
@@ -73,10 +73,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private const string ParserTaskMoniker = "Parser";
         internal const string UnresolvedImportMoniker = "UnresolvedImport";
 
-#if PORT
-        private readonly UnresolvedImportSquiggleProvider _unresolvedSquiggles;
-#endif
-
         private readonly Connection _connection;
         internal Task ReloadTask;
 
@@ -93,17 +89,10 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonInterpreterFactory factory,
             IPythonInterpreterFactory[] allFactories
         ) {
-#if PORT
-            _errorProvider = (ErrorTaskProvider)serviceProvider.GetService(typeof(ErrorTaskProvider));
-            _commentTaskProvider = (CommentTaskProvider)serviceProvider.GetService(typeof(CommentTaskProvider));
-            _unresolvedSquiggles = new UnresolvedImportSquiggleProvider(serviceProvider, _errorProvider);
-#endif
-
             _analysisQueue = new AnalysisQueue(this);
             _analysisQueue.AnalysisComplete += AnalysisQueue_Complete;
             _allFactories = allFactories;
             _options = new AP.OptionsChangedEvent() {
-                implicitProject = false,
                 indentation_inconsistency_severity = Severity.Ignore
             };
             _interpreterFactory = factory;
@@ -169,11 +158,45 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.AddReferenceRequest.Command: response = AddReference((AP.AddReferenceRequest)request); break;
                 case AP.RemoveReferenceRequest.Command: response = RemoveReference((AP.RemoveReferenceRequest)request); break;
                 case AP.GetReferencesRequest.Command: response = GetReferences((AP.GetReferencesRequest)request); break;
+                case AP.AddZipArchiveRequest.Command: response = AddZipArchive((AP.AddZipArchiveRequest)request); break;
+                case AP.AddDirectoryRequest.Command: response = AddDirectory((AP.AddDirectoryRequest)request); break;
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
 
             return Task.FromResult(response);
+        }
+
+        private Response AddDirectory(AP.AddDirectoryRequest request) {
+            AnalyzeDirectory(
+                request.dir,
+                entry => {
+                    _connection.SendEventAsync(
+                        new AP.ChildFileAnalyzed() {
+                            parent = request.dir,
+                            filename = entry.FilePath
+                        }
+                    ).Wait();
+                }
+            );
+
+            return new Response();
+        }
+
+        private Response AddZipArchive(AP.AddZipArchiveRequest request) {
+            AnalyzeZipArchive(
+                request.archive,
+                entry => {
+                    _connection.SendEventAsync(
+                        new AP.ChildFileAnalyzed() {
+                            parent = request.archive,
+                            filename = entry.FilePath
+                        }
+                    ).Wait();
+                }
+            );
+
+            return new Response();
         }
 
         private Response GetReferences(AP.GetReferencesRequest request) {
@@ -236,7 +259,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     out code
                 );
 
-                foreach (var classDef in FindClassDef(request.className, ast)) { 
+                foreach (var classDef in FindClassDef(request.className, ast)) {
                     SuiteStatement suite = classDef.Body as SuiteStatement;
                     if (suite != null) {
                         foreach (var methodCandidate in suite.Statements) {
@@ -1099,7 +1122,6 @@ namespace Microsoft.PythonTools.Intellisense {
             };
         }
 
-
         internal static string LimitLines(
             string str,
             int maxLines = 30,
@@ -1188,7 +1210,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         _projectFiles[getModuleMembers.fileId].AnalysisContext,
                         getModuleMembers.package,
                         getModuleMembers.includeMembers
-                    ), 
+                    ),
                     GetMemberOptions.None
                 )
             };
@@ -1199,7 +1221,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return new AP.CompletionsResponse() {
                 completions = ToCompletions(
-                    _pyAnalyzer.GetModules(getModules.topLevelOnly), 
+                    _pyAnalyzer.GetModules(getModules.topLevelOnly),
                     GetMemberOptions.None
                 )
             };
@@ -1263,16 +1285,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     foreach (var value in member.Values) {
                         var descComps = new List<AP.DescriptionComponent>();
                         if (value is FunctionInfo) {
-                            descComps.Add(new AP.DescriptionComponent("def ", "misc"));
                             var def = ((FunctionInfo)value).FunctionDefinition;
-                            GetFunctionDescription(def, (text, kind) => {
+                            ((FunctionInfo)value).GetDescription((text, kind) => {
                                 descComps.Add(new AP.DescriptionComponent(text, kind));
                             });
-                            descComps.Add(new AP.DescriptionComponent("", "enddecl"));
-                            if (def.Body.Documentation != null) {
-                                descComps.Add(new AP.DescriptionComponent("    " + def.Body.Documentation, "misc"));
-                            }
-
                         } else if (value is ClassInfo) {
                             FillClassDescription(descComps, ((ClassInfo)value).ClassDefinition);
                         }
@@ -1333,40 +1349,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return null;
-        }
-
-        private void GetFunctionDescription(FunctionDefinition def, Action<string, string> addDescription) {
-            addDescription(def.Name, "name");
-            addDescription("(", "misc");
-
-            for (int i = 0; i < def.Parameters.Count; i++) {
-                if (i != 0) {
-                    addDescription(", ", "misc");
-                }
-
-                var curParam = def.Parameters[i];
-
-                string name = curParam.Name;
-                if (curParam.IsDictionary) {
-                    name = "**" + name;
-                } else if (curParam.IsList) {
-                    name = "*" + curParam.Name;
-                }
-
-                if (curParam.DefaultValue != null) {
-                    // TODO: Support all possible expressions for default values, we should
-                    // probably have a PythonAst walker for expressions or we should add ToCodeString()
-                    // onto Python ASTs so they can round trip
-                    ConstantExpression defaultValue = curParam.DefaultValue as ConstantExpression;
-                    if (defaultValue != null) {
-                        // FIXME: Use python repr
-                        name = name + " = " + defaultValue.GetConstantRepr(def.GlobalParent.LanguageVersion);
-                    }
-                }
-
-                addDescription(name, "param");
-            }
-            addDescription(")\n", "misc");
         }
 
         private Response AnalyzeFile(AP.AddFileRequest request) {
@@ -1617,72 +1599,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-#if PORT
-        private IProjectEntry CreateProjectEntry(ITextBuffer buffer, IAnalysisCookie analysisCookie) {
-            if (_pyAnalyzer == null) {
-                // We aren't able to analyze code, so don't create an entry.
-                return null;
-            }
-
-            var replEval = buffer.GetReplEvaluator();
-            if (replEval != null) {
-                // We have a repl window, create an untracked module.
-                return _pyAnalyzer.AddModule(null, null, analysisCookie);
-            }
-
-            string path = buffer.GetFilePath();
-            if (path == null) {
-                return null;
-            }
-
-            IProjectEntry entry;
-            if (!_projectFiles.TryGetValue(path, out entry)) {
-                if (buffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                    string modName;
-                    try {
-                        modName = ModulePath.FromFullPath(path).ModuleName;
-                    } catch (ArgumentException) {
-                        modName = null;
-                    }
-
-                    IPythonProjectEntry[] reanalyzeEntries = null;
-                    if (!string.IsNullOrEmpty(modName)) {
-                        reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
-                    }
-
-                    entry = _pyAnalyzer.AddModule(
-                        modName,
-                        buffer.GetFilePath(),
-                        analysisCookie
-                    );
-
-                    if (reanalyzeEntries != null) {
-                        foreach (var entryRef in reanalyzeEntries) {
-                            _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
-                        }
-                    }
-                } else if (buffer.ContentType.IsOfType("XAML")) {
-                    entry = _pyAnalyzer.AddXamlFile(buffer.GetFilePath());
-                } else {
-                    return null;
-                }
-
-                _projectFiles[path] = entry;
-
-                if (ImplicitProject && ShouldAnalyzePath(path)) { // don't analyze std lib
-                    QueueDirectoryAnalysis(path);
-                }
-            }
-
-            return entry;
-        }
-#endif
-        private void QueueDirectoryAnalysis(string path) {
-            ThreadPool.QueueUserWorkItem(x => {
-                AnalyzeDirectory(PathUtils.NormalizeDirectoryPath(Path.GetDirectoryName(path)));
-            });
-        }
-
         private bool ShouldAnalyzePath(string path) {
             foreach (var fact in _allFactories) {
                 if (PathUtils.IsValidPath(fact.Configuration.InterpreterPath) &&
@@ -1782,20 +1698,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal IEnumerable<KeyValuePair<string, IProjectEntry>> LoadedFiles {
-            get {
-                return _projectFiles;
-            }
-        }
-
-        internal IProjectEntry GetEntryFromFile(string path) {
-            IProjectEntry res;
-            if (_projectFiles.TryGetValue(path, out res)) {
-                return res;
-            }
-            return null;
-        }
-
         private static NameExpression GetFirstNameExpression(Statement stmt) {
             return GetFirstNameExpression(Statement.GetExpression(stmt));
         }
@@ -1854,16 +1756,6 @@ namespace Microsoft.PythonTools.Intellisense {
         internal AutoResetEvent QueueActivityEvent {
             get {
                 return _queueActivityEvent;
-            }
-        }
-
-        /// <summary>
-        /// True if the project is an implicit project and it should model files on disk in addition
-        /// to files which are explicitly added.
-        /// </summary>
-        internal bool ImplicitProject {
-            get {
-                return _options.implicitProject;
             }
         }
 
@@ -2061,13 +1953,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region Implementation Details
 
-        private static Stopwatch _stopwatch = MakeStopWatch();
-
-        internal static Stopwatch Stopwatch {
-            get {
-                return _stopwatch;
-            }
-        }
 
         private AP.CompletionsResponse GetNormalCompletions(IProjectEntry projectEntry, AP.CompletionsRequest request) {
             int version;
@@ -2100,12 +1985,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 return text[location - 1] == ' ';
             }
             return false;
-        }
-
-        private static Stopwatch MakeStopWatch() {
-            var res = new Stopwatch();
-            res.Start();
-            return res;
         }
 
         /// <summary>
@@ -2488,14 +2367,6 @@ namespace Microsoft.PythonTools.Intellisense {
         #region IDisposable Members
 
         public void Dispose() {
-            foreach (var pathAndEntry in _projectFiles) {
-#if PORT
-                _errorProvider.Clear(pathAndEntry.Value, ParserTaskMoniker);
-                _errorProvider.Clear(pathAndEntry.Value, UnresolvedImportMoniker);
-                _commentTaskProvider.Clear(pathAndEntry.Value, ParserTaskMoniker);
-#endif
-            }
-
             _analysisQueue.AnalysisComplete -= AnalysisQueue_Complete;
             _analysisQueue.Dispose();
             if (_pyAnalyzer != null) {

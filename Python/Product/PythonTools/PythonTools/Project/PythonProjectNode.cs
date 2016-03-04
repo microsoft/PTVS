@@ -670,7 +670,7 @@ namespace Microsoft.PythonTools.Project {
                     foreach (var fileProject in _analyzer.LoadedFiles) {
                         string file = fileProject.Key;
                         var projectEntry = fileProject.Value;
-                        string searchPathEntry = GetSearchPathEntry(fileProject.Value);
+                        string searchPathEntry = fileProject.Value.SearchPathEntry;
                         if (searchPathEntry != null && !newDirs.Contains(searchPathEntry)) {
                             _analyzer.UnloadFile(projectEntry);
                         }
@@ -698,9 +698,9 @@ namespace Microsoft.PythonTools.Project {
                 if (File.Exists(dir)) {
                     // If it's a file and not a directory, parse it as a .zip
                     // file in accordance with PEP 273.
-                    await _analyzer.AnalyzeZipArchive(dir, onFileAnalyzed: entry => SetSearchPathEntry(entry, dir));
+                    await _analyzer.AnalyzeZipArchive(dir);
                 } else if (Directory.Exists(dir)) {
-                    await _analyzer.AnalyzeDirectory(dir, onFileAnalyzed: entry => SetSearchPathEntry(entry, dir));
+                    await _analyzer.AnalyzeDirectory(dir);
                 }
             }
         }

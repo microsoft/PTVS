@@ -48,9 +48,13 @@ namespace Microsoft.PythonTools.Navigation {
                     return LibraryNodeType.Members;
             }
         }
-        protected PythonLibraryNode(PythonLibraryNode node) : base(node) { }
+        protected PythonLibraryNode(PythonLibraryNode node) : base(node) {
+            _value = node._value;
+        }
 
-        protected PythonLibraryNode(PythonLibraryNode node, string newFullName) : base(node, newFullName) { }
+        protected PythonLibraryNode(PythonLibraryNode node, string newFullName) : base(node, newFullName) {
+            _value = node._value;
+        }
 
         public override LibraryNode Clone() {
             return new PythonLibraryNode(this);
@@ -125,7 +129,9 @@ namespace Microsoft.PythonTools.Navigation {
                         case "enddecl": kind = VSOBDESCRIPTIONSECTION.OBDS_ENDDECL; break;
                         case "name": kind = VSOBDESCRIPTIONSECTION.OBDS_NAME; break;
                         case "param": kind = VSOBDESCRIPTIONSECTION.OBDS_PARAM; break;
+                        case "comma": kind = VSOBDESCRIPTIONSECTION.OBDS_COMMA; break;
                         default: kind = VSOBDESCRIPTIONSECTION.OBDS_MISC; break;
+
                     }
                     description.AddDescriptionText3(desc.text, kind, null);
                 }

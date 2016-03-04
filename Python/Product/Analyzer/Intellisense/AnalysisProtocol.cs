@@ -518,7 +518,25 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class AddZipArchiveRequest : Request<Response> {
             public const string Command = "addZipArchive";
             public string archive;
+
             public override string command => Command;
+        }
+
+        public sealed class ChildFileAnalyzed : Event {
+            public const string Name = "childFileAnalyzed";
+
+            /// <summary>
+            /// The directory or zip file which was asked to be analyzed
+            /// </summary>
+            public string parent;
+            /// <summary>
+            /// The filename which got added
+            /// </summary>
+            public string filename;
+
+            public int fileId;
+
+            public override string name => Name;
         }
 
         public class TopLevelCompletionsRequest : Request<CompletionsResponse> {
@@ -662,7 +680,6 @@ namespace Microsoft.PythonTools.Intellisense {
             public const string Name = "optionsChanged";
 
             public Severity indentation_inconsistency_severity;
-            public bool implicitProject;
             public int? crossModuleAnalysisLimit;
 
             public override string name => Name;

@@ -64,7 +64,16 @@ namespace Microsoft.PythonTools.Analysis {
         /// <summary>
         /// Only include members which are directly declared
         /// </summary>
-        DeclaredOnly = 0x40
+        DeclaredOnly = 0x40,
+
+        /// <summary>
+        /// Don't allow the evaluation of the members to recurse beyond a single level.
+        /// 
+        /// That is, "type.__class__.__class__" would return no results because type.__class__
+        /// returns type, and the 2nd member access will not continue to recurse through
+        /// the hierarchy.
+        /// </summary>
+        NoMemberRecursion = 0x80
     }
 
     internal static class GetMemberOptionsExtensions {

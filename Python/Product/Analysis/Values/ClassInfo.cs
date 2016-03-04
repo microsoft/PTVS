@@ -312,7 +312,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// <summary>
         /// Gets all members of this class that are not inherited from its base classes.
         /// </summary>
-        public IDictionary<string, IAnalysisSet> GetAllImmediateMembers(IModuleContext moduleContext) {
+        public IDictionary<string, IAnalysisSet> GetAllImmediateMembers(IModuleContext moduleContext, GetMemberOptions options) {
             var result = new Dictionary<string, IAnalysisSet>(Scope.VariableCount);
 
             foreach (var v in Scope.AllVariables) {
@@ -322,11 +322,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            if (!result.ContainsKey("__doc__")) {
-                result["__doc__"] = GetObjectMember(moduleContext, "__doc__");
-            }
-            if (!result.ContainsKey("__class__")) {
-                result["__class__"] = GetObjectMember(moduleContext, "__class__");
+            if (!options.HasFlag(GetMemberOptions.DeclaredOnly)) {
+                if (!result.ContainsKey("__doc__")) {
+                    result["__doc__"] = GetObjectMember(moduleContext, "__doc__");
+                }
+                if (!result.ContainsKey("__class__")) {
+                    result["__class__"] = GetObjectMember(moduleContext, "__class__");
+                }
             }
 
             return result;
@@ -335,9 +337,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             IDictionary<string, IAnalysisSet> result;
             if (options.HasFlag(GetMemberOptions.DeclaredOnly)) {
-                result = GetAllImmediateMembers(moduleContext);
+                result = GetAllImmediateMembers(moduleContext, options);
             } else {
-                result = _mro.GetAllMembers(moduleContext);
+                result = _mro.GetAllMembers(moduleContext, options);
             }
 
             if (_metaclass != null) {
@@ -740,14 +742,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
-            return GetAllMembersOfMro(this, moduleContext);
+        public IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options) {
+            return GetAllMembersOfMro(this, moduleContext, options);
         }
 
         /// <summary>
         /// Compute a list of all members, given the MRO list of types, and taking override rules into account.
         /// </summary>
-        public static IDictionary<string, IAnalysisSet> GetAllMembersOfMro(IEnumerable<IAnalysisSet> mro, IModuleContext moduleContext) {
+        public static IDictionary<string, IAnalysisSet> GetAllMembersOfMro(IEnumerable<IAnalysisSet> mro, IModuleContext moduleContext, GetMemberOptions options) {
             var result = new Dictionary<string, IAnalysisSet>();
 
             // MRO is a list of namespaces corresponding to classes, but each entry can be a union of several different classes.
@@ -759,7 +761,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     // If it's another non-builtin class, we don't want its inherited members, since we'll account
                     // for them while processing our own MRO - we only want its immediate members.
                     var classInfo = ns as ClassInfo;
-                    var classMembers = classInfo != null ? classInfo.GetAllImmediateMembers(moduleContext) : ns.GetAllMembers(moduleContext);
+                    var classMembers = classInfo != null ? classInfo.GetAllImmediateMembers(moduleContext, options) : ns.GetAllMembers(moduleContext);
 
                     foreach (var kvp in classMembers) {
                         IAnalysisSet existing;

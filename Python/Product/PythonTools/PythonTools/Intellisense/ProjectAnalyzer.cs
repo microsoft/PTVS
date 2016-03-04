@@ -124,7 +124,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _conn.SendEventAsync(
                 new AP.OptionsChangedEvent() {
-                    implicitProject = implicitProject,
                     indentation_inconsistency_severity = _pyService.GeneralOptions.IndentationInconsistencySeverity
                 }
             ).DoNotWait();
@@ -166,7 +165,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     // can race with dispose of the process...
                 }
             });
-            conn.EventReceived += _conn_EventReceived;
+            conn.EventReceived += ConnectionEventReceived;
             proc = process;
             return conn;
         }
@@ -186,7 +185,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal event EventHandler<AbnormalAnalysisExitEventArgs> AbnormalAnalysisExit;
 
-        private void _conn_EventReceived(object sender, EventReceivedEventArgs e) {
+        private void ConnectionEventReceived(object sender, EventReceivedEventArgs e) {
             Debug.WriteLine(String.Format("Event received: {0}", e.Event.name));
 
             switch (e.Event.name) {
@@ -203,6 +202,16 @@ namespace Microsoft.PythonTools.Intellisense {
                     } else {
                         Debug.WriteLine("Unknown file id for fileParsed event: {0}", parsed.fileId);
                     }
+                    break;
+                case AP.ChildFileAnalyzed.Name:
+                    var childFile = (AP.ChildFileAnalyzed)e.Event;
+                    var entry = new AnalysisEntry(
+                        this,
+                        childFile.filename,
+                        childFile.fileId
+                    );
+                    entry.SearchPathEntry = childFile.parent;
+                    _projectFilesById[childFile.fileId] = _projectFiles[childFile.filename] = entry;
                     break;
             }
         }
@@ -1036,8 +1045,6 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
         public async Task AnalyzeDirectory(string dir, Action<AnalysisEntry> onFileAnalyzed = null) {
             await SendRequestAsync(new AP.AddDirectoryRequest() { dir = dir }).ConfigureAwait(false);
-
-            // TODO: Need to deal with onFileAnalyzed event
         }
 
         /// <summary>
@@ -1051,7 +1058,6 @@ namespace Microsoft.PythonTools.Intellisense {
             await SendRequestAsync(
                 new AP.AddZipArchiveRequest() { archive = zipFileName }
             ).ConfigureAwait(false);
-            //_analysisQueue.Enqueue(new AddZipArchiveAnalysis(zipFileName, onFileAnalyzed, this), AnalysisPriority.High);
             // TODO: Need to deal with onFileAnalyzed event
         }
 

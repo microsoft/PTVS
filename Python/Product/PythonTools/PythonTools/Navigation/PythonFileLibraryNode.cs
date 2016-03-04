@@ -228,7 +228,8 @@ namespace Microsoft.PythonTools.Navigation {
                 analysis,
                 _member,
                 new SourceLocation(0, 1, 1),
-                GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DetailedInformation | GetMemberOptions.DeclaredOnly
+                GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DetailedInformation | GetMemberOptions.DeclaredOnly |
+                GetMemberOptions.NoMemberRecursion
             ).Result;
             return members;
         }

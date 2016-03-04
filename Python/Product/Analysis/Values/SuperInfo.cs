@@ -68,11 +68,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             if (options.HasFlag(GetMemberOptions.DeclaredOnly)) {
-                return Values.Mro.GetAllMembersOfMro(mro.Skip(1).Take(1), moduleContext);
+                return Values.Mro.GetAllMembersOfMro(mro.Skip(1).Take(1), moduleContext, options);
             }
 
             // First item in MRO list is always the class itself.
-            return Values.Mro.GetAllMembersOfMro(mro.Skip(1), moduleContext);
+            return Values.Mro.GetAllMembersOfMro(mro.Skip(1), moduleContext, options);
         }
 
         private AnalysisValue GetObjectMember(IModuleContext moduleContext, string name) {
