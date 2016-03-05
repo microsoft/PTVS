@@ -2335,6 +2335,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 IPythonProjectEntry pyEntry = projEntry as IPythonProjectEntry;
                 if (pyEntry != null) {
+                    SendParseComplete(pyEntry, new SortedDictionary<int, ParseResult>());
                     // failed to parse, keep the UpdateTree calls balanced
                     pyEntry.UpdateTree(null, null);
                 }

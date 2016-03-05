@@ -179,7 +179,12 @@ namespace Microsoft.PythonTools.Analysis {
             var catalog = new AssemblyCatalog(typeof(IInterpreterOptionsService).Assembly);
             var container = new CompositionContainer(catalog);
             var interpConfig = container.GetExportedValue<IInterpreterOptionsService>();
-            var factory = interpConfig.FindInterpreter(_id, _version);
+            IPythonInterpreterFactory factory;
+            if (_id == InterpreterFactoryCreator.AnalysisOnlyFactoryGuid) {
+                factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(_version);
+            } else {
+                factory = interpConfig.FindInterpreter(_id, _version);
+            }
             
             _analyzer = new OutOfProcProjectAnalyzer(
                 Console.OpenStandardOutput(),

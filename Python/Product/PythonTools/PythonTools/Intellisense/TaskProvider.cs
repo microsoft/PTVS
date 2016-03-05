@@ -331,7 +331,7 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     sealed class TaskProvider : IVsTaskProvider, IDisposable, IVsTaskListEvents {
-        private volatile Dictionary<string, VSTASKPRIORITY> _tokens;
+        private volatile Dictionary<string, VSTASKPRIORITY> _tokens = new Dictionary<string, VSTASKPRIORITY>();
         private readonly Dictionary<EntryKey, List<TaskProviderItem>> _items;
         private readonly Dictionary<EntryKey, HashSet<ITextBuffer>> _errorSources;
         private readonly object _itemsLock = new object();

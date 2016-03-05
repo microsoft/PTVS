@@ -190,6 +190,9 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.WriteLine(String.Format("Event received: {0}", e.Event.name));
 
             switch (e.Event.name) {
+                case AP.AnalysisCompleteEvent.Name:
+                    _analysisComplete = true;
+                    break;
                 case AP.FileAnalysisCompleteEvent.Name:
                     OnAnalysisComplete(e);
                     break;
@@ -749,10 +752,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal async void WaitForCompleteAnalysis(Func<int, bool> itemsLeftUpdated) {
+        internal void WaitForCompleteAnalysis(Func<int, bool> itemsLeftUpdated) {
             if (IsAnalyzing) {
                 while (IsAnalyzing) {
-                    var res = await SendRequestAsync(new AP.AnalysisStatusRequest()).ConfigureAwait(false);
+                    var res = SendRequestAsync(new AP.AnalysisStatusRequest()).Result;
 
                     if (!itemsLeftUpdated(res.itemsLeft)) {
                         break;

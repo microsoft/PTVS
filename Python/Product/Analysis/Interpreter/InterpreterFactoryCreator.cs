@@ -25,6 +25,8 @@ namespace Microsoft.PythonTools.Interpreter {
     /// executable file and cached completion database.
     /// </summary>
     public static class InterpreterFactoryCreator {
+        public static readonly Guid AnalysisOnlyFactoryGuid = new Guid("{3E2D2684-58F3-47E2-B121-58A602EA2382}");
+
         /// <summary>
         /// Creates a new interpreter factory with the specified options. This
         /// interpreter always includes a cached completion database.
