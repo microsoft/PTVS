@@ -426,10 +426,16 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            var response = await SendRequestAsync(new AP.AddFileRequest() { path = path }).ConfigureAwait(false);
+            AnalysisEntry res;
+            if (!_projectFiles.TryGetValue(path, out res)) {
+                Interlocked.Increment(ref _parsePending);
 
-            var res = _projectFilesById[response.fileId] = _projectFiles[path] = new AnalysisEntry(this, path, response.fileId);
-            res.AnalysisCookie = new FileCookie(path);
+                var response = await SendRequestAsync(new AP.AddFileRequest() { path = path }).ConfigureAwait(false);
+
+                res = _projectFilesById[response.fileId] = _projectFiles[path] = new AnalysisEntry(this, path, response.fileId);
+                res.AnalysisCookie = new FileCookie(path);
+            }
+
             return res;
         }
 
@@ -1146,7 +1152,7 @@ namespace Microsoft.PythonTools.Intellisense {
         #endregion
 
         internal async Task<T> SendRequestAsync<T>(Request<T> request) where T : Response, new() {
-            Debug.WriteLine("Sending request {0}", request.command);
+            Debug.WriteLine(String.Format("Sending request {0}", request.command));
             return await _conn.SendRequestAsync(request, _processExitedCancelSource.Token).ConfigureAwait(false);
         }
 
