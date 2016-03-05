@@ -25,7 +25,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly string _expr;
         private readonly ITrackingSpan _span;
         private readonly AnalysisVariable[] _variables;
-        private readonly VsProjectAnalyzer _analyzer;
         private readonly string _privatePrefix;
         private readonly string _memberName;
 
