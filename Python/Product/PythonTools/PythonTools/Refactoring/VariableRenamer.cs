@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             bool hasVariables = false;
-            foreach (var variable in analysis.Values) {
+            foreach (var variable in analysis.Variables) {
                 if (variable.Type == VariableType.Definition || variable.Type == VariableType.Reference) {
                     hasVariables = true;
                     break;
@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
                 variables = paramVars;
             } else {
-                variables = analysis.Values;
+                variables = analysis.Variables;
 
             }
 

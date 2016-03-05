@@ -130,6 +130,74 @@ namespace Microsoft.PythonTools.Intellisense {
             CommentTaskTokensChanged(null, EventArgs.Empty);
         }
 
+        #region Public API
+
+        public PythonLanguageVersion LanguageVersion {
+            get {
+                return _interpreterFactory.GetLanguageVersion();
+            }
+        }
+
+        public void AddUser() {
+            Interlocked.Increment(ref _userCount);
+        }
+
+        /// <summary>
+        /// Reduces the number of known users by one and returns true if the
+        /// analyzer should be disposed.
+        /// </summary>
+        public bool RemoveUser() {
+            return Interlocked.Decrement(ref _userCount) == 0;
+        }
+
+        #region IDisposable Members
+
+        public void Dispose() {
+            _disposing = true;
+            foreach (var entry in _projectFiles.Values) {
+                _taskProvider.Clear(entry, ParserTaskMoniker);
+                _taskProvider.Clear(entry, UnresolvedImportMoniker);
+            }
+
+            _taskProvider.TokensChanged -= CommentTaskTokensChanged;
+            try {
+                if (!_analysisProcess.HasExited) {
+                    _analysisProcess.Kill();
+                }
+            } catch (InvalidOperationException) {
+                // race w/ process exit...
+            }
+            _analysisProcess.Dispose();
+        }
+
+        #endregion
+
+        /// <summary>
+        /// Analyzes a complete directory including all of the contained files and packages.
+        /// </summary>
+        /// <param name="dir">Directory to analyze.</param>
+        /// <param name="onFileAnalyzed">If specified, this callback is invoked for every <see cref="IProjectEntry"/>
+        /// that is analyzed while analyzing this directory.</param>
+        /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
+        public async Task AnalyzeDirectory(string dir) {
+            await SendRequestAsync(new AP.AddDirectoryRequest() { dir = dir }).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        /// Analyzes a .zip file including all of the contained files and packages.
+        /// </summary>
+        /// <param name="dir">.zip file to analyze.</param>
+        /// <param name="onFileAnalyzed">If specified, this callback is invoked for every <see cref="IProjectEntry"/>
+        /// that is analyzed while analyzing this directory.</param>
+        /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
+        public async Task AnalyzeZipArchive(string zipFileName) {
+            await SendRequestAsync(
+                new AP.AddZipArchiveRequest() { archive = zipFileName }
+            ).ConfigureAwait(false);
+        }
+
+        #endregion
+
         private Connection StartConnection(IPythonInterpreterFactory factory, string libAnalyzer, out Process proc) {
             var psi = new ProcessStartInfo(libAnalyzer,
                 String.Format(
@@ -235,19 +303,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public void AddUser() {
-            Interlocked.Increment(ref _userCount);
-        }
-
-        /// <summary>
-        /// Reduces the number of known users by one and returns true if the
-        /// analyzer should be disposed.
-        /// </summary>
-        public bool RemoveUser() {
-            return Interlocked.Decrement(ref _userCount) == 0;
-        }
-
-
         internal static string GetZipFileName(AnalysisEntry entry) {
             object result;
             entry.Properties.TryGetValue(_zipFileName, out result);
@@ -304,11 +359,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public void ConnectErrorList(AnalysisEntry projEntry, ITextBuffer buffer) {
+        internal void ConnectErrorList(AnalysisEntry projEntry, ITextBuffer buffer) {
             _taskProvider.AddBufferForErrorSource(projEntry, ParserTaskMoniker, buffer);
         }
 
-        public void DisconnectErrorList(AnalysisEntry projEntry, ITextBuffer buffer) {
+        internal void DisconnectErrorList(AnalysisEntry projEntry, ITextBuffer buffer) {
             _taskProvider.RemoveBufferForErrorSource(projEntry, ParserTaskMoniker, buffer);
         }
 
@@ -489,7 +544,6 @@ namespace Microsoft.PythonTools.Intellisense {
             var definitions = await file.Analyzer.SendRequestAsync(req);
 
             return new ExpressionAnalysis(
-                file.Analyzer,
                 expr,
                 null,
                 definitions.variables.Select(file.Analyzer.ToAnalysisVariable).ToArray(),
@@ -514,7 +568,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 var definitions = await analysis.File.Analyzer.SendRequestAsync(req);
 
                 return new ExpressionAnalysis(
-                    analysis.File.Analyzer,
                     analysis.Text,
                     analysis.Span,
                     definitions.variables.Select(analysis.File.Analyzer.ToAnalysisVariable).ToArray(),
@@ -684,7 +737,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return MissingImportAnalysis.Empty;
         }
 
-        public static async Task AddImport(AnalysisEntry projectFile, string fromModule, string name, ITextView view, ITextBuffer buffer) {
+        internal static async Task AddImport(AnalysisEntry projectFile, string fromModule, string name, ITextView view, ITextBuffer buffer) {
             var changes = await projectFile.Analyzer.AddImport(
                 projectFile,
                 fromModule,
@@ -936,12 +989,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public PythonLanguageVersion LanguageVersion {
-            get {
-                return _interpreterFactory.GetLanguageVersion();
-            }
-        }
-
         internal bool ShouldEvaluateForCompletion(string source) {
             switch (_pyService.GetInteractiveOptions(_interpreterFactory).ReplIntellisenseMode) {
                 case ReplIntellisenseMode.AlwaysEvaluate: return true;
@@ -1074,30 +1121,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        /// <summary>
-        /// Analyzes a complete directory including all of the contained files and packages.
-        /// </summary>
-        /// <param name="dir">Directory to analyze.</param>
-        /// <param name="onFileAnalyzed">If specified, this callback is invoked for every <see cref="IProjectEntry"/>
-        /// that is analyzed while analyzing this directory.</param>
-        /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
-        public async Task AnalyzeDirectory(string dir) {
-            await SendRequestAsync(new AP.AddDirectoryRequest() { dir = dir }).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Analyzes a .zip file including all of the contained files and packages.
-        /// </summary>
-        /// <param name="dir">.zip file to analyze.</param>
-        /// <param name="onFileAnalyzed">If specified, this callback is invoked for every <see cref="IProjectEntry"/>
-        /// that is analyzed while analyzing this directory.</param>
-        /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
-        public async Task AnalyzeZipArchive(string zipFileName) {
-            await SendRequestAsync(
-                new AP.AddZipArchiveRequest() { archive = zipFileName }
-            ).ConfigureAwait(false);
-        }
-
         internal async Task StopAnalyzingDirectory(string directory) {
             await SendRequestAsync(new AP.RemoveDirectoryRequest() { dir = directory }).ConfigureAwait(false);
         }
@@ -1129,28 +1152,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal event EventHandler<EntryEventArgs> ShouldWarnOnLaunchChanged;
-
-        #endregion
-
-        #region IDisposable Members
-
-        public void Dispose() {
-            _disposing = true;
-            foreach (var entry in _projectFiles.Values) {
-                _taskProvider.Clear(entry, ParserTaskMoniker);
-                _taskProvider.Clear(entry, UnresolvedImportMoniker);
-            }
-
-            _taskProvider.TokensChanged -= CommentTaskTokensChanged;
-            try {
-                if (!_analysisProcess.HasExited) {
-                    _analysisProcess.Kill();
-                }
-            } catch (InvalidOperationException) {
-                // race w/ process exit...
-            }
-            _analysisProcess.Dispose();
-        }
 
         #endregion
 
@@ -1483,19 +1484,19 @@ namespace Microsoft.PythonTools.Intellisense {
             return res.ToArray();
         }
 
-        public async Task<ProjectReference[]> GetReferences() {
+        internal async Task<ProjectReference[]> GetReferences() {
             var res = await SendRequestAsync(new AP.GetReferencesRequest()).ConfigureAwait(false);
 
             return res.references.Select(AP.ProjectReference.Convert).ToArray();
         }
 
-        public async Task<AP.AddReferenceResponse> AddReference(ProjectReference reference, CancellationToken token = default(CancellationToken)) {
+        internal async Task<AP.AddReferenceResponse> AddReference(ProjectReference reference, CancellationToken token = default(CancellationToken)) {
             return await SendRequestAsync(new AP.AddReferenceRequest() {
                 reference = AP.ProjectReference.Convert(reference)
             }).ConfigureAwait(false);
         }
 
-        public async Task<AP.RemoveReferenceResponse> RemoveReference(ProjectReference reference) {
+        internal async Task<AP.RemoveReferenceResponse> RemoveReference(ProjectReference reference) {
             return await SendRequestAsync(
                 new AP.RemoveReferenceRequest() {
                     reference = AP.ProjectReference.Convert(reference)

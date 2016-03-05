@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// the path to the file, the analyzer, and the buffer parser being used to track changes to edits
     /// amongst o
     /// </summary>
-    public sealed class AnalysisEntry {
+    internal sealed class AnalysisEntry {
         private readonly int _fileId;
         private readonly string _path;
         public readonly VsProjectAnalyzer _analyzer;

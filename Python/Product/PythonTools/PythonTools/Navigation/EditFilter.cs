@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.Language {
                 var defs = await VsProjectAnalyzer.AnalyzeExpression(caret.Value);
 
                 Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
-                GetDefsRefsAndValues(_serviceProvider, defs.Expression, defs.Values, out definitions, out references, out values);
+                GetDefsRefsAndValues(_serviceProvider, defs.Expression, defs.Variables, out definitions, out references, out values);
 
                 if ((values.Count + definitions.Count) == 1) {
                     if (values.Count != 0) {
@@ -183,7 +183,7 @@ namespace Microsoft.PythonTools.Language {
             if (caret != null) {
                 var references = await VsProjectAnalyzer.AnalyzeExpression(caret.Value);
 
-                var locations = GetFindRefLocations(_serviceProvider, references.Expression, references.Values);
+                var locations = GetFindRefLocations(_serviceProvider, references.Expression, references.Variables);
 
                 ShowFindSymbolsDialog(references.Expression, locations);
             }
