@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
+    using Analysis;
     using AP = AnalysisProtocol;
 
     class PythonSuggestedImportAction : ISuggestedAction, IComparable<PythonSuggestedImportAction> {
@@ -34,10 +35,10 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly string _fromModule;
         private readonly ITextBuffer _buffer;
 
-        public PythonSuggestedImportAction(PythonSuggestedActionsSource source, ITextBuffer buffer, AP.ImportInfo import) {
+        public PythonSuggestedImportAction(PythonSuggestedActionsSource source, ITextBuffer buffer, ExportedMemberInfo import) {
             _source = source;
-            _fromModule = import.fromName;
-            _name = import.importName;
+            _fromModule = import.FromName;
+            _name = import.ImportName;
             _buffer = buffer;
         }
 

@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
+    using Analysis;
     using AP = AnalysisProtocol;
 
     /// <summary>
@@ -34,10 +35,10 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ITrackingSpan _span;
         private readonly string _name;
         private readonly VsProjectAnalyzer _analyzer;
-        private IEnumerable<AP.ImportInfo> _imports;
+        private IEnumerable<ExportedMemberInfo> _imports;
 
         private MissingImportAnalysis() {
-            _imports = Enumerable.Empty<AP.ImportInfo>();
+            _imports = Enumerable.Empty<ExportedMemberInfo>();
         }
 
         internal MissingImportAnalysis(string name, VsProjectAnalyzer state, ITrackingSpan span) {
@@ -53,7 +54,7 @@ namespace Microsoft.PythonTools.Intellisense {
         ///  so that you can break from the enumeration early and save significant work.
         /// </summary>
         /// <remarks>New in 2.2</remarks>
-        public async Task<IEnumerable<AP.ImportInfo>> GetAvailableImportsAsync(CancellationToken cancellationToken) {
+        public async Task<IEnumerable<ExportedMemberInfo>> GetAvailableImportsAsync(CancellationToken cancellationToken) {
             if (_imports != null) {
                 return _imports;
             }

@@ -23,7 +23,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Intellisense {
-    public static class AnalysisProtocol {
+    internal static class AnalysisProtocol {
         public static readonly Dictionary<string, Type> RegisteredTypes = CollectCommands();
 
         private static Dictionary<string, Type> CollectCommands() {

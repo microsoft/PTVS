@@ -1360,7 +1360,7 @@ namespace Microsoft.PythonTools.Intellisense {
             );
         }
 
-        internal async Task<AP.ImportInfo[]> FindNameInAllModules(string name, CancellationToken cancel = default(CancellationToken)) {
+        internal async Task<IEnumerable<ExportedMemberInfo>> FindNameInAllModules(string name, CancellationToken cancel = default(CancellationToken)) {
             CancellationTokenRegistration registration1 = default(CancellationTokenRegistration), registration2 = default(CancellationTokenRegistration);
             if (cancel.CanBeCanceled) {
                 CancellationTokenSource source = new CancellationTokenSource();
@@ -1374,7 +1374,7 @@ namespace Microsoft.PythonTools.Intellisense {
             try {
                 return (await _conn.SendRequestAsync(new AP.AvailableImportsRequest() {
                     name = name
-                }, cancel)).imports;
+                }, cancel)).imports.Select(x => new ExportedMemberInfo(x.fromName, x.importName));
             } finally {
                 registration1.Dispose();
                 registration2.Dispose();

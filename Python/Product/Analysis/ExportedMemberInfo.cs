@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Analysis {
     public struct ExportedMemberInfo {
         private readonly string _fromName, _name;
         
-        internal ExportedMemberInfo(string fromName, string name) {
+        public ExportedMemberInfo(string fromName, string name) {
             _fromName = fromName;
             _name = name;
         }
