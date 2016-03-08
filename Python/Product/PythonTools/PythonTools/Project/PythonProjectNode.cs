@@ -872,7 +872,8 @@ namespace Microsoft.PythonTools.Project {
                 factory.CreateInterpreter(),
                 factory,
                 interpreterService.Interpreters.ToArray(),
-                false
+                false,
+                FileName
             );
             res.AbnormalAnalysisExit += AnalysisProcessExited;
 

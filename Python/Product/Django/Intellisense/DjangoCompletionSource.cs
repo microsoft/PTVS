@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Html.Editor.Document;
@@ -27,8 +28,11 @@ using Microsoft.Web.Core.Text;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class DjangoCompletionSource : DjangoCompletionSourceBase {
-        public DjangoCompletionSource(IGlyphService glyphService, DjangoAnalyzer analyzer, ITextBuffer textBuffer)
+        private readonly IServiceProvider _serviceProvider;
+
+        public DjangoCompletionSource(IGlyphService glyphService, VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, ITextBuffer textBuffer)
             : base(glyphService, analyzer, textBuffer) {
+            _serviceProvider = serviceProvider;
         }
 
         public override void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
@@ -64,7 +68,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             artifact.Parse(artifactText);
 
             ITrackingSpan applicableSpan;
-            var completionSet = GetCompletionSet(session.GetOptions(_analyzer._serviceProvider), _analyzer, artifact.TokenKind, artifactText, artifact.InnerRange.Start, triggerPoint, out applicableSpan);
+            var completionSet = GetCompletionSet(session.GetOptions(_serviceProvider), _analyzer, artifact.TokenKind, artifactText, artifact.InnerRange.Start, triggerPoint, out applicableSpan);
             completionSets.Add(completionSet);
         }
 

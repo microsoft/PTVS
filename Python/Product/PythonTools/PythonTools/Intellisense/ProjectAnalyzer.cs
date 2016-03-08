@@ -100,7 +100,8 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonInterpreter interpreter,
             IPythonInterpreterFactory factory,
             IPythonInterpreterFactory[] allFactories,
-            bool implicitProject = true
+            bool implicitProject = true,
+            string projectFile = null
         ) {
             _taskProvider = (TaskProvider)serviceProvider.GetService(typeof(TaskProvider));
             _unresolvedSquiggles = new UnresolvedImportSquiggleProvider(serviceProvider, _taskProvider);
@@ -117,7 +118,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _taskProvider.TokensChanged += CommentTaskTokensChanged;
 
-            _conn = StartConnection(factory, libAnalyzer, out _analysisProcess);
+            _conn = StartConnection(factory, libAnalyzer, projectFile, out _analysisProcess);
             _userCount = 1;
 
             Task.Run(() => _conn.ProcessMessages());
@@ -131,6 +132,30 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #region Public API
+
+        public void RegisterExtension(string path) {
+            _conn.SendEventAsync(
+                new AP.ExtensionAddedEvent() {
+                    path = path
+                }
+            );
+        }
+
+        /// <summary>
+        /// Send a command to an extension.  The extension should have been loaded using a 
+        /// RegisterExtension call.  The extension is implemented using IAnalysisExtension.
+        /// 
+        /// The extension name is provided by decorating the exported value with 
+        /// AnalysisExtensionNameAttribute.  The command ID and body are free form values
+        /// defined by the extension.
+        /// </summary>
+        public async Task<string> SendExtensionCommand(string extensionName, string commandId, string body) {
+            return (await _conn.SendRequestAsync(new AP.ExtensionRequest() {
+                extension = extensionName,
+                commandId = commandId,
+                body = body
+            }).ConfigureAwait(false)).response;
+        }
 
         public PythonLanguageVersion LanguageVersion {
             get {
@@ -198,14 +223,18 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #endregion
 
-        private Connection StartConnection(IPythonInterpreterFactory factory, string libAnalyzer, out Process proc) {
-            var psi = new ProcessStartInfo(libAnalyzer,
-                String.Format(
-                    "/id {0} /version {1} /interactive",
-                    factory.Id,
-                    factory.Configuration.Version
-                )
+        private Connection StartConnection(IPythonInterpreterFactory factory, string libAnalyzer, string projectFile, out Process proc) {
+            string args = String.Format(
+                "/id {0} /version {1} /interactive",
+                factory.Id,
+                factory.Configuration.Version
             );
+
+            if (projectFile != null) {
+                args += " /proj \"" + projectFile + "\"";
+            }
+
+            var psi = new ProcessStartInfo(libAnalyzer, args);
             psi.RedirectStandardInput = true;
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;
@@ -468,8 +497,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 OnAnalysisStarted();
 
                 var id = res.fileId;
-
-                entry = _projectFilesById[id] = _projectFiles[path] = new AnalysisEntry(this, path, id);
+                if (!_projectFilesById.TryGetValue(id, out entry)) {
+                    // we awaited between the check and the AddFileRequest, another add could
+                    // have snuck in.  So we check again here...
+                    entry = _projectFilesById[id] = _projectFiles[path] = new AnalysisEntry(this, path, id);
+                }
 
             }
             entry.AnalysisCookie = intellisenseCookie;
@@ -489,9 +521,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 Interlocked.Increment(ref _parsePending);
 
                 var response = await SendRequestAsync(new AP.AddFileRequest() { path = path }).ConfigureAwait(false);
-
-                res = _projectFilesById[response.fileId] = _projectFiles[path] = new AnalysisEntry(this, path, response.fileId);
-                res.AnalysisCookie = new FileCookie(path);
+                
+                // we awaited between the check and the AddFileRequest, another add could
+                // have snuck in.  So we check again here, and we'll leave the other cookie in 
+                // as it's likely a SnapshotCookie which we prefer over a FileCookie.
+                if (response.fileId != -1 && !_projectFilesById.TryGetValue(response.fileId, out res)) {
+                    res = _projectFilesById[response.fileId] = _projectFiles[path] = new AnalysisEntry(this, path, response.fileId);
+                    res.AnalysisCookie = new FileCookie(path);
+                }
             }
 
             return res;

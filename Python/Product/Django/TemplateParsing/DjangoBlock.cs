@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             if (variables.Length < max) {
                 var vars = context.Variables;
                 if (vars != null) {
-                    return CompletionInfo.ToCompletionInfo(vars.Keys, StandardGlyphGroup.GlyphGroupField);
+                    return CompletionInfo.ToCompletionInfo(vars, StandardGlyphGroup.GlyphGroupField);
                 }
             }
 

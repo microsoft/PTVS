@@ -657,6 +657,27 @@ namespace Microsoft.PythonTools.Intellisense {
             public int bufferId, version;
         }
 
+        public sealed class ExtensionAddedEvent : Event {
+            public const string Name = "extensionAdded";
+
+            public string path;
+
+            public override string name => Name;
+        }
+
+        public sealed class ExtensionRequest : Request<ExtensionResponse> {
+            public const string Command = "extensionRequest";
+
+            public override string command => Command;
+
+            public string extension;
+            public string commandId;
+            public string body;
+        }
+
+        public sealed class ExtensionResponse : Response {
+            public string response;
+        }
 
         /// <summary>
         /// Signals all files are analyzed
@@ -694,6 +715,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class CompletionValue {
             public DescriptionComponent[] description;
             public string doc;
+            public AnalysisReference[] locations;
         }
         
         public sealed class DescriptionComponent {

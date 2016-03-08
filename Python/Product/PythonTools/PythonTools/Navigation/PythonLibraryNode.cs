@@ -16,6 +16,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -25,6 +27,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Navigation {
     internal class PythonLibraryNode : CommonLibraryNode {
@@ -33,6 +36,15 @@ namespace Microsoft.PythonTools.Navigation {
         public PythonLibraryNode(LibraryNode parent, CompletionResult value, IVsHierarchy hierarchy, uint itemId, IList<LibraryNode> children)
             : base(parent, value.Name, value.Name, hierarchy, itemId, GetLibraryNodeType(value, parent), children: children) {
             _value = value;
+            bool hasLocation = false;
+            foreach (var completion in value.Values) {
+                if (completion.locations.Any()) {
+                    hasLocation = true;
+                }
+            }
+            if (hasLocation) {
+                CanGoToSource = true;
+            }
         }
 
         private static LibraryNodeType GetLibraryNodeType(CompletionResult value, LibraryNode parent) {
@@ -47,6 +59,7 @@ namespace Microsoft.PythonTools.Navigation {
                 default:
                     return LibraryNodeType.Members;
             }
+
         }
         protected PythonLibraryNode(PythonLibraryNode node) : base(node) {
             _value = node._value;
@@ -138,6 +151,29 @@ namespace Microsoft.PythonTools.Navigation {
             }
         }
 
+        public override void GotoSource(VSOBJGOTOSRCTYPE gotoType) {
+            // We do not support the "Goto Reference"
+            if (VSOBJGOTOSRCTYPE.GS_REFERENCE == gotoType) {
+                return;
+            }
+
+            foreach (var completion in _value.Values) {
+                foreach (var location in completion.locations) {
+                    if (File.Exists(location.file)) {
+                        PythonToolsPackage.NavigateTo(
+                            Site,
+                            location.file,
+                            Guid.Empty,
+                            location.line - 1,
+                            location.column - 1
+                        );
+                        break;
+                    }
+                }
+            }
+
+
+        }
 
         public override int GetLibGuid(out Guid pGuid) {
             pGuid = new Guid(CommonConstants.LibraryGuid);

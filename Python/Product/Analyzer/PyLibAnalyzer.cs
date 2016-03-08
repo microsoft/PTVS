@@ -49,10 +49,11 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly List<string> _baseDb;
         private readonly string _logPrivate, _logGlobal, _logDiagnostic;
         private readonly bool _dryRun;
-        private readonly string _waitForAnalysis;
+        private readonly string _waitForAnalysis, _projectFile;
         private readonly int _repeatCount;
 
         private bool _all, _interactive;
+
         private FileStream _pidMarkerFile;
 
         private readonly AnalyzerStatusUpdater _updater;
@@ -81,6 +82,7 @@ namespace Microsoft.PythonTools.Analysis {
             Console.WriteLine(" /id         [GUID]             - specify GUID of the interpreter being used");
             Console.WriteLine(" /v[ersion]  [version]          - specify language version to be used (x.y format)");
             Console.WriteLine(" /interactive                   - start interactive analyzer");
+            Console.WriteLine(" /proj       [project file]     - specify project file for source interpreters");
 
             Console.WriteLine(" /py[thon]   [filename]         - full path to the Python interpreter to use");
             Console.WriteLine(" /lib[rary]  [directory]        - full path to the Python library to analyze");
@@ -176,8 +178,12 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private async Task RunInteractive() {
+            List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
+            var aggCatalog = new AggregateCatalog();
             var catalog = new AssemblyCatalog(typeof(IInterpreterOptionsService).Assembly);
-            var container = new CompositionContainer(catalog);
+            aggCatalog.Catalogs.Add(catalog);
+
+            var container = new CompositionContainer(aggCatalog);
             var interpConfig = container.GetExportedValue<IInterpreterOptionsService>();
             IPythonInterpreterFactory factory;
             if (_id == InterpreterFactoryCreator.AnalysisOnlyFactoryGuid) {
@@ -185,15 +191,40 @@ namespace Microsoft.PythonTools.Analysis {
             } else {
                 factory = interpConfig.FindInterpreter(_id, _version);
             }
-            
-            _analyzer = new OutOfProcProjectAnalyzer(
-                Console.OpenStandardOutput(),
-                Console.OpenStandardInput(),
-                factory,
-                interpConfig.Interpreters.ToArray()
-            );
 
-            await _analyzer.ProcessMessages();
+            MSBuildProjectInterpreterFactoryProvider msbuildProvider = null;
+            try {
+                if (factory == null && _projectFile != null) {
+                    var proj = new Build.Evaluation.Project(_projectFile);
+                    msbuildProvider = new MSBuildProjectInterpreterFactoryProvider(interpConfig, proj);
+                    try {
+                        msbuildProvider.DiscoverInterpreters();
+                    } catch (InvalidDataException) {
+                        // This exception can be safely ignored here.
+                    }
+
+                    factory = msbuildProvider.ActiveInterpreter;
+                }
+
+                if (factory == null) {
+                    Console.Error.WriteLine("No active interpreter found for interpreter ID: {0}", _id);
+                }
+
+                _analyzer = new OutOfProcProjectAnalyzer(
+                    Console.OpenStandardOutput(),
+                    Console.OpenStandardInput(),
+                    factory,
+                    interpConfig.Interpreters.ToArray(),
+                    container,
+                   aggCatalog
+                );
+
+                await _analyzer.ProcessMessages();
+            } finally {
+                if (msbuildProvider != null) {
+                    msbuildProvider.Dispose();
+                }
+            }
         }
 
         private async Task RunWorker() {
@@ -235,6 +266,7 @@ namespace Microsoft.PythonTools.Analysis {
             bool dryRun,
             string waitForAnalysis,
             int repeatCount,
+            string projectFile = null,
             bool interactive = false
         ) {
             _id = id;
@@ -250,6 +282,7 @@ namespace Microsoft.PythonTools.Analysis {
             _waitForAnalysis = waitForAnalysis;
             _repeatCount = repeatCount;
             _interactive = interactive;
+            _projectFile = projectFile;
 
             _scrapeFileGroups = new List<List<ModulePath>>();
             _analyzeFileGroups = new List<List<ModulePath>>();
@@ -331,7 +364,7 @@ namespace Microsoft.PythonTools.Analysis {
             string interpreter, outDir;
             var library = new List<PythonLibraryPath>();
             List<string> baseDb;
-            string logPrivate, logGlobal, logDiagnostic;
+            string logPrivate, logGlobal, logDiagnostic, projectFile = null;
             bool rescanAll, dryRun, interactive = false;
             int repeatCount;
 
@@ -339,6 +372,9 @@ namespace Microsoft.PythonTools.Analysis {
 
             if (options.ContainsKey("interactive")) {
                 interactive = true;
+            }
+            if (options.TryGetValue("proj", out value)) {
+                projectFile = value;
             }
 
             if (!options.TryGetValue("id", out value)) {
@@ -461,6 +497,7 @@ namespace Microsoft.PythonTools.Analysis {
                 dryRun,
                 waitForAnalysis, 
                 repeatCount,
+                projectFile,
                 interactive
             );
         }

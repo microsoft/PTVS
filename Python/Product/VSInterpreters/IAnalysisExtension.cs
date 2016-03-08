@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,28 +14,28 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Django.Analysis;
-using Microsoft.PythonTools.Django.Project;
-using Microsoft.PythonTools.Interpreter;
 
-namespace Microsoft.PythonTools.Django.TemplateParsing {
+namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
-    /// Provides context for returning the available variables/filters in a template file.
-    /// 
-    /// This is implemented as an interface so we can mock it out for the purposes of our tests
-    /// and not need to do a fully analysis of the Django library.
+    /// Provides an extension which registers against a given analyzer.
     /// </summary>
-    interface IDjangoCompletionContext {
-        string[] Variables {
-            get;
-        }
+    public interface IAnalysisExtension {
+        /// <summary>
+        /// Called when the extension is registered for an analyzer.
+        /// </summary>
+        /// <param name="analyzer"></param>
+        void Register(PythonAnalyzer analyzer);
 
-        Dictionary<string, TagInfo> Filters {
-            get;
-        }
-
-        Dictionary<string, PythonMemberType> GetMembers(string name);
+        /// <summary>
+        /// Handles an extension command.  The extension receives the command body and
+        /// returns a response.
+        /// </summary>
+        string HandleCommand(string commandId, string body);
     }
 }

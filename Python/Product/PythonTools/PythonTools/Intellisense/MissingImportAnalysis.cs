@@ -18,12 +18,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using Analysis;
-    using AP = AnalysisProtocol;
-
     /// <summary>
     /// Provides information about names which are missing import statements but the
     /// name refers to an identifier in another module.

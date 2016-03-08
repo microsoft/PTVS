@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -66,12 +67,16 @@ namespace Microsoft.PythonTools.Intellisense {
             { "HACK", AP.TaskPriority.high },
         };
         private AP.OptionsChangedEvent _options;
+        private readonly AggregateCatalog _catalog;
+        private readonly CompositionContainer _container;
         internal int _analysisPending;
 
         // Moniker strings allow the task provider to distinguish between
         // different sources of items for the same file.
         private const string ParserTaskMoniker = "Parser";
         internal const string UnresolvedImportMoniker = "UnresolvedImport";
+        private readonly HashSet<IAnalysisExtension> _registeredExtensions = new HashSet<IAnalysisExtension>();
+        private readonly Dictionary<string, IAnalysisExtension> _extensionsByName = new Dictionary<string, IAnalysisExtension>();
 
         private readonly Connection _connection;
         internal Task ReloadTask;
@@ -79,19 +84,14 @@ namespace Microsoft.PythonTools.Intellisense {
         internal OutOfProcProjectAnalyzer(
             Stream writer, Stream reader,
             IPythonInterpreterFactory factory,
-            IPythonInterpreterFactory[] allFactories)
-            : this(writer, reader, factory.CreateInterpreter(), factory, allFactories) {
-        }
-
-        internal OutOfProcProjectAnalyzer(
-            Stream writer, Stream reader,
-            IPythonInterpreter interpreter,
-            IPythonInterpreterFactory factory,
-            IPythonInterpreterFactory[] allFactories
+            IPythonInterpreterFactory[] allFactories,
+            CompositionContainer container,
+            AggregateCatalog catalog
         ) {
             _analysisQueue = new AnalysisQueue(this);
             _analysisQueue.AnalysisComplete += AnalysisQueue_Complete;
             _allFactories = allFactories;
+            var interpreter = factory.CreateInterpreter();
             _options = new AP.OptionsChangedEvent() {
                 indentation_inconsistency_severity = Severity.Ignore
             };
@@ -103,10 +103,40 @@ namespace Microsoft.PythonTools.Intellisense {
                 ReloadTask.ContinueWith(_ => ReloadTask = null);
                 interpreter.ModuleNamesChanged += OnModulesChanged;
             }
-
+            _catalog = catalog;
+            _container = container;
+            _container.ExportsChanged += ContainerExportsChanged;
             _projectFiles = new ProjectEntryMap();
             _connection = new Connection(writer, reader, RequestHandler, AnalysisProtocol.RegisteredTypes);
             _connection.EventReceived += ConectionReceivedEvent;
+        }
+
+
+        private void ContainerExportsChanged(object sender, ExportsChangeEventArgs e) {
+            // figure out the new extensions...
+            var extensions = _container.GetExports<IAnalysisExtension, IDictionary<string, object>>();
+            HashSet<IAnalysisExtension> newExtensions = new HashSet<IAnalysisExtension>();
+            lock (_registeredExtensions) {
+                foreach (var extension in extensions) {
+
+                    if (!_registeredExtensions.Contains(extension.Value)) {
+                        
+                        newExtensions.Add(extension.Value);
+                        if (extension.Metadata.ContainsKey("Name") && extension.Metadata["Name"] is string) {
+                            _extensionsByName[(string)extension.Metadata["Name"]] = extension.Value;
+                        } else {
+                            Console.Error.WriteLine("Extension {0} has no name, will not respond to commands", extension.Value);
+                        }
+                    }
+                }
+
+                _registeredExtensions.UnionWith(newExtensions);
+            }
+
+            // inform them of the analyzer...
+            foreach (var extension in newExtensions) {
+                extension.Register(_pyAnalyzer);
+            }
         }
 
         private void ConectionReceivedEvent(object sender, EventReceivedEventArgs e) {
@@ -114,7 +144,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ModulesChangedEvent.Name: OnModulesChanged(this, EventArgs.Empty); break;
                 case AP.OptionsChangedEvent.Name: SetOptions((AP.OptionsChangedEvent)e.Event); break;
                 case AP.SetCommentTaskTokens.Name: _commentPriorityMap = ((AP.SetCommentTaskTokens)e.Event).tokens; break;
+                case AP.ExtensionAddedEvent.Name: AddExtension((AP.ExtensionAddedEvent)e.Event); break;
             }
+        }
+
+        private void AddExtension(AP.ExtensionAddedEvent extensionAdded) {
+            _catalog.Catalogs.Add(new AssemblyCatalog(extensionAdded.path));
         }
 
         private void SetOptions(AP.OptionsChangedEvent options) {
@@ -162,11 +197,25 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.AddDirectoryRequest.Command: response = AddDirectory((AP.AddDirectoryRequest)request); break;
                 case AP.ModuleImportsRequest.Command: response = GetModuleImports((AP.ModuleImportsRequest)request); break;
                 case AP.ValueDescriptionRequest.Command: response = GetValueDescriptions((AP.ValueDescriptionRequest)request); break;
+                case AP.ExtensionRequest.Command: response = ExtensionRequest((AP.ExtensionRequest)request); break;
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
 
             return Task.FromResult(response);
+        }
+
+        private Response ExtensionRequest(AP.ExtensionRequest request) {
+            IAnalysisExtension extension;
+            lock (_registeredExtensions) {
+                if (!_extensionsByName.TryGetValue(request.extension, out extension)) {
+                    throw new InvalidOperationException("Unknown extension: " + request.extension);
+                }
+            }
+
+            return new AP.ExtensionResponse() {
+                response = extension.HandleCommand(request.commandId, request.body)
+            };
         }
 
         private Response GetValueDescriptions(AP.ValueDescriptionRequest request) {
@@ -192,7 +241,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private Response GetModuleImports(AP.ModuleImportsRequest request) {
             var res = Project.GetEntriesThatImportModule(
-                request.moduleName, 
+                request.moduleName,
                 request.includeUnresolved
             );
 
@@ -1063,11 +1112,15 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private AP.AnalysisReference MakeReference(IAnalysisVariable arg) {
+            return MakeReference(arg.Location, arg.Type);
+        }
+
+        private AP.AnalysisReference MakeReference(LocationInfo location, VariableType type) {
             return new AP.AnalysisReference() {
-                column = arg.Location.Column,
-                line = arg.Location.Line,
-                kind = GetVariableType(arg.Type),
-                file = GetFile(arg.Location.ProjectEntry)
+                column = location.Column,
+                line = location.Line,
+                kind = GetVariableType(type),
+                file = GetFile(location.ProjectEntry)
             };
         }
 
@@ -1330,7 +1383,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         values.Add(
                             new AP.CompletionValue() {
                                 description = descComps.ToArray(),
-                                doc = value.Documentation
+                                doc = value.Documentation,
+                                locations = value.Locations.Select(x => MakeReference(x, VariableType.Definition)).ToArray()
                             }
                         );
                     }
@@ -1395,7 +1449,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 };
             }
 
-            throw new InvalidOperationException("Failed to add item");
+            return new AP.AddFileResponse() {
+                fileId = -1
+            };
         }
 
         private Response UnloadFile(AP.UnloadFileRequest command) {

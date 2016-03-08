@@ -42,10 +42,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return VsProjectAnalyzer.GetCompletions(serviceProvider, snapshot, span, point, options);
         }
 
-        /*public static string GetQuickInfo(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span, out ITrackingSpan applicableTo) {
-            return VsProjectAnalyzer.GetQuickInfo(snapshot, span, out applicableTo).Result;
-        }*/
-
         /// <summary>
         /// <summary>
         /// Gets a ImportAnalysis providing a list of imports for the selected identifer if the identifier is 
@@ -53,8 +49,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// 
         /// New in v1.1.
         /// </summary>        
-        public static Task<MissingImportAnalysis> GetMissingImports(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span) {
-            return VsProjectAnalyzer.GetMissingImports(serviceProvider, snapshot, span);
+        public static MissingImportAnalysis GetMissingImports(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span) {
+            return VsProjectAnalyzer.GetMissingImports(serviceProvider, snapshot, span).Result;
         }
     }
 }

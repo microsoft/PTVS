@@ -22,7 +22,9 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -48,7 +50,6 @@ namespace Microsoft.PythonTools.Django.Project {
         private static Guid PythonProjectGuid = new Guid(PythonConstants.ProjectFactoryGuid);
         private OleMenuCommandService _menuService;
         private List<OleMenuCommand> _commands = new List<OleMenuCommand>();
-        private DjangoAnalyzer _analyzer;
 
 #if HAVE_ICONS
         private static ImageList _images;
@@ -57,12 +58,9 @@ namespace Microsoft.PythonTools.Django.Project {
         public DjangoProject() {
         }
 
-        public DjangoAnalyzer Analyzer {
+        public VsProjectAnalyzer Analyzer {
             get {
-                if (_analyzer == null) {
-                    _analyzer = new DjangoAnalyzer(this);
-                }
-                return _analyzer;
+                return _innerVsHierarchy.GetProject().GetPythonProject().GetProjectAnalyzer();
             }
         }
 
@@ -97,7 +95,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
             var pyProj = _innerVsHierarchy.GetProject().GetPythonProject();
             if (pyProj != null) {
-                Analyzer.OnNewAnalyzer(pyProj.GetProjectAnalyzer().Project);
+                RegisterExtension(pyProj.GetProjectAnalyzer());
                 pyProj.ProjectAnalyzerChanging += OnProjectAnalyzerChanging;
             }
 
@@ -128,10 +126,13 @@ namespace Microsoft.PythonTools.Django.Project {
         private void OnProjectAnalyzerChanging(object sender, AnalyzerChangingEventArgs e) {
             var pyProj = sender as IPythonProject;
             if (pyProj != null) {
-                _analyzer.OnNewAnalyzer(e.New);
+                RegisterExtension(e.New);
             }
         }
 
+        private static void RegisterExtension(PythonTools.Intellisense.VsProjectAnalyzer newAnalyzer) {
+            newAnalyzer.RegisterExtension(typeof(DjangoAnalyzer).Assembly.CodeBase);
+        }
 
         private void AddCommand(OleMenuCommand menuItem) {
             _menuService.AddCommand(menuItem);
@@ -145,7 +146,6 @@ namespace Microsoft.PythonTools.Django.Project {
                 }
             }
             _commands.Clear();
-            _analyzer.Dispose();
             base.Close();
         }
 
@@ -942,16 +942,6 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         #endregion
-    }
-
-    class TagInfo {
-        public readonly string Documentation;
-        public readonly IPythonProjectEntry Entry;
-        public TagInfo(string doc, IPythonProjectEntry entry) {
-            Documentation = doc;
-            Entry = entry;
-        }
-
     }
 
 }

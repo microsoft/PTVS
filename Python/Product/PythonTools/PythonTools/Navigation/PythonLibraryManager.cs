@@ -47,11 +47,6 @@ namespace Microsoft.PythonTools.Navigation {
             : base(package) {
             _package = package;
         }
-#if FALSE
-        protected override LibraryNode CreateLibraryNode(LibraryNode parent, IScopeNode subItem, string namePrefix, IVsHierarchy hierarchy, uint itemid) {
-            return new PythonLibraryNode(parent, subItem, namePrefix, hierarchy, itemid);            
-        }
-#endif
 
         public override LibraryNode CreateFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename) {
             return new PythonFileLibraryNode(parent, hierarchy, hierarchy.Caption, filename);
@@ -63,23 +58,25 @@ namespace Microsoft.PythonTools.Navigation {
             }
             AnalysisEntry item;
             if (task.TextBuffer == null || !task.TextBuffer.TryGetPythonProjectEntry(out item)) {
-                item = task.ModuleID.Hierarchy
+                task.ModuleID.Hierarchy
                     .GetProject()
                     .GetPythonProject()
                     .GetAnalyzer()
-                    .AnalyzeFile(task.FileName).Result;
-            }
+                    .AnalyzeFile(task.FileName).ContinueWith(x => {
+                        item = x.Result;
 
-            if (item != null) {
-                // We subscribe to OnNewAnalysis here instead of OnNewParseTree so that 
-                // in the future we can use the analysis to include type information in the
-                // object browser (for example we could include base type information with
-                // links elsewhere in the object browser).
-                item.AnalysisComplete += (sender, args) => {
-                    _package.GetUIThread().InvokeAsync(() => FileParsed(task))
-                        .HandleAllExceptions(_package, GetType())
-                        .DoNotWait();
-                };
+                        if (item != null) {
+                            // We subscribe to OnNewAnalysis here instead of OnNewParseTree so that 
+                            // in the future we can use the analysis to include type information in the
+                            // object browser (for example we could include base type information with
+                            // links elsewhere in the object browser).
+                            item.AnalysisComplete += (sender, args) => {
+                                _package.GetUIThread().InvokeAsync(() => FileParsed(task))
+                                    .HandleAllExceptions(_package, GetType())
+                                    .DoNotWait();
+                            };
+                        }
+                    });
             }
         }
     }
