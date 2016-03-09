@@ -21,14 +21,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using Analysis;
-    using AP = AnalysisProtocol;
-
     class PythonSuggestedImportAction : ISuggestedAction, IComparable<PythonSuggestedImportAction> {
         private readonly PythonSuggestedActionsSource _source;
         private readonly string _name;

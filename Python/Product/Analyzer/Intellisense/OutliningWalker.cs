@@ -15,12 +15,10 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
-using Microsoft.PythonTools.Intellisense;
+using System.Linq;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using System;
-    using System.Linq;
     using AP = AnalysisProtocol;
 
     class OutliningWalker : PythonWalker {

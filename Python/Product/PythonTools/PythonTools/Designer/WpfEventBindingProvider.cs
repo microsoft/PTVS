@@ -19,13 +19,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.Windows.Design.Host;
 
 namespace Microsoft.PythonTools.Designer {
-    using System.Threading.Tasks;
     using AP = AnalysisProtocol;
 
     class WpfEventBindingProvider : EventBindingProvider {
