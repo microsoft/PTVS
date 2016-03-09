@@ -21,8 +21,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Common.Infrastructure;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter.Default;
@@ -84,14 +82,11 @@ namespace Microsoft.PythonTools.Interpreter {
                 throw new ArgumentException(ex.Message, ex);
             }
 
-            Console.Error.WriteLine("Watching {0} {1} for {2} {3} {4}", watchLibraryForChanges, _config.LibraryPath, id, description, GetType());
             if (watchLibraryForChanges && Directory.Exists(_config.LibraryPath)) {
-                Console.Error.WriteLine("Is watching");
                 _refreshIsCurrentTrigger = new Timer(RefreshIsCurrentTimer_Elapsed);
 
                 _libWatcher = CreateLibraryWatcher();
 
-                Console.Error.WriteLine("Watcher created {0} {1} {2}", id, description, _libWatcher);
                 _isCheckingDatabase = true;
                 _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
 
@@ -225,13 +220,11 @@ namespace Microsoft.PythonTools.Interpreter {
                         try {
                             _libWatcher.EnableRaisingEvents = value;
                         } catch (IOException) {
-                            Console.Error.WriteLine("Watching library set to false");
                             // May occur if the library has been deleted while the
                             // watcher was disabled.
                             _libWatcher.Dispose();
                             _libWatcher = null;
                         } catch (ObjectDisposedException) {
-                            Console.Error.WriteLine("Watching library set to false (object disposed)");
                             _libWatcher = null;
                         }
                     }
@@ -517,7 +510,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (_libWatcher != null) {
                     lock (_libWatcherLock) {
                         if (_libWatcher != null) {
-                            Console.Error.WriteLine("Watching library set to false (timer)");
                             _libWatcher.Dispose();
                             _libWatcher = null;
                         }
@@ -668,7 +660,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (_libWatcher != null) {
                     lock (_libWatcherLock) {
                         if (_libWatcher != null) {
-                            Console.Error.WriteLine("Watching library set to false (disposed) {0} {1}", _id, new StackTrace(true).ToString());
                             _libWatcher.EnableRaisingEvents = false;
                             _libWatcher.Dispose();
                             _libWatcher = null;
@@ -706,7 +697,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 watcher.Renamed += OnRenamed;
                 watcher.EnableRaisingEvents = true;
             } catch (IOException ex) {
-                Console.Error.WriteLine("Error (IO) while starting file system watcher {0}", ex);
                 // Raced with directory deletion. We normally handle the
                 // library being deleted by disposing the watcher, but this
                 // occurs in response to an event from the watcher. Because
@@ -716,7 +706,6 @@ namespace Microsoft.PythonTools.Interpreter {
                     watcher.Dispose();
                 }
             } catch (ArgumentException ex) {
-                Console.Error.WriteLine("Error while starting file system watcher {0}", ex);
                 if (watcher != null) {
                     watcher.Dispose();
                 }
