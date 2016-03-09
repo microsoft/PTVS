@@ -27,6 +27,7 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.Common",
     "Microsoft.PythonTools.Debugger",
     "Microsoft.PythonTools.Django",
+    "Microsoft.PythonTools.Django.Analysis",
     "Microsoft.PythonTools.EnvironmentsList",
     "Microsoft.PythonTools.EnvironmentsList.Host",
     "Microsoft.PythonTools.ImportWizard",
@@ -46,7 +47,7 @@ ASSEMBLIES = sorted([
     "MockVsTests",
     "ProfilingUITests",
     "PythonToolsTests",
-    "PythonToolsMockTests",
+    "PythonToolsMockTests",x
     "PythonToolsUITests",
     "ReplWindowUITests",
     "SharedProjectTests",
