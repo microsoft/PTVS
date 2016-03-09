@@ -317,7 +317,7 @@ namespace Microsoft.PythonTools.Language {
                 _locationInfo = locInfo;
                 _glyphType = glyphType;
                 _pathText = GetSearchDisplayText();
-                _lineText = _locationInfo.File.GetLine(_locationInfo.Line);
+                _lineText = _locationInfo.Analysis.GetLine(_locationInfo.Line);
             }
 
             public override string Name {

@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
         public async Task<bool> ExtractMethod(IExtractMethodInput input) {
             var analyzer = _view.GetAnalyzer(_serviceProvider);
-            var projectFile = _view.TextBuffer.GetPythonProjectEntry();
+            var projectFile = _view.TextBuffer.GetAnalysisEntry();
             
             // extract once to validate the selection
             var extractInfo = await analyzer.ExtractMethodAsync(
@@ -93,13 +93,13 @@ namespace Microsoft.PythonTools.Refactoring {
 
     class ExtractedMethodCreator {
         private readonly VsProjectAnalyzer _analyzer;
-        private readonly AnalysisEntry _projectFile;
+        private readonly AnalysisEntry _analysisEntry;
         private readonly ITextView _view;
         public AP.ExtractMethodResponse LastExtraction;
 
         public ExtractedMethodCreator(VsProjectAnalyzer analyzer, AnalysisEntry file, ITextView view, AP.ExtractMethodResponse initialExtraction) {
             _analyzer = analyzer;
-            _projectFile = file;
+            _analysisEntry = file;
             _view = view;
             LastExtraction = initialExtraction;
         }
@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
         internal async Task<AP.ExtractMethodResponse> GetExtractionResult(ExtractMethodRequest info) {
             return LastExtraction = (await _analyzer.ExtractMethodAsync(
-                _projectFile,
+                _analysisEntry,
                 _view.TextBuffer,
                 _view,
                 info.Name,

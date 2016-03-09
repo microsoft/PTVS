@@ -214,7 +214,7 @@ namespace Microsoft.PythonTools.Project {
                 return entry;
             }
 
-            return ((PythonProjectNode)this.ProjectMgr).GetAnalyzer().GetEntryFromFile(Url);
+            return ((PythonProjectNode)this.ProjectMgr).GetAnalyzer().GetAnalysisEntryFromPath(Url);
         }
 
         private void TryRename(string oldFile, string newFile) {

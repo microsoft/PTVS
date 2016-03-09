@@ -102,7 +102,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal AnalysisEntry GetAnalysisEntry() {
             AnalysisEntry entry;
-            if (TextBuffer.TryGetPythonProjectEntry(out entry) && entry != null) {
+            if (TextBuffer.TryGetAnalysisEntry(out entry) && entry != null) {
                 //Debug.Assert(
                 //    entry.Analysis != null,
                 //    string.Format("Failed to get analysis for buffer {0} with file {1}", TextBuffer, entry.FilePath)

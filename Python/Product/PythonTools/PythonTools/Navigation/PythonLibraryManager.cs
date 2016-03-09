@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Navigation {
                 return;
             }
             AnalysisEntry item;
-            if (task.TextBuffer == null || !task.TextBuffer.TryGetPythonProjectEntry(out item)) {
+            if (task.TextBuffer == null || !task.TextBuffer.TryGetAnalysisEntry(out item)) {
                 task.ModuleID.Hierarchy
                     .GetProject()
                     .GetPythonProject()

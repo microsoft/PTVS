@@ -130,7 +130,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _bufferParser.AddBuffer(subjectBuffer);
             } else {
                 // already connected to a buffer parser, we should have the same project entry
-                Debug.Assert(_bufferParser._currentProjEntry == existingParser._currentProjEntry);
+                Debug.Assert(_bufferParser._analysis == existingParser._analysis);
             }
         }
 

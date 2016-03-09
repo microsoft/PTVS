@@ -40,8 +40,8 @@ namespace Microsoft.PythonTools.Intellisense {
             _taskProvider = taskProvider;
         }
 
-        public void ListenForNextNewAnalysis(AnalysisEntry analysis, ITextBuffer buffer) {
-            if (analysis != null && !string.IsNullOrEmpty(analysis.Path)) {
+        public void ListenForNextNewAnalysis(AnalysisEntry entry, ITextBuffer buffer) {
+            if (entry != null && !string.IsNullOrEmpty(entry.Path)) {
                 buffer.RegisterForNewAnalysisEntry(entry => OnNewAnalysis(entry, buffer));
             }
         }

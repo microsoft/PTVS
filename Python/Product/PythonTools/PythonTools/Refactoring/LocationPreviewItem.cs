@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Refactoring {
             _lineNo = locationInfo.Line;
             _columnNo = locationInfo.Column;            
             _parent = parent;
-            string text = locationInfo.File.GetLine(locationInfo.Line);
+            string text = locationInfo.Analysis.GetLine(locationInfo.Line);
             string trimmed = text.TrimStart(_whitespace);
             _text = trimmed;
             _type = type;

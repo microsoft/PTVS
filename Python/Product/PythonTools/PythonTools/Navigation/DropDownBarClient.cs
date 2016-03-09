@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Navigation {
     /// the drop down to remove grayed out elements.
     /// </summary>
     class DropDownBarClient : IVsDropdownBarClient {
-        private AnalysisEntry _projectEntry;                      // project entry which gets updated with new ASTs for us to inspect.
+        private AnalysisEntry _analysisEntry;                           // analysis entry which gets updated with new ASTs for us to inspect.
         private readonly Dispatcher _dispatcher;                        // current dispatcher so we can get back to our thread
         private IWpfTextView _textView;                                 // text view we're drop downs for
         private IVsDropdownBar _dropDownBar;                            // drop down bar - used to refresh when changes occur
@@ -69,13 +69,13 @@ namespace Microsoft.PythonTools.Navigation {
         private const int NavigationLevels = 2;
         private int[] _curSelection = new int[NavigationLevels];
 
-        public DropDownBarClient(IServiceProvider serviceProvider, IWpfTextView textView, AnalysisEntry pythonProjectEntry) {
-            Utilities.ArgumentNotNull("serviceProvider", serviceProvider);
-            Utilities.ArgumentNotNull("textView", textView);
-            Utilities.ArgumentNotNull("pythonProjectEntry", pythonProjectEntry);
+        public DropDownBarClient(IServiceProvider serviceProvider, IWpfTextView textView, AnalysisEntry analysisEntry) {
+            Utilities.ArgumentNotNull(nameof(serviceProvider), serviceProvider);
+            Utilities.ArgumentNotNull(nameof(textView), textView);
+            Utilities.ArgumentNotNull(nameof(analysisEntry), analysisEntry);
 
             _serviceProvider = serviceProvider;
-            _projectEntry = pythonProjectEntry;
+            _analysisEntry = analysisEntry;
             textView.TextBuffer.RegisterForParseTree(ParserOnNewParseTree);
             _textView = textView;
             _dispatcher = Dispatcher.CurrentDispatcher;
@@ -474,7 +474,7 @@ namespace Microsoft.PythonTools.Navigation {
             var dropDownBar = _dropDownBar;
             if (dropDownBar != null) {
 
-                var navigations = await _projectEntry.Analyzer.GetNavigationsAsync(_textView.TextBuffer);
+                var navigations = await _analysisEntry.Analyzer.GetNavigationsAsync(_textView.TextBuffer);
                 lock (_navigationsLock) {
                     _navigations = navigations;
                     for (int i = 0; i < _curSelection.Length; i++) {

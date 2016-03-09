@@ -266,12 +266,6 @@ namespace Microsoft.PythonTools {
             return res;
         }
 
-        internal static AnalysisEntry GetPythonProjectEntry(this ITextBuffer buffer) {
-            AnalysisEntry res;
-            buffer.TryGetPythonProjectEntry(out res);
-            return res;
-        }
-
         internal static PythonProjectNode GetProject(this ITextBuffer buffer, IServiceProvider serviceProvider) {
             var path = buffer.GetFilePath();
             if (path != null) {

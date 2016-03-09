@@ -23,28 +23,28 @@ namespace Microsoft.PythonTools.Intellisense {
     /// number.
     /// </summary>
     public sealed class AnalysisLocation : IEquatable<AnalysisLocation> {
-        internal readonly AnalysisEntry File;
+        internal readonly AnalysisEntry Analysis;
         public readonly int Line, Column;
         private static readonly IEqualityComparer<AnalysisLocation> _fullComparer = new FullLocationComparer();
 
-        internal AnalysisLocation(AnalysisEntry file, int line, int column) {
-            File = file;
+        internal AnalysisLocation(AnalysisEntry analysis, int line, int column) {
+            Analysis = analysis;
             Line = line;
             Column = column;
         }
 
         public string FilePath {
             get {
-                return File.Path;
+                return Analysis.Path;
             }
         }
 
         internal void GotoSource(IServiceProvider serviceProvider) {
-            string zipFileName = VsProjectAnalyzer.GetZipFileName(File);
+            string zipFileName = VsProjectAnalyzer.GetZipFileName(Analysis);
             if (zipFileName == null) {
                 PythonToolsPackage.NavigateTo(
                     serviceProvider,
-                    File.Path,
+                    Analysis.Path,
                     Guid.Empty,
                     Line - 1,
                     Column - 1
@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public override int GetHashCode() {
-            return Line.GetHashCode() ^ File.GetHashCode();
+            return Line.GetHashCode() ^ Analysis.GetHashCode();
         }
 
         public bool Equals(AnalysisLocation other) {
@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // This works nicely for get and call which can both add refs and when they're broken
             // apart you still see both refs, but when they're together you only see 1.
             return Line == other.Line &&
-                File == other.File;
+                Analysis == other.Analysis;
         }
 
         /// <summary>
@@ -87,11 +87,11 @@ namespace Microsoft.PythonTools.Intellisense {
             public bool Equals(AnalysisLocation x, AnalysisLocation y) {
                 return x.Line == y.Line &&
                     x.Column == y.Column &&
-                    x.File == y.File;
+                    x.Analysis == y.Analysis;
             }
 
             public int GetHashCode(AnalysisLocation obj) {
-                return obj.Line.GetHashCode() ^ obj.Column.GetHashCode() ^ obj.File.GetHashCode();
+                return obj.Line.GetHashCode() ^ obj.Column.GetHashCode() ^ obj.Analysis.GetHashCode();
             }
         }
     }
