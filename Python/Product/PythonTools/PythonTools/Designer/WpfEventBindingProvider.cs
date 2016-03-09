@@ -168,7 +168,7 @@ namespace Microsoft.PythonTools.Designer {
 
         public override bool RemoveEventHandler(EventDescription eventDescription, string objectName, string methodName) {
             var method = FindMethod(methodName);
-            if (method.found) {
+            if (method != null && method.found) {
                 var view = _pythonFileNode.GetTextView();
                 var textBuffer = _pythonFileNode.GetTextBuffer();
 
@@ -247,7 +247,7 @@ namespace Microsoft.PythonTools.Designer {
 
         public override bool ShowMethod(EventDescription eventDescription, string methodName) {
             var method = FindMethod(methodName);
-            if (method.found) {
+            if (method != null && method.found) {
                 var view = _pythonFileNode.GetTextView();
                 view.Caret.MoveTo(new SnapshotPoint(view.TextSnapshot, method.start));
                 view.Caret.EnsureVisible();

@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 analysis
             );
 
-            var completions = analysis.Analyzer.GetAllAvailableMembers(analysis, index, GetMemberOptions.None)
+            var completions = analysis.Analyzer.GetAllAvailableMembersAsync(analysis, index, GetMemberOptions.None).Result
                 .Where(IsExceptionType)
                 .Select(member => PythonCompletion(glyphService, member))
                 .OrderBy(completion => completion.DisplayText);

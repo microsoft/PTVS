@@ -107,7 +107,9 @@ namespace Microsoft.PythonTools.Language {
             if (caret != null) {
 
                 var defs = await VsProjectAnalyzer.AnalyzeExpressionAsync(caret.Value);
-
+                if (defs == null) {
+                    return;
+                }
                 Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
                 GetDefsRefsAndValues(_serviceProvider, defs.Expression, defs.Variables, out definitions, out references, out values);
 
@@ -182,6 +184,9 @@ namespace Microsoft.PythonTools.Language {
             var caret = _textView.GetCaretPosition();
             if (caret != null) {
                 var references = await VsProjectAnalyzer.AnalyzeExpressionAsync(caret.Value);
+                if (references == null) {
+                    return;
+                }
 
                 var locations = GetFindRefLocations(_serviceProvider, references.Expression, references.Variables);
 

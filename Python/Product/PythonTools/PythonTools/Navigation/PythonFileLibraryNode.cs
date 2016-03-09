@@ -87,7 +87,9 @@ namespace Microsoft.PythonTools.Navigation {
                         new Parsing.SourceLocation(0, 1, 1)
                     ).Result;
 
-                    return EditFilter.GetFindRefLocations(_hierarchy.ProjectMgr.Site, expr, exprAnalysis.Variables);
+                    if (exprAnalysis != null) {
+                        return EditFilter.GetFindRefLocations(_hierarchy.ProjectMgr.Site, expr, exprAnalysis.Variables);
+                    }
                 }
             }
 
@@ -202,11 +204,11 @@ namespace Microsoft.PythonTools.Navigation {
 
         protected override IEnumerable<CompletionResult> GetChildren() {
             var analysis = _hierarchy.GetAnalysisEntry();
-            var members = analysis.Analyzer.GetAllAvailableMembers(
+            var members = analysis.Analyzer.GetAllAvailableMembersAsync(
                 analysis,
                 new SourceLocation(0, 1, 1),
                 GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DetailedInformation
-            );
+            ).Result;
             return members;
         }
 

@@ -1076,7 +1076,7 @@ namespace PythonToolsUITests {
 
                 var pyproj = project.GetPythonProject();
                 var analyzer = pyproj.GetAnalyzer();
-                Assert.IsNotNull(analyzer.GetModules(true).Where(x => x.Name == "native_module").FirstOrDefault(), "module was not loaded");
+                Assert.IsNotNull(analyzer.GetModulesResult(true).Result.Where(x => x.Name == "native_module").FirstOrDefault(), "module was not loaded");
 
                 using (var evt = new AutoResetEvent(false)) {
                     pyproj.ProjectAnalyzerChanged += (s, e) => { try { evt.Set(); } catch { } };
@@ -1084,10 +1084,10 @@ namespace PythonToolsUITests {
                     Assert.IsTrue(evt.WaitOne(10000), "Timed out waiting for analyzer change");
                 }
 
-                for (int retries = 10; retries > 0 && analyzer.GetModules(true).Where(x => x.Name == "native_module").FirstOrDefault() == null; --retries) {
+                for (int retries = 10; retries > 0 && analyzer.GetModulesResult(true).Result.Where(x => x.Name == "native_module").FirstOrDefault() == null; --retries) {
                     Thread.Sleep(500);
                 }
-                Assert.IsNotNull(analyzer.GetModules(true).Where(x => x.Name == "native_module").FirstOrDefault(), "module was not reloadod");
+                Assert.IsNotNull(analyzer.GetModulesResult(true).Result.Where(x => x.Name == "native_module").FirstOrDefault(), "module was not reloadod");
             }
         }
 

@@ -62,10 +62,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 TextBuffer,
                 pos,
                 indentation
-            ).Result.overrides;
+            ).Result?.overrides;
 
             CompletionSet res;
-            if (completions.Any()) {
+            if (completions != null && completions.Any()) {
                 var set = new FuzzyCompletionSet(
                     "PythonOverrides",
                     "Python",

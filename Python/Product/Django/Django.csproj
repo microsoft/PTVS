@@ -35,7 +35,7 @@
     <AssemblyName>Microsoft.PythonTools.Django</AssemblyName>
     <UseVSSDK>true</UseVSSDK>
     <CreateVsixContainer>true</CreateVsixContainer>
-    <NoWarn>1762</NoWarn>
+    <NoWarn>1762;0436</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -432,9 +432,6 @@
   </ItemGroup>
   <PropertyGroup>
     <UseCodebase>true</UseCodebase>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
-    <NoWarn>1762;0436</NoWarn>
   </PropertyGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

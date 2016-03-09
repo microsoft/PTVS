@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Intellisense {
                                 .Distinct()
                                 .Select(n => new CompletionResult(n, PythonMemberType.Field));
                         }
-                        members = analysis.Analyzer.GetAllAvailableMembers(analysis, location, _options.MemberOptions)
+                        members = analysis.Analyzer.GetAllAvailableMembersAsync(analysis, location, _options.MemberOptions).Result
                             .Union(parameters, CompletionComparer.MemberEquality);
                     }
                 }

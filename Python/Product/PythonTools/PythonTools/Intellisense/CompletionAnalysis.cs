@@ -142,8 +142,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var modules = Enumerable.Empty<CompletionResult>();
             if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                 modules = modules.Concat(package.Length > 0 ? 
-                    analysis.Analyzer.GetModuleMembers(analysis, package, !modulesOnly) :
-                    analysis.Analyzer.GetModules(true).Distinct(CompletionComparer.MemberEquality)
+                    analysis.Analyzer.GetModuleMembersAsync(analysis, package, !modulesOnly).Result :
+                    analysis.Analyzer.GetModulesResult(true).Result.Distinct(CompletionComparer.MemberEquality)
                 );
             }
             if (replScopes != null) {

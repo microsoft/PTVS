@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -31,7 +32,7 @@ namespace Microsoft.PythonTools.Logging {
         private int _configuredInterpreters;
         private int _debugLaunchCount, _normalLaunchCount;
         private List<PackageInstallDetails> _packageInstalls = new List<PackageInstallDetails>();
-        private List<string> _abnormalAnalysisExits = new List<string>();
+        private List<string> _analysisAbnormalities = new List<string>();        
 
         #region IPythonToolsLogger Members
 
@@ -57,7 +58,13 @@ namespace Microsoft.PythonTools.Logging {
                     }
                     break;
                 case PythonLogEvent.AnalysisExitedAbnormally:
-                    _abnormalAnalysisExits.Add(argument.ToString());
+                    _analysisAbnormalities.Add(DateTime.Now + " Abnormal exit: " + argument);
+                    break;
+                case PythonLogEvent.AnalysisOperationCancelled:
+                    _analysisAbnormalities.Add(DateTime.Now + " Operation Cancelled");
+                    break;
+                case PythonLogEvent.AnalysisOpertionFailed:
+                    _analysisAbnormalities.Add(DateTime.Now + " Operation Failed " + argument));
                     break;
             }
         }
@@ -86,10 +93,10 @@ namespace Microsoft.PythonTools.Logging {
                 }
             }
 
-            if (_abnormalAnalysisExits.Count > 0) {
-                res.AppendFormat("Abnormal analysis exits ({0}):", _abnormalAnalysisExits.Count);
+            if (_analysisAbnormalities.Count > 0) {
+                res.AppendFormat("Analysis abnormalities ({0}):", _analysisAbnormalities.Count);
                 res.AppendLine();
-                foreach (var abnormalExit in _abnormalAnalysisExits) {
+                foreach (var abnormalExit in _analysisAbnormalities) {
                     res.AppendLine(abnormalExit);
                 }
             }

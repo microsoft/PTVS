@@ -95,10 +95,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     new AP.UnresolvedImportsRequest() {
                         fileId = analysisEntry.FileId,
                         bufferId = analysisEntry.GetBufferId(textBuffer)
-                    }
+                    },
+                    null
                 );
 
-                return VersionedResponse(resp, textBuffer, lastVersion);
+                if (resp != null) {
+                    return VersionedResponse(resp, textBuffer, lastVersion);
+                }
             }
 
             return null;
@@ -157,13 +160,21 @@ namespace Microsoft.PythonTools.Intellisense {
         /// The extension name is provided by decorating the exported value with 
         /// AnalysisExtensionNameAttribute.  The command ID and body are free form values
         /// defined by the extension.
+        /// 
+        /// Returns null if the extension command fails or the remote process exits unexpectedly.
         /// </summary>
         public async Task<string> SendExtensionCommandAsync(string extensionName, string commandId, string body) {
-            return (await SendRequestAsync(new AP.ExtensionRequest() {
+            var res = await SendRequestAsync(new AP.ExtensionRequest() {
                 extension = extensionName,
                 commandId = commandId,
                 body = body
-            }).ConfigureAwait(false)).response;
+            }).ConfigureAwait(false);
+
+            if (res != null) {
+                return res.response;
+            }
+
+            return null;
         }
 
         public PythonLanguageVersion LanguageVersion {
@@ -366,12 +377,17 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async Task<AP.ModuleInfo[]> GetEntriesThatImportModuleAsync(string moduleName, bool includeUnresolved) {
-            return (await SendRequestAsync(
+            var modules = await SendRequestAsync(
                 new AP.ModuleImportsRequest() {
                     includeUnresolved = includeUnresolved,
                     moduleName = moduleName
                 }
-            ).ConfigureAwait(false)).modules;
+            ).ConfigureAwait(false);
+
+            if (modules != null) {
+                return modules.modules;
+            }
+            return Array.Empty<AP.ModuleInfo>();
         }
 
         private void OnModulesChanged(object sender, EventArgs e) {
@@ -507,17 +523,24 @@ namespace Microsoft.PythonTools.Intellisense {
                         path = path
                     }).ConfigureAwait(false);
 
-                OnAnalysisStarted();
+                if (res != null) {
+                    OnAnalysisStarted();
 
-                var id = res.fileId;
-                if (!_projectFilesById.TryGetValue(id, out entry)) {
-                    // we awaited between the check and the AddFileRequest, another add could
-                    // have snuck in.  So we check again here...
-                    entry = _projectFilesById[id] = _projectFiles[path] = new AnalysisEntry(this, path, id);
+                    var id = res.fileId;
+                    if (!_projectFilesById.TryGetValue(id, out entry)) {
+                        // we awaited between the check and the AddFileRequest, another add could
+                        // have snuck in.  So we check again here...
+                        entry = _projectFilesById[id] = _projectFiles[path] = new AnalysisEntry(this, path, id);
+                    }
+                } else {
+                    Interlocked.Decrement(ref _parsePending);
                 }
 
             }
-            entry.AnalysisCookie = intellisenseCookie;
+
+            if (entry != null) {
+                entry.AnalysisCookie = intellisenseCookie;
+            }
 
             return entry;
         }
@@ -534,13 +557,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 Interlocked.Increment(ref _parsePending);
 
                 var response = await SendRequestAsync(new AP.AddFileRequest() { path = path }).ConfigureAwait(false);
-                
-                // we awaited between the check and the AddFileRequest, another add could
-                // have snuck in.  So we check again here, and we'll leave the other cookie in 
-                // as it's likely a SnapshotCookie which we prefer over a FileCookie.
-                if (response.fileId != -1 && !_projectFilesById.TryGetValue(response.fileId, out res)) {
-                    res = _projectFilesById[response.fileId] = _projectFiles[path] = new AnalysisEntry(this, path, response.fileId);
-                    res.AnalysisCookie = new FileCookie(path);
+                if (response != null) {
+                    // we awaited between the check and the AddFileRequest, another add could
+                    // have snuck in.  So we check again here, and we'll leave the other cookie in 
+                    // as it's likely a SnapshotCookie which we prefer over a FileCookie.
+                    if (response.fileId != -1 && !_projectFilesById.TryGetValue(response.fileId, out res)) {
+                        res = _projectFilesById[response.fileId] = _projectFiles[path] = new AnalysisEntry(this, path, response.fileId);
+                        res.AnalysisCookie = new FileCookie(path);
+                    }
                 }
             }
 
@@ -576,7 +600,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 };
 
                 var res = await analysis.Entry.Analyzer.SendRequestAsync(req).ConfigureAwait(false);
-                return res.descriptions;
+                if (res != null) {
+                    return res.descriptions;
+                }
             }
 
             return Array.Empty<string>();
@@ -592,14 +618,16 @@ namespace Microsoft.PythonTools.Intellisense {
             };
 
             var definitions = await file.Analyzer.SendRequestAsync(req);
-
-            return new ExpressionAnalysis(
-                expr,
-                null,
-                definitions.variables.Select(file.Analyzer.ToAnalysisVariable).ToArray(),
-                definitions.privatePrefix,
-                definitions.memberName
-            );
+            if (definitions != null) {
+                return new ExpressionAnalysis(
+                    expr,
+                    null,
+                    definitions.variables.Select(file.Analyzer.ToAnalysisVariable).ToArray(),
+                    definitions.privatePrefix,
+                    definitions.memberName
+                );
+            }
+            return null;
         }
 
         internal static async Task<ExpressionAnalysis> AnalyzeExpressionAsync(SnapshotPoint point) {
@@ -617,14 +645,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 var definitions = await analysis.Entry.Analyzer.SendRequestAsync(req);
 
-                return new ExpressionAnalysis(
-                    analysis.Text,
-                    analysis.Span,
-                    definitions.variables.Select(analysis.Entry.Analyzer.ToAnalysisVariable).ToArray(),
-                    definitions.privatePrefix,
-                    definitions.memberName
-                );
-
+                if (definitions != null) {
+                    return new ExpressionAnalysis(
+                        analysis.Text,
+                        analysis.Span,
+                        definitions.variables.Select(analysis.Entry.Analyzer.ToAnalysisVariable).ToArray(),
+                        definitions.privatePrefix,
+                        definitions.memberName
+                    );
+                }
             }
 
             return null;
@@ -693,8 +722,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     Trace.WriteLine(String.Format("{0} lookup time {1} for signatures", text, end - start));
                 }
 
-                foreach (var sig in sigs.sigs) {
-                    result.Add(new PythonSignature(this, applicableSpan, sig, paramIndex, lastKeywordArg));
+                if (sigs != null) {
+                    foreach (var sig in sigs.sigs) {
+                        result.Add(new PythonSignature(this, applicableSpan, sig, paramIndex, lastKeywordArg));
+                    }
                 }
             }
 
@@ -800,17 +831,19 @@ namespace Microsoft.PythonTools.Intellisense {
                     view.Options.GetNewLineCharacter()
                 );
 
-                ApplyChanges(
-                    changes.changes,
-                    lastVersion,
-                    textBuffer,
-                    changes.version
-                );
+                if (changes != null) {
+                    ApplyChanges(
+                        changes.changes,
+                        lastVersion,
+                        textBuffer,
+                        changes.version
+                    );
+                }
             }
         }
 
         internal async Task<bool> IsMissingImportAsync(AnalysisEntry entry, string text, SourceLocation location) {
-            return (await SendRequestAsync(
+            var res = await SendRequestAsync(
                 new AP.IsMissingImportRequest() {
                     fileId = entry.FileId,
                     text = text,
@@ -818,7 +851,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     line = location.Line,
                     column = location.Column
                 }
-            ).ConfigureAwait(false)).isMissing;
+            ).ConfigureAwait(false);
+
+            return res?.isMissing ?? false;
         }
 
         private static NameExpression GetFirstNameExpression(Statement stmt) {
@@ -865,6 +900,11 @@ namespace Microsoft.PythonTools.Intellisense {
             if (IsAnalyzing) {
                 while (IsAnalyzing) {
                     var res = SendRequestAsync(new AP.AnalysisStatusRequest()).Result;
+
+                    if (res == null) {
+                        itemsLeftUpdated(0);
+                        return;
+                    }
 
                     if (!itemsLeftUpdated(res.itemsLeft)) {
                         break;
@@ -1215,22 +1255,31 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #endregion
 
-        internal async Task<T> SendRequestAsync<T>(Request<T> request) where T : Response, new() {
+        internal async Task<T> SendRequestAsync<T>(Request<T> request, T defaultValue = default(T)) where T : Response, new() {
             Debug.WriteLine(String.Format("Sending request {0}", request.command));
-            return await _conn.SendRequestAsync(request, _processExitedCancelSource.Token).ConfigureAwait(false);
+            try {
+                return await _conn.SendRequestAsync(request, _processExitedCancelSource.Token).ConfigureAwait(false);
+            } catch (OperationCanceledException) {
+                _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
+            } catch (FailedRequestException e) {
+                _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOpertionFailed, e.Message);
+            }
+            return defaultValue;
         }
 
-        internal IEnumerable<CompletionResult> GetAllAvailableMembers(AnalysisEntry entry, SourceLocation location, GetMemberOptions options) {
-            var members = Task.Run(() => SendRequestAsync(new AP.TopLevelCompletionsRequest() {
+        internal async Task<IEnumerable<CompletionResult>> GetAllAvailableMembersAsync(AnalysisEntry entry, SourceLocation location, GetMemberOptions options) {
+            var members = await SendRequestAsync(new AP.TopLevelCompletionsRequest() {
                 fileId = entry.FileId,
                 options = options,
                 location = location.Index,
                 column = location.Column
-            }).Result).Result;
+            }).ConfigureAwait(false);
 
-            foreach (var member in members.completions) {
-                yield return ToMemberResult(member);
+            if (members != null) {
+                return ConvertMembers(members.completions);
             }
+
+            return Enumerable.Empty<CompletionResult>();
         }
 
         private static CompletionResult ToMemberResult(AP.Completion member) {
@@ -1252,7 +1301,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 column = location.Column
             }).ConfigureAwait(false);
 
-            return ConvertMembers(members.completions);
+            if (members != null) {
+                return ConvertMembers(members.completions);
+            }
+
+            return Enumerable.Empty<CompletionResult>();
         }
 
         private IEnumerable<CompletionResult> ConvertMembers(AP.Completion[] completions) {
@@ -1261,27 +1314,30 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal IEnumerable<CompletionResult> GetModules(bool topLevelOnly) {
-            var members = SendRequestAsync(new AP.GetModulesRequest() {
+        internal async Task<IEnumerable<CompletionResult>> GetModulesResult(bool topLevelOnly) {
+            var members = await SendRequestAsync(new AP.GetModulesRequest() {
                 topLevelOnly = topLevelOnly
-            }).Result;
+            }).ConfigureAwait(false);
 
-
-            foreach (var member in members.completions) {
-                yield return ToMemberResult(member);
+            if (members != null) {
+                return ConvertMembers(members.completions);
             }
+
+            return Enumerable.Empty<CompletionResult>();
         }
 
-        internal IEnumerable<CompletionResult> GetModuleMembers(AnalysisEntry entry, string[] package, bool includeMembers) {
-            var members = SendRequestAsync(new AP.GetModuleMembers() {
+        internal async Task<IEnumerable<CompletionResult>> GetModuleMembersAsync(AnalysisEntry entry, string[] package, bool includeMembers) {
+            var members = await SendRequestAsync(new AP.GetModuleMembers() {
                 fileId = entry.FileId,
                 package = package,
                 includeMembers = includeMembers
-            }).Result;
+            }).ConfigureAwait(false);
 
-            foreach (var member in members.completions) {
-                yield return ToMemberResult(member);
+            if (members != null) {
+                return ConvertMembers(members.completions);
             }
+
+            return Enumerable.Empty<CompletionResult>();
         }
 
         internal IEnumerable<string> GetValues(AnalysisEntry entry, string expr, SourceLocation translatedLocation) {
@@ -1313,21 +1369,22 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<VersionedResponse<AP.MethodInsertionLocationResponse>> GetInsertionPointAsync(AnalysisEntry entry, ITextBuffer textBuffer, string className) {
             var lastVersion = entry.GetAnalysisVersion(textBuffer);
 
-            try {
+            var res = await SendRequestAsync(
+                    new AP.MethodInsertionLocationRequest() {
+                        fileId = entry.FileId,
+                        bufferId = entry.GetBufferId(textBuffer),
+                        className = className
+                    }
+                ).ConfigureAwait(false);
+
+            if (res != null) {
                 return VersionedResponse(
-                    await SendRequestAsync(
-                        new AP.MethodInsertionLocationRequest() {
-                            fileId = entry.FileId,
-                            bufferId = entry.GetBufferId(textBuffer),
-                            className = className
-                        }
-                    ).ConfigureAwait(false),
+                    res,
                     textBuffer,
                     lastVersion
                 );
-            } catch (FailedRequestException) {
-                return null;
             }
+            return null;
         }
 
         internal async Task<AP.MethodInfoResponse> GetMethodInfoAsync(AnalysisEntry entry, ITextBuffer textBuffer, string className, string methodName) {
@@ -1349,21 +1406,22 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<VersionedResponse<AP.AnalysisClassificationsResponse>> GetAnalysisClassificationsAsync(AnalysisEntry projFile, ITextBuffer textBuffer, bool colorNames) {
             var lastVersion = projFile.GetAnalysisVersion(textBuffer);
 
-            try {
+            var res = await SendRequestAsync(
+                    new AP.AnalysisClassificationsRequest() {
+                        fileId = projFile.FileId,
+                        bufferId = projFile.GetBufferId(textBuffer),
+                        colorNames = colorNames
+                    }
+                ).ConfigureAwait(false);
+
+            if (res != null) {
                 return VersionedResponse(
-                    await SendRequestAsync(
-                        new AP.AnalysisClassificationsRequest() {
-                            fileId = projFile.FileId,
-                            bufferId = projFile.GetBufferId(textBuffer),
-                            colorNames = colorNames
-                        }
-                    ).ConfigureAwait(false),
+                    res,
                     textBuffer,
                     lastVersion
                 );
-            } catch (TaskCanceledException) {
-                return null;
             }
+            return null;
         }
 
         internal async Task<AP.LocationNameResponse> GetNameOfLocationAsync(AnalysisEntry entry, ITextBuffer textBuffer, int line, int column) {
@@ -1377,7 +1435,6 @@ namespace Microsoft.PythonTools.Intellisense {
             ).ConfigureAwait(false);
         }
 
-
         internal async Task<string[]> GetProximityExpressionsAsync(AnalysisEntry entry, ITextBuffer textBuffer, int line, int column, int lineCount) {
             return (await SendRequestAsync(
                 new AP.ProximityExpressionsRequest() {
@@ -1387,7 +1444,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     column = column,
                     lineCount = lineCount
                 }
-            ).ConfigureAwait(false)).names;
+            ).ConfigureAwait(false)).names ?? Array.Empty<string>();
         }
 
         internal async Task FormatCodeAsync(SnapshotSpan span, ITextView view, CodeFormattingOptions options, bool selectResult) {
@@ -1410,18 +1467,20 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             );
 
-            ITrackingSpan selectionSpan = null;
-            if (selectResult) {
-                selectionSpan = view.TextBuffer.CurrentSnapshot.CreateTrackingSpan(
-                    Span.FromBounds(res.startIndex, res.endIndex),
-                    SpanTrackingMode.EdgeInclusive
-                );
-            }
+            if (res != null) {
+                ITrackingSpan selectionSpan = null;
+                if (selectResult) {
+                    selectionSpan = view.TextBuffer.CurrentSnapshot.CreateTrackingSpan(
+                        Span.FromBounds(res.startIndex, res.endIndex),
+                        SpanTrackingMode.EdgeInclusive
+                    );
+                }
 
-            ApplyChanges(res.changes, lastAnalyzed, buffer, res.version);
+                ApplyChanges(res.changes, lastAnalyzed, buffer, res.version);
 
-            if (selectResult) {
-                view.Selection.Select(selectionSpan.GetSpan(view.TextBuffer.CurrentSnapshot), false);
+                if (selectResult) {
+                    view.Selection.Select(selectionSpan.GetSpan(view.TextBuffer.CurrentSnapshot), false);
+                }
             }
         }
 
@@ -1438,12 +1497,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             );
 
-            ApplyChanges(
-                res.changes,
-                lastAnalyzed,
-                textBuffer,
-                res.version
-            );
+            if (res != null) {
+                ApplyChanges(
+                    res.changes,
+                    lastAnalyzed,
+                    textBuffer,
+                    res.version
+                );
+            }
         }
 
         internal async Task<IEnumerable<ExportedMemberInfo>> FindNameInAllModulesAsync(string name, CancellationToken cancel = default(CancellationToken)) {
@@ -1458,9 +1519,16 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             try {
-                return (await _conn.SendRequestAsync(new AP.AvailableImportsRequest() {
-                    name = name
-                }, cancel)).imports.Select(x => new ExportedMemberInfo(x.fromName, x.importName));
+                try {
+                    return (await _conn.SendRequestAsync(new AP.AvailableImportsRequest() {
+                        name = name
+                    }, cancel)).imports.Select(x => new ExportedMemberInfo(x.fromName, x.importName));
+                } catch (OperationCanceledException) {
+                    _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
+                } catch (FailedRequestException e) {
+                    _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOpertionFailed, e.Message);
+                }
+                return Enumerable.Empty<ExportedMemberInfo>();
             } finally {
                 registration1.Dispose();
                 registration2.Dispose();
@@ -1484,19 +1552,22 @@ namespace Microsoft.PythonTools.Intellisense {
                 name = name,
                 scope = targetScope,
                 shouldExpandSelection = true
-
             });
-            return VersionedResponse(
-                res,
-                textBuffer,
-                lastAnalyzed
-            );
+
+            if (res != null) {
+                return VersionedResponse(
+                    res,
+                    textBuffer,
+                    lastAnalyzed
+                );
+            }
+            return null;
         }
 
         internal async Task<AP.AddImportResponse> AddImportAsync(AnalysisEntry entry, ITextBuffer textBuffer, string fromModule, string name, string newLine) {
             var bufferId = entry.GetBufferId(textBuffer);
 
-            var res = await SendRequestAsync(
+            return await SendRequestAsync(
                 new AP.AddImportRequest() {
                     fromModule = fromModule,
                     name = name,
@@ -1505,8 +1576,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     newLine = newLine
                 }
             ).ConfigureAwait(false);
-
-            return res;
         }
 
         private void CommentTaskTokensChanged(object sender, EventArgs e) {
@@ -1533,7 +1602,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 );
 
-                if (navigations.version != -1) {
+                if (navigations != null && navigations.version != -1) {
                     List<NavigationInfo> bufferNavs = new List<NavigationInfo>();
 
                     LocationTracker translator = new LocationTracker(
@@ -1580,7 +1649,10 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<ProjectReference[]> GetReferencesAsync() {
             var res = await SendRequestAsync(new AP.GetReferencesRequest()).ConfigureAwait(false);
 
-            return res.references.Select(AP.ProjectReference.Convert).ToArray();
+            if (res != null) {
+                return res.references.Select(AP.ProjectReference.Convert).ToArray();
+            }
+            return Array.Empty<ProjectReference>();
         }
 
         internal async Task<AP.AddReferenceResponse> AddReferenceAsync(ProjectReference reference, CancellationToken token = default(CancellationToken)) {
@@ -1621,7 +1693,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 );
 
-                if (outliningTags.version != -1) {
+                if (outliningTags != null && outliningTags.version != -1) {
                     var translator = new LocationTracker(
                         lastVersion,
                         snapshot.TextBuffer,
@@ -1700,10 +1772,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     fileId = analysis.Entry.FileId
                 };
 
-                return new QuickInfo(
-                    (await analysis.Entry.Analyzer.SendRequestAsync(req).ConfigureAwait(false)).text,
-                    analysis.Span
-                );
+                var quickInfo = await analysis.Entry.Analyzer.SendRequestAsync(req).ConfigureAwait(false);
+
+                if (quickInfo != null) {
+                    return new QuickInfo(quickInfo.text, analysis.Span);
+                }
             }
 
             return null;

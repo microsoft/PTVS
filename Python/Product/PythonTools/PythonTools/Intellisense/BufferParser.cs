@@ -360,18 +360,22 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 );
 
-                _parser.OnAnalysisStarted();
+                if (res != null) {
+                    _parser.OnAnalysisStarted();
 #if DEBUG
-                for (int i = 0; i < bufferInfos.Length; i++) {
-                    var snapshot = snapshots[i];
-                    var buffer = bufferInfos[i];
+                    for (int i = 0; i < bufferInfos.Length; i++) {
+                        var snapshot = snapshots[i];
+                        var buffer = bufferInfos[i];
 
-                    string newCode;
-                    if (res.newCode.TryGetValue(buffer.Id, out newCode)) {
-                        Debug.Assert(newCode == snapshot.GetText());
+                        string newCode;
+                        if (res.newCode.TryGetValue(buffer.Id, out newCode)) {
+                            Debug.Assert(newCode == snapshot.GetText());
+                        }
                     }
-                }
 #endif
+                } else {
+                    Interlocked.Decrement(ref _parser._parsePending);
+                }
             }
         }
 

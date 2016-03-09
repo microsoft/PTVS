@@ -31,21 +31,27 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 String.Empty
             ).Result;
 
-            return new JavaScriptSerializer().Deserialize<string[]>(tags);
+            if (tags != null) {
+                return new JavaScriptSerializer().Deserialize<string[]>(tags);
+            }
+
+            return Array.Empty<string>();
         }
 
         public static Dictionary<string, TagInfo> GetFilters(this VsProjectAnalyzer analyzer) {
-            var tags = analyzer.SendExtensionCommandAsync(
+            var filtersRes = analyzer.SendExtensionCommandAsync(
                 DjangoAnalyzer.Name,
                 DjangoAnalyzer.Commands.GetFilters,
                 String.Empty
             ).Result;
 
-            var filters = new JavaScriptSerializer().Deserialize<Dictionary<string,string>>(tags);
 
             var res = new Dictionary<string, TagInfo>();
-            foreach (var filter in filters) {
-                res[filter.Key] = new TagInfo(filter.Value, null);
+            if (filtersRes != null) {
+                var filters = new JavaScriptSerializer().Deserialize<Dictionary<string, string>>(filtersRes);
+                foreach (var filter in filters) {
+                    res[filter.Key] = new TagInfo(filter.Value, null);
+                }
             }
             return res;
         }
@@ -57,7 +63,11 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 file
             ).Result;
 
-            return new JavaScriptSerializer().Deserialize<string[]>(variables);
+            if (variables != null) {
+                return new JavaScriptSerializer().Deserialize<string[]>(variables);
+            }
+
+            return Array.Empty<string>();
         }
 
         public static Dictionary<string, PythonMemberType> GetMembers(this VsProjectAnalyzer analyzer, string file, string variable) {
@@ -69,12 +79,17 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 serializer.Serialize(new[] { file, variable })
             ).Result;
 
-            var res = serializer.Deserialize<Dictionary<string, string>>(members);
+            if (members != null) {
+                var res = serializer.Deserialize<Dictionary<string, string>>(members);
 
-            return res.ToDictionary(
-                x => x.Key, 
-                x => (PythonMemberType)Enum.Parse(typeof(PythonMemberType), x.Value, true)
-            );
+                return res.ToDictionary(
+                    x => x.Key,
+                    x => (PythonMemberType)Enum.Parse(typeof(PythonMemberType), x.Value, true)
+                );
+            }
+
+
+            return new Dictionary<string, PythonMemberType>();
         }
     }
 }

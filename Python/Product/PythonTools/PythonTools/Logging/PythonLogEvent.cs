@@ -50,7 +50,9 @@ namespace Microsoft.PythonTools.Logging {
         /// <summary>
         /// The analysis process exited abnormally for some reason...
         /// </summary>
-        AnalysisExitedAbnormally
+        AnalysisExitedAbnormally,
+        AnalysisOperationCancelled,
+        AnalysisOpertionFailed
 
     }
 }

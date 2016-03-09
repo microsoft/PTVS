@@ -96,10 +96,16 @@ namespace Microsoft.PythonTools.Navigation {
 
             var projFile = buffer.GetAnalysisEntry();
             var location = projFile.Analyzer.GetNameOfLocationAsync(projFile, buffer, iLine, iCol).Result;
-            pbstrName = location.name;
-            piLineOffset = location.lineOffset;
+            if (location != null) {
+                pbstrName = location.name;
+                piLineOffset = location.lineOffset;
 
-            return VSConstants.S_OK;
+                return VSConstants.S_OK;
+            }
+
+            pbstrName = null;
+            piLineOffset = 0;
+            return VSConstants.E_FAIL;
         }
 
         /// <summary>

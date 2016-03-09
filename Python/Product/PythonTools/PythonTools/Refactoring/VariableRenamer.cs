@@ -44,6 +44,10 @@ namespace Microsoft.PythonTools.Refactoring {
 
             var caret = _view.GetCaretPosition();
             var analysis = await VsProjectAnalyzer.AnalyzeExpressionAsync(caret.Value);
+            if (analysis == null) {
+                input.CannotRename("Unable to get analysis for current text view.");
+                return;
+            }
             
             string originalName = null;
             string privatePrefix = null;

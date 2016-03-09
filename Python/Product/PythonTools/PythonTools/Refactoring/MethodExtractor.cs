@@ -44,6 +44,9 @@ namespace Microsoft.PythonTools.Refactoring {
                 null,
                 null
             );
+            if (extractInfo == null) {
+                return false;
+            }
 
             var extract = extractInfo.Data;
             if (extract.cannotExtractMsg != null) {
@@ -81,8 +84,12 @@ namespace Microsoft.PythonTools.Refactoring {
                 info.TargetScope?.Scope.id
             );
 
+            if (extractInfo == null) {
+                return false;
+            }
+
             VsProjectAnalyzer.ApplyChanges(
-                extract.changes,
+                extractInfo.Data.changes,
                 _view.TextBuffer,
                 extractInfo.GetTracker(extractInfo.Data.version)
             );
@@ -113,7 +120,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 info.Name,
                 info.Parameters,
                 info.TargetScope?.Scope.id
-            ).ConfigureAwait(false)).Data;
+            ).ConfigureAwait(false))?.Data;
         }
     }
 }
