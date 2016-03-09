@@ -36,14 +36,16 @@ namespace Microsoft.PythonTools.Refactoring {
             var projectFile = _view.TextBuffer.GetPythonProjectEntry();
             
             // extract once to validate the selection
-            AP.ExtractMethodResponse extract = await analyzer.ExtractMethod(
+            var extractInfo = await analyzer.ExtractMethodAsync(
                 projectFile,
+                _view.TextBuffer,
                 _view,
                 "method_name",
                 null,
                 null
             );
 
+            var extract = extractInfo.Data;
             if (extract.cannotExtractMsg != null) {
                 input.CannotExtract(extract.cannotExtractMsg);
                 return false;
@@ -70,8 +72,9 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             // extract again to get the final result...
-            extract = await analyzer.ExtractMethod(
+            extractInfo = await analyzer.ExtractMethodAsync(
                 projectFile,
+                _view.TextBuffer,
                 _view,
                 info.Name,
                 info.Parameters,
@@ -80,9 +83,8 @@ namespace Microsoft.PythonTools.Refactoring {
 
             VsProjectAnalyzer.ApplyChanges(
                 extract.changes,
-                projectFile,
                 _view.TextBuffer,
-                extract.version
+                extractInfo.GetTracker(extractInfo.Data.version)
             );
 
             return true;
@@ -104,13 +106,14 @@ namespace Microsoft.PythonTools.Refactoring {
         
 
         internal async Task<AP.ExtractMethodResponse> GetExtractionResult(ExtractMethodRequest info) {
-            return LastExtraction = await _analyzer.ExtractMethod(
+            return LastExtraction = (await _analyzer.ExtractMethodAsync(
                 _projectFile,
+                _view.TextBuffer,
                 _view,
                 info.Name,
                 info.Parameters,
                 info.TargetScope?.Scope.id
-            ).ConfigureAwait(false);
+            ).ConfigureAwait(false)).Data;
         }
     }
 }

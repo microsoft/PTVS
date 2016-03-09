@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (textView != null) {
                 var analyzer = textView.GetAnalyzer(_serviceProvider);
                 if (analyzer != null) {
-                    var monitorResult = analyzer.MonitorTextBuffer(textView.TextBuffer);
+                    var monitorResult = analyzer.MonitorTextBufferAsync(textView.TextBuffer);
                     textView.Closed += TextView_Closed;
                 }
             }

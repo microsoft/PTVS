@@ -672,14 +672,14 @@ namespace Microsoft.PythonTools.Project {
                         var projectEntry = fileProject.Value;
                         string searchPathEntry = fileProject.Value.SearchPathEntry;
                         if (searchPathEntry != null && !newDirs.Contains(searchPathEntry)) {
-                            _analyzer.UnloadFile(projectEntry);
+                            _analyzer.UnloadFileAsync(projectEntry);
                         }
                     }
 
                     // find the values only in the old list, and let the analyzer know it shouldn't be watching those dirs
                     oldDirs.ExceptWith(newDirs);
                     foreach (var dir in oldDirs) {
-                        await _analyzer.StopAnalyzingDirectory(dir);
+                        await _analyzer.StopAnalyzingDirectoryAsync(dir);
                     }
 
                     AnalyzeSearchPaths(newDirs);
@@ -698,9 +698,9 @@ namespace Microsoft.PythonTools.Project {
                 if (File.Exists(dir)) {
                     // If it's a file and not a directory, parse it as a .zip
                     // file in accordance with PEP 273.
-                    await _analyzer.AnalyzeZipArchive(dir);
+                    await _analyzer.AnalyzeZipArchiveAsync(dir);
                 } else if (Directory.Exists(dir)) {
-                    await _analyzer.AnalyzeDirectory(dir);
+                    await _analyzer.AnalyzeDirectoryAsync(dir);
                 }
             }
         }
@@ -892,7 +892,7 @@ namespace Microsoft.PythonTools.Project {
                 PythonLogEvent.AnalysisExitedAbnormally,
                 msg.ToString()
             );
-            ReanalyzeProject();
+            Site.GetUIThread().InvokeAsync(ReanalyzeProject).DoNotWait();
         }
 
         private void HookErrorsAndWarnings(VsProjectAnalyzer res) {
@@ -1042,7 +1042,7 @@ namespace Microsoft.PythonTools.Project {
 
         private async void Reanalyze(VsProjectAnalyzer newAnalyzer) {
             foreach (var child in AllVisibleDescendants.OfType<FileNode>()) {
-                await newAnalyzer.AnalyzeFile(child.Url);
+                await newAnalyzer.AnalyzeFileAsync(child.Url);
             }
 
             var references = GetReferenceContainer();
@@ -1068,7 +1068,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var cancelSource = new CancellationTokenSource();
-            var task = interp.AddReference(new ProjectReference(filename, ProjectReferenceKind.ExtensionModule), cancelSource.Token);
+            var task = interp.AddReferenceAsync(new ProjectReference(filename, ProjectReferenceKind.ExtensionModule), cancelSource.Token);
 
             // try to complete synchronously w/o flashing the dialog...
             if (!task.Wait(100)) {

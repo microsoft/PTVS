@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools {
                 return;
             }
 
-            var classifications = await entry.Analyzer.GetAnalysisClassifications(
+            var classifications = await entry.Analyzer.GetAnalysisClassificationsAsync(
                 entry,
                 _buffer,
                 options.ColorNamesWithAnalysis
@@ -82,17 +82,13 @@ namespace Microsoft.PythonTools {
             if (classifications != null) {
                 // sort the spans by starting position so we can use binary search when handing them out
                 Array.Sort(
-                    classifications.classifications,
+                    classifications.Data.classifications,
                     (x, y) => x.start - y.start
                 );
 
                 lock (_spanCacheLock) {
-                    _spanCache = classifications.classifications;
-                    _spanTranslator = new LocationTracker(
-                        _buffer.GetPythonProjectEntry(),
-                        _buffer,
-                        classifications.version
-                    );
+                    _spanCache = classifications.Data.classifications;
+                    _spanTranslator = classifications.GetTracker(classifications.Data.version);
                 }
 
                 OnNewClassifications(_buffer.CurrentSnapshot);

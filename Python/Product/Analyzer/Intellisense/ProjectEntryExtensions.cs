@@ -42,6 +42,16 @@ namespace Microsoft.PythonTools.Intellisense {
                     return curCode.Text.ToString();
                 }
 
+                if (entry.FilePath != null) {
+                    try {
+                        string allText = File.ReadAllText(entry.FilePath);
+                        entry.SetCurrentCode(allText, buffer, 0);
+                        version = 0;
+                        return allText;
+                    } catch (IOException) {
+                    }
+                }
+
                 version = -1;
                 return null;
             }
@@ -108,13 +118,17 @@ namespace Microsoft.PythonTools.Intellisense {
         public static PythonAst GetVerbatimAst(this IPythonProjectEntry projectFile, PythonLanguageVersion langVersion, int bufferId, out int version) {
             ParserOptions options = new ParserOptions { BindReferences = true, Verbatim = true };
 
-            var parser = Parser.CreateParser(
-                new StringReader(projectFile.GetCurrentCode(bufferId, out version)),
-                langVersion,
-                options
-            );
+            var code = projectFile.GetCurrentCode(bufferId, out version);
+            if (code != null) {
+                var parser = Parser.CreateParser(
+                    new StringReader(code),
+                    langVersion,
+                    options
+                );
 
-            return parser.ParseFile();
+                return parser.ParseFile();
+            }
+            return null;
         }
 
         /// <summary>
@@ -124,13 +138,16 @@ namespace Microsoft.PythonTools.Intellisense {
             ParserOptions options = new ParserOptions { BindReferences = true, Verbatim = true };
 
             code = projectFile.GetCurrentCode(bufferId, out version);
-            var parser = Parser.CreateParser(
-                new StringReader(code),
-                langVersion,
-                options
-            );
+            if (code != null) {
+                var parser = Parser.CreateParser(
+                    new StringReader(code),
+                    langVersion,
+                    options
+                );
 
-            return parser.ParseFile();
+                return parser.ParseFile();
+            }
+            return null;
         }
 
         class CurrentCode {

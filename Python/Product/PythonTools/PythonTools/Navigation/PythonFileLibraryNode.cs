@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Navigation {
 
                 if (analysis != null) {
                     string expr = criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1);
-                    var exprAnalysis = VsProjectAnalyzer.AnalyzeExpression(
+                    var exprAnalysis = VsProjectAnalyzer.AnalyzeExpressionAsync(
                         analysis,
                         criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1),
                         new Parsing.SourceLocation(0, 1, 1)
@@ -224,7 +224,7 @@ namespace Microsoft.PythonTools.Navigation {
 
         protected override IEnumerable<CompletionResult> GetChildren() {
             var analysis = _hierarchy.GetAnalysisEntry();
-            var members = analysis.Analyzer.GetMembers(
+            var members = analysis.Analyzer.GetMembersAsync(
                 analysis,
                 _member,
                 new SourceLocation(0, 1, 1),

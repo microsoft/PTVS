@@ -184,7 +184,7 @@ class Oar(object):
                 );
                 view.Selection.Select(selectionSpan, false);
 
-                analyzer.FormatCode(
+                analyzer.FormatCodeAsync(
                     selectionSpan,
                     view,
                     options,

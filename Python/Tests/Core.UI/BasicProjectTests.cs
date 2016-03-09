@@ -974,7 +974,7 @@ namespace PythonToolsUITests {
 
         private static IEnumerable<string> GetVariableDescriptions(string variable, ITextSnapshot snapshot) {
             var index = snapshot.GetText().IndexOf(variable + " =");
-            return VsProjectAnalyzer.GetValueDescriptions(
+            return VsProjectAnalyzer.GetValueDescriptionsAsync(
                 snapshot.TextBuffer.GetAnalysisEntry(),
                 variable,
                 new SnapshotPoint(snapshot, index)

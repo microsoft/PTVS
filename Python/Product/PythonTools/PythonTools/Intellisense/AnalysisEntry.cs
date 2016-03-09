@@ -16,8 +16,8 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Parsing;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -113,6 +113,40 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             set {
                 Properties[_searchPathEntryKey] = value;
+            }
+        }
+
+        public int GetBufferId(ITextBuffer buffer) {
+            var bufferParser = BufferParser;
+            if (bufferParser != null) {
+                return bufferParser.GetBufferId(buffer);
+            }
+
+            // No buffer parser associated with the file yet.  This can happen when
+            // you have a document that is open but hasn't had focus causing the full
+            // load of our intellisense controller.  In that case there is only a single
+            // buffer which is buffer 0.  An easy repro for this is to open a IronPython WPF
+            // project and close it with the XAML file focused and the .py file still open.
+            // Re-open the project, and double click on a button on the XAML page.  The python
+            // file isn't loaded and weh ave no BufferParser associated with it.
+            return 0;
+        }
+
+        public ITextVersion GetAnalysisVersion(ITextBuffer buffer) {
+            var bufferParser = BufferParser;
+            if (bufferParser != null) {
+                return bufferParser.GetAnalysisVersion(buffer);
+            }
+
+            // See GetBufferId above, this is really just defense in depth...
+            return buffer.CurrentSnapshot.Version;
+        }
+
+        public async Task EnsureCodeSyncedAsync(ITextBuffer buffer) {
+            // See GetBufferId above, this is really just defense in depth...
+            var bufferParser = BufferParser;
+            if (bufferParser != null) {
+                await bufferParser.EnsureCodeSynced(buffer);
             }
         }
     }

@@ -42,33 +42,29 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void ListenForNextNewAnalysis(AnalysisEntry analysis, ITextBuffer buffer) {
             if (analysis != null && !string.IsNullOrEmpty(analysis.Path)) {
-                buffer.RegisterForNewAnalysisEntry(OnNewAnalysis);
+                buffer.RegisterForNewAnalysisEntry(entry => OnNewAnalysis(entry, buffer));
             }
         }
 
-        private async void OnNewAnalysis(AnalysisEntry entry) {
+        private async void OnNewAnalysis(AnalysisEntry entry, ITextBuffer buffer) {
             if (!_alwaysCreateSquiggle) {
                 var service = _serviceProvider.GetPythonToolsService();
                 if (service == null || !service.GeneralOptions.UnresolvedImportWarning) {
                     return;
                 }
 
-                var missingImports = await entry.Analyzer.GetMissingImports(entry);
-                
-                foreach (var buffer in missingImports) {
-                    if (buffer.unresolved.Any()) {
-                        var translator = new LocationTracker(
-                            entry,
-                            buffer.bufferId,
-                            buffer.version
-                        );
+                var missingImports = await entry.Analyzer.GetMissingImportsAsync(buffer);
+                if (missingImports != null) {
+                    var missing = missingImports.Data;
+                    if (missing.unresolved.Any()) {
+                        var translator = missingImports.GetTracker(missingImports.Data.version);
 
                         var f = new TaskProviderItemFactory(translator);
 
                         _taskProvider.ReplaceItems(
                             entry,
                             VsProjectAnalyzer.UnresolvedImportMoniker,
-                            buffer.unresolved.Select(t => f.FromUnresolvedImport(
+                            missingImports.Data.unresolved.Select(t => f.FromUnresolvedImport(
                                 _serviceProvider,
                                 entry.Analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
                                 t.name,

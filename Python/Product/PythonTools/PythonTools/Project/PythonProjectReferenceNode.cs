@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.Project {
         private void RemoveAnalyzedAssembly(VsProjectAnalyzer interp) {
             if (interp != null) {
                 if (_curReference != null) {
-                    interp.RemoveReference(_curReference).Wait();
+                    interp.RemoveReferenceAsync(_curReference).Wait();
                     _curReference = null;
                 }
             }
@@ -137,7 +137,7 @@ namespace Microsoft.PythonTools.Project {
 
                 if (_curReference != null) {
                     try {
-                        await interp.AddReference(_curReference);
+                        await interp.AddReferenceAsync(_curReference);
                     } catch (Exception) {
                         _failedToAnalyze = true;
                     }

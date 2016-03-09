@@ -390,18 +390,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public override string command => Command;
 
-            public int fileId;
+            public int fileId, bufferId;
         }
 
         public sealed class UnresolvedImportsResponse : Response {
-            public BufferUnresolvedImports[] buffers;
-        }
-
-        public class BufferUnresolvedImports {
-            public int bufferId, version;
+            public int version;
             public UnresolvedImport[] unresolved;
         }
-
 
         public sealed class UnresolvedImport {
             public string name;
@@ -798,17 +793,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public sealed class OutlingRegionsRequest : Request<OutliningRegionsResponse> {
             public const string Command = "outlingRegions";
-            public int fileId;
+            public int fileId, bufferId;
 
             public override string command => Command;
         }
 
         public sealed class OutliningRegionsResponse : Response {
-            public BufferOutliningTags[] buffers;
-        }
-
-        public class BufferOutliningTags {
-            public int bufferId, version;
+            public int version;
             public OutliningTag[] tags;
         }
 
@@ -819,17 +810,14 @@ namespace Microsoft.PythonTools.Intellisense {
         public sealed class NavigationRequest : Request<NavigationResponse> {
             public const string Command = "navigation";
             public int fileId;
+            public int bufferId;
 
             public override string command => Command;
         }
 
-        public sealed class BufferNavigations {
-            public int bufferId, version;
-            public Navigation[] navigations;
-        }
-
         public sealed class NavigationResponse : Response {
-            public BufferNavigations[] buffers;
+            public int version;
+            public Navigation[] navigations;
         }
 
         public sealed class Navigation {

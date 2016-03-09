@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return _imports;
             }
 
-            var imports = await _analyzer.FindNameInAllModules(_name, cancellationToken);
+            var imports = await _analyzer.FindNameInAllModulesAsync(_name, cancellationToken);
             cancellationToken.ThrowIfCancellationRequested();
             return Interlocked.CompareExchange(ref _imports, imports, null) ?? imports;
         }

@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// version of the buffer.
     /// </summary>
     internal class LocationTracker {
-        private readonly ITextVersion _lastParsedVersion;
+        private readonly ITextVersion _fromVersion;
         private readonly ITextBuffer _buffer;
 
         /// <summary>
@@ -36,9 +36,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// The tracker will translate positions from the specified version to the current
         /// snapshot in VS.  Requests can be made to track either forwards or backwards.
         /// </summary>
-        public LocationTracker(AnalysisEntry file, ITextBuffer buffer, int fromVersion) {
-            var lastAnalysisVersion = file.BufferParser.GetAnalysisVersion(buffer);
-
+        public LocationTracker(ITextVersion lastAnalysisVersion, ITextBuffer buffer, int fromVersion) {
             // We always hold onto the last version that we've successfully analyzed, as that's
             // the last event the out of proc analyzer will send us.  Once we've received
             // that event all future information should come from at least that version.  This
@@ -49,7 +47,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 lastAnalysisVersion = lastAnalysisVersion.Next;
             }
 
-            _lastParsedVersion = lastAnalysisVersion;
+            _fromVersion = lastAnalysisVersion;
             _buffer = buffer;
         }
 
@@ -57,10 +55,6 @@ namespace Microsoft.PythonTools.Intellisense {
             get {
                 return _buffer;
             }
-        }
-
-        public LocationTracker(AnalysisEntry file, int bufferId, int fromVersion) :
-            this(file, file.BufferParser.GetBuffer(bufferId), fromVersion) {
         }
 
         /// <summary>
@@ -73,7 +67,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 Tracking.TrackSpanForwardInTime(
                     SpanTrackingMode.EdgeInclusive,
                     new Span(from.Start, from.Length),
-                    _lastParsedVersion,
+                    _fromVersion,
                     _buffer.CurrentSnapshot.Version
                 )
             );
@@ -89,7 +83,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 Tracking.TrackPositionForwardInTime(
                     PointTrackingMode.Positive,
                     position,
-                    _lastParsedVersion,
+                    _fromVersion,
                     _buffer.CurrentSnapshot.Version
                 )
             );
@@ -104,7 +98,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 PointTrackingMode.Positive,
                 position,
                 _buffer.CurrentSnapshot.Version,
-                _lastParsedVersion
+                _fromVersion
             );
         }
     }

@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Commands {
             var view = CommonPackage.GetActiveTextView(_serviceProvider);
             var analyzer = view.GetAnalyzer(_serviceProvider);
 
-            await analyzer.RemoveImports(view.TextBuffer, _allScopes);
+            await analyzer.RemoveImportsAsync(view.TextBuffer, _allScopes);
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {

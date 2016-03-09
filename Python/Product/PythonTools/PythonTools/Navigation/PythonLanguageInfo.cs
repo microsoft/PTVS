@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Navigation {
             var buffer = service.GetDataBuffer(pBuffer);
 
             var projFile = buffer.GetAnalysisEntry();
-            var location = projFile.Analyzer.GetNameOfLocation(projFile, buffer, iLine, iCol).Result;
+            var location = projFile.Analyzer.GetNameOfLocationAsync(projFile, buffer, iLine, iCol).Result;
             pbstrName = location.name;
             piLineOffset = location.lineOffset;
 
@@ -116,7 +116,7 @@ namespace Microsoft.PythonTools.Navigation {
 
 
             var projFile = buffer.GetAnalysisEntry();
-            var names = projFile.Analyzer.GetProximityExpressions(projFile, buffer, iLine, iCol, cLines).Result;
+            var names = projFile.Analyzer.GetProximityExpressionsAsync(projFile, buffer, iLine, iCol, cLines).Result;
             ppEnum = new EnumBSTR(names);
             return VSConstants.S_OK;
         }

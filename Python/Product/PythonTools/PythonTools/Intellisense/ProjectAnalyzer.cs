@@ -86,13 +86,22 @@ namespace Microsoft.PythonTools.Intellisense {
             : this(serviceProvider, factory.CreateInterpreter(), factory, allFactories) {
         }
 
-        internal async Task<AP.BufferUnresolvedImports[]> GetMissingImports(AnalysisEntry projectFile) {
-            var resp = await SendRequestAsync(
-                new AP.UnresolvedImportsRequest() {
-                    fileId = projectFile.FileId
-                }
-            );
-            return resp.buffers;
+        internal async Task<VersionedResponse<AP.UnresolvedImportsResponse>> GetMissingImportsAsync(ITextBuffer buffer) {
+            AnalysisEntry analysisEntry;
+            if (buffer.TryGetAnalysisEntry(out analysisEntry)) {
+                var lastVersion = analysisEntry.GetAnalysisVersion(buffer);
+
+                var resp = await SendRequestAsync(
+                    new AP.UnresolvedImportsRequest() {
+                        fileId = analysisEntry.FileId,
+                        bufferId = analysisEntry.GetBufferId(buffer)
+                    }
+                );
+
+                return VersionedResponse(resp, buffer, lastVersion);
+            }
+
+            return null;
         }
 
         internal VsProjectAnalyzer(
@@ -149,8 +158,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// AnalysisExtensionNameAttribute.  The command ID and body are free form values
         /// defined by the extension.
         /// </summary>
-        public async Task<string> SendExtensionCommand(string extensionName, string commandId, string body) {
-            return (await _conn.SendRequestAsync(new AP.ExtensionRequest() {
+        public async Task<string> SendExtensionCommandAsync(string extensionName, string commandId, string body) {
+            return (await SendRequestAsync(new AP.ExtensionRequest() {
                 extension = extensionName,
                 commandId = commandId,
                 body = body
@@ -204,7 +213,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <param name="onFileAnalyzed">If specified, this callback is invoked for every <see cref="IProjectEntry"/>
         /// that is analyzed while analyzing this directory.</param>
         /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
-        public async Task AnalyzeDirectory(string dir) {
+        public async Task AnalyzeDirectoryAsync(string dir) {
             await SendRequestAsync(new AP.AddDirectoryRequest() { dir = dir }).ConfigureAwait(false);
         }
 
@@ -215,7 +224,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <param name="onFileAnalyzed">If specified, this callback is invoked for every <see cref="IProjectEntry"/>
         /// that is analyzed while analyzing this directory.</param>
         /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
-        public async Task AnalyzeZipArchive(string zipFileName) {
+        public async Task AnalyzeZipArchiveAsync(string zipFileName) {
             await SendRequestAsync(
                 new AP.AddZipArchiveRequest() { archive = zipFileName }
             ).ConfigureAwait(false);
@@ -306,13 +315,17 @@ namespace Microsoft.PythonTools.Intellisense {
                     break;
                 case AP.ChildFileAnalyzed.Name:
                     var childFile = (AP.ChildFileAnalyzed)e.Event;
-                    var entry = new AnalysisEntry(
-                        this,
-                        childFile.filename,
-                        childFile.fileId
-                    );
+                    AnalysisEntry entry;
+
+                    if (!_projectFilesById.TryGetValue(childFile.fileId, out entry)) {
+                        entry = new AnalysisEntry(
+                            this,
+                            childFile.filename,
+                            childFile.fileId
+                        );
+                        _projectFilesById[childFile.fileId] = _projectFiles[childFile.filename] = entry;
+                    }
                     entry.SearchPathEntry = childFile.parent;
-                    _projectFilesById[childFile.fileId] = _projectFiles[childFile.filename] = entry;
                     break;
             }
         }
@@ -324,9 +337,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 info.OnAnalysisComplete();
 
-                if (info.BufferParser != null) {
+                var bufferParser = info.BufferParser;
+                if (bufferParser != null) {
                     foreach (var version in analysisComplete.versions) {
-                        info.BufferParser.Analyzed(version.bufferId, version.version);
+                        bufferParser.Analyzed(version.bufferId, version.version);
                     }
                 }
             }
@@ -352,8 +366,8 @@ namespace Microsoft.PythonTools.Intellisense {
             entry.Properties[_pathInZipFile] = value;
         }
 
-        internal async Task<AP.ModuleInfo[]> GetEntriesThatImportModule(string moduleName, bool includeUnresolved) {
-            return (await _conn.SendRequestAsync(
+        internal async Task<AP.ModuleInfo[]> GetEntriesThatImportModuleAsync(string moduleName, bool includeUnresolved) {
+            return (await SendRequestAsync(
                 new AP.ModuleImportsRequest() {
                     includeUnresolved = includeUnresolved,
                     moduleName = moduleName
@@ -378,7 +392,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     oldParser.UninitBuffer(buffer);
                 }
 
-                var monitoredResult = await MonitorTextBuffer(buffers[0]);
+                var monitoredResult = await MonitorTextBufferAsync(buffers[0]);
 
                 for (int i = 1; i < buffers.Length; i++) {
                     monitoredResult.BufferParser.AddBuffer(buffers[i]);
@@ -433,8 +447,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Starts monitoring a buffer for changes so we will re-parse the buffer to update the analysis
         /// as the text changes.
         /// </summary>
-        internal async Task<MonitoredBufferResult> MonitorTextBuffer(ITextBuffer buffer) {
-            var entry = await CreateProjectEntry(buffer, new SnapshotCookie(buffer.CurrentSnapshot)).ConfigureAwait(false);
+        internal async Task<MonitoredBufferResult> MonitorTextBufferAsync(ITextBuffer buffer) {
+            var entry = await CreateProjectEntryAsync(buffer, new SnapshotCookie(buffer.CurrentSnapshot)).ConfigureAwait(false);
 
             if (!buffer.Properties.ContainsProperty(typeof(IInteractiveEvaluator))) {
                 ConnectErrorList(entry, buffer);
@@ -466,7 +480,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private async Task<AnalysisEntry> CreateProjectEntry(ITextBuffer buffer, IIntellisenseCookie intellisenseCookie) {
+        private async Task<AnalysisEntry> CreateProjectEntryAsync(ITextBuffer buffer, IIntellisenseCookie intellisenseCookie) {
             if (_conn == null) {
                 // We aren't able to analyze code, so don't create an entry.
                 return null;
@@ -510,7 +524,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
 
-        internal async Task<AnalysisEntry> AnalyzeFile(string path, string addingFromDirectory = null) {
+        internal async Task<AnalysisEntry> AnalyzeFileAsync(string path, string addingFromDirectory = null) {
             if (_conn == null) {
                 // We aren't able to analyze code, so don't create an entry.
                 return null;
@@ -549,7 +563,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal static async Task<string[]> GetValueDescriptions(AnalysisEntry file, string expr, SnapshotPoint point) {
+        internal static async Task<string[]> GetValueDescriptionsAsync(AnalysisEntry file, string expr, SnapshotPoint point) {
             var analysis = GetApplicableExpression(point);
 
             if (analysis != null) {
@@ -569,7 +583,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return Array.Empty<string>();
         }
 
-        internal static async Task<ExpressionAnalysis> AnalyzeExpression(AnalysisEntry file, string expr, SourceLocation location) {
+        internal static async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry file, string expr, SourceLocation location) {
             var req = new AP.AnalyzeExpressionRequest() {
                 expr = expr,
                 column = location.Column,
@@ -589,7 +603,7 @@ namespace Microsoft.PythonTools.Intellisense {
             );
         }
 
-        internal static async Task<ExpressionAnalysis> AnalyzeExpression(SnapshotPoint point) {
+        internal static async Task<ExpressionAnalysis> AnalyzeExpressionAsync(SnapshotPoint point) {
             var analysis = GetApplicableExpression(point);
 
             if (analysis != null) {
@@ -628,13 +642,13 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Gets a list of signatuers available for the expression at the provided location in the snapshot.
         /// </summary>
-        internal static Task<SignatureAnalysis> GetSignatures(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span) {
+        internal static Task<SignatureAnalysis> GetSignaturesAsync(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span) {
             var analyzer = snapshot.TextBuffer.GetAnalyzer(serviceProvider);
 
-            return analyzer.GetSignatures(snapshot, span);
+            return analyzer.GetSignaturesAsync(snapshot, span);
         }
 
-        private async Task<SignatureAnalysis> GetSignatures(ITextSnapshot snapshot, ITrackingSpan span) {
+        private async Task<SignatureAnalysis> GetSignaturesAsync(ITextSnapshot snapshot, ITrackingSpan span) {
             var buffer = snapshot.TextBuffer;
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, buffer, span);
 
@@ -729,7 +743,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal static async Task<MissingImportAnalysis> GetMissingImports(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span) {
+        internal static async Task<MissingImportAnalysis> GetMissingImportsAsync(IServiceProvider serviceProvider, ITextSnapshot snapshot, ITrackingSpan span) {
             ReverseExpressionParser parser = new ReverseExpressionParser(snapshot, snapshot.TextBuffer, span);
             var loc = span.GetSpan(snapshot.Version);
             int dummy;
@@ -760,7 +774,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 entry
             );
 
-            var isMissing = await analyzer.IsMissingImport(entry, text, location);
+            var isMissing = await analyzer.IsMissingImportAsync(entry, text, location);
 
             if (isMissing) {
                 var applicableSpan = parser.Snapshot.CreateTrackingSpan(
@@ -774,23 +788,29 @@ namespace Microsoft.PythonTools.Intellisense {
             return MissingImportAnalysis.Empty;
         }
 
-        internal static async Task AddImport(AnalysisEntry projectFile, string fromModule, string name, ITextView view, ITextBuffer buffer) {
-            var changes = await projectFile.Analyzer.AddImport(
-                projectFile,
-                fromModule,
-                name,
-                view.Options.GetNewLineCharacter()
-            );
+        internal static async Task AddImportAsync(AnalysisEntry projectFile, string fromModule, string name, ITextView view, ITextBuffer buffer) {
+            var analysis = buffer.GetAnalysisEntry();
+            if (analysis != null) {
+                var lastVersion = analysis.GetAnalysisVersion(buffer);
 
-            ApplyChanges(
-                changes.changes,
-                projectFile,
-                projectFile.BufferParser.GetBufferId(buffer),
-                changes.version
-            );
+                var changes = await projectFile.Analyzer.AddImportAsync(
+                    projectFile,
+                    buffer,
+                    fromModule,
+                    name,
+                    view.Options.GetNewLineCharacter()
+                );
+
+                ApplyChanges(
+                    changes.changes,
+                    lastVersion,
+                    buffer,
+                    changes.version
+                );
+            }
         }
 
-        internal async Task<bool> IsMissingImport(AnalysisEntry entry, string text, SourceLocation location) {
+        internal async Task<bool> IsMissingImportAsync(AnalysisEntry entry, string text, SourceLocation location) {
             return (await SendRequestAsync(
                 new AP.IsMissingImportRequest() {
                     fileId = entry.FileId,
@@ -890,7 +910,12 @@ namespace Microsoft.PythonTools.Intellisense {
                         Debug.WriteLine("Ignoring out of order parse {0}", buffer.version);
                         return;
                     }
-                    translator = new LocationTracker(entry, buffer.bufferId, buffer.version);
+                    var textBuffer = bufferParser.GetBuffer(buffer.bufferId);
+                    translator = new LocationTracker(
+                        entry.GetAnalysisVersion(textBuffer),
+                        textBuffer, 
+                        buffer.version
+                    );
                 }
 
                 // Update the parser warnings/errors.
@@ -1158,12 +1183,11 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        internal async Task StopAnalyzingDirectory(string directory) {
+        internal async Task StopAnalyzingDirectoryAsync(string directory) {
             await SendRequestAsync(new AP.RemoveDirectoryRequest() { dir = directory }).ConfigureAwait(false);
         }
 
-        internal async void UnloadFile(AnalysisEntry entry) {
-            // TODO: Need to get file ID
+        internal async void UnloadFileAsync(AnalysisEntry entry) {
             await SendRequestAsync(new AP.UnloadFileRequest() { fileId = entry.FileId }).ConfigureAwait(false);
         }
 
@@ -1220,7 +1244,7 @@ namespace Microsoft.PythonTools.Intellisense {
             );
         }
 
-        internal async Task<IEnumerable<CompletionResult>> GetMembers(AnalysisEntry file, string text, SourceLocation location, GetMemberOptions options) {
+        internal async Task<IEnumerable<CompletionResult>> GetMembersAsync(AnalysisEntry file, string text, SourceLocation location, GetMemberOptions options) {
             var members = await SendRequestAsync(new AP.CompletionsRequest() {
                 fileId = file.FileId,
                 text = text,
@@ -1261,43 +1285,57 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal IEnumerable<IAnalysisVariable> GetVariables(AnalysisEntry file, string expr, SourceLocation translatedLocation) {
-            return new IAnalysisVariable[0];
+        internal IEnumerable<string> GetValues(AnalysisEntry projectFileInfo, string expr, SourceLocation translatedLocation) {
+            return GetValueDescriptionsAsync(
+                projectFileInfo,
+                expr,
+                new SnapshotPoint(projectFileInfo.BufferParser.Buffers.Last().CurrentSnapshot, translatedLocation.Index)
+            ).Result;
         }
 
-        internal IEnumerable<AnalysisValue> GetValues(AnalysisEntry projectFileInfo, string expr, SourceLocation translatedLocation) {
-            return new AnalysisValue[0];
+        private BufferParser GetBufferParser(ITextBuffer buffer) {
+            var analysis = buffer.GetAnalysisEntry();
+            return null;
         }
-        internal async Task<string[]> FindMethods(AnalysisEntry fileInfo, ITextBuffer textBuffer, string className, int? paramCount) {
-            return (await SendRequestAsync(
+
+        internal async Task<string[]> FindMethodsAsync(AnalysisEntry fileInfo, ITextBuffer textBuffer, string className, int? paramCount) {
+            var res = await SendRequestAsync(
                 new AP.FindMethodsRequest() {
                     fileId = fileInfo.FileId,
-                    bufferId = fileInfo.BufferParser.GetBufferId(textBuffer),
+                    bufferId = fileInfo.GetBufferId(textBuffer),
                     className = className,
                     paramCount = paramCount
                 }
-            ).ConfigureAwait(false)).names;
+            ).ConfigureAwait(false);
+            
+            return res?.names ?? Array.Empty<string>();
         }
 
-        internal async Task<AP.MethodInsertionLocationResponse> GetInsertionPoint(AnalysisEntry fileInfo, ITextBuffer textBuffer, string className) {
+        internal async Task<VersionedResponse<AP.MethodInsertionLocationResponse>> GetInsertionPointAsync(AnalysisEntry fileInfo, ITextBuffer textBuffer, string className) {
+            var lastVersion = fileInfo.GetAnalysisVersion(textBuffer);
+
             try {
-                return await SendRequestAsync(
-                    new AP.MethodInsertionLocationRequest() {
-                        fileId = fileInfo.FileId,
-                        bufferId = fileInfo.BufferParser.GetBufferId(textBuffer),
-                        className = className
-                    }
-                ).ConfigureAwait(false);
+                return VersionedResponse(
+                    await SendRequestAsync(
+                        new AP.MethodInsertionLocationRequest() {
+                            fileId = fileInfo.FileId,
+                            bufferId = fileInfo.GetBufferId(textBuffer),
+                            className = className
+                        }
+                    ).ConfigureAwait(false),
+                    textBuffer,
+                    lastVersion
+                );
             } catch (FailedRequestException) {
                 return null;
             }
         }
 
-        internal async Task<AP.MethodInfoResponse> GetMethodInfo(AnalysisEntry fileInfo, ITextBuffer textBuffer, string className, string methodName) {
+        internal async Task<AP.MethodInfoResponse> GetMethodInfoAsync(AnalysisEntry fileInfo, ITextBuffer textBuffer, string className, string methodName) {
             return await SendRequestAsync(
                 new AP.MethodInfoRequest() {
                     fileId = fileInfo.FileId,
-                    bufferId = fileInfo.BufferParser.GetBufferId(textBuffer),
+                    bufferId = fileInfo.GetBufferId(textBuffer),
                     className = className,
                     methodName = methodName
                 }
@@ -1305,25 +1343,35 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
 
-        internal async Task<AP.AnalysisClassificationsResponse> GetAnalysisClassifications(AnalysisEntry projFile, ITextBuffer buffer, bool colorNames) {
+        private VersionedResponse<T> VersionedResponse<T>(T data, ITextBuffer buffer, ITextVersion versionBeforeRequest) {
+            return new VersionedResponse<T>(data, buffer, versionBeforeRequest);
+        }
+
+        internal async Task<VersionedResponse<AP.AnalysisClassificationsResponse>> GetAnalysisClassificationsAsync(AnalysisEntry projFile, ITextBuffer buffer, bool colorNames) {
+            var lastVersion = projFile.GetAnalysisVersion(buffer);
+
             try {
-                return await SendRequestAsync(
-                    new AP.AnalysisClassificationsRequest() {
-                        fileId = projFile.FileId,
-                        bufferId = projFile.BufferParser.GetBufferId(buffer),
-                        colorNames = colorNames
-                    }
-                ).ConfigureAwait(false);
+                return VersionedResponse(
+                    await SendRequestAsync(
+                        new AP.AnalysisClassificationsRequest() {
+                            fileId = projFile.FileId,
+                            bufferId = projFile.GetBufferId(buffer),
+                            colorNames = colorNames
+                        }
+                    ).ConfigureAwait(false),
+                    buffer,
+                    lastVersion
+                );
             } catch (TaskCanceledException) {
                 return null;
             }
         }
 
-        internal async Task<AP.LocationNameResponse> GetNameOfLocation(AnalysisEntry projFile, ITextBuffer buffer, int line, int column) {
+        internal async Task<AP.LocationNameResponse> GetNameOfLocationAsync(AnalysisEntry projFile, ITextBuffer buffer, int line, int column) {
             return await SendRequestAsync(
                 new AP.LocationNameRequest() {
                     fileId = projFile.FileId,
-                    bufferId = projFile.BufferParser.GetBufferId(buffer),
+                    bufferId = projFile.GetBufferId(buffer),
                     line = line,
                     column = column
                 }
@@ -1331,11 +1379,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
 
-        internal async Task<string[]> GetProximityExpressions(AnalysisEntry projFile, ITextBuffer buffer, int line, int column, int lineCount) {
+        internal async Task<string[]> GetProximityExpressionsAsync(AnalysisEntry projFile, ITextBuffer buffer, int line, int column, int lineCount) {
             return (await SendRequestAsync(
                 new AP.ProximityExpressionsRequest() {
                     fileId = projFile.FileId,
-                    bufferId = projFile.BufferParser.GetBufferId(buffer),
+                    bufferId = projFile.GetBufferId(buffer),
                     line = line,
                     column = column,
                     lineCount = lineCount
@@ -1343,18 +1391,19 @@ namespace Microsoft.PythonTools.Intellisense {
             ).ConfigureAwait(false)).names;
         }
 
-        internal async Task FormatCode(SnapshotSpan span, ITextView view, CodeFormattingOptions options, bool selectResult) {
+        internal async Task FormatCodeAsync(SnapshotSpan span, ITextView view, CodeFormattingOptions options, bool selectResult) {
             var fileInfo = span.Snapshot.TextBuffer.GetAnalysisEntry();
             var buffer = span.Snapshot.TextBuffer;
+            
+            await fileInfo.EnsureCodeSyncedAsync(buffer);
 
-            await fileInfo.BufferParser.EnsureCodeSynced(buffer);
-
-            var bufferId = fileInfo.BufferParser.GetBufferId(buffer);
+            var bufferId = fileInfo.GetBufferId(buffer);
+            var lastAnalyzed = fileInfo.GetAnalysisVersion(buffer);
 
             var res = await SendRequestAsync(
                 new AP.FormatCodeRequest() {
                     fileId = fileInfo.FileId,
-                    bufferId = fileInfo.BufferParser.GetBufferId(buffer),
+                    bufferId = bufferId,
                     startIndex = span.Start,
                     endIndex = span.End,
                     options = options,
@@ -1370,34 +1419,35 @@ namespace Microsoft.PythonTools.Intellisense {
                 );
             }
 
-            ApplyChanges(res.changes, fileInfo, bufferId, res.version);
+            ApplyChanges(res.changes, lastAnalyzed, buffer, res.version);
 
             if (selectResult) {
                 view.Selection.Select(selectionSpan.GetSpan(view.TextBuffer.CurrentSnapshot), false);
             }
         }
 
-        internal async Task RemoveImports(ITextBuffer buffer, bool allScopes) {
+        internal async Task RemoveImportsAsync(ITextBuffer buffer, bool allScopes) {
             var fileInfo = buffer.GetAnalysisEntry();
-            await fileInfo.BufferParser.EnsureCodeSynced(buffer);
+            await fileInfo.EnsureCodeSyncedAsync(buffer);
+            var lastAnalyzed = fileInfo.GetAnalysisVersion(buffer);
 
             var res = await SendRequestAsync(
                 new AP.RemoveImportsRequest() {
                     fileId = fileInfo.FileId,
-                    bufferId = fileInfo.BufferParser.GetBufferId(buffer),
+                    bufferId = fileInfo.GetBufferId(buffer),
                     allScopes = allScopes
                 }
             );
 
             ApplyChanges(
                 res.changes,
-                fileInfo,
-                fileInfo.BufferParser.GetBufferId(buffer),
+                lastAnalyzed,
+                buffer,
                 res.version
             );
         }
 
-        internal async Task<IEnumerable<ExportedMemberInfo>> FindNameInAllModules(string name, CancellationToken cancel = default(CancellationToken)) {
+        internal async Task<IEnumerable<ExportedMemberInfo>> FindNameInAllModulesAsync(string name, CancellationToken cancel = default(CancellationToken)) {
             CancellationTokenRegistration registration1 = default(CancellationTokenRegistration), registration2 = default(CancellationTokenRegistration);
             if (cancel.CanBeCanceled) {
                 CancellationTokenSource source = new CancellationTokenSource();
@@ -1418,11 +1468,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal async Task<AP.ExtractMethodResponse> ExtractMethod(AnalysisEntry projectFile, ITextView view, string name, string[] parameters, int? targetScope = null) {
-            ITextBuffer buffer = projectFile.BufferParser.Buffers.Last();
-            var bufferId = projectFile.BufferParser.GetBufferId(buffer);
+        internal async Task<VersionedResponse<AP.ExtractMethodResponse>> ExtractMethodAsync(AnalysisEntry projectFile, ITextBuffer buffer, ITextView view, string name, string[] parameters, int? targetScope = null) {
+            var bufferId = projectFile.GetBufferId(buffer);
 
-            await projectFile.BufferParser.EnsureCodeSynced(buffer);
+            await projectFile.EnsureCodeSyncedAsync(buffer);
+            var lastAnalyzed = projectFile.GetAnalysisVersion(buffer);
 
             var res = await SendRequestAsync(new AP.ExtractMethodRequest() {
                 fileId = projectFile.FileId,
@@ -1437,12 +1487,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 shouldExpandSelection = true
 
             });
-            return res;
+            return VersionedResponse(
+                res,
+                buffer,
+                lastAnalyzed
+            );
         }
 
-        internal async Task<AP.AddImportResponse> AddImport(AnalysisEntry projectFile, string fromModule, string name, string newLine) {
-            ITextBuffer buffer = projectFile.BufferParser.Buffers.Last();
-            var bufferId = projectFile.BufferParser.GetBufferId(buffer);
+        internal async Task<AP.AddImportResponse> AddImportAsync(AnalysisEntry projectFile, ITextBuffer buffer, string fromModule, string name, string newLine) {
+            var bufferId = projectFile.GetBufferId(buffer);
 
             var res = await SendRequestAsync(
                 new AP.AddImportRequest() {
@@ -1469,31 +1522,35 @@ namespace Microsoft.PythonTools.Intellisense {
             ).DoNotWait();
         }
 
-        internal async Task<NavigationInfo> GetNavigations(ITextBuffer textBuffer) {
+        internal async Task<NavigationInfo> GetNavigationsAsync(ITextBuffer textBuffer) {
             AnalysisEntry entry;
             if (textBuffer.TryGetPythonProjectEntry(out entry)) {
+                var lastVersion = entry.GetAnalysisVersion(textBuffer);
+
                 var navigations = await SendRequestAsync(
                     new AP.NavigationRequest() {
-                        fileId = entry.FileId
+                        fileId = entry.FileId,
+                        bufferId = entry.GetBufferId(textBuffer)
                     }
                 );
 
-                List<NavigationInfo> bufferNavs = new List<NavigationInfo>();
-                foreach (var buffer in navigations.buffers) {
-                    LocationTracker translator = new LocationTracker(
-                        entry,
-                        buffer.bufferId,
-                        buffer.version
-                    );
-                    bufferNavs.AddRange(ConvertNavigations(textBuffer.CurrentSnapshot, translator, buffer.navigations));
-                }
+                if (navigations.version != -1) {
+                    List<NavigationInfo> bufferNavs = new List<NavigationInfo>();
 
-                return new NavigationInfo(
-                    null,
-                    NavigationKind.None,
-                    new SnapshotSpan(),
-                    bufferNavs.ToArray()
-                );
+                    LocationTracker translator = new LocationTracker(
+                        lastVersion,
+                        textBuffer,
+                        navigations.version
+                    );
+                    bufferNavs.AddRange(ConvertNavigations(textBuffer.CurrentSnapshot, translator, navigations.navigations));
+
+                    return new NavigationInfo(
+                        null,
+                        NavigationKind.None,
+                        new SnapshotSpan(),
+                        bufferNavs.ToArray()
+                    );
+                }
             }
 
             return new NavigationInfo(null, NavigationKind.None, new SnapshotSpan(), Array.Empty<NavigationInfo>());
@@ -1521,19 +1578,19 @@ namespace Microsoft.PythonTools.Intellisense {
             return res.ToArray();
         }
 
-        internal async Task<ProjectReference[]> GetReferences() {
+        internal async Task<ProjectReference[]> GetReferencesAsync() {
             var res = await SendRequestAsync(new AP.GetReferencesRequest()).ConfigureAwait(false);
 
             return res.references.Select(AP.ProjectReference.Convert).ToArray();
         }
 
-        internal async Task<AP.AddReferenceResponse> AddReference(ProjectReference reference, CancellationToken token = default(CancellationToken)) {
+        internal async Task<AP.AddReferenceResponse> AddReferenceAsync(ProjectReference reference, CancellationToken token = default(CancellationToken)) {
             return await SendRequestAsync(new AP.AddReferenceRequest() {
                 reference = AP.ProjectReference.Convert(reference)
             }).ConfigureAwait(false);
         }
 
-        internal async Task<AP.RemoveReferenceResponse> RemoveReference(ProjectReference reference) {
+        internal async Task<AP.RemoveReferenceResponse> RemoveReferenceAsync(ProjectReference reference) {
             return await SendRequestAsync(
                 new AP.RemoveReferenceRequest() {
                     reference = AP.ProjectReference.Convert(reference)
@@ -1552,32 +1609,35 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal async Task<IEnumerable<OutliningTaggerProvider.TagSpan>> GetOutliningTags(ITextSnapshot snapshot) {
+        internal async Task<IEnumerable<OutliningTaggerProvider.TagSpan>> GetOutliningTagsAsync(ITextSnapshot snapshot) {
             AnalysisEntry entry;
             var res = Enumerable.Empty<OutliningTaggerProvider.TagSpan>();
             if (snapshot.TextBuffer.TryGetPythonProjectEntry(out entry)) {
+                var lastVersion = entry.GetAnalysisVersion(snapshot.TextBuffer);
+
                 var outliningTags = await SendRequestAsync(
                     new AP.OutlingRegionsRequest() {
-                        fileId = entry.FileId
+                        fileId = entry.FileId,
+                        bufferId = entry.GetBufferId(snapshot.TextBuffer)
                     }
                 );
 
-                foreach (var bufferTags in outliningTags.buffers) {
+                if (outliningTags.version != -1) {
                     var translator = new LocationTracker(
-                        entry,
-                        bufferTags.bufferId,
-                        bufferTags.version
+                        lastVersion,
+                        snapshot.TextBuffer,
+                        outliningTags.version
                     );
 
-                    res = res.Concat(ConvertOutliningTags(snapshot, translator, bufferTags));
+                    res = ConvertOutliningTags(snapshot, translator, outliningTags.tags);
                 }
             }
 
             return res;
         }
 
-        private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(ITextSnapshot currentSnapshot, LocationTracker translator, AP.BufferOutliningTags outliningTags) {
-            foreach (var tag in outliningTags.tags) {
+        private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(ITextSnapshot currentSnapshot, LocationTracker translator, AP.OutliningTag[] tags) {
+            foreach (var tag in tags) {
                 // translate the span from the version we last parsed to the current version
                 var span = translator.TranslateForward(Span.FromBounds(tag.startIndex, tag.endIndex));
 
@@ -1595,11 +1655,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal async Task<AP.OverridesCompletionResponse> GetOverrideCompletions(AnalysisEntry file, ITextBuffer buffer, SourceLocation location, string indentation) {
+        internal async Task<AP.OverridesCompletionResponse> GetOverrideCompletionsAsync(AnalysisEntry file, ITextBuffer buffer, SourceLocation location, string indentation) {
             var res = await SendRequestAsync(
                 new AP.OverridesCompletionRequest() {
                     fileId = file.FileId,
-                    bufferId = file.BufferParser.GetBufferId(buffer),
+                    bufferId = file.GetBufferId(buffer),
                     column = location.Column,
                     index = location.Index,
                     line = location.Line,
@@ -1610,10 +1670,13 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        internal static void ApplyChanges(AP.ChangeInfo[] changes, AnalysisEntry file, int bufferId, int fromVersion) {
-            var buffer = file.BufferParser.GetBuffer(bufferId);
-            var translator = new LocationTracker(file, bufferId, fromVersion);
+        internal static void ApplyChanges(AP.ChangeInfo[] changes, ITextVersion lastVersion, ITextBuffer buffer, int fromVersion) {
+            var translator = new LocationTracker(lastVersion, buffer, fromVersion);
 
+            ApplyChanges(changes, buffer, translator);
+        }
+
+        internal static void ApplyChanges(AP.ChangeInfo[] changes, ITextBuffer buffer, LocationTracker translator) {
             using (var edit = buffer.CreateEdit()) {
                 foreach (var change in changes) {
                     edit.Replace(
@@ -1625,7 +1688,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal static async Task<QuickInfo> GetQuickInfo(SnapshotPoint point) {
+        internal static async Task<QuickInfo> GetQuickInfoAsync(SnapshotPoint point) {
             var analysis = GetApplicableExpression(point);
 
             if (analysis != null) {
@@ -1677,10 +1740,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 Span = span;
                 Location = location;
             }
-        }
-
-        internal static void ApplyChanges(AP.ChangeInfo[] changes, AnalysisEntry file, ITextBuffer buffer, int fromVersion) {
-            ApplyChanges(changes, file, file.BufferParser.GetBufferId(buffer), fromVersion);
         }
 
         private static ApplicableExpression GetApplicableExpression(SnapshotPoint point) {

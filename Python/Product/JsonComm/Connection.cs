@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Cdp {
         private readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1);
         private readonly Dictionary<int, RequestInfo> _requestCache;
         private readonly Dictionary<string, Type> _types;
-        private readonly Func<RequestArgs, Task<Response>> _requestHandler;
+        private readonly Func<RequestArgs, Func<Response, Task>, Task> _requestHandler;
         private readonly Stream _writer, _reader;
         private int _seq;
         private static char[] _headerSeperator = new[] { ':' };
@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Cdp {
         /// where command_name and event_name correspond to the fields in the Request and Event objects.  The type is the type of object
         /// which will be deserialized and instantiated.  If a type is not registered a GenericRequest or GenericEvent object will be created
         /// which will include the complete body of the request as a dictionary.</param>
-        public Connection(Stream writer, Stream reader, Func<RequestArgs, Task<Response>> requestHandler = null,
+        public Connection(Stream writer, Stream reader, Func<RequestArgs, Func<Response, Task>, Task> requestHandler = null,
             Dictionary<string, Type> types = null) {
             _requestCache = new Dictionary<int, RequestInfo>();
             _requestHandler = requestHandler;
@@ -226,18 +226,18 @@ namespace Microsoft.PythonTools.Cdp {
                 };
             }
 
-            Response result;
             bool success = true;
             string message = null;
             try {
-                result = await _requestHandler(new RequestArgs(command, request)).ConfigureAwait(false);
+                await _requestHandler(
+                    new RequestArgs(command, request),
+                    result => SendResponseAsync(seq.Value, command, success, message, result)
+                );
             } catch (Exception e) {
                 success = false;
                 message = e.ToString();
-                result = null;
+                await SendResponseAsync(seq.Value, command, success, message, null).ConfigureAwait(false);
             }
-
-            await SendResponseAsync(seq.Value, command, success, message, result).ConfigureAwait(false);
         }
 
         public void Dispose() {

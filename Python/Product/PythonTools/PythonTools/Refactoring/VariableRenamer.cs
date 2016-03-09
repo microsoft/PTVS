@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             var caret = _view.GetCaretPosition();
-            var analysis = await VsProjectAnalyzer.AnalyzeExpression(caret.Value);
+            var analysis = await VsProjectAnalyzer.AnalyzeExpressionAsync(caret.Value);
             
             string originalName = null;
             string privatePrefix = null;

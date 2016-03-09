@@ -353,7 +353,7 @@ namespace Microsoft.PythonTools.Project {
 
             var interp = project.GetProjectAnalyzer();
             if (interp != null) {
-                foreach (var r in interp.GetReferences().Result) {
+                foreach (var r in interp.GetReferencesAsync().Result) {
                     if (r.Kind == ProjectReferenceKind.ExtensionModule) {
                         string absPath;
                         try {

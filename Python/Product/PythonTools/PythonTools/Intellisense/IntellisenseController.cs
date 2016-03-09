@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             var pt = e.TextPosition.GetPoint(EditorExtensions.IsPythonContent, PositionAffinity.Successor);
             if (pt != null) {
-                var quickInfo = await VsProjectAnalyzer.GetQuickInfo(pt.Value);
+                var quickInfo = await VsProjectAnalyzer.GetQuickInfoAsync(pt.Value);
 
                 QuickInfoSource.AddQuickInfo(_textView.TextBuffer, quickInfo);
 

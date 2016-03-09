@@ -28,14 +28,17 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Dictionary from buffer ID to VersionInfo.
         /// </summary>
-        public readonly Dictionary<int, VersionInfo> Buffers;
+        public readonly Dictionary<int, BufferVersion> Buffers;
 
-        public VersionCookie(Dictionary<int, VersionInfo> versions) {
+        public VersionCookie(Dictionary<int, BufferVersion> versions) {
             Buffers = versions;
         }
     }
 
-    sealed class VersionInfo {
+    /// <summary>
+    /// Stores a snapshot of a specific buffer at a specific version.
+    /// </summary>
+    sealed class BufferVersion {
         /// <summary>
         /// The version this buffer was last parsed at
         /// </summary>
@@ -45,7 +48,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         public readonly PythonAst Ast;
 
-        public VersionInfo(int version, PythonAst ast) {
+        public BufferVersion(int version, PythonAst ast) {
             Version = version;
             Ast = ast;
         }

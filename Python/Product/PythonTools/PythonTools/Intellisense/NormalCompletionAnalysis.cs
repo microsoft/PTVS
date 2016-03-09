@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             analysis
                         );
                         var parameters = Enumerable.Empty<CompletionResult>();
-                        var sigs = VsProjectAnalyzer.GetSignatures(_serviceProvider, _snapshot, Span).Result;
+                        var sigs = VsProjectAnalyzer.GetSignaturesAsync(_serviceProvider, _snapshot, Span).Result;
                         if (sigs.Signatures.Any()) {
                             parameters = sigs.Signatures
                                 .SelectMany(s => s.Parameters)
@@ -131,7 +131,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             analysis
                         );
 
-                        members = analysis.Analyzer.GetMembers(analysis, text, location, _options.MemberOptions).Result;
+                        members = analysis.Analyzer.GetMembersAsync(analysis, text, location, _options.MemberOptions).Result;
                     }
                 }
 

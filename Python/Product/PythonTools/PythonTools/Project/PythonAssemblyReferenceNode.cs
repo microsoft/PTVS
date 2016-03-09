@@ -44,12 +44,12 @@ namespace Microsoft.PythonTools.Project {
             if (analyzer != null && PathUtils.IsSamePath(e.FileName, Url)) {
                 if ((e.FileChangeFlag & (_VSFILECHANGEFLAGS.VSFILECHG_Attr | _VSFILECHANGEFLAGS.VSFILECHG_Size | _VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Add)) != 0) {
                     // file was modified, unload and reload the extension module from our database.
-                    analyzer.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url)).Wait();
+                    analyzer.RemoveReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url)).Wait();
 
                     AnalyzeReference(analyzer);
                 } else if ((e.FileChangeFlag & _VSFILECHANGEFLAGS.VSFILECHG_Del) != 0) {
                     // file was deleted, unload from our extension database
-                    analyzer.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url)).Wait();
+                    analyzer.RemoveReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url)).Wait();
                 }
             }
         }
@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Project {
         private void AnalyzeReference(VsProjectAnalyzer interp) {
             if (interp != null) {
                 _failedToAnalyze = false;
-                var task = interp.AddReference(new ProjectAssemblyReference(AssemblyName, Url));
+                var task = interp.AddReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url));
 
                 // check if we get an exception, and if so mark ourselves as a dangling reference.
                 task.ContinueWith(new TaskFailureHandler(TaskScheduler.FromCurrentSynchronizationContext(), this).HandleAddRefFailure);
@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Project {
             base.Remove(removeFromStorage);
             var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
             if (interp != null) {
-                interp.RemoveReference(new ProjectAssemblyReference(AssemblyName, Url)).Wait();
+                interp.RemoveReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url)).Wait();
             }
         }
 

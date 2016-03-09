@@ -25,6 +25,7 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.Windows.Design.Host;
 
 namespace Microsoft.PythonTools.Designer {
+    using System.Threading.Tasks;
     using AP = AnalysisProtocol;
 
     class WpfEventBindingProvider : EventBindingProvider {
@@ -54,7 +55,7 @@ namespace Microsoft.PythonTools.Designer {
         public override bool CreateMethod(EventDescription eventDescription, string methodName, string initialStatements) {
             // build the new method handler
             var fileInfo = _pythonFileNode.GetAnalysisEntry();
-            var insertPoint = fileInfo.Analyzer.GetInsertionPoint(
+            var insertPoint = fileInfo.Analyzer.GetInsertionPointAsync(
                 fileInfo,
                 _pythonFileNode.GetTextBuffer(),
                 null
@@ -63,23 +64,18 @@ namespace Microsoft.PythonTools.Designer {
             if (insertPoint != null) {
                 var view = _pythonFileNode.GetTextView();
                 var textBuffer = _pythonFileNode.GetTextBuffer();
-                var translator = new LocationTracker(
-                    fileInfo,
-                    textBuffer,
-                    insertPoint.version
-                );
-
+                var translator = insertPoint.GetTracker(insertPoint.Data.version);
 
                 using (var edit = textBuffer.CreateEdit()) {
                     var text = BuildMethod(
                         eventDescription,
                         methodName,
-                        new string(' ', insertPoint.indentation),
+                        new string(' ', insertPoint.Data.indentation),
                         view.Options.IsConvertTabsToSpacesEnabled() ?
                             view.Options.GetIndentSize() :
                             -1);
 
-                    edit.Insert(translator.TranslateForward(insertPoint.location), text);
+                    edit.Insert(translator.TranslateForward(insertPoint.Data.location), text);
                     edit.Apply();
                     return true;
                 }
@@ -118,7 +114,16 @@ namespace Microsoft.PythonTools.Designer {
         public override string CreateUniqueMethodName(string objectName, EventDescription eventDescription) {
             var name = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}_{1}", objectName, eventDescription.Name);
             int count = 0;
-            while (IsExistingMethodName(eventDescription, name)) {
+            var fileInfo = _pythonFileNode.GetAnalysisEntry();
+
+            var methods = fileInfo.Analyzer.FindMethodsAsync(
+               fileInfo,
+               _pythonFileNode.GetTextBuffer(),
+               null,
+               null
+           ).Result;
+
+            while (methods.Contains(name)) {
                 name = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}_{1}{2}", objectName, eventDescription.Name, ++count);
             }
             return name;
@@ -126,7 +131,7 @@ namespace Microsoft.PythonTools.Designer {
 
         public override IEnumerable<string> GetCompatibleMethods(EventDescription eventDescription) {
             var fileInfo = _pythonFileNode.GetAnalysisEntry();
-            return fileInfo.Analyzer.FindMethods(
+            return fileInfo.Analyzer.FindMethodsAsync(
                 fileInfo,
                 _pythonFileNode.GetTextBuffer(),
                 null,
@@ -141,7 +146,7 @@ namespace Microsoft.PythonTools.Designer {
         public override bool IsExistingMethodName(EventDescription eventDescription, string methodName) {
             var fileInfo = _pythonFileNode.GetAnalysisEntry();
 
-            var methods = fileInfo.Analyzer.FindMethods(
+            var methods = fileInfo.Analyzer.FindMethodsAsync(
                 fileInfo,
                 _pythonFileNode.GetTextBuffer(),
                 null,
@@ -153,7 +158,7 @@ namespace Microsoft.PythonTools.Designer {
 
         private AP.MethodInfoResponse FindMethod(string methodName) {
             var fileInfo = _pythonFileNode.GetAnalysisEntry();
-            return fileInfo.Analyzer.GetMethodInfo(
+            return fileInfo.Analyzer.GetMethodInfoAsync(
                 fileInfo,
                 _pythonFileNode.GetTextBuffer(),
                 null,

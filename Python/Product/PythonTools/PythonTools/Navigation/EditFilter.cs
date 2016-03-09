@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Language {
             var caret = _textView.GetCaretPosition();
             if (caret != null) {
 
-                var defs = await VsProjectAnalyzer.AnalyzeExpression(caret.Value);
+                var defs = await VsProjectAnalyzer.AnalyzeExpressionAsync(caret.Value);
 
                 Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
                 GetDefsRefsAndValues(_serviceProvider, defs.Expression, defs.Variables, out definitions, out references, out values);
@@ -181,7 +181,7 @@ namespace Microsoft.PythonTools.Language {
 
             var caret = _textView.GetCaretPosition();
             if (caret != null) {
-                var references = await VsProjectAnalyzer.AnalyzeExpression(caret.Value);
+                var references = await VsProjectAnalyzer.AnalyzeExpressionAsync(caret.Value);
 
                 var locations = GetFindRefLocations(_serviceProvider, references.Expression, references.Variables);
 
@@ -809,7 +809,7 @@ namespace Microsoft.PythonTools.Language {
             var options = _pyService.GetCodeFormattingOptions();
             options.NewLineFormat = _textView.Options.GetNewLineCharacter();
 
-            await analyzer.FormatCode(span, _textView, options, selectResult);
+            await analyzer.FormatCodeAsync(span, _textView, options, selectResult);
         }
 
         internal void RefactorRename() {

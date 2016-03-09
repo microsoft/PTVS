@@ -25,14 +25,14 @@ namespace Microsoft.PythonTools.Intellisense {
         /// part of an identifier then the expression is extended to complete the identifier.
         /// </summary>
         public static ExpressionAnalysis AnalyzeExpression(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span, bool forCompletion = true) {
-            return VsProjectAnalyzer.AnalyzeExpression(span.GetStartPoint(snapshot)).Result;
+            return VsProjectAnalyzer.AnalyzeExpressionAsync(span.GetStartPoint(snapshot)).Result;
         }
 
         /// <summary>
         /// Gets a list of signatures available for the expression at the provided location in the snapshot.
         /// </summary>
         internal static SignatureAnalysis GetSignatures(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span) {
-            return VsProjectAnalyzer.GetSignatures(serviceProvider, snapshot, span).Result;
+            return VsProjectAnalyzer.GetSignaturesAsync(serviceProvider, snapshot, span).Result;
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// New in v1.1.
         /// </summary>        
         public static MissingImportAnalysis GetMissingImports(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span) {
-            return VsProjectAnalyzer.GetMissingImports(serviceProvider, snapshot, span).Result;
+            return VsProjectAnalyzer.GetMissingImportsAsync(serviceProvider, snapshot, span).Result;
         }
     }
 }

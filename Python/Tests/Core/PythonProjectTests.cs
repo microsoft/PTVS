@@ -272,46 +272,46 @@ namespace PythonToolsTests {
                 var m1Path = TestData.GetPath("TestData\\SimpleImport\\module1.py");
                 var m2Path = TestData.GetPath("TestData\\SimpleImport\\module2.py");
 
-                var entry1 = analyzer.AnalyzeFile(m1Path).Result;
-                var entry2 = analyzer.AnalyzeFile(m2Path).Result;
+                var entry1 = analyzer.AnalyzeFileAsync(m1Path).Result;
+                var entry2 = analyzer.AnalyzeFileAsync(m2Path).Result;
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
                 var loc = new Microsoft.PythonTools.Parsing.SourceLocation(0, 1, 1);
                 AssertUtil.ContainsExactly(
-                    analyzer.GetEntriesThatImportModule("module1", true).Result.Select(m => m.moduleName),
+                    analyzer.GetEntriesThatImportModuleAsync("module1", true).Result.Select(m => m.moduleName),
                     "module2"
                 );
 
                 AssertUtil.ContainsExactly(
-                    analyzer.GetValues(entry2, "x", loc).Select(v => v.TypeId),
-                    BuiltinTypeId.Int
+                    analyzer.GetValues(entry2, "x", loc),
+                    "int"
                 );
 
-                analyzer.UnloadFile(entry1);
+                analyzer.UnloadFileAsync(entry1);
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
                 // Even though module1 has been unloaded, we still know that
                 // module2 imports it.
                 AssertUtil.ContainsExactly(
-                    analyzer.GetEntriesThatImportModule("module1", true).Result.Select(m => m.moduleName),
+                    analyzer.GetEntriesThatImportModuleAsync("module1", true).Result.Select(m => m.moduleName),
                     "module2"
                 );
 
                 AssertUtil.ContainsExactly(
-                    analyzer.GetValues(entry2, "x", loc).Select(v => v.TypeId)
+                    analyzer.GetValues(entry2, "x", loc)
                 );
 
-                analyzer.AnalyzeFile(m1Path).Wait();
+                analyzer.AnalyzeFileAsync(m1Path).Wait();
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
                 AssertUtil.ContainsExactly(
-                    analyzer.GetEntriesThatImportModule("module1", true).Result.Select(m => m.moduleName),
+                    analyzer.GetEntriesThatImportModuleAsync("module1", true).Result.Select(m => m.moduleName),
                     "module2"
                 );
 
                 AssertUtil.ContainsExactly(
-                    analyzer.GetValues(entry2, "x", loc).Select(v => v.TypeId),
-                    BuiltinTypeId.Int
+                    analyzer.GetValues(entry2, "x", loc),
+                    "int"
                 );
             }
         }
@@ -321,7 +321,7 @@ namespace PythonToolsTests {
         public void AnalyzeBadEgg() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 4)) };
             using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), factories[0], factories)) {
-                analyzer.AnalyzeZipArchive(TestData.GetPath(@"TestData\BadEgg.egg")).Wait();
+                analyzer.AnalyzeZipArchiveAsync(TestData.GetPath(@"TestData\BadEgg.egg")).Wait();
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
                 // Analysis result must contain the module for the filename inside the egg that is a valid identifier,

@@ -1110,7 +1110,7 @@ async def g():
                 ITrackingSpan span;
                 QuickInfoSource.AugmentQuickInfoWorker(
                     quickInfo,
-                    VsProjectAnalyzer.GetQuickInfo(
+                    VsProjectAnalyzer.GetQuickInfoAsync(
                         new SnapshotPoint(snapshot, start)
                     ).Result,
                     out span

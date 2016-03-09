@@ -61,12 +61,12 @@ namespace Microsoft.PythonTools.Intellisense {
             _currentProjEntry = initialProjectEntry;
             AttachedViews = 1;
 
+            initialProjectEntry.BufferParser = this;
+
             InitBuffer(buffer, 0);
 
             // lock not necessary for _bufferInfo, no one has access to us yet...
             ParseBuffers(new[] { buffer.CurrentSnapshot }, new[] { _bufferInfo[buffer] }).DoNotWait();
-
-            initialProjectEntry.BufferParser = this;
         }
 
         class BufferInfo {

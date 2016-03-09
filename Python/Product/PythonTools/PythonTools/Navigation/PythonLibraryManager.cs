@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Navigation {
                     .GetProject()
                     .GetPythonProject()
                     .GetAnalyzer()
-                    .AnalyzeFile(task.FileName).ContinueWith(x => {
+                    .AnalyzeFileAsync(task.FileName).ContinueWith(x => {
                         item = x.Result;
 
                         if (item != null) {

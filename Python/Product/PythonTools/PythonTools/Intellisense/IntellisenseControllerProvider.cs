@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     controller.PropagateAnalyzer(subjBuf);
                 }
 
-                var entry = analyzer.MonitorTextBuffer(buffer).Result;
+                var entry = analyzer.MonitorTextBufferAsync(buffer).Result;
                 _hookedCloseEvents[textView] = Tuple.Create(entry.BufferParser, analyzer);
                 textView.Closed += TextView_Closed;
 

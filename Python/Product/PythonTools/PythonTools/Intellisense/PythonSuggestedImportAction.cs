@@ -110,16 +110,16 @@ namespace Microsoft.PythonTools.Intellisense {
             get { return false; }
         }
 
-        public void Invoke(CancellationToken cancellationToken) {
+        public async void Invoke(CancellationToken cancellationToken) {
             Debug.Assert(!string.IsNullOrEmpty(_name));
 
-            VsProjectAnalyzer.AddImport(
+            await VsProjectAnalyzer.AddImportAsync(
                 _buffer.GetPythonProjectEntry(),
                 _fromModule,
                 _name,
                 _source._view,
                 _buffer
-            ).Wait();
+            );
         }
 
         public bool TryGetTelemetryId(out Guid telemetryId) {

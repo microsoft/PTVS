@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             _failedToAnalyze = false;
-            var task = interp.AddReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
+            var task = interp.AddReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
 
             // check if we get an exception, and if so mark ourselves as a dangling reference.
             task.ContinueWith(new TaskFailureHandler(TaskScheduler.FromCurrentSynchronizationContext(), this).HandleAddRefFailure);
@@ -209,12 +209,12 @@ namespace Microsoft.PythonTools.Project {
             if (interp != null && PathUtils.IsSamePath(e.FileName, _filename)) {
                 if ((e.FileChangeFlag & (_VSFILECHANGEFLAGS.VSFILECHG_Attr | _VSFILECHANGEFLAGS.VSFILECHG_Size | _VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Add)) != 0) {
                     // file was modified, unload and reload the extension module from our database.
-                    interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
+                    interp.RemoveReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
 
                     AnalyzeReference(interp);
                 } else if ((e.FileChangeFlag & _VSFILECHANGEFLAGS.VSFILECHG_Del) != 0) {
                     // file was deleted, unload from our extension database
-                    interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
+                    interp.RemoveReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
                     ProjectMgr.OnInvalidateItems(Parent);
                 }
             }
@@ -230,7 +230,7 @@ namespace Microsoft.PythonTools.Project {
 
             var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
             if (interp != null) {
-                interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
+                interp.RemoveReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
             }
             ItemNode.RemoveFromProjectFile();
             base.Remove(removeFromStorage);
