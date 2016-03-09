@@ -696,7 +696,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 watcher.Changed += OnChanged;
                 watcher.Renamed += OnRenamed;
                 watcher.EnableRaisingEvents = true;
-            } catch (IOException ex) {
+            } catch (IOException) {
                 // Raced with directory deletion. We normally handle the
                 // library being deleted by disposing the watcher, but this
                 // occurs in response to an event from the watcher. Because
