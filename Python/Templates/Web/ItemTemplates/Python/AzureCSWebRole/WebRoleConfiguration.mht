@@ -1,0 +1,175 @@
+From: "Saved by Internet Explorer 11"
+Subject: Python Web Role Configuration
+Date: Mon, 29 Feb 2016 15:57:26 -0800
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----=_NextPart_000_0000_01D17309.E29328D0"
+X-MimeOLE: Produced By Microsoft MimeOLE V10.0.10011.16384
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_0000_01D17309.E29328D0
+Content-Type: text/html;
+	charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: file://D:\PTVS\PTVS\Python\Product\PythonTools\Templates\SharedFiles\Readme\WebRoleConfiguration.html
+
+=EF=BB=BF<!DOCTYPE HTML>
+<!DOCTYPE html PUBLIC "" ""><!--=0A=
+Python Tools for Visual Studio=0A=
+Copyright(c) Microsoft Corporation=0A=
+All rights reserved.=0A=
+=0A=
+Licensed under the Apache License, Version 2.0 (the License); you may =
+not use=0A=
+this file except in compliance with the License. You may obtain a copy =
+of the=0A=
+License at http://www.apache.org/licenses/LICENSE-2.0=0A=
+=0A=
+THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR =
+CONDITIONS=0A=
+OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY=0A=
+IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR =
+PURPOSE,=0A=
+MERCHANTABLITY OR NON-INFRINGEMENT.=0A=
+=0A=
+See the Apache Version 2.0 License for specific language governing=0A=
+permissions and limitations under the License.=0A=
+--><HTML=20
+lang=3D"en" xmlns=3D"http://www.w3.org/1999/xhtml"><HEAD><META =
+content=3D"IE=3D11.0000"=20
+http-equiv=3D"X-UA-Compatible">
+    =20
+<META charset=3D"utf-8">     <TITLE>Python Web Role =
+Configuration</TITLE>    =20
+<LINK =
+href=3D"file:///D:/PTVS/PTVS/Python/Product/PythonTools/ReadmeStyle.css" =
+
+rel=3D"stylesheet" type=3D"text/css">=20
+<META name=3D"GENERATOR" content=3D"MSHTML 11.00.10586.103"></HEAD>=20
+<BODY>
+<H1 class=3D"top">Configuring Deployment</H1>
+<P>        While the included PowerShell scripts may be edited freely, =
+it is    =20
+   possible to set most configuration options through your Python =
+project.    =20
+</P>
+<P>        To specify the version of Python your web should run with, =
+make it   =20
+    the active environment for your project. (Ensure that you have a =
+WebPI      =20
+ reference or startup task to install this version on the instance - see =
+      =20
+the documentation in <CODE>ConfigureCloudService.ps1</CODE> for more     =
+  =20
+details.)     </P>
+<P>        If your version of Python cannot be detected using the =
+CPython=20
+registry        keys after it has been installed, you can add the        =
+=20
+<CODE>DeployedPythonInterpreterPath</CODE> property to your Python       =
+=20
+project by editing the .pyproj file. This path will take precedence over =
+      =20
+the active environment.     </P>
+<P>        To install packages using pip, update the=20
+<CODE>requirements.txt</CODE>        file in the root directory of your =
+project.=20
+    </P>
+<P>        To set <CODE>PYTHONPATH</CODE> (or equivalent) before running =
+the    =20
+   web, add the necessary Search Paths to your project.     </P>
+<P>        To specify your main handler script, make it the startup file =
+in your=20
+       project. Alternatively, you can set the full importable name of =
+your     =20
+  WSGI app in Project Properties\Web\WSGI Handler.     </P>
+<H1>Troubleshooting Deployment</H1>
+<P>If your web role does not behave correctly after deployment, check =
+the=20
+following:</P>
+<OL>
+  <LI>
+  <P>Your Python project includes a bin\ folder with (at least):</P>
+  <UL>
+    <LI><CODE>ConfigureCloudService.ps1</CODE></LI>
+    <LI><CODE>ps.cmd</CODE></LI></UL></LI>
+  <LI>Your Cloud project references those files from the service=20
+definition.</LI>
+  <LI>
+  <P>Your Python project includes either:</P>
+  <UL>
+    <LI>a <CODE>requirements.txt</CODE> file listing all dependencies, =
+OR</LI>
+    <LI>a virtual environment containing all =
+dependencies.</LI></UL></LI>
+  <LI>
+  <P>Enable Remote Desktop on your Cloud Service and investigate the log =
+
+  files.</P>
+  <P>Logs for ConfigureCloudService.ps1 are stored in the following path =
+on the=20
+  machine instance:</P>
+  <UL>
+    =
+<LI><CODE>C:\Resources\Directory\%RoleId%.DiagnosticStore\LogFiles</CODE>=
+</LI></UL></LI>
+  <LI>            Start a discussion at             <A =
+href=3D"http://go.microsoft.com/fwlink/?LinkId=3D293415">our=20
+  discussion forum</A>            for further help.         </LI></OL>
+<HR>
+
+<P class=3D"hint">This readme file may be deleted when you no longer =
+need=20
+it.</P></BODY></HTML>
+
+------=_NextPart_000_0000_01D17309.E29328D0
+Content-Type: text/css;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: file:///D:/PTVS/PTVS/Python/Product/PythonTools/ReadmeStyle.css
+
+body {
+	font-family: "Segoe UI", Arial, Helvetica, sans-serif; font-size: 11pt; =
+font-weight: 200;
+}
+p {
+	margin: 0px; padding: 0px;
+}
+h1 {
+	margin: 0px; padding: 0px;
+}
+h2 {
+	margin: 0px; padding: 0px;
+}
+h1 {
+	padding-top: 1em; font-size: 20pt; font-weight: bold;
+}
+h1.top {
+	padding-top: 0em;
+}
+h2 {
+	padding-top: 0.5em; padding-left: 0em; font-size: 16pt; font-weight: =
+300;
+}
+p {
+	padding-bottom: 0.5em; padding-left: 0.5em;
+}
+p.hint {
+	color: rgb(102, 102, 102);
+}
+code {
+	font-family: Consolas, "Lucida Console", monospace;
+}
+ol {
+	padding-top: 0px; margin-top: 0px;
+}
+ol > li {
+	padding-top: 1.5em;
+}
+li > img {
+	vertical-align: middle;
+}
+
+------=_NextPart_000_0000_01D17309.E29328D0--

@@ -20,14 +20,14 @@
         <InstallDirectoryNeedsPrefix>false</InstallDirectoryNeedsPrefix>
       </_SourceFiles>
       <_SourceFiles Include="@(ProjectTemplate)">
-        <InstallDirectory>ProjectTemplates</InstallDirectory>
+        <InstallDirectory>ProjectTemplates_%(ProjectTemplate.TemplateName)</InstallDirectory>
       </_SourceFiles>
       <_SourceFiles Include="@(WebProjectTemplate)">
-        <InstallDirectory>WebProjectTemplates</InstallDirectory>
+        <InstallDirectory>WebProjectTemplates_%(WebProjectTemplate.TemplateName)</InstallDirectory>
         <IncludeInWD>false</IncludeInWD>
       </_SourceFiles>
       <_SourceFiles Include="@(ItemTemplate)">
-        <InstallDirectory>ItemTemplates</InstallDirectory>
+        <InstallDirectory>ItemTemplates_%(ItemTemplate.TemplateName)</InstallDirectory>
       </_SourceFiles>
       <_SourceFiles Include="@(MSBuildFile)">
         <InstallDirectory>Dir_MSBuildTargets</InstallDirectory>

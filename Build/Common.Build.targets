@@ -29,7 +29,7 @@
   -->
   <Target Name="_GetVSIXSourceProjects">
     <ItemGroup>
-      <_VSIXSourceProjects Include="@(ProjectReference2)" />
+      <_VSIXSourceProjects Include="@(ProjectReference2)" Condition="'%(ProjectReference2.IncludeInVSIX)' == 'true'" />
       <_VSIXSourceProjects Include="@(ProjectReference)" Condition="'%(ProjectReference.IncludeInVSIX)' == 'true'" />
     </ItemGroup>
   </Target>
