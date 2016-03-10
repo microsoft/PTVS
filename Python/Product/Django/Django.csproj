@@ -427,6 +427,7 @@
     <Compile Include="TemplateParsing\TemplateTokenKind.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="VsMenus.cs" />
+    <ZipProject Include="Templates\Projects\StarterDjangoProject\app-migrations-__init__.py" />
     <ZipItem Include="Templates\Files\DjangoNewAppFiles19\admin.py" />
     <ZipItem Include="Templates\Files\DjangoNewAppFiles19\apps.py" />
     <ZipItem Include="Templates\Files\DjangoNewAppFiles19\migrations-__init__.py" />
