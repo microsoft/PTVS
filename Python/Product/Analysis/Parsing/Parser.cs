@@ -3804,7 +3804,7 @@ namespace Microsoft.PythonTools.Parsing {
             return Error(_verbatim ? (_tokenWhiteSpace + _token.Token.VerbatimImage) : null);
         }
 
-        private Expression FinishExpressionListAsExpr(Expression expr, bool ateMultiply) {
+        private Expression FinishExpressionListAsExpr(Expression expr) {
             var start = GetStart();
             bool trailingComma = true;
             List<Expression> l = new List<Expression>();
@@ -3816,10 +3816,6 @@ namespace Microsoft.PythonTools.Parsing {
 
             while (true) {
                 if (NeverTestToken(PeekToken())) break;
-
-                if (MaybeEat(TokenKind.Multiply)) {
-                    // Still need to produce right AST here...
-                }
 
                 expr = ParseExpression();
                 l.Add(expr);
@@ -3866,26 +3862,20 @@ namespace Microsoft.PythonTools.Parsing {
                 try {
                     _allowIncomplete = true;
 
-                    bool ateMultiply = false;
-                    if (MaybeEat(TokenKind.Multiply)) {
-                        // Need to produce an AST with the splatting here...
-                        ateMultiply = true;
-                    }
-
                     Expression expr = ParseExpression();
                     if (MaybeEat(TokenKind.Comma)) {
                         // "(" expression "," ...
-                        ret = FinishExpressionListAsExpr(expr, ateMultiply);
+                        ret = FinishExpressionListAsExpr(expr);
                     } else if (PeekToken(Tokens.KeywordForToken)) {
                         // "(" expression "for" ...
-                        ret = ParseGeneratorExpression(expr, startingWhiteSpace);
-                        if (ateMultiply) {
+                        if (expr is StarredExpression) {
                             ReportSyntaxError("iterable unpacking cannot be used in comprehension");
                         }
+                        ret = ParseGeneratorExpression(expr, startingWhiteSpace);
                     } else {
                         // "(" expression ")"
                         ret = new ParenthesisExpression(expr);
-                        if (ateMultiply) {
+                        if (expr is StarredExpression) {
                             ReportSyntaxError("can't use starred expression here");
                         }
                     }
@@ -3994,12 +3984,12 @@ namespace Microsoft.PythonTools.Parsing {
                     }
 
                     if (MaybeEat(TokenKind.Multiply)) {
-                        if (atePower) {
+                        if (atePower || _langVersion < PythonLanguageVersion.V35) {
                             ReportSyntaxError("invalid syntax");
                         }
                         ateMultiply = true;
                     } else if (MaybeEat(TokenKind.Power)) {
-                        if (ateMultiply) {
+                        if (ateMultiply || _langVersion < PythonLanguageVersion.V35) {
                             ReportSyntaxError("invalid syntax");
                         }
                         atePower = true;
@@ -4227,9 +4217,9 @@ namespace Microsoft.PythonTools.Parsing {
                 bool prevAllow = _allowIncomplete;
                 try {
                     _allowIncomplete = true;
-                    if (MaybeEat(TokenKind.Multiply)) {
+                    /*if (MaybeEat(TokenKind.Multiply)) {
                         // Need to produce an AST with the splatting here...
-                    }
+                    }*/
 
                     Expression t0 = ParseExpression();
                     if (MaybeEat(TokenKind.Comma)) {

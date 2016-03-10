@@ -82,7 +82,7 @@ namespace AnalysisTests {
         public void Errors35() {
             ParseErrors("Errors35.py",
                 PythonLanguageVersion.V35,
-                new ErrorInfo("iterable unpacking cannot be used in comprehension", 16, 1, 17, 17, 1, 18),
+                new ErrorInfo("iterable unpacking cannot be used in comprehension", 5, 1, 6, 8, 1, 9),
                 new ErrorInfo("invalid syntax", 39, 3, 12, 40, 3, 13),
                 new ErrorInfo("can't use starred expression here", 48, 4, 5, 49, 4, 6),
                 new ErrorInfo("invalid syntax", 59, 5, 9, 60, 5, 10),
