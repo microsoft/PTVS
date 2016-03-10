@@ -26,27 +26,25 @@ permissions and limitations under the License.
 <body>
     <h1 class="top">One more thing...</h1>
     <p>
-        Before running this project, you may want to create a super user by <strong>synchronizing the
-        database</strong>.
+        Before running this project, you may want to <strong>create a super user</strong>.
     </p>
 
 
     <h1>Synchronize the Database</h1>
     <p>
         This project has default settings for the database (it uses sqlite).
-        If you need a super user, you'll need to sync the database before running the project.
+        If you need a super user, you'll need to create one before running the project.
     </p>
 
     <ol>
         <li>Open Solution Explorer.</li>
         <li>
-            <p>Right-click the project node and select Python->Django Sync DB.</p>
+            <p>Right-click the project node and select Python->Django Create Superuser.</p>
             <img src="SyncDB.png" />
         </li>
-        <li>You will be prompted to create a super user, enter yes.</li>
         <li>
-            Enter a user name, email and password when prompted. The username
-            and password do not need to match any existing account.
+            Enter account details when prompted. This creates a new account, and
+            the details do not need to match any of your existing accounts.
         </li>
     </ol>
 </body>
