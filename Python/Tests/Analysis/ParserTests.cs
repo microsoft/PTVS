@@ -51,6 +51,7 @@ namespace AnalysisTests {
         internal static readonly PythonLanguageVersion[] V26_V27Versions = AllVersions.Where(v => v >= PythonLanguageVersion.V26 && v <= PythonLanguageVersion.V27).ToArray();
         internal static readonly PythonLanguageVersion[] V30_V32Versions = AllVersions.Where(v => v >= PythonLanguageVersion.V30 && v <= PythonLanguageVersion.V32).ToArray();
         internal static readonly PythonLanguageVersion[] V3Versions = AllVersions.Where(v => v >= PythonLanguageVersion.V30).ToArray();
+        internal static readonly PythonLanguageVersion[] V33AndV34 = AllVersions.Where(v => v >= PythonLanguageVersion.V33 && v <= PythonLanguageVersion.V34).ToArray();
         internal static readonly PythonLanguageVersion[] V33AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V33).ToArray();
         internal static readonly PythonLanguageVersion[] V35AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V35).ToArray();
 
@@ -75,6 +76,19 @@ namespace AnalysisTests {
 
             // mixed on a comment line - should not crash
             ParseErrors("MixedWhitespace6.py", PythonLanguageVersion.V27, Severity.Error, new ErrorInfo("inconsistent whitespace", 126, 8, 17, 128, 9, 2));
+        }
+
+        [TestMethod, Priority(0)]
+        public void Errors35() {
+            ParseErrors("Errors35.py",
+                PythonLanguageVersion.V35,
+                new ErrorInfo("iterable unpacking cannot be used in comprehension", 16, 1, 17, 17, 1, 18),
+                new ErrorInfo("invalid syntax", 39, 3, 12, 40, 3, 13),
+                new ErrorInfo("can't use starred expression here", 48, 4, 5, 49, 4, 6),
+                new ErrorInfo("invalid syntax", 59, 5, 9, 60, 5, 10),
+                new ErrorInfo("invalid syntax", 72, 6, 9, 73, 6, 10),
+                new ErrorInfo("iterable argument unpacking follows keyword argument unpacking", 85, 7, 9, 88, 7, 12)
+            );
         }
 
         [TestMethod, Priority(0)]
@@ -137,7 +151,7 @@ namespace AnalysisTests {
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
                 new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
-                new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
+                new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1249, 132, 8),
                 new ErrorInfo("'as' requires Python 2.6 or later", 1328, 139, 18, 1330, 139, 20),
                 new ErrorInfo("invalid syntax", 1398, 147, 2, 1403, 147, 7),
                 new ErrorInfo("invalid syntax", 1404, 147, 8, 1409, 147, 13),
@@ -204,7 +218,7 @@ namespace AnalysisTests {
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
                 new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
-                new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
+                new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1249, 132, 8),
                 new ErrorInfo("'as' requires Python 2.6 or later", 1328, 139, 18, 1330, 139, 20),
                 new ErrorInfo("invalid syntax", 1398, 147, 2, 1403, 147, 7),
                 new ErrorInfo("invalid syntax", 1404, 147, 8, 1409, 147, 13),
@@ -270,7 +284,7 @@ namespace AnalysisTests {
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
                 new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
-                new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
+                new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1249, 132, 8),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
                 new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
@@ -332,7 +346,7 @@ namespace AnalysisTests {
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
                 new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
                 new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
-                new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
+                new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1249, 132, 8),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
                 new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
                 new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
@@ -397,7 +411,7 @@ namespace AnalysisTests {
                     new ErrorInfo("sublist parameters are not supported in 3.x", 1171, 123, 10, 1180, 123, 19),
                     new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
                     new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1277, 134, 17, 1280, 134, 20),
-                    new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
+                    new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1249, 132, 8),
                     new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1379, 144, 17, 1382, 144, 20),
                     new ErrorInfo("cannot mix bytes and nonbytes literals", 1404, 147, 8, 1409, 147, 13),
                     new ErrorInfo("cannot mix bytes and nonbytes literals", 1417, 148, 7, 1423, 148, 13),
@@ -413,7 +427,7 @@ namespace AnalysisTests {
                 );
             }
 
-            foreach (var version in V33AndUp) {
+            foreach (var version in V33AndV34) {
                 ParseErrors("AllErrors.py",
                     version,
                     new ErrorInfo("future statement does not support import *", 0, 1, 1, 24, 1, 25),
@@ -463,7 +477,7 @@ namespace AnalysisTests {
                     new ErrorInfo("sublist parameters are not supported in 3.x", 1171, 123, 10, 1180, 123, 19),
                     new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
                     new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1277, 134, 17, 1280, 134, 20),
-                    new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1248, 132, 7),
+                    new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1249, 132, 8),
                     new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1379, 144, 17, 1382, 144, 20),
                     new ErrorInfo("cannot mix bytes and nonbytes literals", 1404, 147, 8, 1409, 147, 13),
                     new ErrorInfo("cannot mix bytes and nonbytes literals", 1417, 148, 7, 1423, 148, 13),
@@ -478,6 +492,68 @@ namespace AnalysisTests {
                     new ErrorInfo("invalid syntax", 1524, 161, 10, 1527, 161, 13)
                 );
             }
+
+            ParseErrors("AllErrors.py",
+                    PythonLanguageVersion.V35,
+                    new ErrorInfo("future statement does not support import *", 0, 1, 1, 24, 1, 25),
+                    new ErrorInfo("future feature is not defined: *", 0, 1, 1, 24, 1, 25),
+                    new ErrorInfo("not a chance", 26, 2, 1, 55, 2, 30),
+                    new ErrorInfo("future feature is not defined: unknown", 57, 3, 1, 87, 3, 31),
+                    new ErrorInfo("default value must be specified here", 106, 5, 16, 107, 5, 17),
+                    new ErrorInfo("non-keyword arg after keyword arg", 134, 8, 12, 135, 8, 13),
+                    new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
+                    new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
+                    new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 216, 17, 10, 222, 17, 16),
+                    new ErrorInfo("unexpected token '42'", 251, 20, 10, 253, 20, 12),
+                    new ErrorInfo("'break' outside loop", 278, 25, 1, 283, 25, 6),
+                    new ErrorInfo("'continue' not properly in loop", 285, 26, 1, 293, 26, 9),
+                    new ErrorInfo("'continue' not supported inside 'finally' clause", 374, 34, 9, 382, 34, 17),
+                    new ErrorInfo("expected expression after del", 386, 36, 1, 389, 36, 4),
+                    new ErrorInfo("can't delete binary operator", 396, 37, 5, 399, 37, 8),
+                    new ErrorInfo("can't delete unary operator", 405, 38, 5, 407, 38, 7),
+                    new ErrorInfo("can't delete or expression", 413, 39, 5, 421, 39, 13),
+                    new ErrorInfo("can't delete and expression", 427, 40, 5, 436, 40, 14),
+                    new ErrorInfo("can't delete dictionary display", 442, 41, 5, 444, 41, 7),
+                    new ErrorInfo("can't delete literal", 450, 42, 5, 454, 42, 9),
+                    new ErrorInfo("can't delete literal", 460, 43, 5, 464, 43, 9),
+                    new ErrorInfo("can't assign to literal", 468, 45, 1, 472, 45, 5),
+                    new ErrorInfo("can't assign to literal", 482, 46, 1, 486, 46, 5),
+                    new ErrorInfo("'return' outside function", 498, 48, 1, 504, 48, 7),
+                    new ErrorInfo("misplaced yield", 552, 55, 1, 557, 55, 6),
+                    new ErrorInfo("two starred expressions in assignment", 660, 68, 8, 662, 68, 10),
+                    new ErrorInfo("illegal expression for augmented assignment", 674, 70, 1, 676, 70, 3),
+                    new ErrorInfo("missing module name", 692, 72, 6, 698, 72, 12),
+                    new ErrorInfo("import * only allowed at module level", 720, 75, 5, 735, 75, 20),
+                    new ErrorInfo("from __future__ imports must occur at the beginning of the file", 749, 78, 1, 780, 78, 32),
+                    new ErrorInfo("nonlocal declaration not allowed at module level", 788, 82, 1, 796, 82, 9),
+                    new ErrorInfo("invalid syntax, only exception value is allowed in 3.x.", 814, 83, 10, 819, 83, 15),
+                    new ErrorInfo("default value must be specified here", 924, 99, 15, 925, 99, 16),
+                    new ErrorInfo("duplicate * args arguments", 987, 105, 13, 988, 105, 14),
+                    new ErrorInfo("duplicate * args arguments", 1017, 108, 13, 1018, 108, 14),
+                    new ErrorInfo("named arguments must follow bare *", 1044, 111, 10, 1048, 111, 14),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1072, 114, 10, 1077, 114, 15),
+                    new ErrorInfo("unexpected token '42'", 1107, 117, 11, 1109, 117, 13),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1106, 117, 10, 1112, 117, 16),
+                    new ErrorInfo("duplicate argument 'abc' in function definition", 1143, 120, 12, 1146, 120, 15),
+                    new ErrorInfo("duplicate argument 'abc' in function definition", 1177, 123, 16, 1180, 123, 19),
+                    new ErrorInfo("sublist parameters are not supported in 3.x", 1171, 123, 10, 1180, 123, 19),
+                    new ErrorInfo("unexpected token '42'", 1208, 127, 7, 1210, 127, 9),
+                    new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1277, 134, 17, 1280, 134, 20),
+                    new ErrorInfo("default 'except' must be last", 1242, 132, 1, 1249, 132, 8),
+                    new ErrorInfo("\", variable\" not allowed in 3.x - use \"as variable\" instead.", 1379, 144, 17, 1382, 144, 20),
+                    new ErrorInfo("cannot mix bytes and nonbytes literals", 1404, 147, 8, 1409, 147, 13),
+                    new ErrorInfo("cannot mix bytes and nonbytes literals", 1417, 148, 7, 1423, 148, 13),
+                    new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
+                    new ErrorInfo("invalid syntax", 1431, 149, 7, 1433, 149, 9),
+                    new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
+                    new ErrorInfo("invalid syntax", 1442, 150, 8, 1444, 150, 10),
+                    new ErrorInfo("invalid syntax", 1451, 152, 4, 1453, 152, 6),
+                    new ErrorInfo("expected name", 1459, 154, 3, 1461, 154, 5),
+                    new ErrorInfo("unexpected token '42'", 1476, 156, 7, 1478, 156, 9),
+                    new ErrorInfo("invalid syntax", 1511, 160, 12, 1512, 160, 13),
+                    new ErrorInfo("invalid syntax", 1524, 161, 10, 1527, 161, 13)
+                );
         }
 
         [TestMethod, Priority(0)]

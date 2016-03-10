@@ -2177,7 +2177,8 @@ m {1}= m
 
             foreach (var test in operators) {
                 Console.WriteLine(test.Operator);
-                var entry = ProcessText(String.Format(text, test.Method, test.Operator), test.Version);
+                var code = String.Format(text, test.Method, test.Operator);
+                var entry = ProcessText(code, test.Version);
 
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("a", text.IndexOf("a =")), "ForwardResult instance");
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("b", text.IndexOf("b =")), "ReverseResult instance");
@@ -2192,7 +2193,7 @@ m {1}= m
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("k", text.IndexOf("k =")), "ForwardResult instance");
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("l", text.IndexOf("l =")), "ReverseResult instance");
                 // We assume that augmented assignments keep their type
-                AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("m", text.IndexOf("m " + test.Operator)), "C instance");
+                AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("m", code.IndexOf("m " + test.Operator)), "C instance");
             }
         }
 
@@ -5046,7 +5047,7 @@ x = X()
 a = x(2)
 ";
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", -1), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", 0), BuiltinTypeId.Int);
         }
 
         /// <summary>
