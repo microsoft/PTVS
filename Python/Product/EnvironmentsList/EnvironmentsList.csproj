@@ -188,21 +188,21 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Analysis\Analysis.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Analysis\Analysis.csproj">
       <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
-      <Name>Analysis</Name>
+      <Name>Microsoft.PythonTools.Analysis</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Common\Common.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Common\Common.csproj">
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Common</Name>
+      <Name>Microsoft.PythonTools.Common</Name>
     </ProjectReference>
-    <ProjectReference Include="..\VSCommon\VSCommon.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\VSCommon\VSCommon.csproj">
       <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
-      <Name>VSCommon</Name>
+      <Name>Microsoft.PythonTools.VSCommon</Name>
     </ProjectReference>
-    <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
-      <Name>VSInterpreters</Name>
+      <Name>Microsoft.PythonTools.VSInterpreters</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />

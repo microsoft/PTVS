@@ -84,9 +84,9 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Common\Common.csproj">
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
-      <Name>Common</Name>
+      <Name>Microsoft.PythonTools.Common</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemDefinitionGroup>

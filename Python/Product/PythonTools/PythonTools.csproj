@@ -71,11 +71,11 @@
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
-    <ProjectReference Include="..\Analyzer\Analyzer.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Analyzer\Analyzer.csproj">
       <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
       <Name>Analyzer</Name>
     </ProjectReference>
-    <ProjectReference Include="..\JsonComm\Ipc.Json.csproj">
+    <ProjectReference Include="$(BuildRoot)Python\Product\Ipc.Json\Ipc.Json.csproj">
       <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
       <Name>Microsoft.PythonTools.Ipc.Json</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
