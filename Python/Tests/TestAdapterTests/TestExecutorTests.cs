@@ -45,8 +45,8 @@ namespace TestAdapterTests {
                 for (int i = 0; i < tasks.Length; i += 1) {
                     tasks[i] = Task.Run(() => {
                         mre.WaitOne();
-                        using (var arg = VisualStudioApp.FromProcessId(123)) {
-                            return arg is VisualStudioApp;
+                        using (var arg = VisualStudioProxy.FromProcessId(123)) {
+                            return arg is VisualStudioProxy;
                         }
                     });
                 }

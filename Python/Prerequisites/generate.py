@@ -33,7 +33,7 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.ImportWizard",
     "Microsoft.PythonTools.IronPython",
     "Microsoft.PythonTools.IronPython.Interpreter",
-    "Microsoft.PythonTools.JsonComm",
+    "Microsoft.PythonTools.Ipc.Json",
     "Microsoft.PythonTools.ML",
     "Microsoft.PythonTools.Profiling",
     "Microsoft.PythonTools.ProjectWizards",
@@ -47,7 +47,7 @@ ASSEMBLIES = sorted([
     "MockVsTests",
     "ProfilingUITests",
     "PythonToolsTests",
-    "PythonToolsMockTests",x
+    "PythonToolsMockTests",
     "PythonToolsUITests",
     "ReplWindowUITests",
     "SharedProjectTests",

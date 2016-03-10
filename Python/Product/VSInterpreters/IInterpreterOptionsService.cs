@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>

@@ -28,13 +28,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
-using Microsoft.PythonTools.Cdp;
+using Microsoft.PythonTools.Ipc;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Intellisense {
+    using Ipc.Json;
     using AP = AnalysisProtocol;
 
     /// <summary>
@@ -56,12 +57,12 @@ namespace Microsoft.PythonTools.Intellisense {
         private static readonly object _pathInZipFile = new { Name = "PathInZipFile" };
 
         private readonly AnalysisQueue _analysisQueue;
-        private readonly IPythonInterpreterFactory _interpreterFactory;
+        private IPythonInterpreterFactory _interpreterFactory;
         //private readonly Dictionary<BufferParser, IProjectEntry> _openFiles = new Dictionary<BufferParser, IProjectEntry>();
         private readonly ProjectEntryMap _projectFiles;
-        private readonly PythonAnalyzer _pyAnalyzer;
+        private PythonAnalyzer _pyAnalyzer;
         private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
-        private readonly IPythonInterpreterFactory[] _allFactories;
+        private IPythonInterpreterFactory[] _allFactories;
         private volatile Dictionary<string, AP.TaskPriority> _commentPriorityMap = new Dictionary<string, AP.TaskPriority>() {
             { "TODO", AP.TaskPriority.normal },
             { "HACK", AP.TaskPriority.high },
@@ -81,36 +82,21 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly Connection _connection;
         internal Task ReloadTask;
 
-        internal OutOfProcProjectAnalyzer(
-            Stream writer, Stream reader,
-            IPythonInterpreterFactory factory,
-            IPythonInterpreterFactory[] allFactories,
-            CompositionContainer container,
-            AggregateCatalog catalog
-        ) {
+        internal OutOfProcProjectAnalyzer(Stream writer, Stream reader) {
             _analysisQueue = new AnalysisQueue(this);
             _analysisQueue.AnalysisComplete += AnalysisQueue_Complete;
-            _allFactories = allFactories;
-            var interpreter = factory.CreateInterpreter();
             _options = new AP.OptionsChangedEvent() {
                 indentation_inconsistency_severity = Severity.Ignore
             };
-            _interpreterFactory = factory;
 
-            if (interpreter != null) {
-                _pyAnalyzer = PythonAnalyzer.Create(factory, interpreter);
-                ReloadTask = _pyAnalyzer.ReloadModulesAsync()/*.HandleAllExceptions(_serviceProvider, GetType())*/;
-                ReloadTask.ContinueWith(_ => ReloadTask = null);
-                interpreter.ModuleNamesChanged += OnModulesChanged;
-            }
-            _catalog = catalog;
-            _container = container;
-            _container.ExportsChanged += ContainerExportsChanged;
             _projectFiles = new ProjectEntryMap();
-            _connection = new Connection(writer, reader, RequestHandler, AnalysisProtocol.RegisteredTypes);
+            _connection = new Connection(writer, reader, RequestHandler, AP.RegisteredTypes);
             _connection.EventReceived += ConectionReceivedEvent;
-        }
 
+            _catalog = new AggregateCatalog();
+            _container = new CompositionContainer(_catalog);
+            _container.ExportsChanged += ContainerExportsChanged;
+        }
 
         private void ContainerExportsChanged(object sender, ExportsChangeEventArgs e) {
             // figure out the new extensions...
@@ -198,11 +184,72 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ModuleImportsRequest.Command: response = GetModuleImports((AP.ModuleImportsRequest)request); break;
                 case AP.ValueDescriptionRequest.Command: response = GetValueDescriptions((AP.ValueDescriptionRequest)request); break;
                 case AP.ExtensionRequest.Command: response = ExtensionRequest((AP.ExtensionRequest)request); break;
+                case AP.InitializeRequest.Command: response = Initialize((AP.InitializeRequest)request); break;
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
 
             await done(response);
+        }
+
+        private Response Initialize(AP.InitializeRequest request) {
+            List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
+
+            List<string> failures = new List<string>();
+            string error = null;
+            foreach (var asm in request.mefExtensions) {
+                try {
+                    var asmCatalog = new AssemblyCatalog(asm);
+                    _catalog.Catalogs.Add(asmCatalog);
+                } catch (Exception e) {
+                    failures.Add(String.Format("Failed to load {0}: {1}", asm, e));
+                }
+            }
+
+            var interpConfig = _container.GetExportedValue<IInterpreterOptionsService>();
+            IPythonInterpreterFactory factory;
+            var id = Guid.Parse(request.interpreterId);
+            Version version = Version.Parse(request.interpreterVersion);
+            if (id == InterpreterFactoryCreator.AnalysisOnlyFactoryGuid) {
+                factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version);
+            } else {
+                factory = interpConfig.FindInterpreter(id, version);
+            }
+
+            var interpreters = interpConfig.Interpreters.ToArray();
+
+            MSBuildProjectInterpreterFactoryProvider msbuildProvider = null;
+            if (factory == null && request.projectFile != null) {
+                var proj = new Build.Evaluation.Project(request.projectFile);
+                msbuildProvider = new MSBuildProjectInterpreterFactoryProvider(interpConfig, proj);
+                try {
+                    msbuildProvider.DiscoverInterpreters();
+                } catch (InvalidDataException) {
+                    // This exception can be safely ignored here.
+                }
+
+                factory = msbuildProvider.ActiveInterpreter;
+            }
+
+            if (factory == null) {
+                error = String.Format("No active interpreter found for interpreter ID: {0} {1}", id, version);
+            }
+
+            _interpreterFactory = factory;
+            _allFactories = interpConfig.Interpreters.ToArray();
+
+            var interpreter = factory.CreateInterpreter();
+            if (interpreter != null) {
+                _pyAnalyzer = PythonAnalyzer.Create(factory, interpreter);
+                ReloadTask = _pyAnalyzer.ReloadModulesAsync()/*.HandleAllExceptions(_serviceProvider, GetType())*/;
+                ReloadTask.ContinueWith(_ => ReloadTask = null);
+                interpreter.ModuleNamesChanged += OnModulesChanged;
+            }
+
+            return new AP.InitializeResponse() {
+                failedLoads = failures.ToArray(),
+                error = error
+            };
         }
 
         private Response ExtensionRequest(AP.ExtensionRequest request) {

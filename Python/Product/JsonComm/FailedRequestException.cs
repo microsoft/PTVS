@@ -16,7 +16,7 @@
 
 using System;
 
-namespace Microsoft.PythonTools.Cdp {
+namespace Microsoft.PythonTools.Ipc.Json {
     public sealed class FailedRequestException : Exception {
         private readonly Response _response;
 

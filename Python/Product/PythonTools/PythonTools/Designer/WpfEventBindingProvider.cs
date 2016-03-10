@@ -24,6 +24,7 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.Windows.Design.Host;
 
 namespace Microsoft.PythonTools.Designer {
+    using Infrastructure;
     using AP = AnalysisProtocol;
 
     class WpfEventBindingProvider : EventBindingProvider {
@@ -57,7 +58,7 @@ namespace Microsoft.PythonTools.Designer {
                 fileInfo,
                 _pythonFileNode.GetTextBuffer(),
                 null
-            ).Result;
+            ).WaitAndUnwrapExceptions();
 
             if (insertPoint != null) {
                 var view = _pythonFileNode.GetTextView();

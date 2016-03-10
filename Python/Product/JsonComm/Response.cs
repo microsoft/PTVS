@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.PythonTools.Cdp {
+namespace Microsoft.PythonTools.Ipc.Json {
     public class Response {
         public Response() {
         }

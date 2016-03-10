@@ -50,12 +50,12 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private readonly ManualResetEvent _cancelRequested = new ManualResetEvent(false);
 
-        private readonly VisualStudioApp _app;
+        private readonly VisualStudioProxy _app;
         private readonly IInterpreterOptionsService _interpreterService;
 
         public TestExecutor() {
-            _app = VisualStudioApp.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
-            _interpreterService = InterpreterOptionsServiceProvider.GetService(_app);
+            _app = VisualStudioProxy.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
+            _interpreterService = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(_app);
         }
 
 

@@ -28,9 +28,9 @@
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Analysis;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Analysis;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.BuildTasks;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.BuildTasks;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Common;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Common;_GetAssemblyName|" />
-    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Debugger;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.JsonComm;_GetAssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Debugger;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Debugger;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.BuildTasks;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.BuildTasks;_GetAssemblyName|" />
-    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.JsonComm;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.JsonComm;_GetAssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.Ipc.Json;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.Ipc.Json;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.EnvironmentsList;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.EnvironmentsList;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|ImportWizard;_GetTargetPath|" AssemblyName="|ImportWizard;AssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|ProjectWizards;_GetTargetPath|" AssemblyName="|ProjectWizards;AssemblyName|" />
@@ -44,8 +44,6 @@
     <Asset Type="UnitTestExtension" Path="|TestAdapter;_GetTargetPath|" />
     <Asset Type="DebuggerEngineExtension" Path="DkmDebugger.vsdconfig" />
     <Asset Type="NativeVisualizer" Path="PythonDkm.natvis" />
-    <Asset Type="Microsoft.VisualStudio.ProjectTemplate" Path="ProjectTemplates" />
-    <Asset Type="Microsoft.VisualStudio.ItemTemplate" Path="ItemTemplates" />
     <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="..\..\packages\Newtonsoft.Json.6.0.5\lib\net45\Newtonsoft.Json.dll" AssemblyName="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed" />
   </Assets>
 </PackageManifest>

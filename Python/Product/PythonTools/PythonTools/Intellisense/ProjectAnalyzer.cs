@@ -24,7 +24,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Cdp;
+using Microsoft.PythonTools.Ipc;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -38,6 +38,9 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Intellisense {
+    using Ipc.Json;
+    using VisualStudio.Settings;
+    using VisualStudioTools;
     using AP = AnalysisProtocol;
 
     public sealed class VsProjectAnalyzer : IDisposable {
@@ -125,21 +128,37 @@ namespace Microsoft.PythonTools.Intellisense {
             _projectFiles = new ConcurrentDictionary<string, AnalysisEntry>();
             _projectFilesById = new ConcurrentDictionary<int, AnalysisEntry>();
 
-            var libAnalyzer = typeof(AP.FileChangedResponse).Assembly.Location;
             _pyService = serviceProvider.GetPythonToolsService();
 
             _taskProvider.TokensChanged += CommentTaskTokensChanged;
 
-            _conn = StartConnection(factory, libAnalyzer, projectFile, out _analysisProcess);
+            _conn = StartConnection(out _analysisProcess);
             _userCount = 1;
 
             Task.Run(() => _conn.ProcessMessages());
+
+            var settings = SettingsManagerCreator.GetSettingsManager(serviceProvider).GetReadOnlySettingsStore(SettingsScope.Configuration);
+            var initialize = new AP.InitializeRequest() {
+                interpreterId = factory.Id.ToString(),
+                interpreterVersion = factory.Configuration.Version.ToString(),
+                projectFile = projectFile,
+                mefExtensions = InterpreterOptionsServiceProvider.GetProviderPaths(settings, typeof(IInterpreterOptionsService)).ToArray()
+            };
+
+            SendRequestAsync(initialize).ContinueWith(
+                task => {
+                    // TODO: Log any warnings/errors
+                    var result = task.Result;
+                    Console.WriteLine(result);
+                }
+            );
 
             _conn.SendEventAsync(
                 new AP.OptionsChangedEvent() {
                     indentation_inconsistency_severity = _pyService.GeneralOptions.IndentationInconsistencySeverity
                 }
             ).DoNotWait();
+
             CommentTaskTokensChanged(null, EventArgs.Empty);
         }
 
@@ -243,18 +262,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #endregion
 
-        private Connection StartConnection(IPythonInterpreterFactory factory, string libAnalyzer, string projectFile, out Process proc) {
-            string args = String.Format(
-                "/id {0} /version {1} /interactive",
-                factory.Id,
-                factory.Configuration.Version
-            );
-
-            if (projectFile != null) {
-                args += " /proj \"" + projectFile + "\"";
-            }
-
-            var psi = new ProcessStartInfo(libAnalyzer, args);
+        private Connection StartConnection(out Process proc) {
+            var libAnalyzer = typeof(AP.FileChangedResponse).Assembly.Location;
+            var psi = new ProcessStartInfo(libAnalyzer, "/interactive");
             psi.RedirectStandardInput = true;
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;

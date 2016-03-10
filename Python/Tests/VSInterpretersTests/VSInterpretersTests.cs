@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -110,7 +111,7 @@ namespace FactoryProviderSuccess {
 
             sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
 
-            var service = new InterpreterOptionsService(sp);
+            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp);
 
             foreach (var msg in log.AllItems) {
                 Console.WriteLine(msg);
@@ -138,7 +139,7 @@ namespace FactoryProviderSuccess {
 
             sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
 
-            var service = new InterpreterOptionsService(sp);
+            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp);
 
             foreach (var msg in log.AllItems) {
                 Console.WriteLine(msg);
@@ -190,7 +191,7 @@ namespace FactoryProviderSuccess {
 
             sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
 
-            var service = new InterpreterOptionsService(sp);
+            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp);
 
             foreach (var msg in log.AllItems) {
                 Console.WriteLine(msg);
@@ -242,7 +243,7 @@ namespace FactoryProviderTypeLoadException {
 
             sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
 
-            var service = new InterpreterOptionsService(sp);
+            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp);
 
             foreach (var msg in log.AllItems) {
                 Console.WriteLine(msg);
@@ -270,7 +271,7 @@ namespace FactoryProviderTypeLoadException {
             sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test1", "CodeBase", path1);
             sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test2", "CodeBase", path2);
 
-            var service = new InterpreterOptionsService(sp);
+            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp);
 
             foreach (var msg in log.AllItems) {
                 Console.WriteLine(msg);

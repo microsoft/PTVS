@@ -15,7 +15,7 @@
 // permissions and limitations under the License.
 
 
-namespace Microsoft.PythonTools.Cdp {
+namespace Microsoft.PythonTools.Ipc.Json {
     public sealed class RequestArgs {
         private readonly string _command;
         private readonly Request _request;

@@ -17,15 +17,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Settings;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudioTools;
+using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     class ConfigurablePythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
         private readonly Dictionary<Guid, PythonInterpreterFactoryWithDatabase> _interpreters = new Dictionary<Guid, PythonInterpreterFactoryWithDatabase>();
-        private readonly SettingsManager _settings;
 
         // keys used for storing information about user defined interpreters
         const string PathKey = "InterpreterPath";
@@ -35,15 +32,14 @@ namespace Microsoft.PythonTools.Interpreter {
         const string VersionKey = "Version";
         const string PathEnvVarKey = "PathEnvironmentVariable";
         const string DescriptionKey = "Description";
-        const string PythonInterpreterKey = "PythonTools\\Interpreters";
+        const string PythonInterpreterKey = "SOFTWARE\\Python\\VisualStudio";
 
         [ImportingConstructor]
-        private ConfigurablePythonInterpreterFactoryProvider([Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider provider) {
-            _settings = SettingsManagerCreator.GetSettingsManager(provider);
+        private ConfigurablePythonInterpreterFactoryProvider() {
             DiscoverInterpreterFactories();
         }
 
-        private PythonInterpreterFactoryWithDatabase LoadUserDefinedInterpreter(SettingsStore store, string guid) {
+        private PythonInterpreterFactoryWithDatabase LoadUserDefinedInterpreter(string guid) {
             // PythonInterpreters\
             //      Id\
             //          Description
@@ -53,30 +49,34 @@ namespace Microsoft.PythonTools.Interpreter {
             //          Version
             //          PathEnvironmentVariable
 
+            var collection = PythonInterpreterKey + "\\" + guid;
             Guid id;
-            string collection;
-            if (Guid.TryParse(guid, out id) && store.CollectionExists((collection = PythonInterpreterKey + "\\" + id.ToString("B")))) {
-                var path = store.GetString(collection, PathKey, string.Empty);
-                var winPath = store.GetString(collection, WindowsPathKey, string.Empty);
-                var libPath = store.GetString(collection, LibraryPathKey, string.Empty);
-                var arch = store.GetString(collection, ArchitectureKey, string.Empty);
-                var version = store.GetString(collection, VersionKey, string.Empty);
-                var pathEnvVar = store.GetString(collection, PathEnvVarKey, string.Empty);
-                var description = store.GetString(collection, DescriptionKey, string.Empty);
+            if (Guid.TryParse(guid, out id)) {
+                using (var key = Registry.CurrentUser.OpenSubKey(collection)) {
+                    if (key != null) {
+                        var path = key.GetValue(PathKey) as string ?? string.Empty;
+                        var winPath = key.GetValue(WindowsPathKey) as string ?? string.Empty;
+                        var libPath = key.GetValue(LibraryPathKey) as string ?? string.Empty;
+                        var arch = key.GetValue(ArchitectureKey) as string ?? string.Empty;
+                        var version = key.GetValue(VersionKey) as string ?? string.Empty;
+                        var pathEnvVar = key.GetValue(PathEnvVarKey) as string ?? string.Empty;
+                        var description = key.GetValue(DescriptionKey) as string ?? string.Empty;
 
-                return InterpreterFactoryCreator.CreateInterpreterFactory(
-                    new InterpreterFactoryCreationOptions {
-                        LanguageVersionString = version,
-                        Id = id,
-                        Description = description,
-                        InterpreterPath = path,
-                        WindowInterpreterPath = winPath,
-                        LibraryPath = libPath,
-                        PathEnvironmentVariableName = pathEnvVar,
-                        ArchitectureString = arch,
-                        WatchLibraryForNewModules = true
+                        return InterpreterFactoryCreator.CreateInterpreterFactory(
+                            new InterpreterFactoryCreationOptions {
+                                LanguageVersionString = version,
+                                Id = id,
+                                Description = description,
+                                InterpreterPath = path,
+                                WindowInterpreterPath = winPath,
+                                LibraryPath = libPath,
+                                PathEnvironmentVariableName = pathEnvVar,
+                                ArchitectureString = arch,
+                                WatchLibraryForNewModules = true
+                            }
+                        );
                     }
-                );
+                }
             }
             return null;
         }
@@ -85,9 +85,7 @@ namespace Microsoft.PythonTools.Interpreter {
             PythonInterpreterFactoryWithDatabase fact;
             if (_interpreters.TryGetValue(id, out fact)) {
                 var collection = PythonInterpreterKey + "\\" + id.ToString("B");
-                var store = _settings.GetWritableSettingsStore(SettingsScope.UserSettings);
-
-                store.DeleteCollection(collection);
+                Registry.CurrentUser.DeleteSubKeyTree(collection);
 
                 _interpreters.Remove(id);
                 OnInterpreterFactoriesChanged();
@@ -105,17 +103,17 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public IPythonInterpreterFactory SetOptions(InterpreterFactoryCreationOptions options) {
             var collection = PythonInterpreterKey + "\\" + options.IdString;
-            var store = _settings.GetWritableSettingsStore(SettingsScope.UserSettings);
-            store.CreateCollection(collection);
-            store.SetString(collection, PathKey, options.InterpreterPath ?? string.Empty);
-            store.SetString(collection, WindowsPathKey, options.WindowInterpreterPath ?? string.Empty);
-            store.SetString(collection, LibraryPathKey, options.LibraryPath ?? string.Empty);
-            store.SetString(collection, ArchitectureKey, options.ArchitectureString);
-            store.SetString(collection, VersionKey, options.LanguageVersionString);
-            store.SetString(collection, PathEnvVarKey, options.PathEnvironmentVariableName ?? string.Empty);
-            store.SetString(collection, DescriptionKey, options.Description ?? string.Empty);
+            using (var key = Registry.CurrentUser.CreateSubKey(collection, true)) {
+                key.SetValue(PathKey, options.InterpreterPath ?? string.Empty);
+                key.SetValue(WindowsPathKey, options.WindowInterpreterPath ?? string.Empty);
+                key.SetValue(LibraryPathKey, options.LibraryPath ?? string.Empty);
+                key.SetValue(ArchitectureKey, options.ArchitectureString);
+                key.SetValue(VersionKey, options.LanguageVersionString);
+                key.SetValue(PathEnvVarKey, options.PathEnvironmentVariableName ?? string.Empty);
+                key.SetValue(DescriptionKey, options.Description ?? string.Empty);
+            }
 
-            var newInterp = LoadUserDefinedInterpreter(store, options.IdString);
+            var newInterp = LoadUserDefinedInterpreter(options.IdString);
             if (newInterp == null) {
                 throw new InvalidOperationException("Unable to load user defined interpreter");
             }
@@ -140,16 +138,16 @@ namespace Microsoft.PythonTools.Interpreter {
             // look for custom configured interpreters
             bool anyChange = false;
             var notFound = new HashSet<Guid>(_interpreters.Keys);
-
-            var store = _settings.GetReadOnlySettingsStore(SettingsScope.UserSettings);
-            if (store.CollectionExists(PythonInterpreterKey)) {
-                foreach (var guid in store.GetSubCollectionNames(PythonInterpreterKey)) {
-                    var interp = LoadUserDefinedInterpreter(store, guid);
-                    if (interp != null) {
-                        anyChange |= notFound.Remove(interp.Id);
-                        if (!_interpreters.ContainsKey(interp.Id)) {
-                            _interpreters[interp.Id] = interp;
-                            anyChange = true;
+            using (var key = Registry.CurrentUser.OpenSubKey(PythonInterpreterKey)) {
+                if (key != null) {
+                    foreach (var guid in key.GetSubKeyNames()) {
+                        var interp = LoadUserDefinedInterpreter(guid);
+                        if (interp != null) {
+                            anyChange |= notFound.Remove(interp.Id);
+                            if (!_interpreters.ContainsKey(interp.Id)) {
+                                _interpreters[interp.Id] = interp;
+                                anyChange = true;
+                            }
                         }
                     }
                 }

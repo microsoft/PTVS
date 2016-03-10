@@ -25,6 +25,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
@@ -72,7 +73,6 @@ namespace PythonToolsUITests {
         [TestCategory("10s")]
         public void HasInterpreters() {
             var sp = new MockServiceProvider();
-            var service = new InterpreterOptionsService(sp);
             var mockService = new MockInterpreterOptionsService();
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 1",
                 new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Factory 1", MockInterpreterConfiguration(new Version(2, 7))),
@@ -846,18 +846,18 @@ namespace PythonToolsUITests {
             if (defaultProviders) {
                 settings.Store.AddSetting(
                     InterpreterOptionsService.FactoryProvidersCollection + "\\CPythonAndConfigurable",
-                    InterpreterOptionsService.FactoryProviderCodeBaseSetting,
+                    InterpreterOptionsServiceProvider.FactoryProviderCodeBaseSetting,
                     typeof(CPythonInterpreterFactoryConstants).Assembly.Location
                 );
                 settings.Store.AddSetting(
                     InterpreterOptionsService.FactoryProvidersCollection + "\\LoadedProjects",
-                    InterpreterOptionsService.FactoryProviderCodeBaseSetting,
+                    InterpreterOptionsServiceProvider.FactoryProviderCodeBaseSetting,
                     typeof(LoadedProjectInterpreterFactoryProvider).Assembly.Location
                 );
             } else {
-                settings.Store.CreateCollection(InterpreterOptionsService.SuppressFactoryProvidersCollection);
+                settings.Store.CreateCollection(InterpreterOptionsServiceProvider.SuppressFactoryProvidersCollection);
             }
-            return new InterpreterOptionsService(sp);
+            return InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp);
         }
 
         #endregion

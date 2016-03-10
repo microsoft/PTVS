@@ -22,7 +22,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Interpreter {
     class DerivedInterpreterFactory : PythonInterpreterFactoryWithDatabase {

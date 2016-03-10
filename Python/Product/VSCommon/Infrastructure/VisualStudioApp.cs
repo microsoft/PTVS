@@ -25,21 +25,21 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Process = System.Diagnostics.Process;
 
 namespace Microsoft.VisualStudioTools {
-    class VisualStudioApp : IDisposable {
-        private static readonly Dictionary<int, VisualStudioApp> _knownInstances = new Dictionary<int, VisualStudioApp>();
+    public sealed class VisualStudioProxy : IDisposable {
+        private static readonly Dictionary<int, VisualStudioProxy> _knownInstances = new Dictionary<int, VisualStudioProxy>();
         private readonly int _processId;
 
-        public static VisualStudioApp FromProcessId(int processId) {
-            VisualStudioApp inst;
+        public static VisualStudioProxy FromProcessId(int processId) {
+            VisualStudioProxy inst;
             lock (_knownInstances) {
                 if (!_knownInstances.TryGetValue(processId, out inst)) {
-                    _knownInstances[processId] = inst = new VisualStudioApp(processId);
+                    _knownInstances[processId] = inst = new VisualStudioProxy(processId);
                 }
             }
             return inst;
         }
 
-        public static VisualStudioApp FromEnvironmentVariable(string variable) {
+        public static VisualStudioProxy FromEnvironmentVariable(string variable) {
             string pid = Environment.GetEnvironmentVariable(variable);
             if (pid == null) {
                 return null;
@@ -53,7 +53,7 @@ namespace Microsoft.VisualStudioTools {
             return FromProcessId(processId);
         }
 
-        public VisualStudioApp(int processId) {
+        public VisualStudioProxy(int processId) {
             _processId = processId;
         }
 

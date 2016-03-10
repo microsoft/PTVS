@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Microsoft.PythonTools.Cdp {
+namespace Microsoft.PythonTools.Ipc.Json {
     public sealed class Connection : IDisposable {
         private readonly object _cacheLock = new object();
         private readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1);

@@ -18,8 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Cdp;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -42,6 +42,21 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
             return all;
+        }
+
+        public sealed class InitializeRequest : Request<InitializeResponse> {
+            public const string Command = "initialize";
+
+            public override string command => Command;
+
+            public string[] mefExtensions;
+            public string interpreterId, interpreterVersion, projectFile;
+
+        }
+
+        public sealed class InitializeResponse : Response {
+            public string[] failedLoads;
+            public string error;
         }
 
         public sealed class GetReferencesRequest : Request<GetReferencesResponse> {
@@ -712,7 +727,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public string doc;
             public AnalysisReference[] locations;
         }
-        
+
         public sealed class DescriptionComponent {
             public string text, kind;
 

@@ -176,6 +176,10 @@
       <Project>{b20e082b-4d3c-457d-b2bd-60420b434573}</Project>
       <Name>EnvironmentsList</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Product\VSCommon\VSCommon.csproj">
+      <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
+      <Name>VSCommon</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />
 </Project>

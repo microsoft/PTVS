@@ -30,15 +30,15 @@ namespace Microsoft.PythonTools.TestAdapter {
     [FileExtension(".pyproj")]
     [DefaultExecutorUri(TestExecutor.ExecutorUriString)]
     class TestDiscoverer : ITestDiscoverer {
-        private readonly VisualStudioApp _app;
+        private readonly VisualStudioProxy _app;
         private readonly IInterpreterOptionsService _interpreterService;
 
         public TestDiscoverer() {
-            _app = VisualStudioApp.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
-            _interpreterService = InterpreterOptionsServiceProvider.GetService(_app);
+            _app = VisualStudioProxy.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
+            _interpreterService = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(_app);
         }
 
-        internal TestDiscoverer(VisualStudioApp app, IInterpreterOptionsService interpreterService) {
+        internal TestDiscoverer(VisualStudioProxy app, IInterpreterOptionsService interpreterService) {
             _app = app;
             _interpreterService = interpreterService;
         }

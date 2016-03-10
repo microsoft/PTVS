@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal readonly List<List<ModulePath>> _scrapeFileGroups, _analyzeFileGroups;
         private readonly HashSet<string> _treatPathsAsStandardLibrary;
         private IEnumerable<string> _readModulePath;
-        private OutOfProcProjectAnalyzer _analyzer;
+        
 
         private int _progressOffset;
         private int _progressTotal;
@@ -82,7 +82,6 @@ namespace Microsoft.PythonTools.Analysis {
             Console.WriteLine(" /id         [GUID]             - specify GUID of the interpreter being used");
             Console.WriteLine(" /v[ersion]  [version]          - specify language version to be used (x.y format)");
             Console.WriteLine(" /interactive                   - start interactive analyzer");
-            Console.WriteLine(" /proj       [project file]     - specify project file for source interpreters");
 
             Console.WriteLine(" /py[thon]   [filename]         - full path to the Python interpreter to use");
             Console.WriteLine(" /lib[rary]  [directory]        - full path to the Python library to analyze");
@@ -177,59 +176,14 @@ namespace Microsoft.PythonTools.Analysis {
             return 0;
         }
 
-        private async Task RunInteractive() {
-            List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
-            var aggCatalog = new AggregateCatalog();
-            var catalog = new AssemblyCatalog(typeof(IInterpreterOptionsService).Assembly);
-            aggCatalog.Catalogs.Add(catalog);
-
-            var container = new CompositionContainer(aggCatalog);
-            var interpConfig = container.GetExportedValue<IInterpreterOptionsService>();
-            IPythonInterpreterFactory factory;
-            if (_id == InterpreterFactoryCreator.AnalysisOnlyFactoryGuid) {
-                factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(_version);
-            } else {
-                factory = interpConfig.FindInterpreter(_id, _version);
-            }
-
-            MSBuildProjectInterpreterFactoryProvider msbuildProvider = null;
-            try {
-                if (factory == null && _projectFile != null) {
-                    var proj = new Build.Evaluation.Project(_projectFile);
-                    msbuildProvider = new MSBuildProjectInterpreterFactoryProvider(interpConfig, proj);
-                    try {
-                        msbuildProvider.DiscoverInterpreters();
-                    } catch (InvalidDataException) {
-                        // This exception can be safely ignored here.
-                    }
-
-                    factory = msbuildProvider.ActiveInterpreter;
-                }
-
-                if (factory == null) {
-                    Console.Error.WriteLine("No active interpreter found for interpreter ID: {0}", _id);
-                }
-
-                _analyzer = new OutOfProcProjectAnalyzer(
-                    Console.OpenStandardOutput(),
-                    Console.OpenStandardInput(),
-                    factory,
-                    interpConfig.Interpreters.ToArray(),
-                    container,
-                   aggCatalog
-                );
-
-                await _analyzer.ProcessMessages();
-            } finally {
-                if (msbuildProvider != null) {
-                    msbuildProvider.Dispose();
-                }
-            }
-        }
-
         private async Task RunWorker() {
             if (_interactive) {
-                await RunInteractive();
+                var analyzer = new OutOfProcProjectAnalyzer(
+                    Console.OpenStandardOutput(),
+                    Console.OpenStandardInput()
+                );
+
+                await analyzer.ProcessMessages();
             } else {
                 WaitForOtherRun();
 
@@ -359,8 +313,8 @@ namespace Microsoft.PythonTools.Analysis {
 
             string value;
 
-            Guid id;
-            Version version;
+            Guid id = Guid.Empty;
+            Version version = default(Version);
             string interpreter, outDir;
             var library = new List<PythonLibraryPath>();
             List<string> baseDb;
@@ -377,16 +331,19 @@ namespace Microsoft.PythonTools.Analysis {
                 projectFile = value;
             }
 
-            if (!options.TryGetValue("id", out value)) {
-                id = Guid.Empty;
-            } else if (!Guid.TryParse(value, out id)) {
-                throw new ArgumentException(value, "id");
-            }
 
-            if (!options.TryGetValue("version", out value) && !options.TryGetValue("v", out value)) {
-                throw new ArgumentNullException("version");
-            } else if (!Version.TryParse(value, out version)) {
-                throw new ArgumentException(value, "version");
+            if (!interactive) {
+                if (!options.TryGetValue("id", out value)) {
+                    id = Guid.Empty;
+                } else if (!Guid.TryParse(value, out id)) {
+                    throw new ArgumentException(value, "id");
+                }
+
+                if (!options.TryGetValue("version", out value) && !options.TryGetValue("v", out value)) {
+                    throw new ArgumentNullException("version");
+                } else if (!Version.TryParse(value, out version)) {
+                    throw new ArgumentException(value, "version");
+                }
             }
 
             if (!options.TryGetValue("python", out value) && !options.TryGetValue("py", out value)) {

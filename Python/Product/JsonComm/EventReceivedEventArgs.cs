@@ -16,7 +16,7 @@
 
 using System;
 
-namespace Microsoft.PythonTools.Cdp {
+namespace Microsoft.PythonTools.Ipc.Json {
     public sealed class EventReceivedEventArgs : EventArgs {
         private readonly string _name;
         private readonly Event _event;

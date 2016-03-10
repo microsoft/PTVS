@@ -23,9 +23,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter {
