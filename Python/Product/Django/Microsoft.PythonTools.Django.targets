@@ -175,13 +175,14 @@ permissions and limitations under the License.
   <PropertyGroup>
     <PythonCommands>
       DjangoShellCommand;
-      DjangoValidateAppCommand;
+      DjangoCheckCommand;
       DjangoMakeMigrationsCommand;
       DjangoMigrateCommand;
       DjangoCreateSuperUserCommand;
       DjangoCollectStaticCommand;
+      $(PythonCommands);
+      DjangoValidateAppCommand;
       DjangoSyncDbCommand;
-      $(PythonCommands)
     </PythonCommands>
 
     <StartupPathOrManagePy>$(QualifiedProjectHome)manage.py</StartupPathOrManagePy>
@@ -201,6 +202,20 @@ permissions and limitations under the License.
                              WorkingDirectory="$(WorkingDirectory)"
                              Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)"
                              ExecuteIn="repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
+      <Output TaskParameter="Command" ItemName="Commands" />
+    </CreatePythonCommandItem>
+  </Target>
+
+  <Target Name="DjangoCheckCommand"
+          Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CheckLabel"
+          DependsOnTargets="SetStartupPathOrManagePy"
+          Returns="@(Commands)">
+    <CreatePythonCommandItem Target="$(StartupPathOrManagePy)"
+                             TargetType="script"
+                             Arguments="check"
+                             WorkingDirectory="$(WorkingDirectory)"
+                             Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)"
+                             ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
       <Output TaskParameter="Command" ItemName="Commands" />
     </CreatePythonCommandItem>
   </Target>
