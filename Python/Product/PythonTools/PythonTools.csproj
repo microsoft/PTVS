@@ -200,10 +200,9 @@
       <HintPath>$(DevEnvDir)\Microsoft.VisualStudio.WizardFramework.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <Name>Newtonsoft.Json</Name>
-      <IncludeInVSIX>True</IncludeInVSIX>
-      <HintPath>..\..\packages\Newtonsoft.Json.6.0.5\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(BuildRoot)BuildOutput\Newtonsoft.Json.6.0.5\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
+      <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
@@ -718,7 +717,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <!-- VSIX -->
-    <None Include="packages.config" />
     <None Include="Theme\contrast.vstheme" />
     <None Include="NoSurveyNewsFeed.html" />
     <None Include="NoInterpreters.html" />
@@ -727,9 +725,10 @@
     <None Include="Theme\Microsoft.PythonTools.theme.v15.0.pkgdef" />
     <None Include="Theme\dark.vstheme" />
     <None Include="Theme\make_theme_pkgdef.py" />
-    <Content Include="Newtonsoft.Json.dll">
+    <Content Include="$(BuildRoot)BuildOutput\Newtonsoft.Json.6.0.5\lib\net45\Newtonsoft.Json.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
     </Content>
     <Content Include="NoInterpreters.mht">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
