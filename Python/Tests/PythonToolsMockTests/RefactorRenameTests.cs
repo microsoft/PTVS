@@ -2420,7 +2420,7 @@ def g(a, b, c):
                     var extractInput = new RenameVariableTestInput(newName, bufferTable, preview);
                     var previewChangesService = new TestPreviewChanges(expected);
 
-                    new VariableRenamer(views[0].View.View, _vs.ServiceProvider).RenameVariable(extractInput, previewChangesService);
+                    new VariableRenamer(views[0].View.View, _vs.ServiceProvider).RenameVariable(extractInput, previewChangesService).Wait();
                     if (error != null) {
                         Assert.AreEqual(error, extractInput.Failure);
                         return;

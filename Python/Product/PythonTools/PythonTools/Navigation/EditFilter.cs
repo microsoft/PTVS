@@ -832,7 +832,7 @@ namespace Microsoft.PythonTools.Language {
             new VariableRenamer(_textView, _serviceProvider).RenameVariable(
                 new RenameVariableUserInput(_serviceProvider),
                 (IVsPreviewChangesService)_serviceProvider.GetService(typeof(SVsPreviewChangesService))
-            );
+            ).DoNotWait();
         }
 
         private static void PasteReplCode(PythonReplEvaluator eval, string pasting) {

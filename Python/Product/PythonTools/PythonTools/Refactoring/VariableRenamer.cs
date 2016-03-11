@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
@@ -36,7 +37,7 @@ namespace Microsoft.PythonTools.Refactoring {
             _serviceProvider = serviceProvider;
         }
 
-        public async void RenameVariable(IRenameVariableInput input, IVsPreviewChangesService previewChanges) {
+        public async Task RenameVariable(IRenameVariableInput input, IVsPreviewChangesService previewChanges) {
             if (IsModuleName(input)) {
                 input.CannotRename("Cannot rename a module name");
                 return;
@@ -51,7 +52,6 @@ namespace Microsoft.PythonTools.Refactoring {
             
             string originalName = null;
             string privatePrefix = null;
-            Expression expr = null;
             if (!String.IsNullOrWhiteSpace(analysis.Expression)) {
                 originalName = analysis.MemberName;
 
@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
             IEnumerable<AnalysisVariable> variables;
             if (!hasVariables) {
-                List<AnalysisVariable> paramVars = GetKeywordParameters(expr, originalName);
+                List<AnalysisVariable> paramVars = GetKeywordParameters(analysis.Expression, originalName);
 
                 if (paramVars.Count == 0) {
                     input.CannotRename(string.Format("No information is available for the variable '{0}'.", originalName));
@@ -114,9 +114,9 @@ namespace Microsoft.PythonTools.Refactoring {
             }
         }
 
-        private List<AnalysisVariable> GetKeywordParameters(Expression expr, string originalName) {
+        private List<AnalysisVariable> GetKeywordParameters(string expr, string originalName) {
             List<AnalysisVariable> paramVars = new List<AnalysisVariable>();
-            if (expr is NameExpression) {
+            if (expr.IndexOf('.')  == -1) {
                 // let's check if we'r re-naming a keyword argument...
                 ITrackingSpan span = _view.GetCaretSpan();
                 var sigs = _view.TextBuffer.CurrentSnapshot.GetSignatures(_serviceProvider, span);

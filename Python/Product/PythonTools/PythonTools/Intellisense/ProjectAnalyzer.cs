@@ -630,7 +630,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 return new ExpressionAnalysis(
                     expr,
                     null,
-                    definitions.variables.Select(file.Analyzer.ToAnalysisVariable).ToArray(),
+                    definitions.variables
+                        .Where(x => x.file != null)
+                        .Select(file.Analyzer.ToAnalysisVariable)
+                        .ToArray(),
                     definitions.privatePrefix,
                     definitions.memberName
                 );
@@ -657,7 +660,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     return new ExpressionAnalysis(
                         analysis.Text,
                         analysis.Span,
-                        definitions.variables.Select(analysis.Entry.Analyzer.ToAnalysisVariable).ToArray(),
+                        definitions.variables
+                            .Where(x => x.file != null)
+                            .Select(analysis.Entry.Analyzer.ToAnalysisVariable)
+                            .ToArray(),
                         definitions.privatePrefix,
                         definitions.memberName
                     );

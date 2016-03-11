@@ -92,7 +92,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-      <Private>false</Private>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
       <Private>false</Private>
