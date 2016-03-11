@@ -39,7 +39,7 @@ namespace PythonToolsMockTests {
             var sln = new ProjectDefinition(
                 "HelloWorld",
                 PythonProject,
-                Compile("server")
+                Compile("server", "")
             ).Generate();
 
             using (var vs = sln.ToMockVs()) {
@@ -102,18 +102,14 @@ namespace PythonToolsMockTests {
                 var project = vs.GetProject("HelloWorld").GetPythonProject();
                 project.ProjectAnalyzerChanged += (s, e) => analyzerChanged.Set();
 
-                var v27 = InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
-                    LanguageVersion = new Version(2, 7),
-                    PrefixPath = "C:\\Python27",
-                    InterpreterPath = "C:\\Python27\\python.exe"
-                });
-                var v34 = InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
-                    LanguageVersion = new Version(3, 4),
-                    PrefixPath = "C:\\Python34",
-                    InterpreterPath = "C:\\Python34\\python.exe"
-                });
-
                 var uiThread = (UIThreadBase)project.GetService(typeof(UIThreadBase));
+                var interpreters = ((IComponentModel)project.GetService(typeof(SComponentModel)))
+                    .GetService<IInterpreterOptionsService>()
+                    .Interpreters;
+
+                var v27 = interpreters.Where(x => x.Id == CPythonInterpreterFactoryConstants.Guid32 && x.Configuration.Version == new Version(2, 7)).First();
+                var v34 = interpreters.Where(x => x.Id == CPythonInterpreterFactoryConstants.Guid32 && x.Configuration.Version == new Version(3, 4)).First();
+                var interpOptions = (UIThreadBase)project.GetService(typeof(IComponentModel));
 
                 uiThread.Invoke(() => {
                     project.Interpreters.AddInterpreter(v27);

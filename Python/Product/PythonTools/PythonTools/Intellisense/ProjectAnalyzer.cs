@@ -353,15 +353,14 @@ namespace Microsoft.PythonTools.Intellisense {
             var analysisComplete = (AP.FileAnalysisCompleteEvent)e.Event;
             AnalysisEntry entry;
             if (_projectFilesById.TryGetValue(analysisComplete.fileId, out entry)) {
-
-                entry.OnAnalysisComplete();
-
                 var bufferParser = entry.BufferParser;
                 if (bufferParser != null) {
                     foreach (var version in analysisComplete.versions) {
                         bufferParser.Analyzed(version.bufferId, version.version);
                     }
                 }
+
+                entry.OnAnalysisComplete();
             }
         }
 

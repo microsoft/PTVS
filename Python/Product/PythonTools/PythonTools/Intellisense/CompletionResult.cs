@@ -20,13 +20,14 @@ namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
     public sealed class CompletionResult {
-        private string _completion;
-        private PythonMemberType _memberType;
+        private readonly string _completion;
+        private readonly PythonMemberType _memberType;
         private readonly string _name, _doc;
         private readonly AP.CompletionValue[] _values;
 
         internal CompletionResult(string name, PythonMemberType memberType) {
             _name = name;
+            _completion = name;
             _memberType = memberType;
         }
 

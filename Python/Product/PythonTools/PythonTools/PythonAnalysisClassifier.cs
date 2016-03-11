@@ -80,6 +80,7 @@ namespace Microsoft.PythonTools {
             );
 
             if (classifications != null) {
+                Debug.WriteLine("Received {0} classifications", classifications.Data.classifications.Length);
                 // sort the spans by starting position so we can use binary search when handing them out
                 Array.Sort(
                     classifications.Data.classifications,

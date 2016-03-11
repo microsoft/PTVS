@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -234,7 +235,15 @@ class F:
                 _classificationsReady2 = new ManualResetEventSlim();
 
                 AstClassifier.ClassificationChanged += (s, e) => SafeSetEvent(_classificationsReady1);
-                AnalysisClassifier.ClassificationChanged += (s, e) => SafeSetEvent(_classificationsReady2);
+                var startVersion = _view.CurrentSnapshot.Version;
+                AnalysisClassifier.ClassificationChanged += (s, e) => {
+                    var analysis = _view.CurrentSnapshot.TextBuffer.GetAnalysisEntry();
+                    // make sure we have classifications from the version we analyzed after
+                    // setting the text below.
+                    if (analysis.GetAnalysisVersion(_view.CurrentSnapshot.TextBuffer).VersionNumber > startVersion.VersionNumber) {
+                        SafeSetEvent(_classificationsReady2);
+                    }
+                };
 
                 _view.Text = code;
             }

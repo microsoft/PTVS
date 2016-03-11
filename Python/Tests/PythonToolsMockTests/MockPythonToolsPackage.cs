@@ -51,7 +51,7 @@ namespace PythonToolsMockTests {
             var settings = (IVsSettingsManager)_serviceContainer.GetService(typeof(SVsSettingsManager));
             IVsWritableSettingsStore store;
             ErrorHandler.ThrowOnFailure(settings.GetWritableSettingsStore((uint)SettingsScope.Configuration, out store));
-            ErrorHandler.ThrowOnFailure(store.CreateCollection(@"PythonTools\NoInterpreterFactories"));
+            //ErrorHandler.ThrowOnFailure(store.CreateCollection(@"PythonTools\NoInterpreterFactories"));
             
             
             _serviceContainer.AddService(typeof(IPythonToolsOptionsService), new MockPythonToolsOptionsService());
