@@ -83,10 +83,12 @@ namespace PythonToolsMockTests {
             _serviceContainer.RemoveService(type);
         }
 
-        private static object CreateTaskProviderService(IServiceContainer container, Type type) {
+        private object CreateTaskProviderService(IServiceContainer container, Type type) {
             var errorProvider = container.GetComponentModel().GetService<IErrorProviderFactory>();
             if (type == typeof(TaskProvider)) {
-                return new TaskProvider(container, null, errorProvider);
+                var res = new TaskProvider(container, null, errorProvider);
+                _onDispose.Add(() => res.Dispose());
+                return res;
             } else {
                 return null;
             }
