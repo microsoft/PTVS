@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
             IEnumerable<AnalysisVariable> variables;
             if (!hasVariables) {
-                List<AnalysisVariable> paramVars = GetKeywordParameters(analysis.Expression, originalName);
+                List<AnalysisVariable> paramVars = await GetKeywordParameters(analysis.Expression, originalName);
 
                 if (paramVars.Count == 0) {
                     input.CannotRename(string.Format("No information is available for the variable '{0}'.", originalName));
@@ -114,12 +114,13 @@ namespace Microsoft.PythonTools.Refactoring {
             }
         }
 
-        private List<AnalysisVariable> GetKeywordParameters(string expr, string originalName) {
+        private async Task<List<AnalysisVariable>> GetKeywordParameters(string expr, string originalName) {
             List<AnalysisVariable> paramVars = new List<AnalysisVariable>();
             if (expr.IndexOf('.')  == -1) {
                 // let's check if we'r re-naming a keyword argument...
                 ITrackingSpan span = _view.GetCaretSpan();
-                var sigs = _view.TextBuffer.CurrentSnapshot.GetSignatures(_serviceProvider, span);
+                var sigs = await _view.TextBuffer.CurrentSnapshot.GetSignaturesAsync(_serviceProvider, span)
+                    .ConfigureAwait(false);
 
                 foreach (var sig in sigs.Signatures) {
                     PythonSignature overloadRes = sig as PythonSignature;

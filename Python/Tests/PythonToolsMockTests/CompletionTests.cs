@@ -1092,14 +1092,17 @@ async def g():
                 view.AdvancedOptions.HideAdvancedMembers = false;
 
                 var snapshot = view.CurrentSnapshot;
+                ITextVersion afterEditVersion = null;
                 ManualResetEvent mre = new ManualResetEvent(false);
                 view.View.TextView.TextBuffer.RegisterForNewAnalysis(entry => {
-                    if (entry.BufferParser.GetAnalysisVersion(snapshot.TextBuffer).VersionNumber > snapshot.Version.VersionNumber) {
+                    if (afterEditVersion != null &&
+                    entry.BufferParser.GetAnalysisVersion(snapshot.TextBuffer).VersionNumber >= afterEditVersion.VersionNumber) {
                         mre.Set();
                     }
                 });
                 view.View.MoveCaret(new SnapshotPoint(snapshot, editInsert));
                 view.Type(editText);
+                afterEditVersion = view.CurrentSnapshot.Version;
 
                 if (!mre.WaitOne(10000)) {
                     Assert.Fail("Failed to wait for new analysis");

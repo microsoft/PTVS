@@ -29,10 +29,25 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         /// <summary>
+        /// Gets a ExpressionAnalysis for the expression at the provided span.  If the span is in
+        /// part of an identifier then the expression is extended to complete the identifier.
+        /// </summary>
+        public static Task<ExpressionAnalysis> AnalyzeExpressionAsync(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span, bool forCompletion = true) {
+            return VsProjectAnalyzer.AnalyzeExpressionAsync(span.GetStartPoint(snapshot));
+        }
+
+        /// <summary>
         /// Gets a list of signatures available for the expression at the provided location in the snapshot.
         /// </summary>
         internal static SignatureAnalysis GetSignatures(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span) {
             return VsProjectAnalyzer.GetSignaturesAsync(serviceProvider, snapshot, span).Result;
+        }
+
+        /// <summary>
+        /// Gets a list of signatures available for the expression at the provided location in the snapshot.
+        /// </summary>
+        internal static Task<SignatureAnalysis> GetSignaturesAsync(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span) {
+            return VsProjectAnalyzer.GetSignaturesAsync(serviceProvider, snapshot, span);
         }
 
         /// <summary>
@@ -51,6 +66,17 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>        
         public static MissingImportAnalysis GetMissingImports(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span) {
             return VsProjectAnalyzer.GetMissingImportsAsync(serviceProvider, snapshot, span).Result;
+        }
+
+        /// <summary>
+        /// <summary>
+        /// Gets a ImportAnalysis providing a list of imports for the selected identifer if the identifier is 
+        /// currently undefined.
+        /// 
+        /// New in v1.1.
+        /// </summary>        
+        public static Task<MissingImportAnalysis> GetMissingImportsAsync(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span) {
+            return VsProjectAnalyzer.GetMissingImportsAsync(serviceProvider, snapshot, span);
         }
     }
 }

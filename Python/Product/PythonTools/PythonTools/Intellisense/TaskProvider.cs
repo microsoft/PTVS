@@ -406,12 +406,15 @@ namespace Microsoft.PythonTools.Intellisense {
             if (disposing) {
                 var worker = _worker;
                 if (worker != null) {
+                    Debug.WriteLine(String.Format("Sending abort... {0}", DateTime.Now));
                     lock (_workerQueue) {
                         _workerQueue.Clear();
                         _workerQueue.Enqueue(WorkerMessage.Abort());
                         _workerQueueChanged.Set();
                     }
+                    Debug.WriteLine(String.Format("Waiting for abort... {0}", DateTime.Now));
                     bool stopped = worker.Join(10000);
+                    Debug.WriteLine(String.Format("Done Waiting for abort... {0} {1}", DateTime.Now, stopped));
                     Debug.Assert(stopped, "Failed to terminate TaskProvider worker thread");
                 }
 
@@ -541,6 +544,8 @@ namespace Microsoft.PythonTools.Intellisense {
             try {
                 WorkerWorker();
             } catch (OperationCanceledException) {
+                Debug.WriteLine(string.Format("Operation cancellled... {0}", DateTime.Now));
+
             } catch (ObjectDisposedException ex) {
                 Trace.TraceError(ex.ToString());
             } catch (Exception ex) {
@@ -550,7 +555,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 ex.ReportUnhandledException(_serviceProvider, GetType());
             } finally {
                 var oldWorker = Interlocked.CompareExchange(ref _worker, null, self);
+                Debug.WriteLine(string.Format("Checking worker... {0}", DateTime.Now));
                 Debug.Assert(oldWorker == self, "Worker was changed while running");
+                Debug.WriteLine(string.Format("Worker exiting... {0}", DateTime.Now));
             }
         }
 
@@ -570,6 +577,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             break;
                         }
                         msg = _workerQueue.Dequeue();
+                        Debug.WriteLine(string.Format("Processing msg... {0} {1}", DateTime.Now, msg.GetType()));
                     }
 
                     if (msg is WorkerMessage.FlushMessage) {
@@ -579,7 +587,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         // Apply the message to our collection
                         changed |= msg.Apply(_items, _itemsLock);
                     }
-
+                    Debug.WriteLine(string.Format("Done processing msg... {0} {1}", DateTime.Now, msg.GetType()));
                     // Every second, we want to force another update
                     if (changed) {
                         var currentTime = DateTime.Now;
@@ -590,18 +598,22 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                     }
                 }
+                Debug.WriteLine(string.Format("Looping to wait... {0}", DateTime.Now));
             }
 
             // Handle any changes that weren't handled in the loop
             if (changed) {
+                Debug.WriteLine(string.Format("Refreshing... {0}", DateTime.Now));
                 Refresh();
             }
 
             // Notify all the flush messages we received
+            Debug.WriteLine(string.Format("Flushing... {0}", DateTime.Now));
             while (flushMessages.Any()) {
                 var msg = flushMessages.Dequeue();
                 msg.Apply(_items, _itemsLock);
             }
+            Debug.WriteLine(string.Format("Done flushing... {0}", DateTime.Now));
         }
 
         private void Refresh() {

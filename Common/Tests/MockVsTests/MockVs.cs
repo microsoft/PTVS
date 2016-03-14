@@ -38,7 +38,6 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 using TestUtilities;
@@ -81,6 +80,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         private readonly List<Action> _uiEvents = new List<Action>();
         private readonly Thread _throwExceptionsOn;
         private ExceptionDispatchInfo _edi;
+        private readonly List<IMockPackage> _loadedPackages = new List<IMockPackage>();
 
         internal IOleCommandTarget
             /*_contextTarget, */    // current context menu
@@ -149,6 +149,17 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public void Dispose() {
+            // Dispose of packages while the UI thread is still running, it's
+            // possible some packages may need to get back onto the UI thread
+            // before their Dispose is complete.  TaskProvider does this - it wants
+            // to wait for the task provider thread to exit, but the same thread
+            // maybe attempting to get back onto the UI thread.  If we yank out
+            // the UI thread first then it never makes it over and we just hang
+            // and deadlock.
+            foreach (var package in _loadedPackages) {
+                package.Dispose();
+            }
+
             _shutdown = true;
             Shell.SetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, true);
             _uiEvent.Set();
@@ -206,20 +217,13 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         private void UIThreadWorker(object evt) {
             try {
                 SynchronizationContext.SetSynchronizationContext(new MockSyncContext(this));
-                var packages = new List<IMockPackage>();
                 foreach (var package in Container.GetExportedValues<IMockPackage>()) {
-                    packages.Add(package);
+                    _loadedPackages.Add(package);
                     package.Initialize();
                 }
 
                 ((AutoResetEvent)evt).Set();
-                try {
-                    RunMessageLoop();
-                } finally {
-                    foreach (var package in packages) {
-                        package.Dispose();
-                    }
-                }
+                RunMessageLoop();
             } catch (Exception ex) {
                 Trace.TraceError("Captured exception on mock UI thread: {0}", ex);
                 _edi = ExceptionDispatchInfo.Capture(ex);

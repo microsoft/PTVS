@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "ownership is unclear")]
-    class BufferParser {
+    sealed class BufferParser : IDisposable {
         private readonly Timer _timer;
         internal readonly AnalysisEntry _analysis;
 
@@ -266,7 +266,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            ParseBuffers(snapshots, bufferInfos).Wait();
+            ParseBuffers(snapshots, bufferInfos).WaitAndHandleAllExceptions(_parser._serviceProvider);
 
             lock (this) {
                 _parsing = false;
@@ -474,6 +474,9 @@ namespace Microsoft.PythonTools.Intellisense {
             return mixedChanges;
         }
 
+        public void Dispose() {
+            StopMonitoring();
+        }
 
         internal ITextDocument Document {
             get {

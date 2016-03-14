@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
 
     public sealed class VsProjectAnalyzer : IDisposable {
-        private readonly Process _analysisProcess;
+        internal readonly Process _analysisProcess;
         private readonly Connection _conn;
         // For entries that were loaded from a .zip file, IProjectEntry.Properties[_zipFileName] contains the full path to that archive.
         private static readonly object _zipFileName = new { Name = "ZipFileName" };
@@ -73,7 +73,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private readonly UnresolvedImportSquiggleProvider _unresolvedSquiggles;
         private readonly PythonToolsService _pyService;
-        private readonly IServiceProvider _serviceProvider;
+        internal readonly IServiceProvider _serviceProvider;
         private readonly CancellationTokenSource _processExitedCancelSource = new CancellationTokenSource();
         private bool _disposing;
 
@@ -222,7 +222,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 _taskProvider.Clear(entry, UnresolvedImportMoniker);
             }
 
+            Debug.WriteLine(String.Format("Disposing of parser {0}", _analysisProcess.Id));
             _taskProvider.TokensChanged -= CommentTaskTokensChanged;
+                
+            lock(_openFiles) {
+                foreach (var openFile in _openFiles.Keys) {
+                    openFile.Dispose();
+                }
+            }
+
             try {
                 if (!_analysisProcess.HasExited) {
                     _analysisProcess.Kill();
@@ -284,6 +292,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 try {
                     while (!process.HasExited) {
                         var line = await process.StandardError.ReadLineAsync();
+                        if (line == null) {
+                            break;
+                        }
                         _stdErr.AppendLine(line);
                         Debug.WriteLine("Analysis Std Err: " + line);
                     }
@@ -1270,15 +1281,17 @@ namespace Microsoft.PythonTools.Intellisense {
         #endregion
 
         internal async Task<T> SendRequestAsync<T>(Request<T> request, T defaultValue = default(T)) where T : Response, new() {
-            Debug.WriteLine(String.Format("Sending request {0}", request.command));
+            Debug.WriteLine(String.Format("{1} Sending request {0}", request.command, DateTime.Now));
+            T res = defaultValue;
             try {
-                return await _conn.SendRequestAsync(request, _processExitedCancelSource.Token).ConfigureAwait(false);
+                res = await _conn.SendRequestAsync(request, _processExitedCancelSource.Token).ConfigureAwait(false);
             } catch (OperationCanceledException) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
             } catch (FailedRequestException e) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOpertionFailed, e.Message);
             }
-            return defaultValue;
+            Debug.WriteLine(String.Format("{2} Done sending requestion {0} {1}", request.command, _analysisProcess.Id, DateTime.Now));
+            return res;
         }
 
         internal async Task<IEnumerable<CompletionResult>> GetAllAvailableMembersAsync(AnalysisEntry entry, SourceLocation location, GetMemberOptions options) {
