@@ -4,8 +4,6 @@ Definition of urls for $safeprojectname$.
 
 from django.conf.urls import include, url
 
-import $safeprojectname$.views
-
 # Uncomment the next two lines to enable the admin:
 # from django.contrib import admin
 # admin.autodiscover()
