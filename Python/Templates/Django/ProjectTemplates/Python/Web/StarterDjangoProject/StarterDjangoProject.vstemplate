@@ -27,6 +27,9 @@
         <ProjectItem ReplaceParameters="true" TargetFileName="models.py">app-models.py</ProjectItem>
         <ProjectItem ReplaceParameters="true" TargetFileName="tests.py">app-tests.py</ProjectItem>
         <ProjectItem ReplaceParameters="true" TargetFileName="views.py">app-views.py</ProjectItem>
+        <Folder Name="migrations">
+          <ProjectItem TargetFileName="__init__.py">app-migrations-__init__.py</ProjectItem>
+        </Folder>
         <Folder Name="static">
           <Folder Name="app">
             <Folder Name="content">

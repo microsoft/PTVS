@@ -173,7 +173,17 @@ permissions and limitations under the License.
   -->
 
   <PropertyGroup>
-    <PythonCommands>DjangoShellCommand;DjangoValidateAppCommand;DjangoMigrateCommand;DjangoCollectStaticCommand;DjangoSyncDbCommand;$(PythonCommands)</PythonCommands>
+    <PythonCommands>
+      DjangoShellCommand;
+      DjangoCheckCommand;
+      DjangoMakeMigrationsCommand;
+      DjangoMigrateCommand;
+      DjangoCreateSuperUserCommand;
+      DjangoCollectStaticCommand;
+      $(PythonCommands);
+      DjangoValidateAppCommand;
+      DjangoSyncDbCommand;
+    </PythonCommands>
 
     <StartupPathOrManagePy>$(QualifiedProjectHome)manage.py</StartupPathOrManagePy>
     <StartupPathOrManagePy Condition="Exists($(StartupPath))">$(StartupPath)</StartupPathOrManagePy>
@@ -196,6 +206,20 @@ permissions and limitations under the License.
     </CreatePythonCommandItem>
   </Target>
 
+  <Target Name="DjangoCheckCommand"
+          Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CheckLabel"
+          DependsOnTargets="SetStartupPathOrManagePy"
+          Returns="@(Commands)">
+    <CreatePythonCommandItem Target="$(StartupPathOrManagePy)"
+                             TargetType="script"
+                             Arguments="check"
+                             WorkingDirectory="$(WorkingDirectory)"
+                             Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)"
+                             ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
+      <Output TaskParameter="Command" ItemName="Commands" />
+    </CreatePythonCommandItem>
+  </Target>
+
   <Target Name="DjangoValidateAppCommand"
           Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;ValidateAppLabel"
           DependsOnTargets="SetStartupPathOrManagePy"
@@ -210,6 +234,20 @@ permissions and limitations under the License.
     </CreatePythonCommandItem>
   </Target>
 
+  <Target Name="DjangoMakeMigrationsCommand"
+          Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;MakeMigrationsLabel"
+          DependsOnTargets="SetStartupPathOrManagePy"
+          Returns="@(Commands)">
+    <CreatePythonCommandItem Target="$(StartupPathOrManagePy)"
+                             TargetType="script"
+                             Arguments="makemigrations"
+                             WorkingDirectory="$(WorkingDirectory)"
+                             Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)"
+                             ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
+      <Output TaskParameter="Command" ItemName="Commands" />
+    </CreatePythonCommandItem>
+  </Target>
+
   <Target Name="DjangoMigrateCommand"
           Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;MigrateLabel"
           DependsOnTargets="SetStartupPathOrManagePy"
@@ -217,6 +255,20 @@ permissions and limitations under the License.
     <CreatePythonCommandItem Target="$(StartupPathOrManagePy)"
                              TargetType="script"
                              Arguments="migrate"
+                             WorkingDirectory="$(WorkingDirectory)"
+                             Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)"
+                             ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
+      <Output TaskParameter="Command" ItemName="Commands" />
+    </CreatePythonCommandItem>
+  </Target>
+
+  <Target Name="DjangoCreateSuperUserCommand"
+          Label="resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CreateSuperUserLabel"
+          DependsOnTargets="SetStartupPathOrManagePy"
+          Returns="@(Commands)">
+    <CreatePythonCommandItem Target="$(StartupPathOrManagePy)"
+                             TargetType="script"
+                             Arguments="createsuperuser"
                              WorkingDirectory="$(WorkingDirectory)"
                              Environment="DJANGO_SETTINGS_MODULE=$(DjangoSettingsModule)"
                              ExecuteIn="Repl:resource:Microsoft.PythonTools.Django;Microsoft.PythonTools.Django.Resources;CommandReplTitle">
