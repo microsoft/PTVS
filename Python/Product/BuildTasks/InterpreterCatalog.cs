@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,23 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
-using Microsoft.VisualStudio.Settings;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
-using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
-namespace Microsoft.PythonTools {
-    public static class InterpreterOptionsServiceProvider {
-        public const string FactoryProvidersCollection = @"PythonTools\InterpreterFactories";
+namespace Microsoft.PythonTools.BuildTasks {
+    public static class InterpreterCatalog {
+        internal const string FactoryProvidersCollection = @"PythonTools\InterpreterFactories";
         // If this collection exists in the settings provider, no factories will
         // be loaded. This is meant for tests.
-        public const string SuppressFactoryProvidersCollection = @"PythonTools\NoInterpreterFactories";
         public const string FactoryProviderCodeBaseSetting = "CodeBase";
         // The second is a static registry entry for the local machine and/or
         // the current user (HKCU takes precedence), intended for being set by
@@ -38,44 +33,25 @@ namespace Microsoft.PythonTools {
         private const string FactoryProvidersRegKeyBase = @"Software\Microsoft\PythonTools\";
         private const string FactoryProvidersRegKeySuffix = @"\InterpreterFactories";
 
-        public static T GetService<T>(VisualStudioProxy app) {
-            if (app != null) {
-                var sp = new ServiceProvider(app.GetDTE() as IOleServiceProvider);
-
-                return GetService<T>(sp);
-            } else {
-                return GetService<T>(ServiceProvider.GlobalProvider);
-            }
-        }
-
-        public static T GetService<T>(IServiceProvider serviceProvider) {
-            var settings = SettingsManagerCreator.GetSettingsManager(serviceProvider);
-            var store = settings.GetReadOnlySettingsStore(SettingsScope.Configuration);
-            IVsActivityLog activityLog = serviceProvider.GetService(typeof(SVsActivityLog)) as IVsActivityLog;
-            var paths = GetProviderPaths(
-                store,
-                typeof(T)
-            );
-
-            var container = CreateCatelog(paths, activityLog);
+        public static T GetService<T>() {
+            CompositionContainer container = CreateContainer<T>();
 
             return container.GetExportedValue<T>();
         }
 
+        public static CompositionContainer CreateContainer<T>() {
+            var paths = GetProviderPaths(
+                typeof(T)
+            );
+
+            var container = CreateCatelog(paths);
+            return container;
+        }
+
         private static void LoadOneProvider(
             string codebase,
-            AggregateCatalog catalog,
-            IVsActivityLog log
+            AggregateCatalog catalog
         ) {
-
-            if (log != null) {
-                log.LogEntryPath(
-                    (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_INFORMATION,
-                    "Python Tools",
-                    "Loading interpreter provider assembly",
-                    codebase
-                );
-            }
 
             AssemblyCatalog assemblyCatalog = null;
 
@@ -83,7 +59,7 @@ namespace Microsoft.PythonTools {
             try {
                 assemblyCatalog = new AssemblyCatalog(codebase);
             } catch (Exception ex) {
-                LogException(log, FailedToLoadAssemblyMessage, codebase, ex);
+                LogException(FailedToLoadAssemblyMessage, codebase, ex);
             }
 
             if (assemblyCatalog == null) {
@@ -94,27 +70,13 @@ namespace Microsoft.PythonTools {
             try {
                 catalog.Catalogs.Add(assemblyCatalog);
             } catch (Exception ex) {
-                LogException(log, FailedToLoadMessage, codebase, ex);
+                LogException(FailedToLoadMessage, codebase, ex);
             }
         }
 
-        public static IEnumerable<string> GetProviderPaths(SettingsStore store, Type type) {
+        public static IEnumerable<string> GetProviderPaths(Type type) {
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var catalog = new List<ComposablePartCatalog>();
-
-            if (store.CollectionExists(SuppressFactoryProvidersCollection)) {
-                return Array.Empty<string>();
-            }
-
-            if (store.CollectionExists(FactoryProvidersCollection)) {
-                foreach (var idStr in store.GetSubCollectionNames(FactoryProvidersCollection)) {
-                    var key = FactoryProvidersCollection + "\\" + idStr;
-                    var asm = store.GetString(key, FactoryProviderCodeBaseSetting, "");
-                    if (asm != null) {
-                        seen.Add(asm);
-                    }
-                }
-            }
 
             foreach (var baseKey in new[] { Registry.CurrentUser, Registry.LocalMachine }) {
                 var version = Version.Parse(AssemblyVersionInfo.Version);
@@ -147,13 +109,12 @@ namespace Microsoft.PythonTools {
             return seen;
         }
 
-        private static CompositionContainer CreateCatelog(IEnumerable<string> asms, IVsActivityLog activityLog) {
+        private static CompositionContainer CreateCatelog(IEnumerable<string> asms) {
             var catalog = new AggregateCatalog();
             foreach (var codeBase in asms) {
                 LoadOneProvider(
                     codeBase,
-                    catalog,
-                    activityLog
+                    catalog
                 );
             }
 
@@ -161,37 +122,36 @@ namespace Microsoft.PythonTools {
         }
 
         private static void LogException(
-            IVsActivityLog log,
             string message,
             string path,
             Exception ex,
             IEnumerable<object> data = null
         ) {
-            if (log == null) {
-                return;
-            }
+            //if (log == null) {
+            //    return;
+            //}
 
-            var fullMessage = string.Format("{1}:{0}{2}{0}{3}",
-                Environment.NewLine,
-                message,
-                ex,
-                data == null ? string.Empty : string.Join(Environment.NewLine, data)
-            ).Trim();
+            //var fullMessage = string.Format("{1}:{0}{2}{0}{3}",
+            //    Environment.NewLine,
+            //    message,
+            //    ex,
+            //    data == null ? string.Empty : string.Join(Environment.NewLine, data)
+            //).Trim();
 
-            if (string.IsNullOrEmpty(path)) {
-                log.LogEntry(
-                    (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_ERROR,
-                    "Python Tools",
-                    fullMessage
-                );
-            } else {
-                log.LogEntryPath(
-                    (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_ERROR,
-                    "Python Tools",
-                    fullMessage,
-                    path
-                );
-            }
+            //if (string.IsNullOrEmpty(path)) {
+            //    log.LogEntry(
+            //        (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_ERROR,
+            //        "Python Tools",
+            //        fullMessage
+            //    );
+            //} else {
+            //    log.LogEntryPath(
+            //        (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_ERROR,
+            //        "Python Tools",
+            //        fullMessage,
+            //        path
+            //    );
+            //}
         }
 
     }

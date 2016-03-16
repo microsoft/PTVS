@@ -47,6 +47,7 @@ namespace Microsoft.PythonTools.Commands {
         internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, IPythonInterpreterFactory factory, PythonProjectNode project) {
             var compModel = serviceProvider.GetComponentModel();
             var provider = compModel.GetService<InteractiveWindowProvider>();
+            var vsProjectContext = compModel.GetService<VsProjectContextProvider>();
 
             string replId = PythonReplEvaluatorProvider.GetReplId(factory, project);
             var window = provider.FindReplWindow(replId);
@@ -69,7 +70,8 @@ namespace Microsoft.PythonTools.Commands {
                 window.InteractiveWindow.SetSmartUpDown(pyService.GetInteractiveOptions(factory).ReplSmartHistory);
             }
 
-            if (project != null && project.Interpreters.IsProjectSpecific(factory)) {
+            
+            if (project != null && vsProjectContext.IsProjectSpecific(factory.Configuration)) {
                 project.AddActionOnClose(window, BasePythonReplEvaluator.CloseReplWindow);
             }
 

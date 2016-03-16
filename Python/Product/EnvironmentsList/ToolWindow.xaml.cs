@@ -282,7 +282,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-        private void UpdateEnvironments(IPythonInterpreterFactory select = null) {
+        private void UpdateEnvironments(string select = null) {
             if (_service == null) {
                 lock (_environmentsLock) {
                     _environments.Clear();
@@ -294,7 +294,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 if (select == null) {
                     var selectView = _environmentsView.View.CurrentItem as EnvironmentView;
                     if (selectView != null) {
-                        select = selectView.Factory;
+                        select = selectView.Factory.Configuration.Id;
                     }
                 }
 
@@ -315,7 +315,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
                 if (select != null) {
                     var selectView = _environments.FirstOrDefault(v => v.Factory != null &&
-                        v.Factory.Id == select.Id && v.Factory.Configuration.Version == select.Configuration.Version);
+                        v.Factory.Configuration.Id == select);
                     if (selectView == null) {
                         select = null;
                     } else {
@@ -397,27 +397,13 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 return;
             }
 
-            var configurable = _service.KnownProviders
-                .OfType<ConfigurablePythonInterpreterFactoryProvider>()
-                .FirstOrDefault();
-
-            if (configurable == null) {
-                e.CanExecute = false;
-                e.Handled = true;
-                return;
-            }
-
             e.CanExecute = true;
             // Not handled, in case another handler wants to suppress
             return;
         }
 
         private async void AddCustomEnvironment_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var configurable = _service == null ? null : _service.KnownProviders
-                .OfType<ConfigurablePythonInterpreterFactoryProvider>()
-                .FirstOrDefault();
-            
-            if (configurable == null) {
+            if (_service == null) {
                 return;
             }
 
@@ -434,7 +420,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 name = string.Format(fmt, i);
             }
 
-            var factory = configurable.SetOptions(new InterpreterFactoryCreationOptions {
+            var factory = _service.AddConfigurableInterpreter(new InterpreterFactoryCreationOptions {
                 Id = Guid.NewGuid(),
                 Description = name
             });

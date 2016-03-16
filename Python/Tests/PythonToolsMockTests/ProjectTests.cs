@@ -112,8 +112,8 @@ namespace PythonToolsMockTests {
                 var interpOptions = (UIThreadBase)project.GetService(typeof(IComponentModel));
 
                 uiThread.Invoke(() => {
-                    project.Interpreters.AddInterpreter(v27);
-                    project.Interpreters.AddInterpreter(v34);
+                    project.AddInterpreter(v27);
+                    project.AddInterpreter(v34);
                 });
 
                 project.SetInterpreterFactory(v27);

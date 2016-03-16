@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ProjectEntryMap _projectFiles;
         private PythonAnalyzer _pyAnalyzer;
         private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
-        private IPythonInterpreterFactory[] _allFactories;
+        private InterpreterConfiguration[] _allConfigs;
         private volatile Dictionary<string, AP.TaskPriority> _commentPriorityMap = new Dictionary<string, AP.TaskPriority>() {
             { "TODO", AP.TaskPriority.normal },
             { "HACK", AP.TaskPriority.high },
@@ -205,37 +205,21 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            var interpConfig = _container.GetExportedValue<IInterpreterOptionsService>();
-            IPythonInterpreterFactory factory;
-            var id = Guid.Parse(request.interpreterId);
-            Version version = Version.Parse(request.interpreterVersion);
-            if (id == InterpreterFactoryCreator.AnalysisOnlyFactoryGuid) {
-                factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version);
-            } else {
-                factory = interpConfig.FindInterpreter(id, version);
+            _catalog.Catalogs.Add(new AssemblyCatalog(GetType().Assembly));
+
+            if (request.projectFile != null) {
+                var projectContextProvider = _container.GetExportedValue<OutOfProcProjectContextProvider>();
+                projectContextProvider.AddContext(request.projectFile);
             }
 
-            var interpreters = interpConfig.Interpreters.ToArray();
-
-            MSBuildProjectInterpreterFactoryProvider msbuildProvider = null;
-            if (factory == null && request.projectFile != null) {
-                var proj = new Build.Evaluation.Project(request.projectFile);
-                msbuildProvider = new MSBuildProjectInterpreterFactoryProvider(interpConfig, proj);
-                try {
-                    msbuildProvider.DiscoverInterpreters();
-                } catch (InvalidDataException) {
-                    // This exception can be safely ignored here.
-                }
-
-                factory = msbuildProvider.ActiveInterpreter;
-            }
+            var factory = _container.GetInterpreterFactory(request.interpreterId);
 
             if (factory == null) {
-                error = String.Format("No active interpreter found for interpreter ID: {0} {1}", id, version);
+                error = String.Format("No active interpreter found for interpreter ID: {0}", request.interpreterId);
             }
 
             _interpreterFactory = factory;
-            _allFactories = interpConfig.Interpreters.ToArray();
+            _allConfigs = _container.GetConfigurations().Values.ToArray();
 
             var interpreter = factory.CreateInterpreter();
             if (interpreter != null) {
@@ -1722,9 +1706,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private bool ShouldAnalyzePath(string path) {
-            foreach (var fact in _allFactories) {
-                if (PathUtils.IsValidPath(fact.Configuration.InterpreterPath) &&
-                    PathUtils.IsSubpathOf(Path.GetDirectoryName(fact.Configuration.InterpreterPath), path)) {
+            foreach (var config in _allConfigs) {
+                if (PathUtils.IsValidPath(config.InterpreterPath) &&
+                    PathUtils.IsSubpathOf(Path.GetDirectoryName(config.InterpreterPath), path)) {
                     return false;
                 }
             }

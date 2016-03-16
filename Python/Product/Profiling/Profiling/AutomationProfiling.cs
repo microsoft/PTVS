@@ -64,18 +64,8 @@ namespace Microsoft.PythonTools.Profiling {
             if (File.Exists(interpreter)) {
                 target.StandaloneTarget.InterpreterPath = interpreter;
             } else {
-                string[] interpreterInfo = interpreter.Split(new[] { ';' }, 2);
-                Guid interpreterGuid;
-                Version interpreterVersion;
-                if (interpreterInfo.Length == 2 &&
-                    Guid.TryParse(interpreterInfo[0], out interpreterGuid) &&
-                    Version.TryParse(interpreterInfo[1], out interpreterVersion)) {
-                    target.StandaloneTarget.PythonInterpreter = new PythonInterpreter();
-                    target.StandaloneTarget.PythonInterpreter.Id = interpreterGuid;
-                    target.StandaloneTarget.PythonInterpreter.Version = interpreterVersion.ToString();
-                } else {
-                    throw new InvalidOperationException(String.Format("Invalid interpreter: {0}", interpreter));
-                }
+                target.StandaloneTarget.PythonInterpreter = new PythonInterpreter();
+                target.StandaloneTarget.PythonInterpreter.Id = interpreter;
             }
 
             return PythonProfilingPackage.Instance.ProfileTarget(target, openReport).GetAutomationObject();

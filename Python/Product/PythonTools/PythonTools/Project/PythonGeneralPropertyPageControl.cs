@@ -50,13 +50,13 @@ namespace Microsoft.PythonTools.Project {
             IsWindowsApplication = Convert.ToBoolean(_propPage.Project.GetProjectProperty(CommonConstants.IsWindowsApplication, false));
             OnInterpretersChanged();
 
-            if (_propPage.PythonProject.Interpreters.IsActiveInterpreterGlobalDefault) {
+            if (_propPage.PythonProject.IsActiveInterpreterGlobalDefault) {
                 // ActiveInterpreter will never be null, so we need to check
                 // the property to find out if it's following the global
                 // default.
                 SetDefaultInterpreter(null);
             } else {
-                SetDefaultInterpreter(_propPage.PythonProject.Interpreters.ActiveInterpreter);
+                SetDefaultInterpreter(_propPage.PythonProject.ActiveInterpreter);
             }
 
         }
@@ -67,8 +67,7 @@ namespace Microsoft.PythonTools.Project {
             try {
                 var selection = _defaultInterpreter.SelectedItem;
                 _defaultInterpreter.Items.Clear();
-                var provider = _propPage.PythonProject != null ? _propPage.PythonProject.Interpreters : null;
-                var available = provider != null ? provider.GetInterpreterFactories().ToArray() : null;
+                var available = _propPage.PythonProject.InterpreterFactories.ToArray();
                 var globalInterpreters = _service.Interpreters.Where(f => f.IsUIVisible() && f.CanBeDefault()).ToList();
                 if (available != null && available.Length > 0) {
                     foreach (var interpreter in available) {
@@ -90,7 +89,7 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
-                if (provider == null || provider.IsActiveInterpreterGlobalDefault) {
+                if (_propPage.PythonProject.IsActiveInterpreterGlobalDefault) {
                     // ActiveInterpreter will never be null, so we need to check
                     // the property to find out if it's following the global
                     // default.
@@ -98,7 +97,7 @@ namespace Microsoft.PythonTools.Project {
                 } else if (selection != null) {
                     SetDefaultInterpreter((IPythonInterpreterFactory)selection);
                 } else { 
-                    SetDefaultInterpreter(provider.ActiveInterpreter);
+                    SetDefaultInterpreter(_propPage.PythonProject.ActiveInterpreter);
                 }
             } finally {
                 _defaultInterpreter.EndUpdate();
@@ -151,7 +150,7 @@ namespace Microsoft.PythonTools.Project {
 
         private void Changed(object sender, EventArgs e) {
             if (_defaultInterpreter.SelectedItem == Separator) {
-                _defaultInterpreter.SelectedItem = _propPage.PythonProject.Interpreters.ActiveInterpreter;
+                _defaultInterpreter.SelectedItem = _propPage.PythonProject.ActiveInterpreter;
             }
             _propPage.IsDirty = true;
         }

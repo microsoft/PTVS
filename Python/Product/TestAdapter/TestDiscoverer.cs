@@ -55,6 +55,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
 
                 foreach (var proj in buildEngine.LoadedProjects) {
+#if FALSE
                     using (var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj)) {
                         try {
                             provider.DiscoverInterpreters();
@@ -122,6 +123,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                             }
                         }
                     }
+#endif
                 }
             } finally {
                 // Disposing buildEngine does not clear the document cache in

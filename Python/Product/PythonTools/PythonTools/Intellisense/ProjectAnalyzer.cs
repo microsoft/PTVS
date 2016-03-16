@@ -138,8 +138,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var settings = SettingsManagerCreator.GetSettingsManager(serviceProvider).GetReadOnlySettingsStore(SettingsScope.Configuration);
             var initialize = new AP.InitializeRequest() {
-                interpreterId = factory.Id.ToString(),
-                interpreterVersion = factory.Configuration.Version.ToString(),
+                interpreterId = factory.Configuration.Id,
                 projectFile = projectFile,
                 mefExtensions = InterpreterOptionsServiceProvider.GetProviderPaths(settings, typeof(IInterpreterOptionsService)).ToArray()
             };
@@ -1287,10 +1286,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 res = await _conn.SendRequestAsync(request, _processExitedCancelSource.Token).ConfigureAwait(false);
             } catch (OperationCanceledException) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
+            } catch(IOException) {
+                _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
             } catch (FailedRequestException e) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOpertionFailed, e.Message);
             }
-            Debug.WriteLine(String.Format("{2} Done sending requestion {0} {1}", request.command, _analysisProcess.Id, DateTime.Now));
+            Debug.WriteLine(String.Format("{1} Done sending requestion {0}", request.command, DateTime.Now));
             return res;
         }
 

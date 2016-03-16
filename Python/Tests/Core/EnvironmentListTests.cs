@@ -58,15 +58,15 @@ namespace PythonToolsUITests {
 
 
         private static InterpreterConfiguration MockInterpreterConfiguration(Version version, InterpreterUIMode uiMode) {
-            return new InterpreterConfiguration(null, null, null, null, null, ProcessorArchitecture.None, version, uiMode);
+            return new InterpreterConfiguration(null, null, null, null, null, null, null, ProcessorArchitecture.None, version, uiMode);
         }
 
         private static InterpreterConfiguration MockInterpreterConfiguration(Version version) {
-            return new InterpreterConfiguration(version);
+            return new InterpreterConfiguration("", "", version);
         }
 
         private static InterpreterConfiguration MockInterpreterConfiguration(string path) {
-            return new InterpreterConfiguration(Path.GetDirectoryName(path), path, "", "", "", ProcessorArchitecture.None, new Version(2, 7));
+            return new InterpreterConfiguration(path, path, Path.GetDirectoryName(path), path, "", "", "", ProcessorArchitecture.None, new Version(2, 7));
         }
 
         [TestMethod, Priority(1)]
@@ -260,6 +260,8 @@ namespace PythonToolsUITests {
                         "Test Factory",
                         new InterpreterConfiguration(
                             invalidPath,
+                            "Test Factory",
+                            invalidPath,
                             invalidPath,
                             "",
                             "",
@@ -406,10 +408,8 @@ namespace PythonToolsUITests {
                     list.Environments.Select(ev => (string)ev.InterpreterPath),
                     StringComparer.OrdinalIgnoreCase
                 ));
-
-                var configurable = list.Service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().FirstOrDefault();
-                Assert.IsNotNull(configurable, "No configurable provider available");
-                var fact = configurable.SetOptions(new InterpreterFactoryCreationOptions {
+                
+                var fact = list.Service.AddConfigurableInterpreter(new InterpreterFactoryCreationOptions {
                     Id = Guid.NewGuid(),
                     LanguageVersionString = "2.7",
                     // The actual file doesn't matter, except to test that it
@@ -429,9 +429,9 @@ namespace PythonToolsUITests {
                         TestData.GetPath("HelloWorld\\HelloWorld.pyproj")
                     );
 
-                    configurable.SetOptions(new InterpreterFactoryCreationOptions {
-                        Id = fact.Id,
-                        LanguageVersion = fact.Configuration.Version,
+                    list.Service.AddConfigurableInterpreter(new InterpreterFactoryCreationOptions {
+                        NewId = fact,
+                        LanguageVersionString = "2.7",
                         InterpreterPath = TestData.GetPath("HelloWorld2\\HelloWorld.pyproj")
                     });
 
@@ -446,7 +446,7 @@ namespace PythonToolsUITests {
                         TestData.GetPath("HelloWorld2\\HelloWorld.pyproj")
                     );
                 } finally {
-                    configurable.RemoveInterpreter(fact.Id);
+                    list.Service.RemoveConfigurableInterpreter(fact);
                 }
 
                 var afterRemove = wpf.Invoke(() => new HashSet<string>(
@@ -465,9 +465,6 @@ namespace PythonToolsUITests {
 
                 var before = wpf.Invoke(() => new HashSet<Guid>(list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Id)));
 
-                var configurable = list.Service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().FirstOrDefault();
-                Assert.IsNotNull(configurable, "No configurable provider available");
-
                 await list.Execute(ApplicationCommands.New, null);
                 var afterAdd = wpf.Invoke(() => new HashSet<Guid>(list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Id)));
 
@@ -478,7 +475,7 @@ namespace PythonToolsUITests {
                 Assert.AreEqual(1, difference.Count, "Did not add a new environment");
                 var newEnv = list.Service.Interpreters.Single(f => difference.Contains(f.Id));
 
-                Assert.IsTrue(configurable.IsConfigurable(newEnv), "Did not add a configurable environment");
+                Assert.IsTrue(list.Service.IsConfigurable(newEnv.Configuration.Id), "Did not add a configurable environment");
 
                 // To remove the environment, we need to trigger the Remove
                 // command on the ConfigurationExtensionProvider's control
@@ -491,7 +488,7 @@ namespace PythonToolsUITests {
                 AssertUtil.ContainsExactly(afterRemove, before);
             }
         }
-
+#if FALSE
         [TestMethod, Priority(1)]
         public void LoadUnloadProjectFactories() {
             var service = new MockInterpreterOptionsService();
@@ -569,6 +566,7 @@ namespace PythonToolsUITests {
                 loaded.ProjectUnloaded(project);
             }
         }
+#endif
 
         [TestMethod, Priority(1)]
         public void ChangeDefault() {
@@ -697,7 +695,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        #region Test Helpers
+#region Test Helpers
 
         private static bool LogException(Task task) {
             var ex = task.Exception;
@@ -743,6 +741,8 @@ namespace PythonToolsUITests {
                 Guid.NewGuid(),
                 Path.GetFileName(PathUtils.TrimEndSeparator(env)),
                 new InterpreterConfiguration(
+                    env,
+                    Path.GetFileName(PathUtils.TrimEndSeparator(env)),
                     env,
                     PathUtils.FindFile(env, "python.exe"),
                     PathUtils.FindFile(env, "python.exe"),
@@ -845,22 +845,24 @@ namespace PythonToolsUITests {
             sp.Services[typeof(SVsSettingsManager).GUID] = settings;
             if (defaultProviders) {
                 settings.Store.AddSetting(
-                    InterpreterOptionsService.FactoryProvidersCollection + "\\CPythonAndConfigurable",
+                    InterpreterOptionsServiceProvider.FactoryProvidersCollection + "\\CPythonAndConfigurable",
                     InterpreterOptionsServiceProvider.FactoryProviderCodeBaseSetting,
                     typeof(CPythonInterpreterFactoryConstants).Assembly.Location
                 );
+#if FALSE
                 settings.Store.AddSetting(
-                    InterpreterOptionsService.FactoryProvidersCollection + "\\LoadedProjects",
+                    InterpreterOptionsServiceProvider.FactoryProvidersCollection + "\\LoadedProjects",
                     InterpreterOptionsServiceProvider.FactoryProviderCodeBaseSetting,
                     typeof(LoadedProjectInterpreterFactoryProvider).Assembly.Location
                 );
+#endif
             } else {
                 settings.Store.CreateCollection(InterpreterOptionsServiceProvider.SuppressFactoryProvidersCollection);
             }
             return InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp);
         }
 
-        #endregion
+#endregion
     }
 
     class TestPipPackageCache : PipPackageCache {

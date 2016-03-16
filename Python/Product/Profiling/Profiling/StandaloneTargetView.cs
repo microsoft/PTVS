@@ -51,11 +51,19 @@ namespace Microsoft.PythonTools.Profiling {
 
         public StandaloneTargetView(IServiceProvider serviceProvider) {
             var componentService = (IComponentModel)(serviceProvider.GetService(typeof(SComponentModel)));
-            var interpreterService = componentService.GetService<IInterpreterOptionsService>();
+            
+            var interpreterProviders = componentService.DefaultExportProvider.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>();
+            var pythonService = componentService.GetService<PythonToolsService>();
 
-            var availableInterpreters = interpreterService.Interpreters.Select(factory => new PythonInterpreterView(factory)).ToList();
+            var availableInterpreters = interpreterProviders.GetConfigurations().Select(
+                factory => new PythonInterpreterView(
+                    factory.Value.Description, 
+                    factory.Key, 
+                    factory.Value.InterpreterPath
+                )
+            ).ToList();
 
-            _customInterpreter = new PythonInterpreterView("Other...", Guid.Empty, new Version(), null);
+            _customInterpreter = new PythonInterpreterView("Other...", "", null);
             availableInterpreters.Add(_customInterpreter);
             _availableInterpreters = new ReadOnlyCollection<PythonInterpreterView>(availableInterpreters);
 
@@ -70,9 +78,8 @@ namespace Microsoft.PythonTools.Profiling {
             PropertyChanged += new PropertyChangedEventHandler(StandaloneTargetView_PropertyChanged);
 
             if (IsAnyAvailableInterpreters) {
-                var defaultId = interpreterService.DefaultInterpreter.Id;
-                var defaultVersion = interpreterService.DefaultInterpreter.Configuration.Version;
-                Interpreter = AvailableInterpreters.FirstOrDefault(v => v.Id == defaultId && v.Version == defaultVersion);
+                var defaultId = pythonService.DefaultInterpreterId;
+                Interpreter = AvailableInterpreters.FirstOrDefault(v => v.Id == defaultId);
             }
         }
 
@@ -86,10 +93,9 @@ namespace Microsoft.PythonTools.Profiling {
         public StandaloneTargetView(IServiceProvider serviceProvider, StandaloneTarget template)
             : this(serviceProvider) {
             if (template.PythonInterpreter != null) {
-                Version version;
-                if (IsAnyAvailableInterpreters && Version.TryParse(template.PythonInterpreter.Version, out version)) {
+                if (IsAnyAvailableInterpreters) {
                     Interpreter = AvailableInterpreters
-                        .FirstOrDefault(v => v.Id == template.PythonInterpreter.Id && v.Version == version);
+                        .FirstOrDefault(v => v.Id == template.PythonInterpreter.Id);
                 } else {
                     Interpreter = _customInterpreter;
                 }

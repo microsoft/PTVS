@@ -239,6 +239,15 @@ namespace Microsoft.PythonTools {
                 .Where(p => p != null);
         }
 
+        public static IPythonProject AsPythonProject(this IVsProject project) {
+            return ((IVsHierarchy)project).GetProject().GetCommonProject() as PythonProjectNode;
+        }
+
+        public static IPythonProject AsPythonProject(this EnvDTE.Project project) {
+            return project.GetCommonProject() as PythonProjectNode;
+        }
+
+
         internal static PythonProjectNode GetPythonProject(this IVsProject project) {
             return ((IVsHierarchy)project).GetProject().GetCommonProject() as PythonProjectNode;
         }

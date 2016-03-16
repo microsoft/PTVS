@@ -42,6 +42,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 options.Id,
                 options.Description,
                 new InterpreterConfiguration(
+                    options.NewId,
+                    baseFactory.Configuration.Description,
                     options.PrefixPath,
                     options.InterpreterPath,
                     options.WindowInterpreterPath,

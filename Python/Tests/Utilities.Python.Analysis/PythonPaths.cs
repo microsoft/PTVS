@@ -34,9 +34,6 @@ namespace TestUtilities {
         public static readonly Guid IronPythonGuid = new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}");
         public static readonly Guid IronPython64Guid = new Guid("{FCC291AA-427C-498C-A4D7-4502D6449B8C}");
 
-        // Not currently used for auto-detection
-        public static readonly Guid JythonGuid = new Guid("{844BA471-72F7-431B-AA3F-675AFD18E230}");
-
         public static readonly PythonVersion Python25 = GetCPythonVersion(PythonLanguageVersion.V25);
         public static readonly PythonVersion Python26 = GetCPythonVersion(PythonLanguageVersion.V26);
         public static readonly PythonVersion Python27 = GetCPythonVersion(PythonLanguageVersion.V27);
@@ -185,7 +182,7 @@ namespace TestUtilities {
                 if (libPath == null || !libPath.EnumerateFiles("site.py").Any()) {
                     continue;
                 }
-                return new PythonVersion(interpreter.FullName, version, JythonGuid);
+                return new PythonVersion(interpreter.FullName, version, CPythonGuid);
             }
             return null;
         }
@@ -295,12 +292,21 @@ namespace TestUtilities {
         public InterpreterConfiguration Configuration {
             get {
                 return new InterpreterConfiguration(
+                    InterpreterId,
+                    "",
                     PrefixPath, InterpreterPath, null, LibPath, "PYTHONPATH",
                     Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
                     Version.ToVersion()
                 );
             }
         }
+
+        public string InterpreterId {
+            get {
+                return Version.ToVersion().ToString() + " " + (Isx64 ? "64-bit" : "32-bit");
+            }
+        }
+
     }
 
     public static class PythonVersionExtensions {

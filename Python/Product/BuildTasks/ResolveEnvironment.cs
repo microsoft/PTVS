@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
 using System.IO;
 using System.Linq;
@@ -42,11 +43,9 @@ namespace Microsoft.PythonTools.BuildTasks {
         }
 
         /// <summary>
-        /// The interpreter ID to resolve. If this and
-        /// <see cref="InterpreterVersion"/>
+        /// The interpreter ID to resolve.
         /// </summary>
         public string InterpreterId { get; set; }
-        public string InterpreterVersion { get; set; }
 
         [Output]
         public string PrefixPath { get; private set; }
@@ -81,29 +80,13 @@ namespace Microsoft.PythonTools.BuildTasks {
         internal string[] SearchPaths { get; private set; }
 
         public bool Execute() {
-            bool returnActive;
-            Guid id;
-            Version version;
+            string id = InterpreterId;
 
-            returnActive = !Guid.TryParse(InterpreterId, out id);
-
-            if (!Version.TryParse(InterpreterVersion, out version)) {
-                if (!returnActive) {
-                    _log.LogError(
-                        "Invalid values for InterpreterId (\"{0}\") and InterpreterVersion (\"{1}\")",
-                        InterpreterId,
-                        InterpreterVersion
-                    );
-                    return false;
-                }
-            }
-
-            MSBuildProjectInterpreterFactoryProvider provider = null;
             ProjectCollection collection = null;
             Project project = null;
 
-            var service = ServiceHolder.Create();
-            if (service == null) {
+            var exports = FromInProc() ?? FromOutOfProc();
+            if (exports == null) {
                 _log.LogError("Unable to obtain interpreter service.");
                 return false;
             }
@@ -134,67 +117,48 @@ namespace Microsoft.PythonTools.BuildTasks {
                     SearchPaths = new string[0];
                 }
 
-                provider = new MSBuildProjectInterpreterFactoryProvider(service.Service, project);
+                var projectContext = exports.GetExportedValue<MsBuildProjectContextProvider>();
+                projectContext.AddContext(project);
                 try {
-                    provider.DiscoverInterpreters();
-                } catch (InvalidDataException ex) {
-                    _log.LogWarning("Errors while resolving environments: {0}", ex.Message);
-                }
+                    var factoryProviders = exports.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>();
 
-                IPythonInterpreterFactory factory = null;
-                if (returnActive) {
-                    factory = provider.ActiveInterpreter;
-                } else {
-                    factory = provider.FindInterpreter(id, version);
-                }
+                    var factory = factoryProviders.GetInterpreterFactory(id);
 
-                if (!provider.IsAvailable(factory)) {
-                    _log.LogError(
-                        "The environment '{0}' is not available. Check your project configuration and try again.",
-                        factory.Description
-                    );
-                    return false;
-                } else if (factory == service.Service.NoInterpretersValue) {
-                    _log.LogError(
-                        "No Python environments are configured. Please install or configure an environment and try " +
-                        "again. See http://go.microsoft.com/fwlink/?LinkID=299429 for information on setting up a " +
-                        "Python environment."
-                    );
-                    return false;
-                } else if (factory != null) {
-                    PrefixPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
-                    if (PathUtils.IsSubpathOf(projectHome, PrefixPath)) {
-                        ProjectRelativePrefixPath = PathUtils.GetRelativeDirectoryPath(projectHome, PrefixPath);
+                    if (factory == null) {
+                        _log.LogError(
+                            "The environment '{0}' is not available. Check your project configuration and try again.",
+                            factory.Description
+                        );
+                        return false;
                     } else {
-                        ProjectRelativePrefixPath = string.Empty;
-                    }
-                    InterpreterPath = factory.Configuration.InterpreterPath;
-                    WindowsInterpreterPath = factory.Configuration.WindowsInterpreterPath;
-                    LibraryPath = PathUtils.EnsureEndSeparator(factory.Configuration.LibraryPath);
-                    Architecture = factory.Configuration.Architecture.ToString();
-                    PathEnvironmentVariable = factory.Configuration.PathEnvironmentVariable;
-                    Description = factory.Description;
-                    MajorVersion = factory.Configuration.Version.Major.ToString();
-                    MinorVersion = factory.Configuration.Version.Minor.ToString();
+                        PrefixPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
+                        if (PathUtils.IsSubpathOf(projectHome, PrefixPath)) {
+                            ProjectRelativePrefixPath = PathUtils.GetRelativeDirectoryPath(projectHome, PrefixPath);
+                        } else {
+                            ProjectRelativePrefixPath = string.Empty;
+                        }
+                        InterpreterPath = factory.Configuration.InterpreterPath;
+                        WindowsInterpreterPath = factory.Configuration.WindowsInterpreterPath;
+                        LibraryPath = PathUtils.EnsureEndSeparator(factory.Configuration.LibraryPath);
+                        Architecture = factory.Configuration.Architecture.ToString();
+                        PathEnvironmentVariable = factory.Configuration.PathEnvironmentVariable;
+                        Description = factory.Description;
+                        MajorVersion = factory.Configuration.Version.Major.ToString();
+                        MinorVersion = factory.Configuration.Version.Minor.ToString();
 
-                    return true;
-                } else if (returnActive) {
-                    _log.LogError("Unable to resolve active environment.");
-                } else {
-                    _log.LogError("Unable to resolve environment {0} {1}", InterpreterId, InterpreterVersion);
+                        return true;
+                    }
+                } finally {
+                    projectContext.RemoveContext(project);
                 }
 
             } catch (Exception ex) {
                 _log.LogErrorFromException(ex);
             } finally {
-                if (provider != null) {
-                    provider.Dispose();
-                }
                 if (collection != null) {
                     collection.UnloadAllProjects();
                     collection.Dispose();
                 }
-                service.Dispose();
             }
 
             _log.LogError("Unable to resolve environment");
@@ -204,60 +168,20 @@ namespace Microsoft.PythonTools.BuildTasks {
         public IBuildEngine BuildEngine { get; set; }
         public ITaskHost HostObject { get; set; }
 
-        private sealed class ServiceHolder : IDisposable {
-            private readonly AssemblyCatalog _catalog;
-            private readonly CompositionContainer _container;
-            private readonly IInterpreterOptionsService _service;
 
-            private static ServiceHolder FromInProc() {
-                if (ServiceProvider.GlobalProvider != null) {
-                    var model = ServiceProvider.GlobalProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-                    if (model != null) {
-                        var service = model.GetService<IInterpreterOptionsService>();
-                        if (service != null) {
-                            return new ServiceHolder(null, null, service);
-                        }
-                    }
-                }
-                return null;
-            }
-
-            private static ServiceHolder FromOutOfProc() {
-                var catalog = new AssemblyCatalog(typeof(IInterpreterOptionsService).Assembly);
-                var container = new CompositionContainer(catalog);
-                var service = container.GetExportedValue<IInterpreterOptionsService>();
-                if (service != null) {
-                    return new ServiceHolder(catalog, container, service);
-                }
-                return null;
-            }
-
-            public static ServiceHolder Create() {
-                return FromInProc() ?? FromOutOfProc();
-            }
-
-            private ServiceHolder(
-                AssemblyCatalog catalog,
-                CompositionContainer container,
-                IInterpreterOptionsService service
-            ) {
-                _catalog = catalog;
-                _container = container;
-                _service = service;
-            }
-
-            public IInterpreterOptionsService Service { get { return _service; } }
-
-            public void Dispose() {
-                if (_container != null) {
-                    _container.Dispose();
-                }
-                if (_catalog != null) {
-                    _catalog.Dispose();
+        private static ExportProvider FromInProc() {
+            if (ServiceProvider.GlobalProvider != null) {
+                var model = ServiceProvider.GlobalProvider.GetService(typeof(SComponentModel)) as IComponentModel;
+                if (model != null) {
+                    return model.DefaultExportProvider;
                 }
             }
+            return null;
         }
 
+        private static ExportProvider FromOutOfProc() {
+            return InterpreterCatalog.CreateContainer<MsBuildProjectContextProvider>();
+        }
     }
 
     /// <summary>

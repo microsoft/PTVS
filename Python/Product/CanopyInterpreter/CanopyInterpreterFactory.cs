@@ -142,6 +142,8 @@ namespace CanopyInterpreter {
 
             var config = new InterpreterConfiguration(
                 userPath,
+                description,
+                userPath,
                 interpPath,
                 winInterpPath,
                 libPath,

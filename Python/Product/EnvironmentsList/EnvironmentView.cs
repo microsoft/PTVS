@@ -83,14 +83,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 IsCheckingDatabase = _withDb.IsCheckingDatabase;
                 IsCurrent = _withDb.IsCurrent;
             }
+            
 
-            var configurableProvider = _service != null ?
-                _service.KnownProviders
-                    .OfType<ConfigurablePythonInterpreterFactoryProvider>()
-                    .FirstOrDefault() :
-                null;
-
-            if (configurableProvider != null && configurableProvider.IsConfigurable(factory)) {
+            if (_service.IsConfigurable(factory.Configuration.Id)) {
                 IsConfigurable = true;
             }
 
@@ -105,7 +100,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             Extensions = new ObservableCollection<object>();
             Extensions.Add(new EnvironmentPathsExtensionProvider());
             if (IsConfigurable) {
-                Extensions.Add(new ConfigurationExtensionProvider(configurableProvider));
+                Extensions.Add(new ConfigurationExtensionProvider(_service));
             }
 
             CanBeDefault = Factory.CanBeDefault();

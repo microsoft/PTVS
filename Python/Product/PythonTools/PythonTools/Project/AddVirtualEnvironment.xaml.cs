@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Project {
             IInterpreterOptionsService service,
             bool browseForExisting = false
         ) {
-            using (var view = new AddVirtualEnvironmentView(project, service, project.Interpreters.ActiveInterpreter)) {
+            using (var view = new AddVirtualEnvironmentView(project, service, project.ActiveInterpreter)) {
                 var wnd = new AddVirtualEnvironment(project.Site, view);
 
                 if (browseForExisting) {

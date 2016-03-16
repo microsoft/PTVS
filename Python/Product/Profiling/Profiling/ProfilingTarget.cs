@@ -193,13 +193,7 @@ namespace Microsoft.PythonTools.Profiling {
 
     public sealed class PythonInterpreter {
         [XmlElement("Id")]
-        public Guid Id {
-            get;
-            set;
-        }
-
-        [XmlElement("Version")]
-        public string Version {
+        public string Id {
             get;
             set;
         }
@@ -208,7 +202,6 @@ namespace Microsoft.PythonTools.Profiling {
             var res = new PythonInterpreter();
 
             res.Id = Id;
-            res.Version = Version;
             return res;
         }
 
@@ -216,8 +209,7 @@ namespace Microsoft.PythonTools.Profiling {
             if (self == null) {
                 return other == null;
             } else if (other != null) {
-                return self.Id == other.Id &&
-                    self.Version == other.Version;
+                return self.Id == other.Id;
             }
             return false;
         }

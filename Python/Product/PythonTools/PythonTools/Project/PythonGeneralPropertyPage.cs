@@ -45,14 +45,14 @@ namespace Microsoft.PythonTools.Project {
             }
             set {
                 if (base.Project != null) {
-                    PythonProject.Interpreters.InterpreterFactoriesChanged -= OnInterpretersChanged;
-                    PythonProject.Interpreters.ActiveInterpreterChanged -= OnInterpretersChanged;
+                    PythonProject.InterpreterFactoriesChanged -= OnInterpretersChanged;
+                    PythonProject.ActiveInterpreterChanged -= OnInterpretersChanged;
                     base.Project.PropertyPage = null;
                 }
                 base.Project = value;
                 if (value != null) {
-                    PythonProject.Interpreters.InterpreterFactoriesChanged += OnInterpretersChanged;
-                    PythonProject.Interpreters.ActiveInterpreterChanged += OnInterpretersChanged;
+                    PythonProject.InterpreterFactoriesChanged += OnInterpretersChanged;
+                    PythonProject.ActiveInterpreterChanged += OnInterpretersChanged;
                     value.PropertyPage = this;
                 }
             }
@@ -82,8 +82,8 @@ namespace Microsoft.PythonTools.Project {
             Project.SetProjectProperty(CommonConstants.IsWindowsApplication, _control.IsWindowsApplication.ToString());
             
             var interp = _control.DefaultInterpreter;
-            if (interp != null && !PythonProject.Interpreters.GetInterpreterFactories().Contains(interp)) {
-                PythonProject.Interpreters.AddInterpreter(interp);
+            if (interp != null && !PythonProject.InterpreterFactories.Contains(interp)) {
+                PythonProject.AddInterpreter(interp);
             }
             PythonProject.SetInterpreterFactory(_control.DefaultInterpreter);
             IsDirty = false;

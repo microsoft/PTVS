@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             : base(
                 InterpreterFactoryCreator.AnalysisOnlyFactoryGuid,
                 description ?? string.Format("Python {0} Analyzer", version),
-                new InterpreterConfiguration(version),
+                new InterpreterConfiguration(version.ToString(), "Analysis", version),
                 false
         ) { }
 

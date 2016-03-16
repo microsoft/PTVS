@@ -80,6 +80,16 @@ namespace TestUtilities.Python {
             return _factories;
         }
 
+        public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
+            return GetInterpreterFactories().Select(x => x.Configuration);
+        }
+
+        public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+            return GetInterpreterFactories()
+                .Where(x => x.Configuration.Id == id)
+                .FirstOrDefault();
+        }
+
         public event EventHandler InterpreterFactoriesChanged;
     }
 }

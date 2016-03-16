@@ -218,11 +218,12 @@ namespace Microsoft.PythonTools.InterpreterList {
             var factory = view.Factory;
             IVsInteractiveWindow window;
 
-            var provider = _service.KnownProviders.OfType<LoadedProjectInterpreterFactoryProvider>().FirstOrDefault();
-            var vsProject = provider == null ?
-                null :
-                provider.GetProject(factory);
-            var project = vsProject == null ? null : vsProject.GetPythonProject();
+            // TODO: Figure out another way to get the project
+            //var provider = _service.KnownProviders.OfType<LoadedProjectInterpreterFactoryProvider>().FirstOrDefault();
+            //var vsProject = provider == null ?
+            //    null :
+            //    provider.GetProject(factory);
+            PythonProjectNode project = null;// vsProject == null ? null : vsProject.GetPythonProject();
             try {
                 window = ExecuteInReplCommand.EnsureReplWindow(_site, factory, project);
             } catch (InvalidOperationException ex) {
@@ -271,11 +272,12 @@ namespace Microsoft.PythonTools.InterpreterList {
                 factory.Configuration.WindowsInterpreterPath;
             psi.WorkingDirectory = factory.Configuration.PrefixPath;
 
-            var provider = _service.KnownProviders.OfType<LoadedProjectInterpreterFactoryProvider>().FirstOrDefault();
-            var vsProject = provider == null ?
-                null :
-                provider.GetProject(factory);
-            var project = vsProject == null ? null : vsProject.GetPythonProject();
+            // TODO: Figure out some other wa to get the project
+            //var provider = _service.KnownProviders.OfType<LoadedProjectInterpreterFactoryProvider>().FirstOrDefault();
+            //var vsProject = provider == null ?
+            //    null :
+            //    provider.GetProject(factory);
+            IPythonProject project = null;// vsProject == null ? null : vsProject.GetPythonProject();
             if (project != null) {
                 psi.EnvironmentVariables[factory.Configuration.PathEnvironmentVariable] = 
                     string.Join(";", project.GetSearchPaths());

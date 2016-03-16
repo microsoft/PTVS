@@ -19,9 +19,14 @@ using System.Reflection;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase {
+        public CPythonInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options) :
+            base(options.Id, configuration.Description, configuration, options.WatchLibraryForNewModules) {            
+        }
+
         public CPythonInterpreterFactory(
             Version version,
             Guid id,
+            string newId,
             string description,
             string prefixPath,
             string pythonPath,
@@ -34,6 +39,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 id,
                 description,
                 new InterpreterConfiguration(
+                    newId,
+                    description,
                     prefixPath,
                     pythonPath,
                     pythonwPath,

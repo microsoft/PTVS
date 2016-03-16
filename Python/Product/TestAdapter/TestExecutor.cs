@@ -284,6 +284,8 @@ namespace Microsoft.PythonTools.TestAdapter {
             string projectFile,
             IInterpreterOptionsService interpreterService
         ) {
+            return null;
+#if FALSE
             var buildEngine = new MSBuild.ProjectCollection();
             MSBuildProjectInterpreterFactoryProvider provider = null;
             try {
@@ -369,6 +371,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 buildEngine.UnloadAllProjects();
                 buildEngine.Dispose();
             }
+#endif
         }
 
         private static void RecordEnd(IFrameworkHandle frameworkHandle, TestCase test, TestResult result, string stdout, string stderr, TestOutcome outcome) {

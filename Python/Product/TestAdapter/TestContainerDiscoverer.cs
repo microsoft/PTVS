@@ -264,12 +264,13 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (e.Project.TryGetProjectPath(out path) &&
                     !_knownProjects.ContainsKey(path)) {
                     var dteProject = ((IVsHierarchy)e.Project).GetProject();
-                    var interpFact = (MSBuildProjectInterpreterFactoryProvider)dteProject.Properties.Item("InterpreterFactoryProvider").Value;
+                    // TODO: Fix me
+                    //var interpFact = null; //(MSBuildProjectInterpreterFactoryProvider)dteProject.Properties.Item("InterpreterFactoryProvider").Value;
 
                     var projectInfo = new ProjectInfo(
                         e.Project,
-                        this,
-                        interpFact
+                        this/*,
+                        interpFact*/
                     );
 
                     _knownProjects.Add(path, projectInfo);
@@ -468,7 +469,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         class ProjectInfo {
             public readonly IVsProject Project;
             public readonly TestContainerDiscoverer Discoverer;
-            public readonly MSBuildProjectInterpreterFactoryProvider FactoryProvider;
+            //public readonly MSBuildProjectInterpreterFactoryProvider FactoryProvider;
             public IPythonInterpreterFactory ActiveInterpreter;
             /// <summary>
             /// used to track when the test window has asked us for tests from this project, 
@@ -478,11 +479,12 @@ namespace Microsoft.PythonTools.TestAdapter {
             /// </summary>
             public bool HasRequestedContainers;    
 
-            public ProjectInfo(IVsProject project, TestContainerDiscoverer discoverer, MSBuildProjectInterpreterFactoryProvider factoryProvider) {
+            public ProjectInfo(IVsProject project, TestContainerDiscoverer discoverer/*, MSBuildProjectInterpreterFactoryProvider factoryProvider*/) {
                 Project = project;
                 Discoverer = discoverer;
-                FactoryProvider = factoryProvider;
-                ActiveInterpreter = FactoryProvider.ActiveInterpreter;
+                //FactoryProvider = factoryProvider;
+                //ActiveInterpreter = FactoryProvider.ActiveInterpreter;
+                ActiveInterpreter = null;
 
                 Attach();
                 HookNewDatabaseAvailable();
@@ -491,7 +493,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             private void ActiveInterpreterChanged(object sender, EventArgs args) {
                 UnhookDatabaseCurrentChanged();
 
-                ActiveInterpreter = FactoryProvider.ActiveInterpreter;
+                //ActiveInterpreter = FactoryProvider.ActiveInterpreter;
 
                 HookNewDatabaseAvailable();
 
@@ -517,11 +519,11 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             internal void Attach() {
-                FactoryProvider.ActiveInterpreterChanged += ActiveInterpreterChanged;
+                //FactoryProvider.ActiveInterpreterChanged += ActiveInterpreterChanged;
             }
 
             internal void Detach() {
-                FactoryProvider.ActiveInterpreterChanged -= ActiveInterpreterChanged;
+                //FactoryProvider.ActiveInterpreterChanged -= ActiveInterpreterChanged;
             }
         }
     }

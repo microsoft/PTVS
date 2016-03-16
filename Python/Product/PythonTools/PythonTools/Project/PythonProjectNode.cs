@@ -46,6 +46,7 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using IServiceProvider = System.IServiceProvider;
 using MessageBox = System.Windows.Forms.MessageBox;
+using MSBuild = Microsoft.Build.Evaluation;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using Task = System.Threading.Tasks.Task;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
@@ -69,7 +70,8 @@ namespace Microsoft.PythonTools.Project {
         private PythonDebugPropertyPage _debugPropPage;
         private CommonSearchPathContainerNode _searchPathContainer;
         private InterpretersContainerNode _interpretersContainer;
-        private MSBuildProjectInterpreterFactoryProvider _interpreters;
+        private HashSet<string> _validFactories = new HashSet<string>();
+        public IPythonInterpreterFactory _active;
 
         internal List<CustomCommand> _customCommands;
         private string _customCommandsDisplayLabel;
@@ -78,6 +80,8 @@ namespace Microsoft.PythonTools.Project {
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
+            ActiveInterpreterChanged += OnActiveInterpreterChanged;
+            InterpreterFactoriesChanged += OnInterpreterFactoriesChanged;
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
@@ -94,13 +98,6 @@ namespace Microsoft.PythonTools.Project {
         protected override void NewBuildProject(Build.Evaluation.Project project) {
             base.NewBuildProject(project);
 
-            if (_interpreters != null) {
-                _interpreters.ActiveInterpreterChanged -= ActiveInterpreterChanged;
-                _interpreters.InterpreterFactoriesChanged -= InterpreterFactoriesChanged;
-                _interpreters.Dispose();
-                _interpreters = null;
-            }
-
             // Remove old custom commands
             if (_customCommands != null) {
                 foreach (var c in _customCommands) {
@@ -114,16 +111,29 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            // Hook up the interpreter factory provider
-            var interpreterService = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
-            _interpreters = new MSBuildProjectInterpreterFactoryProvider(interpreterService, project);
-            try {
-                _interpreters.DiscoverInterpreters();
-            } catch (InvalidDataException ex) {
-                OutputWindowRedirector.GetGeneral(Site).WriteErrorLine(ex.Message);
+            // collect the valid interpreter factories for this project...
+            foreach (var item in project.GetItems(MSBuildConstants.InterpreterItem)) {
+                var id = item.GetMetadataValue(MSBuildConstants.IdKey);
+                if (!String.IsNullOrWhiteSpace(id)) {
+                    _validFactories.Add(id);
+                }
             }
-            _interpreters.ActiveInterpreterChanged += ActiveInterpreterChanged;
-            _interpreters.InterpreterFactoriesChanged += InterpreterFactoriesChanged;
+
+            foreach (var item in project.GetItems(MSBuildConstants.InterpreterReferenceItem)) {
+                var id = item.EvaluatedInclude;
+                if (!String.IsNullOrWhiteSpace(id)) {
+                    _validFactories.Add(id);
+                }
+            }
+
+            //// Hook up the interpreter factory provider
+            //var interpreterService = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
+            //_interpreters = new MSBuildProjectInterpreterFactoryProvider(interpreterService, project);
+            //try {
+            //    _interpreters.DiscoverInterpreters();
+            //} catch (InvalidDataException ex) {
+            //    OutputWindowRedirector.GetGeneral(Site).WriteErrorLine(ex.Message);
+            //}
 
             // Add any custom commands
             _customCommands = CustomCommand.GetCommands(project, this).ToList();
@@ -147,13 +157,219 @@ namespace Microsoft.PythonTools.Project {
             return CurrentConfig;
         }
 
-        private void InterpreterFactoriesChanged(object sender, EventArgs e) {
+        private void OnInterpreterFactoriesChanged(object sender, EventArgs e) {
             Site.GetUIThread().Invoke(() => RefreshInterpreters());
         }
 
-        internal MSBuildProjectInterpreterFactoryProvider Interpreters {
+        internal IPythonInterpreterFactory ActiveInterpreter {
             get {
-                return _interpreters;
+                return _active ?? Site.GetPythonToolsService().DefaultInterpreter;
+            }
+            set {
+                var oldActive = _active;
+
+                lock (_validFactories) {
+                    if (_validFactories.Count == 0) {
+                        // No factories, so we must use the global default.
+                        _active = null;
+                    } else if (value == null || !_validFactories.Contains(value.Configuration.Id)) {
+                        // Choose a factory and make it our default.
+                        // TODO: We should have better ordering than this...
+                        var compModel = Site.GetComponentModel();
+
+                        _active = compModel.DefaultExportProvider.GetInterpreterFactory(
+                                _validFactories.ToList().OrderBy(f => f).LastOrDefault()
+                        );
+                    } else {
+                        _active = value;
+                    }
+                }
+
+                if (_active != oldActive) {
+                    if (oldActive == null) {
+                        // No longer need to listen to this event
+
+                        Site.GetPythonToolsService().DefaultInterpreterChanged -= GlobalDefaultInterpreterChanged;
+                    }
+
+                    if (_active != null) {
+                        BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, _active.Configuration.Id);
+                    } else {
+                        BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, "");
+                        // Need to start listening to this event
+                        Site.GetPythonToolsService().DefaultInterpreterChanged += GlobalDefaultInterpreterChanged;
+                    }
+                    BuildProject.MarkDirty();
+
+                    ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        private void GlobalDefaultInterpreterChanged(object sender, EventArgs e) {
+            // This event is only raised when our active interpreter is the
+            // global default.
+            var evt = ActiveInterpreterChanged;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
+            }
+        }
+
+        internal event EventHandler ActiveInterpreterChanged;
+
+        internal event EventHandler InterpreterFactoriesChanged;
+
+        /// <summary>
+        /// Adds the specified factory to the project. If the factory was
+        /// created by this provider, it will be added as an Interpreter element
+        /// with full details. If the factory was not created by this provider,
+        /// it will be added as an InterpreterReference element with only the
+        /// ID and version.
+        /// </summary>
+        /// <param name="factory">The factory to add.</param>
+        // TODO: Can this be entirely configuration based?
+        public void AddInterpreter(IPythonInterpreterFactory factory, bool disposeInterpreter = false) {
+            if (factory == null) {
+                throw new ArgumentNullException("factory");
+            }
+
+            if (_validFactories.Contains(factory.Configuration.Id)) {
+                return;
+            }
+
+            MSBuild.ProjectItem item;
+            var compModel = Site.GetComponentModel();
+            var derived = factory as DerivedInterpreterFactory;
+            if (derived != null) {
+                var projectHome = PathUtils.GetAbsoluteDirectoryPath(BuildProject.DirectoryPath, BuildProject.GetPropertyValue("ProjectHome"));
+                var rootPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
+
+                item = BuildProject.AddItem(MSBuildConstants.InterpreterItem,
+                    PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
+                    new Dictionary<string, string> {
+                        { MSBuildConstants.IdKey, derived.Configuration.Id },
+                        { MSBuildConstants.BaseInterpreterKey, derived.BaseInterpreter.Configuration.Id  },
+                        { MSBuildConstants.VersionKey, derived.BaseInterpreter.Configuration.Version.ToString() },
+                        { MSBuildConstants.DescriptionKey, derived.Description },
+                        { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, derived.Configuration.InterpreterPath) },
+                        { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, derived.Configuration.WindowsInterpreterPath) },
+                        { MSBuildConstants.LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, derived.Configuration.LibraryPath) },
+                        { MSBuildConstants.PathEnvVarKey, derived.Configuration.PathEnvironmentVariable },
+                        { MSBuildConstants.ArchitectureKey, derived.Configuration.Architecture.ToString() }
+                    }).FirstOrDefault();
+            } else if (compModel.DefaultExportProvider.GetInterpreterFactory(factory.Configuration.Id) != null) {
+                // The interpreter exists globally, so add a reference.
+                item = BuildProject.AddItem(MSBuildConstants.InterpreterReferenceItem,
+                    string.Format("{0:B}\\{1}", factory.Configuration.Id, factory.Configuration.Version)
+                    ).FirstOrDefault();
+            } else {
+                // Can't find the interpreter anywhere else, so add its
+                // configuration to the project file.
+                var projectHome = PathUtils.GetAbsoluteDirectoryPath(BuildProject.DirectoryPath, BuildProject.GetPropertyValue("ProjectHome"));
+                var rootPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
+
+                item = BuildProject.AddItem(MSBuildConstants.InterpreterItem,
+                    PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
+                    new Dictionary<string, string> {
+                        { MSBuildConstants.IdKey, factory.Configuration.Id },
+                        { MSBuildConstants.VersionKey, factory.Configuration.Version.ToString() },
+                        { MSBuildConstants.DescriptionKey, factory.Description },
+                        { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, factory.Configuration.InterpreterPath) },
+                        { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, factory.Configuration.WindowsInterpreterPath) },
+                        { MSBuildConstants.LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, factory.Configuration.LibraryPath) },
+                        { MSBuildConstants.PathEnvVarKey, factory.Configuration.PathEnvironmentVariable },
+                        { MSBuildConstants.ArchitectureKey, factory.Configuration.Architecture.ToString() }
+                    }).FirstOrDefault();
+            }
+
+            lock (_validFactories) {
+                _validFactories.Add(factory.Configuration.Id);
+            }
+
+            InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
+            UpdateActiveInterpreter();
+        }
+
+        /// <summary>
+        /// Removes an interpreter factory from the project. This function will
+        /// modify the project, but does not handle source control.
+        /// </summary>
+        /// <param name="factory">
+        /// The id of the factory to remove. The function returns silently if
+        /// the factory is not known by this provider.
+        /// </param>
+        public void RemoveInterpreterFactory(IPythonInterpreterFactory factory) {
+            if (factory == null) {
+                throw new ArgumentNullException("factory");
+            }
+
+            if (!_validFactories.Contains(factory.Configuration.Id)) {
+                return;
+            }
+
+            foreach (var item in BuildProject.GetItems(MSBuildConstants.InterpreterItem)) {
+                if (item.GetMetadataValue(MSBuildConstants.IdKey) == factory.Configuration.Id) {
+                    BuildProject.RemoveItem(item);
+                    BuildProject.MarkDirty();
+                    break;
+                }
+            }
+
+            foreach (var item in BuildProject.GetItems(MSBuildConstants.InterpreterReferenceItem)) {
+                var id = item.EvaluatedInclude;
+                if(id == factory.Configuration.Id) { 
+                    BuildProject.RemoveItem(item);
+                    BuildProject.MarkDirty();
+                    break;
+                }
+            }
+
+            _validFactories.Remove(factory.Configuration.Id);
+            UpdateActiveInterpreter();
+            InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void UpdateActiveInterpreter() {
+            var newActive = _active;
+            lock (_validFactories) {
+                if (newActive == null || 
+                    _validFactories.Count == 0 || 
+                    !_validFactories.Contains(newActive.Configuration.Id)) {
+                    newActive = Site.GetComponentModel().DefaultExportProvider.GetInterpreterFactory(
+                        BuildProject.GetPropertyValue(MSBuildConstants.InterpreterIdProperty)
+                    );
+                }
+            }
+            ActiveInterpreter = newActive;
+        }
+
+        internal bool IsActiveInterpreterGlobalDefault {
+            get {
+                return _active == null;
+            }
+        }
+
+        internal IEnumerable<IPythonInterpreterFactory> InterpreterFactories {
+            get {
+                var compModel = Site.GetComponentModel();
+                if (_validFactories.Count == 0) {
+                    // all non-project specific configs are valid...
+                    var vsProjContext = compModel.GetService<VsProjectContextProvider>();
+                    var configs = compModel.DefaultExportProvider.GetConfigurations();
+                    foreach (var config in configs) {
+                        if (!vsProjContext.IsProjectSpecific(config.Value)) {
+                            yield return compModel.DefaultExportProvider.GetInterpreterFactory(config.Key);
+                        }
+                    }
+                } else {
+                    // we have a list of registered factories, only include those...
+                    foreach (var config in _validFactories) {
+                        var interp = compModel.DefaultExportProvider.GetInterpreterFactory(config);
+                        if (interp != null) {
+                            yield return interp;
+                        }
+                    }
+                }
             }
         }
 
@@ -294,8 +510,8 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override bool FilterItemTypeToBeAddedToHierarchy(string itemType) {
-            if (MSBuildProjectInterpreterFactoryProvider.InterpreterReferenceItem.Equals(itemType, StringComparison.Ordinal) ||
-                MSBuildProjectInterpreterFactoryProvider.InterpreterItem.Equals(itemType, StringComparison.Ordinal)) {
+            if (MSBuildConstants.InterpreterReferenceItem.Equals(itemType, StringComparison.Ordinal) ||
+                MSBuildConstants.InterpreterItem.Equals(itemType, StringComparison.Ordinal)) {
                 return true;
             }
             return base.FilterItemTypeToBeAddedToHierarchy(itemType);
@@ -347,19 +563,15 @@ namespace Microsoft.PythonTools.Project {
             base.Reload();
 
             string id;
-            if (_interpreters.IsActiveInterpreterGlobalDefault &&
-                !string.IsNullOrEmpty(id = GetProjectProperty(MSBuildProjectInterpreterFactoryProvider.InterpreterIdProperty))) {
+            if (IsActiveInterpreterGlobalDefault &&
+                !string.IsNullOrEmpty(id = GetProjectProperty(MSBuildConstants.InterpreterIdProperty))) {
                 // The interpreter in the project file has no reference, so
                 // find and add it.
-                var interpreterService = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
-                if (interpreterService != null) {
-                    var existing = interpreterService.FindInterpreter(
-                        id,
-                        GetProjectProperty(MSBuildProjectInterpreterFactoryProvider.InterpreterVersionProperty));
-                    if (existing != null && QueryEditProjectFile(false)) {
-                        _interpreters.AddInterpreter(existing);
-                        Debug.Assert(_interpreters.ActiveInterpreter == existing);
-                    }
+                var interpFact = Site.GetComponentModel().DefaultExportProvider.GetInterpreterFactory(
+                    id
+                );
+                if (interpFact != null && QueryEditProjectFile(false)) {
+                    AddInterpreter(interpFact);
                 }
             }
 
@@ -463,28 +675,26 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var remaining = node.AllChildren.OfType<InterpretersNode>().ToList();
+            var vsProjectContext = Site.GetComponentModel().GetService<VsProjectContextProvider>();
 
-            var interpreters = Interpreters;
-            if (interpreters != null) {
-                if (!interpreters.IsActiveInterpreterGlobalDefault) {
-                    foreach (var fact in interpreters.GetInterpreterFactories()) {
-                        if (!RemoveFirst(remaining, n => !n._isGlobalDefault && n._factory == fact)) {
-                            node.AddChild(new InterpretersNode(
-                                this,
-                                Interpreters.GetProjectItem(fact),
-                                fact,
-                                isInterpreterReference: !interpreters.IsProjectSpecific(fact),
-                                canDelete:
-                                    interpreters.IsProjectSpecific(fact) &&
-                                    Directory.Exists(fact.Configuration.PrefixPath)
-                            ));
-                        }
+            if (!IsActiveInterpreterGlobalDefault) {
+                foreach (var fact in InterpreterFactories) {
+                    if (!RemoveFirst(remaining, n => !n._isGlobalDefault && n._factory == fact)) {
+                        bool isProjectSpecific = vsProjectContext.IsProjectSpecific(fact.Configuration);
+                        node.AddChild(new InterpretersNode(
+                            this,
+                            fact,
+                            isInterpreterReference: !isProjectSpecific,
+                            canDelete:
+                                isProjectSpecific &&
+                                Directory.Exists(fact.Configuration.PrefixPath)
+                        ));
                     }
-                } else {
-                    var fact = interpreters.ActiveInterpreter;
-                    if (fact.IsRunnable() && !RemoveFirst(remaining, n => n._isGlobalDefault && n._factory == fact)) {
-                        node.AddChild(new InterpretersNode(this, null, fact, true, false, true));
-                    }
+                }
+            } else {
+                var fact = ActiveInterpreter;
+                if (fact.IsRunnable() && !RemoveFirst(remaining, n => n._isGlobalDefault && n._factory == fact)) {
+                    node.AddChild(new InterpretersNode(this, fact, true, false, true));
                 }
             }
 
@@ -512,7 +722,7 @@ namespace Microsoft.PythonTools.Project {
             var node = _interpretersContainer;
             if (node != null) {
                 foreach (var child in node.AllChildren.OfType<InterpretersNode>()) {
-                    BoldItem(child, child._factory == Interpreters.ActiveInterpreter);
+                    BoldItem(child, child._factory == ActiveInterpreter);
                 }
             }
         }
@@ -784,10 +994,6 @@ namespace Microsoft.PythonTools.Project {
                     _analyzer = null;
                 }
 
-                if (_interpreters != null) {
-                    _interpreters.Dispose();
-                    _interpreters = null;
-                }
                 if (_interpretersContainer != null) {
                     _interpretersContainer.Dispose();
                     _interpretersContainer = null;
@@ -808,13 +1014,13 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public int SetInterpreterFactory(IPythonInterpreterFactory factory) {
-            if (Interpreters != null && factory != Interpreters.ActiveInterpreter) {
+            if (factory != ActiveInterpreter) {
                 //Make sure we can edit the project file
                 if (!ProjectMgr.QueryEditProjectFile(false)) {
                     return VSConstants.OLE_E_PROMPTSAVECANCELLED;
                 }
 
-                Interpreters.ActiveInterpreter = factory;
+                ActiveInterpreter = factory;
             }
             return VSConstants.S_OK;
         }
@@ -921,8 +1127,8 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public IPythonInterpreterFactory GetInterpreterFactory() {
-            var interpreters = _interpreters;
-            if (interpreters == null) {
+            var fact = ActiveInterpreter;
+            if (fact == null) {
                 // May occur if we are racing with Dispose(), so the factory we
                 // return isn't important, but it has to be non-null to fulfil
                 // the contract.
@@ -930,7 +1136,6 @@ namespace Microsoft.PythonTools.Project {
                 return service.DefaultInterpreter;
             }
 
-            var fact = interpreters.ActiveInterpreter;
 
             Site.GetPythonToolsService().EnsureCompletionDb(fact);
 
@@ -938,21 +1143,12 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public IPythonInterpreterFactory GetInterpreterFactoryOrThrow() {
-            var interpreters = _interpreters;
-            var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
-
-            if (interpreters == null) {
-                // May occur if we are racing with Dispose(), so the factory we
-                // return isn't important, but it has to be non-null to fulfil
-                // the contract.
-                return service.DefaultInterpreter;
-            }
-
-            var fact = interpreters.ActiveInterpreter;
-            if (fact == service.NoInterpretersValue) {
+            var fact = ActiveInterpreter;
+            if (fact == null) {
                 throw new NoInterpretersException();
             }
-            if (!interpreters.IsAvailable(fact) || !File.Exists(fact.Configuration.InterpreterPath)) {
+
+            if (!fact.Configuration.IsAvailable()) {
                 throw new MissingInterpreterException(
                     Strings.MissingEnvironment.FormatUI(fact.Description, fact.Configuration.Version)
                 );
@@ -968,7 +1164,7 @@ namespace Microsoft.PythonTools.Project {
         /// will be created immediately unless another project in the solution
         /// can provide a matching analyzer.
         /// </summary>
-        private void ActiveInterpreterChanged(object sender, EventArgs e) {
+        private void OnActiveInterpreterChanged(object sender, EventArgs e) {
             if (IsClosed) {
                 return;
             }
@@ -1345,13 +1541,10 @@ namespace Microsoft.PythonTools.Project {
             if (args != null && args.TryGetValue("e", out description) && !string.IsNullOrEmpty(description)) {
                 var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
 
-                var interpreters = _interpreters;
-                if (interpreters != null) {
-                    factory = interpreters.GetInterpreterFactories().FirstOrDefault(
-                        // Description is a localized string, hence CCIC
-                        f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
-                    );
-                }
+                factory = InterpreterFactories.FirstOrDefault(
+                    // Description is a localized string, hence CCIC
+                    f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
+                );
 
                 if (factory == null) {
                     factory = service.Interpreters.FirstOrDefault(
@@ -1515,7 +1708,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override bool Publish(PublishProjectOptions publishOptions, bool async) {
             var factory = GetInterpreterFactory();
-            if (_interpreters.IsAvailable(factory) &&
+            if (factory.Configuration.IsAvailable() &&
                 Directory.Exists(factory.Configuration.PrefixPath) &&
                 PathUtils.IsSubpathOf(ProjectHome, factory.Configuration.PrefixPath)
             ) {
@@ -2050,17 +2243,12 @@ namespace Microsoft.PythonTools.Project {
         private void ShowAddInterpreter() {
             var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
 
-            var result = AddInterpreter.ShowDialog(this, service);
+            var result = Project.AddInterpreter.ShowDialog(this, service);
             if (result == null) {
                 return;
             }
 
-            var interpreters = _interpreters;
-            if (interpreters == null) {
-                return;
-            }
-
-            var toRemove = new HashSet<IPythonInterpreterFactory>(interpreters.GetInterpreterFactories());
+            var toRemove = new HashSet<IPythonInterpreterFactory>(InterpreterFactories);
             var toAdd = new HashSet<IPythonInterpreterFactory>(result);
             toRemove.ExceptWith(toAdd);
             toAdd.ExceptWith(toRemove);
@@ -2071,10 +2259,10 @@ namespace Microsoft.PythonTools.Project {
                     throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
                 }
                 foreach (var factory in toAdd) {
-                    interpreters.AddInterpreter(factory);
+                    AddInterpreter(factory);
                 }
                 foreach (var factory in toRemove) {
-                    interpreters.RemoveInterpreterFactory(factory);
+                    RemoveInterpreterFactory(factory);
                 }
             }
         }
@@ -2128,14 +2316,14 @@ namespace Microsoft.PythonTools.Project {
                 );
             }
 
-            var interpreters = _interpreters;
-            if (interpreters == null) {
-                return null;
-            }
+            var rootPath = PathUtils.GetAbsoluteDirectoryPath(ProjectHome, path);
+            foreach (var fact in InterpreterFactories) {
+                var config = fact.Configuration;
+                var rootPrefix = PathUtils.EnsureEndSeparator(config.PrefixPath);
 
-            var existing = interpreters.FindInterpreter(path);
-            if (existing != null) {
-                return existing;
+                if (rootPrefix.Equals(rootPath, StringComparison.OrdinalIgnoreCase)) {
+                    return fact;
+                }
             }
 
             var options = VirtualEnv.FindInterpreterOptions(path, service, baseInterp);
@@ -2150,14 +2338,108 @@ namespace Microsoft.PythonTools.Project {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
 
-            Guid id;
+            string id;
             try {
-                id = interpreters.CreateInterpreterFactory(options);
+                id = CreateInterpreterFactory(options);
             } catch (ArgumentException ex) {
                 TaskDialog.ForException(Site, ex, issueTrackerUrl: IssueTrackerUrl).ShowModal();
                 return null;
             }
-            return interpreters.FindInterpreter(id, options.LanguageVersion);
+            return Site.GetComponentModel().DefaultExportProvider.GetInterpreterFactory(id);
+        }
+
+
+        /// <summary>
+        /// Creates a derived interpreter factory from the specified set of
+        /// options. This function will modify the project, raise the
+        /// <see cref="InterpreterFactoriesChanged"/> event and potentially
+        /// display UI.
+        /// </summary>
+        /// <param name="options">
+        /// <para>The options for the new interpreter:</para>
+        /// <para>Guid: ID of the base interpreter.</para>
+        /// <para>Version: Version of the base interpreter. This will also be
+        /// the version of the new interpreter.</para>
+        /// <para>PythonPath: Either the path to the root of the virtual
+        /// environment, or directly to the interpreter executable. If no file
+        /// exists at the provided path, the name of the interpreter specified
+        /// for the base interpreter is tried. If that is not found, "scripts"
+        /// is added as the last directory. If that is not found, an exception
+        /// is raised.</para>
+        /// <para>PythonWindowsPath [optional]: The path to the interpreter
+        /// executable for windowed applications. If omitted, an executable with
+        /// the same name as the base interpreter's will be used if it exists.
+        /// Otherwise, this will be set to the same as PythonPath.</para>
+        /// <para>PathEnvVar [optional]: The name of the environment variable to
+        /// set for search paths. If omitted, the value from the base
+        /// interpreter will be used.</para>
+        /// <para>Description [optional]: The user-friendly name of the
+        /// interpreter. If omitted, the relative path from the project home to
+        /// the directory containing the interpreter is used. If this path ends
+        /// in "\\Scripts", the last segment is also removed.</para>
+        /// </param>
+        /// <returns>The ID of the created interpreter.</returns>
+        public string CreateInterpreterFactory(InterpreterFactoryCreationOptions options) {
+            var projectHome = ProjectHome;
+            var rootPath = PathUtils.GetAbsoluteDirectoryPath(projectHome, options.PrefixPath);
+
+            IPythonInterpreterFactory fact;
+            var id = Guid.NewGuid();
+            string newId = id.ToString("N");
+            var baseInterp = Site.GetComponentModel().DefaultExportProvider
+                .GetInterpreterFactory(options.NewId) as PythonInterpreterFactoryWithDatabase;
+            if (baseInterp != null) {
+                var pathVar = options.PathEnvironmentVariableName;
+                if (string.IsNullOrEmpty(pathVar)) {
+                    pathVar = baseInterp.Configuration.PathEnvironmentVariable;
+                }
+
+                var description = options.Description;
+                if (string.IsNullOrEmpty(description)) {
+                    description = PathUtils.CreateFriendlyDirectoryPath(projectHome, rootPath);
+                    int i = description.LastIndexOf("\\scripts", StringComparison.OrdinalIgnoreCase);
+                    if (i > 0) {
+                        description = description.Remove(i);
+                    }
+                }
+
+                fact = new DerivedInterpreterFactory(
+                    baseInterp,
+                    new InterpreterFactoryCreationOptions {
+                        Id = id,
+                        NewId = newId,
+                        LanguageVersion = baseInterp.Configuration.Version,
+                        Description = description,
+                        InterpreterPath = options.InterpreterPath,
+                        WindowInterpreterPath = options.WindowInterpreterPath,
+                        LibraryPath = options.LibraryPath,
+                        PrefixPath = options.PrefixPath,
+                        PathEnvironmentVariableName = pathVar,
+                        Architecture = baseInterp.Configuration.Architecture,
+                        WatchLibraryForNewModules = true
+                    }
+                );
+            } else {
+                fact = InterpreterFactoryCreator.CreateInterpreterFactory(
+                    new InterpreterFactoryCreationOptions {
+                        Id = id,
+                        NewId = newId,
+                        LanguageVersion = options.LanguageVersion,
+                        Description = options.Description,
+                        InterpreterPath = options.InterpreterPath,
+                        WindowInterpreterPath = options.WindowInterpreterPath,
+                        LibraryPath = options.LibraryPath,
+                        PrefixPath = options.PrefixPath,
+                        PathEnvironmentVariableName = options.PathEnvironmentVariableName,
+                        Architecture = options.Architecture,
+                        WatchLibraryForNewModules = options.WatchLibraryForNewModules
+                    }
+                );
+            }
+
+            AddInterpreter(fact, true);
+
+            return MSBuildProjectInterpreterFactoryProvider.MSBuildProviderName + ";" + newId;
         }
 
 
@@ -2172,7 +2454,7 @@ namespace Microsoft.PythonTools.Project {
             if (!QueryEditProjectFile(false)) {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
-            _interpreters.RemoveInterpreterFactory(factory);
+            RemoveInterpreterFactory(factory);
 
             var path = factory.Configuration.PrefixPath;
             if (removeFromStorage && Directory.Exists(path)) {

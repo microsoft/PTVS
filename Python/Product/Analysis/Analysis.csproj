@@ -81,6 +81,7 @@
     <Compile Include="Interpreter\NewDatabaseEventArgs.cs" />
     <Compile Include="Interpreter\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="Interpreter\PythonLibraryPath.cs" />
+    <Compile Include="Interpreter\IProjectContextProvider.cs" />
     <Compile Include="LockedEnumerable.cs" />
     <Compile Include="ModulePath.cs" />
     <Compile Include="Parsing\Ast\AwaitExpression.cs" />

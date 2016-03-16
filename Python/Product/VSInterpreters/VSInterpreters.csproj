@@ -76,6 +76,7 @@
     <Compile Include="IAnalysisExtension.cs" />
     <Compile Include="IInterpreterOptionsService.cs" />
     <Compile Include="InterpreterOptionsService.cs" />
+    <Compile Include="MSBuildConstants.cs" />
     <Compile Include="MSBuildProjectInterpreterFactoryProvider.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="RegistryWatcher.cs" />

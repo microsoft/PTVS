@@ -17,9 +17,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Linq;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter {
+#if FALSE
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     class ConfigurablePythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
         private readonly Dictionary<Guid, PythonInterpreterFactoryWithDatabase> _interpreters = new Dictionary<Guid, PythonInterpreterFactoryWithDatabase>();
@@ -127,12 +129,21 @@ namespace Microsoft.PythonTools.Interpreter {
             return newInterp;
         }
 
-        #region IPythonInterpreterFactoryProvider Members
+#region IPythonInterpreterFactoryProvider Members
 
         public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
             return _interpreters.Values;
         }
 
+        public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
+            return GetInterpreterFactories().Select(x => x.Configuration);
+        }
+
+        public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+            return GetInterpreterFactories()
+                .Where(x => x.Configuration.Id == id)
+                .FirstOrDefault();
+        }
 
         private void DiscoverInterpreterFactories() {
             // look for custom configured interpreters
@@ -173,7 +184,8 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        #endregion
+#endregion
 
     }
+#endif
 }

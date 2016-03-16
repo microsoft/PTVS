@@ -403,7 +403,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
             if (selectedInterpreter != null && selectedInterpreter.Id != Guid.Empty) {
                 project.AddItem(
-                    MSBuildProjectInterpreterFactoryProvider.InterpreterReferenceItem,
+                    MSBuildConstants.InterpreterReferenceItem,
                     string.Format("{0:B}\\{1}", selectedInterpreter.Id, selectedInterpreter.Version)
                 );
             }
@@ -412,7 +412,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                     AddVirtualEnvironment(project, sourcePath, options);
 
                     if (string.IsNullOrEmpty(interpreterId.Value)) {
-                        interpreterId.Value = options.IdString;
+                        interpreterId.Value = options.NewId;
                         interpreterVersion.Value = options.LanguageVersionString;
                     }
                 }
@@ -452,18 +452,18 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             prefixPath = PathUtils.GetRelativeDirectoryPath(sourcePath, prefixPath);
 
             return project.AddItem(
-                MSBuildProjectInterpreterFactoryProvider.InterpreterItem,
+                MSBuildConstants.InterpreterItem,
                 prefixPath,
                 new Dictionary<string, string> {
-                    { MSBuildProjectInterpreterFactoryProvider.IdKey, Guid.NewGuid().ToString("B") },
-                    { MSBuildProjectInterpreterFactoryProvider.DescriptionKey, options.Description },
-                    { MSBuildProjectInterpreterFactoryProvider.BaseInterpreterKey, options.IdString },
-                    { MSBuildProjectInterpreterFactoryProvider.InterpreterPathKey, interpreterPath },
-                    { MSBuildProjectInterpreterFactoryProvider.WindowsPathKey, windowInterpreterPath },
-                    { MSBuildProjectInterpreterFactoryProvider.LibraryPathKey, libraryPath },
-                    { MSBuildProjectInterpreterFactoryProvider.VersionKey, options.LanguageVersionString },
-                    { MSBuildProjectInterpreterFactoryProvider.ArchitectureKey, options.ArchitectureString },
-                    { MSBuildProjectInterpreterFactoryProvider.PathEnvVarKey, options.PathEnvironmentVariableName }
+                    { MSBuildConstants.IdKey, Guid.NewGuid().ToString("B") },
+                    { MSBuildConstants.DescriptionKey, options.Description },
+                    { MSBuildConstants.BaseInterpreterKey, options.NewId },
+                    { MSBuildConstants.InterpreterPathKey, interpreterPath },
+                    { MSBuildConstants.WindowsPathKey, windowInterpreterPath },
+                    { MSBuildConstants.LibraryPathKey, libraryPath },
+                    { MSBuildConstants.VersionKey, options.LanguageVersionString },
+                    { MSBuildConstants.ArchitectureKey, options.ArchitectureString },
+                    { MSBuildConstants.PathEnvVarKey, options.PathEnvironmentVariableName }
                 }
             );
         }

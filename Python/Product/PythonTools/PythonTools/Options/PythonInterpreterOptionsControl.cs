@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Options {
                 return;
             }
 
-            _addInterpreter.Enabled = _service.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().Any();
+            _addInterpreter.Enabled = true;
 
             _showSettingsFor.BeginUpdate();
             _defaultInterpreter.BeginUpdate();

@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools {
             }
 
             return interpreterService.KnownProviders
-                .Where(p => !(p is LoadedProjectInterpreterFactoryProvider))
+                //.Where(p => !(p is LoadedProjectInterpreterFactoryProvider))
                 .SelectMany(p => p.GetInterpreterFactories())
                 .Where(PythonInterpreterFactoryExtensions.IsUIVisible)
                 .OrderBy(fact => fact.Description)

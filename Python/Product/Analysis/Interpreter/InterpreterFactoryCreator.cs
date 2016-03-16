@@ -42,6 +42,7 @@ namespace Microsoft.PythonTools.Interpreter {
             return new CPythonInterpreterFactory(
                 ver,
                 (options.Id == default(Guid)) ? Guid.NewGuid() : options.Id,
+                options.NewId,
                 description,
                 prefixPath ?? string.Empty,
                 options.InterpreterPath ?? string.Empty,
@@ -51,6 +52,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 options.Architecture,
                 options.WatchLibraryForNewModules
             );
+        }
+
+        public static PythonInterpreterFactoryWithDatabase CreateInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options) {
+            return new CPythonInterpreterFactory(configuration, options);
         }
 
         /// <summary>

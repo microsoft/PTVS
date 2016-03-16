@@ -47,6 +47,11 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
         
+        public string NewId {
+            get;
+            set;
+        }
+
         /// <summary>
         /// Specifies a unique identifier for the interpreter. If one is not
         /// provided a new Guid will be created.

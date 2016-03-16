@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Microsoft.PythonTools;
@@ -25,6 +26,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.Win32;
 
 namespace Microsoft.IronPythonTools.Interpreter {
+    [InterpreterFactoryId("IronPython")]
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class IronPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
@@ -103,6 +105,16 @@ namespace Microsoft.IronPythonTools.Interpreter {
             if (_interpreterX64 != null) {
                 yield return _interpreterX64;
             }
+        }
+
+        public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
+            return GetInterpreterFactories().Select(x => x.Configuration);
+        }
+
+        public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+            return GetInterpreterFactories()
+                .Where(x => x.Configuration.Id == id)
+                .FirstOrDefault();
         }
 
         private void DiscoverInterpreterFactories() {

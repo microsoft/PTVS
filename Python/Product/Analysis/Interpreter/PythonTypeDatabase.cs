@@ -247,7 +247,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         existingModules.Add(
                             String.Format("{0}|{1}|{2}|{3}|{4}",
                                 extensionModuleFilename,
-                                interpreter.Id,
+                                interpreter.Configuration.Id,
                                 interpreter.Configuration.Version,
                                 new FileInfo(extensionModuleFilename).LastWriteTime.ToString("O"),
                                 dbFile

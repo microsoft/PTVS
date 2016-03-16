@@ -100,6 +100,10 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Raised when the default interpreter is set to a new value.
         /// </summary>
         event EventHandler DefaultInterpreterChanged;
+
+        string AddConfigurableInterpreter(InterpreterFactoryCreationOptions options);
+        void RemoveConfigurableInterpreter(string id);
+        bool IsConfigurable(string id);
     }
 
     public interface IInterpreterOptionsService2 : IInterpreterOptionsService {

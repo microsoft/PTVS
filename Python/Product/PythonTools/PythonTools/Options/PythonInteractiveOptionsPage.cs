@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         internal void SaveOptions(IPythonInterpreterFactory interpreter, PythonInteractiveOptions options) {
-            options.Save(interpreter);
+            options.Save(interpreter.Configuration.Id);
         }
     }
 }

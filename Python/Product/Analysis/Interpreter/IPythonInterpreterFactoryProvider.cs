@@ -16,6 +16,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition.Hosting;
+using System.IO;
+using System.Linq;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -33,9 +36,84 @@ namespace Microsoft.PythonTools.Interpreter {
         IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories();
 
         /// <summary>
-        /// Raised when the result of calling <see cref="GetInterpreterFactories"/> may have changed.
+        /// Raised when the result of calling <see cref="GetInterpreterConfigurations"/> may have changed.
         /// </summary>
         /// <remarks>New in 2.0.</remarks>
         event EventHandler InterpreterFactoriesChanged;
+
+
+        /// <summary>
+        /// Returns the list of configured interpreters
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations();
+
+        /// <summary>
+        /// Gets a specific configured interpreter
+        /// </summary>
+        IPythonInterpreterFactory GetInterpreterFactory(string id);
+
+    }
+
+    public static class PythonInterpreterExtensions {
+
+        /// <summary>
+        /// Gets the interpreter factory for a fully qualified interpreter factory name.
+        /// 
+        /// A fully qualified interpreter factory name is of the form "providerName;identifier".
+        /// providerName resolves to the IPythonInterpreterFactoryProvider.  identifier is
+        /// an opaque string which the interpreter factory provider uses to resolve the identity
+        /// of the interpreter.
+        /// </summary>
+        public static IPythonInterpreterFactory GetInterpreterFactory(this IEnumerable<Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>> factoryProviders, string id) {
+            var interpAndId = id.Split(new[] { ';' }, 2);
+            if (interpAndId.Length == 2) {
+                var provider = factoryProviders.GetInterpreterFactoryProvider(interpAndId[0]);
+                if (provider != null) {
+                    return provider.GetInterpreterFactory(interpAndId[1]);
+                }
+            }
+            return null;
+        }
+
+        public static IPythonInterpreterFactoryProvider GetInterpreterFactoryProvider(this IEnumerable<Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>> factoryProviders, string id) {
+            return factoryProviders.Where(
+                x => x.Metadata.ContainsKey("InterpreterFactoryId") &&
+                      x.Metadata["InterpreterFactoryId"] is string &&
+                      ((string)x.Metadata["InterpreterFactoryId"]) == id
+            ).FirstOrDefault()?.Value;
+        }
+
+        public static Dictionary<string, InterpreterConfiguration> GetConfigurations(this ExportProvider self) {
+            return self.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>()
+                .GetConfigurations();
+        }
+
+        public static Dictionary<string, InterpreterConfiguration> GetConfigurations(this IEnumerable<Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>> factoryProviders) {
+            Dictionary<string, InterpreterConfiguration> res = new Dictionary<string, InterpreterConfiguration>();
+            foreach (var provider in factoryProviders) {
+                object value;
+                if (provider.Metadata.TryGetValue("", out value) && value is string) {
+                    string id = (string)value;
+                    foreach (var config in provider.Value.GetInterpreterConfigurations()) {
+                        res[id + ";" + config.Id] = config;
+                    }
+                }
+            }
+            return res;
+        }
+
+        public static IPythonInterpreterFactory GetInterpreterFactory(this ExportProvider self, string id) {
+            return self.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>()
+                .GetInterpreterFactory(id);
+        }
+
+        public static bool IsAvailable(this InterpreterConfiguration configuration) {
+            // TODO: Differs from original by not checking for base interpreter
+            // configuration
+            return File.Exists(configuration.InterpreterPath) && 
+                File.Exists(configuration.WindowsInterpreterPath) &&
+                File.Exists(configuration.LibraryPath);
+        }
     }
 }

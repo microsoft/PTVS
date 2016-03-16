@@ -23,6 +23,7 @@ using System.Reflection;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Uwp.Interpreter {
+    [InterpreterFactoryId("Uwp")]
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     class PythonUwpInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
         private HashSet<IPythonInterpreterFactory> _factories = null;
@@ -56,6 +57,8 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
                                         // win the battle of conflicting factory names
                                         factoryMap[factoryName] = new PythonUwpInterpreterFactory(
                                                 new InterpreterConfiguration(
+                                                    pythonUwpVersion.ToString(),
+                                                    factoryName,
                                                     dirInfo.FullName,
                                                     targetsFile.FullName,
                                                     null,
@@ -105,6 +108,16 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
         public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
             DiscoverFactories();
             return _factories;
+        }
+
+        public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
+            return GetInterpreterFactories().Select(x => x.Configuration);
+        }
+
+        public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+            return GetInterpreterFactories()
+                .Where(x => x.Configuration.Id == id)
+                .FirstOrDefault();
         }
     }
 }

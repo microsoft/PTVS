@@ -21,10 +21,83 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project {
+
+    [Export(typeof(IProjectContextProvider))]
+    [Export(typeof(VsProjectContextProvider))]
+    [PartCreationPolicy(CreationPolicy.Shared)]
+    sealed class VsProjectContextProvider : IProjectContextProvider, IDisposable {
+        private readonly HashSet<object> _projects = new HashSet<object>();
+        private readonly SolutionEventsListener _listener;
+        private readonly Dictionary<string, object> _createdFactories = new Dictionary<string, object>();
+
+        [ImportingConstructor]
+        public VsProjectContextProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
+            var solution = (IVsSolution)serviceProvider.GetService(typeof(SVsSolution));
+            _listener = new SolutionEventsListener(solution);
+            _listener.ProjectLoaded += Solution_ProjectLoaded;
+            _listener.ProjectClosing += Solution_ProjectUnloading;
+            _listener.ProjectUnloading += Solution_ProjectUnloading;
+        }
+
+        private void Solution_ProjectLoaded(object sender, ProjectEventArgs e) {
+            var project = e.Project.GetPythonProject();
+            if (project != null) {
+                
+                bool added = false;
+                lock (_projects) {
+                    added = _projects.Add(project.BuildProject);
+                }
+                if (added) {
+                    ProjectContextsChanged?.Invoke(this, EventArgs.Empty);
+                }
+
+            }
+        }
+
+        private void Solution_ProjectUnloading(object sender, ProjectEventArgs e) {
+            var project = e.Project.GetPythonProject();
+            if (project != null) {
+
+                bool removed = false;
+                lock (_projects) {
+                    removed = _projects.Remove(project.BuildProject);
+                }
+                if (removed) {
+                    ProjectContextsChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        public void Dispose() {
+            _listener.Dispose();
+        }
+
+        public void InterpreterLoaded(object context, InterpreterConfiguration configuration) {
+            _createdFactories[configuration.Id] = context;
+        }
+
+        public void InterpreterUnloaded(object context, InterpreterConfiguration configuration) {
+            _createdFactories.Remove(configuration.Id);
+        }
+
+        public bool IsProjectSpecific(InterpreterConfiguration configuration) {
+            return _createdFactories.ContainsKey(configuration.Id);
+        }
+
+        public event EventHandler ProjectContextsChanged;
+
+        public IEnumerable<object> ProjectContexts {
+            get {
+                return _projects.ToArray();
+            }
+        }
+    }
+#if FALSE
     [Guid(GuidList.guidLoadedProjectInterpreterFactoryProviderString)]
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
@@ -89,6 +162,7 @@ namespace Microsoft.PythonTools.Project {
                     provider.InterpreterFactoriesChanged += Interpreters_InterpreterFactoriesChanged;
                 }
             }
+
             OnInterpreterFactoriesChanged();
         }
 
@@ -102,6 +176,7 @@ namespace Microsoft.PythonTools.Project {
                     provider.InterpreterFactoriesChanged -= Interpreters_InterpreterFactoriesChanged;
                 }
             }
+
             OnInterpreterFactoriesChanged();
         }
 
@@ -145,6 +220,16 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
+            return GetInterpreterFactories().Select(x => x.Configuration);
+        }
+
+        public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+            return GetInterpreterFactories()
+                .Where(x => x.Configuration.Id == id)
+                .FirstOrDefault();
+        }
+
         private void OnInterpreterFactoriesChanged() {
             var evt = InterpreterFactoriesChanged;
             if (evt != null) {
@@ -153,5 +238,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public event EventHandler InterpreterFactoriesChanged;
+
     }
+#endif
 }

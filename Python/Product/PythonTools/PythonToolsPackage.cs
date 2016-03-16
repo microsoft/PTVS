@@ -181,8 +181,8 @@ namespace Microsoft.PythonTools {
     [ProvideToolWindow(typeof(InterpreterListToolWindow), Style = VsDockStyle.Linked, Window = ToolWindowGuids80.SolutionExplorer)]
     [ProvidePythonInterpreterFactoryProvider(CPythonInterpreterFactoryConstants.Id32, typeof(CPythonInterpreterFactoryConstants))]
     [ProvidePythonInterpreterFactoryProvider(CPythonInterpreterFactoryConstants.Id64, typeof(CPythonInterpreterFactoryConstants))]
-    [ProvidePythonInterpreterFactoryProvider("ConfigurablePythonInterpreterFactoryProvider", typeof(ConfigurablePythonInterpreterFactoryProvider))]
-    [ProvidePythonInterpreterFactoryProvider(GuidList.guidLoadedProjectInterpreterFactoryProviderString, typeof(LoadedProjectInterpreterFactoryProvider))]
+    //[ProvidePythonInterpreterFactoryProvider("ConfigurablePythonInterpreterFactoryProvider", typeof(ConfigurablePythonInterpreterFactoryProvider))]
+    //[ProvidePythonInterpreterFactoryProvider(GuidList.guidLoadedProjectInterpreterFactoryProviderString, typeof(LoadedProjectInterpreterFactoryProvider))]
     [ProvideDiffSupportedContentType(".py;.pyw", ";")]
     [ProvideCodeExpansions(GuidList.guidPythonLanguageService, false, 106, "Python", @"Snippets\%LCID%\SnippetsIndex.xml", @"Snippets\%LCID%\Python\")]
     [ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
@@ -590,15 +590,15 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             interpreterService.InterpretersChanged += RefreshReplCommands;
             interpreterService.DefaultInterpreterChanged += RefreshReplCommands;
 
-            var loadedProjectProvider = interpreterService.KnownProviders
-                .OfType<LoadedProjectInterpreterFactoryProvider>()
-                .FirstOrDefault();
-            // Ensure the provider is available - if not, you probably need to
-            // rebuild or clean your experimental hive.
-            Debug.Assert(loadedProjectProvider != null, "Expected LoadedProjectInterpreterFactoryProvider");
-            if (loadedProjectProvider != null) {
-                loadedProjectProvider.SetSolution((IVsSolution)GetService(typeof(SVsSolution)));
-            }
+            //var loadedProjectProvider = interpreterService.KnownProviders
+            //    .OfType<LoadedProjectInterpreterFactoryProvider>()
+            //    .FirstOrDefault();
+            //// Ensure the provider is available - if not, you probably need to
+            //// rebuild or clean your experimental hive.
+            //Debug.Assert(loadedProjectProvider != null, "Expected LoadedProjectInterpreterFactoryProvider");
+            //if (loadedProjectProvider != null) {
+            //    loadedProjectProvider.SetSolution((IVsSolution)GetService(typeof(SVsSolution)));
+            //}
 
             // The variable is inherited by child processes backing Test Explorer, and is used in PTVS
             // test discoverer and test executor to connect back to VS.

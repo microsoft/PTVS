@@ -32,13 +32,23 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IronPythonInterpreterFactory(ProcessorArchitecture arch = ProcessorArchitecture.X86)
             : base(
                 arch == ProcessorArchitecture.Amd64 ? _ipy64InterpreterGuid : _ipyInterpreterGuid,
-                arch == ProcessorArchitecture.Amd64 ? "IronPython 64-bit 2.7" : "IronPython 2.7",
+                GetDescription(arch),
                 GetConfiguration(arch),
                 true) { }
+
+        private static string GetDescription(ProcessorArchitecture arch) {
+            return "IronPython " + GetInterpreterId(arch);
+        }
+
+        private static string GetInterpreterId(ProcessorArchitecture arch) {
+            return arch == ProcessorArchitecture.Amd64 ? "2.7 64-bit" : "2.7 32-bit";
+        }
 
         private static InterpreterConfiguration GetConfiguration(ProcessorArchitecture arch) {
             var prefixPath = IronPythonResolver.GetPythonInstallDir();
             return new InterpreterConfiguration(
+                GetInterpreterId(arch),
+                GetDescription(arch),
                 prefixPath,
                 Path.Combine(prefixPath, arch == ProcessorArchitecture.Amd64 ? "ipy64.exe" : "ipy.exe"),
                 Path.Combine(prefixPath, arch == ProcessorArchitecture.Amd64 ? "ipyw64.exe" : "ipyw.exe"),

@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public void Load() {
-            var configurable = _pyService._interpreterOptionsService.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().FirstOrDefault();
+            var configurable = _pyService._interpreterOptionsService;
             Debug.Assert(configurable != null);
 
             Display = _interpreter.Description;
@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Options {
             Version = _interpreter.Configuration.Version.ToString();
             Architecture = FormatArchitecture(_interpreter.Configuration.Architecture);
             PathEnvironmentVariable = _interpreter.Configuration.PathEnvironmentVariable;
-            IsConfigurable = configurable != null && configurable.IsConfigurable(_interpreter);
+            IsConfigurable = configurable != null && configurable.IsConfigurable(_interpreter.Configuration.Id);
             SupportsCompletionDb = _interpreter is IPythonInterpreterFactoryWithDatabase;
             Factory = _interpreter;
         }

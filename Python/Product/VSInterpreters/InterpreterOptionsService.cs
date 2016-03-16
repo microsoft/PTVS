@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -32,10 +33,6 @@ namespace Microsoft.PythonTools.Interpreter {
     sealed class InterpreterOptionsService : IInterpreterOptionsService2, IDisposable {
         internal static Guid NoInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
 
-        // Two locations for specifying factory providers.
-        // The first is within the VS 1x.0_Config hive, and is easiest to
-        // specify in pkgdef files.
-        internal const string FactoryProvidersCollection = @"PythonTools\InterpreterFactories";
         // The second is a static registry entry for the local machine and/or
         // the current user (HKCU takes precedence), intended for being set by
         // other installers.
@@ -342,6 +339,45 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        const string PathKey = "ExecutablePath";
+        const string WindowsPathKey = "WindowedExecutablePath";
+        const string LibraryPathKey = "LibraryPath";
+        const string ArchitectureKey = "Architecture";
+        const string VersionKey = "Version";
+        const string PathEnvVarKey = "PathEnvironmentVariable";
+        const string DescriptionKey = "Description";
+        const string PythonInterpreterKey = "SOFTWARE\\Python\\VisualStudio";
+
+        public string AddConfigurableInterpreter(InterpreterFactoryCreationOptions options) {
+            var collection = PythonInterpreterKey + "\\" + options.IdString;
+            using (var key = Registry.CurrentUser.CreateSubKey(collection, true)) {
+                key.SetValue(LibraryPathKey, options.LibraryPath ?? string.Empty);
+                key.SetValue(ArchitectureKey, options.ArchitectureString);
+                key.SetValue(VersionKey, options.LanguageVersionString);
+                key.SetValue(PathEnvVarKey, options.PathEnvironmentVariableName ?? string.Empty);
+                key.SetValue(DescriptionKey, options.Description ?? string.Empty);
+                using (var installPath = key.CreateSubKey("InstallPath")) {
+                    key.SetValue("", Path.GetDirectoryName(options.InterpreterPath ?? options.WindowInterpreterPath ?? ""));
+                    key.SetValue(WindowsPathKey, options.WindowInterpreterPath ?? string.Empty);
+                    key.SetValue(PathKey, options.InterpreterPath ?? string.Empty);
+                }
+            }
+
+            return CPythonInterpreterFactoryProvider.GetIntepreterId(
+                "VisualStudio",
+                options.Architecture,
+                options.IdString
+            );
+        }
+
+        public void RemoveConfigurableInterpreter(string id) {
+            var collection = PythonInterpreterKey + "\\" + id;
+            Registry.CurrentUser.DeleteSubKeyTree(collection);
+        }
+
+        public bool IsConfigurable(string id) {
+            return id.StartsWith("Global;VisualStudio;");
+        }
 
         public IEnumerable<IPythonInterpreterFactoryProvider> KnownProviders {
             get {

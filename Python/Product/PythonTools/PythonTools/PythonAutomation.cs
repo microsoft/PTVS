@@ -215,7 +215,7 @@ namespace Microsoft.PythonTools {
         }
 
         private void SaveSettingsToStorage() {
-            CurrentOptions.Save(_interpreterFactory);
+            CurrentOptions.Save(_interpreterFactory.Configuration.Id);
         }
 
         string IPythonInteractiveOptions.PrimaryPrompt {

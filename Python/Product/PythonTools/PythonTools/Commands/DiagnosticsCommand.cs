@@ -160,7 +160,7 @@ namespace Microsoft.PythonTools.Commands {
                             }
                         });
 
-                        foreach (var factory in pyProj.Interpreters.GetInterpreterFactories()) {
+                        foreach (var factory in pyProj.InterpreterFactories) {
                             res.AppendLine();
                             res.AppendLine("        Interpreter: " + factory.Description);
                             res.AppendLine("            Id: " + factory.Id);
@@ -189,16 +189,16 @@ namespace Microsoft.PythonTools.Commands {
             res.AppendLine("Environments: ");
             foreach (var provider in interpreterService.KnownProviders) {
                 res.AppendLine("    " + provider.GetType().FullName);
-                foreach (var factory in provider.GetInterpreterFactories()) {
-                    res.AppendLine("        Id: " + factory.Id);
-                    res.AppendLine("        Factory: " + factory.Description);
-                    res.AppendLine("        Version: " + factory.Configuration.Version);
-                    res.AppendLine("        Arch: " + factory.Configuration.Architecture);
-                    res.AppendLine("        Prefix Path: " + factory.Configuration.PrefixPath ?? "(null)");
-                    res.AppendLine("        Path: " + factory.Configuration.InterpreterPath ?? "(null)");
-                    res.AppendLine("        Windows Path: " + factory.Configuration.WindowsInterpreterPath ?? "(null)");
-                    res.AppendLine("        Lib Path: " + factory.Configuration.LibraryPath ?? "(null)");
-                    res.AppendLine("        Path Env: " + factory.Configuration.PathEnvironmentVariable ?? "(null)");
+                foreach (var config in provider.GetInterpreterConfigurations()) {
+                    res.AppendLine("        Id: " + config.Id);
+                    res.AppendLine("        Factory: " + config.Description);
+                    res.AppendLine("        Version: " + config.Version);
+                    res.AppendLine("        Arch: " + config.Architecture);
+                    res.AppendLine("        Prefix Path: " + config.PrefixPath ?? "(null)");
+                    res.AppendLine("        Path: " + config.InterpreterPath ?? "(null)");
+                    res.AppendLine("        Windows Path: " + config.WindowsInterpreterPath ?? "(null)");
+                    res.AppendLine("        Lib Path: " + config.LibraryPath ?? "(null)");
+                    res.AppendLine("        Path Env: " + config.PathEnvironmentVariable ?? "(null)");
                     res.AppendLine();
                 }
             }

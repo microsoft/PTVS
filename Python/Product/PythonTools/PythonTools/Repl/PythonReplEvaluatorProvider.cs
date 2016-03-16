@@ -115,7 +115,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal static string GetReplId(IPythonInterpreterFactory interpreter, PythonProjectNode project, bool alwaysPerProject) {
-            if (alwaysPerProject || project != null && project.Interpreters.IsProjectSpecific(interpreter)) {
+            var vsProjectContext = project.Site.GetComponentModel().GetService<VsProjectContextProvider>();
+            if (alwaysPerProject || project != null && vsProjectContext.IsProjectSpecific(interpreter.Configuration)) {
                 return GetConfigurableReplId(interpreter, (IVsHierarchy)project, "");
             } else {
                 return String.Format("{0} {1} {2}",

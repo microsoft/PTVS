@@ -205,14 +205,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
     sealed class ConfigurationExtensionProvider : IEnvironmentViewExtension {
         private FrameworkElement _wpfObject;
-        private readonly ConfigurablePythonInterpreterFactoryProvider _factoryProvider;
+        private readonly IInterpreterOptionsService _interpreterOptions;
 
-        internal ConfigurationExtensionProvider(ConfigurablePythonInterpreterFactoryProvider factoryProvider) {
-            _factoryProvider = factoryProvider;
+        internal ConfigurationExtensionProvider(IInterpreterOptionsService interpreterOptions) {
+            _interpreterOptions = interpreterOptions;
         }
 
         public void ApplyConfiguration(ConfigurationEnvironmentView view) {
-            _factoryProvider.SetOptions(new InterpreterFactoryCreationOptions {
+            _interpreterOptions.AddConfigurableInterpreter(new InterpreterFactoryCreationOptions {
                 Id = view.EnvironmentView.Factory.Id,
                 Description = view.Description,
                 PrefixPath = view.PrefixPath,
@@ -252,7 +252,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public void RemoveConfiguration(ConfigurationEnvironmentView view) {
             var factory = view.EnvironmentView.Factory;
-            _factoryProvider.RemoveInterpreter(factory.Id);
+            _interpreterOptions.RemoveConfigurableInterpreter(factory.Configuration.Id);
         }
 
         public int SortPriority {

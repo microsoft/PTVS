@@ -186,6 +186,7 @@ namespace Microsoft.PythonTools.Project {
                 );
 
                 result.Id = baseInterpreter.Id;
+                result.NewId = baseInterpreter.Configuration.Id;
                 result.LanguageVersion = baseInterpreter.Configuration.Version;
                 result.Architecture = baseInterpreter.Configuration.Architecture;
                 result.WatchLibraryForNewModules = true;
@@ -193,6 +194,7 @@ namespace Microsoft.PythonTools.Project {
                 result.Description = PathUtils.GetFileOrDirectoryName(prefixPath);
 
                 result.Id = Guid.Empty;
+                result.NewId = null;
                 result.LanguageVersion = new Version(0, 0);
                 result.Architecture = ProcessorArchitecture.None;
                 result.WatchLibraryForNewModules = false;

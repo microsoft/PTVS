@@ -24,6 +24,8 @@ namespace Microsoft.PythonTools.Options {
             Id = id;
             Description = description;
             Configuration = new InterpreterConfiguration(
+                "",
+                Description,
                 null,
                 null,
                 null,

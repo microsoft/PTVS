@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.Intellisense {
             public override string command => Command;
 
             public string[] mefExtensions;
-            public string interpreterId, interpreterVersion, projectFile;
+            public string interpreterId, projectFile;
 
         }
 
