@@ -62,11 +62,6 @@ namespace Microsoft.PythonTools.Interpreter {
         IPythonInterpreterFactory FindInterpreter(string id, string version);
 
         /// <summary>
-        /// Gets the set of known providers.
-        /// </summary>
-        IEnumerable<IPythonInterpreterFactoryProvider> KnownProviders { get; }
-
-        /// <summary>
         /// Raised when the set of interpreters changes. This is not raised when
         /// the set is first initialized.
         /// </summary>

@@ -49,9 +49,7 @@ namespace IronPythonTests {
                     Assert.Inconclusive("Interpreter missing for " + GetType().Name);
                 }
                 var provider = new IronPythonInterpreterFactoryProvider();
-                return provider.GetInterpreterFactories()
-                    .First(f => f.Id == PythonVersion.Id &&
-                                f.Configuration.Version == PythonVersion.Version.ToVersion());
+                return provider.GetInterpreterFactories().FirstOrDefault();
             }
         }
 

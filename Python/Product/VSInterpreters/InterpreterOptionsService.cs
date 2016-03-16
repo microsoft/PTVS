@@ -32,6 +32,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [PartCreationPolicy(CreationPolicy.Shared)]
     sealed class InterpreterOptionsService : IInterpreterOptionsService2, IDisposable {
         internal static Guid NoInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
+        internal const string NoInterpretersFactoryProvider = "NoInterpreters";
 
         // The second is a static registry entry for the local machine and/or
         // the current user (HKCU takes precedence), intended for being set by
@@ -138,7 +139,8 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             // May have removed the default interpreter, so select a new default
-            if (FindInterpreter(DefaultInterpreter.Id, DefaultInterpreter.Configuration.Version) == null) {
+            
+            if (FindInterpreter(DefaultInterpreter.Configuration.Id) == null) {
                 DefaultInterpreter = Interpreters.LastOrDefault(fact => fact.CanBeAutoDefault());
             }
 
@@ -178,6 +180,10 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return new InterpretersEnumerable(this);
             }
+        }
+
+        public IPythonInterpreterFactory FindInterpreter(string id) {
+            return Interpreters.FirstOrDefault(fact => fact.Configuration.Id == id);
         }
 
         public IPythonInterpreterFactory FindInterpreter(Guid id, Version version) {
@@ -249,13 +255,11 @@ namespace Microsoft.PythonTools.Interpreter {
         private void SaveDefaultInterpreter() {
             using (var interpreterOptions = Registry.CurrentUser.CreateSubKey(DefaultInterpreterOptionsCollection, true)) {
                 if (_defaultInterpreter == null) {
-                    interpreterOptions.SetValue(DefaultInterpreterSetting, Guid.Empty.ToString("B"));
-                    interpreterOptions.SetValue(DefaultInterpreterVersionSetting, new Version(2, 6).ToString());
+                    interpreterOptions.SetValue(DefaultInterpreterSetting, "");
                 } else {
-                    Debug.Assert(_defaultInterpreter.Id != NoInterpretersFactoryGuid);
+                    Debug.Assert(!InterpreterOptionsService.IsNoInterpretersFactory(_defaultInterpreter.Configuration.Id));
 
-                    interpreterOptions.SetValue(DefaultInterpreterSetting, _defaultInterpreter.Id.ToString("B"));
-                    interpreterOptions.SetValue(DefaultInterpreterVersionSetting, _defaultInterpreter.Configuration.Version.ToString());
+                    interpreterOptions.SetValue(DefaultInterpreterSetting, _defaultInterpreter.Configuration.Id);
                 }
             }
         }
@@ -326,7 +330,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     try {
                         _noInterpretersValue = InterpreterFactoryCreator.CreateInterpreterFactory(
                             new InterpreterFactoryCreationOptions {
-                                Id = NoInterpretersFactoryGuid,
+                                NewId = NoInterpretersFactoryProvider,
                                 Description = "No Interpreters",
                                 LanguageVersion = new Version(2, 7)
                             }
@@ -377,12 +381,6 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public bool IsConfigurable(string id) {
             return id.StartsWith("Global;VisualStudio;");
-        }
-
-        public IEnumerable<IPythonInterpreterFactoryProvider> KnownProviders {
-            get {
-                return _providers;
-            }
         }
 
         public async Task<object> LockInterpreterAsync(IPythonInterpreterFactory factory, object moniker, TimeSpan timeout) {
@@ -505,6 +503,10 @@ namespace Microsoft.PythonTools.Interpreter {
             IEnumerator IEnumerable.GetEnumerator() {
                 return new InterpretersEnumerator(_owner, _e.GetEnumerator());
             }
+        }
+
+        public static bool IsNoInterpretersFactory(string id) {
+            return id.StartsWith(NoInterpretersFactoryProvider + ";");
         }
     }
 }

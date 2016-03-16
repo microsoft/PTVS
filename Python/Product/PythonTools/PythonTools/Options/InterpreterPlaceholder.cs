@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Options {
             Id = id;
             Description = description;
             Configuration = new InterpreterConfiguration(
-                "",
+                "PlaceHolder;" + id.ToString(),
                 Description,
                 null,
                 null,

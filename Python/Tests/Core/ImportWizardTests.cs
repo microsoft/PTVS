@@ -133,7 +133,7 @@ namespace PythonToolsTests {
                 settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
                 settings.Filters = "*.py;*.pyproj";
 
-                var interpreter = new PythonInterpreterView("Test", Guid.NewGuid(), new Version(2, 7), null);
+                var interpreter = new PythonInterpreterView("Test", Guid.NewGuid().ToString(), null);
                 settings.Dispatcher.Invoke((Action)(() => settings.AvailableInterpreters.Add(interpreter)));
                 //settings.AddAvailableInterpreter(interpreter);
                 settings.SelectedInterpreter = interpreter;
@@ -145,10 +145,9 @@ namespace PythonToolsTests {
                 var proj = XDocument.Load(path);
 
                 Assert.AreEqual(interpreter.Id, Guid.Parse(proj.Descendant("InterpreterId").Value));
-                Assert.AreEqual(interpreter.Version, Version.Parse(proj.Descendant("InterpreterVersion").Value));
 
                 var interp = proj.Descendant("InterpreterReference");
-                Assert.AreEqual(string.Format("{0:B}\\{1}", interpreter.Id, interpreter.Version),
+                Assert.AreEqual(string.Format("{0}", interpreter.Id),
                     interp.Attribute("Include").Value);
             }
         }

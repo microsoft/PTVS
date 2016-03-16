@@ -89,10 +89,6 @@ namespace TestUtilities.Python {
             return FindInterpreter(Guid.Parse(id), Version.Parse(version));
         }
 
-        public IEnumerable<IPythonInterpreterFactoryProvider> KnownProviders {
-            get { return _providers; }
-        }
-
         public event EventHandler InterpretersChanged;
 
         public void BeginSuppressInterpretersChangedEvent() {

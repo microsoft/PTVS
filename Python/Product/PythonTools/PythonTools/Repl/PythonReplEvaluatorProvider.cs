@@ -46,12 +46,11 @@ namespace Microsoft.PythonTools.Repl {
 
         public IInteractiveEvaluator GetEvaluator(string replId) {
             if (replId.StartsWith(_replGuid, StringComparison.OrdinalIgnoreCase)) {
-                string[] components = replId.Split(new[] { ' ' }, 3);
-                if (components.Length == 3) {
+                string[] components = replId.Split(new[] { ' ' }, 2);
+                if (components.Length == 2) {
                     return PythonReplEvaluator.Create(
                         _serviceProvider,
                         components[1],
-                        components[2],
                         _interpreterService
                     );
                 }
@@ -115,16 +114,22 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal static string GetReplId(IPythonInterpreterFactory interpreter, PythonProjectNode project, bool alwaysPerProject) {
-            var vsProjectContext = project.Site.GetComponentModel().GetService<VsProjectContextProvider>();
-            if (alwaysPerProject || project != null && vsProjectContext.IsProjectSpecific(interpreter.Configuration)) {
+            if (alwaysPerProject || IsProjectSpecific(interpreter, project)) {
                 return GetConfigurableReplId(interpreter, (IVsHierarchy)project, "");
             } else {
-                return String.Format("{0} {1} {2}",
+                return String.Format("{0} {1}",
                     _replGuid,
-                    interpreter.Id,
-                    interpreter.Configuration.Version
+                    interpreter.Configuration.Id
                 );
             }
+        }
+
+        private static bool IsProjectSpecific(IPythonInterpreterFactory interpreter, PythonProjectNode project) {
+            if (project != null) {
+                var vsProjectContext = project.Site.GetComponentModel().GetService<VsProjectContextProvider>();
+                return vsProjectContext.IsProjectSpecific(interpreter.Configuration);
+            }
+            return false;
         }
 
         internal static string GetConfigurableReplId(string userId) {
@@ -135,10 +140,9 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal static string GetConfigurableReplId(IPythonInterpreterFactory interpreter, IVsHierarchy project, string userId) {
-            return String.Format("{0}|{1}|{2}|{3}|{4}",
+            return String.Format("{0}|{1}|{2}|{3}",
                 _configurableGuid,
-                interpreter.Id,
-                interpreter.Configuration.Version,
+                interpreter.Configuration.Id,
                 userId,
                 project != null ? project.GetRootCanonicalName() : ""
             );

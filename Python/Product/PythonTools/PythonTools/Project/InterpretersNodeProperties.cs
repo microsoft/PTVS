@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Project {
         public string Id {
             get {
                 var fact = Factory;
-                return fact != null ? fact.Id.ToString("B") : "";
+                return fact != null ? fact.Configuration.Id : "";
             }
         }
 #endif

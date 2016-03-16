@@ -495,7 +495,7 @@ namespace Microsoft.PythonTools.Project {
         public override string Url {
             get {
                 if (!PathUtils.IsValidPath(_factory.Configuration.PrefixPath)) {
-                    return string.Format("UnknownInterpreter\\{0}\\{1}", _factory.Id, _factory.Configuration.Version);
+                    return string.Format("UnknownInterpreter\\{0}", _factory.Configuration.Id);
                 }
 
                 return _factory.Configuration.PrefixPath;

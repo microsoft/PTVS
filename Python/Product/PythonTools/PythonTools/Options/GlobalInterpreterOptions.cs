@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Options {
             _interpreterOptions = interpreterOptions;
         }
 
-        internal Guid DefaultInterpreter {
+        internal string DefaultInterpreter {
             get;
             set;
         }
@@ -44,26 +44,25 @@ namespace Microsoft.PythonTools.Options {
 
         public void Load() {
             if (_interpreterOptions != null) {
-                DefaultInterpreter = _interpreterOptions.DefaultInterpreter.Id;
+                DefaultInterpreter = _interpreterOptions.DefaultInterpreter.Configuration.Id;
                 DefaultInterpreterVersion = _interpreterOptions.DefaultInterpreter.Configuration.Version;
             }
         }
 
         public void Save() {
             _interpreterOptions.DefaultInterpreter =
-                _interpreterOptions.FindInterpreter(DefaultInterpreter, DefaultInterpreterVersion) ??
+                _pyService.ComponentModel.DefaultExportProvider.GetInterpreterFactory(DefaultInterpreter);
                 _interpreterOptions.Interpreters.LastOrDefault();
-            DefaultInterpreter = _interpreterOptions.DefaultInterpreter.Id;
+            DefaultInterpreter = _interpreterOptions.DefaultInterpreter.Configuration.Id;
             DefaultInterpreterVersion = _interpreterOptions.DefaultInterpreter.Configuration.Version;
         }        
 
         public void Reset() {
-            DefaultInterpreter = Guid.Empty;
-            DefaultInterpreterVersion = new Version();
+            DefaultInterpreter = string.Empty;
         }
 
         internal void UpdateInterpreter() {
-            var interpreter = _interpreterOptions.FindInterpreter(DefaultInterpreter, DefaultInterpreterVersion);
+            var interpreter = _pyService.ComponentModel.DefaultExportProvider.GetInterpreterFactory(DefaultInterpreter);
             if (interpreter != null) {
                 _interpreterOptions.DefaultInterpreter = interpreter;
             }

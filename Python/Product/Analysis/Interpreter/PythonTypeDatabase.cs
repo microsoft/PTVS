@@ -245,10 +245,9 @@ namespace Microsoft.PythonTools.Interpreter {
                         // [FileName]|interpGuid|interpVersion|DateTimeStamp|[db_file.idb]
                         // save the new entry in the DB file
                         existingModules.Add(
-                            String.Format("{0}|{1}|{2}|{3}|{4}",
+                            String.Format("{0}|{1}|{2}|{3}",
                                 extensionModuleFilename,
                                 interpreter.Configuration.Id,
-                                interpreter.Configuration.Version,
                                 new FileInfo(extensionModuleFilename).LastWriteTime.ToString("O"),
                                 dbFile
                             )
@@ -269,10 +268,9 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             const int extensionModuleFilenameIndex = 0;
-            const int interpreterGuidIndex = 1;
-            const int interpreterVersionIndex = 2;
-            const int extensionTimeStamp = 3;
-            const int dbFileIndex = 4;
+            const int interpreteIdIndex = 1;
+            const int extensionTimeStamp = 2;
+            const int dbFileIndex = 3;
 
             /// <summary>
             /// Finds the appropriate entry in our database file and returns the name of the .idb file to be loaded or null
@@ -283,10 +281,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 string line;
                 while ((line = reader.ReadLine()) != null) {
-                    // [FileName]|interpGuid|interpVersion|DateTimeStamp|[db_file.idb]
+                    // [FileName]|interpId|DateTimeStamp|[db_file.idb]
                     string[] columns = line.Split('|');
-                    Guid interpGuid;
-                    Version interpVersion;
 
                     if (columns.Length != 5) {
                         // malformed data...
@@ -313,10 +309,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
 
                     // check if this is the file we're looking for...
-                    if (!Guid.TryParse(columns[interpreterGuidIndex], out interpGuid) ||            // corrupt data
-                        interpGuid != interpreter.Id ||                         // not our interpreter
-                        !Version.TryParse(columns[interpreterVersionIndex], out interpVersion) ||     // corrupt data
-                        interpVersion != interpreter.Configuration.Version ||
+                    if (columns[interpreteIdIndex] != interpreter.Configuration.Id ||
                         String.Compare(columns[extensionModuleFilenameIndex], extensionModuleFilename, StringComparison.OrdinalIgnoreCase) != 0) {   // not our interpreter
 
                         // nope, but remember the line for when we re-write out the DB.
@@ -409,8 +402,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             using (var output = ProcessOutput.RunHiddenAndCapture(
                 analyzerPath,
-                "/id", fact.Id.ToString("B"),
-                "/version", fact.Configuration.Version.ToString(),
+                "/id", fact.Configuration.Id,
                 "/python", fact.Configuration.InterpreterPath,
                 request.DetectLibraryPath ? null : "/library",
                 request.DetectLibraryPath ? null : fact.Configuration.LibraryPath,
@@ -461,8 +453,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 try {
                     var message = string.Format(
                         "ERROR_STDLIB: {0}\\{1}{2}{3}",
-                        request.Factory.Id,
-                        request.Factory.Configuration.Version,
+                        request.Factory.Configuration.Id,
                         Environment.NewLine,
                         (exc.InnerException ?? exc).ToString()
                     );

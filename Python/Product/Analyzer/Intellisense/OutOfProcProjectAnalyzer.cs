@@ -216,6 +216,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (factory == null) {
                 error = String.Format("No active interpreter found for interpreter ID: {0}", request.interpreterId);
+                return new AP.InitializeResponse() {
+                    failedLoads = failures.ToArray(),
+                    error = error
+                };
             }
 
             _interpreterFactory = factory;

@@ -159,14 +159,16 @@ namespace Microsoft.PythonTools {
 
         private void InitializeLogging() {
             if (_interpreterOptionsService != null) { // not available in some test cases...
-                // log interesting stats on startup
-                var installed = _interpreterOptionsService.KnownProviders
+                                                      // log interesting stats on startup
+                var knownProviders = ComponentModel.GetExtensions<IPythonInterpreterFactoryProvider>();
+
+                var installed = knownProviders
                     //.Where(x => !(x is ConfigurablePythonInterpreterFactoryProvider) &&
                     //            !(x is LoadedProjectInterpreterFactoryProvider))
                     .SelectMany(x => x.GetInterpreterConfigurations())
                     .Count();
 
-                var configured = _interpreterOptionsService.KnownProviders.
+                var configured = knownProviders.
                     SelectMany(x => x.GetInterpreterConfigurations()).
                     Select(x => x.Id).
                     Where(x => _interpreterOptionsService.IsConfigurable(x)).
@@ -659,7 +661,7 @@ namespace Microsoft.PythonTools {
         /// Gets a path which is unique for this interpreter (based upon the Id and version).
         /// </summary>
         internal static string GetInteractivePath(IPythonInterpreterFactory interpreterFactory) {
-            return interpreterFactory.Id.ToString("B") + "\\" + interpreterFactory.Configuration.Version + "\\";
+            return interpreterFactory.Configuration.Id;
         }
 
         #endregion

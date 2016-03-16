@@ -445,8 +445,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 return object.ReferenceEquals(x, y) || (
                     x.Factory != null && x.Factory.Configuration != null &&
                     y.Factory != null && y.Factory.Configuration != null &&
-                    x.Factory.Id == y.Factory.Id &&
-                    x.Factory.Configuration.Version == y.Factory.Configuration.Version
+                    x.Factory.Configuration.Id == y.Factory.Configuration.Id
                 );
             }
 

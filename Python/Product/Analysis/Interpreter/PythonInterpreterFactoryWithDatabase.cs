@@ -329,8 +329,7 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return Path.Combine(
                     PythonTypeDatabase.CompletionDatabasePath,
-                    Id.ToString(),
-                    Configuration.Version.ToString()
+                    Configuration.Id.ToString()
                 );
             }
         }

@@ -24,8 +24,7 @@ namespace Microsoft.PythonTools {
     /// </summary>
     class PythonInterpreterView {
         readonly string _name;
-        readonly Guid _id;
-        readonly Version _version;
+        readonly string _id;
         readonly string _path;
         
         /// <summary>
@@ -33,8 +32,7 @@ namespace Microsoft.PythonTools {
         /// </summary>
         public PythonInterpreterView(IPythonInterpreterFactory factory) {
             _name = factory.Description;
-            _id = factory.Id;
-            _version = factory.Configuration.Version;
+            _id = factory.Configuration.Id;
             _path = factory.Configuration.InterpreterPath;
         }
 
@@ -44,16 +42,14 @@ namespace Microsoft.PythonTools {
         public PythonInterpreterView(PythonInterpreter interpreter) {
             _name = null;
             _id = interpreter.Id;
-            _version = Version.Parse(interpreter.Version);
             _path = null;
         }
         /// <summary>
         /// Create a PythonInterpreterView with values from parameters.
         /// </summary>
-        public PythonInterpreterView(string name, Guid id, Version version, string path) {
+        public PythonInterpreterView(string name, string id, string path) {
             _name = name;
             _id = id;
-            _version = version;
             _path = path;
         }
 
@@ -63,8 +59,7 @@ namespace Microsoft.PythonTools {
         /// <returns></returns>
         public PythonInterpreter GetInterpreter() {
             return new PythonInterpreter {
-                Id = Id,
-                Version = Version.ToString()
+                Id = Id
             };
         }
 
@@ -80,18 +75,9 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// The Guid identifying the interpreter.
         /// </summary>
-        public Guid Id { 
+        public string Id { 
             get {
                 return _id;
-            }
-        }
-
-        /// <summary>
-        /// The version of the interpreter.
-        /// </summary>
-        public Version Version { 
-            get {
-                return _version;
             }
         }
 
@@ -113,7 +99,7 @@ namespace Microsoft.PythonTools {
             if (other == null) {
                 return false;
             } else {
-                return Id.Equals(other.Id) && Version.Equals(other.Version);
+                return Id.Equals(other.Id);
             }
         }
 
@@ -124,7 +110,7 @@ namespace Microsoft.PythonTools {
 
     sealed class PythonInterpreter {
         [XmlElement("Id")]
-        public Guid Id {
+        public string Id {
             get;
             set;
         }
@@ -139,7 +125,6 @@ namespace Microsoft.PythonTools {
             var res = new PythonInterpreter();
 
             res.Id = Id;
-            res.Version = Version;
             return res;
         }
 
@@ -147,8 +132,7 @@ namespace Microsoft.PythonTools {
             if (self == null) {
                 return other == null;
             } else if (other != null) {
-                return self.Id == other.Id &&
-                    self.Version == other.Version;
+                return self.Id == other.Id;
             }
             return false;
         }

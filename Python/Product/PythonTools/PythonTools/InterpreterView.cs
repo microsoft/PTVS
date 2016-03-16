@@ -38,14 +38,9 @@ namespace Microsoft.PythonTools {
             IServiceProvider serviceProvider,
             IInterpreterOptionsService interpreterService = null
         ) {
-            if (interpreterService == null) {
-                interpreterService = serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-                if (interpreterService == null) {
-                    return Enumerable.Empty<InterpreterView>();
-                }
-            }
+            var knownProviders = serviceProvider.GetComponentModel().GetExtensions<IPythonInterpreterFactoryProvider>();
 
-            return interpreterService.KnownProviders
+            return knownProviders
                 //.Where(p => !(p is LoadedProjectInterpreterFactoryProvider))
                 .SelectMany(p => p.GetInterpreterFactories())
                 .Where(PythonInterpreterFactoryExtensions.IsUIVisible)

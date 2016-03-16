@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Interpreter {
             if (interpAndId.Length == 2) {
                 var provider = factoryProviders.GetInterpreterFactoryProvider(interpAndId[0]);
                 if (provider != null) {
-                    return provider.GetInterpreterFactory(interpAndId[1]);
+                    return provider.GetInterpreterFactory(id);
                 }
             }
             return null;

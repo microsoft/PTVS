@@ -56,9 +56,9 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private class UnavailableFactory : IPythonInterpreterFactory {
-            public UnavailableFactory(string id, string version) {
+            public UnavailableFactory(string id) {
                 Id = Guid.Parse(id);
-                Configuration = new InterpreterConfiguration(id, "Unavailable", Version.Parse(version));
+                Configuration = new InterpreterConfiguration(id, "Unavailable", new Version(0, 0));
             }
             public string Description { get { return Id.ToString(); } }
             public InterpreterConfiguration Configuration { get; private set; }
@@ -69,13 +69,12 @@ namespace Microsoft.PythonTools.Repl {
         public static IPythonReplEvaluator Create(
             IServiceProvider serviceProvider,
             string id,
-            string version,
             IInterpreterOptionsService interpreterService
         ) {
-            var factory = interpreterService != null ? interpreterService.FindInterpreter(id, version) : null;
+            var factory = serviceProvider.GetComponentModel().DefaultExportProvider.GetInterpreterFactory(id);
             if (factory == null) {
                 try {
-                    factory = new UnavailableFactory(id, version);
+                    factory = new UnavailableFactory(id);
                 } catch (FormatException) {
                     return null;
                 }
@@ -89,7 +88,7 @@ namespace Microsoft.PythonTools.Repl {
                 return;
             }
 
-            var interpreter = _interpreterService.FindInterpreter(current.Id, current.Configuration.Version);
+            var interpreter = _serviceProvider.GetComponentModel().DefaultExportProvider.GetInterpreterFactory(current.Configuration.Id);
             if (interpreter != null && interpreter != current) {
                 // the interpreter has been reconfigured, we want the new settings
                 _interpreter = interpreter;

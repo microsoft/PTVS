@@ -248,7 +248,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// Gets a unique identifier for the factory.
         /// </summary>
         public static string GetIdentifier(IPythonInterpreterFactory factory) {
-            return GetIdentifier(factory.Id, factory.Configuration.Version);
+            return factory.Configuration.Id;
         }
 
         /// <summary>

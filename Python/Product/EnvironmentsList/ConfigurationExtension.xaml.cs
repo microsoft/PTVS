@@ -214,6 +214,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public void ApplyConfiguration(ConfigurationEnvironmentView view) {
             _interpreterOptions.AddConfigurableInterpreter(new InterpreterFactoryCreationOptions {
                 Id = view.EnvironmentView.Factory.Id,
+                NewId = view.EnvironmentView.Factory.Configuration.Id,
                 Description = view.Description,
                 PrefixPath = view.PrefixPath,
                 InterpreterPath = view.InterpreterPath,

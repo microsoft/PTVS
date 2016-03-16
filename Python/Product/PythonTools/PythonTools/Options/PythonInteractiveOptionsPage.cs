@@ -67,16 +67,16 @@ namespace Microsoft.PythonTools.Options {
         public override void LoadSettingsFromStorage() {
             var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
 
-            var seenIds = new HashSet<Guid>();
+            var seenIds = new HashSet<string>();
             var placeholders = PyService.InteractiveOptions.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();
             PyService.ClearInteractiveOptions();
             foreach (var interpreter in interpreterService.Interpreters) {
-                seenIds.Add(interpreter.Id);
+                seenIds.Add(interpreter.Configuration.Id);
                 PyService.GetInteractiveOptions(interpreter);
             }
 
             foreach (var kv in placeholders) {
-                if (!seenIds.Contains(kv.Key.Id)) {
+                if (!seenIds.Contains(kv.Key.Configuration.Id)) {
                     PyService.AddInteractiveOptions(kv.Key, kv.Value);
                 }
             }

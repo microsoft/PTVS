@@ -38,8 +38,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         private static readonly PythonInterpreterView _defaultInterpreter = new PythonInterpreterView(
             "(Global default or an auto-detected virtual environment)",
-            Guid.Empty,
-            new Version(),
+            String.Empty,
             null
         );
 
@@ -365,11 +364,9 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             globals.AddProperty("LaunchProvider", DefaultLauncherProvider.DefaultLauncherName);
 
             var interpreterId = globals.AddProperty(PythonConstants.InterpreterId, "");
-            var interpreterVersion = globals.AddProperty(PythonConstants.InterpreterVersion, "");
 
-            if (selectedInterpreter != null && selectedInterpreter.Id != Guid.Empty) {
-                interpreterId.Value = selectedInterpreter.Id.ToString("B");
-                interpreterVersion.Value = selectedInterpreter.Version.ToString();
+            if (selectedInterpreter != null && !String.IsNullOrWhiteSpace(selectedInterpreter.Id)) {
+                interpreterId.Value = selectedInterpreter.Id;
             }
 
             // VS requires property groups with conditions for Debug
@@ -401,10 +398,10 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 project.AddItem("Folder", folder);
             }
 
-            if (selectedInterpreter != null && selectedInterpreter.Id != Guid.Empty) {
+            if (selectedInterpreter != null && !String.IsNullOrWhiteSpace(selectedInterpreter.Id)) {
                 project.AddItem(
                     MSBuildConstants.InterpreterReferenceItem,
-                    string.Format("{0:B}\\{1}", selectedInterpreter.Id, selectedInterpreter.Version)
+                    selectedInterpreter.Id
                 );
             }
             if (virtualEnvPaths != null && virtualEnvPaths.Any() && service != null) {
@@ -413,7 +410,6 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
                     if (string.IsNullOrEmpty(interpreterId.Value)) {
                         interpreterId.Value = options.NewId;
-                        interpreterVersion.Value = options.LanguageVersionString;
                     }
                 }
             }
