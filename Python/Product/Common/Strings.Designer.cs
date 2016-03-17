@@ -1100,6 +1100,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;Remember my selection.
+        /// </summary>
+        public static string RememberMySelection {
+            get {
+                return ResourceManager.GetString("RememberMySelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to read file &apos;{0}&apos;.
         /// </summary>
         public static string ReplCannotReadFile {
@@ -1157,8 +1166,8 @@ namespace Microsoft.PythonTools {
         
         /// <summary>
         ///   Looks up a localized string similar to The interactive window could not be started because the associated Python environment could not be found.
-        ///If this version of Python has recently been uninstalled, you can close this window.
-        ///.
+        ///
+        ///If this version of Python has recently been uninstalled, you can close this window..
         /// </summary>
         public static string ReplEvaluatorInterpreterNotFound {
             get {
@@ -1176,7 +1185,8 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python interactive window. Type $help for a list of commands..
+        ///   Looks up a localized string similar to &amp;#x1b;[94;21m{0} interactive window &amp;#x1b;[m[PTVS {1}-{2}]
+        ///Type $help for a list of commands..
         /// </summary>
         public static string ReplInitializationMessage {
             get {
@@ -1223,11 +1233,75 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Changing to {0} will reset your current state..
+        /// </summary>
+        public static string ReplQuerySwitchEvaluator {
+            get {
+                return ResourceManager.GetString("ReplQuerySwitchEvaluator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This includes variables and imported modules,
+        ///but your command history will be preserved..
+        /// </summary>
+        public static string ReplQuerySwitchEvaluatorHint {
+            get {
+                return ResourceManager.GetString("ReplQuerySwitchEvaluatorHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Open a new tab.
+        /// </summary>
+        public static string ReplQuerySwitchNewTab {
+            get {
+                return ResourceManager.GetString("ReplQuerySwitchNewTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your existing state will still be available in this window..
+        /// </summary>
+        public static string ReplQuerySwitchNewTabHint {
+            get {
+                return ResourceManager.GetString("ReplQuerySwitchNewTabHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Switch this tab.
+        /// </summary>
+        public static string ReplQuerySwitchThisTab {
+            get {
+                return ResourceManager.GetString("ReplQuerySwitchThisTab", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Your previous work will be lost when you change environment..
+        /// </summary>
+        public static string ReplQuerySwitchThisTabHint {
+            get {
+                return ResourceManager.GetString("ReplQuerySwitchThisTabHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Resetting Python state..
         /// </summary>
         public static string ReplReset {
             get {
                 return ResourceManager.GetString("ReplReset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Switching interactive environment....
+        /// </summary>
+        public static string ReplSwitchEvaluator {
+            get {
+                return ResourceManager.GetString("ReplSwitchEvaluator", resourceCulture);
             }
         }
         

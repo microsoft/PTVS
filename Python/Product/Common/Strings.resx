@@ -313,8 +313,8 @@ Try moving your source code to a location where you can read and write files.</v
   </data>
   <data name="ReplEvaluatorInterpreterNotFound" xml:space="preserve">
     <value>The interactive window could not be started because the associated Python environment could not be found.
-If this version of Python has recently been uninstalled, you can close this window.
-</value>
+
+If this version of Python has recently been uninstalled, you can close this window.</value>
   </data>
   <data name="ReplEvaluatorInterpreterNotConfigured" xml:space="preserve">
     <value>{0} cannot be started because the path to the interpreter has not been configured.
@@ -322,7 +322,9 @@ Please update the environment in Tools-&gt;Options-&gt;Python Tools-&gt;Environm
 </value>
   </data>
   <data name="ReplInitializationMessage" xml:space="preserve">
-    <value>Python interactive window. Type $help for a list of commands.</value>
+    <value>&amp;#x1b;[94;21m{0} interactive window &amp;#x1b;[m[PTVS {1}-{2}]
+Type $help for a list of commands.</value>
+    <comment>{0} is the Python language version, {1} is the PTVS version, {2} is the VS version</comment>
   </data>
   <data name="CustomCommandPrerequisitesContent" xml:space="preserve">
     <value>'{0}' command requires some packages that are not installed in your Python environment. Those packages need to be installed first before the command can be run.</value>
@@ -711,5 +713,31 @@ Your web browser will not be opened.</value>
   </data>
   <data name="DebugReplDisplayName" xml:space="preserve">
     <value>Current debuggee</value>
+  </data>
+  <data name="RememberMySelection" xml:space="preserve">
+    <value>&amp;Remember my selection</value>
+  </data>
+  <data name="ReplQuerySwitchEvaluator" xml:space="preserve">
+    <value>Changing to {0} will reset your current state.</value>
+    <comment>{0} is the user-provided description of the Python interpreter</comment>
+  </data>
+  <data name="ReplQuerySwitchEvaluatorHint" xml:space="preserve">
+    <value>This includes variables and imported modules,
+but your command history will be preserved.</value>
+  </data>
+  <data name="ReplQuerySwitchNewTab" xml:space="preserve">
+    <value>&amp;Open a new tab</value>
+  </data>
+  <data name="ReplQuerySwitchNewTabHint" xml:space="preserve">
+    <value>Your existing state will still be available in this window.</value>
+  </data>
+  <data name="ReplQuerySwitchThisTab" xml:space="preserve">
+    <value>&amp;Switch this tab</value>
+  </data>
+  <data name="ReplQuerySwitchThisTabHint" xml:space="preserve">
+    <value>Your previous work will be lost when you change environment.</value>
+  </data>
+  <data name="ReplSwitchEvaluator" xml:space="preserve">
+    <value>Switching interactive environment...</value>
   </data>
 </root>

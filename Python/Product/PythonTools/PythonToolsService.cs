@@ -58,6 +58,7 @@ namespace Microsoft.PythonTools {
         private readonly GlobalInterpreterOptions _globalInterpreterOptions;
         private readonly PythonInteractiveOptions _interactiveOptions;
         internal readonly Dictionary<IPythonInterpreterFactory, InterpreterOptions> _interpreterOptions = new Dictionary<IPythonInterpreterFactory, InterpreterOptions>();
+        private readonly SuppressDialogOptions _suppressDialogOptions;
         private readonly SurveyNewsService _surveyNews;
         private readonly IdleManager _idleManager;
         private Func<CodeFormattingOptions> _optionsFactory;
@@ -105,6 +106,7 @@ namespace Microsoft.PythonTools {
             _debuggerOptions = new DebuggerOptions(this);
             _generalOptions = new GeneralOptions(this);
             _surveyNews = new SurveyNewsService(container);
+            _suppressDialogOptions = new SuppressDialogOptions(this);
             _globalInterpreterOptions = new GlobalInterpreterOptions(this, _interpreterOptionsService);
             _globalInterpreterOptions.Load();
             _interactiveOptions = new PythonInteractiveOptions(this, "Interactive");
@@ -264,6 +266,12 @@ namespace Microsoft.PythonTools {
         public GlobalInterpreterOptions GlobalInterpreterOptions {
             get {
                 return _globalInterpreterOptions;
+            }
+        }
+
+        public SuppressDialogOptions SuppressDialogOptions {
+            get {
+                return _suppressDialogOptions;
             }
         }
 
