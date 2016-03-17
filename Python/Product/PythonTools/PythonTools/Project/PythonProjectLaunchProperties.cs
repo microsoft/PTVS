@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Project {
             } else {
                 interpreter = project.GetInterpreterFactory();
                 var service = site.GetComponentModel().GetService<IInterpreterOptionsService>();
-                if (service == null || interpreter == service.NoInterpretersValue) {
+                if (service == null || interpreter == null) {
                     throw new NoInterpretersException();
                 }
             }

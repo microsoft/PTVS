@@ -106,8 +106,6 @@ namespace Microsoft.PythonTools.Commands {
 
             var pythonPathIsMasked = _serviceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath ? " (masked)" : "";
 
-            var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-
             var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
             res.AppendLine("Projects: ");
 

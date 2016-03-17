@@ -259,7 +259,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public static IPythonInterpreterFactory FindBaseInterpreterFromVirtualEnv(
             string prefixPath,
             string libPath,
-            IInterpreterOptionsService service
+            IInterpreterRegistry service
         ) {
             string basePath = GetOrigPrefixPath(prefixPath, libPath);
 

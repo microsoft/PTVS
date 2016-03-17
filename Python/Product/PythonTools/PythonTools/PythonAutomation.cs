@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools {
         }
 
         IPythonInteractiveOptions IPythonOptions.GetInteractiveOptions(string interpreterName) {
-            var interpreters = _pyService.ComponentModel.GetService<IInterpreterOptionsService>().Interpreters;
+            var interpreters = _pyService.ComponentModel.GetService<IInterpreterRegistry>().Interpreters;
             var factory = interpreters.FirstOrDefault(i => i.Configuration.Description == interpreterName);
 
             return factory == null ? null : new AutomationInterpreterOptions(_serviceProvider, factory);

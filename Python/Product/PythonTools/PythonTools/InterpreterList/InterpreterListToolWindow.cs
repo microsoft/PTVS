@@ -39,7 +39,6 @@ namespace Microsoft.PythonTools.InterpreterList {
     sealed class InterpreterListToolWindow : ToolWindowPane {
         private IServiceProvider _site;
         private PythonToolsService _pyService;
-        private IInterpreterOptionsService _service;
         private Redirector _outputWindow;
         private IVsStatusbar _statusBar;
 
@@ -56,8 +55,6 @@ namespace Microsoft.PythonTools.InterpreterList {
             BitmapImageMoniker = KnownMonikers.DockPanel;
             Caption = Strings.Environments;
 
-            _service = _site.GetComponentModel().GetService<IInterpreterOptionsService>();
-            
             _outputWindow = OutputWindowRedirector.GetGeneral(_site);
             Debug.Assert(_outputWindow != null);
             _statusBar = _site.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
@@ -96,8 +93,6 @@ namespace Microsoft.PythonTools.InterpreterList {
                 UnhandledException_Executed,
                 UnhandledException_CanExecute
             ));
-
-            list.Service = _service;
 
             Content = list;
         }

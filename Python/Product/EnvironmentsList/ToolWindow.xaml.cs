@@ -31,6 +31,7 @@ using System.Windows.Threading;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
     public partial class ToolWindow : UserControl, IDisposable {
@@ -39,8 +40,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private readonly CollectionViewSource _environmentsView;
         private readonly HashSet<IPythonInterpreterFactory> _currentlyRefreshing;
+        private IInterpreterRegistry _interpreters;
         private IInterpreterOptionsService _service;
-        
+        private IServiceProvider _site;
+
         private AnalyzerStatusListener _listener;
         private readonly object _listenerLock = new object();
         private int _listenerTimeToLive;
@@ -60,7 +63,19 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             SizeChanged += ToolWindow_SizeChanged;
         }
 
-        public IServiceProvider Site { get; set; }
+        public IServiceProvider Site {
+            get {
+                return _site;
+            }
+            set {
+                _site = value;
+                if(value != null) {
+                    var compModel = _site.GetService(typeof(SComponentModel)) as IComponentModel;
+                    Service = compModel.GetService<IInterpreterOptionsService>();
+                    Interpreters = compModel.GetService<IInterpreterRegistry>();
+                }
+            }
+        }
 
         internal static async void SendUnhandledException(UIElement element, ExceptionDispatchInfo edi) {
             try {
@@ -299,7 +314,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 }
 
                 _environments.Merge(
-                    _service.Interpreters
+                    _interpreters.Interpreters
                     .Distinct()
                     .Where(f => f.IsUIVisible())
                     .Select(f => {
@@ -347,6 +362,21 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public event EventHandler<EnvironmentViewEventArgs> ViewCreated;
 
+        public IInterpreterRegistry Interpreters {
+            get {
+                return _interpreters;
+            }
+            set {
+                if (_interpreters != null) {
+                    _interpreters.InterpretersChanged -= Service_InterpretersChanged;
+                }
+                _interpreters = value;
+                if (_service != null) {
+                    _interpreters.InterpretersChanged += Service_InterpretersChanged;
+                }
+            }
+        }
+
         public IInterpreterOptionsService Service {
             get {
                 return _service;
@@ -354,12 +384,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             set {
                 if (_service != null) {
                     _service.DefaultInterpreterChanged -= Service_DefaultInterpreterChanged;
-                    _service.InterpretersChanged -= Service_InterpretersChanged;
                 }
                 _service = value;
                 if (_service != null) {
                     _service.DefaultInterpreterChanged += Service_DefaultInterpreterChanged;
-                    _service.InterpretersChanged += Service_InterpretersChanged;
                 }
                 Dispatcher.InvokeAsync(FirstUpdateEnvironments).Task.DoNotWait();
             }

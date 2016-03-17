@@ -39,7 +39,7 @@ namespace Microsoft.PythonTools.Interpreter {
             RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase
         );
 
-        internal const string InterpreterIdProperty = "InterpreterId";
+        public const string InterpreterIdProperty = "InterpreterId";
         internal const string InterpreterVersionProperty = "InterpreterVersion";
     }
 }

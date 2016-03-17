@@ -49,6 +49,7 @@ namespace Microsoft.PythonTools {
         private readonly IServiceContainer _container;
         private LanguagePreferences _langPrefs;
         private IPythonToolsOptionsService _optionsService;
+        internal readonly IInterpreterRegistry _interpreterRegistry;
         internal readonly IInterpreterOptionsService _interpreterOptionsService;
         private VsProjectAnalyzer _analyzer;
         private readonly PythonToolsLogger _logger;
@@ -103,9 +104,13 @@ namespace Microsoft.PythonTools {
 
             _optionsService = (IPythonToolsOptionsService)container.GetService(typeof(IPythonToolsOptionsService));
             var compModel = (IComponentModel)container.GetService(typeof(SComponentModel));
+            _interpreterRegistry = compModel.GetService<IInterpreterRegistry>();
+            if (_interpreterRegistry != null) {
+                _interpreterRegistry.InterpretersChanged += InterpretersChanged;
+            }
+
             _interpreterOptionsService = compModel.GetService<IInterpreterOptionsService>();
             if (_interpreterOptionsService != null) {   // not available in some test cases...
-                _interpreterOptionsService.InterpretersChanged += InterpretersChanged;
                 _interpreterOptionsService.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
                 LoadInterpreterOptions();
             }
@@ -115,7 +120,7 @@ namespace Microsoft.PythonTools {
             _debuggerOptions = new DebuggerOptions(this);
             _generalOptions = new GeneralOptions(this);
             _surveyNews = new SurveyNewsService(container);
-            _globalInterpreterOptions = new GlobalInterpreterOptions(this, _interpreterOptionsService);
+            _globalInterpreterOptions = new GlobalInterpreterOptions(this, _interpreterOptionsService, _interpreterRegistry);
             _globalInterpreterOptions.Load();
             _debugInteractiveOptions = new PythonInteractiveCommonOptions(this, "Debug Interactive Window", "");
             _factoryProviders = ComponentModel.DefaultExportProvider.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>();
@@ -139,9 +144,12 @@ namespace Microsoft.PythonTools {
                     connectionPoint.Unadvise(_langPrefsTextManagerCookie);
                 }
             }
-            
+
+            if (_interpreterRegistry != null) {
+                _interpreterRegistry.InterpretersChanged -= InterpretersChanged;
+            }
+
             if (_interpreterOptionsService != null) {
-                _interpreterOptionsService.InterpretersChanged -= InterpretersChanged;
                 _interpreterOptionsService.DefaultInterpreterChanged -= UpdateDefaultAnalyzer;
             }
 
@@ -219,7 +227,7 @@ namespace Microsoft.PythonTools {
                 _container,
                 defaultFactory.CreateInterpreter(),
                 defaultFactory,
-                _interpreterOptionsService.Interpreters.ToArray()
+                _interpreterRegistry.Interpreters.ToArray()
             );
         }
 
@@ -477,7 +485,7 @@ namespace Microsoft.PythonTools {
             try {
                 var placeholders = InterpreterOptions.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();
                 ClearInterpreterOptions();
-                foreach (var interpreter in _interpreterOptionsService.Interpreters) {
+                foreach (var interpreter in _interpreterRegistry.Interpreters) {
                     GetInterpreterOptions(interpreter);
                 }
 
@@ -490,7 +498,7 @@ namespace Microsoft.PythonTools {
         }
 
         internal void SaveInterpreterOptions() {
-            _interpreterOptionsService.BeginSuppressInterpretersChangedEvent();
+            _interpreterRegistry.BeginSuppressInterpretersChangedEvent();
             try {
                 // Remove any items
                 foreach (var option in InterpreterOptions.Select(kv => kv.Value).Where(o => o.Removed).ToList()) {
@@ -534,7 +542,7 @@ namespace Microsoft.PythonTools {
                     RemoveInterpreterOptions(factory);
                 }
             } finally {
-                _interpreterOptionsService.EndSuppressInterpretersChangedEvent();
+                _interpreterRegistry.EndSuppressInterpretersChangedEvent();
             }
         }
 

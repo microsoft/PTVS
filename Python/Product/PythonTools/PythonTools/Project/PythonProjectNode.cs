@@ -1081,7 +1081,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var model = Site.GetComponentModel();
-            var interpreterService = model.GetService<IInterpreterOptionsService>();
+            var interpreterService = model.GetService<IInterpreterRegistry>();
             var factory = GetInterpreterFactory();
             var res = new VsProjectAnalyzer(
                 Site,
@@ -1549,7 +1549,7 @@ namespace Microsoft.PythonTools.Project {
             // First try and get the factory from the parameter
             string description;
             if (args != null && args.TryGetValue("e", out description) && !string.IsNullOrEmpty(description)) {
-                var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
+                var service = Site.GetComponentModel().GetService<IInterpreterRegistry>();
 
                 factory = InterpreterFactories.FirstOrDefault(
                     // Description is a localized string, hence CCIC
@@ -1877,7 +1877,7 @@ namespace Microsoft.PythonTools.Project {
             IServiceProvider provider,
             InterpretersNode node = null
         ) {
-            var service = provider.GetComponentModel().GetService<IInterpreterOptionsService>();
+            var service = provider.GetComponentModel().GetService<IInterpreterRegistry>();
             var view = InstallPythonPackage.ShowDialog(provider, factory, service);
             if (view == null) {
                 throw new OperationCanceledException();
@@ -2278,7 +2278,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async void ShowAddVirtualEnvironmentWithErrorHandling(bool browseForExisting) {
-            var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
+            var service = Site.GetComponentModel().GetService<IInterpreterRegistry>();
             var statusBar = (IVsStatusbar)GetService(typeof(SVsStatusbar));
             object index = (short)0;
             statusBar.Animation(1, ref index);
@@ -2304,7 +2304,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal async Task<IPythonInterpreterFactory> CreateOrAddVirtualEnvironment(
-            IInterpreterOptionsService service,
+            IInterpreterRegistry service,
             bool create,
             string path,
             IPythonInterpreterFactory baseInterp,

@@ -26,9 +26,11 @@ namespace Microsoft.PythonTools.Options {
     public sealed class GlobalInterpreterOptions {
         private readonly PythonToolsService _pyService;
         private readonly IInterpreterOptionsService _interpreterOptions;
+        private readonly IInterpreterRegistry _interpreters;
 
-        internal GlobalInterpreterOptions(PythonToolsService pyService, IInterpreterOptionsService interpreterOptions) {
+        internal GlobalInterpreterOptions(PythonToolsService pyService, IInterpreterOptionsService interpreterOptions, IInterpreterRegistry interpreters) {
             _pyService = pyService;
+            _interpreters = interpreters;
             _interpreterOptions = interpreterOptions;
         }
 
@@ -52,7 +54,7 @@ namespace Microsoft.PythonTools.Options {
         public void Save() {
             _interpreterOptions.DefaultInterpreter =
                 _pyService.ComponentModel.DefaultExportProvider.GetInterpreterFactory(DefaultInterpreter);
-                _interpreterOptions.Interpreters.LastOrDefault();
+                _interpreters.Interpreters.LastOrDefault();
             DefaultInterpreter = _interpreterOptions.DefaultInterpreter.Configuration.Id;
             DefaultInterpreterVersion = _interpreterOptions.DefaultInterpreter.Configuration.Version;
         }        

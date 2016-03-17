@@ -38,6 +38,7 @@ using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
 
+#if FALSE
 namespace PythonToolsUITests {
     [TestClass]
     public class EnvironmentListTests {
@@ -946,3 +947,4 @@ namespace PythonToolsUITests {
         }
     }
 }
+#endif

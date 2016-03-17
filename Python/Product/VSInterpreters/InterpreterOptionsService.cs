@@ -28,9 +28,10 @@ using System.Threading.Tasks;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter {
+    [Export(typeof(IInterpreterRegistry))]
     [Export(typeof(IInterpreterOptionsService))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    sealed class InterpreterOptionsService : IInterpreterOptionsService2, IDisposable {
+    sealed class InterpreterOptionsService : IInterpreterRegistry, IInterpreterOptionsService2, IDisposable {
         internal static Guid NoInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
         internal const string NoInterpretersFactoryProvider = "NoInterpreters";
 
@@ -51,6 +52,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private int _suppressInterpretersChanged;
         private bool _raiseInterpretersChanged, _defaultInterpreterWatched, _factoryChangesWatched;
 
+        private string _defaultInterpreterId;
         IPythonInterpreterFactory _defaultInterpreter;
         IPythonInterpreterFactory _noInterpretersValue;
         private EventHandler _defaultInterpreterChanged;
@@ -100,7 +102,7 @@ namespace Microsoft.PythonTools.Interpreter {
             ) == null) {
                 // DefaultInterpreterOptions subkey does not exist yet, so
                 // create it and then start the watcher.
-                SaveDefaultInterpreter();
+                SaveDefaultInterpreter(_defaultInterpreter?.Configuration?.Id);
 
                 RegistryWatcher.Instance.Add(
                     hive, view, DefaultInterpreterOptionsCollection,
@@ -213,8 +215,8 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void LoadDefaultInterpreter(bool suppressChangeEvent = false) {
-            if (_defaultInterpreter == null) {
+        private void LoadDefaultInterpreterId() {
+            if (_defaultInterpreterId == null) {
                 string id = null;
                 using (var interpreterOptions = Registry.CurrentUser.OpenSubKey(DefaultInterpreterOptionsCollection)) {
                     if (interpreterOptions != null) {
@@ -226,9 +228,20 @@ namespace Microsoft.PythonTools.Interpreter {
                     if (newDefault == null) {
                         var defaultConfig = Configurations.LastOrDefault(fact => fact.CanBeAutoDefault());
                         if (defaultConfig != null) {
-                            newDefault = FindInterpreter(defaultConfig.Id);
+                            id = defaultConfig.Id;
                         }
                     }
+
+                    _defaultInterpreterId = id;
+                }
+            }
+        }
+
+        private void LoadDefaultInterpreter(bool suppressChangeEvent = false) {
+            if (_defaultInterpreter == null) {
+                LoadDefaultInterpreterId();
+                if (_defaultInterpreterId != null) {
+                    var newDefault = FindInterpreter(_defaultInterpreterId);
 
                     if (suppressChangeEvent) {
                         _defaultInterpreter = newDefault;
@@ -259,15 +272,29 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void SaveDefaultInterpreter() {
+        private void SaveDefaultInterpreter(string id) {
             using (var interpreterOptions = Registry.CurrentUser.CreateSubKey(DefaultInterpreterOptionsCollection, true)) {
-                if (_defaultInterpreter == null) {
+                if (id == null) {
                     interpreterOptions.SetValue(DefaultInterpreterSetting, "");
                 } else {
-                    Debug.Assert(!InterpreterOptionsService.IsNoInterpretersFactory(_defaultInterpreter.Configuration.Id));
+                    Debug.Assert(!InterpreterOptionsService.IsNoInterpretersFactory(id));
 
-                    interpreterOptions.SetValue(DefaultInterpreterSetting, _defaultInterpreter.Configuration.Id);
+                    interpreterOptions.SetValue(DefaultInterpreterSetting, id);
                 }
+            }
+        }
+
+        public string DefaultInterpreterId {
+            get {
+                LoadDefaultInterpreterId();
+                return _defaultInterpreterId;
+            }
+            set {
+                _defaultInterpreterId = value;
+                _defaultInterpreter = null; // cleared so we'll re-initialize if anyone cares about it.
+                SaveDefaultInterpreter(value);
+
+                _defaultInterpreterChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -289,7 +316,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
                 if (newDefault != _defaultInterpreter) {
                     _defaultInterpreter = newDefault;
-                    SaveDefaultInterpreter();
+                    SaveDefaultInterpreter(_defaultInterpreter?.Configuration?.Id);
 
                     _defaultInterpreterChanged?.Invoke(this, EventArgs.Empty);
                 }

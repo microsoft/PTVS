@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools {
     [ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = true, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.WindowsFileExtension)]
-    [ProvideDebugEngine(AD7Engine.DebugEngineName, typeof(AD7ProgramProvider), typeof(AD7Engine), AD7Engine.DebugEngineId,  hitCountBp: true)]
+    [ProvideDebugEngine(AD7Engine.DebugEngineName, typeof(AD7ProgramProvider), typeof(AD7Engine), AD7Engine.DebugEngineId, hitCountBp: true)]
     [ProvideDebugLanguage("Python", "{DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF}", PythonExpressionEvaluatorGuid, AD7Engine.DebugEngineId)]
     [ProvideDebugPortSupplier("Python remote (ptvsd)", typeof(PythonRemoteDebugPortSupplier), PythonRemoteDebugPortSupplier.PortSupplierId, typeof(PythonRemoteDebugPortPicker))]
     [ProvideDebugPortPicker(typeof(PythonRemoteDebugPortPicker))]
@@ -344,7 +344,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 );
 
                 return res ? VSConstants.S_OK : VSConstants.E_FAIL;
-        }
+            }
 
             return base.CreateToolWindow(ref toolWindowType, id);
         }
@@ -549,14 +549,14 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             UIContext.FromUIContextGuid(DkmEngineId.NativeEng).IsActive = true;
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
-            RegisterCommands(new Command[] { 
-                new OpenDebugReplCommand(this), 
-                new ExecuteInReplCommand(this), 
-                new SendToReplCommand(this), 
-                new StartWithoutDebuggingCommand(this), 
-                new StartDebuggingCommand(this), 
-                new FillParagraphCommand(this), 
-                new SendToDefiningModuleCommand(this), 
+            RegisterCommands(new Command[] {
+                new OpenDebugReplCommand(this),
+                new ExecuteInReplCommand(this),
+                new SendToReplCommand(this),
+                new StartWithoutDebuggingCommand(this),
+                new StartDebuggingCommand(this),
+                new FillParagraphCommand(this),
+                new SendToDefiningModuleCommand(this),
                 new DiagnosticsCommand(this),
                 new RemoveImportsCommand(this, true),
                 new RemoveImportsCommand(this, false),
@@ -586,8 +586,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             // Enable the Python debugger UI context
             UIContext.FromUIContextGuid(AD7Engine.DebugEngineGuid).IsActive = true;
 
+            var interpreters = ComponentModel.GetService<IInterpreterRegistry>();
+            interpreters.InterpretersChanged += RefreshReplCommands;
+
             var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
-            interpreterService.InterpretersChanged += RefreshReplCommands;
             interpreterService.DefaultInterpreterChanged += RefreshReplCommands;
 
             //var loadedProjectProvider = interpreterService.KnownProviders
@@ -638,18 +640,23 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 return replCommands;
             }
 
+            var interpreters = compModel.GetService<IInterpreterRegistry>();
+            if (interpreters == null) {
+                return replCommands;
+            }
+
+            var factories = interpreters.Interpreters.ToList();
+            if (factories.Count == 0) {
+                return replCommands;
+            }
+
             var interpreterService = compModel.GetService<IInterpreterOptionsService>();
             if (interpreterService == null) {
                 return replCommands;
             }
 
-            var factories = interpreterService.Interpreters.ToList();
-            if (factories.Count == 0) {
-                return replCommands;
-            }
-
             var defaultFactory = interpreterService.DefaultInterpreter;
-            if (defaultFactory != interpreterService.NoInterpretersValue) {
+            if (defaultFactory != null) {
                 factories.Remove(defaultFactory);
                 factories.Insert(0, defaultFactory);
             }
@@ -661,7 +668,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 replCommands.Add(cmd);
             }
 
-            if (defaultFactory != interpreterService.NoInterpretersValue) {
+            if (defaultFactory != null) {
                 // This command is a fallback for the Python.Interactive command
                 // If no project is selected, the default environment will be
                 // used.

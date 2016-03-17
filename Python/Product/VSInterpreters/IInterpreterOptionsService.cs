@@ -19,11 +19,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter {
-    /// <summary>
-    /// Provides information about the available interpreters and the current
-    /// default. Instances of this service should be obtained using MEF.
-    /// </summary>
-    public interface IInterpreterOptionsService {
+    public interface IInterpreterRegistry {
         /// <summary>
         /// Returns a sequence of available interpreters. The sequence is sorted
         /// and should not be re-sorted if it will be displayed to users.
@@ -69,11 +65,19 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <see cref="BeginSuppressInterpretersChangedEvent"/>.
         /// </summary>
         void EndSuppressInterpretersChangedEvent();
+    }
 
+    /// <summary>
+    /// Provides information about the available interpreters and the current
+    /// default. Instances of this service should be obtained using MEF.
+    /// </summary>
+    public interface IInterpreterOptionsService {
         /// <summary>
         /// Gets or sets the default interpreter.
         /// </summary>
         IPythonInterpreterFactory DefaultInterpreter { get; set; }
+
+        string DefaultInterpreterId { get; set; }
 
         /// <summary>
         /// Raised when the default interpreter is set to a new value.

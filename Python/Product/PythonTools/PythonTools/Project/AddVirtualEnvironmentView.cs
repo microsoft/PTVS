@@ -36,7 +36,7 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     sealed class AddVirtualEnvironmentView : DependencyObject, INotifyPropertyChanged, IDisposable {
-        readonly IInterpreterOptionsService _interpreterService;
+        readonly IInterpreterRegistry _interpreterService;
         private readonly PythonProjectNode _project;
         internal readonly string _projectHome;
         private readonly SemaphoreSlim _ready = new SemaphoreSlim(1);
@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Project {
 
         public AddVirtualEnvironmentView(
             PythonProjectNode project,
-            IInterpreterOptionsService interpreterService,
+            IInterpreterRegistry interpreterService,
             IPythonInterpreterFactory selectInterpreter
         ) {
             _interpreterService = interpreterService;

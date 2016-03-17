@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
             InitializeComponent();
 
             EnvironmentsToolWindow.ViewCreated += EnvironmentsToolWindow_ViewCreated;
-            EnvironmentsToolWindow.Service = _service;
+            EnvironmentsToolWindow.Service = _service; // TODO: Should be sited.
         }
 
         void EnvironmentsToolWindow_ViewCreated(object sender, EnvironmentViewEventArgs e) {

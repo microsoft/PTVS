@@ -42,7 +42,18 @@ namespace Microsoft.PythonTools.TestAdapter {
             _app = app;
             _interpreterService = interpreterService;
         }
+#if FALSE
+        private void LoadDefaultInterpreter(bool suppressChangeEvent = false) {
+            string newDefault = string.Empty;
 
+            using (var interpreterOptions = Registry.CurrentUser.OpenSubKey(DefaultInterpreterOptionsCollection)) {
+                if (interpreterOptions != null) {
+                    newDefault = interpreterOptions.GetValue(DefaultInterpreterSetting) as string ?? string.Empty;
+                }
+
+            }
+        }
+#endif
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
             ValidateArg.NotNull(sources, "sources");
             ValidateArg.NotNull(discoverySink, "discoverySink");
@@ -56,6 +67,10 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 foreach (var proj in buildEngine.LoadedProjects) {
 #if FALSE
+                    var defaultInterpreter = proj.GetPropertyValue(MSBuildConstants.InterpreterIdProperty);
+                    if (String.IsNullOrWhiteSpace(defaultInterpreter)) {
+                        defaultInterpreter = 
+                    }
                     using (var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj)) {
                         try {
                             provider.DiscoverInterpreters();

@@ -27,7 +27,7 @@ using Microsoft.VisualStudioTools;
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IInteractiveEvaluatorProvider))]
     class PythonReplEvaluatorProvider : IInteractiveEvaluatorProvider {
-        readonly IInterpreterOptionsService _interpreterService;
+        readonly IInterpreterRegistry _interpreterService;
         readonly IServiceProvider _serviceProvider;
 
         private const string _replGuid = "FAEC7F47-85D8-4899-8D7B-0B855B732CC8";
@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Repl {
 
         [ImportingConstructor]
         public PythonReplEvaluatorProvider(
-            [Import] IInterpreterOptionsService interpreterService,
+            [Import] IInterpreterRegistry interpreterService,
             [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider
         ) {
             Debug.Assert(interpreterService != null);

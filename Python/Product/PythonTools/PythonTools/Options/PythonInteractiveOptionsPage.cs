@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public override void LoadSettingsFromStorage() {
-            var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
+            var interpreterService = ComponentModel.GetService<IInterpreterRegistry>();
 
             var seenIds = new HashSet<string>();
             var placeholders = PyService.InteractiveOptions.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();

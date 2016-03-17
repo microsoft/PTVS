@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Options {
                     }
                 }
 
-                if (_showSettingsFor.Items.Count > 0 && _service.DefaultInterpreter != _service.NoInterpretersValue) {
+                if (_showSettingsFor.Items.Count > 0 && _service.DefaultInterpreter != null) {
                     _showSettingsFor.SelectedItem = _defaultInterpreter.SelectedItem = _service.DefaultInterpreter;
                 }
 

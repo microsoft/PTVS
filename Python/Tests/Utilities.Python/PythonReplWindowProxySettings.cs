@@ -94,7 +94,7 @@ namespace TestUtilities.UI.Python {
                 Thread.Sleep(retries * 100);
             }
             Assert.IsTrue(success, "Unable to open " + description + " through DTE");
-            var interpreters = app.ComponentModel.GetService<IInterpreterOptionsService>();
+            var interpreters = app.ComponentModel.GetService<IInterpreterRegistry>();
             var replId = PythonReplEvaluatorProvider.GetReplId(
                 interpreters.FindInterpreter(Version.Id)
             );

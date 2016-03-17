@@ -22,7 +22,7 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
-    public class MockInterpreterOptionsService : IInterpreterOptionsService {
+    public class MockInterpreterOptionsService : IInterpreterOptionsService, IInterpreterRegistry {
         readonly List<IPythonInterpreterFactoryProvider> _providers;
         readonly IPythonInterpreterFactory _noInterpretersValue;
         IPythonInterpreterFactory _defaultInterpreter;
@@ -102,6 +102,16 @@ namespace TestUtilities.Python {
                         evt(this, EventArgs.Empty);
                     }
                 }
+            }
+        }
+
+        public string DefaultInterpreterId {
+            get {
+                return DefaultInterpreter?.Configuration?.Id;
+            }
+
+            set {
+                DefaultInterpreter = FindInterpreter(value);
             }
         }
 

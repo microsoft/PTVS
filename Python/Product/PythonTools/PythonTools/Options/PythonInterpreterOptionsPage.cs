@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public sealed class PythonInterpreterOptionsPage : PythonDialogPage {
         private PythonInterpreterOptionsControl _window;
-        private IInterpreterOptionsService _service;
+        private IInterpreterRegistry _service;
 
         public PythonInterpreterOptionsPage()
             : base("Interpreters") {
@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Options {
 
         private PythonInterpreterOptionsControl GetWindow() {
             if (_window == null) {
-                _service = ComponentModel.GetService<IInterpreterOptionsService>();
+                _service = ComponentModel.GetService<IInterpreterRegistry>();
                 _service.InterpretersChanged += InterpretersChanged;
                 _window = new PythonInterpreterOptionsControl(ComponentModel.GetService<SVsServiceProvider>());
             }
