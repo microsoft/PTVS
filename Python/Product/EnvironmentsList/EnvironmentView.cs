@@ -29,7 +29,6 @@ using Microsoft.VisualStudioTools;
 namespace Microsoft.PythonTools.EnvironmentsList {
     public sealed class EnvironmentView : DependencyObject {
         public static readonly RoutedCommand OpenInteractiveWindow = new RoutedCommand();
-        public static readonly RoutedCommand OpenInteractiveOptions = new RoutedCommand();
         public static readonly RoutedCommand MakeGlobalDefault = new RoutedCommand();
         public static readonly RoutedCommand MakeActiveInCurrentProject = new RoutedCommand();
 
