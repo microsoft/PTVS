@@ -9,10 +9,6 @@
 
 
   <ItemGroup>
-    <GACAssembly Include="!(bindpath.bin)\Microsoft.PythonTools.Analysis.dll;
-                          !(bindpath.bin)\Microsoft.PythonTools.Attacher.exe;
-                          !(bindpath.bin)\Microsoft.PythonTools.Debugger.dll" />
-
     <!-- Registration files -->
     <File Include="extension.vsixmanifest" />
     <File Include="Microsoft.PythonTools.pkgdef;
@@ -59,50 +55,102 @@
                    PythonProjectBig.ico" />
 
     <!-- Templates -->
-    <File Include="Templates\NewItem\NewPythonItems.vsdir;
-                   Templates\NewItem\class.py;
-                   Templates\NewItem\class.pyw;
-                   Templates\NewItem\module.py;
-                   Templates\NewItem\module.pyw">
-      <InstallDirectory>FileTemplate</InstallDirectory>
+    <File Include="NewFileItems\NewPythonItems.vsdir;
+                   NewFileItems\class.py;
+                   NewFileItems\class.pyw;
+                   NewFileItems\module.py;
+                   NewFileItems\module.pyw">
+      <InstallDirectory>NewFileItems</InstallDirectory>
     </File>
-    <ItemTemplate Include="ItemTemplates\Python\EmptyPackage.zip;
-                           ItemTemplates\Python\EmptyPyFile.zip;
-                           ItemTemplates\Python\PyClass.zip;
-                           ItemTemplates\Python\TextFile.zip" />
-    <ItemTemplate Include="ItemTemplates\Python\HTMLFile.zip;
-                           ItemTemplates\Python\JavaScript.zip;
-                           ItemTemplates\Python\Stylesheet.zip">
+    <ItemTemplate Include="$(BuildRoot)Python\Templates\Core\ItemTemplates\Python\EmptyPackage\*">
+      <TemplateName>EmptyPackage</TemplateName>
+    </ItemTemplate>
+    <ItemTemplate Include="$(BuildRoot)Python\Templates\Core\ItemTemplates\Python\EmptyPyFile\*">
+      <TemplateName>EmptyPyFile</TemplateName>
+    </ItemTemplate>
+    <ItemTemplate Include="$(BuildRoot)Python\Templates\Core\ItemTemplates\Python\PyClass\*">
+      <TemplateName>PyClass</TemplateName>
+    </ItemTemplate>
+    <ItemTemplate Include="$(BuildRoot)Python\Templates\Core\ItemTemplates\Python\TextFile\*">
+      <TemplateName>TextFile</TemplateName>
+    </ItemTemplate>
+    
+    <ItemTemplate Include="$(BuildRoot)Python\Templates\Web\ItemTemplates\Python\HTMLFile\*">
+      <TemplateName>HTMLFile</TemplateName>
       <IncludeInWD>false</IncludeInWD>
     </ItemTemplate>
-    <ItemTemplate Include="ItemTemplates\Python\AzureCSWorkerRole.zip;
-                           ItemTemplates\Python\AzureCSWebRole.zip">
+    <ItemTemplate Include="$(BuildRoot)Python\Templates\Web\ItemTemplates\Python\JavaScript\*">
+      <TemplateName>JavaScript</TemplateName>
+      <IncludeInWD>false</IncludeInWD>
+    </ItemTemplate>
+    <ItemTemplate Include="$(BuildRoot)Python\Templates\Web\ItemTemplates\Python\Stylesheet\*">
+      <TemplateName>Stylesheet</TemplateName>
+      <IncludeInWD>false</IncludeInWD>
+    </ItemTemplate>
+    <ItemTemplate Include="$(BuildRoot)Python\Templates\Web\ItemTemplates\Python\AzureCSWorkerRole\*">
+      <TemplateName>AzureCSWorkerRole</TemplateName>
+      <IncludeInWD>false</IncludeInWD>
+    </ItemTemplate>
+    <ItemTemplate Include="$(BuildRoot)Python\Templates\Web\ItemTemplates\Python\AzureCSWebRole\*">
+      <TemplateName>AzureCSWebRole</TemplateName>
       <IncludeInWD>false</IncludeInWD>
     </ItemTemplate>
     
-    <ProjectTemplate Include="ProjectTemplates\Python\ConsoleAppProject.zip;
-                              ProjectTemplates\Python\FromExistingCode.zip" />
-    <WebProjectTemplate Include="ProjectTemplates\Python\Web\EmptyWebProject.zip;
-                                 ProjectTemplates\Python\Web\StarterBottleProject.zip;
-                                 ProjectTemplates\Python\Web\StarterFlaskJadeProject.zip;
-                                 ProjectTemplates\Python\Web\StarterFlaskProject.zip;
-                                 ProjectTemplates\Python\Web\WebProjectBottle.zip;
-                                 ProjectTemplates\Python\Web\WebProjectFlask.zip;
-                                 ProjectTemplates\Python\Web\CloudService.zip;
-                                 ProjectTemplates\Python\Web\WorkerRoleProject.zip;
-                                 ProjectTemplates\Python\Web\EmptyWebRole.zip;
-                                 ProjectTemplates\Python\Web\WebRoleBottle.zip;
-                                 ProjectTemplates\Python\Web\WebRoleFlask.zip" />
+    <ProjectTemplate Include="$(BuildRoot)Python\Templates\Core\ProjectTemplates\Python\ConsoleAppProject\*">
+      <TemplateName>ConsoleAppProject</TemplateName>
+    </ProjectTemplate>
+    <ProjectTemplate Include="$(BuildRoot)Python\Templates\Core\ProjectTemplates\Python\FromExistingCode\*">
+      <TemplateName>FromExistingCode</TemplateName>
+    </ProjectTemplate>
+    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\WebProjectEmpty\*">
+      <TemplateName>EmptyWebProject</TemplateName>
+    </WebProjectTemplate>
+    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\StarterBottleProject\*">
+      <TemplateName>StarterBottleProject</TemplateName>
+    </WebProjectTemplate>
+    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\StarterFlaskJadeProject\*">
+      <TemplateName>StarterFlaskJadeProject</TemplateName>
+    </WebProjectTemplate>
+    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\StarterFlaskProject\*">
+      <TemplateName>StarterFlaskProject</TemplateName>
+    </WebProjectTemplate>
+    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\WebProjectBottle\*">
+      <TemplateName>WebProjectBottle</TemplateName>
+    </WebProjectTemplate>
+    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\WebProjectFlask\*">
+      <TemplateName>WebProjectFlask</TemplateName>
+    </WebProjectTemplate>
+    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\CloudService\*">
+      <TemplateName>CloudService</TemplateName>
+    </WebProjectTemplate>
+    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\WorkerRoleProject\*">
+      <TemplateName>WorkerRoleProject</TemplateName>
+    </WebProjectTemplate>
+    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\WebRoleEmpty\*">
+      <TemplateName>EmptyWebRole</TemplateName>
+    </WebProjectTemplate>
+    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\WebRoleBottle\*">
+      <TemplateName>WebRoleBottle</TemplateName>
+    </WebProjectTemplate>
+    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\WebRoleFlask\*">
+      <TemplateName>WebRoleFlask</TemplateName>
+    </WebProjectTemplate>
 
-    <File Include="ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceBottleWebRole.zip;
-                   ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceEmptyWebRole.zip;
-                   ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceFlaskWebRole.zip">
-      <InstallDirectory>ItemTemplates_CloudService_WebRole</InstallDirectory>
+    <File Include="$(BuildRoot)Python\Templates\Web\ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceBottleWebRole\*">
+      <InstallDirectory>ItemTemplates_CloudService_WebRole_Bottle</InstallDirectory>
+      <IncludeInWD>false</IncludeInWD>
+    </File>
+    <File Include="$(BuildRoot)Python\Templates\Web\ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceEmptyWebRole\*">
+      <InstallDirectory>ItemTemplates_CloudService_WebRole_Empty</InstallDirectory>
+      <IncludeInWD>false</IncludeInWD>
+    </File>
+    <File Include="$(BuildRoot)Python\Templates\Web\ItemTemplates\CloudService\NETFramework4\Web Role\Python\CloudServiceFlaskWebRole\*">
+      <InstallDirectory>ItemTemplates_CloudService_WebRole_Flask</InstallDirectory>
       <IncludeInWD>false</IncludeInWD>
     </File>
 
-    <File Include="ItemTemplates\CloudService\NETFramework4\Worker Role\Python\CloudServiceWorkerRole.zip">
-      <InstallDirectory>ItemTemplates_CloudService_WorkerRole</InstallDirectory>
+    <File Include="$(BuildRoot)Python\Templates\Web\ItemTemplates\CloudService\NETFramework4\Worker Role\Python\CloudServiceWorkerRole\*">
+      <InstallDirectory>ItemTemplates_CloudService_WorkerRole_Worker</InstallDirectory>
       <IncludeInWD>false</IncludeInWD>
     </File>
 
@@ -158,7 +206,9 @@
     <!-- Unit Test Adapter -->
     <File Include="!(bindpath.bin)\Microsoft.PythonTools.TestAdapter.dll;
                    visualstudio_py_testlauncher.py" />
-    <ItemTemplate Include="ItemTemplates\Python\UnitTestFile.zip" />
+    <ItemTemplate Include="$(BuildRoot)Python\Templates\Core\ItemTemplates\Python\UnitTestFile\*">
+      <TemplateName>UnitTestFile</TemplateName>
+    </ItemTemplate>
 
     <!-- ptvsd -->
     <SharedFile Include="visualstudio_py_repl.py;

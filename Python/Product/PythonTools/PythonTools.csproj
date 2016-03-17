@@ -71,6 +71,9 @@
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
+    <ProjectReference2 Include="..\..\Templates\Templates.csproj">
+      <IncludeInVSIX>false</IncludeInVSIX>
+    </ProjectReference2>
     <ProjectReference2 Include="$(BuildRoot)Python\Product\Analyzer\Analyzer.csproj" />
     <ProjectReference Include="$(BuildRoot)Python\Product\Attacher\Attacher.csproj">
       <Project>{666A22BB-0CB5-4C08-A20F-E17450DA6573}</Project>
@@ -102,14 +105,20 @@
       <HintPath>$(DevEnvDir)Extensions\Microsoft\Windows Azure Tools\Common\Microsoft.VisualStudio.WindowsAzure.CommonAzureTools.Contracts.1.2.dll</HintPath>
       <Private>false</Private>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Web.WindowsAzure.Contracts, Version=2.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-      <SpecificVersion>True</SpecificVersion>
-      <HintPath Condition="Exists('$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
-      <HintPath Condition="Exists('$(DevEnvDir)Extensions\Microsoft\Web Tools\WindowsAzure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)Extensions\Microsoft\Web Tools\WindowsAzure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
-      <HintPath Condition="Exists('$(DevEnvDir)Extensions\Microsoft\Web Tools Azure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)Extensions\Microsoft\Web Tools Azure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
   </ItemGroup>
+  <Choose>
+    <When Condition="$(VSTarget) == '14.0'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Web.WindowsAzure.Contracts, Version=2.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+          <SpecificVersion>True</SpecificVersion>
+          <HintPath Condition="Exists('$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
+          <HintPath Condition="Exists('$(DevEnvDir)Extensions\Microsoft\Web Tools\WindowsAzure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)Extensions\Microsoft\Web Tools\WindowsAzure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
+          <HintPath Condition="Exists('$(DevEnvDir)Extensions\Microsoft\Web Tools Azure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)Extensions\Microsoft\Web Tools Azure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
+          <Private>false</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+  </Choose>
   <ItemGroup>
     <Reference Include="Accessibility">
       <EmbedInteropTypes>False</EmbedInteropTypes>
@@ -179,7 +188,9 @@
     <Reference Include="Microsoft.VisualStudio.VSHelp, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.WizardFramework, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.WizardFramework, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>$(DevEnvDir)\Microsoft.VisualStudio.WizardFramework.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
@@ -215,25 +226,23 @@
     <Reference Include="WindowsBase" />
     <Reference Include="System.Xaml" />
     <Reference Include="WindowsFormsIntegration" />
-    <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-      <HintPath>Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-      <HintPath>Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
     <Reference Include="Microsoft.VisualStudio.ImageCatalog, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Imaging, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.VisualStudio.Imaging.Interop.$(VSTarget).DesignTime, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.$(VSTarget).DesignTime, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.14.0.DesignTime, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Immutable.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Utilities, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Settings.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
       <Private>false</Private>
     </Reference>
   </ItemGroup>
@@ -679,199 +688,14 @@
     </ZipItem>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <!-- Item Templates -->
-    <ZipItem Include="Templates\Files\EmptyPackage\__init__.py" />
-    <ZipItem Include="Templates\Files\EmptyPyFile\empty.py" />
-    <ZipItem Include="Templates\Files\EmptyPackage\package.vstemplate" />
-    <ZipItem Include="Templates\Files\PyClass\class.py" />
-    <ZipItem Include="Templates\Files\EmptyPyFile\empty.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\PyClass\class.vstemplate" />
-    <ZipItem Include="Templates\Files\UnitTestFile\test.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\UnitTestFile\test.py" />
-    <ZipItem Include="Templates\Files\TextFile\textfile.txt" />
-    <ZipItem Include="Templates\Files\TextFile\textfile.vstemplate" />
-    <ZipItem Include="Templates\Files\Stylesheet\Stylesheet.css" />
-    <ZipItem Include="Templates\Files\Stylesheet\Stylesheet.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\JavaScript\JavaScript.js" />
-    <ZipItem Include="Templates\Files\JavaScript\JavaScript.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\HtmlFile\HtmlFile.html" />
-    <ZipItem Include="Templates\Files\HtmlFile\HtmlFile.vstemplate" />
-  </ItemGroup>
-  <ItemGroup>
-    <!-- Project Templates -->
-    <ZipProject Include="Templates\Projects\ConsoleAppProject\PythonApp.pyproj">
-      <OutputSubPath>
-      </OutputSubPath>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\ConsoleAppProject\Program.py">
-      <OutputSubPath>
-      </OutputSubPath>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\ConsoleAppProject\PythonConsoleApp.vstemplate">
-      <OutputSubPath>
-      </OutputSubPath>
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.pyproj">
-      <OutputSubPath>
-      </OutputSubPath>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\FromExistingCode\FromExistingCode.vstemplate">
-      <OutputSubPath>
-      </OutputSubPath>
-      <SubType>Designer</SubType>
-    </ZipProject>
-  </ItemGroup>
-  <ItemGroup>
-    <!-- Web Project Templates -->
-    <ZipProject Include="Templates\Projects\CloudService\CloudService.ccproj" />
-    <ZipProject Include="Templates\Projects\CloudService\cloudservice.ico" />
-    <ZipProject Include="Templates\Projects\CloudService\CloudService.vstemplate" />
-    <ZipProject Include="Templates\Projects\CloudService\ServiceConfiguration.Cloud.cscfg" />
-    <ZipProject Include="Templates\Projects\CloudService\ServiceConfiguration.Local.cscfg" />
-    <ZipProject Include="Templates\Projects\CloudService\ServiceDefinition.csdef" />
-    <ZipProject Include="Templates\Projects\EmptyWebProject\EmptyWebProject.pyproj" />
-    <ZipProject Include="Templates\Projects\EmptyWebProject\EmptyWebProject.vstemplate" />
-    <ZipProject Include="Templates\Projects\EmptyWebRole\EmptyWebRole.pyproj" />
-    <ZipProject Include="Templates\Projects\EmptyWebRole\EmptyWebRole.vstemplate" />
-    <ZipProject Include="Templates\Projects\EmptyWebRole\requirements.txt" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\_references.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\about.tpl" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\app.py" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\bootstrap.css" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\bootstrap.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\bootstrap.min.css" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\bootstrap.min.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\contact.tpl" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.eot" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.svg" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.ttf" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\glyphicons-halflings-regular.woff" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\index.tpl" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate.min.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate.unobtrusive.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate.unobtrusive.min.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery.validate-vsdoc.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.intellisense.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.min.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\jquery-1.10.2.min.map" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\layout.tpl" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\modernizr-2.6.2.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\requirements.txt" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\respond.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\respond.min.js" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\routes.py" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\site.css" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\StarterBottleProject.png" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\StarterBottleProject.pyproj" />
-    <ZipProject Include="Templates\Projects\StarterBottleProject\StarterBottleProject.vstemplate" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\__init__.py" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\_references.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\about.jade" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\runserver.py" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\bootstrap.css" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\bootstrap.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\bootstrap.min.css" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\bootstrap.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\contact.jade" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.eot" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.svg" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.ttf" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\glyphicons-halflings-regular.woff" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\index.jade" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate.unobtrusive.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate.unobtrusive.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery.validate-vsdoc.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.intellisense.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\jquery-1.10.2.min.map" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\layout.jade" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\modernizr-2.6.2.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\requirements.txt" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\respond.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\respond.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\views.py" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\site.css" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\StarterFlaskJadeProject.png" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\StarterFlaskJadeProject.pyproj" />
-    <ZipProject Include="Templates\Projects\StarterFlaskJadeProject\StarterFlaskJadeProject.vstemplate" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\__init__.py" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\_references.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\about.html" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\runserver.py" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.css" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.min.css" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\bootstrap.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\contact.html" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.eot" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.svg" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.ttf" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\glyphicons-halflings-regular.woff" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\index.html" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.unobtrusive.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate.unobtrusive.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery.validate-vsdoc.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.intellisense.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\jquery-1.10.2.min.map" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\layout.html" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\modernizr-2.6.2.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\requirements.txt" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\respond.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\respond.min.js" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\views.py" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\site.css" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\StarterFlaskProject.png" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\StarterFlaskProject.pyproj" />
-    <ZipProject Include="Templates\Projects\StarterFlaskProject\StarterFlaskProject.vstemplate" />
-    <ZipProject Include="Templates\Projects\WebProjectBottle\app.py" />
-    <ZipProject Include="Templates\Projects\WebProjectBottle\WebProjectBottle.pyproj" />
-    <ZipProject Include="Templates\Projects\WebProjectBottle\WebProjectBottle.vstemplate" />
-    <ZipProject Include="Templates\Projects\WebProjectFlask\app.py" />
-    <ZipProject Include="Templates\Projects\WebProjectFlask\WebProjectFlask.pyproj" />
-    <ZipProject Include="Templates\Projects\WebProjectFlask\WebProjectFlask.vstemplate" />
-    <ZipProject Include="Templates\Projects\WebRoleBottle\app.py" />
-    <ZipProject Include="Templates\Projects\WebRoleBottle\requirements.txt" />
-    <ZipProject Include="Templates\Projects\WebRoleBottle\WebRoleBottle.pyproj" />
-    <ZipProject Include="Templates\Projects\WebRoleBottle\WebRoleBottle.vstemplate" />
-    <ZipProject Include="Templates\Projects\WebRoleFlask\app.py" />
-    <ZipProject Include="Templates\Projects\WebRoleFlask\requirements.txt" />
-    <ZipProject Include="Templates\Projects\WebRoleFlask\WebRoleFlask.pyproj" />
-    <ZipProject Include="Templates\Projects\WebRoleFlask\WebRoleFlask.vstemplate" />
-    <ZipProject Include="Templates\Projects\WorkerRoleProject\requirements.txt" />
-    <ZipProject Include="Templates\Projects\WorkerRoleProject\worker.py" />
-    <ZipProject Include="Templates\Projects\WorkerRoleProject\WorkerRoleProject.pyproj" />
-    <ZipProject Include="Templates\Projects\WorkerRoleProject\WorkerRoleProject.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipProject>
-  </ItemGroup>
-  <ItemGroup>
     <!-- VSIX -->
     <Compile Include="PythonTools\Repl\PythonInteractiveEvaluator.CommandProcessorThread.cs" />
     <None Include="Theme\contrast.vstheme" />
     <None Include="NoSurveyNewsFeed.html" />
     <None Include="NoInterpreters.html" />
     <None Include="ptvsd\attach_server.py" />
-    <None Include="Theme\Microsoft.PythonTools.theme.v11.0.pkgdef" />
-    <None Include="Theme\Microsoft.PythonTools.theme.v12.0.pkgdef" />
     <None Include="Theme\Microsoft.PythonTools.theme.v14.0.pkgdef" />
+    <None Include="Theme\Microsoft.PythonTools.theme.v15.0.pkgdef" />
     <None Include="Theme\dark.vstheme" />
     <None Include="Theme\make_theme_pkgdef.py" />
     <Content Include="NoInterpreters.mht">
@@ -946,70 +770,9 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Templates\SharedFiles\Readme\WorkerRoleConfiguration.html" />
-    <SharedTemplateFile Include="Templates\SharedFiles\ConfigureCloudService.ps1">
-      <IncludeInWebRoleTemplates>true</IncludeInWebRoleTemplates>
-      <IncludeInWorkerRoleTemplates>true</IncludeInWorkerRoleTemplates>
-    </SharedTemplateFile>
-    <SharedTemplateFile Include="Templates\SharedFiles\ps.cmd">
-      <IncludeInWebRoleTemplates>true</IncludeInWebRoleTemplates>
-      <IncludeInWorkerRoleTemplates>true</IncludeInWorkerRoleTemplates>
-    </SharedTemplateFile>
-    <SharedTemplateFile Include="Templates\SharedFiles\LaunchWorker.ps1">
-      <IncludeInWebRoleTemplates>false</IncludeInWebRoleTemplates>
-      <IncludeInWorkerRoleTemplates>true</IncludeInWorkerRoleTemplates>
-    </SharedTemplateFile>
-    <ZipItem Include="Templates\Files\AzureCSWorkerRole\AzureCSWorkerRole.vstemplate" />
-    <ZipItem Include="Templates\Files\AzureCSWebRole\AzureCSWebRole.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipItem>
-    <SharedTemplateFile Include="Templates\SharedFiles\WebRoleConfiguration.mht">
-      <IncludeInWebRoleTemplates>true</IncludeInWebRoleTemplates>
-      <IncludeInWorkerRoleTemplates>false</IncludeInWorkerRoleTemplates>
-    </SharedTemplateFile>
-    <ZipItem Include="Templates\Files\CloudServiceBottleWebRole\CloudServiceBottleWebRole.vstemplate">
-      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
-      <Language>CloudService</Language>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\CloudServiceBottleWebRole\roletemplatedata.xml">
-      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
-      <Language>CloudService</Language>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\CloudServiceFlaskWebRole\CloudServiceFlaskWebRole.vstemplate">
-      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
-      <Language>CloudService</Language>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\CloudServiceFlaskWebRole\roletemplatedata.xml">
-      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
-      <Language>CloudService</Language>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\CloudServiceWorkerRole\roletemplatedata.xml">
-      <OutputSubPath>NETFramework4\Worker Role\Python</OutputSubPath>
-      <Language>CloudService</Language>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\CloudServiceWorkerRole\WorkerRole.vstemplate">
-      <OutputSubPath>NETFramework4\Worker Role\Python</OutputSubPath>
-      <Language>CloudService</Language>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\CloudServiceEmptyWebRole\CloudServiceEmptyWebRole.vstemplate">
-      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
-      <Language>CloudService</Language>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\CloudServiceEmptyWebRole\roletemplatedata.xml">
-      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
-      <Language>CloudService</Language>
-    </ZipItem>
-    <SharedTemplateFile Include="Templates\SharedFiles\WorkerRoleConfiguration.mht">
-      <IncludeInWebRoleTemplates>false</IncludeInWebRoleTemplates>
-      <IncludeInWorkerRoleTemplates>true</IncludeInWorkerRoleTemplates>
-    </SharedTemplateFile>
-    <None Include="Templates\SharedFiles\Readme\ServiceDefinition.png" />
-    <None Include="Templates\SharedFiles\Readme\WebRoleConfiguration.html" />
     <Content Include="ReadmeStyle.css" />
-    <ZipProject Include="Templates\Projects\WebProjectBottle\requirements.txt" />
-    <ZipProject Include="Templates\Projects\WebProjectFlask\requirements.txt" />
     <None Include="Theme\Repl\make_theme_pkgdef.py" />
-    <_ThemePkgDef Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v14.0.pkgdef">
+    <_ThemePkgDef Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v$(VSTarget).pkgdef">
       <IncludeInVsix>true</IncludeInVsix>
       <Link>Microsoft.PythonTools.Repl.theme.pkgdef</Link>
       <VSIXSubPath>.</VSIXSubPath>
@@ -1057,19 +820,19 @@
       <VSIXSubPath>.</VSIXSubPath>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Templates\NewItem\class.py">
+    <Content Include="NewFileItems\class.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Templates\NewItem\class.pyw">
+    <Content Include="NewFileItems\class.pyw">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Templates\NewItem\module.pyw">
+    <Content Include="NewFileItems\module.pyw">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Templates\NewItem\module.py">
+    <Content Include="NewFileItems\module.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -1086,7 +849,7 @@
       <VSIXSubPath>.</VSIXSubPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Templates\NewItem\NewPythonItems.vsdir">
+    <Content Include="NewFileItems\NewPythonItems.vsdir">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -1234,9 +997,6 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Templates\Files\EmptyPackage\package\" />
-  </ItemGroup>
   <PropertyGroup>
     <SharedProject_IncludeUIThreadBase>false</SharedProject_IncludeUIThreadBase>
   </PropertyGroup>
@@ -1263,54 +1023,6 @@
     <Copy SourceFiles="@(_PTVSDSourceFiles)" DestinationFiles="@(_PTVSDFiles)" SkipUnchangedFiles="true">
       <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
     </Copy>
-  </Target>
-  <Target Name="_CalculateSharedTemplateFiles">
-    <ItemGroup>
-      <_Templates Include="Templates\Projects\EmptyWebRole;Templates\Projects\WebRoleBottle;Templates\Projects\WebRoleFlask">
-        <IsWeb>true</IsWeb>
-        <IsWorker>false</IsWorker>
-        <Type>Project</Type>
-      </_Templates>
-      <_Templates Include="Templates\Files\AzureCSWebRole">
-        <IsWeb>true</IsWeb>
-        <IsWorker>false</IsWorker>
-        <Type>Item</Type>
-      </_Templates>
-      <_Templates Include="Templates\Projects\WorkerRoleProject">
-        <IsWeb>false</IsWeb>
-        <IsWorker>true</IsWorker>
-        <Type>Project</Type>
-      </_Templates>
-      <_Templates Include="Templates\Files\AzureCSWorkerRole">
-        <IsWeb>false</IsWeb>
-        <IsWorker>true</IsWorker>
-        <Type>Item</Type>
-      </_Templates>
-    </ItemGroup>
-    <ItemGroup>
-      <_SharedTemplateFiles Include="@(_Templates)">
-        <SourceFile>%(SharedTemplateFile.FullPath)</SourceFile>
-        <IncludeInWeb Condition="%(SharedTemplateFile.IncludeInWebRoleTemplates) != ''">%(SharedTemplateFile.IncludeInWebRoleTemplates)</IncludeInWeb>
-        <IncludeInWorker Condition="%(SharedTemplateFile.IncludeInWorkerRoleTemplates) != ''">%(SharedTemplateFile.IncludeInWorkerRoleTemplates)</IncludeInWorker>
-        <TargetFileName>%(SharedTemplateFile.Filename)%(SharedTemplateFile.Extension)</TargetFileName>
-      </_SharedTemplateFiles>
-      <SharedTemplateFiles Include="%(_SharedTemplateFiles.Identity)\%(_SharedTemplateFiles.TargetFileName)" Condition="(%(_SharedTemplateFiles.IsWeb) and %(_SharedTemplateFiles.IncludeInWeb)) or (%(_SharedTemplateFiles.IsWorker) and %(_SharedTemplateFiles.IncludeInWorker))">
-        <SourceFile>%(_SharedTemplateFiles.SourceFile)</SourceFile>
-        <Type>%(_SharedTemplateFiles.Type)</Type>
-      </SharedTemplateFiles>
-    </ItemGroup>
-  </Target>
-  <Target Name="_CopySharedTemplateFiles" BeforeTargets="GetZipFilesFromVSTemplates" Inputs="%(SharedTemplateFiles.SourceFile)" Outputs="@(SharedTemplateFiles)">
-    <MakeDir Directories="%(SharedTemplateFiles.RootDir)%(SharedTemplateFiles.Directory)" />
-    <Copy SourceFiles="%(SharedTemplateFiles.SourceFile)" DestinationFiles="%(SharedTemplateFiles.FullPath)" OverwriteReadOnlyFiles="true">
-      <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
-    </Copy>
-  </Target>
-  <Target Name="CopySharedTemplateFiles" BeforeTargets="GetZipFilesFromVSTemplates" DependsOnTargets="_CalculateSharedTemplateFiles;_CopySharedTemplateFiles">
-    <ItemGroup>
-      <ZipProject Include="%(SharedTemplateFiles.FullPath)" Condition="%(SharedTemplateFiles.Type) == 'Project'" />
-      <ZipItem Include="%(SharedTemplateFiles.FullPath)" Condition="%(SharedTemplateFiles.Type) == 'Item'" />
-    </ItemGroup>
   </Target>
   <!-- We build these assemblies into separate folders to avoid incremental cleaning issues,
        but then CreatePkgDef can't find them for the ProvideCodeBase attributes. So we copy

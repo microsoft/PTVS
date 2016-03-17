@@ -34,21 +34,15 @@
         Microsoft.PythonTools.Profiling.dll;
         Microsoft.PythonTools.ProjectWizards.dll;
         Microsoft.PythonTools.Django.dll;
-        Microsoft.IronPythonTools.Resolver.dll
+        Microsoft.IronPythonTools.Resolver.dll;
+        Microsoft.PythonTools.WebRole.dll;
+        Microsoft.PythonTools.AzureSetup.exe
         "/>
     
     <ManagedFiles Include="Microsoft.PythonTools.ML.dll" Condition="$(IncludeML)" />
     <ManagedFiles Include="Microsoft.PythonTools.TestAdapter.dll" Condition="$(IncludeTestAdapter)" />
     <ManagedFiles Include="Microsoft.PythonTools.Uwp.dll" Condition="$(IncludeUwp)" />
     <ManagedFiles Include="Microsoft.PythonTools.VsLogger.dll" Condition="'$(IncludeVsLogger)' == 'True'" />
-
-    <ManagedFiles Include="
-        Microsoft.PythonTools.WebRole.dll;
-        Microsoft.PythonTools.AzureSetup.exe
-        ">
-        <SkipStrongName>true</SkipStrongName>
-    </ManagedFiles>
-
 
     <UnmanagedFiles Include="
         PyDebugAttach.dll;

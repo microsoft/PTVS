@@ -21,6 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <LinkerBindInputPaths Include="$(LayoutOutputPath)\Microsoft.PythonTools.IronPython" />
+    <LinkerBindInputPaths Include="$(BuildRoot)\Python\Templates\IronPython" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\MergeModule.wxi">

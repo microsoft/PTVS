@@ -59,11 +59,9 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Settings.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-      <HintPath>..\PythonTools\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-      <HintPath>..\PythonTools\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>

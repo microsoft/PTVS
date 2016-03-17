@@ -1,0 +1,318 @@
+From: "Saved by Internet Explorer 11"
+Subject: Python Web Role Configuration
+Date: Thu, 7 Aug 2014 10:30:09 -0700
+MIME-Version: 1.0
+Content-Type: multipart/related;
+	type="text/html";
+	boundary="----=_NextPart_000_0000_01CFB22A.90418FA0"
+X-MimeOLE: Produced By Microsoft MimeOLE V6.3.9600.16384
+
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_0000_01CFB22A.90418FA0
+Content-Type: text/html;
+	charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: file://D:\PTVS\Main\Python\Product\PythonTools\Templates\SharedFiles\Readme\WebRoleConfiguration.html
+
+=EF=BB=BF<!DOCTYPE HTML>
+<!DOCTYPE html PUBLIC "" ""><!--=0A=
+ Copyright (c) Microsoft Corporation.=0A=
+=0A=
+ This source code is subject to terms and conditions of the Apache =
+License, Version 2.0. A=0A=
+ copy of the license can be found in the License.html file at the root =
+of this distribution. If=0A=
+ you cannot locate the Apache License, Version 2.0, please send an email =
+to=0A=
+ vspython@microsoft.com. By using this source code in any fashion, you =
+are agreeing to be bound=0A=
+ by the terms of the Apache License, Version 2.0.=0A=
+=0A=
+ You must not remove this notice, or any other, from this software.=0A=
+--><HTML=20
+lang=3D"en" xmlns=3D"http://www.w3.org/1999/xhtml"><HEAD><META =
+content=3D"IE=3D11.0000"=20
+http-equiv=3D"X-UA-Compatible">
+    =20
+<META charset=3D"utf-8">     <TITLE>Python Web Role =
+Configuration</TITLE>    =20
+<LINK =
+href=3D"file:///D:/PTVS/Main/Python/Product/PythonTools/ReadmeStyle.css" =
+
+rel=3D"stylesheet" type=3D"text/css">=20
+<META name=3D"GENERATOR" content=3D"MSHTML 11.00.9600.17207"></HEAD>=20
+<BODY>
+<H1 class=3D"top">One more thing...</H1>
+<DIV>
+<P>            If you are not using Microsoft Azure Tools 2.4 or later, =
+you will=20
+            need to finish configuring your web role:         </P>
+<OL>
+  <LI>Open your ServiceDefinition.csdef file: <IMG =
+src=3D"file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/SharedFi=
+les/Readme/ServiceDefinition.png"></LI>
+  <LI>Find your new <CODE>&lt;WebRole role=3D"{your project =
+name}"&gt;</CODE>=20
+  element.</LI>
+  <LI>Paste the XML below as a child of the <CODE>WebRole</CODE>=20
+element.</LI></OL><TEXTAREA id=3D"code" contenteditable=3D"false" =
+rows=3D"12" cols=3D"75">&lt;Startup&gt;=0A=
+  &lt;Task commandLine=3D"ps.cmd ConfigureCloudService.ps1" =
+executionContext=3D"elevated" taskType=3D"simple"&gt;=0A=
+    &lt;Environment&gt;=0A=
+      &lt;Variable name=3D"EMULATED"&gt;=0A=
+        &lt;RoleInstanceValue =
+xpath=3D"/RoleEnvironment/Deployment/@emulated" /&gt;=0A=
+      &lt;/Variable&gt;=0A=
+    &lt;/Environment&gt;=0A=
+  &lt;/Task&gt;=0A=
+&lt;/Startup&gt;=0A=
+</TEXTAREA>=20
+       =20
+<P class=3D"hint">            (If you have Microsoft Azure Tools 2.4 or =
+later,=20
+this code has            already been added.)         </P></DIV>
+<H1>Configuring Deployment</H1>
+<P>        While the code above and the included PowerShell scripts may =
+be=20
+edited        freely, it is possible to set most configuration options =
+through=20
+your        Python project.     </P>
+<P>        To specify the version of Python your web should run with, =
+make it   =20
+    the active environment for your project. (Ensure that you have a =
+WebPI      =20
+ reference or startup task to install this version on the instance - see =
+      =20
+the documentation in <CODE>ConfigureCloudService.ps1</CODE> for more     =
+  =20
+details.)     </P>
+<P>        If your version of Python cannot be detected using the =
+CPython=20
+registry        keys after it has been installed, you can add the        =
+=20
+<CODE>DeployedPythonInterpreterPath</CODE> property to your Python       =
+=20
+project by editing the .pyproj file. This path will take precedence over =
+      =20
+the active environment.     </P>
+<P>        To install packages using pip, update the=20
+<CODE>requirements.txt</CODE>        file in the root directory of your =
+project.=20
+    </P>
+<P>        To set <CODE>PYTHONPATH</CODE> (or equivalent) before running =
+the    =20
+   web, add the necessary Search Paths to your project.     </P>
+<P>        To specify your main handler script, make it the startup file =
+in your=20
+       project. Alternatively, you can set the full importable name of =
+your     =20
+  WSGI app in Project Properties\Web\WSGI Handler.     </P>
+<H1>Troubleshooting Deployment</H1>
+<P>If your web role does not behave correctly after deployment, check =
+the=20
+following:</P>
+<OL>
+  <LI>
+  <P>Your Python project includes a bin\ folder with (at least):</P>
+  <UL>
+    <LI><CODE>ConfigureCloudService.ps1</CODE></LI>
+    <LI><CODE>ps.cmd</CODE></LI></UL></LI>
+  <LI>
+  <P>Your Cloud project includes the above XML and the command lines =
+match.</P>
+  <P>Earlier versions of PTVS would create similar XML with a different =
+command =20
+               line. If this exists, it should be removed when you add =
+the above=20
+  XML.</P></LI>
+  <LI>
+  <P>Your Python project includes either:</P>
+  <UL>
+    <LI>a <CODE>requirements.txt</CODE> file listing all dependencies, =
+OR</LI>
+    <LI>a virtual environment containing all =
+dependencies.</LI></UL></LI>
+  <LI>
+  <P>Enable Remote Desktop on your Cloud Service and investigate the log =
+
+  files.</P>
+  <P>Logs for ConfigureCloudService.ps1 are stored in the following path =
+on the=20
+  machine instance:</P>
+  <UL>
+    =
+<LI><CODE>C:\Resources\Directory\%RoleId%.DiagnosticStore\LogFiles</CODE>=
+</LI></UL></LI>
+  <LI>            Start a discussion at             <A =
+href=3D"http://go.microsoft.com/fwlink/?LinkId=3D293415">our=20
+  discussion forum</A>            for further help.         </LI></OL>
+<HR>
+
+<P class=3D"hint">This readme file may be deleted when you no longer =
+need=20
+it.</P></BODY></HTML>
+
+------=_NextPart_000_0000_01CFB22A.90418FA0
+Content-Type: image/png
+Content-Transfer-Encoding: base64
+Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/Templates/SharedFiles/Readme/ServiceDefinition.png
+
+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
+ipUCyXOv/j9FmrG1Vlw4sQAAAABJRU5ErkJggg==
+
+------=_NextPart_000_0000_01CFB22A.90418FA0
+Content-Type: text/css;
+	charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/ReadmeStyle.css
+
+body {
+	font-family: "Segoe UI", Arial, Helvetica, sans-serif; font-size: 11pt; =
+font-weight: 200;
+}
+p {
+	margin: 0px; padding: 0px;
+}
+h1 {
+	margin: 0px; padding: 0px;
+}
+h2 {
+	margin: 0px; padding: 0px;
+}
+h1 {
+	padding-top: 1em; font-size: 20pt; font-weight: bold;
+}
+h1.top {
+	padding-top: 0em;
+}
+h2 {
+	padding-top: 0.5em; padding-left: 0em; font-size: 16pt; font-weight: =
+300;
+}
+p {
+	padding-bottom: 0.5em; padding-left: 0.5em;
+}
+p.hint {
+	color: rgb(102, 102, 102);
+}
+code {
+	font-family: Consolas, "Lucida Console", monospace;
+}
+ol {
+	padding-top: 0px; margin-top: 0px;
+}
+ol > li {
+	padding-top: 1.5em;
+}
+li > img {
+	vertical-align: middle;
+}
+
+------=_NextPart_000_0000_01CFB22A.90418FA0--

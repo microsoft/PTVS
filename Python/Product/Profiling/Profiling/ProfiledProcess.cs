@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.Profiling {
             _arch = arch;
 
             ProcessStartInfo processInfo;
-            string pythonInstallDir = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("VsPyProf.dll"));
+            string pythonInstallDir = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("VsPyProf.dll", typeof(ProfiledProcess).Assembly));
             string dll = _arch == ProcessorArchitecture.Amd64 ? "VsPyProf.dll" : "VsPyProfX86.dll";
             string arguments = "\"" + Path.Combine(pythonInstallDir, "proflaun.py") + "\" " +
                 "\"" + Path.Combine(pythonInstallDir, dll) + "\" " +

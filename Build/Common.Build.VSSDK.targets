@@ -5,13 +5,13 @@
   
   By default, we don't even create a VSIX, since the project may contain
   exactly one template that is referenced by a single project that creates
-  the VSIX. This last project explicitly sets CreateVisxContainer to true.
+  the VSIX. This last project explicitly sets CreateVsixContainer to true.
   -->
   <PropertyGroup Condition="$(UseVSSDKTemplateOnly)">
     <CreateVsixContainer Condition="'$(CreateVsixContainer)' == ''">false</CreateVsixContainer>
     <CopyVsixManifestToOutput>$(CreateVsixContainer)</CopyVsixManifestToOutput>
     <GeneratePkgDefFile Condition="'$(GeneratePkgDefFile)' == ''">false</GeneratePkgDefFile>
-    <DeployExtension>false</DeployExtension>
+    <DeployExtension Condition="'$(DeployExtension)' == ''">false</DeployExtension>
     <CopyBuildOutputToOutputDirectory>false</CopyBuildOutputToOutputDirectory>
     <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
     <IncludeVSIXItemsFromTargets>BuiltVsixTemplateItems</IncludeVSIXItemsFromTargets>
@@ -76,7 +76,8 @@
   </Target>
 
   <PropertyGroup>
-    <VSSDKTargets>$(BuildRoot)\BuildOutput\Microsoft.VSSDK.BuildTools.14.0.23205\tools\VSSDK\Microsoft.VsSDK.targets</VSSDKTargets>
+    <VSSDKTargets Condition="$(VSTarget) == '14.0'">$(BuildOutputRoot)Microsoft.VSSDK.BuildTools.14.0.23205\tools\VSSDK\Microsoft.VsSDK.targets</VSSDKTargets>
+    <VSSDKTargets Condition="$(VSTarget) == '15.0'">$(BuildOutputRoot)Microsoft.VSSDK.BuildTools.15.0.25001-Dev15CTP1\tools\VSSDK\Microsoft.VsSDK.targets</VSSDKTargets>
   </PropertyGroup>
   
   <!-- Import the VS SDK headers -->

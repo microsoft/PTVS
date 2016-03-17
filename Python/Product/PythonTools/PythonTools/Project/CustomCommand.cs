@@ -188,7 +188,7 @@ namespace Microsoft.PythonTools.Project {
         ) {
             var commandNames = project.GetPropertyValue(PythonCommands);
             if (!string.IsNullOrEmpty(commandNames)) {
-                foreach (var name in commandNames.Split(';').Where(n => !string.IsNullOrEmpty(n)).Distinct()) {
+                foreach (var name in commandNames.Split(';').Select(s => s.Trim()).Where(n => !string.IsNullOrEmpty(n)).Distinct()) {
                     ProjectTargetInstance targetInstance;
                     if (!project.Targets.TryGetValue(name, out targetInstance)) {
                         continue;
@@ -595,6 +595,7 @@ namespace Microsoft.PythonTools.Project {
             bool created;
             var replWindow = replProvider.OpenOrCreateTemporary(replWindowId, replTitle, out created);
 
+            // TODO: Find alternative way of closing repl window on Dev15
             var replFrame = (replWindow as ToolWindowPane)?.Frame as IVsWindowFrame;
 
             var interactive = replWindow.InteractiveWindow;
@@ -619,11 +620,7 @@ namespace Microsoft.PythonTools.Project {
 
             project.AddActionOnClose((object)replWindow, InteractiveWindowProvider.Close);
 
-            var pane = replWindow as ToolWindowPane;
-            var frame = pane != null ? pane.Frame as IVsWindowFrame : null;
-            if (frame != null) {
-                ErrorHandler.ThrowOnFailure(frame.Show());
-            }
+            replWindow.Show(true);
 
             var result = await pyEvaluator.ResetAsync(false, quiet: true);
 

@@ -5,6 +5,17 @@
 
     <?include ..\MergeModule.wxi ?>
 
+    <?foreach key in VS;WD;VWD?>
+    <DirectoryRef Id="Dir_$(var.key)ItemTemplates">
+      <Directory Id="Dir_$(var.key)ItemTemplates_WpfWindow" Name="WpfWindow" />
+    </DirectoryRef>
+    <DirectoryRef Id="Dir_$(var.key)ProjectTemplates">
+      <?foreach temp in SilverlightProject;WinformsProject;WpfProject;ConsoleProject?>
+        <Directory Id="Dir_$(var.key)ProjectTemplates_$(var.temp)" Name="$(var.temp)" />
+      <?endforeach?>
+    </DirectoryRef>
+    <?endforeach?>
+
     <Component Id="PerUserInstallRegistry" Directory="Dir_VSInstallLocation" Guid="{B2C46CB0-DF28-4540-BC7F-29B0EA636055}">
       <Condition>NOT ALLUSERS = 1</Condition>
       <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>

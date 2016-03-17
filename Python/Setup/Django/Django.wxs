@@ -5,6 +5,22 @@
 
     <?include ..\MergeModule.wxi ?>
 
+    <?foreach key in VS;WD;VWD?>
+    <DirectoryRef Id="Dir_$(var.key)WebProjectTemplates">
+      <Directory Id="Dir_$(var.key)WebProjectTemplates_DjangoProject" Name="DjangoProject" />
+      <Directory Id="Dir_$(var.key)WebProjectTemplates_StarterDjangoProject" Name="StarterDjangoProject" />
+      <Directory Id="Dir_$(var.key)WebProjectTemplates_DjangoWebRole" Name="DjangoWebRole" />
+    </DirectoryRef>
+    <DirectoryRef Id="Dir_$(var.key)ItemTemplates">
+      <Directory Id="Dir_$(var.key)ItemTemplates_DjangoNewAppFiles14" Name="DjangoNewAppFiles14" />
+      <Directory Id="Dir_$(var.key)ItemTemplates_DjangoNewAppFiles19" Name="DjangoNewAppFiles19" />
+    </DirectoryRef>
+    <DirectoryRef Id="Dir_$(var.key)ItemTemplates_CloudService_WebRole">
+      <Directory Id="Dir_$(var.key)ItemTemplates_CloudService_WebRole_Django" Name="CloudServiceDjangoWebRole" />
+    </DirectoryRef>
+    <?endforeach?>
+
+
     <Component Id="PerUserInstallRegistry" Directory="Dir_VSInstallLocation" Guid="{4B9498D3-AA15-4DA7-951B-47A49883AF73}">
       <Condition>NOT ALLUSERS = 1</Condition>
       <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>

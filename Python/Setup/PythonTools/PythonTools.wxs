@@ -13,7 +13,7 @@
     <?foreach key in VS;WD;VWD?>
     <DirectoryRef Id="Dir_$(var.key)InstallLocation">
       <Directory Id="Dir_$(var.key)InstallLocationTemplates" Name="Templates">
-        <Directory Id="Dir_$(var.key)FileTemplate" Name="NewItem" />
+        <Directory Id="Dir_$(var.key)NewFileItems" Name="NewFileItems" />
       </Directory>
       <Directory Id="Dir_$(var.key)CompletionDB" Name="CompletionDB" />
       <Directory Id="Dir_$(var.key)Snippets" Name="Snippets">
@@ -23,6 +23,33 @@
         </Directory>
       </Directory>
     </DirectoryRef>
+    <DirectoryRef Id="Dir_$(var.key)ItemTemplates_CloudService_WebRole">
+      <Directory Id="Dir_$(var.key)ItemTemplates_CloudService_WebRole_Bottle" Name="CloudServiceBottleWebRole" />
+      <Directory Id="Dir_$(var.key)ItemTemplates_CloudService_WebRole_Empty" Name="CloudServiceEmptyWebRole" />
+      <Directory Id="Dir_$(var.key)ItemTemplates_CloudService_WebRole_Flask" Name="CloudServiceFlaskWebRole" />
+    </DirectoryRef>
+    <DirectoryRef Id="Dir_$(var.key)ItemTemplates_CloudService_WorkerRole">
+      <Directory Id="Dir_$(var.key)ItemTemplates_CloudService_WorkerRole_Worker" Name="CloudServiceWorkerRole" />
+    </DirectoryRef>
+    
+    <DirectoryRef Id="Dir_$(var.key)ItemTemplates">
+      <?foreach temp in EmptyPackage;EmptyPyFile;PyClass;TextFile;HTMLFile;JavaScript;Stylesheet;AzureCSWorkerRole;AzureCSWebRole;UnitTestFile?>
+        <Directory Id="Dir_$(var.key)ItemTemplates_$(var.temp)" Name="$(var.temp)" />
+      <?endforeach?>
+    </DirectoryRef>
+    <DirectoryRef Id="Dir_$(var.key)ProjectTemplates">
+      <?foreach temp in ConsoleAppProject;FromExistingCode?>
+        <Directory Id="Dir_$(var.key)ProjectTemplates_$(var.temp)" Name="$(var.temp)" />
+      <?endforeach?>
+    </DirectoryRef>
+    
+    <?if not $(var.key)=WD?>
+    <DirectoryRef Id="Dir_$(var.key)WebProjectTemplates">
+      <?foreach temp in EmptyWebProject;StarterBottleProject;StarterFlaskJadeProject;StarterFlaskProject;WebProjectBottle;WebProjectFlask;CloudService;WorkerRoleProject;EmptyWebRole;WebRoleBottle;WebRoleFlask?>
+        <Directory Id="Dir_$(var.key)WebProjectTemplates_$(var.temp)" Name="$(var.temp)" />
+      <?endforeach?>
+    </DirectoryRef>
+    <?endif?>
     <?endforeach?>
 
     <Configuration Name="Config_StartMenuLocation" Format="Key" Type="Identifier" DefaultValue="TARGETDIR" />

@@ -44,10 +44,25 @@
     <Reference Include="Accessibility">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="envdte, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="envdte100, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="envdte80, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="envdte90, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="envdte90a, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.VisualStudio.CommandBars, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop, Version=8.0.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
@@ -88,6 +103,9 @@
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="PresentationUI, Version=4.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35" />
+    <Reference Include="stdole, Version=7.0.3300.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
@@ -103,14 +121,6 @@
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="WindowsBase" />
-    <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-      <HintPath>..\PythonTools\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-      <HintPath>..\PythonTools\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
     <Reference Include="Microsoft.Web.Core, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\Microsoft.Web.Core.dll</HintPath>
     </Reference>
@@ -129,65 +139,15 @@
     <Reference Include="Microsoft.VisualStudio.Web.HTML, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(DevEnvDir)Microsoft.VisualStudio.Web.Html.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop.$(VSTarget).DesignTime, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.14.0.DesignTime, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <COMReference Include="EnvDTE">
-      <Guid>{80CC9F66-E7D8-4DDD-85B6-D9E6CD0E93E2}</Guid>
-      <VersionMajor>8</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>primary</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </COMReference>
-    <COMReference Include="EnvDTE100">
-      <Guid>{26AD1324-4B7C-44BC-84F8-B86AED45729F}</Guid>
-      <VersionMajor>10</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>primary</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </COMReference>
-    <COMReference Include="EnvDTE80">
-      <Guid>{1A31287A-4D7D-413E-8E32-3B374931BD89}</Guid>
-      <VersionMajor>8</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>primary</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </COMReference>
-    <COMReference Include="EnvDTE90">
-      <Guid>{2CE2370E-D744-4936-A090-3FFFE667B0E1}</Guid>
-      <VersionMajor>9</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>primary</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </COMReference>
-    <COMReference Include="Microsoft.VisualStudio.CommandBars">
-      <Guid>{1CBA492E-7263-47BB-87FE-639000619B15}</Guid>
-      <VersionMajor>8</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>primary</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </COMReference>
-    <COMReference Include="stdole">
-      <Guid>{00020430-0000-0000-C000-000000000046}</Guid>
-      <VersionMajor>2</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>primary</WrapperTool>
-      <Isolated>False</Isolated>
-      <EmbedInteropTypes>False</EmbedInteropTypes>
-    </COMReference>
+    <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
+      <Private>false</Private>
+    </Reference>
   </ItemGroup>
   <ItemDefinitionGroup>
     <ZipProject>
@@ -198,86 +158,6 @@
       <Language>Python</Language>
     </ZipItem>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <!-- Item Templates -->
-    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\DjangoNewAppFiles.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\DjangoTemplate.html" />
-    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\models.py" />
-    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\tests.py" />
-    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\views.py" />
-    <ZipItem Include="Templates\Files\DjangoNewAppFiles14\__init__.py" />
-    <ZipItem Include="Templates\Files\CloudServiceDjangoWebRole\CloudServiceDjangoWebRole.vstemplate">
-      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
-      <Language>CloudService</Language>
-    </ZipItem>
-    <ZipItem Include="Templates\Files\CloudServiceDjangoWebRole\roletemplatedata.xml">
-      <OutputSubPath>NETFramework4\Web Role\Python</OutputSubPath>
-      <Language>CloudService</Language>
-      <SubType>Designer</SubType>
-    </ZipItem>
-  </ItemGroup>
-  <ItemGroup>
-    <!-- Web Project Templates -->
-    <ZipProject Include="Templates\Projects\DjangoProject\settings.py" />
-    <ZipProject Include="Templates\Projects\DjangoProject\urls.py" />
-    <ZipProject Include="Templates\Projects\DjangoProject\wsgi.py" />
-    <ZipProject Include="Templates\Projects\DjangoProject\__init__.py" />
-    <ZipProject Include="Templates\Projects\DjangoProject\manage.py" />
-    <ZipProject Include="Templates\Projects\DjangoProject\DjangoApp.pyproj">
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\DjangoProject\DjangoApp.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\manage.py" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\app-__init__.py" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\app-forms.py" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\app-models.py" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\app-tests.py" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\app-views.py" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\project-__init__.py" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\project-settings.py" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\project-urls.py" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\project-wsgi.py" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\bootstrap.css" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\bootstrap.min.css" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\site.css" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\glyphicons-halflings-regular.svg" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\bootstrap.js" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\bootstrap.min.js" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery-1.10.2.intellisense.js" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery-1.10.2.js" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery-1.10.2.min.js" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery.validate-vsdoc.js" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery.validate.js" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery.validate.min.js" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery.validate.unobtrusive.js" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery.validate.unobtrusive.min.js" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\modernizr-2.6.2.js" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\respond.js" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\respond.min.js" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\_references.js" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\glyphicons-halflings-regular.eot" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\glyphicons-halflings-regular.ttf" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\glyphicons-halflings-regular.woff" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\jquery-1.10.2.min.map" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\about.html" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\contact.html" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\index.html" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\layout.html" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\login.html" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\loginpartial.html" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\requirements.txt" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\StarterDjangoProject.png" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\StarterDjangoProject.pyproj">
-      <SubType>Designer</SubType>
-    </ZipProject>
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\StarterDjangoProject.vstemplate">
-      <SubType>Designer</SubType>
-    </ZipProject>
-  </ItemGroup>
   <ItemGroup>
     <Compile Include="$(BuildRoot)\Common\Product\SharedProject\SolutionListener.cs">
       <Link>Project\SolutionListener.cs</Link>
@@ -362,11 +242,6 @@
     <Compile Include="TemplateParsing\TemplateTokenKind.cs" />
     <Compile Include="Utilities.cs" />
     <Compile Include="VsMenus.cs" />
-    <ZipProject Include="Templates\Projects\DjangoProject\requirements.txt" />
-    <Resource Include="Templates\Projects\StarterDjangoProject\Readme\SyncDB.png" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\readme.mht" />
-    <ZipProject Include="Templates\Projects\StarterDjangoProject\db.sqlite3" />
-    <None Include="Templates\Projects\StarterDjangoProject\Readme\readme.html" />
     <Content Include="Microsoft.PythonTools.Django.targets">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -392,14 +267,6 @@
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
-    <ZipProject Include="Templates\Projects\DjangoWebRole\DjangoWebRole.vstemplate" />
-    <ZipProject Include="Templates\Projects\DjangoWebRole\DjangoWebRole.pyproj" />
-    <ZipProject Include="Templates\Projects\DjangoWebRole\requirements.txt" />
-    <ZipProject Include="Templates\Projects\DjangoWebRole\manage.py" />
-    <ZipProject Include="Templates\Projects\DjangoWebRole\settings.py" />
-    <ZipProject Include="Templates\Projects\DjangoWebRole\urls.py" />
-    <ZipProject Include="Templates\Projects\DjangoWebRole\wsgi.py" />
-    <ZipProject Include="Templates\Projects\DjangoWebRole\__init__.py" />
   </ItemGroup>
   <ItemGroup>
     <VSCTCompile Include="Django.vsct">
@@ -462,23 +329,6 @@
   <Target Name="AfterBuild">
   </Target>
   -->
-  <ItemGroup>
-    <SharedTemplateFiles Include="..\PythonTools\Templates\SharedFiles\WebRoleConfiguration.mht">
-      <Link>Templates\SharedFiles\WebRoleConfiguration.mht</Link>
-      <Type>Project</Type>
-      <TargetPath>Templates\Projects\DjangoWebRole\WebRoleConfiguration.mht</TargetPath>
-    </SharedTemplateFiles>
-    <SharedTemplateFiles Include="..\PythonTools\Templates\SharedFiles\ConfigureCloudService.ps1">
-      <Link>Templates\SharedFiles\ConfigureCloudService.ps1</Link>
-      <Type>Project</Type>
-      <TargetPath>Templates\Projects\DjangoWebRole\ConfigureCloudService.ps1</TargetPath>
-    </SharedTemplateFiles>
-    <SharedTemplateFiles Include="..\PythonTools\Templates\SharedFiles\ps.cmd">
-      <Link>Templates\SharedFiles\ps.cmd</Link>
-      <Type>Project</Type>
-      <TargetPath>Templates\Projects\DjangoWebRole\ps.cmd</TargetPath>
-    </SharedTemplateFiles>
-  </ItemGroup>
   <Target Name="_CopySharedTemplateFiles" BeforeTargets="GetZipFilesFromVSTemplates" Inputs="@(SharedTemplateFiles)" Outputs="%(SharedTemplateFiles.TargetPath)">
     <Copy SourceFiles="@(SharedTemplateFiles)" DestinationFiles="%(SharedTemplateFiles.TargetPath)" OverwriteReadOnlyFiles="true">
       <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
