@@ -24,9 +24,9 @@
 
     <ProjectFile Include="PythonTools\PythonTools.csproj"/>
 
-    <ProjectFile Include="IronPythonResolver\IronPythonResolver.csproj"/>
-    <ProjectFile Include="IronPython\IronPython.Interpreter.csproj"/>
-    <ProjectFile Include="IronPython\IronPython.csproj"/>
+    <ProjectFile Include="IronPythonResolver\IronPythonResolver.csproj" Condition="'$(IncludeIronPython)' == 'True'"/>
+    <ProjectFile Include="IronPython\IronPython.Interpreter.csproj" Condition="'$(IncludeIronPython)' == 'True'"/>
+    <ProjectFile Include="IronPython\IronPython.csproj" Condition="'$(IncludeIronPython)' == 'True'"/>
 
     <ProjectFile Include="VsPyProf\VsPyProf.vcxproj"/>
     <ProjectFile Include="VsPyProf\VsPyProfX86.vcxproj"/>
@@ -42,9 +42,9 @@
     <ProjectFile Include="AnalysisMemoryTester\AnalysisMemoryTester.csproj" Condition="$(VSTarget) != '15.0'" />
     <ProjectFile Include="EnvironmentsListHost\EnvironmentsListHost.csproj" Condition="$(VSTarget) != '15.0'" />
 
-    <ProjectFile Include="ML\ML.csproj" Condition="$(IncludeML)"/>
+    <ProjectFile Include="ML\ML.csproj" Condition="'$(IncludeML)' == 'True'"/>
     
-    <ProjectFile Include="Uwp\Uwp.csproj"/>
+    <ProjectFile Include="Uwp\Uwp.csproj" Condition="'$(IncludeUwp)' == 'True'"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
