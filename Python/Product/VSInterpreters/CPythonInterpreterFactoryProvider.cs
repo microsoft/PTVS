@@ -176,7 +176,7 @@ namespace Microsoft.PythonTools.Interpreter {
             ProcessorArchitecture? arch2;
 
             using (var interpKey = vendorKey.OpenSubKey(key)) {
-                var versionValue = interpKey.GetValue("Version") as string;
+                var versionValue = interpKey.GetValue("SysVersion") as string;
                 if (!TryParsePythonVersion(versionValue, out version, out arch2) &&
                     !TryParsePythonVersion(key, out version, out arch2)) {
                     version = new Version(2, 7);

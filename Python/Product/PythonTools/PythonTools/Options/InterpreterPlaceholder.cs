@@ -20,9 +20,10 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Options {
     class InterpreterPlaceholder : IPythonInterpreterFactory {
+        public const string PlaceholderId = "Placeholder";
         public InterpreterPlaceholder(string id, string description) {
             Configuration = new InterpreterConfiguration(
-                "PlaceHolder;" + id.ToString(),
+                PlaceholderId + ";" + id.ToString(),
                 description,
                 null,
                 null,

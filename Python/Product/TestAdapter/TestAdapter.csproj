@@ -131,6 +131,7 @@
     <Compile Include="..\..\..\Common\Product\TestAdapter\TestFilesUpdateWatcher.cs">
       <Link>TestFilesUpdateWatcher.cs</Link>
     </Compile>
+    <Compile Include="TestExecutorProjectContext.cs" />
     <Compile Include="TestMethodResolver.cs" />
     <Compile Include="..\..\..\Common\Product\TestAdapter\VsProjectExtensions.cs">
       <Link>VsProjectExtensions.cs</Link>

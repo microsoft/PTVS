@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Commands {
 #endif
 
                 var pyService = serviceProvider.GetPythonToolsService();
-                window.InteractiveWindow.SetSmartUpDown(pyService.GetInteractiveOptions(factory).ReplSmartHistory);
+                window.InteractiveWindow.SetSmartUpDown(pyService.GetInteractiveOptions(factory.Configuration).ReplSmartHistory);
             }
 
             

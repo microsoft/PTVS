@@ -136,11 +136,18 @@ namespace Microsoft.PythonTools.Intellisense {
 
             Task.Run(() => _conn.ProcessMessages());
 
-            var settings = SettingsManagerCreator.GetSettingsManager(serviceProvider).GetReadOnlySettingsStore(SettingsScope.Configuration);
+            // load the interpreter factories available inside of VS into the remote process
+            var providers = new HashSet<string>(
+                    serviceProvider.GetComponentModel().GetExtensions<IPythonInterpreterFactoryProvider>()
+                        .Select(x => x.GetType().Assembly.Location),
+                    StringComparer.OrdinalIgnoreCase
+            );
+            providers.Add(typeof(IInterpreterOptionsService).Assembly.Location);
+                
             var initialize = new AP.InitializeRequest() {
                 interpreterId = factory.Configuration.Id,
                 projectFile = projectFile,
-                mefExtensions = InterpreterOptionsServiceProvider.GetProviderPaths(settings, typeof(IInterpreterOptionsService)).ToArray()
+                mefExtensions = providers.ToArray()
             };
 
             SendRequestAsync(initialize).ContinueWith(
@@ -1115,7 +1122,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal bool ShouldEvaluateForCompletion(string source) {
-            switch (_pyService.GetInteractiveOptions(_interpreterFactory).ReplIntellisenseMode) {
+            switch (_pyService.GetInteractiveOptions(_interpreterFactory.Configuration).ReplIntellisenseMode) {
                 case ReplIntellisenseMode.AlwaysEvaluate: return true;
                 case ReplIntellisenseMode.NeverEvaluate: return false;
                 case ReplIntellisenseMode.DontEvaluateCalls:

@@ -49,17 +49,32 @@ namespace Microsoft.PythonTools {
         }
 
         public static T GetService<T>(IServiceProvider serviceProvider) {
+            CompositionContainer container = CreateContainer(serviceProvider, typeof(T));
+
+            return container.GetExportedValue<T>();
+        }
+
+        public static CompositionContainer CreateContainer(VisualStudioProxy app, params Type[] additionalTypes) {
+            if (app != null) {
+                var sp = new ServiceProvider(app.GetDTE() as IOleServiceProvider);
+
+                return CreateContainer(sp, additionalTypes);
+            } else {
+                return CreateContainer(ServiceProvider.GlobalProvider, additionalTypes);
+            }
+        }
+
+        public static CompositionContainer CreateContainer(IServiceProvider serviceProvider, params Type[] additionalTypes) {
             var settings = SettingsManagerCreator.GetSettingsManager(serviceProvider);
             var store = settings.GetReadOnlySettingsStore(SettingsScope.Configuration);
             IVsActivityLog activityLog = serviceProvider.GetService(typeof(SVsActivityLog)) as IVsActivityLog;
-            var paths = GetProviderPaths(
-                store,
-                typeof(T)
-            );
+            var paths = GetProviderPaths(store);
+            foreach (var type in additionalTypes) {
+                paths.Add(type.Assembly.Location);
+            }
 
             var container = CreateCatelog(paths, activityLog);
-
-            return container.GetExportedValue<T>();
+            return container;
         }
 
         private static void LoadOneProvider(
@@ -98,12 +113,12 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        public static IEnumerable<string> GetProviderPaths(SettingsStore store, Type type) {
+        public static HashSet<string> GetProviderPaths(SettingsStore store) {
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var catalog = new List<ComposablePartCatalog>();
 
             if (store.CollectionExists(SuppressFactoryProvidersCollection)) {
-                return Array.Empty<string>();
+                return seen;
             }
 
             if (store.CollectionExists(FactoryProvidersCollection)) {
@@ -141,9 +156,6 @@ namespace Microsoft.PythonTools {
                 }
             }
 
-            if (type != null) {
-                seen.Add(type.Assembly.Location);
-            }
             return seen;
         }
 

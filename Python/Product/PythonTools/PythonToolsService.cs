@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools {
         private readonly GeneralOptions _generalOptions;
         private readonly PythonInteractiveCommonOptions _debugInteractiveOptions;
         private readonly GlobalInterpreterOptions _globalInterpreterOptions;
-        internal readonly Dictionary<IPythonInterpreterFactory, PythonInteractiveOptions> _interactiveOptions = new Dictionary<IPythonInterpreterFactory, PythonInteractiveOptions>();
+        internal readonly Dictionary<string, PythonInteractiveOptions> _interactiveOptions = new Dictionary<string, PythonInteractiveOptions>();
         internal readonly Dictionary<IPythonInterpreterFactory, InterpreterOptions> _interpreterOptions = new Dictionary<IPythonInterpreterFactory, InterpreterOptions>();
         private readonly SurveyNewsService _surveyNews;
         private readonly IdleManager _idleManager;
@@ -574,7 +574,7 @@ namespace Microsoft.PythonTools {
         internal void AddInterpreterOptions(IPythonInterpreterFactory interpreterFactory, InterpreterOptions options, bool addInteractive = false) {
             _interpreterOptions[interpreterFactory] = options;
             if (addInteractive) {
-                _interactiveOptions[interpreterFactory] = options.InteractiveOptions;
+                _interactiveOptions[interpreterFactory.Configuration.Id] = options.InteractiveOptions;
             }
             RaiseEnvironmentsChanged();
         }
@@ -637,28 +637,28 @@ namespace Microsoft.PythonTools {
 
         #region Interactive Options
 
-        internal PythonInteractiveOptions GetInteractiveOptions(IPythonInterpreterFactory interpreterFactory) {
+        internal PythonInteractiveOptions GetInteractiveOptions(InterpreterConfiguration config) {
             PythonInteractiveOptions options;
-            if (!_interactiveOptions.TryGetValue(interpreterFactory, out options)) {
-                var path = GetInteractivePath(interpreterFactory);
-                _interactiveOptions[interpreterFactory] = options = new PythonInteractiveOptions(_container, this, "Interactive Windows", path);
+            if (!_interactiveOptions.TryGetValue(config.Id, out options)) {
+                var path = config.Id;
+                _interactiveOptions[config.Id] = options = new PythonInteractiveOptions(_container, this, "Interactive Windows", path);
                 options.Load();
             }
             return options;
         }
 
-        internal IEnumerable<KeyValuePair<IPythonInterpreterFactory, PythonInteractiveOptions>> InteractiveOptions {
+        internal IEnumerable<KeyValuePair<string, PythonInteractiveOptions>> InteractiveOptions {
             get {
                 return _interactiveOptions;
             }
         }
 
-        internal void AddInteractiveOptions(IPythonInterpreterFactory interpreterFactory, PythonInteractiveOptions options) {
-            _interactiveOptions[interpreterFactory] = options;
+        internal void AddInteractiveOptions(string id , PythonInteractiveOptions options) {
+            _interactiveOptions[id] = options;
         }
 
         internal void RemoveInteractiveOptions(IPythonInterpreterFactory interpreterFactory) {
-            _interactiveOptions.Remove(interpreterFactory);
+            _interactiveOptions.Remove(interpreterFactory.Configuration.Id);
         }
 
         internal void ClearInteractiveOptions() {

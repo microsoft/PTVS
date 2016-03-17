@@ -26,6 +26,8 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         IEnumerable<IPythonInterpreterFactory> Interpreters { get; }
 
+        IEnumerable<InterpreterConfiguration> Configurations { get; }
+
         /// <summary>
         /// Returns a sequence of available interpreters. If no interpreters are
         /// available, the sequence contains only

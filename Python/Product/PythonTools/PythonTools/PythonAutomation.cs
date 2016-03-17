@@ -210,7 +210,7 @@ namespace Microsoft.PythonTools {
 
         internal PythonInteractiveOptions CurrentOptions {
             get {
-                return _serviceProvider.GetPythonToolsService().GetInteractiveOptions(_interpreterFactory);
+                return _serviceProvider.GetPythonToolsService().GetInteractiveOptions(_interpreterFactory.Configuration);
             }
         }
 

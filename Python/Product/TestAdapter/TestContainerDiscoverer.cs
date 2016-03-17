@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
@@ -62,7 +63,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             ValidateArg.NotNull(testFilesUpdateWatcher, "testFilesUpdateWatcher");
             ValidateArg.NotNull(testFilesAddRemoveListener, "testFilesAddRemoveListener");
             ValidateArg.NotNull(operationState, "operationState");
-
             _fileRootMap = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             _knownProjects = new Dictionary<string, ProjectInfo>(StringComparer.OrdinalIgnoreCase);
 
@@ -264,14 +264,8 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (e.Project.TryGetProjectPath(out path) &&
                     !_knownProjects.ContainsKey(path)) {
                     var dteProject = ((IVsHierarchy)e.Project).GetProject();
-                    // TODO: Fix me
-                    //var interpFact = null; //(MSBuildProjectInterpreterFactoryProvider)dteProject.Properties.Item("InterpreterFactoryProvider").Value;
 
-                    var projectInfo = new ProjectInfo(
-                        e.Project,
-                        this/*,
-                        interpFact*/
-                    );
+                    var projectInfo = new ProjectInfo(e.Project, this);
 
                     _knownProjects.Add(path, projectInfo);
 
@@ -469,8 +463,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         class ProjectInfo {
             public readonly IVsProject Project;
             public readonly TestContainerDiscoverer Discoverer;
-            //public readonly MSBuildProjectInterpreterFactoryProvider FactoryProvider;
-            public IPythonInterpreterFactory ActiveInterpreter;
+
             /// <summary>
             /// used to track when the test window has asked us for tests from this project, 
             /// so we don't deliver events before it's ready.  It will ask when the project 
@@ -481,49 +474,22 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             public ProjectInfo(IVsProject project, TestContainerDiscoverer discoverer/*, MSBuildProjectInterpreterFactoryProvider factoryProvider*/) {
                 Project = project;
+                IProjectInterpreterDbChanged dbChanged = Project as IProjectInterpreterDbChanged;
+                if (dbChanged != null) {
+                    dbChanged.InterpreterDbChanged += DatabaseChanged;
+                }
                 Discoverer = discoverer;
-                //FactoryProvider = factoryProvider;
-                //ActiveInterpreter = FactoryProvider.ActiveInterpreter;
-                ActiveInterpreter = null;
-
-                Attach();
-                HookNewDatabaseAvailable();
-            }
-
-            private void ActiveInterpreterChanged(object sender, EventArgs args) {
-                UnhookDatabaseCurrentChanged();
-
-                //ActiveInterpreter = FactoryProvider.ActiveInterpreter;
-
-                HookNewDatabaseAvailable();
-
-                Discoverer.OnTestContainersChanged(Project);
-            }
-
-            private void HookNewDatabaseAvailable() {
-                var dbInterp = ActiveInterpreter as PythonInterpreterFactoryWithDatabase;
-                if (dbInterp != null) {
-                    dbInterp.NewDatabaseAvailable += DatabaseChanged;
-                }
-            }
-
-            private void UnhookDatabaseCurrentChanged() {
-                var dbInterp = ActiveInterpreter as PythonInterpreterFactoryWithDatabase;
-                if (dbInterp != null) {
-                    dbInterp.NewDatabaseAvailable -= DatabaseChanged;
-                }
             }
 
             private void DatabaseChanged(object sender, EventArgs args) {
                 Discoverer.OnTestContainersChanged(Project);
             }
 
-            internal void Attach() {
-                //FactoryProvider.ActiveInterpreterChanged += ActiveInterpreterChanged;
-            }
-
             internal void Detach() {
-                //FactoryProvider.ActiveInterpreterChanged -= ActiveInterpreterChanged;
+                IProjectInterpreterDbChanged dbChanged = Project as IProjectInterpreterDbChanged;
+                if (dbChanged != null) {
+                    dbChanged.InterpreterDbChanged -= DatabaseChanged;
+                }
             }
         }
     }

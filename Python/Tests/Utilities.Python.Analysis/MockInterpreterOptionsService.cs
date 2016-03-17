@@ -64,6 +64,10 @@ namespace TestUtilities.Python {
             get { return _providers.Where(p => p != null).SelectMany(p => p.GetInterpreterFactories()); }
         }
 
+        public IEnumerable<InterpreterConfiguration> Configurations {
+            get { return _providers.Where(p => p != null).SelectMany(p => p.GetInterpreterFactories()).Select(x => x.Configuration); }
+        }
+
         public IEnumerable<IPythonInterpreterFactory> InterpretersOrDefault {
             get {
                 if (Interpreters.Any()) {

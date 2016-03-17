@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -51,11 +52,13 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly ManualResetEvent _cancelRequested = new ManualResetEvent(false);
 
         private readonly VisualStudioProxy _app;
+        private readonly CompositionContainer _container;
         private readonly IInterpreterOptionsService _interpreterService;
 
         public TestExecutor() {
             _app = VisualStudioProxy.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
-            _interpreterService = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(_app);
+            _container = InterpreterOptionsServiceProvider.CreateContainer(_app, typeof(IInterpreterOptionsService), typeof(TestExecutorProjectContext));
+            _interpreterService = _container.GetExportedValue<IInterpreterOptionsService>();
         }
 
 
@@ -72,7 +75,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             var receiver = new TestReceiver();
 
-            var discoverer = new TestDiscoverer(_app, _interpreterService);
+            var discoverer = new TestDiscoverer(_container);
             discoverer.DiscoverTests(sources, null, null, receiver);
 
             if (_cancelRequested.WaitOne(0)) {
@@ -125,7 +128,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             PythonProjectSettings settings;
             if (!sourceToSettings.TryGetValue(test.Source, out settings)) {
-                sourceToSettings[test.Source] = settings = LoadProjectSettings(test.Source, _interpreterService);
+                sourceToSettings[test.Source] = settings = LoadProjectSettings(test.Source);
             }
             if (settings == null) {
                 frameworkHandle.SendMessage(
@@ -281,28 +284,32 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private PythonProjectSettings LoadProjectSettings(
-            string projectFile,
-            IInterpreterOptionsService interpreterService
+            string projectFile
         ) {
-            return null;
-#if FALSE
+            var registry = _container.GetExportedValue<IInterpreterRegistry>();
+            
             var buildEngine = new MSBuild.ProjectCollection();
             MSBuildProjectInterpreterFactoryProvider provider = null;
             try {
+                
                 var proj = buildEngine.LoadProject(projectFile);
-                provider = new MSBuildProjectInterpreterFactoryProvider(interpreterService, proj);
-                try {
-                    provider.DiscoverInterpreters();
-                } catch (InvalidDataException) {
-                    // Can safely ignore this exception here.
+                var interpreter = proj.GetPropertyValue(MSBuildConstants.InterpreterIdProperty);
+                IPythonInterpreterFactory factory = null;
+                if (interpreter != null) {
+                    factory = registry.FindInterpreter(interpreter);
                 }
 
-                if (provider.ActiveInterpreter == interpreterService.NoInterpretersValue) {
+                if (factory == null) {
+                    var options = _container.GetExportedValue<IInterpreterOptionsService>();
+                    factory = options.DefaultInterpreter;
+                }
+
+                if (factory == null) {
                     return null;
                 }
 
                 var projSettings = new PythonProjectSettings();
-                projSettings.Factory = provider.ActiveInterpreter;
+                projSettings.Factory = factory;
 
                 projSettings.ProjectHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
 
@@ -371,7 +378,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                 buildEngine.UnloadAllProjects();
                 buildEngine.Dispose();
             }
-#endif
         }
 
         private static void RecordEnd(IFrameworkHandle frameworkHandle, TestCase test, TestResult result, string stdout, string stderr, TestOutcome outcome) {

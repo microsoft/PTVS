@@ -395,7 +395,7 @@ namespace Microsoft.PythonTools.Interpreter {
         const string WindowsPathKey = "WindowedExecutablePath";
         const string LibraryPathKey = "LibraryPath";
         const string ArchitectureKey = "Architecture";
-        const string VersionKey = "Version";
+        const string VersionKey = "SysVersion";
         const string PathEnvVarKey = "PathEnvironmentVariable";
         const string DescriptionKey = "Description";
         const string PythonInterpreterKey = "SOFTWARE\\Python\\VisualStudio";

@@ -80,6 +80,7 @@
   <ItemGroup />
   <ItemGroup>
     <Compile Include="Infrastructure\InterpreterOptionsServiceProvider.cs" />
+    <Compile Include="Infrastructure\IProjectInterpreterDbChanged.cs" />
     <Compile Include="Infrastructure\OutputWindowRedirector.cs" />
     <Compile Include="Infrastructure\SettingsManagerCreator.cs" />
     <Compile Include="Infrastructure\TaskDialog.cs" />

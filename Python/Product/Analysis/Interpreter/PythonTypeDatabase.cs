@@ -403,6 +403,7 @@ namespace Microsoft.PythonTools.Interpreter {
             using (var output = ProcessOutput.RunHiddenAndCapture(
                 analyzerPath,
                 "/id", fact.Configuration.Id,
+                "/version", fact.Configuration.Version.ToString(),
                 "/python", fact.Configuration.InterpreterPath,
                 request.DetectLibraryPath ? null : "/library",
                 request.DetectLibraryPath ? null : fact.Configuration.LibraryPath,

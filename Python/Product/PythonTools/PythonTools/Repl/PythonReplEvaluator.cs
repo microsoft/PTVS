@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Repl {
         private bool _ownsAnalyzer, _enableAttach, _supportsMultipleCompleteStatementInputs;
 
         public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, IInterpreterRegistry interpreterService = null)
-            : this(interpreter, serviceProvider, new DefaultPythonReplEvaluatorOptions(serviceProvider, () => serviceProvider.GetPythonToolsService().GetInteractiveOptions(interpreter)), interpreterService) {
+            : this(interpreter, serviceProvider, new DefaultPythonReplEvaluatorOptions(serviceProvider, () => serviceProvider.GetPythonToolsService().GetInteractiveOptions(interpreter.Configuration)), interpreterService) {
         }
 
         public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, PythonReplEvaluatorOptions options, IInterpreterRegistry interpreterService = null)

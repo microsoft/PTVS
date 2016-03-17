@@ -58,6 +58,7 @@ namespace Microsoft.PythonTools.Project {
         CommonProjectNode,
         IPythonProject3,
         IAzureRoleProject,
+        IProjectInterpreterDbChanged,
         IPythonProjectLaunchProperties {
         // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
         // about the directory from the search path that referenced them in IProjectEntry.Properties[_searchPathEntryKey], so that
@@ -167,11 +168,11 @@ namespace Microsoft.PythonTools.Project {
             Site.GetUIThread().Invoke(() => RefreshInterpreters());
         }
 
-        internal IPythonInterpreterFactory ActiveInterpreter {
+        public IPythonInterpreterFactory ActiveInterpreter {
             get {
                 return _active ?? Site.GetPythonToolsService().DefaultInterpreter;
             }
-            set {
+            internal set {
                 var oldActive = _active;
 
                 lock (_validFactories) {
@@ -194,22 +195,45 @@ namespace Microsoft.PythonTools.Project {
                 if (_active != oldActive) {
                     if (oldActive == null) {
                         // No longer need to listen to this event
+                        var defaultInterp = Site.GetPythonToolsService().DefaultInterpreter as PythonInterpreterFactoryWithDatabase;
+                        if (defaultInterp != null) {
+                            defaultInterp.NewDatabaseAvailable -= OnNewDatabaseAvailable;
+                        }
 
                         Site.GetPythonToolsService().DefaultInterpreterChanged -= GlobalDefaultInterpreterChanged;
+                    } else {
+                        var oldInterpWithDb = oldActive as PythonInterpreterFactoryWithDatabase;
+                        if (oldInterpWithDb != null) {
+                            oldInterpWithDb.NewDatabaseAvailable -= OnNewDatabaseAvailable;
+                        }
                     }
 
                     if (_active != null) {
+                        var newInterpWithDb = _active as PythonInterpreterFactoryWithDatabase;
+                        if (newInterpWithDb != null) {
+                            newInterpWithDb.NewDatabaseAvailable += OnNewDatabaseAvailable;
+                        }
                         BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, _active.Configuration.Id);
                     } else {
                         BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, "");
                         // Need to start listening to this event
+
                         Site.GetPythonToolsService().DefaultInterpreterChanged += GlobalDefaultInterpreterChanged;
+
+                        var defaultInterp = Site.GetPythonToolsService().DefaultInterpreter as PythonInterpreterFactoryWithDatabase;
+                        if (defaultInterp != null) {
+                            defaultInterp.NewDatabaseAvailable += OnNewDatabaseAvailable;
+                        }
                     }
                     BuildProject.MarkDirty();
 
                     ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
+        }
+
+        private void OnNewDatabaseAvailable(object sender, EventArgs e) {
+            InterpreterDbChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void GlobalDefaultInterpreterChanged(object sender, EventArgs e) {
@@ -221,7 +245,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        internal event EventHandler ActiveInterpreterChanged;
+        public event EventHandler ActiveInterpreterChanged;
 
         internal event EventHandler InterpreterFactoriesChanged;
 
@@ -964,6 +988,7 @@ namespace Microsoft.PythonTools.Project {
 
         public event EventHandler ProjectAnalyzerChanged;
         public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
+        public event EventHandler InterpreterDbChanged;
 
         public override IProjectLauncher GetLauncher() {
             return PythonToolsPackage.GetLauncher(Site, this);
@@ -1179,6 +1204,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
+            InterpreterDbChanged?.Invoke(this, EventArgs.Empty);
             Site.GetUIThread().InvokeAsync(ReanalyzeProject).DoNotWait();
         }
 

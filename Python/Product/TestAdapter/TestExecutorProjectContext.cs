@@ -20,12 +20,17 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 
-namespace Microsoft.PythonTools.BuildTasks {
+namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(IProjectContextProvider))]
-    [Export(typeof(MsBuildProjectContextProvider))]
-    [PartCreationPolicy(CreationPolicy.Shared)]
-    class MsBuildProjectContextProvider : IProjectContextProvider {
+    [Export(typeof(TestExecutorProjectContext))]
+    class TestExecutorProjectContext : IProjectContextProvider {
         private readonly HashSet<object> _contexts = new HashSet<object>();
+
+        public IEnumerable<object> ProjectContexts {
+            get {
+                return _contexts.ToArray();
+            }
+        }
 
         public void AddContext(object context) {
             bool added = false;
@@ -47,18 +52,12 @@ namespace Microsoft.PythonTools.BuildTasks {
             }
         }
 
+        public event EventHandler ProjectContextsChanged;
+
         public void InterpreterLoaded(object context, InterpreterConfiguration factory) {
         }
 
         public void InterpreterUnloaded(object context, InterpreterConfiguration factory) {
         }
-
-        public IEnumerable<object> ProjectContexts {
-            get {
-                return _contexts.ToArray();
-            }
-        }
-
-        public event EventHandler ProjectContextsChanged;
     }
 }

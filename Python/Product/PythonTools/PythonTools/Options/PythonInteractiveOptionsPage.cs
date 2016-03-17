@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public PythonInteractiveOptions GetOptions(IPythonInterpreterFactory interpreterFactory) {
-            return PyService.GetInteractiveOptions(interpreterFactory);
+            return PyService.GetInteractiveOptions(interpreterFactory.Configuration);
         }
 
         public override void ResetSettings() {
@@ -68,15 +68,15 @@ namespace Microsoft.PythonTools.Options {
             var interpreterService = ComponentModel.GetService<IInterpreterRegistry>();
 
             var seenIds = new HashSet<string>();
-            var placeholders = PyService.InteractiveOptions.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();
+            var placeholders = PyService.InteractiveOptions.Where(kv => kv.Key.StartsWith(InterpreterPlaceholder.PlaceholderId + ";")).ToArray();
             PyService.ClearInteractiveOptions();
             foreach (var interpreter in interpreterService.Interpreters) {
                 seenIds.Add(interpreter.Configuration.Id);
-                PyService.GetInteractiveOptions(interpreter);
+                PyService.GetInteractiveOptions(interpreter.Configuration);
             }
 
             foreach (var kv in placeholders) {
-                if (!seenIds.Contains(kv.Key.Configuration.Id)) {
+                if (!seenIds.Contains(kv.Key)) {
                     PyService.AddInteractiveOptions(kv.Key, kv.Value);
                 }
             }
@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         private PythonInteractiveOptions ReadOptions(IPythonInterpreterFactory interpreter) {
-            return PyService.GetInteractiveOptions(interpreter);
+            return PyService.GetInteractiveOptions(interpreter.Configuration);
         }
 
         public override void SaveSettingsToStorage() {
@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Options {
             foreach (var keyValue in PyService.InteractiveOptions) {
                 var interpreter = keyValue.Key;
 
-                if (interpreter is InterpreterPlaceholder) {
+                if (interpreter.StartsWith(InterpreterPlaceholder.PlaceholderId + ";")) {
                     // Placeholders will be saved by the interpreter options page.
                     continue;
                 }
@@ -105,8 +105,8 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        internal void SaveOptions(IPythonInterpreterFactory interpreter, PythonInteractiveOptions options) {
-            options.Save(interpreter.Configuration.Id);
+        internal void SaveOptions(string id, PythonInteractiveOptions options) {
+            options.Save(id);
         }
     }
 }

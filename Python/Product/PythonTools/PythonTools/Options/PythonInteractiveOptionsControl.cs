@@ -142,7 +142,7 @@ visualstudio_py_repl.BACKEND.attach()";
         private void RefreshOptions() {
             var factory = _showSettingsFor.SelectedItem as IPythonInterpreterFactory;
             if (factory != null) {
-                CurrentOptions = _serviceProvider.GetPythonToolsService().GetInteractiveOptions(factory);
+                CurrentOptions = _serviceProvider.GetPythonToolsService().GetInteractiveOptions(factory.Configuration);
             } else {
                 CurrentOptions = null;
             }
