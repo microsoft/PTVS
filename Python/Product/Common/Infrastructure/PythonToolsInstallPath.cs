@@ -63,8 +63,8 @@ namespace Microsoft.PythonTools.Infrastructure {
             return string.Empty;
         }
 
-        public static string TryGetFile(string filename) {
-            string path = GetFromAssembly(typeof(PythonToolsInstallPath).Assembly, filename);
+        public static string TryGetFile(string filename, Assembly assembly = null) {
+            string path = GetFromAssembly(assembly ?? typeof(PythonToolsInstallPath).Assembly, filename);
 
             if (string.IsNullOrEmpty(path)) {
                 path = GetFromRegistry(filename);
@@ -73,8 +73,8 @@ namespace Microsoft.PythonTools.Infrastructure {
             return path;
         }
 
-        public static string GetFile(string filename) {
-            var path = TryGetFile(filename);
+        public static string GetFile(string filename, Assembly assembly = null) {
+            var path = TryGetFile(filename, assembly);
 
 #if DEBUG
             if (string.IsNullOrEmpty(path)) {
