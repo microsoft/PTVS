@@ -40,6 +40,7 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.PyKinect",
     "Microsoft.PythonTools.TestAdapter",
     "Microsoft.PythonTools.Uwp",
+    "Microsoft.PythonTools.Uwp.Interpreter",
     "Microsoft.PythonTools.VSCommon",
     "Microsoft.PythonTools.VSInterpreters",
     "Microsoft.PythonTools.VsLogger",

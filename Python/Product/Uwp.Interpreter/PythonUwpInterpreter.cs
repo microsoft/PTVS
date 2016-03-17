@@ -22,7 +22,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Uwp.Interpreter {
     class PythonUwpInterpreter : IPythonInterpreter, IPythonInterpreterWithProjectReferences2, IDisposable {

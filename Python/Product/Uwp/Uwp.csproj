@@ -35,7 +35,7 @@
     <AssemblyName>Microsoft.PythonTools.Uwp</AssemblyName>
     <UseVSSDK>true</UseVSSDK>
     <CreateVsixContainer>true</CreateVsixContainer>
-    <NoWarn>1762</NoWarn>
+    <NoWarn>1762;0436</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -158,9 +158,6 @@
     </Compile>
     <Compile Include="Extensions.cs" />
     <Compile Include="Guids.cs" />
-    <Compile Include="Interpreter\PythonUwpInterpreter.cs" />
-    <Compile Include="Interpreter\PythonUwpInterpreterFactory.cs" />
-    <Compile Include="Interpreter\PythonUwpInterpreterFactoryProvider.cs" />
     <Compile Include="Project\PythonUwpProject.cs" />
     <Compile Include="Project\PythonUwpProjectConfig.cs" />
     <Compile Include="Project\PythonUwpProjectFactory.cs" />
@@ -239,6 +236,11 @@
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
       <Name>PythonTools</Name>
       <EmbedInteropTypes>False</EmbedInteropTypes>
+    </ProjectReference>
+    <ProjectReference Include="..\Uwp.Interpreter\Uwp.Interpreter.csproj">
+      <Project>{833320ca-fa68-43b4-a256-2d57460b0f61}</Project>
+      <Name>Uwp.Interpreter</Name>
+      <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />
