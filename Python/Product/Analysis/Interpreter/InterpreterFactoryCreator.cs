@@ -41,8 +41,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             return new CPythonInterpreterFactory(
                 ver,
-                (options.Id == default(Guid)) ? Guid.NewGuid() : options.Id,
-                options.NewId,
+                options.Id,
                 description,
                 prefixPath ?? string.Empty,
                 options.InterpreterPath ?? string.Empty,

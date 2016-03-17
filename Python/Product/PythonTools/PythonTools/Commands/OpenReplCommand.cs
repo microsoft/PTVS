@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Commands {
                         var service = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
                         asFactory = service.Interpreters.FirstOrDefault(
                             // Descriptions are localized strings, hence CCIC
-                            f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
+                            f => description.Equals(f.Configuration.Description, StringComparison.CurrentCultureIgnoreCase)
                         );
                         if (asFactory != null) {
                             factory = asFactory;
@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Commands {
 
         public string Description {
             get {
-                return _factory.Description + " Interactive";
+                return _factory.Configuration.Description + " Interactive";
             }
         }
         

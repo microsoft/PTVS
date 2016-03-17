@@ -92,7 +92,9 @@ namespace Microsoft.PythonTools {
                     _spanTranslator = classifications.GetTracker(classifications.Data.version);
                 }
 
-                OnNewClassifications(_buffer.CurrentSnapshot);
+                if (_spanTranslator != null) {
+                    OnNewClassifications(_buffer.CurrentSnapshot);
+                }
             }
         }
 
@@ -139,7 +141,7 @@ namespace Microsoft.PythonTools {
                 spanTranslator = _spanTranslator;
             }
 
-            if (span.Length <= 0 || span.Snapshot.IsReplBufferWithCommand() || spans == null) {
+            if (span.Length <= 0 || span.Snapshot.IsReplBufferWithCommand() || spans == null || spanTranslator == null) {
                 return classifications;
             }
 

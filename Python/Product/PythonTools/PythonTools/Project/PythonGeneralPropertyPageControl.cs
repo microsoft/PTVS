@@ -26,9 +26,9 @@ using Microsoft.VisualStudioTools;
 namespace Microsoft.PythonTools.Project {
     public partial class PythonGeneralPropertyPageControl : UserControl {
         static readonly IPythonInterpreterFactory Separator =
-            new InterpreterPlaceholder(Guid.Empty, " -- Other installed interpreters --");
+            new InterpreterPlaceholder("", " -- Other installed interpreters --");
         static readonly IPythonInterpreterFactory GlobalDefault =
-            new InterpreterPlaceholder(Guid.Empty, "(Use global default)");
+            new InterpreterPlaceholder("", "(Use global default)");
 
         private IInterpreterOptionsService _service;
         private readonly PythonGeneralPropertyPage _propPage;
@@ -158,7 +158,7 @@ namespace Microsoft.PythonTools.Project {
         private void Interpreter_Format(object sender, ListControlConvertEventArgs e) {
             var factory = e.ListItem as IPythonInterpreterFactory;
             if (factory != null) {
-                e.Value = factory.Description;
+                e.Value = factory.Configuration.Description;
             } else {
                 e.Value = e.ListItem.ToString();
             }

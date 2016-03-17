@@ -101,14 +101,15 @@ namespace Microsoft.PythonTools {
             private async void OnNewParseTree(AnalysisEntry entry) {
                 var snapshot = _buffer.CurrentSnapshot;
 
-                _tags = (await entry.Analyzer.GetOutliningTagsAsync(snapshot))
-                        .Concat(ProcessRegionTags(snapshot))
-                        .ToArray();
+                var tags = await entry.Analyzer.GetOutliningTagsAsync(snapshot);
+                if (tags != null) {
+                    _tags = tags.Concat(ProcessRegionTags(snapshot)).ToArray();
 
-                TagsChanged(
-                    this,
-                    new SnapshotSpanEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length))
-                );
+                    TagsChanged(
+                        this,
+                        new SnapshotSpanEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length))
+                    );
+                }
             }
 
             internal static IEnumerable<TagSpan> ProcessRegionTags(ITextSnapshot snapshot) {

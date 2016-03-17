@@ -223,7 +223,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         description = CPythonInterpreterFactoryConstants.Description64;
                     }
 
-                    string newId = GetIntepreterId(GetVendorName(vendorKey), arch ?? arch2, key);
+                    string newId = CPythonInterpreterFactoryConstants.GetIntepreterId(GetVendorName(vendorKey), arch ?? arch2, key);
                     if (!_factories.ContainsKey(newId)) {
                         try {
                             var interpPath = installPath.GetValue("ExecutablePath") as string ?? Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
@@ -257,17 +257,6 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private static string GetVendorName(RegistryKey vendorKey) {
             return vendorKey.Name.Substring(vendorKey.Name.LastIndexOf('\\') + 1);
-        }
-
-        public static string GetIntepreterId(string vendor, ProcessorArchitecture? arch, string key) {
-            string archStr;
-            switch (arch) {
-                case ProcessorArchitecture.Amd64: archStr = "x64"; break;
-                case ProcessorArchitecture.X86: archStr = "x86"; break;
-                default: archStr = "unknown"; break;
-            }
-
-            return FactoryProviderName + ";" + vendor + ";" + archStr + ";" + key;
         }
 
         private void DiscoverInterpreterFactories() {

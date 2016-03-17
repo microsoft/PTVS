@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Uwp {
     [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasAppContainerProject_string)]
     [Description("Python Tools Uwp Interpreter")]
     [ProvideProjectFactory(typeof(PythonUwpProjectFactory), null, null, null, null, ".\\NullPath", LanguageVsTemplate = PythonConstants.LanguageName)]
-    [ProvidePythonInterpreterFactoryProvider(PythonUwpInterpreterFactory.InterpreterGuidString, typeof(PythonUwpInterpreterFactoryProvider))]
+    [ProvidePythonInterpreterFactoryProvider(PythonUwpInterpreterFactoryProvider.InterpreterFactoryProviderId, typeof(PythonUwpInterpreterFactoryProvider))]
     public sealed class PythonUwpPackage : Package {
         internal static PythonUwpPackage Instance;
 

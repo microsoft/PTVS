@@ -47,34 +47,9 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
         
-        public string NewId {
+        public string Id {
             get;
             set;
-        }
-
-        /// <summary>
-        /// Specifies a unique identifier for the interpreter. If one is not
-        /// provided a new Guid will be created.
-        /// </summary>
-        public Guid Id { get; set; }
-
-        /// <summary>
-        /// Specifies the Id of the language as a string.
-        /// </summary>
-        /// <exception cref="FormatException">
-        /// The string cannot be parsed.
-        /// </exception>
-        public string IdString {
-            get {
-                return Id.ToString("B");
-            }
-            set {
-                if (string.IsNullOrEmpty(value)) {
-                    Id = Guid.Empty;
-                } else {
-                    Id = Guid.Parse(value);
-                }
-            }
         }
 
         /// <summary>

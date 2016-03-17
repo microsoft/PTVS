@@ -208,7 +208,7 @@ namespace PythonToolsTests {
         ) {
             var mockService = new MockInterpreterOptionsService();
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider",
-                new MockPythonInterpreterFactory(python.Id, "Test Python", python.Configuration)
+                new MockPythonInterpreterFactory("Test Python", python.Configuration)
             ));
 
             using (var wpf = new WpfProxy()) {
@@ -283,7 +283,7 @@ namespace PythonToolsTests {
                     Assert.AreEqual("scripts\\python.exe", env.Descendant("InterpreterPath").Value, true);
                     // The mock configuration uses python.exe for both paths.
                     Assert.AreEqual("scripts\\python.exe", env.Descendant("WindowsInterpreterPath").Value, true);
-                    Assert.AreEqual(python.Id.ToString("B"), env.Descendant("BaseInterpreter").Value, true);
+                    Assert.AreEqual(python.Id, env.Descendant("BaseInterpreter").Value, true);
                     Assert.AreEqual("PYTHONPATH", env.Descendant("PathEnvironmentVariable").Value, true);
                 }
             }

@@ -38,11 +38,14 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public LocationTracker GetTracker(int fromVersion) {
-            return new LocationTracker(
-                _versionBeforeRequest,
-                _buffer,
-                fromVersion
-            );
+            if (fromVersion >= _versionBeforeRequest.VersionNumber) {
+                return new LocationTracker(
+                    _versionBeforeRequest,
+                    _buffer,
+                    fromVersion
+                );
+            }
+            return null;
         }
     }
 }

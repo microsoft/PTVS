@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             return x.Configuration.Id == y.Configuration.Id && 
-                x.Description == y.Description &&
+                x.Configuration.Description == y.Configuration.Description &&
                 x.Configuration.Equals(y.Configuration);
         }
 
@@ -133,6 +133,17 @@ namespace Microsoft.PythonTools.Interpreter {
                 factory.Configuration != null &&
                 !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.CannotBeDefault) &&
                 !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.CannotBeAutoDefault);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the factory can be automatically selected as
+        /// the default interpreter.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public static bool CanBeAutoDefault(this InterpreterConfiguration config) {
+            return config != null &&
+                !config.UIMode.HasFlag(InterpreterUIMode.CannotBeDefault) &&
+                !config.UIMode.HasFlag(InterpreterUIMode.CannotBeAutoDefault);
         }
 
         /// <summary>

@@ -30,23 +30,9 @@ namespace Microsoft.PythonTools.Interpreter {
     /// </summary>
     public interface IPythonInterpreterFactory {
         /// <summary>
-        /// A user friendly description of the interpreter.
-        /// </summary>
-        string Description {
-            get;
-        }
-
-        /// <summary>
         /// Configuration settings for the interpreter.
         /// </summary>
         InterpreterConfiguration Configuration {
-            get;
-        }
-
-        /// <summary>
-        /// A stable ID for the interpreter used to track settings.
-        /// </summary>
-        Guid Id {
             get;
         }
 

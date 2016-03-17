@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Options {
         private readonly IPythonInterpreterFactory _interpreter;
 
         public string Display;
-        public Guid Id;
+        public string Id;
         public string InterpreterPath;
         public string WindowsInterpreterPath;
         public string LibraryPath;
@@ -53,8 +53,8 @@ namespace Microsoft.PythonTools.Options {
             var configurable = _pyService._interpreterOptionsService;
             Debug.Assert(configurable != null);
 
-            Display = _interpreter.Description;
-            Id = _interpreter.Id;
+            Display = _interpreter.Configuration.Description;
+            Id = _interpreter.Configuration.Id;
             InterpreterPath = _interpreter.Configuration.InterpreterPath;
             WindowsInterpreterPath = _interpreter.Configuration.WindowsInterpreterPath;
             LibraryPath = _interpreter.Configuration.LibraryPath;

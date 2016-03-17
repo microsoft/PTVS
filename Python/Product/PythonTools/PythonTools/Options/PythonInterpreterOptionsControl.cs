@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Options {
                     .InterpreterOptions
                     .Select(x => x.Key)
                     .Where(f => f.IsUIVisible() && f.CanBeConfigured())
-                    .OrderBy(f => f.Description);
+                    .OrderBy(f => f.Configuration.Description);
 
                 foreach (var interpreter in interpreters) {
                     InterpreterOptions opts;
@@ -283,7 +283,7 @@ namespace Microsoft.PythonTools.Options {
                     _defaultInterpreter.Enabled = true;
                     _showSettingsFor.Enabled = true;
                 }
-                var id = Guid.NewGuid();
+                var id = Guid.NewGuid().ToString();
                 var factory = new InterpreterPlaceholder(id, newInterp.InterpreterDescription);
                 var newOptions = new InterpreterOptions(_serviceProvider.GetPythonToolsService(), factory) {
                     Display = newInterp.InterpreterDescription,
@@ -356,7 +356,7 @@ namespace Microsoft.PythonTools.Options {
         private void Interpreter_Format(object sender, ListControlConvertEventArgs e) {
             var factory = e.ListItem as IPythonInterpreterFactory;
             if (factory != null) {
-                e.Value = factory.Description;
+                e.Value = factory.Configuration.Description;
             } else {
                 e.Value = e.ListItem.ToString();
             }

@@ -121,7 +121,7 @@ namespace Microsoft.PythonTools.Project {
             get {
                 var fact = Factory as DerivedInterpreterFactory;
                 return fact != null ? 
-                    fact.BaseInterpreter.Description :
+                    fact.BaseInterpreter.Configuration.Description :
                     SR.GetString(SR.UnknownInParentheses);
             }
         }

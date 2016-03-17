@@ -82,18 +82,22 @@ namespace CanopyInterpreter {
                 description += " 32-bit)";
             }
 
-            return InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
-                PrefixPath = basePath,
-                InterpreterPath = interpPath,
-                WindowInterpreterPath = winInterpPath,
-                LibraryPath = libPath,
-                LanguageVersion = languageVersion,
-                Id = id,
-                Description = description,
-                Architecture = arch,
-                PathEnvironmentVariableName = CanopyInterpreterFactoryConstants.PathEnvironmentVariableName,
-                WatchLibraryForNewModules = true
-            });
+            return InterpreterFactoryCreator.CreateInterpreterFactory(
+                new InterpreterConfiguration(
+                    basePath,
+                    description,
+                    basePath,
+                    interpPath,
+                    winInterpPath,
+                    libPath,
+                    CanopyInterpreterFactoryConstants.PathEnvironmentVariableName,
+                    arch,
+                    languageVersion
+                ),
+                new InterpreterFactoryCreationOptions {
+                    WatchLibraryForNewModules = true
+                }
+            );
         }
 
         /// <summary>
@@ -124,10 +128,6 @@ namespace CanopyInterpreter {
                 throw new DirectoryNotFoundException(libPath);
             }
 
-            var id = (baseFactory.Configuration.Architecture == ProcessorArchitecture.Amd64) ?
-                CanopyInterpreterFactoryConstants.UserGuid64 :
-                CanopyInterpreterFactoryConstants.UserGuid32;
-
             // Make the description string look like "Canopy 1.1.0.46 (2.7 32-bit)"
             var description = "Canopy ";
             if (!string.IsNullOrEmpty(canopyVersion)) {
@@ -152,16 +152,15 @@ namespace CanopyInterpreter {
                 baseFactory.Configuration.Version
             );
 
-            return new CanopyInterpreterFactory(id, description, baseFactory, config);
+            return new CanopyInterpreterFactory(description, baseFactory, config);
         }
 
         private CanopyInterpreterFactory(
-            Guid id,
             string description,
             PythonInterpreterFactoryWithDatabase baseFactory,
             InterpreterConfiguration config
         )
-            : base(id, description, config, true) {
+            : base(description, config, true) {
             if (baseFactory == null) {
                 throw new ArgumentNullException("baseFactory");
             }
@@ -307,7 +306,7 @@ namespace CanopyInterpreter {
             } else if (!_base.IsCurrent) {
                 return string.Format(culture,
                     "{0} is out of date:{1}{2}",
-                    _base.Description,
+                    _base.Configuration.Description,
                     Environment.NewLine,
                     _base.GetIsCurrentReason(culture));
             }

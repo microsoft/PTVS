@@ -28,7 +28,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         public AnalysisOnlyInterpreterFactory(Version version, string description = null)
             : base(
-                InterpreterFactoryCreator.AnalysisOnlyFactoryGuid,
                 description ?? string.Format("Python {0} Analyzer", version),
                 new InterpreterConfiguration(version.ToString(), "Analysis", version),
                 false

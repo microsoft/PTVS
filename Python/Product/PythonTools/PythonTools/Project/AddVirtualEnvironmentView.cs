@@ -57,15 +57,15 @@ namespace Microsoft.PythonTools.Project {
             _interpreterService = interpreterService;
             _project = project;
             VirtualEnvBasePath = _projectHome = project.ProjectHome;
-            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(project.Site, interpreterService));
+            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(project.Site, project));
             var selection = Interpreters.FirstOrDefault(v => v.Interpreter == selectInterpreter);
             if (selection == null) {
-                selection = Interpreters.FirstOrDefault(v => v.Interpreter == interpreterService.DefaultInterpreter)
+                selection = Interpreters.FirstOrDefault(v => v.Interpreter == project.GetInterpreterFactory())
                     ?? Interpreters.LastOrDefault();
             }
             BaseInterpreter = selection;
 
-            _interpreterService.InterpretersChanged += OnInterpretersChanged;
+            _project.InterpreterFactoriesChanged += OnInterpretersChanged;
 
             var venvName = "env";
             for (int i = 1; Directory.Exists(Path.Combine(_projectHome, venvName)); ++i) {
@@ -87,12 +87,12 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
             var existing = Interpreters.Where(iv => iv.Interpreter != null).ToDictionary(iv => iv.Interpreter);
-            var def = _interpreterService.DefaultInterpreter;
+            var def = _project.GetInterpreterFactory();
 
             int i = 0;
-            foreach (var interp in _interpreterService.Interpreters) {
+            foreach (var interp in _project.InterpreterFactories) {
                 if (!existing.Remove(interp)) {
-                    Interpreters.Insert(i, new InterpreterView(interp, interp.Description, interp == def));
+                    Interpreters.Insert(i, new InterpreterView(interp, interp.Configuration.Description, interp == def));
                 }
                 i += 1;
             }
@@ -229,7 +229,7 @@ namespace Microsoft.PythonTools.Project {
 
                 var options = VirtualEnv.FindInterpreterOptions(path, _interpreterService);
                 if (options != null && File.Exists(options.InterpreterPath)) {
-                    var baseInterp = _interpreterService.FindInterpreter(options.Id, options.LanguageVersion);
+                    var baseInterp = _interpreterService.FindInterpreter(options.Id);
                     InterpreterView baseInterpView;
                     if (baseInterp != null &&
                         (baseInterpView = Interpreters.FirstOrDefault(iv => iv.Interpreter == baseInterp)) != null) {
@@ -416,7 +416,7 @@ namespace Microsoft.PythonTools.Project {
                     return;
                 }
 
-                MayNotSupportVirtualEnv = !SupportsVirtualEnv.Contains(interp.Id);
+                //MayNotSupportVirtualEnv = !SupportsVirtualEnv.Contains(interp.Id);
                 RefreshCanCreateVirtualEnv(VirtualEnvPath);
 
                 var libPath = interp.Configuration.LibraryPath;

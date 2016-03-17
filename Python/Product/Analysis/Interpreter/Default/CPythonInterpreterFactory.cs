@@ -20,12 +20,11 @@ using System.Reflection;
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase {
         public CPythonInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options) :
-            base(options.Id, configuration.Description, configuration, options.WatchLibraryForNewModules) {            
+            base(configuration.Description, configuration, options.WatchLibraryForNewModules) {            
         }
 
         public CPythonInterpreterFactory(
             Version version,
-            Guid id,
             string newId,
             string description,
             string prefixPath,
@@ -36,7 +35,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             ProcessorArchitecture arch,
             bool watchForNewModules)
             : base(
-                id,
                 description,
                 new InterpreterConfiguration(
                     newId,

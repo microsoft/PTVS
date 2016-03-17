@@ -38,20 +38,6 @@ namespace Microsoft.PythonTools {
         /// to be the provider object itself. The assembly needs to be deployed
         /// in the root of the package.
         /// </param>
-        public ProvidePythonInterpreterFactoryProviderAttribute(Guid id, Type factoryProvider) {
-            _id = id.ToString("B");
-            _provider = factoryProvider;
-        }
-
-        /// <summary>
-        /// Registers a PythonInterpreterFactoryProvider.
-        /// </summary>
-        /// <param name="id">The ID of the provider.</param>
-        /// <param name="factoryProvider">
-        /// A type in the assembly containing the provider. This does not need
-        /// to be the provider object itself. The assembly needs to be deployed
-        /// in the root of the package.
-        /// </param>
         public ProvidePythonInterpreterFactoryProviderAttribute(string id, Type factoryProvider) {
             _id = id;
             _provider = factoryProvider;

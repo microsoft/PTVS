@@ -127,7 +127,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                     if (factory == null) {
                         _log.LogError(
                             "The environment '{0}' is not available. Check your project configuration and try again.",
-                            factory.Description
+                            factory.Configuration.Description
                         );
                         return false;
                     } else {
@@ -142,7 +142,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                         LibraryPath = PathUtils.EnsureEndSeparator(factory.Configuration.LibraryPath);
                         Architecture = factory.Configuration.Architecture.ToString();
                         PathEnvironmentVariable = factory.Configuration.PathEnvironmentVariable;
-                        Description = factory.Description;
+                        Description = factory.Configuration.Description;
                         MajorVersion = factory.Configuration.Version.Major.ToString();
                         MinorVersion = factory.Configuration.Version.Minor.ToString();
 

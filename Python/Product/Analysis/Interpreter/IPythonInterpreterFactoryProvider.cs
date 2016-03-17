@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// of the interpreter.
         /// </summary>
         public static IPythonInterpreterFactory GetInterpreterFactory(this IEnumerable<Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>> factoryProviders, string id) {
-            var interpAndId = id.Split(new[] { ';' }, 2);
+            var interpAndId = id.Split(new[] { '|' }, 2);
             if (interpAndId.Length == 2) {
                 var provider = factoryProviders.GetInterpreterFactoryProvider(interpAndId[0]);
                 if (provider != null) {
@@ -92,14 +92,11 @@ namespace Microsoft.PythonTools.Interpreter {
         public static Dictionary<string, InterpreterConfiguration> GetConfigurations(this IEnumerable<Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>> factoryProviders) {
             Dictionary<string, InterpreterConfiguration> res = new Dictionary<string, InterpreterConfiguration>();
             foreach (var provider in factoryProviders) {
-                object value;
-                if (provider.Metadata.TryGetValue("", out value) && value is string) {
-                    string id = (string)value;
-                    foreach (var config in provider.Value.GetInterpreterConfigurations()) {
-                        res[id + ";" + config.Id] = config;
-                    }
+                foreach (var config in provider.Value.GetInterpreterConfigurations()) {
+                    res[config.Id] = config;
                 }
             }
+
             return res;
         }
 
@@ -113,7 +110,7 @@ namespace Microsoft.PythonTools.Interpreter {
             // configuration
             return File.Exists(configuration.InterpreterPath) && 
                 File.Exists(configuration.WindowsInterpreterPath) &&
-                File.Exists(configuration.LibraryPath);
+                Directory.Exists(configuration.LibraryPath);
         }
     }
 }

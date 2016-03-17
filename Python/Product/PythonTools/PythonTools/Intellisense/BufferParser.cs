@@ -80,12 +80,13 @@ namespace Microsoft.PythonTools.Intellisense {
             /// </summary>
             internal ITextVersion _analysisVersion;
             public ITextSnapshot LastSentSnapshot;
-            internal int LastParsedVersion = -1;
+            internal int LastParsedVersion;
 
             public BufferInfo(ITextBuffer buffer, int id) {
                 Buffer = buffer;
                 Id = id;
                 _analysisVersion = buffer.CurrentSnapshot.Version;
+                LastParsedVersion = _analysisVersion.VersionNumber - 1;
             }
         }
 

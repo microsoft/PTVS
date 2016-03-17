@@ -18,7 +18,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 added = _contexts.Add(context);
             }
             if (added) {
-                ProjectContextsChanged.Invoke(this, EventArgs.Empty);
+                ProjectContextsChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 removed = _contexts.Remove(context);
             }
             if (removed) {
-                ProjectContextsChanged.Invoke(this, EventArgs.Empty);
+                ProjectContextsChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 

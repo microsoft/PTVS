@@ -45,14 +45,16 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private const string DefaultInterpreterVersionSetting = "DefaultInterpreterVersion";
 
-        private IPythonInterpreterFactoryProvider[] _providers;
+        private Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] _providers;
 
         private readonly object _suppressInterpretersChangedLock = new object();
         private int _suppressInterpretersChanged;
-        private bool _raiseInterpretersChanged;
+        private bool _raiseInterpretersChanged, _defaultInterpreterWatched, _factoryChangesWatched;
 
         IPythonInterpreterFactory _defaultInterpreter;
         IPythonInterpreterFactory _noInterpretersValue;
+        private EventHandler _defaultInterpreterChanged;
+        private EventHandler _interpretersChanged;
 
         sealed class LockInfo : IDisposable {
             public int _lockCount;
@@ -67,30 +69,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
 
         [ImportingConstructor]
-        public InterpreterOptionsService([ImportMany]params Lazy<IPythonInterpreterFactoryProvider>[] providers) {
-            List<IPythonInterpreterFactoryProvider> providerValues = new List<IPythonInterpreterFactoryProvider>();
-            foreach (var provider in providers) {
-                try {
-                    providerValues.Add(provider.Value);
-                } catch (CompositionException) {
-                }
-            }
-
-            BeginSuppressInterpretersChangedEvent();
-            try {
-
-                _providers = providerValues.ToArray();
-
-                foreach (var provider in _providers) {
-                    provider.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
-                }
-
-                LoadDefaultInterpreter(suppressChangeEvent: true);
-            } finally {
-                EndSuppressInterpretersChangedEvent();
-            }
-
-            InitializeDefaultInterpreterWatcher();
+        public InterpreterOptionsService([ImportMany]params Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] providers) {
+            _providers = providers;
         }
 
         public void Dispose() {
@@ -128,6 +108,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     recursive: false, notifyValueChange: true, notifyKeyChange: false
                 );
             }
+            _defaultInterpreterWatched = true;
         }
 
         private void Provider_InterpreterFactoriesChanged(object sender, EventArgs e) {
@@ -138,11 +119,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
-            // May have removed the default interpreter, so select a new default
-            
-            if (FindInterpreter(DefaultInterpreter.Configuration.Id) == null) {
-                DefaultInterpreter = Interpreters.LastOrDefault(fact => fact.CanBeAutoDefault());
-            }
+            // Invalidate the default interpreter, we'll re-initialize it on demand
+            // if someone asks for it.
+            _defaultInterpreter = null;
 
             OnInterpretersChanged();
         }
@@ -151,26 +130,34 @@ namespace Microsoft.PythonTools.Interpreter {
             try {
                 BeginSuppressInterpretersChangedEvent();
                 for (bool repeat = true; repeat; repeat = _raiseInterpretersChanged, _raiseInterpretersChanged = false) {
-                    var evt = InterpretersChanged;
-                    if (evt != null) {
-                        evt(this, EventArgs.Empty);
-                    }
+                    _interpretersChanged?.Invoke(this, EventArgs.Empty);
                 }
             } finally {
                 EndSuppressInterpretersChangedEvent();
             }
         }
 
-
         // Used for testing.
-        internal IPythonInterpreterFactoryProvider[] SetProviders(IPythonInterpreterFactoryProvider[] providers) {
+        internal Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] SetProviders(Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] providers) {
             var oldProviders = _providers;
             _providers = providers;
             foreach (var p in oldProviders) {
-                p.InterpreterFactoriesChanged -= Provider_InterpreterFactoriesChanged;
+                IPythonInterpreterFactoryProvider provider;
+                try {
+                    provider = p.Value;
+                } catch (CompositionException) {
+                    continue;
+                }
+                provider.InterpreterFactoriesChanged -= Provider_InterpreterFactoriesChanged;
             }
             foreach (var p in providers) {
-                p.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
+                IPythonInterpreterFactoryProvider provider;
+                try {
+                    provider = p.Value;
+                } catch (CompositionException) {
+                    continue;
+                }
+                provider.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
             }
             Provider_InterpreterFactoriesChanged(this, EventArgs.Empty);
             return oldProviders;
@@ -182,31 +169,28 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        public IEnumerable<InterpreterConfiguration> Configurations {
+            get {
+                return _providers.GetConfigurations().Values
+                    .OrderBy(config => config.Description)
+                    .ThenBy(config => config.Version);
+            }
+        }
+
         public IPythonInterpreterFactory FindInterpreter(string id) {
-            return Interpreters.FirstOrDefault(fact => fact.Configuration.Id == id);
+            return _providers.GetInterpreterFactory(id);
         }
 
-        public IPythonInterpreterFactory FindInterpreter(Guid id, Version version) {
-            return Interpreters.FirstOrDefault(fact => AreEqual(fact, id, version));
-        }
+        public event EventHandler InterpretersChanged {
+            add {
+                EnsureFactoryChangesWatched();
 
-        public IPythonInterpreterFactory FindInterpreter(Guid id, string version) {
-            Version parsedVersion;
-            if (Version.TryParse(version, out parsedVersion)) {
-                return FindInterpreter(id, parsedVersion);
+                _interpretersChanged += value;
             }
-            return null;
-        }
-
-        public IPythonInterpreterFactory FindInterpreter(string id, string version) {
-            Guid parsedId;
-            if (Guid.TryParse(id, out parsedId)) {
-                return FindInterpreter(parsedId, version);
+            remove {
+                _interpretersChanged -= value;
             }
-            return null;
         }
-
-        public event EventHandler InterpretersChanged;
 
         private void DefaultInterpreterRegistry_Changed(object sender, RegistryChangedEventArgs e) {
             try {
@@ -229,26 +213,49 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private static bool AreEqual(IPythonInterpreterFactory factory, Guid id, Version version) {
-            return factory != null && factory.Id.Equals(id) && (factory.Configuration.Version == null || factory.Configuration.Version.Equals(version));
+        private void LoadDefaultInterpreter(bool suppressChangeEvent = false) {
+            if (_defaultInterpreter == null) {
+                string id = null;
+                using (var interpreterOptions = Registry.CurrentUser.OpenSubKey(DefaultInterpreterOptionsCollection)) {
+                    if (interpreterOptions != null) {
+                        id = interpreterOptions.GetValue(DefaultInterpreterSetting) as string ?? string.Empty;
+                    }
+
+                    var newDefault = FindInterpreter(id);
+
+                    if (newDefault == null) {
+                        var defaultConfig = Configurations.LastOrDefault(fact => fact.CanBeAutoDefault());
+                        if (defaultConfig != null) {
+                            newDefault = FindInterpreter(defaultConfig.Id);
+                        }
+                    }
+
+                    if (suppressChangeEvent) {
+                        _defaultInterpreter = newDefault;
+                    } else {
+                        DefaultInterpreter = newDefault;
+                    }
+                }
+            }
         }
 
-        private void LoadDefaultInterpreter(bool suppressChangeEvent = false) {
-            string id = null, version = null;
-            using (var interpreterOptions = Registry.CurrentUser.OpenSubKey(DefaultInterpreterOptionsCollection)) {
-                if (interpreterOptions != null) {
-                    id = interpreterOptions.GetValue(DefaultInterpreterSetting) as string ?? string.Empty;
-                    version = interpreterOptions.GetValue(DefaultInterpreterVersionSetting) as string ?? string.Empty;
+        private void EnsureFactoryChangesWatched() {
+            if (!_factoryChangesWatched) {
+                BeginSuppressInterpretersChangedEvent();
+                try {
+                    foreach (var provider in _providers) {
+                        IPythonInterpreterFactoryProvider providerValue;
+                        try {
+                            providerValue = provider.Value;
+                        } catch (CompositionException) {
+                            continue;
+                        }
+                        providerValue.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
+                    }
+                } finally {
+                    EndSuppressInterpretersChangedEvent();
                 }
-
-                var newDefault = FindInterpreter(id, version) ??
-                    Interpreters.LastOrDefault(fact => fact.CanBeAutoDefault());
-
-                if (suppressChangeEvent) {
-                    _defaultInterpreter = newDefault;
-                } else {
-                    DefaultInterpreter = newDefault;
-                }
+                _factoryChangesWatched = true;
             }
         }
 
@@ -266,10 +273,17 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public IPythonInterpreterFactory DefaultInterpreter {
             get {
+                LoadDefaultInterpreter(true);
                 return _defaultInterpreter ?? NoInterpretersValue;
             }
             set {
                 var newDefault = value;
+                if (_defaultInterpreter == null && (newDefault == NoInterpretersValue || value == null)) {
+                    // we may have not loaded the default interpreter yet.  Do so 
+                    // now so we know if we need to raise the change event.
+                    LoadDefaultInterpreter();
+                }
+
                 if (newDefault == NoInterpretersValue) {
                     newDefault = null;
                 }
@@ -277,15 +291,22 @@ namespace Microsoft.PythonTools.Interpreter {
                     _defaultInterpreter = newDefault;
                     SaveDefaultInterpreter();
 
-                    var evt = DefaultInterpreterChanged;
-                    if (evt != null) {
-                        evt(this, EventArgs.Empty);
-                    }
+                    _defaultInterpreterChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
 
-        public event EventHandler DefaultInterpreterChanged;
+        public event EventHandler DefaultInterpreterChanged {
+            add {
+                if (!_defaultInterpreterWatched) {
+                    InitializeDefaultInterpreterWatcher();
+                }
+                _defaultInterpreterChanged += value;
+            }
+            remove {
+                _defaultInterpreterChanged -= value;
+            }
+        }
 
         public void BeginSuppressInterpretersChangedEvent() {
             lock (_suppressInterpretersChangedLock) {
@@ -330,7 +351,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     try {
                         _noInterpretersValue = InterpreterFactoryCreator.CreateInterpreterFactory(
                             new InterpreterFactoryCreationOptions {
-                                NewId = NoInterpretersFactoryProvider,
+                                Id = NoInterpretersFactoryProvider,
                                 Description = "No Interpreters",
                                 LanguageVersion = new Version(2, 7)
                             }
@@ -353,7 +374,7 @@ namespace Microsoft.PythonTools.Interpreter {
         const string PythonInterpreterKey = "SOFTWARE\\Python\\VisualStudio";
 
         public string AddConfigurableInterpreter(InterpreterFactoryCreationOptions options) {
-            var collection = PythonInterpreterKey + "\\" + options.IdString;
+            var collection = PythonInterpreterKey + "\\" + options.Id;
             using (var key = Registry.CurrentUser.CreateSubKey(collection, true)) {
                 key.SetValue(LibraryPathKey, options.LibraryPath ?? string.Empty);
                 key.SetValue(ArchitectureKey, options.ArchitectureString);
@@ -367,10 +388,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
-            return CPythonInterpreterFactoryProvider.GetIntepreterId(
+            return CPythonInterpreterFactoryConstants.GetIntepreterId(
                 "VisualStudio",
                 options.Architecture,
-                options.IdString
+                options.Id
             );
         }
 
@@ -474,6 +495,10 @@ namespace Microsoft.PythonTools.Interpreter {
             private readonly IEnumerable<IPythonInterpreterFactory> _e;
 
             private static IList<IPythonInterpreterFactory> GetFactories(IPythonInterpreterFactoryProvider provider) {
+                if (provider == null) {
+                    return Array.Empty<IPythonInterpreterFactory>();
+                }
+
                 while (true) {
                     try {
                         var res = new List<IPythonInterpreterFactory>();
@@ -490,10 +515,20 @@ namespace Microsoft.PythonTools.Interpreter {
 
             public InterpretersEnumerable(InterpreterOptionsService owner) {
                 _owner = owner;
-                _e = owner._providers.SelectMany(GetFactories)
+                _e = owner._providers
+                    .Select(GetFactoryProvider)
+                    .SelectMany(GetFactories)
                     .Where(fact => fact != null)
-                    .OrderBy(fact => fact.Description)
+                    .OrderBy(fact => fact.Configuration.Description)
                     .ThenBy(fact => fact.Configuration.Version);
+            }
+
+            private IPythonInterpreterFactoryProvider GetFactoryProvider(Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>> lazy) {
+                try {
+                    return lazy.Value;
+                } catch (CompositionException) {
+                    return null;
+                }
             }
 
             public IEnumerator<IPythonInterpreterFactory> GetEnumerator() {
@@ -506,7 +541,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public static bool IsNoInterpretersFactory(string id) {
-            return id.StartsWith(NoInterpretersFactoryProvider + ";");
+            return id.StartsWith(NoInterpretersFactoryProvider + "|");
         }
     }
 }

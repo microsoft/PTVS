@@ -241,7 +241,7 @@ namespace TestUtilities.UI.Python {
         /// </remarks>
         public DefaultInterpreterSetter SelectDefaultInterpreter(PythonVersion python) {
             return new DefaultInterpreterSetter(
-                InterpreterService.FindInterpreter(python.Id, python.Version.ToVersion()),
+                InterpreterService.FindInterpreter(python.Id),
                 ServiceProvider
             );
         }
@@ -253,7 +253,7 @@ namespace TestUtilities.UI.Python {
             }
 
             var interpreterService = InterpreterService;
-            var factory = interpreterService.FindInterpreter(interp.Id, interp.Configuration.Version);
+            var factory = interpreterService.FindInterpreter(interp.Id);
             var defaultInterpreterSetter = new DefaultInterpreterSetter(factory);
 
             try {

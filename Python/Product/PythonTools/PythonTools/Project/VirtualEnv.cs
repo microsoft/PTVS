@@ -182,19 +182,17 @@ namespace Microsoft.PythonTools.Project {
                 result.Description = string.Format(
                     "{0} ({1})",
                     PathUtils.GetFileOrDirectoryName(prefixPath),
-                    baseInterpreter.Description
+                    baseInterpreter.Configuration.Description
                 );
 
-                result.Id = baseInterpreter.Id;
-                result.NewId = baseInterpreter.Configuration.Id;
+                result.Id = baseInterpreter.Configuration.Id;
                 result.LanguageVersion = baseInterpreter.Configuration.Version;
                 result.Architecture = baseInterpreter.Configuration.Architecture;
                 result.WatchLibraryForNewModules = true;
             } else {
                 result.Description = PathUtils.GetFileOrDirectoryName(prefixPath);
 
-                result.Id = Guid.Empty;
-                result.NewId = null;
+                result.Id = null;
                 result.LanguageVersion = new Version(0, 0);
                 result.Architecture = ProcessorArchitecture.None;
                 result.WatchLibraryForNewModules = false;

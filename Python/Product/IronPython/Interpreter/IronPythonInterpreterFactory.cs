@@ -26,12 +26,8 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase {
-        private static readonly Guid _ipyInterpreterGuid = new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}");
-        private static readonly Guid _ipy64InterpreterGuid = new Guid("{FCC291AA-427C-498C-A4D7-4502D6449B8C}");
-
         public IronPythonInterpreterFactory(ProcessorArchitecture arch = ProcessorArchitecture.X86)
             : base(
-                arch == ProcessorArchitecture.Amd64 ? _ipy64InterpreterGuid : _ipyInterpreterGuid,
                 GetDescription(arch),
                 GetConfiguration(arch),
                 true) { }
@@ -41,7 +37,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         private static string GetInterpreterId(ProcessorArchitecture arch) {
-            return arch == ProcessorArchitecture.Amd64 ? "2.7 64-bit" : "2.7 32-bit";
+            return arch == ProcessorArchitecture.Amd64 ? "IronPython|2.7 64-bit" : "IronPython|2.7 32-bit";
         }
 
         private static InterpreterConfiguration GetConfiguration(ProcessorArchitecture arch) {

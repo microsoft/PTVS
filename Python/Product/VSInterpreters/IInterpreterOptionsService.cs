@@ -43,23 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         IPythonInterpreterFactory NoInterpretersValue { get; }
 
-        /// <summary>
-        /// Returns an interpreter matching the provided ID and version, if one
-        /// is available. Otherwise, return null.
-        /// </summary>
-        IPythonInterpreterFactory FindInterpreter(Guid id, Version version);
-
-        /// <summary>
-        /// Returns an interpreter matching the provided ID and version, if one
-        /// is available. Otherwise, return null.
-        /// </summary>
-        IPythonInterpreterFactory FindInterpreter(Guid id, string version);
-
-        /// <summary>
-        /// Returns an interpreter matching the provided ID and version, if one
-        /// is available. Otherwise, return null.
-        /// </summary>
-        IPythonInterpreterFactory FindInterpreter(string id, string version);
+        IPythonInterpreterFactory FindInterpreter(string id);
 
         /// <summary>
         /// Raised when the set of interpreters changes. This is not raised when

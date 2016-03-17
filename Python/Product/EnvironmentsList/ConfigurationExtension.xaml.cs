@@ -213,8 +213,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public void ApplyConfiguration(ConfigurationEnvironmentView view) {
             _interpreterOptions.AddConfigurableInterpreter(new InterpreterFactoryCreationOptions {
-                Id = view.EnvironmentView.Factory.Id,
-                NewId = view.EnvironmentView.Factory.Configuration.Id,
+                Id = view.EnvironmentView.Factory.Configuration.Id,
                 Description = view.Description,
                 PrefixPath = view.PrefixPath,
                 InterpreterPath = view.InterpreterPath,
@@ -229,7 +228,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public bool IsConfigurationChanged(ConfigurationEnvironmentView view) {
             var factory = view.EnvironmentView.Factory;
             var arch = factory.Configuration.Architecture == ProcessorArchitecture.Amd64 ? "64-bit" : "32-bit";
-            return view.Description != factory.Description ||
+            return view.Description != factory.Configuration.Description ||
                 view.PrefixPath != factory.Configuration.PrefixPath ||
                 view.InterpreterPath != factory.Configuration.InterpreterPath ||
                 view.WindowsInterpreterPath != factory.Configuration.WindowsInterpreterPath ||
@@ -241,7 +240,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public void ResetConfiguration(ConfigurationEnvironmentView view) {
             var factory = view.EnvironmentView.Factory;
-            view.Description = factory.Description;
+            view.Description = factory.Configuration.Description;
             view.PrefixPath = factory.Configuration.PrefixPath;
             view.InterpreterPath = factory.Configuration.InterpreterPath;
             view.WindowsInterpreterPath = factory.Configuration.WindowsInterpreterPath;

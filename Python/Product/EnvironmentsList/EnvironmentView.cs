@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 IsConfigurable = true;
             }
 
-            Description = Factory.Description;
+            Description = Factory.Configuration.Description;
             IsDefault = (_service != null && _service.DefaultInterpreter == Factory);
 
             PrefixPath = Factory.Configuration.PrefixPath;
@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public override string ToString() {
             return string.Format(
                 "{{{0}:{1}}}", GetType().FullName,
-                _withDb == null ? "(null)" : _withDb.Description
+                _withDb == null ? "(null)" : _withDb.Configuration.Description
             );
         }
 

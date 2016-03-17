@@ -29,7 +29,7 @@ namespace TestUtilities.Python {
 
         public MockInterpreterOptionsService() {
             _providers = new List<IPythonInterpreterFactoryProvider>();
-            _noInterpretersValue = new MockPythonInterpreterFactory(Guid.NewGuid(), "No Interpreters", new InterpreterConfiguration("2.7", "No Interpreters", new Version(2, 7)));
+            _noInterpretersValue = new MockPythonInterpreterFactory("No Interpreters", new InterpreterConfiguration("2.7", "No Interpreters", new Version(2, 7)));
         }
 
         public void AddProvider(IPythonInterpreterFactoryProvider provider) {
@@ -77,18 +77,6 @@ namespace TestUtilities.Python {
             get { return _noInterpretersValue; }
         }
 
-        public IPythonInterpreterFactory FindInterpreter(Guid id, Version version) {
-            return InterpretersOrDefault.FirstOrDefault(f => f.Id == id && f.Configuration.Version == version);
-        }
-
-        public IPythonInterpreterFactory FindInterpreter(Guid id, string version) {
-            return FindInterpreter(id, Version.Parse(version));
-        }
-
-        public IPythonInterpreterFactory FindInterpreter(string id, string version) {
-            return FindInterpreter(Guid.Parse(id), Version.Parse(version));
-        }
-
         public event EventHandler InterpretersChanged;
 
         public void BeginSuppressInterpretersChangedEvent() {
@@ -133,6 +121,17 @@ namespace TestUtilities.Python {
 
         public bool IsConfigurable(string id) {
             throw new NotImplementedException();
+        }
+
+        public IPythonInterpreterFactory FindInterpreter(string id) {
+            foreach (var interp in _providers) {
+                foreach (var config in interp.GetInterpreterConfigurations()) {
+                    if (config.Id == id) {
+                        return interp.GetInterpreterFactory(id);
+                    }
+                }
+            }
+            return null;
         }
     }
 }

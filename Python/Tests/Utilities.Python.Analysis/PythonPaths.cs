@@ -31,8 +31,6 @@ namespace TestUtilities {
 
         public static readonly Guid CPythonGuid = new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}");
         public static readonly Guid CPython64Guid = new Guid("{9A7A9026-48C1-4688-9D5D-E5699D47D074}");
-        public static readonly Guid IronPythonGuid = new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}");
-        public static readonly Guid IronPython64Guid = new Guid("{FCC291AA-427C-498C-A4D7-4502D6449B8C}");
 
         public static readonly PythonVersion Python25 = GetCPythonVersion(PythonLanguageVersion.V25);
         public static readonly PythonVersion Python26 = GetCPythonVersion(PythonLanguageVersion.V26);
@@ -71,7 +69,10 @@ namespace TestUtilities {
                                     return new PythonVersion(
                                         Path.Combine(res, exeName),
                                         PythonLanguageVersion.V27,
-                                        x64 ? IronPython64Guid : IronPythonGuid
+                                        x64 ? "IronPython|2.7 64-bit" : "IronPython|2.7 32-bit",
+                                        x64,
+                                        true,
+                                        false
                                     );
                                 }
                             }
@@ -80,7 +81,14 @@ namespace TestUtilities {
                 }
             }
 
-            var ver = new PythonVersion("C:\\Program Files (x86)\\IronPython 2.7\\" + exeName, PythonLanguageVersion.V27, IronPythonGuid);
+            var ver = new PythonVersion(
+                "C:\\Program Files (x86)\\IronPython 2.7\\" + exeName, 
+                PythonLanguageVersion.V27,
+                "IronPython|2.7 32-bit",
+                false,
+                true,
+                false
+            );
             if (File.Exists(ver.InterpreterPath)) {
                 return ver;
             }
@@ -112,16 +120,48 @@ namespace TestUtilities {
             var path = "C:\\Python" + version.ToString().Substring(1) + "\\python.exe";
             var arch = NativeMethods.GetBinaryType(path);
             if (arch == ProcessorArchitecture.X86 && !x64) {
-                return new PythonVersion(path, version, CPythonGuid);
+                return new PythonVersion(path, version, 
+                    CPythonInterpreterFactoryConstants.GetIntepreterId(
+                        "PythonCore",
+                        arch,
+                        version.ToVersion().ToString()
+                    ),
+                    false,
+                    false,
+                    true
+                );
             } else if (arch == ProcessorArchitecture.Amd64 && x64) {
-                return new PythonVersion(path, version, CPython64Guid);
+                return new PythonVersion(
+                    path, 
+                    version,
+                    CPythonInterpreterFactoryConstants.GetIntepreterId(
+                        "PythonCore",
+                        arch,
+                        version.ToVersion().ToString()
+                    ),
+                    true,
+                    false,
+                    true
+                );
             }
 
             if (x64) {
                 path = "C:\\Python" + version.ToString().Substring(1) + "_x64\\python.exe";
                 arch = NativeMethods.GetBinaryType(path);
                 if (arch == ProcessorArchitecture.Amd64) {
-                    return new PythonVersion(path, version, CPython64Guid);
+                    return new PythonVersion(
+                        path, 
+                        version,
+                        CPythonInterpreterFactoryConstants.GetIntepreterId(
+                            "PythonCore",
+                            arch,
+                            version.ToVersion().ToString()
+                        ),
+                        true,
+                        false,
+                        true
+
+                    );
                 }
             }
 
@@ -143,9 +183,31 @@ namespace TestUtilities {
                             var path = Path.Combine(installPath.ToString(), "python.exe");
                             var arch = NativeMethods.GetBinaryType(path);
                             if (arch == ProcessorArchitecture.X86) {
-                                return x64 ? null : new PythonVersion(path, version, CPythonGuid);
+                                return x64 ? null : new PythonVersion(
+                                    path, 
+                                    version, 
+                                    CPythonInterpreterFactoryConstants.GetIntepreterId(
+                                        "PythonCore",
+                                        arch,
+                                        versionStr
+                                    ),
+                                    false,
+                                    false,
+                                    true
+                                );
                             } else if (arch == ProcessorArchitecture.Amd64) {
-                                return x64 ? new PythonVersion(path, version, CPython64Guid) : null;
+                                return x64 ? new PythonVersion(
+                                    path, 
+                                    version,
+                                    CPythonInterpreterFactoryConstants.GetIntepreterId(
+                                        "PythonCore",
+                                        arch,
+                                        versionStr
+                                    ),
+                                    true,
+                                    false,
+                                    true
+                                ) : null;
                             } else {
                                 return null;
                             }
@@ -182,7 +244,18 @@ namespace TestUtilities {
                 if (libPath == null || !libPath.EnumerateFiles("site.py").Any()) {
                     continue;
                 }
-                return new PythonVersion(interpreter.FullName, version, CPythonGuid);
+                return new PythonVersion(
+                    interpreter.FullName, 
+                    version,
+                    CPythonInterpreterFactoryConstants.GetIntepreterId(
+                        "Jython",
+                        ProcessorArchitecture.X86,
+                        version.ToVersion().ToString()
+                    ),
+                    false,
+                    false,
+                    true
+                );
             }
             return null;
         }
@@ -254,18 +327,18 @@ namespace TestUtilities {
     public class PythonVersion {
         public readonly string InterpreterPath;
         public readonly PythonLanguageVersion Version;
-        public readonly Guid Id;
+        public string Id;
         public readonly bool IsCPython;
         public readonly bool IsIronPython;
         public readonly bool Isx64;
 
-        public PythonVersion(string path, PythonLanguageVersion pythonLanguageVersion, Guid id) {
+        public PythonVersion(string path, PythonLanguageVersion pythonLanguageVersion, string id, bool x64, bool ironPython, bool cPython) {
             InterpreterPath = path;
             Version = pythonLanguageVersion;
+            IsCPython = cPython;
+            Isx64 = x64;
+            IsIronPython = ironPython;
             Id = id;
-            IsCPython = (Id == PythonPaths.CPythonGuid || Id == PythonPaths.CPython64Guid);
-            Isx64 = (Id == PythonPaths.CPython64Guid || Id == PythonPaths.IronPython64Guid);
-            IsIronPython = (Id == PythonPaths.IronPythonGuid || Id == PythonPaths.IronPython64Guid);
         }
 
         public override string ToString() {
@@ -292,7 +365,7 @@ namespace TestUtilities {
         public InterpreterConfiguration Configuration {
             get {
                 return new InterpreterConfiguration(
-                    InterpreterId,
+                    Id,
                     "",
                     PrefixPath, InterpreterPath, null, LibPath, "PYTHONPATH",
                     Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
@@ -300,13 +373,6 @@ namespace TestUtilities {
                 );
             }
         }
-
-        public string InterpreterId {
-            get {
-                return Version.ToVersion().ToString() + " " + (Isx64 ? "64-bit" : "32-bit");
-            }
-        }
-
     }
 
     public static class PythonVersionExtensions {

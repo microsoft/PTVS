@@ -412,7 +412,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             lock (_environmentsLock) {
                 names = new HashSet<string>(_environments
                     .Where(view => view.Factory != null)
-                    .Select(view => view.Factory.Description)
+                    .Select(view => view.Factory.Configuration.Description)
                 );
             }
             var name = string.Format(fmt, 1);
@@ -421,7 +421,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
 
             var factory = _service.AddConfigurableInterpreter(new InterpreterFactoryCreationOptions {
-                Id = Guid.NewGuid(),
+                Id = Guid.NewGuid().ToString(),
                 Description = name
             });
 

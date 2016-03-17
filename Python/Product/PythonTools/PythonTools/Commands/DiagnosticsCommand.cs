@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.Commands {
 
                         foreach (var factory in pyProj.InterpreterFactories) {
                             res.AppendLine();
-                            res.AppendLine("        Interpreter: " + factory.Description);
+                            res.AppendLine("        Interpreter: " + factory.Configuration.Description);
                             res.AppendLine("            Id: " + factory.Configuration.Id);
                             res.AppendLine("            Version: " + factory.Configuration.Version);
                             res.AppendLine("            Arch: " + factory.Configuration.Architecture);
@@ -282,7 +282,7 @@ namespace Microsoft.PythonTools.Commands {
             res.AppendLine("Environment Analysis Logs: ");
             foreach (var provider in knownProviders) {
                 foreach (var factory in provider.GetInterpreterFactories().OfType<IPythonInterpreterFactoryWithDatabase>()) {
-                    res.AppendLine(factory.Description);
+                    res.AppendLine(factory.Configuration.Description);
                     string analysisLog = factory.GetAnalysisLogContent(CultureInfo.InvariantCulture);
                     if (!string.IsNullOrEmpty(analysisLog)) {
                         res.AppendLine(analysisLog);

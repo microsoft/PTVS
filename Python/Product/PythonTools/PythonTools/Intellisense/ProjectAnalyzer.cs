@@ -1721,7 +1721,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 );
 
-                if (outliningTags != null && outliningTags.version != -1) {
+                if (outliningTags != null && outliningTags.version >= lastVersion.VersionNumber) {
                     var translator = new LocationTracker(
                         lastVersion,
                         snapshot.TextBuffer,
@@ -1729,6 +1729,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     );
 
                     res = ConvertOutliningTags(snapshot, translator, outliningTags.tags);
+                } else {
+                    return null;
                 }
             }
 

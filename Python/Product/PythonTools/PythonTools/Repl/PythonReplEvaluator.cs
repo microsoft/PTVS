@@ -57,12 +57,11 @@ namespace Microsoft.PythonTools.Repl {
 
         private class UnavailableFactory : IPythonInterpreterFactory {
             public UnavailableFactory(string id) {
-                Id = Guid.Parse(id);
                 Configuration = new InterpreterConfiguration(id, "Unavailable", new Version(0, 0));
             }
-            public string Description { get { return Id.ToString(); } }
+            public string Description { get { return Configuration.Id.ToString(); } }
             public InterpreterConfiguration Configuration { get; private set; }
-            public Guid Id { get; private set; }
+            public Guid Id { get { return Guid.Empty; } }
             public IPythonInterpreter CreateInterpreter() { return null; }
         }
 
@@ -147,7 +146,7 @@ namespace Microsoft.PythonTools.Repl {
 
         internal override string DisplayName {
             get {
-                return Interpreter != null ? Interpreter.Description : string.Empty;
+                return Interpreter != null ? Interpreter.Configuration.Description : string.Empty;
             }
         }
 
@@ -198,7 +197,7 @@ namespace Microsoft.PythonTools.Repl {
                 Window.WriteError(Strings.ReplEvaluatorInterpreterNotFound);
                 return;
             } else if (String.IsNullOrWhiteSpace(Interpreter.Configuration.InterpreterPath)) {
-                Window.WriteError(Strings.ReplEvaluatorInterpreterNotConfigured.FormatUI(Interpreter.Description));
+                Window.WriteError(Strings.ReplEvaluatorInterpreterNotConfigured.FormatUI(Interpreter.Configuration.Description));
                 return;
             }
             var processInfo = new ProcessStartInfo(Interpreter.Configuration.InterpreterPath);

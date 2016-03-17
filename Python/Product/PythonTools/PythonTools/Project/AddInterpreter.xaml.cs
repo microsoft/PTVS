@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly AddInterpreterView _view;
 
         private AddInterpreter(PythonProjectNode project, IInterpreterOptionsService service) {
-            _view = new AddInterpreterView(project.Site, service, project.InterpreterFactories);
+            _view = new AddInterpreterView(project, project.Site, project.InterpreterFactories);
             _view.PropertyChanged += View_PropertyChanged;
             DataContext = _view;
 

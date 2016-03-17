@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools {
 
         public static IEnumerable<InterpreterView> GetInterpreters(
             IServiceProvider serviceProvider,
-            IInterpreterOptionsService interpreterService = null
+            PythonProjectNode project
         ) {
             var knownProviders = serviceProvider.GetComponentModel().GetExtensions<IPythonInterpreterFactoryProvider>();
 
@@ -44,9 +44,9 @@ namespace Microsoft.PythonTools {
                 //.Where(p => !(p is LoadedProjectInterpreterFactoryProvider))
                 .SelectMany(p => p.GetInterpreterFactories())
                 .Where(PythonInterpreterFactoryExtensions.IsUIVisible)
-                .OrderBy(fact => fact.Description)
+                .OrderBy(fact => fact.Configuration.Description)
                 .ThenBy(fact => fact.Configuration.Version)
-                .Select(i => new InterpreterView(i, i.Description, i == interpreterService.DefaultInterpreter));
+                .Select(i => new InterpreterView(i, i.Configuration.Description, i == project.ActiveInterpreter));
         }
 
         public InterpreterView(IPythonInterpreterFactory interpreter, string name, PythonProjectNode project)

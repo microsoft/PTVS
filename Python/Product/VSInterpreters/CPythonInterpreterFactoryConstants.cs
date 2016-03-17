@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Reflection;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -38,5 +39,22 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public const string Description32 = "Python";
         public const string Description64 = "Python 64-bit";
+
+        public static string GetIntepreterId(string vendor, ProcessorArchitecture? arch, string key) {
+            string archStr;
+            switch (arch) {
+                case ProcessorArchitecture.Amd64: archStr = "x64"; break;
+                case ProcessorArchitecture.X86: archStr = "x86"; break;
+                default: archStr = "unknown"; break;
+            }
+
+            return String.Join(
+                "|", 
+                CPythonInterpreterFactoryProvider.FactoryProviderName,
+                vendor,
+                key,
+                archStr
+            );
+        }
     }
 }

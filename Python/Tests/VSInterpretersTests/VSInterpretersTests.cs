@@ -292,7 +292,7 @@ namespace FactoryProviderTypeLoadException {
 
             try {
                 InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
-                    Id = Guid.NewGuid(),
+                    Id = Guid.NewGuid().ToString(),
                     LanguageVersionString = "1.0"
                 });
                 Assert.Fail("Expected ArgumentException");

@@ -409,7 +409,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                     AddVirtualEnvironment(project, sourcePath, options);
 
                     if (string.IsNullOrEmpty(interpreterId.Value)) {
-                        interpreterId.Value = options.NewId;
+                        interpreterId.Value = options.Id;
                     }
                 }
             }
@@ -453,7 +453,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 new Dictionary<string, string> {
                     { MSBuildConstants.IdKey, Guid.NewGuid().ToString("B") },
                     { MSBuildConstants.DescriptionKey, options.Description },
-                    { MSBuildConstants.BaseInterpreterKey, options.NewId },
+                    { MSBuildConstants.BaseInterpreterKey, options.Id },
                     { MSBuildConstants.InterpreterPathKey, interpreterPath },
                     { MSBuildConstants.WindowsPathKey, windowInterpreterPath },
                     { MSBuildConstants.LibraryPathKey, libraryPath },

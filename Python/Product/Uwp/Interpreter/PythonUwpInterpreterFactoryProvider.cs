@@ -23,10 +23,11 @@ using System.Reflection;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Uwp.Interpreter {
-    [InterpreterFactoryId("Uwp")]
+    [InterpreterFactoryId(InterpreterFactoryProviderId)]
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     class PythonUwpInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
         private HashSet<IPythonInterpreterFactory> _factories = null;
+        public const string InterpreterFactoryProviderId = "Uwp";
 
         private const string PythonUwpSdkTargetsFile = @"DesignTime\CommonConfiguration\Neutral\CPython.targets";
 

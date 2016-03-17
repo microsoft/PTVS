@@ -58,22 +58,23 @@ namespace Microsoft.PythonTools.Intellisense {
                     var missing = missingImports.Data;
                     if (missing.unresolved.Any()) {
                         var translator = missingImports.GetTracker(missingImports.Data.version);
+                        if (translator != null) {
+                            var f = new TaskProviderItemFactory(translator);
 
-                        var f = new TaskProviderItemFactory(translator);
-
-                        _taskProvider.ReplaceItems(
-                            entry,
-                            VsProjectAnalyzer.UnresolvedImportMoniker,
-                            missingImports.Data.unresolved.Select(t => f.FromUnresolvedImport(
-                                _serviceProvider,
-                                entry.Analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
-                                t.name,
-                                new SourceSpan(
-                                    new SourceLocation(t.startIndex, t.startLine, t.startColumn),
-                                    new SourceLocation(t.endIndex, t.endLine, t.endColumn)
-                                )
-                            )).ToList()
-                        );
+                            _taskProvider.ReplaceItems(
+                                entry,
+                                VsProjectAnalyzer.UnresolvedImportMoniker,
+                                missingImports.Data.unresolved.Select(t => f.FromUnresolvedImport(
+                                    _serviceProvider,
+                                    entry.Analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
+                                    t.name,
+                                    new SourceSpan(
+                                        new SourceLocation(t.startIndex, t.startLine, t.startColumn),
+                                        new SourceLocation(t.endIndex, t.endLine, t.endColumn)
+                                    )
+                                )).ToList()
+                            );
+                        }
                     } else {
                         _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
                     }

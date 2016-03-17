@@ -502,8 +502,8 @@ namespace Microsoft.PythonTools {
                 // Add or update any items that weren't removed
                 foreach (var option in InterpreterOptions.Select(x => x.Value)) {
                     if (option.Added) {
-                        if (option.Id == Guid.Empty) {
-                            option.Id = Guid.NewGuid();
+                        if (String.IsNullOrWhiteSpace(option.Id)) {
+                            option.Id = Guid.NewGuid().ToString();
                         }
                         option.Added = false;
                     }

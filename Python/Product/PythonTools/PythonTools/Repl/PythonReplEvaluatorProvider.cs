@@ -71,17 +71,16 @@ namespace Microsoft.PythonTools.Repl {
         /// Creates an interactive evaluator programmatically for some plugin
         /// </summary>
         private IInteractiveEvaluator CreateConfigurableEvaluator(string replId) {
-            string[] components = replId.Split(new[] { '|' }, 5);
+            string[] components = replId.Split(new[] { '|' }, 4);
             if (components.Length == 5) {
                 string interpreter = components[1];
-                string interpreterVersion = components[2];
-                // string userId = components[3];
+                // string userId = components[2];
                 // We don't care about the user identifier - it is there to
                 // ensure that evaluators can be distinguished within a project
                 // and/or with the same interpreter.
-                string projectName = components[4];
+                string projectName = components[3];
 
-                var factory = _interpreterService.FindInterpreter(interpreter, interpreterVersion);
+                var factory = _interpreterService.FindInterpreter(interpreter);
 
                 if (factory != null) {
                     var replOptions = new ConfigurablePythonReplOptions();

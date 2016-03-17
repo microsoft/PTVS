@@ -117,10 +117,9 @@ namespace PythonToolsTests {
 
             foreach (var version in PythonPaths.Versions) {
                 var verStr = version.Version.ToVersion().ToString();
-                proj.SetProperty("InterpreterId", version.Id.ToString("B"));
-                proj.SetProperty("InterpreterVersion", verStr);
+                proj.SetProperty("InterpreterId", version.Id.ToString());
                 proj.RemoveItems(proj.ItemsIgnoringCondition.Where(i => i.ItemType == "InterpreterReference").ToArray());
-                proj.AddItem("InterpreterReference", string.Format("{0:B}\\{1}", version.Id, verStr));
+                proj.AddItem("InterpreterReference", version.Id);
                 proj.Save();
                 proj.ReevaluateIfNecessary();
 

@@ -80,6 +80,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private void InitializeContexts() {
             foreach (var provider in _contextProviders) {
                 provider.Value.ProjectContextsChanged += Provider_ProjectContextsChanged;
+                Provider_ProjectContextsChanged(provider.Value, EventArgs.Empty);
             }
         }
 
@@ -102,23 +103,24 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public IPythonInterpreterFactory GetInterpreterFactory(string id) {
-            var pathAndId = id.Split(new[] { ';' }, 2);
-            if (pathAndId.Length == 2) {
-                var interpId = pathAndId[0];
-                var path = pathAndId[1];
+            var pathAndId = id.Split(new[] { '|' }, 3);
+            if (pathAndId.Length == 3) {
+                var interpId = pathAndId[1];
+                var path = pathAndId[2];
 
                 // see if the project is loaded
                 ProjectInfo project;
-                if (_projects.TryGetValue(path, out project)) {
-                    
-                    // see if we have the associated interpreter ID.
-                    FactoryInfo factInfo;
-                    if (project.Factories.TryGetValue(interpId, out factInfo)) {
-                        return factInfo.Factory;
-                    }
+                FactoryInfo factInfo;
+                if (_projects.TryGetValue(path, out project) &&
+                    project.Factories.TryGetValue(interpId, out factInfo)) {
+                    return factInfo.Factory;
                 }
             }
             return null;
+        }
+
+        public static string GetInterpreterId(string file, string id) {
+            return String.Join("|", MSBuildProviderName, id, file);
         }
 
         private void Provider_ProjectContextsChanged(object sender, EventArgs e) {
@@ -127,6 +129,13 @@ namespace Microsoft.PythonTools.Interpreter {
             if (contextProvider != null) {
                 foreach (var context in contextProvider.ProjectContexts) {
                     var projContext = context as MSBuild.Project;
+                    if (projContext == null) {
+                        var projectFile = context as string;
+                        if (projectFile != null && projectFile.EndsWith(".pyproj", StringComparison.OrdinalIgnoreCase)) {
+                            projContext = new MSBuild.Project(projectFile);
+                        }
+                    }
+
                     if (projContext != null && !_projects.ContainsKey(projContext.FullPath)) {
                         var projInfo = new ProjectInfo(projContext, contextProvider);
                         _projects[projContext.FullPath] = projInfo;
@@ -176,7 +185,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var factories = new Dictionary<string, FactoryInfo>();
             foreach (var item in project.GetItems(InterpreterItem)) {
                 IPythonInterpreterFactory fact;
-                
+
                 // Errors in these options are fatal, so we set anyError and
                 // continue with the next entry.
                 var dir = item.EvaluatedInclude;
@@ -286,7 +295,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 if (hasError) {
                     fact = new NotFoundInterpreterFactory(
-                        id,
+                        GetInterpreterId(project.FullPath, id),
                         ver,
                         string.Format("{0} (unavailable)", description),
                         Directory.Exists(dir) ? dir : null
@@ -296,7 +305,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         baseInterp,
                         new InterpreterFactoryCreationOptions {
                             LanguageVersion = baseInterp.Configuration.Version,
-                            Id = Guid.NewGuid(),
+                            Id = GetInterpreterId(project.FullPath, id),
                             Description = description,
                             InterpreterPath = path,
                             WindowInterpreterPath = winPath,
@@ -304,29 +313,31 @@ namespace Microsoft.PythonTools.Interpreter {
                             PrefixPath = dir,
                             PathEnvironmentVariableName = pathVar,
                             Architecture = baseInterp.Configuration.Architecture,
-                            WatchLibraryForNewModules = true,                            
+                            WatchLibraryForNewModules = true,
                         }
                     );
                 } else {
-                    fact = InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
-                        LanguageVersion = ver,
-                        Id = Guid.NewGuid(),
-                        Description = description,
-                        InterpreterPath = path,
-                        WindowInterpreterPath = winPath,
-                        LibraryPath = libPath,
-                        PrefixPath = dir,
-                        PathEnvironmentVariableName = pathVar,
-                        ArchitectureString = arch,
-                        WatchLibraryForNewModules = true
-                    });
+                    fact = InterpreterFactoryCreator.CreateInterpreterFactory(
+                        new InterpreterFactoryCreationOptions {
+                            LanguageVersion = ver,
+                            Id = GetInterpreterId(project.FullPath, id),
+                            Description = description,
+                            InterpreterPath = path,
+                            WindowInterpreterPath = winPath,
+                            LibraryPath = libPath,
+                            PrefixPath = dir,
+                            PathEnvironmentVariableName = pathVar,
+                            ArchitectureString = arch,
+                            WatchLibraryForNewModules = true
+                        }
+                    );
                 }
 
                 var existing = _factoryProviders.GetInterpreterFactory(id);
                 if (existing != null && existing.IsEqual(fact)) {
-                    factories[project.FullPath] = new FactoryInfo(
-                        item, 
-                        false, 
+                    factories[id] = new FactoryInfo(
+                        item,
+                        false,
                         existing
                     );
                     var disposable = fact as IDisposable;
@@ -335,7 +346,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 } else {
                     projectInfo.RootPaths[id] = dir;
-                    factories[project.FullPath] = new FactoryInfo(item, true, fact);
+                    factories[id] = new FactoryInfo(item, true, fact);
                     anyChange = true;
                 }
             }
@@ -348,11 +359,11 @@ namespace Microsoft.PythonTools.Interpreter {
                 var existing = _factoryProviders.GetInterpreterFactory(id);
 
                 if (existing != null) {
-                    factories[project.FullPath] = new FactoryInfo(item, false, existing);
+                    factories[id] = new FactoryInfo(item, false, existing);
                 } else {
                     owned = true;
                     existing = new NotFoundInterpreterFactory(id, new Version(0, 0));
-                    factories[project.FullPath] = new FactoryInfo(item, owned, existing);
+                    factories[id] = new FactoryInfo(item, owned, existing);
                     anyChange = true;
                 }
             }
@@ -372,7 +383,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 foreach (var factory in factories) {
                     projectInfo.Context.InterpreterLoaded(projectInfo.Project, factory.Value.Factory.Configuration);
                 }
-                //UpdateActiveInterpreter();
             }
 
             if (anyError) {
@@ -418,10 +428,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 string description = null,
                 string prefixPath = null
             ) {
-                Description = string.IsNullOrEmpty(description) ? string.Format("Unknown Python {0}", version) : description;
                 Configuration = new InterpreterConfiguration(
                     id,
-                    Description,
+                    string.IsNullOrEmpty(description) ? string.Format("Unknown Python {0}", version) : description,
                     prefixPath,
                     null,
                     null,
@@ -1326,7 +1335,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-#region IDisposable Members
+    #region IDisposable Members
 
         public void Dispose() {
             _service.DefaultInterpreterChanged -= GlobalDefaultInterpreterChanged;
@@ -1343,7 +1352,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-#endregion
+    #endregion
     }
 #endif
 }

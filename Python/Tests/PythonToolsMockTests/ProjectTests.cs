@@ -106,9 +106,9 @@ namespace PythonToolsMockTests {
                 var interpreters = ((IComponentModel)project.GetService(typeof(SComponentModel)))
                     .GetService<IInterpreterOptionsService>()
                     .Interpreters;
-
-                var v27 = interpreters.Where(x => x.Id == CPythonInterpreterFactoryConstants.Guid32 && x.Configuration.Version == new Version(2, 7)).First();
-                var v34 = interpreters.Where(x => x.Id == CPythonInterpreterFactoryConstants.Guid32 && x.Configuration.Version == new Version(3, 4)).First();
+                
+                var v27 = interpreters.Where(x => x.Configuration.Id == "Global;PythonCore;2.7;x86").First();
+                var v34 = interpreters.Where(x => x.Configuration.Id == "Global;PythonCore;3.4;x86").First();
                 var interpOptions = (UIThreadBase)project.GetService(typeof(IComponentModel));
 
                 uiThread.Invoke(() => {

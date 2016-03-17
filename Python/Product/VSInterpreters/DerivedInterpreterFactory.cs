@@ -28,8 +28,6 @@ namespace Microsoft.PythonTools.Interpreter {
         readonly PythonInterpreterFactoryWithDatabase _base;
         bool _deferRefreshIsCurrent;
 
-        string _description;
-
         PythonTypeDatabase _baseDb;
         bool _baseHasRefreshed;
 
@@ -39,11 +37,10 @@ namespace Microsoft.PythonTools.Interpreter {
             PythonInterpreterFactoryWithDatabase baseFactory,
             InterpreterFactoryCreationOptions options
         ) : base(
-                options.Id,
                 options.Description,
                 new InterpreterConfiguration(
-                    options.NewId,
-                    baseFactory.Configuration.Description,
+                    options.Id,
+                    options.Description,
                     options.PrefixPath,
                     options.InterpreterPath,
                     options.WindowInterpreterPath,
@@ -62,8 +59,6 @@ namespace Microsoft.PythonTools.Interpreter {
             _base = baseFactory;
             _base.IsCurrentChanged += Base_IsCurrentChanged;
             _base.NewDatabaseAvailable += Base_NewDatabaseAvailable;
-
-            _description = options.Description;
 
             if (Volatile.Read(ref _deferRefreshIsCurrent)) {
                 // This rare race condition is due to a design flaw that is in
@@ -93,16 +88,6 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return _base;
             }
-        }
-
-        public override string Description {
-            get {
-                return _description;
-            }
-        }
-
-        public void SetDescription(string value) {
-            _description = value;
         }
 
         public override IPythonInterpreter MakeInterpreter(PythonInterpreterFactoryWithDatabase factory) {
@@ -251,7 +236,7 @@ namespace Microsoft.PythonTools.Interpreter {
             } else if (!_base.IsCurrent) {
                 return string.Format(culture,
                     "Base interpreter {0} is out of date{1}{1}{2}",
-                    _base.Description,
+                    _base.Configuration.Description,
                     Environment.NewLine,
                     _base.GetFriendlyIsCurrentReason(culture));
             }
@@ -264,7 +249,7 @@ namespace Microsoft.PythonTools.Interpreter {
             } else if (!_base.IsCurrent) {
                 return string.Format(culture,
                     "Base interpreter {0} is out of date{1}{1}{2}",
-                    _base.Description,
+                    _base.Configuration.Description,
                     Environment.NewLine,
                     _base.GetIsCurrentReason(culture));
             }

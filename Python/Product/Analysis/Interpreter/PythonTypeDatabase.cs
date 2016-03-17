@@ -514,7 +514,7 @@ namespace Microsoft.PythonTools.Interpreter {
 #if DEBUG
                         "Debug",
 #endif
-                        AssemblyVersionInfo.VSVersion
+                        AssemblyVersionInfo.Version
                     );
                 }
                 return _completionDatabasePath;
@@ -531,7 +531,7 @@ namespace Microsoft.PythonTools.Interpreter {
 #if DEBUG
                         "Debug",
 #endif
-                        AssemblyVersionInfo.VSVersion
+                        AssemblyVersionInfo.Version
                     );
                 }
                 return _referencesDatabasePath;

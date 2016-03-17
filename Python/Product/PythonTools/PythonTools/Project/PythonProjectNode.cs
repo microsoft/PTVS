@@ -106,16 +106,20 @@ namespace Microsoft.PythonTools.Project {
             }
             _customCommands = null;
 
+            var contextProvider = Site.GetComponentModel().GetService<VsProjectContextProvider>();
+            contextProvider.UpdateProject(this, project);
+
             // Project has been cleared, so nothing else to do here
             if (project == null) {
                 return;
             }
 
+
             // collect the valid interpreter factories for this project...
             foreach (var item in project.GetItems(MSBuildConstants.InterpreterItem)) {
                 var id = item.GetMetadataValue(MSBuildConstants.IdKey);
                 if (!String.IsNullOrWhiteSpace(id)) {
-                    _validFactories.Add(id);
+                    _validFactories.Add(MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(BuildProject.FullPath, id));
                 }
             }
 
@@ -125,6 +129,8 @@ namespace Microsoft.PythonTools.Project {
                     _validFactories.Add(id);
                 }
             }
+
+            UpdateActiveInterpreter();
 
             //// Hook up the interpreter factory provider
             //var interpreterService = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
@@ -250,7 +256,7 @@ namespace Microsoft.PythonTools.Project {
                         { MSBuildConstants.IdKey, derived.Configuration.Id },
                         { MSBuildConstants.BaseInterpreterKey, derived.BaseInterpreter.Configuration.Id  },
                         { MSBuildConstants.VersionKey, derived.BaseInterpreter.Configuration.Version.ToString() },
-                        { MSBuildConstants.DescriptionKey, derived.Description },
+                        { MSBuildConstants.DescriptionKey, derived.Configuration.Description },
                         { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, derived.Configuration.InterpreterPath) },
                         { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, derived.Configuration.WindowsInterpreterPath) },
                         { MSBuildConstants.LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, derived.Configuration.LibraryPath) },
@@ -273,7 +279,7 @@ namespace Microsoft.PythonTools.Project {
                     new Dictionary<string, string> {
                         { MSBuildConstants.IdKey, factory.Configuration.Id },
                         { MSBuildConstants.VersionKey, factory.Configuration.Version.ToString() },
-                        { MSBuildConstants.DescriptionKey, factory.Description },
+                        { MSBuildConstants.DescriptionKey, factory.Configuration.Description },
                         { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, factory.Configuration.InterpreterPath) },
                         { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, factory.Configuration.WindowsInterpreterPath) },
                         { MSBuildConstants.LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, factory.Configuration.LibraryPath) },
@@ -358,7 +364,11 @@ namespace Microsoft.PythonTools.Project {
                     var configs = compModel.DefaultExportProvider.GetConfigurations();
                     foreach (var config in configs) {
                         if (!vsProjContext.IsProjectSpecific(config.Value)) {
-                            yield return compModel.DefaultExportProvider.GetInterpreterFactory(config.Key);
+                            var res = compModel.DefaultExportProvider.GetInterpreterFactory(config.Key);
+                            if (res == null) {
+                                continue;
+                            }
+                            yield return res;
                         }
                     }
                 } else {
@@ -1150,7 +1160,7 @@ namespace Microsoft.PythonTools.Project {
 
             if (!fact.Configuration.IsAvailable()) {
                 throw new MissingInterpreterException(
-                    Strings.MissingEnvironment.FormatUI(fact.Description, fact.Configuration.Version)
+                    Strings.MissingEnvironment.FormatUI(fact.Configuration.Description, fact.Configuration.Version)
                 );
             }
 
@@ -1543,12 +1553,12 @@ namespace Microsoft.PythonTools.Project {
 
                 factory = InterpreterFactories.FirstOrDefault(
                     // Description is a localized string, hence CCIC
-                    f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
+                    f => description.Equals(f.Configuration.Description, StringComparison.CurrentCultureIgnoreCase)
                 );
 
                 if (factory == null) {
                     factory = service.Interpreters.FirstOrDefault(
-                        f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
+                        f => description.Equals(f.Configuration.Description, StringComparison.CurrentCultureIgnoreCase)
                     );
                 }
             }
@@ -1827,7 +1837,7 @@ namespace Microsoft.PythonTools.Project {
             var name = "-r " + ProcessOutput.QuoteSingleArgument(txt);
             if (args != null && !args.ContainsKey("y")) {
                 if (!ShouldInstallRequirementsTxt(
-                    selectedInterpreterFactory.Description,
+                    selectedInterpreterFactory.Configuration.Description,
                     txt,
                     elevated
                 )) {
@@ -2074,7 +2084,7 @@ namespace Microsoft.PythonTools.Project {
                 var dlg = TaskDialog.ForException(
                     Site,
                     ex,
-                    Strings.MissingEnvironment.FormatUI(factory.Description, factory.Configuration.Version),
+                    Strings.MissingEnvironment.FormatUI(factory.Configuration.Description, factory.Configuration.Version),
                     IssueTrackerUrl
                 );
                 dlg.Title = Strings.ProductTitle;
@@ -2331,7 +2341,7 @@ namespace Microsoft.PythonTools.Project {
                 throw new InvalidOperationException(Strings.VirtualEnvAddFailed);
             }
             if (!create) {
-                baseInterp = service.FindInterpreter(options.Id, options.LanguageVersion);
+                baseInterp = service.FindInterpreter(options.Id);
             }
 
             if (!QueryEditProjectFile(false)) {
@@ -2384,10 +2394,12 @@ namespace Microsoft.PythonTools.Project {
             var rootPath = PathUtils.GetAbsoluteDirectoryPath(projectHome, options.PrefixPath);
 
             IPythonInterpreterFactory fact;
-            var id = Guid.NewGuid();
-            string newId = id.ToString("N");
+            var id = MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(
+                BuildProject.FullPath,
+                Guid.NewGuid().ToString("N")    // TODO: More friendly name...
+            );
             var baseInterp = Site.GetComponentModel().DefaultExportProvider
-                .GetInterpreterFactory(options.NewId) as PythonInterpreterFactoryWithDatabase;
+                .GetInterpreterFactory(options.Id) as PythonInterpreterFactoryWithDatabase;
             if (baseInterp != null) {
                 var pathVar = options.PathEnvironmentVariableName;
                 if (string.IsNullOrEmpty(pathVar)) {
@@ -2407,7 +2419,6 @@ namespace Microsoft.PythonTools.Project {
                     baseInterp,
                     new InterpreterFactoryCreationOptions {
                         Id = id,
-                        NewId = newId,
                         LanguageVersion = baseInterp.Configuration.Version,
                         Description = description,
                         InterpreterPath = options.InterpreterPath,
@@ -2423,7 +2434,6 @@ namespace Microsoft.PythonTools.Project {
                 fact = InterpreterFactoryCreator.CreateInterpreterFactory(
                     new InterpreterFactoryCreationOptions {
                         Id = id,
-                        NewId = newId,
                         LanguageVersion = options.LanguageVersion,
                         Description = options.Description,
                         InterpreterPath = options.InterpreterPath,
@@ -2439,7 +2449,7 @@ namespace Microsoft.PythonTools.Project {
 
             AddInterpreter(fact, true);
 
-            return MSBuildProjectInterpreterFactoryProvider.MSBuildProviderName + ";" + newId;
+            return id;
         }
 
 

@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Analysis {
         private const string AnalysisLimitsKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion + 
             @"\Analysis\StandardLibrary";
 
-        private readonly Guid _id;
+        private readonly string _id;
         private readonly Version _version;
         private readonly string _interpreter;
         private readonly List<PythonLibraryPath> _library;
@@ -207,7 +207,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public PyLibAnalyzer(
-            Guid id,
+            string id,
             Version langVersion,
             string interpreter,
             IEnumerable<PythonLibraryPath> library,
@@ -243,9 +243,8 @@ namespace Microsoft.PythonTools.Analysis {
             _treatPathsAsStandardLibrary = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _library = library != null ? library.ToList() : new List<PythonLibraryPath>();
 
-            if (_id != Guid.Empty && !interactive) {
-                var identifier = AnalyzerStatusUpdater.GetIdentifier(_id, _version);
-                _updater = new AnalyzerStatusUpdater(identifier);
+            if (!String.IsNullOrWhiteSpace(_id) && !interactive) {
+                _updater = new AnalyzerStatusUpdater(_id);
                 // We worry about initialization exceptions here, specifically
                 // that our identifier may already be in use.
                 _updater.WaitForWorkerStarted();
@@ -313,7 +312,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             string value;
 
-            Guid id = Guid.Empty;
+            string id = string.Empty;
             Version version = default(Version);
             string interpreter, outDir;
             var library = new List<PythonLibraryPath>();
@@ -333,10 +332,8 @@ namespace Microsoft.PythonTools.Analysis {
 
 
             if (!interactive) {
-                if (!options.TryGetValue("id", out value)) {
-                    id = Guid.Empty;
-                } else if (!Guid.TryParse(value, out id)) {
-                    throw new ArgumentException(value, "id");
+                if (options.TryGetValue("id", out value)) {
+                    id = value;
                 }
 
                 if (!options.TryGetValue("version", out value) && !options.TryGetValue("v", out value)) {
