@@ -48,6 +48,7 @@ using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools {
     public static class Extensions {
@@ -325,10 +326,18 @@ namespace Microsoft.PythonTools {
             return null;
         }
 
+        internal static PythonLanguageVersion GetLanguageVersion(this ITextView textView, IServiceProvider serviceProvider) {
+            PythonInteractiveEvaluator evaluator;
+            if (textView.Properties.TryGetProperty(typeof(PythonInteractiveEvaluator), out evaluator)) {
+                return evaluator.LanguageVersion;
+            }
+            return GetAnalyzer(textView, serviceProvider)?.InterpreterFactory.GetLanguageVersion() ?? PythonLanguageVersion.None;
+        }
+
         internal static VsProjectAnalyzer GetAnalyzer(this ITextView textView, IServiceProvider serviceProvider) {
-            PythonReplEvaluator evaluator;
-            if (textView.Properties.TryGetProperty<PythonReplEvaluator>(typeof(PythonReplEvaluator), out evaluator)) {
-                return evaluator.ReplAnalyzer;
+            PythonInteractiveEvaluator evaluator;
+            if (textView.Properties.TryGetProperty(typeof(PythonInteractiveEvaluator), out evaluator)) {
+                return evaluator.Analyzer;
             }
             return textView.TextBuffer.GetAnalyzer(serviceProvider);
         }
@@ -437,22 +446,21 @@ namespace Microsoft.PythonTools {
         }
 
         internal static VsProjectAnalyzer GetAnalyzer(this ITextBuffer buffer, IServiceProvider serviceProvider) {
-            PythonProjectNode pyProj;
-            if (!buffer.Properties.TryGetProperty<PythonProjectNode>(typeof(PythonProjectNode), out pyProj)) {
-                pyProj = buffer.GetProject(serviceProvider);
-                if (pyProj != null) {
-                    buffer.Properties.AddProperty(typeof(PythonProjectNode), pyProj);
-                }
+            VsProjectAnalyzer analyzer;
+            if (buffer.Properties.TryGetProperty(typeof(VsProjectAnalyzer), out analyzer) && analyzer != null) {
+                return analyzer;
             }
 
+            var interactive = buffer.GetInteractiveWindow();
+            if (interactive != null &&
+                interactive.TextView.TextBuffer.Properties.TryGetProperty(typeof(VsProjectAnalyzer), out analyzer) &&
+                analyzer != null) {
+                return analyzer;
+            }
+
+            var pyProj = buffer.Properties.GetOrCreateSingletonProperty(() => buffer.GetProject(serviceProvider));
             if (pyProj != null) {
                 return pyProj.GetAnalyzer();
-            }
-
-            VsProjectAnalyzer analyzer;
-            // exists for tests where we don't run in VS and for the existing changes preview
-            if (buffer.Properties.TryGetProperty<VsProjectAnalyzer>(typeof(VsProjectAnalyzer), out analyzer)) {
-                return analyzer;
             }
 
             return serviceProvider.GetPythonToolsService().DefaultAnalyzer;

@@ -125,10 +125,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 return Enumerable.Empty<MemberResult>();
             }
 
-            IPythonReplIntellisense pyReplEval = null;
+            IPythonInteractiveIntellisense pyReplEval = null;
             IInteractiveEvaluator eval;
             if (TextBuffer.Properties.TryGetProperty(typeof(IInteractiveEvaluator), out eval)) {
-                pyReplEval = eval as IPythonReplIntellisense;
+                pyReplEval = eval as IPythonInteractiveIntellisense;
             }
             IEnumerable<KeyValuePair<string, bool>> replScopes = null;
             if (pyReplEval != null) {

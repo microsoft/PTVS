@@ -103,25 +103,6 @@
                                     </TextBlock>
                                 </Grid>
                             </Button>
-
-                            <Button Command="{x:Static l:EnvironmentView.OpenInteractiveOptions}"
-                                    CommandParameter="{Binding}"
-                                    Style="{StaticResource NavigationButton}"
-                                    Margin="6"
-                                    HorizontalAlignment="Left">
-                                <Grid Background="Transparent">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="auto" />
-                                        <ColumnDefinition />
-                                    </Grid.ColumnDefinitions>
-                                    <Control Grid.Column="0"
-                                             Margin="3 0"
-                                             Style="{StaticResource SettingsImage}" />
-                                    <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
-                                        Configure interactive window
-                                    </TextBlock>
-                                </Grid>
-                            </Button>
                         </StackPanel>
                     </DataTemplate>
 

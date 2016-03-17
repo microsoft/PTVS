@@ -507,8 +507,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         private void EnvironmentReplWorkingDirectoryTest(
             PythonVisualStudioApp app,
             EnvDTE.Project project,
-            TreeNode env,
-            string envName
+            TreeNode env
         ) {
             var path1 = Path.Combine(Path.GetDirectoryName(project.FullName), Guid.NewGuid().ToString("N"));
             var path2 = Path.Combine(Path.GetDirectoryName(project.FullName), Guid.NewGuid().ToString("N"));
@@ -518,28 +517,25 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             env.Select();
             app.Dte.ExecuteCommand("Python.Interactive");
 
-            var window = app.GetInteractiveWindow(string.Format("{0} Interactive", envName));
-            Assert.IsNotNull(window, string.Format("Failed to find '{0} Interactive'", envName));
-            try {
+            using (var window = app.GetInteractiveWindow(string.Format("{0} Interactive", project.Name))) {
+                Assert.IsNotNull(window, string.Format("Failed to find '{0} Interactive'", project.Name));
                 app.ServiceProvider.GetUIThread().Invoke(() => project.GetPythonProject().SetProjectProperty("WorkingDirectory", path1));
 
                 window.Reset();
-                window.ReplWindow.Evaluator.ExecuteText("import os; os.getcwd()").Wait();
+                window.ExecuteText("import os; os.getcwd()").Wait();
                 window.WaitForTextEnd(
                     string.Format("'{0}'", path1.Replace("\\", "\\\\")),
-                    ">>>"
+                    ">"
                 );
 
                 app.ServiceProvider.GetUIThread().Invoke(() => project.GetPythonProject().SetProjectProperty("WorkingDirectory", path2));
 
                 window.Reset();
-                window.ReplWindow.Evaluator.ExecuteText("import os; os.getcwd()").Wait();
+                window.ExecuteText("import os; os.getcwd()").Wait();
                 window.WaitForTextEnd(
                     string.Format("'{0}'", path2.Replace("\\", "\\\\")),
-                    ">>>"
+                    ">"
                 );
-            } finally {
-                window.Close();
             }
         }
 
@@ -559,7 +555,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 var sln = app.OpenSolutionExplorer();
                 var env = sln.FindChildOfProject(project, Strings.Environments, envName);
 
-                EnvironmentReplWorkingDirectoryTest(app, project, env, envName);
+                EnvironmentReplWorkingDirectoryTest(app, project, env);
             }
         }
 
@@ -573,7 +569,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 string envName;
                 var env = app.CreateVirtualEnvironment(project, out envName);
 
-                EnvironmentReplWorkingDirectoryTest(app, project, env, envName);
+                EnvironmentReplWorkingDirectoryTest(app, project, env);
             }
         }
     }

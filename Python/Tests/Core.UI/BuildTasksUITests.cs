@@ -141,14 +141,17 @@ namespace PythonToolsUITests {
 
                 Execute(node, "Command from Resource");
 
-                var repl = app.GetInteractiveWindow("Repl from Resource");
-                Assert.IsNotNull(repl, "Could not find repl window");
-                repl.WaitForTextEnd(
-                    "Program.py completed",
-                    repl.PrimaryPrompt
-                );
+                using (var repl = app.GetInteractiveWindow("Repl from Resource")) {
+                    Assert.IsNotNull(repl, "Could not find repl window");
+                    repl.WaitForTextEnd(
+                        "Program.py completed",
+                        ">"
+                    );
+                }
 
-                Assert.IsNull(app.GetInteractiveWindow("resource:PythonToolsUITests;PythonToolsUITests.Resources;ReplName"));
+                using (var repl = app.GetInteractiveWindow("resource:PythonToolsUITests;PythonToolsUITests.Resources;ReplName")) {
+                    Assert.IsNull(repl);
+                }
             }
         }
 
@@ -162,16 +165,19 @@ namespace PythonToolsUITests {
 
                 Execute(node, "Test Command 2");
 
-                var repl = app.GetInteractiveWindow("Test Repl");
-                Assert.IsNotNull(repl, "Could not find repl window");
-                repl.WaitForTextEnd(
-                    "Program.py completed",
-                    repl.PrimaryPrompt
-                );
+                using (var repl = app.GetInteractiveWindow("Test Repl")) {
+                    Assert.IsNotNull(repl, "Could not find repl window");
+                    repl.WaitForTextEnd(
+                        "Program.py completed",
+                        ">"
+                    );
+                }
 
                 app.Dte.Solution.Close();
 
-                Assert.IsNull(app.GetInteractiveWindow("Test Repl"), "Repl window was not closed");
+                using (var repl = app.GetInteractiveWindow("Test Repl")) {
+                    Assert.IsNull(repl, "Repl window was not closed");
+                }
             }
         }
 
@@ -185,12 +191,13 @@ namespace PythonToolsUITests {
 
                 Execute(node, "Write to Repl");
 
-                var repl = app.GetInteractiveWindow("Test Repl");
-                Assert.IsNotNull(repl, "Could not find repl window");
-                repl.WaitForTextEnd(
-                    string.Format("({0}, {1})", PythonVersion.Configuration.Version.Major, PythonVersion.Configuration.Version.Minor),
-                    repl.PrimaryPrompt
-                );
+                using (var repl = app.GetInteractiveWindow("Test Repl")) {
+                    Assert.IsNotNull(repl, "Could not find repl window");
+                    repl.WaitForTextEnd(
+                        string.Format("({0}, {1})", PythonVersion.Configuration.Version.Major, PythonVersion.Configuration.Version.Minor),
+                        ">"
+                    );
+                }
             }
         }
 
@@ -454,19 +461,19 @@ namespace PythonToolsUITests {
     }
 
     [TestClass]
-    public class BuildTasksUI25Tests : BuildTasksUI27Tests {
+    public class BuildTasksUI26Tests : BuildTasksUI27Tests {
         internal override PythonVersion PythonVersion {
             get {
-                return PythonPaths.Python25 ?? PythonPaths.Python25_x64;
+                return PythonPaths.Python26 ?? PythonPaths.Python25_x64;
             }
         }
     }
 
     [TestClass]
-    public class BuildTasksUI33Tests : BuildTasksUI27Tests {
+    public class BuildTasksUI35Tests : BuildTasksUI27Tests {
         internal override PythonVersion PythonVersion {
             get {
-                return PythonPaths.Python33 ?? PythonPaths.Python33_x64;
+                return PythonPaths.Python35 ?? PythonPaths.Python35_x64;
             }
         }
     }

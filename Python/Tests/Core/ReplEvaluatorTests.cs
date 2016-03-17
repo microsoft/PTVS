@@ -171,16 +171,18 @@ g()",
 
             using (var evaluator = MakeEvaluator()) {
                 foreach (var testCase in testCases) {
-                    AssertUtil.AreEqual(evaluator.JoinCode(evaluator.SplitCode(testCase.Code)), testCase.Expected);
+                    AssertUtil.AreEqual(ReplEditFilter.JoinCodeLines(ReplEditFilter.SplitCode(testCase.Code), Microsoft.PythonTools.Parsing.PythonLanguageVersion.V35), testCase.Expected);
                 }
             }
         }
 
-        private static PythonReplEvaluator MakeEvaluator() {
+        private static PythonInteractiveEvaluator MakeEvaluator() {
             var python = PythonPaths.Python27 ?? PythonPaths.Python27_x64 ?? PythonPaths.Python26 ?? PythonPaths.Python26_x64;
             python.AssertInstalled();
             var provider = new SimpleFactoryProvider(python.InterpreterPath, python.InterpreterPath);
-            var eval = new PythonReplEvaluator(provider.GetInterpreterFactories().First(), PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
+            var eval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
+                InterpreterPath = python.InterpreterPath
+            };
             Assert.IsTrue(eval._Initialize(new MockReplWindow(eval)).Result.IsSuccessful);
             return eval;
         }
@@ -212,11 +214,11 @@ g()",
             public event EventHandler InterpreterFactoriesChanged { add { } remove { } }
         }
 
-        private static void TestOutput(MockReplWindow window, PythonReplEvaluator evaluator, string code, bool success, params string[] expectedOutput) {
+        private static void TestOutput(MockReplWindow window, PythonInteractiveEvaluator evaluator, string code, bool success, params string[] expectedOutput) {
             TestOutput(window, evaluator, code, success, null, true, 3000, expectedOutput);
         }
 
-        private static void TestOutput(MockReplWindow window, PythonReplEvaluator evaluator, string code, bool success, Action<bool> afterExecute, bool equalOutput, int timeout = 3000, params string[] expectedOutput) {
+        private static void TestOutput(MockReplWindow window, PythonInteractiveEvaluator evaluator, string code, bool success, Action<bool> afterExecute, bool equalOutput, int timeout = 3000, params string[] expectedOutput) {
             window.ClearScreen();
 
             bool completed = false;
@@ -277,12 +279,7 @@ g()",
         public void NoInterpreterPath() {
             // http://pytools.codeplex.com/workitem/662
 
-            var emptyFact = InterpreterFactoryCreator.CreateInterpreterFactory(
-                new InterpreterFactoryCreationOptions() {
-                    Description = "Test Interpreter"
-                }
-            );
-            var replEval = new PythonReplEvaluator(emptyFact, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
+            var replEval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider());
             var replWindow = new MockReplWindow(replEval);
             replEval._Initialize(replWindow);
             var execute = replEval.ExecuteText("42");
@@ -297,13 +294,9 @@ g()",
         public void BadInterpreterPath() {
             // http://pytools.codeplex.com/workitem/662
 
-            var emptyFact = InterpreterFactoryCreator.CreateInterpreterFactory(
-                new InterpreterFactoryCreationOptions() {
-                    Description = "Test Interpreter",
-                    InterpreterPath = "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe"
-                }
-            );
-            var replEval = new PythonReplEvaluator(emptyFact, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
+            var replEval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
+                InterpreterPath = @"C:\Does\Not\Exist\Some\Interpreter.exe"
+            };
             var replWindow = new MockReplWindow(replEval);
             replEval._Initialize(replWindow);
             var execute = replEval.ExecuteText("42");

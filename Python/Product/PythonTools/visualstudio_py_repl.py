@@ -171,12 +171,12 @@ actual inspection and introspection."""
     _DONE = to_bytes('DONE')
     _MODC = to_bytes('MODC')
     
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         import threading
         self.conn = None
         self.send_lock = SafeSendLock()
         self.input_event = threading.Lock()
-        self.input_event.acquire()  # lock starts acquired (we use it like a manual reset event)        
+        self.input_event.acquire()  # lock starts acquired (we use it like a manual reset event)
         self.input_string = None
         self.exit_requested = False
     
@@ -407,13 +407,12 @@ actual inspection and introspection."""
             write_int(self.conn, len(xaml_bytes))
             write_bytes(self.conn, xaml_bytes)
 
-    def send_prompt(self, ps1, ps2, update_all = True):
+    def send_prompt(self, ps1, ps2):
         """sends the current prompt to the interactive window"""
         with self.send_lock:
             write_bytes(self.conn, ReplBackend._PRPC)
             write_string(self.conn, ps1)
             write_string(self.conn, ps2)
-            write_int(self.conn, update_all)
     
     def send_error(self):
         """reports that an error occured to the interactive window"""
@@ -544,7 +543,7 @@ class BasicReplBackend(ReplBackend):
     future_bits = 0x3e010   # code flags used to mark future bits
 
     """Basic back end which executes all Python code in-proc"""
-    def __init__(self, mod_name = '__main__', launch_file = None):
+    def __init__(self, mod_name='__main__'):
         import threading
         ReplBackend.__init__(self)
         if mod_name is not None:
@@ -556,7 +555,6 @@ class BasicReplBackend(ReplBackend):
         else:
             self.exec_mod = sys.modules['__main__']
 
-        self.launch_file = launch_file
         self.code_flags = 0
         self.execute_item = None
         self.execute_item_lock = threading.Lock()
@@ -578,7 +576,6 @@ class BasicReplBackend(ReplBackend):
     def connect_using_socket(self, socket):
         ReplBackend.connect_using_socket(self, socket)
         self.init_connection()
-
 
     def run_file_as_main(self, filename, args):
         f = open(filename, 'rb')
@@ -731,7 +728,7 @@ due to the exec, so we do it here"""
             import System
             self.main_thread = System.Threading.Thread.CurrentThread
 
-        # save our selves so global lookups continue to work (required pre-2.6)...
+        # save ourselves so global lookups continue to work (required pre-2.6)...
         cur_modules = set()
         try:
             cur_ps1 = sys.ps1
@@ -742,14 +739,6 @@ due to the exec, so we do it here"""
             sys.ps2 = cur_ps2 = '... '
 
         self.send_prompt(cur_ps1, cur_ps2)
-
-        # launch the startup script if one has been specified
-        if self.launch_file:
-            try:
-                self.run_file_as_main(self.launch_file, '')
-            except:
-                print('error in launching startup script:')
-                traceback.print_exc()
 
         while True:
             exit, cur_modules, cur_ps1, cur_ps2 = self.run_one_command(cur_modules, cur_ps1, cur_ps2)
@@ -1321,9 +1310,7 @@ def _run_repl():
     parser = OptionParser(prog='repl', description='Process REPL options')
     parser.add_option('--port', dest='port',
                    help='the port to connect back to')
-    parser.add_option('--launch_file', dest='launch_file',
-                   help='the script file to run on startup')
-    parser.add_option('--execution_mode', dest='backend',
+    parser.add_option('--execution-mode', dest='backend',
                    help='the backend to use')
     parser.add_option('--enable-attach', dest='enable_attach', 
                     action="store_true", default=False,
@@ -1356,7 +1343,7 @@ def _run_repl():
     sys.argv = args or ['']
 
     global BACKEND
-    BACKEND = backend_type(launch_file=options.launch_file)
+    BACKEND = backend_type()
     BACKEND.connect(int(options.port))
 
     if options.enable_attach:

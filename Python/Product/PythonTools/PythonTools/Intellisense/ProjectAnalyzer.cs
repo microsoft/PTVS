@@ -24,6 +24,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
@@ -235,7 +236,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     // A buffer may have multiple DropDownBarClients, given one may open multiple CodeWindows
                     // over a single buffer using Window/New Window
                     List<DropDownBarClient> clients;
-                    if (buffer.Properties.TryGetProperty<List<DropDownBarClient>>(typeof(DropDownBarClient), out clients)) {
+                    if (buffer.Properties.TryGetProperty(typeof(DropDownBarClient), out clients)) {
                         foreach (var client in clients) {
                             client.UpdateProjectEntry(projEntry);
                         }
@@ -297,11 +298,11 @@ namespace Microsoft.PythonTools.Intellisense {
             _errorProvider.ClearErrorSource(bufferParser._currentProjEntry, ParserTaskMoniker);
             _errorProvider.ClearErrorSource(bufferParser._currentProjEntry, UnresolvedImportMoniker);
 
-                if (ImplicitProject) {
-                    // remove the file from the error list
+            if (ImplicitProject) {
+                // remove the file from the error list
                 _errorProvider.Clear(bufferParser._currentProjEntry, ParserTaskMoniker);
                 _errorProvider.Clear(bufferParser._currentProjEntry, UnresolvedImportMoniker);
-                }
+            }
 
             _commentTaskProvider.ClearErrorSource(bufferParser._currentProjEntry, ParserTaskMoniker);
             if (ImplicitProject) {
@@ -316,8 +317,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            var replEval = buffer.GetReplEvaluator();
-            if (replEval != null) {
+            var interactive = buffer.GetInteractiveWindow();
+            if (interactive != null) {
                 // We have a repl window, create an untracked module.
                 return _pyAnalyzer.AddModule(null, null, analysisCookie);
             }
@@ -850,7 +851,7 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonProjectEntry pyProjEntry = entry as IPythonProjectEntry;
             List<PythonAst> asts = new List<PythonAst>();
             foreach (var snapshot in snapshots) {
-                if (snapshot.TextBuffer.Properties.ContainsProperty(PythonReplEvaluator.InputBeforeReset)) {
+                if (snapshot.TextBuffer.Properties.ContainsProperty(ParseQueue.DoNotParse)) {
                     continue;
                 }
 
@@ -858,7 +859,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     continue;
                 }
 
-                if (pyProjEntry != null && snapshot.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+                if (pyProjEntry != null && snapshot.IsPythonContent()) {
                     PythonAst ast;
                     CollectingErrorSink errorSink;
                     List<TaskProviderItem> commentTasks;
@@ -917,9 +918,9 @@ namespace Microsoft.PythonTools.Intellisense {
             var tasks = commentTasks = new List<TaskProviderItem>();
 
             var options = new ParserOptions {
-                    ErrorSink = errorSink,
-                    IndentationInconsistencySeverity = indentationSeverity,
-                    BindReferences = true
+                ErrorSink = errorSink,
+                IndentationInconsistencySeverity = indentationSeverity,
+                BindReferences = true
             };
             options.ProcessComment += (sender, e) => ProcessComment(tasks, snapshot, e.Span, e.Text);
 
@@ -937,8 +938,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var tasks = commentTasks = new List<TaskProviderItem>();
 
             var options = new ParserOptions {
-                    ErrorSink = errorSink,
-                    IndentationInconsistencySeverity = indentationSeverity,
+                ErrorSink = errorSink,
+                IndentationInconsistencySeverity = indentationSeverity,
                 BindReferences = true,
             };
             options.ProcessComment += (sender, e) => ProcessComment(tasks, snapshot, e.Span, e.Text);
@@ -953,10 +954,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 try {
                     ast = parser.ParseFile();
                 } catch (BadSourceException) {
-                } catch (Exception e) {
-                    if (e.IsCriticalException()) {
-                        throw;
-                    }
+                } catch (Exception e) when (!e.IsCriticalException()) {
                     Debug.Assert(false, String.Format("Failure in Python parser: {0}", e.ToString()));
                 }
 
@@ -1028,9 +1026,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private static SignatureAnalysis TryGetLiveSignatures(ITextSnapshot snapshot, int paramIndex, string text, ITrackingSpan applicableSpan, string lastKeywordArg) {
             IInteractiveEvaluator eval;
-            IPythonReplIntellisense dlrEval;
+            IPythonInteractiveIntellisense dlrEval;
             if (snapshot.TextBuffer.Properties.TryGetProperty<IInteractiveEvaluator>(typeof(IInteractiveEvaluator), out eval) &&
-                (dlrEval = eval as IPythonReplIntellisense) != null) {
+                (dlrEval = eval as IPythonInteractiveIntellisense) != null) {
                 if (text.EndsWith("(")) {
                     text = text.Substring(0, text.Length - 1);
                 }
@@ -1085,18 +1083,21 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal bool ShouldEvaluateForCompletion(string source) {
-            switch (_pyService.GetInteractiveOptions(_interpreterFactory).ReplIntellisenseMode) {
-                case ReplIntellisenseMode.AlwaysEvaluate: return true;
-                case ReplIntellisenseMode.NeverEvaluate: return false;
+            switch (_pyService.InteractiveOptions.CompletionMode) {
+                case ReplIntellisenseMode.AlwaysEvaluate:
+                    return true;
+                case ReplIntellisenseMode.NeverEvaluate:
+                    return false;
                 case ReplIntellisenseMode.DontEvaluateCalls:
-                    var parser = Parser.CreateParser(new StringReader(source), _interpreterFactory.GetLanguageVersion());
+                    using (var parser = Parser.CreateParser(new StringReader(source), _interpreterFactory.GetLanguageVersion())) {
+                        var stmt = parser.ParseSingleStatement();
+                        var exprWalker = new ExprWalker();
 
-                    var stmt = parser.ParseSingleStatement();
-                    var exprWalker = new ExprWalker();
-
-                    stmt.Walk(exprWalker);
-                    return exprWalker.ShouldExecute;
-                default: throw new InvalidOperationException();
+                        stmt.Walk(exprWalker);
+                        return exprWalker.ShouldExecute;
+                    }
+                default:
+                    throw new InvalidOperationException();
             }
         }
 

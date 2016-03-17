@@ -22,19 +22,9 @@ namespace Microsoft.PythonTools.Options {
     // TODO: We should switch to a scheme which takes strings / returns object for options so they're extensible w/o reving the interface
     [Guid("BACA2500-5EA7-4075-8D02-647EAC0BC6E3")]
     public interface IPythonOptions {
-        IPythonIntellisenseOptions Intellisense {
-            get;
-        }
+        IPythonIntellisenseOptions Intellisense { get; }
 
-        /// <summary>
-        /// Gets interactive options for the given environment.
-        /// </summary>
-        /// <param name="interpreterName">
-        /// The user-visible description of the environment. If multiple
-        /// environments have the same description, one will be returned
-        /// arbitrarily.
-        /// </param>
-        IPythonInteractiveOptions GetInteractiveOptions(string interpreterName);
+        IPythonInteractiveOptions Interactive { get; }
 
         bool PromptBeforeRunningWithBuildErrorSetting {
             get;
@@ -76,54 +66,19 @@ namespace Microsoft.PythonTools.Options {
         bool AutoListIdentifiers { get; set; }
     }
 
-    [Guid("6DCCD6E9-FAC4-4EFA-9243-AE1A71D8923D")]
+    [Guid("28214322-2EEC-4750-8D87-EF76714757CE")]
     public interface IPythonInteractiveOptions {
-        string PrimaryPrompt {
+        bool UseSmartHistory {
             get;
             set;
         }
 
-        string SecondaryPrompt {
+        string CompletionMode {
             get;
             set;
         }
 
-        bool UseInterpreterPrompts {
-            get;
-            set;
-        }
-
-        bool InlinePrompts {
-            get;
-            set;
-        }
-
-        bool ReplSmartHistory {
-            get;
-            set;
-        }
-
-        string ReplIntellisenseMode {
-            get;
-            set;
-        }
-
-        string StartupScript {
-            get;
-            set;
-        }
-
-        string ExecutionMode {
-            get;
-            set;
-        }
-
-        string InterpreterArguments {
-            get;
-            set;
-        }
-
-        bool EnableAttach {
+        string StartupScripts {
             get;
             set;
         }

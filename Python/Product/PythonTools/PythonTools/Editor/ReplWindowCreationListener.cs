@@ -24,7 +24,6 @@ using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
 using IOleCommandTarget = Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget;
 
@@ -32,36 +31,32 @@ namespace Microsoft.PythonTools.Editor {
     [Export(typeof(IVsInteractiveWindowOleCommandTargetProvider))]
     [ContentType(PythonCoreConstants.ContentType)]
     public class PythonOleCommandTargetProvider : IVsInteractiveWindowOleCommandTargetProvider {
-        private readonly IEditorOperationsFactoryService _editorOpsFactory;
         private readonly IServiceProvider _serviceProvider;
+        private readonly IComponentModel _componentModel;
 
         [ImportingConstructor]
-        public PythonOleCommandTargetProvider([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, IEditorOperationsFactoryService editorOpsFactory) {
-            _editorOpsFactory = editorOpsFactory;
+        public PythonOleCommandTargetProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
+            _componentModel = _serviceProvider.GetComponentModel();
         }
 
         public IOleCommandTarget GetCommandTarget(IWpfTextView textView, IOleCommandTarget nextTarget) {
-            EditFilter filter;
-            if (!textView.Properties.TryGetProperty<EditFilter>(typeof(EditFilter), out filter)) {
-                textView.Properties[typeof(EditFilter)] = filter = new EditFilter(
-                    textView,
-                    _editorOpsFactory.GetEditorOperations(textView),
-                    _serviceProvider
-                );
-                var window = textView.TextBuffer.GetInteractiveWindow();
-                if (window != null && window.Evaluator is PythonReplEvaluator) {
-                    textView.Properties.AddProperty(typeof(PythonReplEvaluator), (PythonReplEvaluator)window.Evaluator);
-                }
-                var intellisenseController = IntellisenseControllerProvider.GetOrCreateController(
-                    _serviceProvider,
-                    (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel)),
-                    textView
-                );
-                intellisenseController._oldTarget = nextTarget;
-                filter._next = intellisenseController;
+            var window = textView.TextBuffer.GetInteractiveWindow();
+
+            var controller = IntellisenseControllerProvider.GetOrCreateController(
+                _serviceProvider,
+                _componentModel,
+                textView
+            );
+            controller._oldTarget = nextTarget;
+
+            var editFilter = EditFilter.GetOrCreate(_serviceProvider, _componentModel, textView, controller);
+
+            if (window == null) {
+                return editFilter;
             }
-            return filter;
+
+            return ReplEditFilter.GetOrCreate(_serviceProvider, _componentModel, textView, editFilter);
         }
     }
 }

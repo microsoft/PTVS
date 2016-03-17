@@ -14,10 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.InteractiveWindow;
 
 namespace Microsoft.PythonTools.Repl {
     interface IInteractiveEvaluatorProvider {
-        IInteractiveEvaluator GetEvaluator(string replId);
+        IInteractiveEvaluator GetEvaluator(string evaluatorId);
+
+        /// <summary>
+        /// Returns a list of display name - evaluatorId pairs.
+        /// </summary>
+        IEnumerable<KeyValuePair<string, string>> GetEvaluators();
+
+        /// <summary>
+        /// The result of <see cref="GetEvaluators"/> has changed.
+        /// </summary>
+        event EventHandler EvaluatorsChanged;
     }
 }

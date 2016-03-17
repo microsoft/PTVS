@@ -29,7 +29,9 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
@@ -68,7 +70,14 @@ namespace TestUtilities.UI.Python {
         protected override void Dispose(bool disposing) {
             if (!IsDisposed) {
                 try {
-                    InteractiveWindow.CloseAll(this);
+                    ServiceProvider.GetUIThread().Invoke(() => {
+                        var iwp = ComponentModel.GetService<InteractiveWindowProvider>();
+                        if (iwp != null) {
+                            foreach (var w in iwp.AllOpenWindows) {
+                                w.InteractiveWindow.Close();
+                            }
+                        }
+                    });
                 } catch (Exception ex) {
                     Console.WriteLine("Error while closing all interactive windows");
                     Console.WriteLine(ex);
@@ -183,43 +192,23 @@ namespace TestUtilities.UI.Python {
             }
         }
 
-        public InteractiveWindow GetInteractiveWindow(string title) {
-            AutomationElement element = null;
-            for (int i = 0; i < 5 && element == null; i++) {
-                element = Element.FindFirst(TreeScope.Descendants,
-                    new AndCondition(
-                        new PropertyCondition(
-                            AutomationElement.NameProperty,
-                            title
-                        ),
-                        new PropertyCondition(
-                            AutomationElement.ControlTypeProperty,
-                            ControlType.Pane
-                        )
-                    )
-                );
-                if (element == null) {
-                    System.Threading.Thread.Sleep(100);
-                }
-            }
+        public ReplWindowProxy ExecuteInInteractive(Project project, PythonReplWindowProxySettings settings = null) {
+            OpenSolutionExplorer().SelectProject(project);
+            ExecuteCommand("Python.ExecuteInInteractive");
+            return GetInteractiveWindow(project);
+        }
 
-            if (element == null) {
-                DumpVS();
+        public ReplWindowProxy GetInteractiveWindow(Project project, PythonReplWindowProxySettings settings = null) {
+            return GetInteractiveWindow(project.Name + " Interactive", settings);
+        }
+
+        public ReplWindowProxy GetInteractiveWindow(string title, PythonReplWindowProxySettings settings = null) {
+            var iwp = GetService<IComponentModel>(typeof(SComponentModel))?.GetService<InteractiveWindowProvider>();
+            var window = iwp?.AllOpenWindows.FirstOrDefault(w => ((ToolWindowPane)w).Caption == title);
+            if (window == null) {
                 return null;
             }
-
-            return new InteractiveWindow(
-                title,
-                element.FindFirst(
-                    TreeScope.Descendants,
-                    new PropertyCondition(
-                        AutomationElement.AutomationIdProperty,
-                        "WpfTextView"
-                    )
-                ),
-                this
-            );
-
+            return new ReplWindowProxy(this, window.InteractiveWindow, (ToolWindowPane)window, settings ?? new PythonReplWindowProxySettings());
         }
 
         internal Document WaitForDocument(string docName) {
