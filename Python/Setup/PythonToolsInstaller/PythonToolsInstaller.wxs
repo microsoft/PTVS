@@ -197,6 +197,7 @@
 
         <ConfigurationData Name="Config_StartMenuLocation" Value="Dir_StartMenu"/>
       </Merge>
+      <?if "$(var.IncludeIronPython)" ~= "True" ?>
       <Merge Id="Merge_IronPython" Language="1033" SourceFile="IronPython.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
@@ -204,6 +205,7 @@
         <?endforeach?>
         <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
       </Merge>
+      <?endif ?>
       <?if "$(var.IncludeVsLogger)" ~= "True" ?>
       <Merge Id="Merge_VsLogger" Language="1033" SourceFile="VsLogger.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
@@ -239,9 +241,11 @@
       </Feature>
       <?endif?>
       
+      <?if "$(var.IncludeIronPython)" ~= "True" ?>
       <Feature Id="Feature_IronPython" AllowAdvertise="no" Level="1" Title="IronPython support" Description="IronPython support">
         <MergeRef Id="Merge_IronPython"/>
       </Feature>
+      <?endif?>
 
       <Feature Id="Feature_VsPyFile" AllowAdvertise="no" Level="1" Title="Register file associations" Description="Associates Python projects and source files with Visual Studio (existing source file associations are not modified).">
         <ComponentRef Id="Comp_VSPyFileProgId"/>
