@@ -454,19 +454,19 @@ namespace PythonToolsUITests {
     }
 
     [TestClass]
-    public class BuildTasksUI25Tests : BuildTasksUI27Tests {
+    public class BuildTasksUI26Tests : BuildTasksUI27Tests {
         internal override PythonVersion PythonVersion {
             get {
-                return PythonPaths.Python25 ?? PythonPaths.Python25_x64;
+                return PythonPaths.Python26 ?? PythonPaths.Python26_x64;
             }
         }
     }
 
     [TestClass]
-    public class BuildTasksUI33Tests : BuildTasksUI27Tests {
+    public class BuildTasksUI35Tests : BuildTasksUI27Tests {
         internal override PythonVersion PythonVersion {
             get {
-                return PythonPaths.Python33 ?? PythonPaths.Python33_x64;
+                return PythonPaths.Python35 ?? PythonPaths.Python35_x64;
             }
         }
     }
