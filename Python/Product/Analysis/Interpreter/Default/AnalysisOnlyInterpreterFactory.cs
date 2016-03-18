@@ -17,9 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class AnalysisOnlyInterpreterFactory : PythonInterpreterFactoryWithDatabase {
@@ -29,7 +26,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public AnalysisOnlyInterpreterFactory(Version version, string description = null)
             : base(
                 description ?? string.Format("Python {0} Analyzer", version),
-                new InterpreterConfiguration(version.ToString(), "Analysis", version),
+                new InterpreterConfiguration("AnalysisOnly;" + version.ToString(), "Analysis", version),
                 false
         ) { }
 

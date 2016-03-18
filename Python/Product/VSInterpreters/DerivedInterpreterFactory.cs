@@ -31,6 +31,8 @@ namespace Microsoft.PythonTools.Interpreter {
         PythonTypeDatabase _baseDb;
         bool _baseHasRefreshed;
 
+        [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors",
+            Justification = "call to RefreshIsCurrent is required for back compat")]
         public DerivedInterpreterFactory(
             PythonInterpreterFactoryWithDatabase baseFactory,
             InterpreterConfiguration config,
@@ -47,44 +49,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 RefreshIsCurrent();
             }
         }
-
-        [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors",
-            Justification = "call to RefreshIsCurrent is required for back compat")]
-        public DerivedInterpreterFactory(
-            PythonInterpreterFactoryWithDatabase baseFactory,
-            InterpreterFactoryCreationOptions options
-        ) : base(
-                options.Description,
-                new InterpreterConfiguration(
-                    options.Id,
-                    options.Description,
-                    options.PrefixPath,
-                    options.InterpreterPath,
-                    options.WindowInterpreterPath,
-                    options.LibraryPath,
-                    options.PathEnvironmentVariableName,
-                    options.Architecture,
-                    options.LanguageVersion,
-                    InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured
-                ),
-                options.WatchLibraryForNewModules
-        ) {
-            if (baseFactory.Configuration.Version != options.LanguageVersion) {
-                throw new ArgumentException("Language versions do not match", "options");
-            }
-
-            _base = baseFactory;
-            _base.IsCurrentChanged += Base_IsCurrentChanged;
-            _base.NewDatabaseAvailable += Base_NewDatabaseAvailable;
-
-            if (Volatile.Read(ref _deferRefreshIsCurrent)) {
-                // This rare race condition is due to a design flaw that is in
-                // shipped public API and cannot be fixed without breaking
-                // compatibility with 3rd parties.
-                RefreshIsCurrent();
-            }
-        }
-
+        
         private void Base_NewDatabaseAvailable(object sender, EventArgs e) {
             if (_baseDb != null) {
                 _baseDb = null;

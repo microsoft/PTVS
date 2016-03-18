@@ -123,7 +123,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     _interpreter = new IronPythonInterpreterFactory(_config.Architecture);
                 }
             } else if (_configX64 != null && id == _configX64.Id) {
-                _interpreter = new IronPythonInterpreterFactory(_configX64.Architecture);
+                _interpreterX64 = new IronPythonInterpreterFactory(_configX64.Architecture);
             }
             return null;
         }

@@ -214,7 +214,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 projectContextProvider.AddContext(request.projectFile);
             }
 
-            var factory = _container.GetInterpreterFactory(request.interpreterId);
+            IPythonInterpreterFactory factory;
+            Version analysisVersion;
+            if (request.interpreterId.StartsWith("AnalysisOnly;") &&
+                Version.TryParse(request.interpreterId.Substring(request.interpreterId.IndexOf(';') + 1), out analysisVersion)) {
+                factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(analysisVersion);
+            } else {
+                factory = _container.GetInterpreterFactory(request.interpreterId);
+            }
 
             if (factory == null) {
                 error = String.Format("No active interpreter found for interpreter ID: {0}", request.interpreterId);

@@ -2464,31 +2464,36 @@ namespace Microsoft.PythonTools.Project {
 
                 fact = new DerivedInterpreterFactory(
                     baseInterp,
+                    new InterpreterConfiguration(
+                        id,
+                        description,
+                        options.PrefixPath,
+                        options.InterpreterPath,
+                        options.WindowInterpreterPath,
+                        options.LibraryPath,
+                        options.PathEnvironmentVariableName,
+                        baseInterp.Configuration.Architecture,
+                        baseInterp.Configuration.Version,
+                        InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured
+                    ),
                     new InterpreterFactoryCreationOptions {
-                        Id = id,
-                        LanguageVersion = baseInterp.Configuration.Version,
-                        Description = description,
-                        InterpreterPath = options.InterpreterPath,
-                        WindowInterpreterPath = options.WindowInterpreterPath,
-                        LibraryPath = options.LibraryPath,
-                        PrefixPath = options.PrefixPath,
-                        PathEnvironmentVariableName = pathVar,
-                        Architecture = baseInterp.Configuration.Architecture,
                         WatchLibraryForNewModules = true
                     }
                 );
             } else {
                 fact = InterpreterFactoryCreator.CreateInterpreterFactory(
+                    new InterpreterConfiguration(
+                        id,
+                        options.Description,
+                        options.PrefixPath,
+                        options.InterpreterPath,
+                        options.WindowInterpreterPath,
+                        options.LibraryPath,
+                        options.PathEnvironmentVariableName ?? "PYTHONPATH",
+                        options.Architecture,
+                        options.LanguageVersion
+                    ),
                     new InterpreterFactoryCreationOptions {
-                        Id = id,
-                        LanguageVersion = options.LanguageVersion,
-                        Description = options.Description,
-                        InterpreterPath = options.InterpreterPath,
-                        WindowInterpreterPath = options.WindowInterpreterPath,
-                        LibraryPath = options.LibraryPath,
-                        PrefixPath = options.PrefixPath,
-                        PathEnvironmentVariableName = options.PathEnvironmentVariableName,
-                        Architecture = options.Architecture,
                         WatchLibraryForNewModules = options.WatchLibraryForNewModules
                     }
                 );

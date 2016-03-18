@@ -648,7 +648,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         ExportProvider IComponentModel.DefaultExportProvider {
-            get { throw new NotImplementedException(); }
+            get { return Container; }
         }
 
         ComposablePartCatalog IComponentModel.GetCatalog(string catalogName) {
