@@ -30,8 +30,10 @@ using System.Runtime.InteropServices;
 class AssemblyVersionInfo {
 #if DEV14
     public const string VSMajorVersion = "14";
+    public const string VSName = "2015";
 #elif DEV15
     public const string VSMajorVersion = "15";
+    public const string VSName = "15";
 #else
 #error Unrecognized VS Version.
 #endif
