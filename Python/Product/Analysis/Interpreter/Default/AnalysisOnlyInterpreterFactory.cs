@@ -31,8 +31,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         ) { }
 
         public AnalysisOnlyInterpreterFactory(Version version, IEnumerable<string> databasePaths, string description = null)
-            : base(GetDescription(version, description), GetConfiguration(version, databasePaths.ToArray()), false) {
-            _actualDatabasePaths = databasePaths.ToList();
+            : base(GetDescription(version, description), GetConfiguration(version, databasePaths?.ToArray() ?? Array.Empty<string>()), false) {
+            _actualDatabasePaths = databasePaths?.ToList();
         }
 
         public AnalysisOnlyInterpreterFactory(Version version, PythonTypeDatabase database, string description = null)

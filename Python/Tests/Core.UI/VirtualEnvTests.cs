@@ -463,13 +463,13 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
             }
 
-            public IEnumerable<object> ProjectContexts {
+            public IEnumerable<object> Projects {
                 get {
                     return _contexts;
                 }
             }
 
-            public event EventHandler ProjectContextsChanged {
+            public event EventHandler ProjectsChanaged {
                 add {
                 }
                 remove {

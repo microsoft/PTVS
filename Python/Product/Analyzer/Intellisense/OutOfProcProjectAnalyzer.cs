@@ -221,7 +221,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 int versionEnd = request.interpreterId.IndexOf(';', versionStart);
 
                 if (Version.TryParse(request.interpreterId.Substring(versionStart, versionEnd - versionStart), out analysisVersion)) {
-                    var dbDirs = request.interpreterId.Substring(versionEnd + 1).Split(';');
+                    string[] dbDirs;
+                    if (versionEnd + 1 != request.interpreterId.Length) {
+                        dbDirs = request.interpreterId.Substring(versionEnd + 1).Split(';');
+                    } else {
+                        dbDirs = null;
+                    }
                     factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(analysisVersion, null, dbDirs);
                 }
             } else {

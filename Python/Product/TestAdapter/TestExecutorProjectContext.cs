@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.TestAdapter {
     class TestExecutorProjectContext : IProjectContextProvider {
         private readonly HashSet<object> _contexts = new HashSet<object>();
 
-        public IEnumerable<object> ProjectContexts {
+        public IEnumerable<object> Projects {
             get {
                 return _contexts.ToArray();
             }
@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 added = _contexts.Add(context);
             }
             if (added) {
-                ProjectContextsChanged?.Invoke(this, EventArgs.Empty);
+                ProjectsChanaged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -48,11 +48,11 @@ namespace Microsoft.PythonTools.TestAdapter {
                 removed = _contexts.Remove(context);
             }
             if (removed) {
-                ProjectContextsChanged?.Invoke(this, EventArgs.Empty);
+                ProjectsChanaged?.Invoke(this, EventArgs.Empty);
             }
         }
 
-        public event EventHandler ProjectContextsChanged;
+        public event EventHandler ProjectsChanaged;
 
         public void InterpreterLoaded(object context, InterpreterConfiguration factory) {
         }

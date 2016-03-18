@@ -84,7 +84,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private void InitializeContexts() {
             foreach (var provider in _contextProviders) {
-                provider.Value.ProjectContextsChanged += Provider_ProjectContextsChanged;
+                provider.Value.ProjectsChanaged += Provider_ProjectContextsChanged;
                 Provider_ProjectContextsChanged(provider.Value, EventArgs.Empty);
             }
         }
@@ -95,14 +95,6 @@ namespace Microsoft.PythonTools.Interpreter {
             foreach (var project in _projects) {
                 foreach (var fact in project.Value.Factories) {
                     yield return fact.Value.Config;
-                }
-            }
-        }
-
-        public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
-            foreach (var project in _projects) {
-                foreach (var fact in project.Value.Factories) {
-                    yield return fact.Value.Factory;
                 }
             }
         }
@@ -136,9 +128,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 HashSet<string> seen = new HashSet<string>();
                 HashSet<ProjectInfo> added = new HashSet<ProjectInfo>();
                 HashSet<ProjectInfo> removed = new HashSet<ProjectInfo>();
-                var contexts = contextProvider.ProjectContexts;
+                var contexts = contextProvider.Projects;
                 lock (_projects) {
-                    foreach (var context in contextProvider.ProjectContexts) {
+                    foreach (var context in contextProvider.Projects) {
                         var projContext = context as MSBuild.Project;
                         if (projContext == null) {
                             var projectFile = context as string;

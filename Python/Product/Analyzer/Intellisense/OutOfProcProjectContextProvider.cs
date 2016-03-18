@@ -18,7 +18,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 added = _contexts.Add(context);
             }
             if (added) {
-                ProjectContextsChanged?.Invoke(this, EventArgs.Empty);
+                ProjectsChanaged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 removed = _contexts.Remove(context);
             }
             if (removed) {
-                ProjectContextsChanged?.Invoke(this, EventArgs.Empty);
+                ProjectsChanaged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -38,12 +38,12 @@ namespace Microsoft.PythonTools.Intellisense {
         public void InterpreterUnloaded(object context, InterpreterConfiguration factory) {
         }
 
-        public IEnumerable<object> ProjectContexts {
+        public IEnumerable<object> Projects {
             get {
                 return _contexts.ToArray();
             }
         }
 
-        public event EventHandler ProjectContextsChanged;
+        public event EventHandler ProjectsChanaged;
     }
 }

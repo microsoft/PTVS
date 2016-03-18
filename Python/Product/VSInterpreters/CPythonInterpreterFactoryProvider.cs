@@ -216,10 +216,8 @@ namespace Microsoft.PythonTools.Interpreter {
                         actualArch = NativeMethods.GetBinaryType(Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable));
                     }
 
-                    var id = CPythonInterpreterFactoryConstants.Guid32;
                     var description = CPythonInterpreterFactoryConstants.Description32;
                     if (actualArch == ProcessorArchitecture.Amd64) {
-                        id = CPythonInterpreterFactoryConstants.Guid64;
                         description = CPythonInterpreterFactoryConstants.Description64;
                     }
 
@@ -294,16 +292,6 @@ namespace Microsoft.PythonTools.Interpreter {
 
 
         #region IPythonInterpreterProvider Members
-
-        public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
-            EnsureInitialized();
-
-            InterpreterInformation[] infos;
-            lock (_factories) {
-                infos = _factories.Values.ToArray();
-            }
-            return infos.Select(x => x.EnsureFactory());
-        }
 
         public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
             EnsureInitialized();

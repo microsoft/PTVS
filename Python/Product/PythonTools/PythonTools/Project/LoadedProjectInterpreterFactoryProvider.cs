@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (changed) {
-                ProjectContextsChanged?.Invoke(this, EventArgs.Empty);
+                ProjectsChanaged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -79,9 +79,9 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public event EventHandler ProjectContextsChanged;
+        public event EventHandler ProjectsChanaged;
 
-        public IEnumerable<object> ProjectContexts {
+        public IEnumerable<object> Projects {
             get {
                 lock(_projects) {
                     return _projects.Values.ToArray();
