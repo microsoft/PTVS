@@ -279,6 +279,15 @@ namespace TestUtilities.UI.Python {
             get {
                 var model = GetService<IComponentModel>(typeof(SComponentModel));
                 var service = model.GetService<IInterpreterRegistryService>();
+                Assert.IsNotNull(service, "Unable to get IInterpreterRegistryService");
+                return service;
+            }
+        }
+
+        public IInterpreterOptionsService OptionsService {
+            get {
+                var model = GetService<IComponentModel>(typeof(SComponentModel));
+                var service = model.GetService<IInterpreterOptionsService>();
                 Assert.IsNotNull(service, "Unable to get InterpreterOptionsService");
                 return service;
             }

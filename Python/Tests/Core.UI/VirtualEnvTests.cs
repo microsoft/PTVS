@@ -17,11 +17,13 @@
 extern alias analysis;
 extern alias util;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using analysis::Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools;
@@ -453,49 +455,86 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             }
         }
 
+        class MockProjectContextProvider : IProjectContextProvider {
+            private readonly object[] _contexts;
+
+            public MockProjectContextProvider(params object[] contexts) {
+                _contexts = contexts;
+
+            }
+
+            public IEnumerable<object> ProjectContexts {
+                get {
+                    return _contexts;
+                }
+            }
+
+            public event EventHandler ProjectContextsChanged {
+                add {
+                }
+                remove {
+                }
+            }
+
+            public void InterpreterLoaded(object context, InterpreterConfiguration factory) {
+            }
+
+            public void InterpreterUnloaded(object context, InterpreterConfiguration factory) {
+            }
+        }
+
+        class MockLogger : IInterpreterLog {
+            public readonly StringBuilder Errors = new StringBuilder();
+
+            public void Log(string msg) {
+                Errors.Append(msg);
+            }
+        }
+
         [TestMethod, Priority(1)]
         public void UnavailableEnvironments() {
             var collection = new Microsoft.Build.Evaluation.ProjectCollection();
             try {
                 var service = new MockInterpreterOptionsService();
                 var proj = collection.LoadProject(TestData.GetPath(@"TestData\Environments\Unavailable.pyproj"));
+                var contextProvider = new MockProjectContextProvider(proj);
 
-                using (var provider = new MSBuildProjectInterpreterFactoryProvider(service, proj)) {
-                    try {
-                        provider.DiscoverInterpreters();
-                        Assert.Fail("Expected InvalidDataException in DiscoverInterpreters");
-                    } catch (InvalidDataException ex) {
-                        AssertUtil.AreEqual(ex.Message
-                            .Replace(TestData.GetPath("TestData\\Environments\\"), "$")
-                            .Split('\r', '\n')
-                            .Where(s => !string.IsNullOrEmpty(s))
-                            .Select(s => s.Trim()),
-                            "Some project interpreters failed to load:",
-                            @"Interpreter $env\ has invalid value for 'Id': INVALID ID",
-                            @"Interpreter $env\ has invalid value for 'Version': INVALID VERSION",
-                            @"Interpreter $env\ has invalid value for 'BaseInterpreter': INVALID BASE",
-                            @"Interpreter $env\ has invalid value for 'InterpreterPath': INVALID<>PATH",
-                            @"Interpreter $env\ has invalid value for 'WindowsInterpreterPath': INVALID<>PATH",
-                            @"Interpreter $env\ has invalid value for 'LibraryPath': INVALID<>PATH",
-                            @"Interpreter $env\ has invalid value for 'BaseInterpreter': {98512745-4ac7-4abb-9f33-120af32edc77}"
-                        );
-                    }
+                var logger = new MockLogger();
+
+                using (var provider = new MSBuildProjectInterpreterFactoryProvider(
+                    new[] { new Lazy<IProjectContextProvider>(() => contextProvider) },
+                    null,
+                    new[] { new Lazy<IInterpreterLog>(() => logger) })) {
+                    AssertUtil.AreEqual(
+                        logger.Errors.ToString()
+                        .Replace(TestData.GetPath("TestData\\Environments\\"), "$")
+                        .Split('\r', '\n')
+                        .Where(s => !string.IsNullOrEmpty(s))
+                        .Select(s => s.Trim()),
+                        @"Interpreter $env\ has invalid value for 'Id': INVALID ID",
+                        @"Interpreter $env\ has invalid value for 'Version': INVALID VERSION",
+                        @"Interpreter $env\ has invalid value for 'BaseInterpreter': INVALID BASE",
+                        @"Interpreter $env\ has invalid value for 'InterpreterPath': INVALID<>PATH",
+                        @"Interpreter $env\ has invalid value for 'WindowsInterpreterPath': INVALID<>PATH",
+                        @"Interpreter $env\ has invalid value for 'LibraryPath': INVALID<>PATH",
+                        @"Interpreter $env\ has invalid value for 'BaseInterpreter': {98512745-4ac7-4abb-9f33-120af32edc77}"
+                    );
 
                     var factories = provider.GetInterpreterFactories().ToList();
                     foreach (var fact in factories) {
-                        Console.WriteLine("{0}: {1}", fact.GetType().FullName, fact.Description);
+                        Console.WriteLine("{0}: {1}", fact.GetType().FullName, fact.Configuration.Description);
                     }
 
                     foreach (var fact in factories) {
                         Assert.IsInstanceOfType(
                             fact,
                             typeof(MSBuildProjectInterpreterFactoryProvider.NotFoundInterpreterFactory),
-                            string.Format("{0} was not correct type", fact.Description)
+                            string.Format("{0} was not correct type", fact.Configuration.Description)
                         );
-                        Assert.IsFalse(provider.IsAvailable(fact), string.Format("{0} was not unavailable", fact.Description));
+                        Assert.IsFalse(fact.Configuration.IsAvailable(), string.Format("{0} was not unavailable", fact.Configuration.Description));
                     }
 
-                    AssertUtil.AreEqual(factories.Select(f => f.Description),
+                    AssertUtil.AreEqual(factories.Select(f => f.Configuration.Description),
                         "Invalid BaseInterpreter (unavailable)",
                         "Invalid InterpreterPath (unavailable)",
                         "Invalid WindowsInterpreterPath (unavailable)",
@@ -558,10 +597,10 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
                 app.ServiceProvider.GetUIThread().Invoke(() => {
                     var pp = project.GetPythonProject();
-                    pp.Interpreters.AddInterpreter(dis.CurrentDefault);
+                    pp.AddInterpreter(dis.CurrentDefault);
                 });
 
-                var envName = dis.CurrentDefault.Description;
+                var envName = dis.CurrentDefault.Configuration.Description;
                 var sln = app.OpenSolutionExplorer();
                 var env = sln.FindChildOfProject(project, Strings.Environments, envName);
 

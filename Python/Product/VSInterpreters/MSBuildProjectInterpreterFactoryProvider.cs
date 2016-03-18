@@ -44,6 +44,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [PartCreationPolicy(CreationPolicy.Shared)]
     public sealed class MSBuildProjectInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
         private readonly Dictionary<string, ProjectInfo> _projects = new Dictionary<string, ProjectInfo>();
+        private readonly Lazy<IInterpreterLog>[] _loggers;
         private readonly Lazy<IProjectContextProvider>[] _contextProviders;
         private readonly Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] _factoryProviders;
         // keys used for storing information about user defined interpreters
@@ -71,8 +72,12 @@ namespace Microsoft.PythonTools.Interpreter {
         internal const string InterpreterVersionProperty = "InterpreterVersion";
 
         [ImportingConstructor]
-        public MSBuildProjectInterpreterFactoryProvider([ImportMany]Lazy<IProjectContextProvider>[] contextProviders, [ImportMany]Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] factoryProviders) {
+        public MSBuildProjectInterpreterFactoryProvider(
+            [ImportMany]Lazy<IProjectContextProvider>[] contextProviders, 
+            [ImportMany]Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] factoryProviders,
+            [ImportMany]Lazy<IInterpreterLog>[] loggers) {
             _factoryProviders = factoryProviders;
+            _loggers = loggers;
             _contextProviders = contextProviders;
             InitializeContexts();
         }
@@ -191,15 +196,28 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        private void Log(string format, params object[] args) {
+            Log(String.Format(format, args));
+        }
+
+        private void Log(string msg) {
+            foreach (var logger in _loggers) {
+                IInterpreterLog loggerValue = null;
+                try {
+                    loggerValue = logger.Value;
+                } catch (CompositionException) {
+                }
+                if (loggerValue != null) {
+                    loggerValue.Log(msg);
+                }
+            }
+        }
+
         /// <summary>
         /// Call to find interpreters in the associated project. Separated from
         /// the constructor to allow exceptions to be handled without causing
         /// the project node to be invalid.
         /// </summary>
-        /// <exception cref="InvalidDataException">
-        /// One or more interpreters failed to load. The error message should be
-        /// presented to the user, but can otherwise be ignored.
-        /// </exception>
         private bool DiscoverInterpreters(ProjectInfo projectInfo) {
             // <Interpreter Include="InterpreterDirectory">
             //   <Id>factoryProviderId;interpreterFactoryId</Id>
@@ -212,9 +230,6 @@ namespace Microsoft.PythonTools.Interpreter {
             //   <Description>...</Description>
             // </Interpreter>
             var project = projectInfo.Project;
-            var errors = new StringBuilder();
-            errors.AppendLine("Some project interpreters failed to load:");
-            bool anyError = false;
 
             var projectHome = PathUtils.GetAbsoluteDirectoryPath(project.DirectoryPath, project.GetPropertyValue("ProjectHome"));
             var factories = new Dictionary<string, FactoryInfo>();
@@ -223,28 +238,25 @@ namespace Microsoft.PythonTools.Interpreter {
                 // continue with the next entry.
                 var dir = item.EvaluatedInclude;
                 if (!PathUtils.IsValidPath(dir)) {
-                    errors.AppendLine(string.Format("Interpreter has invalid path: {0}", dir ?? "(null)"));
-                    anyError = true;
+                    Log("Interpreter has invalid path: {0}", dir ?? "(null)");
                     continue;
                 }
                 dir = PathUtils.GetAbsoluteDirectoryPath(projectHome, dir);
 
                 var id = item.GetMetadataValue(IdKey);
                 if (string.IsNullOrEmpty(id)) {
-                    errors.AppendLine(string.Format("Interpreter {0} has invalid value for '{1}': {2}", dir, IdKey, id));
-                    anyError = true;
+                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, IdKey, id);
                     continue;
                 }
                 if (factories.ContainsKey(id)) {
-                    errors.AppendLine(string.Format("Interpreter {0} has a non-unique id: {1}", dir, id));
+                    Log("Interpreter {0} has a non-unique id: {1}", dir, id);
                     continue;
                 }
 
                 var verStr = item.GetMetadataValue(VersionKey);
                 Version ver;
                 if (string.IsNullOrEmpty(verStr) || !Version.TryParse(verStr, out ver)) {
-                    errors.AppendLine(string.Format("Interpreter {0} has invalid value for '{1}': {2}", dir, VersionKey, verStr));
-                    anyError = true;
+                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, VersionKey, verStr);
                     continue;
                 }
 
@@ -272,7 +284,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 var path = item.GetMetadataValue(InterpreterPathKey);
                 if (!PathUtils.IsValidPath(path)) {
-                    errors.AppendLine(string.Format("Interpreter {0} has invalid value for '{1}': {2}", dir, InterpreterPathKey, path));
+                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, InterpreterPathKey, path);
                     hasError = true;
                 } else if (!hasError) {
                     path = PathUtils.GetAbsoluteFilePath(dir, path);
@@ -280,7 +292,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 var winPath = item.GetMetadataValue(WindowsPathKey);
                 if (!PathUtils.IsValidPath(winPath)) {
-                    errors.AppendLine(string.Format("Interpreter {0} has invalid value for '{1}': {2}", dir, WindowsPathKey, winPath));
+                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, WindowsPathKey, winPath);
                     hasError = true;
                 } else if (!hasError) {
                     winPath = PathUtils.GetAbsoluteFilePath(dir, winPath);
@@ -291,7 +303,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     libPath = "lib";
                 }
                 if (!PathUtils.IsValidPath(libPath)) {
-                    errors.AppendLine(string.Format("Interpreter {0} has invalid value for '{1}': {2}", dir, LibraryPathKey, libPath));
+                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, LibraryPathKey, libPath);
                     hasError = true;
                 } else if (!hasError) {
                     libPath = PathUtils.GetAbsoluteDirectoryPath(dir, libPath);
@@ -320,7 +332,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     baseInterp = FindBaseInterpreterFromVirtualEnv(dir, libPath);
 
                     if (baseInterp == null) {
-                        errors.AppendLine(string.Format("Interpreter {0} has invalid value for '{1}': {2}", dir, BaseInterpreterKey, value ?? "(null)"));
+                        Log("Interpreter {0} has invalid value for '{1}': {2}", dir, BaseInterpreterKey, value ?? "(null)");
                         hasError = true;
                     }
                 }
@@ -402,10 +414,6 @@ namespace Microsoft.PythonTools.Interpreter {
                         );
                     }
                 }
-            }
-
-            if (anyError) {
-                throw new InvalidDataException(errors.ToString());
             }
 
             return anyChange;

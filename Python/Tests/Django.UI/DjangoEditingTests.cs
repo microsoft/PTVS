@@ -51,8 +51,9 @@ namespace DjangoUITests {
         [TestInitialize]
         public void ChangeDefaultInterpreter() {
             var model = (IComponentModel)VSTestContext.ServiceProvider.GetService(typeof(SComponentModel));
-            var interpreterService = model.GetService<IInterpreterOptionsService>();
-            PreviousDefault = interpreterService.DefaultInterpreter;
+            var interpreterService = model.GetService<IInterpreterRegistryService>();
+            var optionsService = model.GetService<IInterpreterOptionsService>();
+            PreviousDefault = optionsService.DefaultInterpreter;
 
             foreach (var ver in PythonPaths.Versions) {
                 if (!ver.IsCPython) {
@@ -61,7 +62,7 @@ namespace DjangoUITests {
 
                 foreach (var p in Directory.EnumerateDirectories(Path.Combine(ver.LibPath, "site-packages"))) {
                     if (Path.GetFileName(p).StartsWith("django")) {
-                        interpreterService.DefaultInterpreter = interpreterService.FindInterpreter(ver.Id, ver.Version.ToVersion());
+                        optionsService.DefaultInterpreter = interpreterService.FindInterpreter(ver.Id);
                         return;
                     }
                 }

@@ -300,11 +300,12 @@ namespace PythonToolsUITests {
                             break;
                         case 1:
                             var model = app.GetService<IComponentModel>(typeof(SComponentModel));
-                            var interpreterService = model.GetService<IInterpreterOptionsService>();
-                            var newInterpreter = interpreterService.FindInterpreter(PythonPaths.CPythonGuid, "3.4")
-                                ?? interpreterService.FindInterpreter(PythonPaths.CPythonGuid, "2.7");
+                            var interpreterService = model.GetService<IInterpreterRegistryService>();
+                            var optionsService = model.GetService<IInterpreterOptionsService>();
+                            var newInterpreter = interpreterService.FindInterpreter("Global;PythonCore;3.4;x86")
+                                ?? interpreterService.FindInterpreter("Global;PythonCore;2.7;x86");
                             Assert.IsNotNull(newInterpreter);
-                            interpreterService.DefaultInterpreter = newInterpreter;
+                            optionsService.DefaultInterpreter = newInterpreter;
                             break;
                     }
                 }
@@ -390,21 +391,23 @@ namespace PythonToolsUITests {
                 var project = t.WaitAndUnwrapExceptions();
 
                 var provider = project.Properties.Item("InterpreterFactoryProvider").Value as MSBuildProjectInterpreterFactoryProvider;
+
+                var contextProvider = app.GetService<VsProjectContextProvider>();
                 for (int retries = 20; retries > 0; --retries) {
-                    if (provider.IsProjectSpecific(provider.ActiveInterpreter)) {
+                    if (contextProvider.IsProjectSpecific(project.GetPythonProject().ActiveInterpreter.Configuration)) {
                         break;
                     }
                     Thread.Sleep(1000);
                 }
-                Assert.IsTrue(provider.IsProjectSpecific(provider.ActiveInterpreter), "Did not have virtualenv");
+                Assert.IsTrue(contextProvider.IsProjectSpecific(project.GetPythonProject().ActiveInterpreter.Configuration), "Did not have virtualenv");
                 
                 for (int retries = 60; retries > 0; --retries) {
-                    if (provider.ActiveInterpreter.FindModules("flask").Any()) {
+                    if (project.GetPythonProject().ActiveInterpreter.FindModules("flask").Any()) {
                         break;
                     }
                     Thread.Sleep(1000);
                 }
-                AssertUtil.ContainsExactly(provider.ActiveInterpreter.FindModules("flask"), "flask");
+                AssertUtil.ContainsExactly(project.GetPythonProject().ActiveInterpreter.FindModules("flask"), "flask");
             }
         }
 
@@ -412,7 +415,7 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectInstallOnNew() {
             using (var app = new PythonVisualStudioApp()) {
-                Pip.Uninstall(app.ServiceProvider, app.InterpreterService.DefaultInterpreter, "bottle", false)
+                Pip.Uninstall(app.ServiceProvider, app.OptionsService.DefaultInterpreter, "bottle", false)
                     .WaitAndUnwrapExceptions();
 
                 var t = Task.Run(() => app.CreateProject(
@@ -432,17 +435,17 @@ namespace PythonToolsUITests {
 
                 var provider = project.Properties.Item("InterpreterFactoryProvider").Value as MSBuildProjectInterpreterFactoryProvider;
 
-                Assert.AreSame(app.InterpreterService.DefaultInterpreter, provider.ActiveInterpreter);
+                Assert.AreSame(app.OptionsService.DefaultInterpreter, project.GetPythonProject().ActiveInterpreter);
 
                 for (int retries = 60; retries > 0; --retries) {
-                    if (provider.ActiveInterpreter.FindModules("bottle").Any()) {
+                    if (project.GetPythonProject().ActiveInterpreter.FindModules("bottle").Any()) {
                         break;
                     }
                     Thread.Sleep(1000);
                 }
-                AssertUtil.ContainsExactly(provider.ActiveInterpreter.FindModules("bottle"), "bottle");
+                AssertUtil.ContainsExactly(project.GetPythonProject().ActiveInterpreter.FindModules("bottle"), "bottle");
 
-                Pip.Uninstall(app.ServiceProvider, app.InterpreterService.DefaultInterpreter, "bottle", false)
+                Pip.Uninstall(app.ServiceProvider, app.OptionsService.DefaultInterpreter, "bottle", false)
                     .WaitAndUnwrapExceptions();
             }
         }
@@ -583,7 +586,7 @@ namespace PythonToolsUITests {
                 using (new ProcessScope("Microsoft.PythonTools.Analyzer")) {
                     factory = CreateVirtualEnvironment(pythonVersion, app, pyProj);
 
-                    EndToEndLog("Created virtual environment {0}", factory.Description);
+                    EndToEndLog("Created virtual environment {0}", factory.Configuration.Description);
 
                     InstallWebFramework(app, moduleName, packageName ?? moduleName, factory);
 
@@ -724,13 +727,13 @@ namespace PythonToolsUITests {
             var uiThread = app.ServiceProvider.GetUIThread();
             var task = uiThread.InvokeTask(() => {
                 var model = app.GetService<IComponentModel>(typeof(SComponentModel));
-                var service = model.GetService<IInterpreterOptionsService>();
+                var service = model.GetService<IInterpreterRegistryService>();
 
                 return pyProj.CreateOrAddVirtualEnvironment(
                     service,
                     true,
                     Path.Combine(pyProj.ProjectHome, "env"),
-                    service.FindInterpreter(PythonPaths.CPythonGuid, pythonVersion),
+                    service.FindInterpreter("Global;PythonCore;" + pythonVersion + ";x86"),
                     Version.Parse(pythonVersion) >= new Version(3, 3)
                 );
             });
@@ -740,7 +743,7 @@ namespace PythonToolsUITests {
                 throw ex.InnerException;
             }
             var factory = task.Result;
-            Assert.IsTrue(uiThread.Invoke(() => factory.Id == pyProj.GetInterpreterFactory().Id));
+            Assert.IsTrue(uiThread.Invoke(() => factory.Configuration.Id == pyProj.GetInterpreterFactory().Configuration.Id));
             return factory;
         }
 

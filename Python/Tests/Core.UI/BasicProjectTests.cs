@@ -572,9 +572,10 @@ namespace PythonToolsUITests {
         public void ChangeDefaultInterpreterProjectClosed() {
             using (var app = new PythonVisualStudioApp()) {
                 
-                var service = app.InterpreterService;
+                var service = app.OptionsService;
                 var original = service.DefaultInterpreter;
-                using (var dis = new DefaultInterpreterSetter(service.Interpreters.FirstOrDefault(i => i != original))) {
+                var interpreters = app.InterpreterService;
+                using (var dis = new DefaultInterpreterSetter(interpreters.Interpreters.FirstOrDefault(i => i != original))) {
                     var project = app.OpenProject(@"TestData\HelloWorld.sln");
                     app.Dte.Solution.Close();
 
@@ -1080,7 +1081,7 @@ namespace PythonToolsUITests {
 
                 using (var evt = new AutoResetEvent(false)) {
                     pyproj.ProjectAnalyzerChanged += (s, e) => { try { evt.Set(); } catch { } };
-                    dis.SetDefault(app.InterpreterService.FindInterpreter(testPython.Id, testPython.Version.ToVersion()));
+                    dis.SetDefault(app.InterpreterService.FindInterpreter(testPython.Id));
                     Assert.IsTrue(evt.WaitOne(10000), "Timed out waiting for analyzer change");
                 }
 
@@ -1338,7 +1339,7 @@ namespace PythonToolsUITests {
 
             using (var app = new PythonVisualStudioApp())
             using (var dis = app.SelectDefaultInterpreter(python)) {
-                var interpreterName = dis.CurrentDefault.Description;
+                var interpreterName = dis.CurrentDefault.Configuration.Description;
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
                 var replService = (IPythonOptions)app.Dte.GetObject("VsPython");
