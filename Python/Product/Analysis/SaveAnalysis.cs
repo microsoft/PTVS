@@ -21,7 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Values;
-using Microsoft.PythonTools.Common.Infrastructure;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
