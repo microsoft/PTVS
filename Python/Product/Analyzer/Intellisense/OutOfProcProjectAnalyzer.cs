@@ -214,11 +214,16 @@ namespace Microsoft.PythonTools.Intellisense {
                 projectContextProvider.AddContext(request.projectFile);
             }
 
-            IPythonInterpreterFactory factory;
+            IPythonInterpreterFactory factory = null;
             Version analysisVersion;
-            if (request.interpreterId.StartsWith("AnalysisOnly;") &&
-                Version.TryParse(request.interpreterId.Substring(request.interpreterId.IndexOf(';') + 1), out analysisVersion)) {
-                factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(analysisVersion);
+            if (request.interpreterId.StartsWith("AnalysisOnly;")) {
+                int versionStart = request.interpreterId.IndexOf(';') + 1;
+                int versionEnd = request.interpreterId.IndexOf(';', versionStart);
+
+                if (Version.TryParse(request.interpreterId.Substring(versionStart, versionEnd - versionStart), out analysisVersion)) {
+                    var dbDirs = request.interpreterId.Substring(versionEnd + 1).Split(';');
+                    factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(analysisVersion, null, dbDirs);
+                }
             } else {
                 factory = _container.GetInterpreterFactory(request.interpreterId);
             }
