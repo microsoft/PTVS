@@ -40,7 +40,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return arch == ProcessorArchitecture.Amd64 ? "IronPython|2.7 64-bit" : "IronPython|2.7 32-bit";
         }
 
-        private static InterpreterConfiguration GetConfiguration(ProcessorArchitecture arch) {
+        internal static InterpreterConfiguration GetConfiguration(ProcessorArchitecture arch) {
             var prefixPath = IronPythonResolver.GetPythonInstallDir();
             return new InterpreterConfiguration(
                 GetInterpreterId(arch),

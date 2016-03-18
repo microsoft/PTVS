@@ -32,11 +32,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
         private IPythonInterpreterFactory _interpreter;
         private IPythonInterpreterFactory _interpreterX64;
+        private InterpreterConfiguration _config, _configX64;
         const string IronPythonCorePath = "Software\\IronPython";
 
         public IronPythonInterpreterFactoryProvider() {
             DiscoverInterpreterFactories();
-            if (_interpreter == null) {
+            if (_config == null) {
                 StartWatching(RegistryHive.LocalMachine, RegistryView.Registry32);
             }
         }
@@ -73,7 +74,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 e.CancelWatcher = true;
             } else {
                 DiscoverInterpreterFactories();
-                if (_interpreter != null) {
+                if (_config != null) {
                     e.CancelWatcher = true;
                 }
             }
@@ -108,20 +109,30 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
-            return GetInterpreterFactories().Select(x => x.Configuration);
+            if (_config != null) {
+                yield return _config;
+            }
+            if (_configX64 != null) {
+                yield return _configX64;
+            }
         }
 
         public IPythonInterpreterFactory GetInterpreterFactory(string id) {
-            return GetInterpreterFactories()
-                .Where(x => x.Configuration.Id == id)
-                .FirstOrDefault();
+            if (_config != null && id == _config.Id) {
+                if (_interpreter == null) {
+                    _interpreter = new IronPythonInterpreterFactory(_config.Architecture);
+                }
+            } else if (_configX64 != null && id == _configX64.Id) {
+                _interpreter = new IronPythonInterpreterFactory(_configX64.Architecture);
+            }
+            return null;
         }
 
         private void DiscoverInterpreterFactories() {
-            if (_interpreter == null && IronPythonResolver.GetPythonInstallDir() != null) {
-                _interpreter = new IronPythonInterpreterFactory(ProcessorArchitecture.X86);
+            if (_config == null && IronPythonResolver.GetPythonInstallDir() != null) {
+                _config = IronPythonInterpreterFactory.GetConfiguration(ProcessorArchitecture.X86);
                 if (Environment.Is64BitOperatingSystem) {
-                    _interpreterX64 = new IronPythonInterpreterFactory(ProcessorArchitecture.Amd64);
+                    _configX64 = IronPythonInterpreterFactory.GetConfiguration(ProcessorArchitecture.Amd64);
                 }
                 var evt = InterpreterFactoriesChanged;
                 if (evt != null) {

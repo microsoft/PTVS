@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
             foreach (var project in _projects) {
                 foreach (var fact in project.Value.Factories) {
-                    yield return fact.Value.Factory.Configuration;
+                    yield return fact.Value.Config;
                 }
             }
         }
