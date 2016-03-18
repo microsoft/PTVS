@@ -83,9 +83,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal VsProjectAnalyzer(
             IServiceProvider serviceProvider,
-            IPythonInterpreterFactory factory,
-            IPythonInterpreterFactory[] allFactories)
-            : this(serviceProvider, factory.CreateInterpreter(), factory, allFactories) {
+            IPythonInterpreterFactory factory)
+            : this(serviceProvider, factory.CreateInterpreter(), factory) {
         }
 
         internal async Task<VersionedResponse<AP.UnresolvedImportsResponse>> GetMissingImportsAsync(ITextBuffer textBuffer) {
@@ -113,7 +112,6 @@ namespace Microsoft.PythonTools.Intellisense {
             IServiceProvider serviceProvider,
             IPythonInterpreter interpreter,
             IPythonInterpreterFactory factory,
-            IPythonInterpreterFactory[] allFactories,
             bool implicitProject = true,
             string projectFile = null
         ) {

@@ -226,8 +226,7 @@ namespace Microsoft.PythonTools {
             return new VsProjectAnalyzer(
                 _container,
                 defaultFactory.CreateInterpreter(),
-                defaultFactory,
-                _interpreterRegistry.Interpreters.ToArray()
+                defaultFactory
             );
         }
 

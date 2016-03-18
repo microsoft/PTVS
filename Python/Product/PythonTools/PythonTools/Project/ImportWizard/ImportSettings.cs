@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             if (_service != null) {
                 AvailableInterpreters = new ObservableCollection<PythonInterpreterView>(
                     Enumerable.Repeat(_defaultInterpreter, 1)
-                    .Concat(_service.Interpreters.Select(fact => new PythonInterpreterView(fact)))
+                    .Concat(_service.Configurations.Select(fact => new PythonInterpreterView(fact)))
                 );
             } else {
                 AvailableInterpreters = new ObservableCollection<PythonInterpreterView>();

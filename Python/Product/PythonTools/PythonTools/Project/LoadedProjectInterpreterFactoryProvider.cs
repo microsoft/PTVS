@@ -73,6 +73,12 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        public bool IsProjectSpecific(string id) {
+            lock (_createdFactories) {
+                return _createdFactories.ContainsKey(id);
+            }
+        }
+
         public event EventHandler ProjectContextsChanged;
 
         public IEnumerable<object> ProjectContexts {

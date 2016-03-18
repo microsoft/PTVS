@@ -108,25 +108,25 @@ namespace Microsoft.PythonTools.Repl {
             return null;
         }
 
-        internal static string GetReplId(IPythonInterpreterFactory interpreter, PythonProjectNode project = null) {
-            return GetReplId(interpreter, project, false);
+        internal static string GetReplId(string id, PythonProjectNode project = null) {
+            return GetReplId(id, project, false);
         }
 
-        internal static string GetReplId(IPythonInterpreterFactory interpreter, PythonProjectNode project, bool alwaysPerProject) {
-            if (alwaysPerProject || IsProjectSpecific(interpreter, project)) {
-                return GetConfigurableReplId(interpreter, (IVsHierarchy)project, "");
+        internal static string GetReplId(string id, PythonProjectNode project, bool alwaysPerProject) {
+            if (alwaysPerProject || IsProjectSpecific(id, project)) {
+                return GetConfigurableReplId(id, (IVsHierarchy)project, "");
             } else {
                 return String.Format("{0} {1}",
                     _replGuid,
-                    interpreter.Configuration.Id
+                    id
                 );
             }
         }
 
-        private static bool IsProjectSpecific(IPythonInterpreterFactory interpreter, PythonProjectNode project) {
+        private static bool IsProjectSpecific(string id, PythonProjectNode project) {
             if (project != null) {
                 var vsProjectContext = project.Site.GetComponentModel().GetService<VsProjectContextProvider>();
-                return vsProjectContext.IsProjectSpecific(interpreter.Configuration);
+                return vsProjectContext.IsProjectSpecific(id);
             }
             return false;
         }
@@ -138,10 +138,10 @@ namespace Microsoft.PythonTools.Repl {
             );
         }
 
-        internal static string GetConfigurableReplId(IPythonInterpreterFactory interpreter, IVsHierarchy project, string userId) {
+        internal static string GetConfigurableReplId(string id, IVsHierarchy project, string userId) {
             return String.Format("{0}|{1}|{2}|{3}",
                 _configurableGuid,
-                interpreter.Configuration.Id,
+                id,
                 userId,
                 project != null ? project.GetRootCanonicalName() : ""
             );

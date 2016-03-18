@@ -645,7 +645,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 return replCommands;
             }
 
-            var factories = interpreters.Interpreters.ToList();
+            var factories = interpreters.Configurations.ToList();
             if (factories.Count == 0) {
                 return replCommands;
             }
@@ -657,8 +657,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             var defaultFactory = interpreterService.DefaultInterpreter;
             if (defaultFactory != null) {
-                factories.Remove(defaultFactory);
-                factories.Insert(0, defaultFactory);
+                factories.Remove(defaultFactory.Configuration);
+                factories.Insert(0, defaultFactory.Configuration);
             }
 
             for (int i = 0; i < (PkgCmdIDList.cmdidReplWindowF - PkgCmdIDList.cmdidReplWindow) && i < factories.Count; i++) {
@@ -672,7 +672,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 // This command is a fallback for the Python.Interactive command
                 // If no project is selected, the default environment will be
                 // used.
-                replCommands.Add(new OpenReplCommand(this, (int)PythonConstants.OpenInteractiveForEnvironment, defaultFactory));
+                replCommands.Add(new OpenReplCommand(this, (int)PythonConstants.OpenInteractiveForEnvironment, defaultFactory.Configuration));
             }
             return replCommands;
         }

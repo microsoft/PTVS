@@ -70,9 +70,14 @@ namespace Microsoft.PythonTools.Project {
                     }
 
                     var prefix = Path.GetDirectoryName(Path.GetDirectoryName(pkg));
-                    var factory = service.Interpreters.FirstOrDefault(
-                        f => PathUtils.IsSameDirectory(f.Configuration.PrefixPath, prefix)
+                    var config = service.Configurations.FirstOrDefault(
+                        f => PathUtils.IsSameDirectory(f.PrefixPath, prefix)
                     );
+
+                    IPythonInterpreterFactory factory = null;
+                    if (config != null) {
+                        factory = service.FindInterpreter(config.Id);
+                    }
 
                     if (factory != null && !(await factory.FindModulesAsync("conda")).Any()) {
                         factory = null;

@@ -122,7 +122,7 @@ namespace Microsoft.PythonTools.Repl {
         internal VsProjectAnalyzer ReplAnalyzer {
             get {
                 if (_replAnalyzer == null && Interpreter != null && _interpreterService != null) {
-                    _replAnalyzer = new VsProjectAnalyzer(_serviceProvider, Interpreter, _interpreterService.Interpreters.ToArray());
+                    _replAnalyzer = new VsProjectAnalyzer(_serviceProvider, Interpreter);
                     _ownsAnalyzer = true;
                 }
                 return _replAnalyzer;

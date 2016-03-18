@@ -143,7 +143,7 @@ namespace IronPythonTests {
             execute.Wait();
             Assert.IsTrue(execute.Result.IsSuccessful);
 
-            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), fact, new[] { fact })) {
+            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), fact)) {
                 replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
 
                 CompletionResult[] names = null;

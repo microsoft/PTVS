@@ -347,7 +347,7 @@ namespace Microsoft.PythonTools.Project {
 
             foreach (var item in BuildProject.GetItems(MSBuildConstants.InterpreterReferenceItem)) {
                 var id = item.EvaluatedInclude;
-                if(id == factory.Configuration.Id) { 
+                if (id == factory.Configuration.Id) {
                     BuildProject.RemoveItem(item);
                     BuildProject.MarkDirty();
                     break;
@@ -362,8 +362,8 @@ namespace Microsoft.PythonTools.Project {
         private void UpdateActiveInterpreter() {
             var newActive = _active;
             lock (_validFactories) {
-                if (newActive == null || 
-                    _validFactories.Count == 0 || 
+                if (newActive == null ||
+                    _validFactories.Count == 0 ||
                     !_validFactories.Contains(newActive.Configuration.Id)) {
                     newActive = Site.GetComponentModel().DefaultExportProvider.GetInterpreterFactory(
                         BuildProject.GetPropertyValue(MSBuildConstants.InterpreterIdProperty)
@@ -376,6 +376,30 @@ namespace Microsoft.PythonTools.Project {
         internal bool IsActiveInterpreterGlobalDefault {
             get {
                 return _active == null;
+            }
+        }
+        internal IEnumerable<InterpreterConfiguration> InterpreterConfigurations {
+            get {
+                var compModel = Site.GetComponentModel();
+                var configs = compModel.DefaultExportProvider.GetConfigurations();
+                if (_validFactories.Count == 0) {
+                    // all non-project specific configs are valid...
+                    var vsProjContext = compModel.GetService<VsProjectContextProvider>();
+                    foreach (var config in configs) {
+                        if (!vsProjContext.IsProjectSpecific(config.Value)) {
+                            yield return config.Value;
+                        }
+                    }
+                } else {
+                    // we have a list of registered factories, only include those...
+                    foreach (var config in _validFactories) {
+                        var interp = compModel.DefaultExportProvider.GetInterpreterFactory(config);
+                        InterpreterConfiguration value;
+                        if (configs.TryGetValue(config, out value)) {
+                            yield return value;
+                        }
+                    }
+                }
             }
         }
 
@@ -481,7 +505,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override Guid[] GetConfigurationIndependentPropertyPages() {
-            return new[] { 
+            return new[] {
                 GetGeneralPropertyPageType().GUID,
                 typeof(PythonDebugPropertyPage).GUID,
                 typeof(PublishPropertyPage).GUID
@@ -1112,7 +1136,6 @@ namespace Microsoft.PythonTools.Project {
                 Site,
                 factory.CreateInterpreter(),
                 factory,
-                interpreterService.Interpreters.ToArray(),
                 false,
                 FileName
             );
@@ -1235,7 +1258,7 @@ namespace Microsoft.PythonTools.Project {
                 if (analyzerChanging != null) {
                     analyzerChanging(this, new AnalyzerChangingEventArgs(
                         _analyzer,
-                        analyzer 
+                        analyzer
                     ));
                 }
 
@@ -1576,16 +1599,23 @@ namespace Microsoft.PythonTools.Project {
             string description;
             if (args != null && args.TryGetValue("e", out description) && !string.IsNullOrEmpty(description)) {
                 var service = Site.GetComponentModel().GetService<IInterpreterRegistry>();
+                InterpreterConfiguration config;
 
-                factory = InterpreterFactories.FirstOrDefault(
+                config = InterpreterConfigurations.FirstOrDefault(
                     // Description is a localized string, hence CCIC
-                    f => description.Equals(f.Configuration.Description, StringComparison.CurrentCultureIgnoreCase)
+                    c => description.Equals(c.Description, StringComparison.CurrentCultureIgnoreCase)
                 );
+                if (config != null) {
+                    factory = service.FindInterpreter(config.Id);
+                }
 
                 if (factory == null) {
-                    factory = service.Interpreters.FirstOrDefault(
-                        f => description.Equals(f.Configuration.Description, StringComparison.CurrentCultureIgnoreCase)
+                    config = service.Configurations.FirstOrDefault(
+                        c => description.Equals(c.Description, StringComparison.CurrentCultureIgnoreCase)
                     );
+                    if (config != null) {
+                        factory = service.FindInterpreter(config.Id);
+                    }
                 }
             }
 
@@ -1700,7 +1730,7 @@ namespace Microsoft.PythonTools.Project {
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
             try {
-                ExecuteInReplCommand.EnsureReplWindow(Site, selectedInterpreterFactory, this).Show(true);
+                ExecuteInReplCommand.EnsureReplWindow(Site, selectedInterpreterFactory.Configuration, this).Show(true);
             } catch (InvalidOperationException ex) {
                 MessageBox.Show(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex), Strings.ProductTitle);
             }
@@ -1708,7 +1738,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
 
-#region IPythonProject Members
+        #region IPythonProject Members
 
         string IPythonProject.ProjectName {
             get {
@@ -1757,7 +1787,7 @@ namespace Microsoft.PythonTools.Project {
                                     "*",
                                     SearchOption.AllDirectories
                                 )
-                            // Exclude the completion DB
+                                // Exclude the completion DB
                                 .Where(f => !f.Contains("\\.ptvs\\"))
                                 .Select(f => new PublishFile(f, PathUtils.GetRelativeFilePath(ProjectHome, f)))
                             ).ToArray(),
@@ -1781,9 +1811,9 @@ namespace Microsoft.PythonTools.Project {
             return base.GetUnevaluatedProperty(name);
         }
 
-#endregion
+        #endregion
 
-#region Search Path support
+        #region Search Path support
 
         internal int AddSearchPathZip() {
             var fileName = Site.BrowseForFileOpen(
@@ -1817,9 +1847,9 @@ namespace Microsoft.PythonTools.Project {
             return VSConstants.S_OK;
         }
 
-#endregion
+        #endregion
 
-#region Package Installation support
+        #region Package Installation support
 
         private int ExecInstallPythonPackage(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
             InterpretersNode selectedInterpreter;

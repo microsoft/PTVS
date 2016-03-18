@@ -220,7 +220,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             //    provider.GetProject(factory);
             PythonProjectNode project = null;// vsProject == null ? null : vsProject.GetPythonProject();
             try {
-                window = ExecuteInReplCommand.EnsureReplWindow(_site, factory, project);
+                window = ExecuteInReplCommand.EnsureReplWindow(_site, factory.Configuration, project);
             } catch (InvalidOperationException ex) {
                 MessageBox.Show(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex), Strings.ProductTitle);
                 return;

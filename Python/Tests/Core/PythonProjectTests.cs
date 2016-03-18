@@ -268,7 +268,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(1)]
         public void LoadAndUnloadModule() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 3)) };
-            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), factories[0], factories)) {
+            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), factories[0])) {
                 var m1Path = TestData.GetPath("TestData\\SimpleImport\\module1.py");
                 var m2Path = TestData.GetPath("TestData\\SimpleImport\\module2.py");
 
@@ -320,7 +320,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(1)]
         public void AnalyzeBadEgg() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 4)) };
-            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), factories[0], factories)) {
+            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), factories[0])) {
                 analyzer.AnalyzeZipArchiveAsync(TestData.GetPath(@"TestData\BadEgg.egg")).Wait();
                 analyzer.WaitForCompleteAnalysis(_ => true);
 

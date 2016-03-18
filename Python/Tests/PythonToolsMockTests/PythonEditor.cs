@@ -64,7 +64,7 @@ namespace PythonToolsMockTests {
                 }
                 if (analyzer == null) {
                     _disposeAnalyzer = true;
-                    analyzer = new VsProjectAnalyzer(vs.ServiceProvider, factory, new[] { factory });
+                    analyzer = new VsProjectAnalyzer(vs.ServiceProvider, factory);
                     var task = analyzer.ReloadTask;
                     if (task != null) {
                         task.WaitAndUnwrapExceptions();
