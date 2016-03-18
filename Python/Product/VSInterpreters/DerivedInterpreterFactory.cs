@@ -31,6 +31,23 @@ namespace Microsoft.PythonTools.Interpreter {
         PythonTypeDatabase _baseDb;
         bool _baseHasRefreshed;
 
+        public DerivedInterpreterFactory(
+            PythonInterpreterFactoryWithDatabase baseFactory,
+            InterpreterConfiguration config,
+            InterpreterFactoryCreationOptions options
+        ) : base(config.Description, config, options.WatchLibraryForNewModules) {
+            _base = baseFactory;
+            _base.IsCurrentChanged += Base_IsCurrentChanged;
+            _base.NewDatabaseAvailable += Base_NewDatabaseAvailable;
+
+            if (Volatile.Read(ref _deferRefreshIsCurrent)) {
+                // This rare race condition is due to a design flaw that is in
+                // shipped public API and cannot be fixed without breaking
+                // compatibility with 3rd parties.
+                RefreshIsCurrent();
+            }
+        }
+
         [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors",
             Justification = "call to RefreshIsCurrent is required for back compat")]
         public DerivedInterpreterFactory(
@@ -259,7 +276,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public static IPythonInterpreterFactory FindBaseInterpreterFromVirtualEnv(
             string prefixPath,
             string libPath,
-            IInterpreterRegistry service
+            IInterpreterRegistryService service
         ) {
             string basePath = GetOrigPrefixPath(prefixPath, libPath);
 

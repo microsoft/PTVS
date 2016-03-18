@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         }
 
         public ImportWizard(IServiceProvider serviceProvider, string sourcePath, string projectPath) {
-            var interpreterService = serviceProvider.GetComponentModel().GetService<IInterpreterRegistry>();
+            var interpreterService = serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
             _site = serviceProvider;
             ImportSettings = new ImportSettings(serviceProvider, interpreterService);
 

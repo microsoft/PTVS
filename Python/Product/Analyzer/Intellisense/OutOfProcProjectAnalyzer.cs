@@ -138,7 +138,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void SetOptions(AP.OptionsChangedEvent options) {
-            _pyAnalyzer.Limits.CrossModule = options.crossModuleAnalysisLimit;
+            if (_pyAnalyzer != null) {
+                _pyAnalyzer.Limits.CrossModule = options.crossModuleAnalysisLimit;
+            }
             _options = options;
         }
 

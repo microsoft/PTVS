@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.TestAdapter {
     class TestDiscoverer : ITestDiscoverer {
         private readonly CompositionContainer _container;
         private readonly IInterpreterOptionsService _interpreterService;
-        private readonly IInterpreterRegistry _interpreters;
+        private readonly IInterpreterRegistryService _interpreters;
 
         public TestDiscoverer() : this(CreateCompositionContainer()) {
         }
@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         internal TestDiscoverer(CompositionContainer container) {
             _container = container;
-            _interpreters = container.GetExportedValue<IInterpreterRegistry>();
+            _interpreters = container.GetExportedValue<IInterpreterRegistryService>();
             _interpreterService = container.GetExportedValue<IInterpreterOptionsService>();
         }
 

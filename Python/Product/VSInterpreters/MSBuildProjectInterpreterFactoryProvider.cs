@@ -105,14 +105,14 @@ namespace Microsoft.PythonTools.Interpreter {
         public IPythonInterpreterFactory GetInterpreterFactory(string id) {
             var pathAndId = id.Split(new[] { '|' }, 3);
             if (pathAndId.Length == 3) {
-                var interpId = pathAndId[1];
                 var path = pathAndId[2];
 
                 // see if the project is loaded
                 ProjectInfo project;
                 FactoryInfo factInfo;
                 if (_projects.TryGetValue(path, out project) &&
-                    project.Factories.TryGetValue(interpId, out factInfo)) {
+                    project.Factories != null &&
+                    project.Factories.TryGetValue(id, out factInfo)) {
                     return factInfo.Factory;
                 }
             }
@@ -127,19 +127,54 @@ namespace Microsoft.PythonTools.Interpreter {
             var contextProvider = (IProjectContextProvider)sender;
             bool discovered = false;
             if (contextProvider != null) {
-                foreach (var context in contextProvider.ProjectContexts) {
-                    var projContext = context as MSBuild.Project;
-                    if (projContext == null) {
-                        var projectFile = context as string;
-                        if (projectFile != null && projectFile.EndsWith(".pyproj", StringComparison.OrdinalIgnoreCase)) {
-                            projContext = new MSBuild.Project(projectFile);
+                // Run through and and get the new interpreters to add...
+                HashSet<string> seen = new HashSet<string>();
+                HashSet<ProjectInfo> added = new HashSet<ProjectInfo>();
+                HashSet<ProjectInfo> removed = new HashSet<ProjectInfo>();
+                var contexts = contextProvider.ProjectContexts;
+                lock (_projects) {
+                    foreach (var context in contextProvider.ProjectContexts) {
+                        var projContext = context as MSBuild.Project;
+                        if (projContext == null) {
+                            var projectFile = context as string;
+                            if (projectFile != null && projectFile.EndsWith(".pyproj", StringComparison.OrdinalIgnoreCase)) {
+                                projContext = new MSBuild.Project(projectFile);
+                            }
+                        }
+
+                        if (projContext != null) {
+                            if (!_projects.ContainsKey(projContext.FullPath)) {
+                                var projInfo = new ProjectInfo(projContext, contextProvider);
+                                _projects[projContext.FullPath] = projInfo;
+                                added.Add(projInfo);
+                            }
+                            seen.Add(projContext.FullPath);
                         }
                     }
 
-                    if (projContext != null && !_projects.ContainsKey(projContext.FullPath)) {
-                        var projInfo = new ProjectInfo(projContext, contextProvider);
-                        _projects[projContext.FullPath] = projInfo;
-                        discovered |= DiscoverInterpreters(projInfo);
+                    // Then remove any existing projects that are no longer there
+                    var toRemove = _projects
+                        .Where(x => x.Value.Context == contextProvider && !seen.Contains(x.Value.Project.FullPath))
+                        .Select(x => x.Key)
+                        .ToArray();
+
+                    foreach (var projInfo in toRemove) {
+                        var value = _projects[projInfo];
+                        _projects.Remove(projInfo);
+                        removed.Add(value);
+                        value.Dispose();
+                    }
+                }
+
+                // apply what we discovered without the projects lock...
+                foreach (var projInfo in added) {
+                    discovered |= DiscoverInterpreters(projInfo);
+                }
+
+                foreach (var projInfo in removed) {
+                    projInfo.Dispose();
+                    if (projInfo.Factories.Count > 0) {
+                        discovered = true;
                     }
                 }
             }
@@ -179,13 +214,11 @@ namespace Microsoft.PythonTools.Interpreter {
             var project = projectInfo.Project;
             var errors = new StringBuilder();
             errors.AppendLine("Some project interpreters failed to load:");
-            bool anyChange = false, anyError = false;
+            bool anyError = false;
 
             var projectHome = PathUtils.GetAbsoluteDirectoryPath(project.DirectoryPath, project.GetPropertyValue("ProjectHome"));
             var factories = new Dictionary<string, FactoryInfo>();
             foreach (var item in project.GetItems(InterpreterItem)) {
-                IPythonInterpreterFactory fact;
-
                 // Errors in these options are fatal, so we set anyError and
                 // continue with the next entry.
                 var dir = item.EvaluatedInclude;
@@ -227,14 +260,14 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 var value = item.GetMetadataValue(BaseInterpreterKey);
-                PythonInterpreterFactoryWithDatabase baseInterp = null;
+                InterpreterConfiguration baseInterp = null;
                 if (!string.IsNullOrEmpty(value)) {
                     // It's a valid GUID, so find a suitable base. If we
                     // don't find one now, we'll try and figure it out from
                     // the pyvenv.cfg/orig-prefix.txt files later.
                     // Using an empty GUID will always go straight to the
                     // later lookup.
-                    baseInterp = _factoryProviders.GetInterpreterFactory(value) as PythonInterpreterFactoryWithDatabase;
+                    baseInterp = _factoryProviders.GetConfiguration(value);
                 }
 
                 var path = item.GetMetadataValue(InterpreterPathKey);
@@ -267,7 +300,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 var pathVar = item.GetMetadataValue(PathEnvVarKey);
                 if (string.IsNullOrEmpty(pathVar)) {
                     if (baseInterp != null) {
-                        pathVar = baseInterp.Configuration.PathEnvironmentVariable;
+                        pathVar = baseInterp.PathEnvironmentVariable;
                     } else {
                         pathVar = "PYTHONPATH";
                     }
@@ -284,8 +317,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (baseInterp == null && !hasError) {
                     // Only thing missing is the base interpreter, so let's try
                     // to find it using paths
-                    baseInterp = FindBaseInterpreterFromVirtualEnv(dir, libPath) as
-                        PythonInterpreterFactoryWithDatabase;
+                    baseInterp = FindBaseInterpreterFromVirtualEnv(dir, libPath);
 
                     if (baseInterp == null) {
                         errors.AppendLine(string.Format("Interpreter {0} has invalid value for '{1}': {2}", dir, BaseInterpreterKey, value ?? "(null)"));
@@ -293,95 +325,82 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
 
+                string fullId = GetInterpreterId(project.FullPath, id);
+
+                FactoryInfo info;
                 if (hasError) {
-                    fact = new NotFoundInterpreterFactory(
-                        GetInterpreterId(project.FullPath, id),
-                        ver,
-                        string.Format("{0} (unavailable)", description),
-                        Directory.Exists(dir) ? dir : null
-                    );
-                } else if (baseInterp != null) {
-                    fact = new DerivedInterpreterFactory(
-                        baseInterp,
-                        new InterpreterFactoryCreationOptions {
-                            LanguageVersion = baseInterp.Configuration.Version,
-                            Id = GetInterpreterId(project.FullPath, id),
-                            Description = description,
-                            InterpreterPath = path,
-                            WindowInterpreterPath = winPath,
-                            LibraryPath = libPath,
-                            PrefixPath = dir,
-                            PathEnvironmentVariableName = pathVar,
-                            Architecture = baseInterp.Configuration.Architecture,
-                            WatchLibraryForNewModules = true,
-                        }
-                    );
+                    info = new ErrorFactoryInfo(item, fullId, ver, description, dir);
                 } else {
-                    fact = InterpreterFactoryCreator.CreateInterpreterFactory(
-                        new InterpreterFactoryCreationOptions {
-                            LanguageVersion = ver,
-                            Id = GetInterpreterId(project.FullPath, id),
-                            Description = description,
-                            InterpreterPath = path,
-                            WindowInterpreterPath = winPath,
-                            LibraryPath = libPath,
-                            PrefixPath = dir,
-                            PathEnvironmentVariableName = pathVar,
-                            ArchitectureString = arch,
-                            WatchLibraryForNewModules = true
-                        }
+                    info = new ConfiguredFactoryInfo(
+                        this,
+                        item,
+                        baseInterp,
+                        new InterpreterConfiguration(
+                            fullId,
+                            description,
+                            dir,
+                            path,
+                            winPath,
+                            libPath,
+                            pathVar,
+                            baseInterp.Architecture,
+                            baseInterp.Version,
+                            InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured
+                        )
                     );
                 }
 
-                var existing = _factoryProviders.GetInterpreterFactory(id);
-                if (existing != null && existing.IsEqual(fact)) {
-                    factories[id] = new FactoryInfo(
-                        item,
-                        false,
-                        existing
-                    );
-                    var disposable = fact as IDisposable;
-                    if (disposable != null) {
-                        disposable.Dispose();
-                    }
-                } else {
-                    projectInfo.RootPaths[id] = dir;
-                    factories[id] = new FactoryInfo(item, true, fact);
-                    anyChange = true;
-                }
+                MergeFactory(projectInfo, factories, info);
             }
 
             // <InterpreterReference Include="{factoryProviderId};{interpreterId}" />
             foreach (var item in project.GetItems(InterpreterReferenceItem)) {
                 string id = item.EvaluatedInclude;
 
-                bool owned = false;
-                var existing = _factoryProviders.GetInterpreterFactory(id);
-
-                if (existing != null) {
-                    factories[id] = new FactoryInfo(item, false, existing);
+                var config = _factoryProviders.GetConfiguration(id);
+                FactoryInfo info;
+                if (config == null) {
+                    info = new ErrorFactoryInfo(item, id, new Version(0, 0), "Missing interpreter", "");
                 } else {
-                    owned = true;
-                    existing = new NotFoundInterpreterFactory(id, new Version(0, 0));
-                    factories[id] = new FactoryInfo(item, owned, existing);
-                    anyChange = true;
+                    info = new ReferenceFactoryInfo(this, config, item);
                 }
+
+                MergeFactory(projectInfo, factories, info);
             }
 
-            if (anyChange || projectInfo.Factories == null || factories.Count != projectInfo.Factories.Count) {
-                if (projectInfo.Factories != null) {
-                    foreach (var factory in projectInfo.Factories) {
-                        projectInfo.Context.InterpreterUnloaded(projectInfo.Project, factory.Value.Factory.Configuration);
-                    }
-                }
+            HashSet<FactoryInfo> previousFactories = new HashSet<FactoryInfo>();
+            if (projectInfo.Factories != null) {
+                previousFactories.UnionWith(projectInfo.Factories.Values);
+            }
+            HashSet<FactoryInfo> newFactories = new HashSet<FactoryInfo>(factories.Values);
+
+            bool anyChange = !newFactories.SetEquals(previousFactories);
+            if (anyChange || projectInfo.Factories == null) {
                 // Lock here mainly to ensure that any searches complete before
                 // we trigger the changed event.
                 lock (projectInfo) {
                     projectInfo.Factories = factories;
                 }
 
-                foreach (var factory in factories) {
-                    projectInfo.Context.InterpreterLoaded(projectInfo.Project, factory.Value.Factory.Configuration);
+                foreach (var removed in previousFactories.Except(newFactories)) {
+                    projectInfo.Context.InterpreterUnloaded(
+                        projectInfo.Project,
+                        removed.Config
+                    );
+
+                    IDisposable disp = removed as IDisposable;
+                    if (disp != null) {
+                        disp.Dispose();
+                    }
+                }
+
+                foreach (var added in newFactories.Except(previousFactories)) {
+                    foreach (var factory in factories) {
+                        projectInfo.Context.InterpreterLoaded(
+                            projectInfo.Project,
+                            factory.Value.Config
+                        );
+                    }
                 }
             }
 
@@ -392,7 +411,29 @@ namespace Microsoft.PythonTools.Interpreter {
             return anyChange;
         }
 
-        public IPythonInterpreterFactory FindBaseInterpreterFromVirtualEnv(
+        private static void MergeFactory(ProjectInfo projectInfo, Dictionary<string, FactoryInfo> factories, FactoryInfo info) {
+            FactoryInfo existing;
+            if (projectInfo.Factories != null &&
+                projectInfo.Factories.TryGetValue(info.Config.Id, out existing) &&
+                existing.Equals(info)) {
+                // keep the existing factory, we may have already created it's IPythonInterpreterFactory instance
+                factories[info.Config.Id] = existing;
+            } else {
+                factories[info.Config.Id] = info;
+            }
+        }
+
+        private static ProcessorArchitecture ParseArchitecture(string value) {
+            if (string.IsNullOrEmpty(value)) {
+                return ProcessorArchitecture.None;
+            } else if (value.Equals("x64", StringComparison.InvariantCultureIgnoreCase)) {
+                return ProcessorArchitecture.Amd64;
+            } else {
+                return ProcessorArchitecture.X86;
+            }
+        }
+
+        public InterpreterConfiguration FindBaseInterpreterFromVirtualEnv(
             string prefixPath,
             string libPath
         ) {
@@ -404,7 +445,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
                     foreach (var config in value.GetInterpreterConfigurations()) {
                         if (PathUtils.IsSamePath(config.PrefixPath, basePath)) {
-                            return value.GetInterpreterFactory(config.Id);
+                            return config;
                         }
                     }
                 }
@@ -452,18 +493,141 @@ namespace Microsoft.PythonTools.Interpreter {
 
         class FactoryInfo {
             public readonly MSBuild.ProjectItem ProjectItem;
-            public readonly IPythonInterpreterFactory Factory;
-            public readonly bool Owned;
+            public readonly InterpreterConfiguration Config;
+            protected IPythonInterpreterFactory _factory;
 
-            public FactoryInfo(MSBuild.ProjectItem projectItem, bool owned, IPythonInterpreterFactory factory) {
+            public FactoryInfo(MSBuild.ProjectItem projectItem, InterpreterConfiguration configuration) {
+                Config = configuration;
                 ProjectItem = projectItem;
-                Owned = owned;
-                Factory = factory;
+            }
+
+            protected virtual void CreateFactory() {
+            }
+
+            public IPythonInterpreterFactory Factory {
+                get {
+                    if (_factory == null) {
+                        CreateFactory();
+                    }
+                    return _factory;
+                }
+            }
+        }
+
+        sealed class ConfiguredFactoryInfo : FactoryInfo, IDisposable {
+            private readonly InterpreterConfiguration _baseConfig;
+            private readonly MSBuildProjectInterpreterFactoryProvider _factoryProvider;
+
+            public ConfiguredFactoryInfo(MSBuildProjectInterpreterFactoryProvider factoryProvider, MSBuild.ProjectItem projectItem, InterpreterConfiguration baseConfig, InterpreterConfiguration config) : base(projectItem, config) {
+                _factoryProvider = factoryProvider;
+                _baseConfig = baseConfig;
+            }
+
+            protected override void CreateFactory() {
+                if (_baseConfig != null) {
+                    var baseInterp = _factoryProvider._factoryProviders.GetInterpreterFactory(_baseConfig.Id) as PythonInterpreterFactoryWithDatabase;
+                    if (baseInterp != null) {
+                        _factory = new DerivedInterpreterFactory(
+                            baseInterp,
+                            Config,
+                            new InterpreterFactoryCreationOptions {
+                                WatchLibraryForNewModules = true,
+                            }
+                        );
+                    }
+                }
+                if (_factory == null) {
+                    _factory = InterpreterFactoryCreator.CreateInterpreterFactory(
+                        Config,
+                        new InterpreterFactoryCreationOptions {
+                            WatchLibraryForNewModules = true
+                        }
+                    );
+                }
+            }
+
+            public override bool Equals(object obj) {
+                ConfiguredFactoryInfo other = obj as ConfiguredFactoryInfo;
+                if (other != null) {
+                    return other.Config == Config && other._baseConfig == _baseConfig;
+                }
+                return false;
+            }
+
+            public override int GetHashCode() {
+                return Config.GetHashCode() ^ _baseConfig?.GetHashCode() ?? 0;
+            }
+
+            public void Dispose() {
+                IDisposable fact = _factory as IDisposable;
+                if (fact != null) {
+                    fact.Dispose();
+                }
+            }
+        }
+
+        sealed class ErrorFactoryInfo : FactoryInfo {
+            private string _dir;
+
+            public ErrorFactoryInfo(MSBuild.ProjectItem projectItem, string id, Version ver, string description, string dir) : base(projectItem, new InterpreterConfiguration(id, description, ver)) {
+                _dir = dir;
+            }
+
+            protected override void CreateFactory() {
+                _factory = new NotFoundInterpreterFactory(
+                    Config.Id,
+                    Config.Version,
+                    string.Format("{0} (unavailable)", Config.Description),
+                    Directory.Exists(_dir) ? _dir : null
+                );
+            }
+
+            public override bool Equals(object obj) {
+                ErrorFactoryInfo other = obj as ErrorFactoryInfo;
+                if (other != null) {
+                    return other.Config == Config &&
+                        other._dir == _dir;
+                }
+                return false;
+            }
+
+            public override int GetHashCode() {
+                return Config.GetHashCode() ^ _dir?.GetHashCode() ?? 0;
+            }
+        }
+
+        sealed class ReferenceFactoryInfo : FactoryInfo {
+            private readonly MSBuildProjectInterpreterFactoryProvider _owner;
+
+            public ReferenceFactoryInfo(MSBuildProjectInterpreterFactoryProvider owner, InterpreterConfiguration config, MSBuild.ProjectItem projectItem) : base(projectItem, config) {
+                _owner = owner;
+            }
+
+            protected override void CreateFactory() {
+                var existing = _owner._factoryProviders.GetInterpreterFactory(Config.Id);
+
+                if (existing != null) {
+                    _factory = existing;
+                } else {
+                    _factory = new NotFoundInterpreterFactory(Config.Id, new Version(0, 0));
+                }
+            }
+
+            public override bool Equals(object obj) {
+                ReferenceFactoryInfo other = obj as ReferenceFactoryInfo;
+                if (other != null) {
+                    return other.Config == Config;
+                }
+                return false;
+            }
+
+            public override int GetHashCode() {
+                return Config.GetHashCode();
             }
         }
 
 
-        class ProjectInfo {
+        sealed class ProjectInfo : IDisposable {
             public readonly MSBuild.Project Project;
             public readonly IProjectContextProvider Context;
             public Dictionary<string, FactoryInfo> Factories;
@@ -473,21 +637,23 @@ namespace Microsoft.PythonTools.Interpreter {
                 Context = context;
                 Project = project;
             }
+
+            public void Dispose() {
+                if (Factories != null) {
+                    foreach (var keyValue in Factories) {
+                        IDisposable disp = keyValue.Value as IDisposable;
+                        if (disp != null) {
+                            disp.Dispose();
+                        }
+                    }
+                }
+            }
         }
 
         public void Dispose() {
             if (_projects != null) {
                 foreach (var project in _projects) {
-                    if (project.Value.Factories != null) {
-                        foreach (var keyValue in project.Value.Factories) {
-                            if (keyValue.Value.Owned) {
-                                IDisposable disp = keyValue.Value.Factory as IDisposable;
-                                if (disp != null) {
-                                    disp.Dispose();
-                                }
-                            }
-                        }
-                    }
+                    project.Value.Dispose();
                 }
             }
         }

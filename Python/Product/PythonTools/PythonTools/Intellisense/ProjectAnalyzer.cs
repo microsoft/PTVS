@@ -141,7 +141,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     StringComparer.OrdinalIgnoreCase
             );
             providers.Add(typeof(IInterpreterOptionsService).Assembly.Location);
-                
+
+
             var initialize = new AP.InitializeRequest() {
                 interpreterId = factory.Configuration.Id,
                 projectFile = projectFile,

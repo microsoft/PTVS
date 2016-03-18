@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Project {
 
         private static async Task<IPythonInterpreterFactory> TryGetCondaFactoryAsync(
             IPythonInterpreterFactory target,
-            IInterpreterRegistry service
+            IInterpreterRegistryService service
         ) {
             var condaMetaPath = PathUtils.GetAbsoluteDirectoryPath(
                 target.Configuration.PrefixPath,
@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Project {
 
         public static bool CanInstall(
             IPythonInterpreterFactory factory,
-            IInterpreterRegistry service
+            IInterpreterRegistryService service
         ) {
             if (!factory.IsRunnable()) {
                 return false;
@@ -107,7 +107,7 @@ namespace Microsoft.PythonTools.Project {
         public static async Task<bool> Install(
             IServiceProvider provider,
             IPythonInterpreterFactory factory,
-            IInterpreterRegistry service,
+            IInterpreterRegistryService service,
             string package,
             Redirector output = null
         ) {

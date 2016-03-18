@@ -286,7 +286,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private PythonProjectSettings LoadProjectSettings(
             string projectFile
         ) {
-            var registry = _container.GetExportedValue<IInterpreterRegistry>();
+            var registry = _container.GetExportedValue<IInterpreterRegistryService>();
             
             var buildEngine = new MSBuild.ProjectCollection();
             MSBuildProjectInterpreterFactoryProvider provider = null;

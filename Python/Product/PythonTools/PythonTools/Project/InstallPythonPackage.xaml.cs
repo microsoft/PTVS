@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Project {
         public static InstallPythonPackageView ShowDialog(
             IServiceProvider serviceProvider,
             IPythonInterpreterFactory factory,
-            IInterpreterRegistry service
+            IInterpreterRegistryService service
         ) {
             var wnd = new InstallPythonPackage(serviceProvider, factory, service);
             if (wnd.ShowModal() ?? false) {
@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Project {
         private InstallPythonPackage(
             IServiceProvider serviceProvider,
             IPythonInterpreterFactory factory,
-            IInterpreterRegistry service
+            IInterpreterRegistryService service
         ) {
             _view = new InstallPythonPackageView(
                 serviceProvider,

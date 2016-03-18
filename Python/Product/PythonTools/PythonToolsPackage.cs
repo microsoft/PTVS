@@ -586,7 +586,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             // Enable the Python debugger UI context
             UIContext.FromUIContextGuid(AD7Engine.DebugEngineGuid).IsActive = true;
 
-            var interpreters = ComponentModel.GetService<IInterpreterRegistry>();
+            var interpreters = ComponentModel.GetService<IInterpreterRegistryService>();
             interpreters.InterpretersChanged += RefreshReplCommands;
 
             var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
@@ -640,7 +640,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 return replCommands;
             }
 
-            var interpreters = compModel.GetService<IInterpreterRegistry>();
+            var interpreters = compModel.GetService<IInterpreterRegistryService>();
             if (interpreters == null) {
                 return replCommands;
             }

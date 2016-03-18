@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private readonly CollectionViewSource _environmentsView;
         private readonly HashSet<IPythonInterpreterFactory> _currentlyRefreshing;
-        private IInterpreterRegistry _interpreters;
+        private IInterpreterRegistryService _interpreters;
         private IInterpreterOptionsService _service;
         private IServiceProvider _site;
 
@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 if(value != null) {
                     var compModel = _site.GetService(typeof(SComponentModel)) as IComponentModel;
                     Service = compModel.GetService<IInterpreterOptionsService>();
-                    Interpreters = compModel.GetService<IInterpreterRegistry>();
+                    Interpreters = compModel.GetService<IInterpreterRegistryService>();
                 }
             }
         }
@@ -362,7 +362,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public event EventHandler<EnvironmentViewEventArgs> ViewCreated;
 
-        public IInterpreterRegistry Interpreters {
+        public IInterpreterRegistryService Interpreters {
             get {
                 return _interpreters;
             }

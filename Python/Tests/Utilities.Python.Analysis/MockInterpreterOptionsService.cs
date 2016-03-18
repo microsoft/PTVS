@@ -18,11 +18,12 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
-    public class MockInterpreterOptionsService : IInterpreterOptionsService, IInterpreterRegistry {
+    public class MockInterpreterOptionsService : IInterpreterOptionsService, IInterpreterRegistryService {
         readonly List<IPythonInterpreterFactoryProvider> _providers;
         readonly IPythonInterpreterFactory _noInterpretersValue;
         IPythonInterpreterFactory _defaultInterpreter;
@@ -146,6 +147,18 @@ namespace TestUtilities.Python {
                 }
             }
             return null;
+        }
+
+        public Task<object> LockInterpreterAsync(IPythonInterpreterFactory factory, object moniker, TimeSpan timeout) {
+            throw new NotImplementedException();
+        }
+
+        public bool IsInterpreterLocked(IPythonInterpreterFactory factory, object moniker) {
+            throw new NotImplementedException();
+        }
+
+        public bool UnlockInterpreter(object cookie) {
+            throw new NotImplementedException();
         }
     }
 }

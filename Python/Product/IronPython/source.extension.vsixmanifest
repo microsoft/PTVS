@@ -27,5 +27,6 @@
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.IronPythonTools.Resolver;_GetTargetPath|" AssemblyName="|Microsoft.IronPythonTools.Resolver;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.IronPython.Interpreter;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.IronPython.Interpreter;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|%CurrentProject%;_GetTargetPath|" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.IronPython.Interpreter;_GetTargetPath|" />
   </Assets>
 </PackageManifest>

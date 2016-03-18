@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools {
         private readonly IServiceContainer _container;
         private LanguagePreferences _langPrefs;
         private IPythonToolsOptionsService _optionsService;
-        internal readonly IInterpreterRegistry _interpreterRegistry;
+        internal readonly IInterpreterRegistryService _interpreterRegistry;
         internal readonly IInterpreterOptionsService _interpreterOptionsService;
         private VsProjectAnalyzer _analyzer;
         private readonly PythonToolsLogger _logger;
@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools {
 
             _optionsService = (IPythonToolsOptionsService)container.GetService(typeof(IPythonToolsOptionsService));
             var compModel = (IComponentModel)container.GetService(typeof(SComponentModel));
-            _interpreterRegistry = compModel.GetService<IInterpreterRegistry>();
+            _interpreterRegistry = compModel.GetService<IInterpreterRegistryService>();
             if (_interpreterRegistry != null) {
                 _interpreterRegistry.InterpretersChanged += InterpretersChanged;
             }

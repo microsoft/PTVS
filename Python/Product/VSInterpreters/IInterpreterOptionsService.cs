@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter {
-    public interface IInterpreterRegistry {
+    public interface IInterpreterRegistryService {
         /// <summary>
         /// Returns a sequence of available interpreters. The sequence is sorted
         /// and should not be re-sorted if it will be displayed to users.
@@ -67,31 +67,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <see cref="BeginSuppressInterpretersChangedEvent"/>.
         /// </summary>
         void EndSuppressInterpretersChangedEvent();
-    }
 
-    /// <summary>
-    /// Provides information about the available interpreters and the current
-    /// default. Instances of this service should be obtained using MEF.
-    /// </summary>
-    public interface IInterpreterOptionsService {
-        /// <summary>
-        /// Gets or sets the default interpreter.
-        /// </summary>
-        IPythonInterpreterFactory DefaultInterpreter { get; set; }
-
-        string DefaultInterpreterId { get; set; }
-
-        /// <summary>
-        /// Raised when the default interpreter is set to a new value.
-        /// </summary>
-        event EventHandler DefaultInterpreterChanged;
-
-        string AddConfigurableInterpreter(InterpreterFactoryCreationOptions options);
-        void RemoveConfigurableInterpreter(string id);
-        bool IsConfigurable(string id);
-    }
-
-    public interface IInterpreterOptionsService2 : IInterpreterOptionsService {
         /// <summary>
         /// Marks the factory as locked. Future calls to LockInterpreterAsync
         /// with the same moniker will block until
@@ -121,5 +97,27 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </returns>
         /// <remarks>New in 2.1</remarks>
         bool UnlockInterpreter(object cookie);
+    }
+
+    /// <summary>
+    /// Provides information about the available interpreters and the current
+    /// default. Instances of this service should be obtained using MEF.
+    /// </summary>
+    public interface IInterpreterOptionsService {
+        /// <summary>
+        /// Gets or sets the default interpreter.
+        /// </summary>
+        IPythonInterpreterFactory DefaultInterpreter { get; set; }
+
+        string DefaultInterpreterId { get; set; }
+
+        /// <summary>
+        /// Raised when the default interpreter is set to a new value.
+        /// </summary>
+        event EventHandler DefaultInterpreterChanged;
+
+        string AddConfigurableInterpreter(InterpreterFactoryCreationOptions options);
+        void RemoveConfigurableInterpreter(string id);
+        bool IsConfigurable(string id);
     }
 }

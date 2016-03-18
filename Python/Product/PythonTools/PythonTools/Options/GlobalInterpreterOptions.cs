@@ -26,9 +26,9 @@ namespace Microsoft.PythonTools.Options {
     public sealed class GlobalInterpreterOptions {
         private readonly PythonToolsService _pyService;
         private readonly IInterpreterOptionsService _interpreterOptions;
-        private readonly IInterpreterRegistry _interpreters;
+        private readonly IInterpreterRegistryService _interpreters;
 
-        internal GlobalInterpreterOptions(PythonToolsService pyService, IInterpreterOptionsService interpreterOptions, IInterpreterRegistry interpreters) {
+        internal GlobalInterpreterOptions(PythonToolsService pyService, IInterpreterOptionsService interpreterOptions, IInterpreterRegistryService interpreters) {
             _pyService = pyService;
             _interpreters = interpreters;
             _interpreterOptions = interpreterOptions;

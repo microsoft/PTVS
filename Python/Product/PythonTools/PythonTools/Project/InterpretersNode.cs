@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Project {
     /// </summary>
     [ComVisible(true)]
     internal class InterpretersNode : HierarchyNode {
-        private readonly IInterpreterOptionsService _interpreterService;
+        private readonly IInterpreterRegistryService _interpreterService;
         internal readonly IPythonInterpreterFactory _factory;
         private readonly bool _isReference;
         private readonly bool _canDelete, _canRemove;
@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Project {
             : base(project, MakeElement(project)) {
             ExcludeNodeFromScc = true;
 
-            _interpreterService = project.Site.GetComponentModel().GetService<IInterpreterOptionsService>();
+            _interpreterService = project.Site.GetComponentModel().GetService<IInterpreterRegistryService>();
             _factory = factory;
             _isReference = isInterpreterReference;
             _canDelete = canDelete;
@@ -294,8 +294,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
-            var service = _interpreterService as IInterpreterOptionsService2;
-            if (service != null && service.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
+            if (_interpreterService.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
                 // Prevent the environment from being deleted while installing.
                 return false;
             }
@@ -323,8 +322,7 @@ namespace Microsoft.PythonTools.Project {
                 throw new NotSupportedException();
             }
 
-            var service = _interpreterService as IInterpreterOptionsService2;
-            if (service != null && service.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
+            if (_interpreterService.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
                 // Prevent the environment from being deleted while installing.
                 // This situation should not occur through the UI, but might be
                 // invocable through DTE.

@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools {
         internal static bool IsRunnable(this IPythonInterpreterFactory factory) {
             return factory != null &&
                 factory.Configuration != null &&
-                !InterpreterOptionsService.IsNoInterpretersFactory(factory.Configuration.Id) &&
+                !InterpreterRegistryService.IsNoInterpretersFactory(factory.Configuration.Id) &&
                 File.Exists(factory.Configuration.InterpreterPath);
         }
 
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools {
                 }
             } else if (factory.Configuration == null) {
                 throw new NullReferenceException();
-            } else if (InterpreterOptionsService.IsNoInterpretersFactory(factory.Configuration.Id)) {
+            } else if (InterpreterRegistryService.IsNoInterpretersFactory(factory.Configuration.Id)) {
                 throw new NoInterpretersException();
             } else if (!File.Exists(factory.Configuration.InterpreterPath)) {
                 throw new FileNotFoundException(factory.Configuration.InterpreterPath ?? "(null)");

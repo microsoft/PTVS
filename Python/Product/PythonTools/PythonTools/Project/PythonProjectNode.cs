@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Project {
         private PythonDebugPropertyPage _debugPropPage;
         private CommonSearchPathContainerNode _searchPathContainer;
         private InterpretersContainerNode _interpretersContainer;
-        private HashSet<string> _validFactories = new HashSet<string>();
+        private readonly HashSet<string> _validFactories = new HashSet<string>();
         public IPythonInterpreterFactory _active;
 
         internal List<CustomCommand> _customCommands;
@@ -115,8 +115,8 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-
             // collect the valid interpreter factories for this project...
+            _validFactories.Clear();
             foreach (var item in project.GetItems(MSBuildConstants.InterpreterItem)) {
                 var id = item.GetMetadataValue(MSBuildConstants.IdKey);
                 if (!String.IsNullOrWhiteSpace(id)) {
@@ -132,15 +132,6 @@ namespace Microsoft.PythonTools.Project {
             }
 
             UpdateActiveInterpreter();
-
-            //// Hook up the interpreter factory provider
-            //var interpreterService = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
-            //_interpreters = new MSBuildProjectInterpreterFactoryProvider(interpreterService, project);
-            //try {
-            //    _interpreters.DiscoverInterpreters();
-            //} catch (InvalidDataException ex) {
-            //    OutputWindowRedirector.GetGeneral(Site).WriteErrorLine(ex.Message);
-            //}
 
             // Add any custom commands
             _customCommands = CustomCommand.GetCommands(project, this).ToList();
@@ -1130,14 +1121,14 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var model = Site.GetComponentModel();
-            var interpreterService = model.GetService<IInterpreterRegistry>();
+            var interpreterService = model.GetService<IInterpreterRegistryService>();
             var factory = GetInterpreterFactory();
             var res = new VsProjectAnalyzer(
                 Site,
                 factory.CreateInterpreter(),
                 factory,
                 false,
-                FileName
+                BuildProject.FullPath
             );
             res.AbnormalAnalysisExit += AnalysisProcessExited;
 
@@ -1598,7 +1589,7 @@ namespace Microsoft.PythonTools.Project {
             // First try and get the factory from the parameter
             string description;
             if (args != null && args.TryGetValue("e", out description) && !string.IsNullOrEmpty(description)) {
-                var service = Site.GetComponentModel().GetService<IInterpreterRegistry>();
+                var service = Site.GetComponentModel().GetService<IInterpreterRegistryService>();
                 InterpreterConfiguration config;
 
                 config = InterpreterConfigurations.FirstOrDefault(
@@ -1933,7 +1924,7 @@ namespace Microsoft.PythonTools.Project {
             IServiceProvider provider,
             InterpretersNode node = null
         ) {
-            var service = provider.GetComponentModel().GetService<IInterpreterRegistry>();
+            var service = provider.GetComponentModel().GetService<IInterpreterRegistryService>();
             var view = InstallPythonPackage.ShowDialog(provider, factory, service);
             if (view == null) {
                 throw new OperationCanceledException();
@@ -1961,7 +1952,7 @@ namespace Microsoft.PythonTools.Project {
         ) {
             var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
 
-            var service = provider.GetComponentModel().GetService<IInterpreterOptionsService>() as IInterpreterOptionsService2;
+            var service = provider.GetComponentModel().GetService<IInterpreterRegistryService>();
             object cookie = null;
             if (service != null) {
                 cookie = await service.LockInterpreterAsync(
@@ -2033,7 +2024,7 @@ namespace Microsoft.PythonTools.Project {
             InterpretersNode node = null) {
             var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
 
-            var service = provider.GetComponentModel().GetService<IInterpreterOptionsService>() as IInterpreterOptionsService2;
+            var service = provider.GetComponentModel().GetService<IInterpreterRegistryService>();
             object cookie = null;
             if (service != null) {
                 cookie = await service.LockInterpreterAsync(
@@ -2334,7 +2325,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async void ShowAddVirtualEnvironmentWithErrorHandling(bool browseForExisting) {
-            var service = Site.GetComponentModel().GetService<IInterpreterRegistry>();
+            var service = Site.GetComponentModel().GetService<IInterpreterRegistryService>();
             var statusBar = (IVsStatusbar)GetService(typeof(SVsStatusbar));
             object index = (short)0;
             statusBar.Animation(1, ref index);
@@ -2360,7 +2351,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal async Task<IPythonInterpreterFactory> CreateOrAddVirtualEnvironment(
-            IInterpreterRegistry service,
+            IInterpreterRegistryService service,
             bool create,
             string path,
             IPythonInterpreterFactory baseInterp,

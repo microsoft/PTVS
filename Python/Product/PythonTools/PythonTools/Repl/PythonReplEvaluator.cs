@@ -38,15 +38,15 @@ namespace Microsoft.PythonTools.Repl {
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
     internal class PythonReplEvaluator : BasePythonReplEvaluator {
         private IPythonInterpreterFactory _interpreter;
-        private readonly IInterpreterRegistry _interpreterService;
+        private readonly IInterpreterRegistryService _interpreterService;
         private VsProjectAnalyzer _replAnalyzer;
         private bool _ownsAnalyzer, _enableAttach, _supportsMultipleCompleteStatementInputs;
 
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, IInterpreterRegistry interpreterService = null)
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, IInterpreterRegistryService interpreterService = null)
             : this(interpreter, serviceProvider, new DefaultPythonReplEvaluatorOptions(serviceProvider, () => serviceProvider.GetPythonToolsService().GetInteractiveOptions(interpreter.Configuration)), interpreterService) {
         }
 
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, PythonReplEvaluatorOptions options, IInterpreterRegistry interpreterService = null)
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, PythonReplEvaluatorOptions options, IInterpreterRegistryService interpreterService = null)
             : base(serviceProvider, serviceProvider.GetPythonToolsService(), options) {
             _interpreter = interpreter;
             _interpreterService = interpreterService;
@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Repl {
         public static IPythonReplEvaluator Create(
             IServiceProvider serviceProvider,
             string id,
-            IInterpreterRegistry interpreterService
+            IInterpreterRegistryService interpreterService
         ) {
             var factory = serviceProvider.GetComponentModel().DefaultExportProvider.GetInterpreterFactory(id);
             if (factory == null) {
@@ -342,7 +342,7 @@ namespace Microsoft.PythonTools.Repl {
 
     [InteractiveWindowRole("DontPersist")]
     class PythonReplEvaluatorDontPersist : PythonReplEvaluator {
-        public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, PythonReplEvaluatorOptions options, IInterpreterRegistry interpreterService) :
+        public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, PythonReplEvaluatorOptions options, IInterpreterRegistryService interpreterService) :
             base(interpreter, serviceProvider, options, interpreterService) {
         }
     }

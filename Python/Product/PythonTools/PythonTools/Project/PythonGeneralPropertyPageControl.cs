@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Project {
         static readonly IPythonInterpreterFactory GlobalDefault =
             new InterpreterPlaceholder("", "(Use global default)");
 
-        private IInterpreterRegistry _service;
+        private IInterpreterRegistryService _service;
         private readonly PythonGeneralPropertyPage _propPage;
 
         internal PythonGeneralPropertyPageControl(PythonGeneralPropertyPage newPythonGeneralPropertyPage) {
@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal void LoadSettings() {
-            _service = _propPage.Project.Site.GetComponentModel().GetService<IInterpreterRegistry>();
+            _service = _propPage.Project.Site.GetComponentModel().GetService<IInterpreterRegistryService>();
 
             StartupFile = _propPage.Project.GetProjectProperty(CommonConstants.StartupFile, false);
             WorkingDirectory = _propPage.Project.GetProjectProperty(CommonConstants.WorkingDirectory, false);

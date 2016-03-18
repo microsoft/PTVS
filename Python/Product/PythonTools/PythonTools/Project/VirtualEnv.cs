@@ -144,7 +144,7 @@ namespace Microsoft.PythonTools.Project {
 
         public static InterpreterFactoryCreationOptions FindInterpreterOptions(
             string prefixPath,
-            IInterpreterRegistry service,
+            IInterpreterRegistryService service,
             IPythonInterpreterFactory baseInterpreter = null
         ) {
             var result = new InterpreterFactoryCreationOptions();

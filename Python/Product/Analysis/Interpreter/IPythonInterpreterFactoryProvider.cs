@@ -52,7 +52,6 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Gets a specific configured interpreter
         /// </summary>
         IPythonInterpreterFactory GetInterpreterFactory(string id);
-
     }
 
     public static class PythonInterpreterExtensions {
@@ -71,6 +70,17 @@ namespace Microsoft.PythonTools.Interpreter {
                 var provider = factoryProviders.GetInterpreterFactoryProvider(interpAndId[0]);
                 if (provider != null) {
                     return provider.GetInterpreterFactory(id);
+                }
+            }
+            return null;
+        }
+
+        public static InterpreterConfiguration GetConfiguration(this IEnumerable<Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>> factoryProviders, string id) {
+            var interpAndId = id.Split(new[] { '|' }, 2);
+            if (interpAndId.Length == 2) {
+                var provider = factoryProviders.GetInterpreterFactoryProvider(interpAndId[0]);
+                if (provider != null) {
+                    return provider.GetInterpreterConfigurations().Where(x => x.Id == id).FirstOrDefault();
                 }
             }
             return null;

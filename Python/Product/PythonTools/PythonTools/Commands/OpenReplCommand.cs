@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Commands {
                         ErrorHandler.Succeeded(parse.GetSwitchValue(0, out description)) &&
                         !string.IsNullOrEmpty(description)
                     ) {
-                        var service = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistry>();
+                        var service = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
                         var matchingConfig = service.Configurations.FirstOrDefault(
                             // Descriptions are localized strings, hence CCIC
                             f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
