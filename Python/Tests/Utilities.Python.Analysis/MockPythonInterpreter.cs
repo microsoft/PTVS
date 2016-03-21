@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
@@ -23,13 +24,32 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
     public class MockPythonInterpreter : IPythonInterpreter {
-        public readonly List<string> _modules;
+        public readonly Dictionary<string, IPythonModule> _modules;
+        public readonly HashSet<string> _moduleNames;
         public bool IsDatabaseInvalid;
 
         public MockPythonInterpreter(IPythonInterpreterFactory factory) {
-            _modules = new List<string>();
+            _modules = new Dictionary<string, IPythonModule>();
+            _moduleNames = new HashSet<string>(StringComparer.Ordinal);
         }
 
+        public void AddModule(string name, IPythonModule module) {
+            _modules[name] = module;
+            ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
+        }
+        
+        /// <summary>
+        /// Removes a module. If <c>retainName</c> is true, keeps returning
+        /// the module name from <see cref="GetModuleNames"/>.
+        /// </summary>
+        public void RemoveModule(string name, bool retainName = false) {
+            if (retainName) {
+                _moduleNames.Add(name);
+            }
+            if (_modules.Remove(name)) {
+                ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
 
         public void Initialize(PythonAnalyzer state) { }
 
@@ -38,16 +58,15 @@ namespace TestUtilities.Python {
         }
 
         public IList<string> GetModuleNames() {
-            return _modules;
+            return _modules.Keys.Concat(_moduleNames).ToArray();
         }
 
-        public event EventHandler ModuleNamesChanged { add { } remove { } }
+        public event EventHandler ModuleNamesChanged;
 
         public IPythonModule ImportModule(string name) {
-            if (_modules.Contains(name)) {
-                return null;
-            }
-            return null;
+            IPythonModule res;
+            _modules.TryGetValue(name, out res);
+            return res;
         }
 
         public IModuleContext CreateModuleContext() {
