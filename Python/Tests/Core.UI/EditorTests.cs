@@ -24,7 +24,6 @@ using System.Windows;
 using EnvDTE;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -33,6 +32,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Tagging;
+using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
@@ -52,11 +53,10 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AutomaticBraceCompletion() {
             using (var app = new PythonVisualStudioApp()) {
-                var origValue = app.Dte.Properties["Text Editor", "Python"].Item("Brace Completion").Value;
-                app.Dte.Properties["Text Editor", "Python"].Item("Brace Completion").Value = 1;
-                app.OnDispose(() => app.Dte.Properties["Text Editor", "Python"].Item("Brace Completion").Value = origValue);
-
                 var project = app.OpenProject(@"TestData\AutomaticBraceCompletion.sln");
+
+                bool oldState = EnableAutoBraceCompletion(app, true);
+                app.OnDispose(() => EnableAutoBraceCompletion(app, oldState));
 
                 // check that braces get auto completed
                 AutoBraceCompetionTest(app, project, "foo(", "foo()");
@@ -102,6 +102,20 @@ namespace PythonToolsUITests {
             Assert.AreEqual(expectedText, actual);
 
             window.Document.Close(vsSaveChanges.vsSaveChangesNo);
+        }
+
+        private bool EnableAutoBraceCompletion(VisualStudioApp app, bool enable) {
+            return app.GetService<UIThreadBase>().Invoke(() => {
+                var mgr = app.GetService<IVsTextManager4>(typeof(SVsTextManager));
+                LANGPREFERENCES3[] langPrefs = { new LANGPREFERENCES3() };
+
+                langPrefs[0].guidLang = GuidList.guidPythonLanguageServiceGuid;
+                ErrorHandler.ThrowOnFailure(mgr.GetUserPreferences4(null, langPrefs, null));
+                bool old = langPrefs[0].fBraceCompletion != 0;
+                langPrefs[0].fBraceCompletion = enable ? 1u : 0u;
+                ErrorHandler.ThrowOnFailure(mgr.SetUserPreferences4(null, langPrefs, null));
+                return old;
+            });
         }
 
 
