@@ -33,7 +33,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 true) { }
 
         private static string GetDescription(ProcessorArchitecture arch) {
-            return "IronPython " + GetInterpreterId(arch);
+            return "IronPython " + (arch == ProcessorArchitecture.Amd64 ? "2.7 64-bit" : "2.7 32-bit");
         }
 
         private static string GetInterpreterId(ProcessorArchitecture arch) {
@@ -51,7 +51,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 Path.Combine(prefixPath, "Lib"),
                 "IRONPYTHONPATH",
                 arch,
-                new Version(2, 7));
+                new Version(2, 7),
+                InterpreterUIMode.SupportsDatabase);
         }
 
         public override IPythonInterpreter MakeInterpreter(PythonInterpreterFactoryWithDatabase factory) {

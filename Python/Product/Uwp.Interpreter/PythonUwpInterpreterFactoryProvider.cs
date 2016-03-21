@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
                                                     null,
                                                     ProcessorArchitecture.None,
                                                     pythonUwpVersion,
-                                                    InterpreterUIMode.CannotBeDefault
+                                                    InterpreterUIMode.CannotBeDefault | InterpreterUIMode.SupportsDatabase
                                                     ),
                                                 factoryName);
                                     }

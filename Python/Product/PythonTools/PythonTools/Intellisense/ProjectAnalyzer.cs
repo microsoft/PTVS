@@ -157,11 +157,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             );
 
-            _conn.SendEventAsync(
+            SendEventAsync(
                 new AP.OptionsChangedEvent() {
                     indentation_inconsistency_severity = _pyService.GeneralOptions.IndentationInconsistencySeverity
                 }
-            ).DoNotWait();
+            ).Wait();
 
             CommentTaskTokensChanged(null, EventArgs.Empty);
         }
@@ -169,11 +169,11 @@ namespace Microsoft.PythonTools.Intellisense {
         #region Public API
 
         public void RegisterExtension(string path) {
-            _conn.SendEventAsync(
+            SendEventAsync(
                 new AP.ExtensionAddedEvent() {
                     path = path
                 }
-            );
+            ).Wait();
         }
 
         /// <summary>
@@ -415,7 +415,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OnModulesChanged(object sender, EventArgs e) {
-            _conn.SendEventAsync(new AP.ModulesChangedEvent()).DoNotWait();
+            SendEventAsync(new AP.ModulesChangedEvent()).Wait();
         }
 
         /// <summary>
@@ -1297,8 +1297,22 @@ namespace Microsoft.PythonTools.Intellisense {
             } catch (FailedRequestException e) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOpertionFailed, e.Message);
             }
-            Debug.WriteLine(String.Format("{1} Done sending requestion {0}", request.command, DateTime.Now));
+            Debug.WriteLine(String.Format("{1} Done sending request {0}", request.command, DateTime.Now));
             return res;
+        }
+
+        internal async Task SendEventAsync(Event eventValue)  {
+            Debug.WriteLine(String.Format("{1} Sending event {0}", eventValue.name, DateTime.Now));
+            try {
+                await _conn.SendEventAsync(eventValue).ConfigureAwait(false);
+            } catch (OperationCanceledException) {
+                _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
+            } catch (IOException) {
+                _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
+            } catch (FailedRequestException e) {
+                _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOpertionFailed, e.Message);
+            }
+            Debug.WriteLine(String.Format("{1} Done sending event {0}", eventValue.name, DateTime.Now));
         }
 
         internal async Task<IEnumerable<CompletionResult>> GetAllAvailableMembersAsync(AnalysisEntry entry, SourceLocation location, GetMemberOptions options) {
@@ -1617,11 +1631,11 @@ namespace Microsoft.PythonTools.Intellisense {
             foreach (var keyValue in _taskProvider.Tokens) {
                 priorities[keyValue.Key] = GetPriority(keyValue.Value);
             }
-            _conn.SendEventAsync(
+            SendEventAsync(
                 new AP.SetCommentTaskTokens() {
                     tokens = priorities
                 }
-            ).DoNotWait();
+            ).Wait();
         }
 
         internal async Task<NavigationInfo> GetNavigationsAsync(ITextBuffer textBuffer) {

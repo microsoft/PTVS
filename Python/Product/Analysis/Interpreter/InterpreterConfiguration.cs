@@ -211,5 +211,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 Version.GetHashCode() ^
                 UIMode.GetHashCode();
         }
+
+        public override string ToString() {
+            return Description;
+        }
     }
 }

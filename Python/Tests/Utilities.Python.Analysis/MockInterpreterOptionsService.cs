@@ -160,5 +160,9 @@ namespace TestUtilities.Python {
         public bool UnlockInterpreter(object cookie) {
             throw new NotImplementedException();
         }
+
+        public InterpreterConfiguration FindConfiguration(string id) {
+            throw new NotImplementedException();
+        }
     }
 }

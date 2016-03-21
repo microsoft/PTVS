@@ -196,9 +196,13 @@ namespace Microsoft.PythonTools.Intellisense {
         private Response Initialize(AP.InitializeRequest request) {
             List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
 
+            HashSet<string> assemblies = new HashSet<string>(request.mefExtensions);
+            assemblies.Add(typeof(IInterpreterRegistryService).Assembly.Location);
+            assemblies.Add(GetType().Assembly.Location);
+
             List<string> failures = new List<string>();
             string error = null;
-            foreach (var asm in request.mefExtensions) {
+            foreach (var asm in assemblies) {
                 try {
                     var asmCatalog = new AssemblyCatalog(asm);
                     _catalog.Catalogs.Add(asmCatalog);
@@ -206,8 +210,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     failures.Add(String.Format("Failed to load {0}: {1}", asm, e));
                 }
             }
-
-            _catalog.Catalogs.Add(new AssemblyCatalog(GetType().Assembly));
 
             if (request.projectFile != null) {
                 var projectContextProvider = _container.GetExportedValue<OutOfProcProjectContextProvider>();

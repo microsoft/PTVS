@@ -243,7 +243,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             PythonToolsPackage.ShowOptionPage(
                 _site,
                 typeof(PythonInteractiveOptionsPage),
-                ((EnvironmentView)e.Parameter).Factory
+                ((EnvironmentView)e.Parameter).Factory.Configuration
             );
         }
 

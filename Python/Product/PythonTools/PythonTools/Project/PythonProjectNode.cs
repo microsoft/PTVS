@@ -2474,7 +2474,7 @@ namespace Microsoft.PythonTools.Project {
                         options.PathEnvironmentVariableName,
                         baseInterp.Configuration.Architecture,
                         baseInterp.Configuration.Version,
-                        InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured
+                        InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase
                     ),
                     new InterpreterFactoryCreationOptions {
                         WatchLibraryForNewModules = true

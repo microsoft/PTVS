@@ -55,6 +55,7 @@ namespace Microsoft.PythonTools.Options {
             }
 
             _addInterpreter.Enabled = true;
+            var options = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
 
             _showSettingsFor.BeginUpdate();
             _defaultInterpreter.BeginUpdate();
@@ -64,20 +65,20 @@ namespace Microsoft.PythonTools.Options {
 
                 var interpreters = _serviceProvider.GetPythonToolsService()
                     .InterpreterOptions
-                    .Select(x => x.Key)
-                    .Where(f => f.IsUIVisible() && f.CanBeConfigured())
-                    .OrderBy(f => f.Configuration.Description);
+                    .Where(f => f.Value._config.IsUIVisible() && f.Value._config.CanBeConfigured())
+                    .OrderBy(f => f.Value._config.Description)
+                    .ToArray();
 
                 foreach (var interpreter in interpreters) {
                     InterpreterOptions opts;
-                    if (_serviceProvider.GetPythonToolsService().TryGetInterpreterOptions(interpreter, out opts) && !opts.Removed) {
-                        _showSettingsFor.Items.Add(interpreter);
-                        _defaultInterpreter.Items.Add(interpreter);
+                    if (_serviceProvider.GetPythonToolsService().TryGetInterpreterOptions(interpreter.Key, out opts) && !opts.Removed) {
+                        _showSettingsFor.Items.Add(interpreter.Value._config);
+                        _defaultInterpreter.Items.Add(interpreter.Value._config);
                     }
                 }
 
                 if (_showSettingsFor.Items.Count > 0 && _service.DefaultInterpreter != null) {
-                    _showSettingsFor.SelectedItem = _defaultInterpreter.SelectedItem = _service.DefaultInterpreter;
+                    _showSettingsFor.SelectedItem = _defaultInterpreter.SelectedItem = _service.DefaultInterpreter.Configuration;
                 }
 
                 if (_defaultInterpreter.SelectedItem == null && _defaultInterpreter.Items.Count > 0) {
@@ -102,10 +103,10 @@ namespace Microsoft.PythonTools.Options {
 
             if (Visible) {
 
-                var selection = PythonInterpreterOptionsPage.NextOptionsSelection ?? _service.DefaultInterpreter;
+                var selection = PythonInterpreterOptionsPage.NextOptionsSelection ?? _service.DefaultInterpreter.Configuration;
                 PythonInterpreterOptionsPage.NextOptionsSelection = null;
                 _showSettingsFor.SelectedItem = selection;
-                _defaultInterpreter.SelectedItem = _service.DefaultInterpreter;
+                _defaultInterpreter.SelectedItem = _service.DefaultInterpreter.Configuration;
 
                 if (_showSettingsFor.SelectedItem == null && _showSettingsFor.Items.Count > 0) {
                     _showSettingsFor.SelectedIndex = 0;
@@ -169,9 +170,9 @@ namespace Microsoft.PythonTools.Options {
             LoadNewOptions();
         }
 
-        public IPythonInterpreterFactory DefaultInterpreter {
+        public InterpreterConfiguration DefaultInterpreter {
             get {
-                return _defaultInterpreter.SelectedItem as IPythonInterpreterFactory;
+                return _defaultInterpreter.SelectedItem as InterpreterConfiguration;
             }
         }
 
@@ -266,9 +267,10 @@ namespace Microsoft.PythonTools.Options {
 
         private InterpreterOptions CurrentOptions {
             get {
-                var fact = _showSettingsFor.SelectedItem as IPythonInterpreterFactory;
+                var fact = _showSettingsFor.SelectedItem as InterpreterConfiguration;
                 return fact != null ? 
-                    _serviceProvider.GetPythonToolsService().GetInterpreterOptions(fact) : null;
+                    _serviceProvider.GetPythonToolsService()
+                    .GetInterpreterOptions(fact.Id) : null;
             }
         }
 
@@ -285,13 +287,12 @@ namespace Microsoft.PythonTools.Options {
                 }
                 var id = Guid.NewGuid().ToString();
                 var factory = new InterpreterPlaceholder(id, newInterp.InterpreterDescription);
-                var newOptions = new InterpreterOptions(_serviceProvider.GetPythonToolsService(), factory) {
+                var newOptions = new InterpreterOptions(_serviceProvider.GetPythonToolsService(), factory.Configuration) {
                     Display = newInterp.InterpreterDescription,
                     Added = true,
                     IsConfigurable = true,
                     SupportsCompletionDb = true,
                     Id = id,
-                    Factory = factory,
                     InteractiveOptions = new PythonInteractiveOptions(
                         _serviceProvider,
                         _serviceProvider.GetPythonToolsService(), 
@@ -300,10 +301,10 @@ namespace Microsoft.PythonTools.Options {
                     )
                 };
 
-                _serviceProvider.GetPythonToolsService().AddInterpreterOptions(newOptions.Factory, newOptions, true);
+                _serviceProvider.GetPythonToolsService().AddInterpreterOptions(newOptions._config.Id, newOptions, true);
                 _showSettingsFor.BeginUpdate();
                 UpdateInterpreters();
-                _showSettingsFor.SelectedItem = newOptions.Factory;
+                _showSettingsFor.SelectedItem = newOptions._config;
                 _showSettingsFor.EndUpdate();
             }
         }

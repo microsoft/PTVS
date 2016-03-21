@@ -216,38 +216,43 @@ namespace Microsoft.PythonTools.Interpreter {
                         actualArch = NativeMethods.GetBinaryType(Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable));
                     }
 
-                    var description = CPythonInterpreterFactoryConstants.Description32;
-                    if (actualArch == ProcessorArchitecture.Amd64) {
-                        description = CPythonInterpreterFactoryConstants.Description64;
+                    string description = interpKey.GetValue("Description") as string;
+                    if (description == null) {
+                        description = CPythonInterpreterFactoryConstants.Description32;
+                        if (actualArch == ProcessorArchitecture.Amd64) {
+                            description = CPythonInterpreterFactoryConstants.Description64;
+                        }
                     }
 
                     string newId = CPythonInterpreterFactoryConstants.GetIntepreterId(GetVendorName(vendorKey), arch ?? arch2, key);
-                    if (!_factories.ContainsKey(newId)) {
-                        try {
-                            var interpPath = installPath.GetValue("ExecutablePath") as string ?? Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
-                            var windowsPath = installPath.GetValue("WindowedExecutablePath") as string ?? Path.Combine(basePath, CPythonInterpreterFactoryConstants.WindowsExecutable);
-                            var libraryPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.LibrarySubPath);
-                            string prefixPath = Path.GetDirectoryName(interpPath);
+                    InterpreterInformation existing;
 
-                            _factories[newId] = new InterpreterInformation(
-                                new InterpreterConfiguration(
-                                    newId,
-                                    string.Format("{0} {1}", description, version),
-                                    prefixPath,
-                                    interpPath,
-                                    windowsPath,
-                                    libraryPath,
-                                    CPythonInterpreterFactoryConstants.PathEnvironmentVariableName,
-                                    actualArch ?? ProcessorArchitecture.None,
-                                    version
-                                )
-                            );
-                        } catch (ArgumentException) {
-                            return false;
+                    _factories.TryGetValue(newId, out existing);
+                    try { 
+                        var interpPath = installPath.GetValue("ExecutablePath") as string ?? Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
+                        var windowsPath = installPath.GetValue("WindowedExecutablePath") as string ?? Path.Combine(basePath, CPythonInterpreterFactoryConstants.WindowsExecutable);
+                        var libraryPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.LibrarySubPath);
+                        string prefixPath = Path.GetDirectoryName(interpPath);
+
+                        var newConfig = new InterpreterConfiguration(
+                            newId,
+                            string.Format("{0} {1}", description, version),
+                            prefixPath,
+                            interpPath,
+                            windowsPath,
+                            libraryPath,
+                            CPythonInterpreterFactoryConstants.PathEnvironmentVariableName,
+                            actualArch ?? ProcessorArchitecture.None,
+                            version
+                        );
+                        if (existing == null || newConfig != existing.Configuration) {
+                            _factories[newId] = new InterpreterInformation(newConfig);
+                            return true;
                         }
-
-                        return true;
+                    } catch (ArgumentException) {
                     }
+
+                    return false;
                 }
             }
             return false;

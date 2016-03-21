@@ -45,7 +45,8 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                     libPath,
                     pathEnvVar,
                     arch,
-                    version),
+                    version,
+                    InterpreterUIMode.SupportsDatabase),
                 watchForNewModules) { }
 
         public override bool AssumeSimpleLibraryLayout {

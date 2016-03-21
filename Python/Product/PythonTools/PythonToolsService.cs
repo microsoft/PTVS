@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools {
         private readonly PythonInteractiveCommonOptions _debugInteractiveOptions;
         private readonly GlobalInterpreterOptions _globalInterpreterOptions;
         internal readonly Dictionary<string, PythonInteractiveOptions> _interactiveOptions = new Dictionary<string, PythonInteractiveOptions>();
-        internal readonly Dictionary<IPythonInterpreterFactory, InterpreterOptions> _interpreterOptions = new Dictionary<IPythonInterpreterFactory, InterpreterOptions>();
+        internal readonly Dictionary<string, InterpreterOptions> _interpreterOptions = new Dictionary<string, InterpreterOptions>();
         private readonly SurveyNewsService _surveyNews;
         private readonly IdleManager _idleManager;
         private Func<CodeFormattingOptions> _optionsFactory;
@@ -482,10 +482,10 @@ namespace Microsoft.PythonTools {
         internal void LoadInterpreterOptions() {
             BeginSuppressRaiseEnvironmentsChanged();
             try {
-                var placeholders = InterpreterOptions.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();
+                var placeholders = InterpreterOptions.Where(kv => kv.Key.StartsWith("Placeholder;")).ToArray();
                 ClearInterpreterOptions();
-                foreach (var interpreter in _interpreterRegistry.Interpreters) {
-                    GetInterpreterOptions(interpreter);
+                foreach (var interpreter in _interpreterRegistry.Configurations) {
+                    GetInterpreterOptions(interpreter.Id);
                 }
 
                 foreach (var kv in placeholders) {
@@ -501,9 +501,9 @@ namespace Microsoft.PythonTools {
             try {
                 // Remove any items
                 foreach (var option in InterpreterOptions.Select(kv => kv.Value).Where(o => o.Removed).ToList()) {
-                    _interpreterOptionsService.RemoveConfigurableInterpreter(option.Factory.Configuration.Id);
-                    RemoveInteractiveOptions(option.Factory);
-                    RemoveInterpreterOptions(option.Factory);
+                    _interpreterOptionsService.RemoveConfigurableInterpreter(option._config.Id);
+                    RemoveInteractiveOptions(option._config.Id);
+                    RemoveInterpreterOptions(option._config.Id);
                 }
 
                 // Add or update any items that weren't removed
@@ -537,8 +537,8 @@ namespace Microsoft.PythonTools {
                 }
 
 
-                foreach (var factory in InterpreterOptions.Select(x => x.Key).OfType<InterpreterPlaceholder>().ToArray()) {
-                    RemoveInterpreterOptions(factory);
+                foreach (var factory in InterpreterOptions.Where(x => x.Value.Id.StartsWith("Placeholder;")).ToArray()) {
+                    RemoveInterpreterOptions(factory.Value.Id);
                 }
             } finally {
                 _interpreterRegistry.EndSuppressInterpretersChangedEvent();
@@ -550,19 +550,18 @@ namespace Microsoft.PythonTools {
             LoadInterpreterOptions();
         }
 
-        internal InterpreterOptions GetInterpreterOptions(IPythonInterpreterFactory interpreterFactory) {
-            InterpreterOptions options;
-            if (!_interpreterOptions.TryGetValue(interpreterFactory, out options)) {
-                var path = GetInteractivePath(interpreterFactory);
-                _interpreterOptions[interpreterFactory] = options = new InterpreterOptions(this, interpreterFactory);
+        internal InterpreterOptions GetInterpreterOptions(string id) {
+            InterpreterOptions options;            
+            if (!_interpreterOptions.TryGetValue(id, out options)) {
+                _interpreterOptions[id] = options = new InterpreterOptions(this, _interpreterRegistry.FindConfiguration(id));
                 options.Load();
                 RaiseEnvironmentsChanged();
             }
             return options;
         }
 
-        internal bool TryGetInterpreterOptions(IPythonInterpreterFactory factory, out InterpreterOptions options) {
-            return _interpreterOptions.TryGetValue(factory, out options);
+        internal bool TryGetInterpreterOptions(string id, out InterpreterOptions options) {
+            return _interpreterOptions.TryGetValue(id, out options);
         }
 
         private void ClearInterpreterOptions() {
@@ -570,22 +569,22 @@ namespace Microsoft.PythonTools {
             RaiseEnvironmentsChanged();
         }
 
-        internal void AddInterpreterOptions(IPythonInterpreterFactory interpreterFactory, InterpreterOptions options, bool addInteractive = false) {
-            _interpreterOptions[interpreterFactory] = options;
+        internal void AddInterpreterOptions(string id, InterpreterOptions options, bool addInteractive = false) {
+            _interpreterOptions[id] = options;
             if (addInteractive) {
-                _interactiveOptions[interpreterFactory.Configuration.Id] = options.InteractiveOptions;
+                _interactiveOptions[id] = options.InteractiveOptions;
             }
             RaiseEnvironmentsChanged();
         }
 
-        internal IEnumerable<KeyValuePair<IPythonInterpreterFactory, InterpreterOptions>> InterpreterOptions {
+        internal IEnumerable<KeyValuePair<string, InterpreterOptions>> InterpreterOptions {
             get {
                 return _interpreterOptions;
             }
         }
 
-        internal void RemoveInterpreterOptions(IPythonInterpreterFactory interpreterFactory) {
-            _interpreterOptions.Remove(interpreterFactory);
+        internal void RemoveInterpreterOptions(string id) {
+            _interpreterOptions.Remove(id);
             RaiseEnvironmentsChanged();
         }
 
@@ -656,8 +655,8 @@ namespace Microsoft.PythonTools {
             _interactiveOptions[id] = options;
         }
 
-        internal void RemoveInteractiveOptions(IPythonInterpreterFactory interpreterFactory) {
-            _interactiveOptions.Remove(interpreterFactory.Configuration.Id);
+        internal void RemoveInteractiveOptions(string id) {
+            _interactiveOptions.Remove(id);
         }
 
         internal void ClearInteractiveOptions() {
@@ -667,8 +666,8 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// Gets a path which is unique for this interpreter (based upon the Id and version).
         /// </summary>
-        internal static string GetInteractivePath(IPythonInterpreterFactory interpreterFactory) {
-            return interpreterFactory.Configuration.Id;
+        internal static string GetInteractivePath(InterpreterConfiguration config) {
+            return config.Id;
         }
 
         #endregion

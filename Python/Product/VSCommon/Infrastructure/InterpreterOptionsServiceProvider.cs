@@ -38,18 +38,8 @@ namespace Microsoft.PythonTools {
         private const string FactoryProvidersRegKeyBase = @"Software\Microsoft\PythonTools\";
         private const string FactoryProvidersRegKeySuffix = @"\InterpreterFactories";
 
-        public static T GetService<T>(VisualStudioProxy app) {
-            if (app != null) {
-                var sp = new ServiceProvider(app.GetDTE() as IOleServiceProvider);
-
-                return GetService<T>(sp);
-            } else {
-                return GetService<T>(ServiceProvider.GlobalProvider);
-            }
-        }
-
-        public static T GetService<T>(IServiceProvider serviceProvider) {
-            CompositionContainer container = CreateContainer(serviceProvider, typeof(T));
+        public static T GetService<T>(IServiceProvider serviceProvider, params Type[] additionalTypes) {
+            CompositionContainer container = CreateContainer(serviceProvider, additionalTypes);
 
             return container.GetExportedValue<T>();
         }

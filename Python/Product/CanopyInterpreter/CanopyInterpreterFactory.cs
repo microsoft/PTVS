@@ -92,7 +92,8 @@ namespace CanopyInterpreter {
                     libPath,
                     CanopyInterpreterFactoryConstants.PathEnvironmentVariableName,
                     arch,
-                    languageVersion
+                    languageVersion,
+                    InterpreterUIMode.SupportsDatabase
                 ),
                 new InterpreterFactoryCreationOptions {
                     WatchLibraryForNewModules = true
@@ -149,7 +150,8 @@ namespace CanopyInterpreter {
                 libPath,
                 CanopyInterpreterFactoryConstants.PathEnvironmentVariableName,
                 baseFactory.Configuration.Architecture,
-                baseFactory.Configuration.Version
+                baseFactory.Configuration.Version,
+                InterpreterUIMode.SupportsDatabase
             );
 
             return new CanopyInterpreterFactory(description, baseFactory, config);

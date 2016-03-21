@@ -419,7 +419,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-        internal static void ShowOptionPage(System.IServiceProvider serviceProvider, Type dialogPage, IPythonInterpreterFactory interpreter) {
+        internal static void ShowOptionPage(System.IServiceProvider serviceProvider, Type dialogPage, InterpreterConfiguration interpreter) {
             if (dialogPage == typeof(PythonInterpreterOptionsPage)) {
                 PythonInterpreterOptionsPage.NextOptionsSelection = interpreter;
             } else if (dialogPage == typeof(PythonInteractiveOptionsPage)) {

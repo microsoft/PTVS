@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Options {
             : base("Interpreters") {
         }
 
-        internal static IPythonInterpreterFactory NextOptionsSelection { get; set; }
+        internal static InterpreterConfiguration NextOptionsSelection { get; set; }
 
         void InterpretersChanged(object sender, EventArgs e) {
             LoadSettingsFromStorage();
@@ -77,18 +77,7 @@ namespace Microsoft.PythonTools.Options {
         public override void SaveSettingsToStorage() {
             var defaultInterpreter = GetWindow().DefaultInterpreter;
 
-            if (defaultInterpreter != null) {
-                Version ver;
-                if (defaultInterpreter is InterpreterPlaceholder) {
-                    ver = Version.Parse(PyService.GetInterpreterOptions(defaultInterpreter).Version ?? "2.7");
-                } else {
-                    ver = defaultInterpreter.Configuration.Version;
-                }
-
-                PyService.GlobalInterpreterOptions.DefaultInterpreter = defaultInterpreter.Configuration.Id;
-            } else {
-                PyService.GlobalInterpreterOptions.DefaultInterpreter = string.Empty;
-            }
+            PyService.GlobalInterpreterOptions.DefaultInterpreter = defaultInterpreter?.Id ?? string.Empty;
 
             PyService.SaveInterpreterOptions();
             PyService.GlobalInterpreterOptions.Save();

@@ -111,7 +111,7 @@ namespace FactoryProviderSuccess {
             
             sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
 
-            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp);
+            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp, typeof(IInterpreterOptionsService), typeof(IInterpreterRegistryService));
 
             bool match = false;
             foreach (var msg in log.AllItems) {
@@ -138,7 +138,7 @@ namespace FactoryProviderSuccess {
 
             sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
 
-            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp);
+            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp, typeof(IInterpreterOptionsService), typeof(IInterpreterRegistryService));
 
             foreach (var msg in log.AllItems) {
                 Console.WriteLine(msg);
@@ -190,7 +190,7 @@ namespace FactoryProviderSuccess {
 
             sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
 
-            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp);
+            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp, typeof(IInterpreterOptionsService), typeof(IInterpreterRegistryService));
 
             foreach (var msg in log.AllItems) {
                 Console.WriteLine(msg);
@@ -242,7 +242,7 @@ namespace FactoryProviderTypeLoadException {
 
             sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
 
-            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp);
+            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp, typeof(IInterpreterOptionsService), typeof(IInterpreterRegistryService));
 
             bool isMatch = false;
             foreach (var msg in log.AllItems) {
@@ -269,7 +269,7 @@ namespace FactoryProviderTypeLoadException {
             sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test1", "CodeBase", path1);
             sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test2", "CodeBase", path2);
 
-            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp);
+            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp, typeof(IInterpreterOptionsService), typeof(IInterpreterRegistryService));
 
             bool isMatch = false;
             foreach (var msg in log.AllItems) {

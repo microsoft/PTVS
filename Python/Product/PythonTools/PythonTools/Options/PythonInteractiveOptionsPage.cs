@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.Options {
             : base("Interactive Windows") {
         }
 
-        internal static IPythonInterpreterFactory NextOptionsSelection { get; set; }
+        internal static InterpreterConfiguration NextOptionsSelection { get; set; }
 
         // replace the default UI of the dialog page w/ our own UI.
         protected override System.Windows.Forms.IWin32Window Window {
