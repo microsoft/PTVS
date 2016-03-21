@@ -21,15 +21,20 @@ using System.Text;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.Windows.Design.Host;
 
-namespace Microsoft.PythonTools.Designer {
+namespace Microsoft.PythonTools.XamlDesignerSupport {
     class WpfEventBindingProvider : EventBindingProvider {
-        private Project.PythonFileNode _pythonFileNode;
+        private IProjectEntry _entry;
+        private Func<ITextView> _getView;
+        private Func<ITextBuffer> _getBuffer;
 
-        public WpfEventBindingProvider(Project.PythonFileNode pythonFileNode) {
-            _pythonFileNode = pythonFileNode;
+        public WpfEventBindingProvider(IProjectEntry entry, Func<ITextView> getView, Func<ITextBuffer> getBuffer) {
+            _entry = entry;
+            _getView = getView;
+            _getBuffer = getBuffer;
         }
 
         public override bool AddEventHandler(EventDescription eventDescription, string objectName, string methodName) {
@@ -51,8 +56,8 @@ namespace Microsoft.PythonTools.Designer {
 
         public override bool CreateMethod(EventDescription eventDescription, string methodName, string initialStatements) {
             // build the new method handler
-            var view = _pythonFileNode.GetTextView();
-            var textBuffer = _pythonFileNode.GetTextBuffer();
+            var view = _getView();
+            var textBuffer = _getBuffer();
             PythonAst ast;
             var classDef = GetClassForEvents(out ast);
             if (classDef != null) {
@@ -96,7 +101,7 @@ namespace Microsoft.PythonTools.Designer {
 
         private ClassDefinition GetClassForEvents(out PythonAst ast) {
             ast = null;
-            var analysis = _pythonFileNode.GetProjectEntry() as IPythonProjectEntry;
+            var analysis = _entry as IPythonProjectEntry;
 
             if (analysis != null) {
                 // TODO: Wait for up to date analysis
@@ -201,8 +206,8 @@ namespace Microsoft.PythonTools.Designer {
         public override bool RemoveEventHandler(EventDescription eventDescription, string objectName, string methodName) {
             var method = FindMethod(methodName);
             if (method != null) {
-                var view = _pythonFileNode.GetTextView();
-                var textBuffer = _pythonFileNode.GetTextBuffer();
+                var view = _getView();
+                var textBuffer = _getBuffer();
 
                 // appending a method adds 2 extra newlines, we want to remove those if those are still
                 // present so that adding a handler and then removing it leaves the buffer unchanged.
@@ -280,7 +285,7 @@ namespace Microsoft.PythonTools.Designer {
         public override bool ShowMethod(EventDescription eventDescription, string methodName) {
             var method = FindMethod(methodName);
             if (method != null) {
-                var view = _pythonFileNode.GetTextView();
+                var view = _getView();
                 view.Caret.MoveTo(new VisualStudio.Text.SnapshotPoint(view.TextSnapshot, method.StartIndex));
                 view.Caret.EnsureVisible();
                 return true;

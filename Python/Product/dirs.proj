@@ -4,10 +4,15 @@
 
   <ItemGroup>
     <ProjectFile Include="$(BuildRoot)\Common\Product\dirs.proj"/>
-    
+
+    <ProjectFile Include="Common\Common.csproj"/>
+    <ProjectFile Include="VsCommon\VsCommon.csproj"/>
+
     <ProjectFile Include="Analysis\Analysis.csproj"/>
     <ProjectFile Include="VSInterpreters\VSInterpreters.csproj"/>
     <ProjectFile Include="Analyzer\Analyzer.csproj"/>
+
+    <ProjectFile Include="XamlDesignerSupport\XamlDesignerSupport.csproj"/>
 
     <ProjectFile Include="PyDebugAttach\PyDebugAttach.vcxproj"/>
     <ProjectFile Include="PyDebugAttach\PyDebugAttachX86.vcxproj"/>
