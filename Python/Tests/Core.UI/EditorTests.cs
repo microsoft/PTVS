@@ -48,6 +48,62 @@ namespace PythonToolsUITests {
         }
 
         #region Test Cases
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void AutomaticBraceCompletion() {
+            using (var app = new PythonVisualStudioApp()) {
+                var origValue = app.Dte.Properties["Text Editor", "Python"].Item("Brace Completion").Value;
+                app.Dte.Properties["Text Editor", "Python"].Item("Brace Completion").Value = 1;
+                app.OnDispose(() => app.Dte.Properties["Text Editor", "Python"].Item("Brace Completion").Value = origValue);
+
+                var project = app.OpenProject(@"TestData\AutomaticBraceCompletion.sln");
+
+                // check that braces get auto completed
+                AutoBraceCompetionTest(app, project, "foo(", "foo()");
+                AutoBraceCompetionTest(app, project, "foo[", "foo[]");
+                AutoBraceCompetionTest(app, project, "foo{", "foo{}");
+                AutoBraceCompetionTest(app, project, "\"foo", "\"foo\"");
+                AutoBraceCompetionTest(app, project, "'foo", "'foo'");
+
+                // check that braces get not autocompleted in comments and strings
+                AutoBraceCompetionTest(app, project, "\"foo(\"", "\"foo(\"");
+                AutoBraceCompetionTest(app, project, "#foo(", "#foo(");
+                AutoBraceCompetionTest(app, project, "\"\"\"\rfoo(\r\"\"\"\"", "\"\"\"\r\nfoo(\r\n\"\"\"\"");
+
+                // check that end braces gets skiped
+                AutoBraceCompetionTest(app, project, "foo(bar)", "foo(bar)");
+                AutoBraceCompetionTest(app, project, "foo[bar]", "foo[bar]");
+                AutoBraceCompetionTest(app, project, "foo{bar}", "foo{bar}");
+                AutoBraceCompetionTest(app, project, "\"foo\"", "\"foo\"");
+                AutoBraceCompetionTest(app, project, "'foo'", "'foo'");
+                AutoBraceCompetionTest(app, project, "foo({[\"\"]})", "foo({[\"\"]})");
+            }
+        }
+
+        private static void AutoBraceCompetionTest(VisualStudioApp app, Project project, string typedText, string expectedText) {
+            var item = project.ProjectItems.Item("Program.py");
+            var window = item.Open();
+            window.Activate();
+
+            Keyboard.Type(typedText);
+
+            var doc = app.GetDocument(item.Document.FullName);
+
+            string actual = null;
+            for (int i = 0; i < 100; i++) {
+                actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
+
+                if (expectedText == actual) {
+                    break;
+                }
+                System.Threading.Thread.Sleep(100);
+            }
+
+            Assert.AreEqual(expectedText, actual);
+
+            window.Document.Close(vsSaveChanges.vsSaveChangesNo);
+        }
+
 
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
