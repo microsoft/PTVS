@@ -85,7 +85,12 @@ namespace Microsoft.PythonTools.Commands {
             var dlg = new DiagnosticsForm(_serviceProvider, "Gathering data...");
 
             ThreadPool.QueueUserWorkItem(x => {
-                var data = GetData();
+                string data;
+                try {
+                    data = GetData();
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    data = ex.ToUnhandledExceptionMessage(GetType());
+                }
                 try {
                     dlg.BeginInvoke((Action)(() => {
                         dlg.Ready(data);
@@ -119,18 +124,13 @@ namespace Microsoft.PythonTools.Commands {
                     // Some projects will throw rather than give us a unique
                     // name. They are not ours, so we will ignore them.
                     name = project.UniqueName;
-                } catch (Exception ex) {
-                    if (ex.IsCriticalException()) {
-                        throw;
-                    }
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
                     bool isPythonProject = false;
                     try {
                         isPythonProject = Utilities.GuidEquals(PythonConstants.ProjectFactoryGuid, project.Kind);
-                    } catch (Exception ex2) {
-                        if (ex2.IsCriticalException()) {
-                            throw;
-                        }
+                    } catch (Exception ex2) when (!ex2.IsCriticalException()) {
                     }
+
                     if (isPythonProject) {
                         // Actually, it was one of our projects, so we do care
                         // about the exception. We'll add it to the output,
@@ -217,10 +217,7 @@ namespace Microsoft.PythonTools.Commands {
                 var inMemLogger = _serviceProvider.GetComponentModel().GetService<InMemoryLogger>();
                 res.AppendLine(inMemLogger.ToString());
                 res.AppendLine();
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 res.AppendLine("  Failed to access event log.");
                 res.AppendLine(ex.ToString());
                 res.AppendLine();
@@ -246,10 +243,7 @@ namespace Microsoft.PythonTools.Commands {
                     res.AppendLine();
                 }
 
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 res.AppendLine("  Failed to access event log.");
                 res.AppendLine(ex.ToString());
                 res.AppendLine();
@@ -257,11 +251,20 @@ namespace Microsoft.PythonTools.Commands {
 
             res.AppendLine("Loaded assemblies:");
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().OrderBy(assem => assem.FullName)) {
-                var assemFileVersion = assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false).OfType<AssemblyFileVersionAttribute>().FirstOrDefault();
+                AssemblyFileVersionAttribute assemFileVersion;
+                var error = "(null)";
+                try {
+                    assemFileVersion = assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false)
+                        .OfType<AssemblyFileVersionAttribute>()
+                        .FirstOrDefault();
+                } catch (Exception e) when (!e.IsCriticalException()) {
+                    assemFileVersion = null;
+                    error = string.Format("{0}: {1}", e.GetType().Name, e.Message);
+                }
 
                 res.AppendLine(string.Format("  {0}, FileVersion={1}",
                     assembly.FullName,
-                    assemFileVersion == null ? "(null)" : assemFileVersion.Version
+                    assemFileVersion?.Version ?? error
                 ));
             }
             res.AppendLine();
@@ -271,11 +274,10 @@ namespace Microsoft.PythonTools.Commands {
                 res.AppendLine("Global Analysis:");
                 try {
                     res.AppendLine(File.ReadAllText(globalAnalysisLog));
-                } catch (Exception e) {
-                    if (e.IsCriticalException()) {
-                        throw;
-                    }
-                    res.AppendLine("Error reading: " + e);
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    res.AppendLine("Error reading the global analysis log.");
+                    res.AppendLine("Please wait for analysis to complete and try again.");
+                    res.AppendLine(ex.ToString());
                 }
             }
             res.AppendLine();
