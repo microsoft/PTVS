@@ -367,7 +367,7 @@ namespace Microsoft.PythonTools.Navigation {
                 var oldValue = change.Key;
                 var newValue = change.Value;
 
-                if (oldValue != newValue) {
+                if (_dropDownBar != null && oldValue != newValue) {
                     if (oldValue == -1 || newValue == -1) {
                         // we've selected something new, we need to refresh the combo to
                         // to remove the grayed out entry
@@ -485,7 +485,7 @@ namespace Microsoft.PythonTools.Navigation {
                 Action callback = () => CaretPositionChanged(
                     this,
                     new CaretPositionChangedEventArgs(
-                        null,
+                        _textView,
                         _textView.Caret.Position,
                         _textView.Caret.Position
                     )

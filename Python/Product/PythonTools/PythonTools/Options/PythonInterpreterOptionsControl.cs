@@ -293,6 +293,7 @@ namespace Microsoft.PythonTools.Options {
                     IsConfigurable = true,
                     SupportsCompletionDb = true,
                     Id = id,
+                    PathEnvironmentVariable = "PYTHONPATH",
                     InteractiveOptions = new PythonInteractiveOptions(
                         _serviceProvider,
                         _serviceProvider.GetPythonToolsService(), 

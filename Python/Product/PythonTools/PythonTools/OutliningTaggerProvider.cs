@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools {
                 if (tags != null) {
                     _tags = tags.Concat(ProcessRegionTags(snapshot)).ToArray();
 
-                    TagsChanged(
+                    TagsChanged?.Invoke(
                         this,
                         new SnapshotSpanEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length))
                     );
@@ -159,7 +159,7 @@ namespace Microsoft.PythonTools {
             }
 
             private static Span GetFinalSpan(ITextSnapshot snapshot, int start, int length) {
-                Debug.Assert(start + length <= snapshot.Length);
+                Debug.Assert(start + length <= snapshot.Length, String.Format("{0} + {1} <= {2}", start, length, snapshot.Length));
                 int cnt = 0;
                 var text = snapshot.GetText(start, length);
 

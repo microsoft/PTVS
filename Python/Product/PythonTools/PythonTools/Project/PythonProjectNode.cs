@@ -204,7 +204,10 @@ namespace Microsoft.PythonTools.Project {
                         if (newInterpWithDb != null) {
                             newInterpWithDb.NewDatabaseAvailable += OnNewDatabaseAvailable;
                         }
-                        BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, _active.Configuration.Id);
+                        BuildProject.SetProperty(
+                            MSBuildConstants.InterpreterIdProperty,
+                            ReplaceMSBuildPath(_active.Configuration.Id)
+                        );
                     } else {
                         BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, "");
                         // Need to start listening to this event
@@ -221,6 +224,14 @@ namespace Microsoft.PythonTools.Project {
                     ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
+        }
+
+        private string ReplaceMSBuildPath(string id) {
+            int index = id.IndexOf(BuildProject.FullPath, StringComparison.OrdinalIgnoreCase);
+            if (index != -1) {
+                id = id.Substring(0, index) + "$(MSBuildProjectFullPath)" + id.Substring(index + BuildProject.FullPath.Length);
+            }
+            return id;
         }
 
         private void OnNewDatabaseAvailable(object sender, EventArgs e) {

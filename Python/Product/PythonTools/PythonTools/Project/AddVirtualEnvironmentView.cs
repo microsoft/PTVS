@@ -42,13 +42,6 @@ namespace Microsoft.PythonTools.Project {
         private readonly SemaphoreSlim _ready = new SemaphoreSlim(1);
         private InterpreterView _lastUserSelectedBaseInterpreter;
 
-        // These interpreter IDs are known to support virtualenv.
-        private static readonly IEnumerable<Guid> SupportsVirtualEnv = new[] {
-            CPythonInterpreterFactoryConstants.Guid32,
-            CPythonInterpreterFactoryConstants.Guid64
-        };
-
-
         public AddVirtualEnvironmentView(
             PythonProjectNode project,
             IInterpreterRegistryService interpreterService,

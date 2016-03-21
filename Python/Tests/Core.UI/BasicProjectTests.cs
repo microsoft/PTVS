@@ -1230,7 +1230,7 @@ namespace PythonToolsUITests {
                 string fullPath = TestData.GetPath(@"TestData\AddExistingFolder.sln");
 
                 Assert.AreEqual(5, project.ProjectItems.Count);
-                Assert.AreEqual(8, app.OpenSolutionExplorer().ExpandAll());
+                Assert.AreEqual(7, app.OpenSolutionExplorer().ExpandAll());
 
                 var item = project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\AddExistingFolder\TestFolder\TestFile.txt"));
 
@@ -1240,7 +1240,7 @@ namespace PythonToolsUITests {
 
                 Assert.AreEqual(6, project.ProjectItems.Count);
                 // Two more items, because we've added the file and its folder
-                Assert.AreEqual(10, app.OpenSolutionExplorer().ExpandAll());
+                Assert.AreEqual(9, app.OpenSolutionExplorer().ExpandAll());
 
                 var folder = project.ProjectItems.Item("TestFolder");
                 Assert.IsNotNull(folder);
@@ -1260,7 +1260,7 @@ namespace PythonToolsUITests {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
                 // "Python Environments", "References", "Search Paths", "Program.py"
                 Assert.AreEqual(4, project.ProjectItems.Count);
-                Assert.AreEqual(7, app.OpenSolutionExplorer().ExpandAll());
+                Assert.AreEqual(6, app.OpenSolutionExplorer().ExpandAll());
 
                 try {
                     File.Delete(TestData.GetPath(@"TestData\HelloWorld\LocalsTest.py"));
@@ -1270,7 +1270,7 @@ namespace PythonToolsUITests {
 
                 Assert.IsNotNull(item);
                 Assert.AreEqual(5, project.ProjectItems.Count);
-                Assert.AreEqual(8, app.OpenSolutionExplorer().ExpandAll());
+                Assert.AreEqual(7, app.OpenSolutionExplorer().ExpandAll());
 
                 Assert.AreEqual("LocalsTest.py", item.Properties.Item("FileName").Value);
 

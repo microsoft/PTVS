@@ -201,12 +201,12 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public override int GetHashCode() {
             var cmp = StringComparer.OrdinalIgnoreCase;
-            return cmp.GetHashCode(PrefixPath) ^
+            return cmp.GetHashCode(PrefixPath ?? "") ^
                 Id.GetHashCode() ^
-                cmp.GetHashCode(InterpreterPath) ^
-                cmp.GetHashCode(WindowsInterpreterPath) ^
-                cmp.GetHashCode(LibraryPath) ^
-                cmp.GetHashCode(PathEnvironmentVariable) ^
+                cmp.GetHashCode(InterpreterPath ?? "") ^
+                cmp.GetHashCode(WindowsInterpreterPath ?? "") ^
+                cmp.GetHashCode(LibraryPath ?? "") ^
+                cmp.GetHashCode(PathEnvironmentVariable ?? "") ^
                 Architecture.GetHashCode() ^
                 Version.GetHashCode() ^
                 UIMode.GetHashCode();

@@ -47,29 +47,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly Lazy<IInterpreterLog>[] _loggers;
         private readonly Lazy<IProjectContextProvider>[] _contextProviders;
         private readonly Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] _factoryProviders;
-        // keys used for storing information about user defined interpreters
-        public const string InterpreterItem = "Interpreter";
-        public const string IdKey = "Id";
-        public const string InterpreterPathKey = "InterpreterPath";
-        public const string WindowsPathKey = "WindowsInterpreterPath";
-        public const string LibraryPathKey = "LibraryPath";
-        public const string ArchitectureKey = "Architecture";
-        public const string VersionKey = "Version";
-        public const string PathEnvVarKey = "PathEnvironmentVariable";
-        public const string DescriptionKey = "Description";
-        public const string BaseInterpreterKey = "BaseInterpreter";
         public const string MSBuildProviderName = "MSBuild";
-
-        public const string InterpreterReferenceItem = "InterpreterReference";
-        private static readonly Regex InterpreterReferencePath = new Regex(
-    @"\{?(?<id>[a-f0-9\-]+)\}?
-              \\
-              (?<version>[23]\.[0-9])",
-    RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace | RegexOptions.IgnoreCase
-);
-
-        internal const string InterpreterIdProperty = "InterpreterId";
-        internal const string InterpreterVersionProperty = "InterpreterVersion";
 
         [ImportingConstructor]
         public MSBuildProjectInterpreterFactoryProvider(
@@ -227,7 +205,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var projectHome = PathUtils.GetAbsoluteDirectoryPath(project.DirectoryPath, project.GetPropertyValue("ProjectHome"));
             var factories = new Dictionary<string, FactoryInfo>();
-            foreach (var item in project.GetItems(InterpreterItem)) {
+            foreach (var item in project.GetItems(MSBuildConstants.InterpreterItem)) {
                 // Errors in these options are fatal, so we set anyError and
                 // continue with the next entry.
                 var dir = item.EvaluatedInclude;
@@ -237,9 +215,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
                 dir = PathUtils.GetAbsoluteDirectoryPath(projectHome, dir);
 
-                var id = item.GetMetadataValue(IdKey);
+                var id = item.GetMetadataValue(MSBuildConstants.IdKey);
                 if (string.IsNullOrEmpty(id)) {
-                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, IdKey, id);
+                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, MSBuildConstants.IdKey, id);
                     continue;
                 }
                 if (factories.ContainsKey(id)) {
@@ -247,10 +225,10 @@ namespace Microsoft.PythonTools.Interpreter {
                     continue;
                 }
 
-                var verStr = item.GetMetadataValue(VersionKey);
+                var verStr = item.GetMetadataValue(MSBuildConstants.VersionKey);
                 Version ver;
                 if (string.IsNullOrEmpty(verStr) || !Version.TryParse(verStr, out ver)) {
-                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, VersionKey, verStr);
+                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, MSBuildConstants.VersionKey, verStr);
                     continue;
                 }
 
@@ -260,12 +238,12 @@ namespace Microsoft.PythonTools.Interpreter {
                 // later.
                 bool hasError = false;
 
-                var description = item.GetMetadataValue(DescriptionKey);
+                var description = item.GetMetadataValue(MSBuildConstants.DescriptionKey);
                 if (string.IsNullOrEmpty(description)) {
                     description = PathUtils.CreateFriendlyDirectoryPath(projectHome, dir);
                 }
 
-                var value = item.GetMetadataValue(BaseInterpreterKey);
+                var value = item.GetMetadataValue(MSBuildConstants.BaseInterpreterKey);
                 InterpreterConfiguration baseInterp = null;
                 if (!string.IsNullOrEmpty(value)) {
                     // It's a valid GUID, so find a suitable base. If we
@@ -276,34 +254,34 @@ namespace Microsoft.PythonTools.Interpreter {
                     baseInterp = _factoryProviders.GetConfiguration(value);
                 }
 
-                var path = item.GetMetadataValue(InterpreterPathKey);
+                var path = item.GetMetadataValue(MSBuildConstants.InterpreterPathKey);
                 if (!PathUtils.IsValidPath(path)) {
-                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, InterpreterPathKey, path);
+                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, MSBuildConstants.InterpreterPathKey, path);
                     hasError = true;
                 } else if (!hasError) {
                     path = PathUtils.GetAbsoluteFilePath(dir, path);
                 }
 
-                var winPath = item.GetMetadataValue(WindowsPathKey);
+                var winPath = item.GetMetadataValue(MSBuildConstants.WindowsPathKey);
                 if (!PathUtils.IsValidPath(winPath)) {
-                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, WindowsPathKey, winPath);
+                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, MSBuildConstants.WindowsPathKey, winPath);
                     hasError = true;
                 } else if (!hasError) {
                     winPath = PathUtils.GetAbsoluteFilePath(dir, winPath);
                 }
 
-                var libPath = item.GetMetadataValue(LibraryPathKey);
+                var libPath = item.GetMetadataValue(MSBuildConstants.LibraryPathKey);
                 if (string.IsNullOrEmpty(libPath)) {
                     libPath = "lib";
                 }
                 if (!PathUtils.IsValidPath(libPath)) {
-                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, LibraryPathKey, libPath);
+                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, MSBuildConstants.LibraryPathKey, libPath);
                     hasError = true;
                 } else if (!hasError) {
                     libPath = PathUtils.GetAbsoluteDirectoryPath(dir, libPath);
                 }
 
-                var pathVar = item.GetMetadataValue(PathEnvVarKey);
+                var pathVar = item.GetMetadataValue(MSBuildConstants.PathEnvVarKey);
                 if (string.IsNullOrEmpty(pathVar)) {
                     if (baseInterp != null) {
                         pathVar = baseInterp.PathEnvironmentVariable;
@@ -314,7 +292,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 string arch = null;
                 if (baseInterp == null) {
-                    arch = item.GetMetadataValue(ArchitectureKey);
+                    arch = item.GetMetadataValue(MSBuildConstants.ArchitectureKey);
                     if (string.IsNullOrEmpty(arch)) {
                         arch = "x86";
                     }
@@ -326,7 +304,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     baseInterp = FindBaseInterpreterFromVirtualEnv(dir, libPath);
 
                     if (baseInterp == null) {
-                        Log("Interpreter {0} has invalid value for '{1}': {2}", dir, BaseInterpreterKey, value ?? "(null)");
+                        Log("Interpreter {0} has invalid value for '{1}': {2}", dir, MSBuildConstants.BaseInterpreterKey, value ?? "(null)");
                         hasError = true;
                     }
                 }
@@ -359,8 +337,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 MergeFactory(projectInfo, factories, info);
             }
 
-            // <InterpreterReference Include="{factoryProviderId};{interpreterId}" />
-            foreach (var item in project.GetItems(InterpreterReferenceItem)) {
+            // <InterpreterReference Include="{factoryProviderId}|{interpreterId}" />
+            foreach (var item in project.GetItems(MSBuildConstants.InterpreterReferenceItem)) {
                 string id = item.EvaluatedInclude;
 
                 var config = _factoryProviders.GetConfiguration(id);

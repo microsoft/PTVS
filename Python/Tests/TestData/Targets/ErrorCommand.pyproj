@@ -14,8 +14,7 @@
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <InterpreterId>{2af0f10d-7135-4994-9156-5d01c9c11b7e}</InterpreterId>
-    <InterpreterVersion>2.7</InterpreterVersion>
+    <InterpreterId>Global|PythonCore|2.7|x86</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
     <DebugSymbols>true</DebugSymbols>
@@ -26,12 +25,12 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <InterpreterReference Include="{2af0f10d-7135-4994-9156-5d01c9c11b7e}\2.5" />
-    <InterpreterReference Include="{2af0f10d-7135-4994-9156-5d01c9c11b7e}\2.7" />
-    <InterpreterReference Include="{2af0f10d-7135-4994-9156-5d01c9c11b7e}\3.3" />
-    <InterpreterReference Include="{9a7a9026-48c1-4688-9d5d-e5699d47d074}\2.5" />
-    <InterpreterReference Include="{9a7a9026-48c1-4688-9d5d-e5699d47d074}\2.7" />
-    <InterpreterReference Include="{9a7a9026-48c1-4688-9d5d-e5699d47d074}\3.3" />
+    <InterpreterReference Include="Global|PythonCore|2.5|x86" />
+    <InterpreterReference Include="Global|PythonCore|2.7|x86" />
+    <InterpreterReference Include="Global|PythonCore|3.3|x86" />
+    <InterpreterReference Include="Global|PythonCore|2.5|x64" />
+    <InterpreterReference Include="Global|PythonCore|2.7|x64" />
+    <InterpreterReference Include="Global|PythonCore|3.3|x64" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.py" />
