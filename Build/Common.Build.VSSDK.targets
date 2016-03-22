@@ -205,7 +205,6 @@
 
     <CreateZipPackage Files="@(_VSIXSourceItems)" ZipPackage="$(_Container)" CompressionLevel="$(ZipPackageCompressionLevel)">
       <Output TaskParameter="ZipPackage" ItemName="FileWrites" />
-      <Output TaskParameter="ZipPackage" ItemName="_FilesToSign" />
     </CreateZipPackage>
 
     <ItemGroup>
