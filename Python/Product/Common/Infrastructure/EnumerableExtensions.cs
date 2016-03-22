@@ -20,7 +20,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Microsoft.PythonTools.Common.Infrastructure {
+namespace Microsoft.PythonTools.Infrastructure {
     public static class EnumerableExtensions {
         public static IEnumerable<T> MaybeEnumerate<T>(this IEnumerable<T> source) {
             return source ?? Enumerable.Empty<T>();

@@ -25,12 +25,12 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <InterpreterReference Include="Global|PythonCore|2.5|x86" />
+    <InterpreterReference Include="Global|PythonCore|2.6|x86" />
     <InterpreterReference Include="Global|PythonCore|2.7|x86" />
-    <InterpreterReference Include="Global|PythonCore|3.3|x86" />
-    <InterpreterReference Include="Global|PythonCore|2.5|x64" />
+    <InterpreterReference Include="Global|PythonCore|3.5|x86" />
+    <InterpreterReference Include="Global|PythonCore|2.6|x64" />
     <InterpreterReference Include="Global|PythonCore|2.7|x64" />
-    <InterpreterReference Include="Global|PythonCore|3.3|x64" />
+    <InterpreterReference Include="Global|PythonCore|3.5|x64" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.py" />

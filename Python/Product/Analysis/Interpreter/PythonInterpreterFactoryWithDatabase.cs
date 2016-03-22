@@ -21,7 +21,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using Microsoft.PythonTools.Common.Infrastructure;
+using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
@@ -326,8 +327,13 @@ namespace Microsoft.PythonTools.Interpreter {
             if (File.Exists(analysisLog)) {
                 try {
                     return File.ReadAllText(analysisLog);
-                } catch (Exception e) {
-                    return string.Format(culture, "Error reading: {0}", e);
+                } catch (Exception ex) {
+                    return string.Format(
+                        culture,
+                        "Error reading {0}. Please let analysis complete and try again.",
+                        analysisLog,
+                        ex
+                    );
                 }
             }
             return null;

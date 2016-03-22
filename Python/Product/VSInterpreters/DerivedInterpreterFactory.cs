@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -243,11 +243,11 @@ namespace Microsoft.PythonTools.Interpreter {
             string libPath,
             IInterpreterRegistryService service
         ) {
-            string basePath = GetOrigPrefixPath(prefixPath, libPath);
+            string basePath = PathUtils.TrimEndSeparator(GetOrigPrefixPath(prefixPath, libPath));
 
             if (Directory.Exists(basePath)) {
                 return service.Interpreters.FirstOrDefault(interp =>
-                    PathUtils.IsSamePath(interp.Configuration.PrefixPath, basePath)
+                    PathUtils.IsSamePath(PathUtils.TrimEndSeparator(interp.Configuration.PrefixPath), basePath)
                 );
             }
             return null;

@@ -92,5 +92,15 @@ namespace TestUtilities.Python {
                 FileUtils.CopyDirectory(testDataSource, TestData.GetPath("TestData"));
             }
         }
+
+        public static string GetUnicodePathSolution() {
+            var tempProject = TestData.GetTempPath("UnicodePath");
+            var tempSln = Path.Combine(tempProject, "UnicodePathä.sln");
+            if (!File.Exists(tempSln)) {
+                FileUtils.CopyDirectory(TestData.GetPath("TestData\\UnicodePath"), Path.Combine(tempProject, "UnicodePathä"));
+                File.Copy(TestData.GetPath("TestData\\UnicodePath.sln"), tempSln);
+            }
+            return tempSln;
+        }
     }
 }
