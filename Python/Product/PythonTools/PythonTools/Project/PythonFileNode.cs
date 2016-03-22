@@ -178,7 +178,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override void Remove(bool removeFromStorage) {
-            ((PythonProjectNode)ProjectMgr).GetAnalyzer().UnloadFileAsync(GetAnalysisEntry());
+            var analysis = GetAnalysisEntry();
+            if (analysis != null) {
+                ((PythonProjectNode)ProjectMgr).GetAnalyzer().UnloadFileAsync(analysis);
+            }
 
             if (Url.EndsWith(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase) && removeFromStorage) {
                 TryDelete(Url + "c");

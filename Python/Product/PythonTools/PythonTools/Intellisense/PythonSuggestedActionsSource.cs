@@ -43,12 +43,14 @@ namespace Microsoft.PythonTools.Intellisense {
             _provider = provider;
             _view = textView;
             _textBuffer = textBuffer;
+            _textBuffer.RegisterForNewAnalysis(OnNewAnalysisEntry);
         }
 
-        public event EventHandler<EventArgs> SuggestedActionsChanged {
-            add { }
-            remove { }
+        private void OnNewAnalysisEntry(AnalysisEntry obj) {
+            SuggestedActionsChanged?.Invoke(this, EventArgs.Empty);
         }
+
+        public event EventHandler<EventArgs> SuggestedActionsChanged;
 
         public void Dispose() { }
 

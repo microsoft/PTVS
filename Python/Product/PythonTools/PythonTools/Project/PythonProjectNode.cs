@@ -941,7 +941,9 @@ namespace Microsoft.PythonTools.Project {
                         string file = fileProject.Key;
                         var projectEntry = fileProject.Value;
                         string searchPathEntry = fileProject.Value.SearchPathEntry;
-                        if (searchPathEntry != null && !newDirs.Contains(searchPathEntry)) {
+                        if (projectEntry != null && 
+                            searchPathEntry != null && 
+                            !newDirs.Contains(searchPathEntry)) {
                             _analyzer.UnloadFileAsync(projectEntry);
                         }
                     }
