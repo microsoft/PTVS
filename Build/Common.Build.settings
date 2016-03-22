@@ -67,7 +67,6 @@
     <PackagesPath Condition="!HasTrailingSlash($(PackagesPath))">$(PackagesPath)\</PackagesPath>
 
     <PTVSPRPath Condition="'$(PTVSPRPath)' == ''">$(BuildRoot)..\PTVS-pr\</PTVSPRPath>
-    <PTVSSamplesPath Condition="'$(PTVSSamplesPath)' == ''">$(BuildRoot)Python\Samples\</PTVSSamplesPath>
 
     <!-- BuildOutputRoot contains all build files.
     

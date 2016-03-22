@@ -37,6 +37,10 @@
       <TargetName>IronPython.Templates</TargetName>
       <FopxSubPath>Common7\IDE\</FopxSubPath>
     </FopxItem>
+    <FopxItem Include="$(BuildRoot)\Python\Templates\Samples">
+      <TargetName>Sample.Templates</TargetName>
+      <FopxSubPath>Common7\IDE\</FopxSubPath>
+    </FopxItem>
     <FopxItem Include="$(BuildRoot)\Python\Templates\Uwp">
       <TargetName>Uwp.Templates</TargetName>
       <FopxSubPath>Common7\IDE\</FopxSubPath>
