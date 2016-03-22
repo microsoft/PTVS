@@ -14,15 +14,14 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.VisualStudio.Text.BraceCompletion;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Editor;
 using System.ComponentModel.Composition;
-using Microsoft.VisualStudio.Utilities;
 using System.Diagnostics;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.BraceCompletion;
+using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Editor.BraceCompletion {
-
     [Export(typeof(IBraceCompletionContextProvider))]
     [BracePair('(', ')')]
     [BracePair('[', ']')]
