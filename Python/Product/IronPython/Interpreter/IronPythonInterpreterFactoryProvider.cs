@@ -100,11 +100,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IPythonInterpreterProvider Members
 
         public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
-            if (_interpreter != null) {
-                yield return _interpreter;
+            if (_config != null) {
+                yield return GetInterpreterFactory(_config.Id);
             }
-            if (_interpreterX64 != null) {
-                yield return _interpreterX64;
+            if (_configX64 != null) {
+                yield return GetInterpreterFactory(_configX64.Id);
             }
         }
 
@@ -119,13 +119,35 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IPythonInterpreterFactory GetInterpreterFactory(string id) {
             if (_config != null && id == _config.Id) {
-                if (_interpreter == null) {
-                    _interpreter = new IronPythonInterpreterFactory(_config.Architecture);
-                }
+                EnsureInterpreter();
+
+                return _interpreter;
             } else if (_configX64 != null && id == _configX64.Id) {
-                _interpreterX64 = new IronPythonInterpreterFactory(_configX64.Architecture);
+                EnsureInterpreterX64();
+
+                return _interpreterX64;
             }
             return null;
+        }
+
+        private void EnsureInterpreterX64() {
+            if (_interpreterX64 == null) {
+                lock (this) {
+                    if (_interpreterX64 == null) {
+                        _interpreterX64 = new IronPythonInterpreterFactory(_configX64.Architecture);
+                    }
+                }
+            }
+        }
+
+        private void EnsureInterpreter() {
+            if (_interpreter == null) {
+                lock (this) {
+                    if (_interpreter == null) {
+                        _interpreter = new IronPythonInterpreterFactory(_config.Architecture);
+                    }
+                }
+            }
         }
 
         private void DiscoverInterpreterFactories() {
