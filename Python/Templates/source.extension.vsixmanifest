@@ -4,6 +4,7 @@
     <DisplayName>PTVSTemplates</DisplayName>
     <Description xml:space="preserve">Provides templates for Python projects and items.</Description>
     <MoreInfo>http://aka.ms/ptvs</MoreInfo>
+    <License>Python Tools for VS License.rtf</License>
     <GettingStartedGuide>http://aka.ms/ptvstutorial</GettingStartedGuide>
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>

@@ -24,7 +24,7 @@
   </Choose>
   <PropertyGroup>
     <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
-    <OutputPathSuffix>templates\</OutputPathSuffix>
+    <OutputPathSuffix>template_samples\</OutputPathSuffix>
     <IntermediateOutputPathSuffix>$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
   </PropertyGroup>
   <Import Project="$(BuildRoot)\Build\Common.Build.settings" />
@@ -37,8 +37,8 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft</RootNamespace>
-    <AssemblyName>Microsoft.PythonTools.Templates</AssemblyName>
-    <ProjectGuid>{DBA0B643-FDB0-482F-B3DF-7DDD01263D31}</ProjectGuid>
+    <AssemblyName>Microsoft.PythonTools.Samples</AssemblyName>
+    <ProjectGuid>{E8BCFACF-94AC-443C-A718-E4C1983D3E31}</ProjectGuid>
     <UseVSSDKTemplateOnly>true</UseVSSDKTemplateOnly>
     <CreateVsixContainer>true</CreateVsixContainer>
     <DeployExtension>$(BuildingInsideVisualStudio)</DeployExtension>
@@ -48,7 +48,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="source.extension.vsixmanifest" />
+    <None Include="SamplesVsix\source.extension.vsixmanifest" />
     <None Include="DO NOT MODIFY PROJECT.txt" />
     <Content Include="..\Product\Icons\Dev$(VSTarget)\PythonProject.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -65,17 +65,7 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <None Include="SharedFiles\**\*">
-      <IncludeInVsix>false</IncludeInVsix>
-    </None>
-    <None Include="ReadmeFiles\**\*">
-      <IncludeInVsix>false</IncludeInVsix>
-    </None>
-    <Content Include="Core\ItemTemplates\**\*;Django\ItemTemplates\**\*;IronPython\ItemTemplates\**\*;Web\ItemTemplates\**\*">
-      <IncludeInVsix>true</IncludeInVsix>
-      <VsixSubPath>ItemTemplates\%(RecursiveDir)</VsixSubPath>
-    </Content>
-    <Content Include="Core\ProjectTemplates\**\*;Django\ProjectTemplates\**\*;IronPython\ProjectTemplates\**\*;Web\ProjectTemplates\**\*">
+    <Content Include="Samples\ProjectTemplates\**\*">
       <IncludeInVsix>true</IncludeInVsix>
       <VsixSubPath>ProjectTemplates\%(RecursiveDir)</VsixSubPath>
     </Content>

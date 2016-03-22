@@ -206,15 +206,6 @@
         <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
       </Merge>
       <?endif ?>
-      <?if "$(var.IncludeVsLogger)" ~= "True" ?>
-      <Merge Id="Merge_VsLogger" Language="1033" SourceFile="VsLogger.msm" DiskId="1">
-        <?foreach key in VS;WD;VWD?>
-        <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
-        <ConfigurationData Name="Config_$(var.key)TemplatesParent" Value="Dir_$(var.key)Templates"/>
-        <?endforeach?>
-        <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
-      </Merge>
-      <?endif?>
     </DirectoryRef>
 
     <!-- Features to install -->

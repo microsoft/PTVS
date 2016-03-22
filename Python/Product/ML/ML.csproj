@@ -110,10 +110,6 @@
     <ZipProject Include="ProjectTemplates\RegressionTemplate\regression.py" />
     <ZipProject Include="ProjectTemplates\RegressionTemplate\RegressionTemplate.pyproj" />
     <ZipProject Include="ProjectTemplates\RegressionTemplate\RegressionTemplate.vstemplate" />
-    <Content Include="Python Tools for VS License.rtf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-    </Content>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>
@@ -123,6 +119,11 @@
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
     <Content Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="..\PythonTools\Python Tools for VS License.rtf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>

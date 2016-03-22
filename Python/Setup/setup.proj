@@ -13,7 +13,6 @@
     <ProjectFile Include="Uwp\Uwp.wixproj" Condition="'$(IncludeUwp)' == 'True'"/>
     <ProjectFile Include="PythonTools\PythonTools.wixproj"/>
     <ProjectFile Include="PythonProfiling\PythonProfiling.wixproj"/>
-    <ProjectFile Include="$(PTVSPRPath)VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'"/>
     <ProjectFile Include="PythonToolsInstaller\PythonToolsInstaller.wixproj"/>
   </ItemGroup>
 

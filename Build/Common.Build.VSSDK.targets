@@ -14,6 +14,7 @@
     <DeployExtension Condition="'$(DeployExtension)' == ''">false</DeployExtension>
     <CopyBuildOutputToOutputDirectory>false</CopyBuildOutputToOutputDirectory>
     <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
+    <IncludeVSIXItemsFromTargets></IncludeVSIXItemsFromTargets>
   </PropertyGroup>
 
   <PropertyGroup Condition="!$(UseVSSDK) and !$(UseVSSDKTemplateOnly)">
