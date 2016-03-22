@@ -130,14 +130,17 @@ namespace Microsoft.PythonTools.Project {
                     _validFactories.Add(id);
                 }
             }
-
-            UpdateActiveInterpreter();
-
+            
             // Add any custom commands
             _customCommands = CustomCommand.GetCommands(project, this).ToList();
             _customCommandsDisplayLabel = CustomCommand.GetCommandsDisplayLabel(project, this);
         }
 
+        public override void Load(string filename, string location, string name, uint flags, ref Guid iidProject, out int canceled) {
+            base.Load(filename, location, name, flags, ref iidProject, out canceled);
+
+            UpdateActiveInterpreter();
+        }
         IAsyncCommand IPythonProject2.FindCommand(string canonicalName) {
             return _customCommands.FirstOrDefault(cc => cc.Target == canonicalName);
         }
@@ -164,6 +167,7 @@ namespace Microsoft.PythonTools.Project {
                 return _active ?? Site.GetPythonToolsService().DefaultInterpreter;
             }
             internal set {
+                Debug.Assert(this.FileName != null);
                 var oldActive = _active;
 
                 lock (_validFactories) {
@@ -624,6 +628,8 @@ namespace Microsoft.PythonTools.Project {
 
             OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
             base.Reload();
+
+            UpdateActiveInterpreter();
 
             string id;
             if (IsActiveInterpreterGlobalDefault &&

@@ -791,6 +791,11 @@ namespace Microsoft.PythonTools.Intellisense {
                     FromImportStatement fromImport;
 
                     if (statement is ImportStatement) {
+                        if (fromModule == "__future__") {
+                            // we need to insert before normal imports
+                            break;
+                        }
+
                         // we insert after this
                         start = statement.EndIndex;
                     } else if ((fromImport = (statement as FromImportStatement)) != null) {
