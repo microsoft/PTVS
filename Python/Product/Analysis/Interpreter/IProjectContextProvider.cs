@@ -16,7 +16,14 @@ namespace Microsoft.PythonTools.Interpreter {
     /// InterpreterUnloaded.
     /// </summary>
     public interface IProjectContextProvider {
+        /// <summary>
+        /// Raised when the list of projects has changed.
+        /// </summary>
         event EventHandler ProjectsChanaged;
+        /// <summary>
+        /// Raised when one of the individual projects may have had interpreters added or removed.
+        /// </summary>
+        event EventHandler<ProjectChangedEventArgs> ProjectChanged;
 
         IEnumerable<object> Projects {
             get;
@@ -31,5 +38,15 @@ namespace Microsoft.PythonTools.Interpreter {
         void InterpreterLoaded(object context, InterpreterConfiguration factory);
 
         void InterpreterUnloaded(object context, InterpreterConfiguration factory);
+    }
+
+    public class ProjectChangedEventArgs : EventArgs {
+        private readonly object _project;
+
+        public ProjectChangedEventArgs(object project) {
+            _project = project;
+        }
+
+        public object Project => _project;
     }
 }

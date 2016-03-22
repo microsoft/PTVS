@@ -59,5 +59,13 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public void InterpreterUnloaded(object context, InterpreterConfiguration factory) {
         }
+
+        public event EventHandler<ProjectChangedEventArgs> ProjectChanged {
+            add {
+
+            }
+            remove {
+            }
+        }
     }
 }

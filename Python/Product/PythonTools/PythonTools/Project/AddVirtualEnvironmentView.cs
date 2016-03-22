@@ -79,11 +79,12 @@ namespace Microsoft.PythonTools.Project {
                 Dispatcher.BeginInvoke((Action)(() => OnInterpretersChanged(sender, e)));
                 return;
             }
+
             var existing = Interpreters.Where(iv => iv.Interpreter != null).ToDictionary(iv => iv.Interpreter);
             var def = _project.GetInterpreterFactory();
 
             int i = 0;
-            foreach (var interp in _project.InterpreterFactories) {
+            foreach (var interp in InterpreterView.GetInterpreters(_project.Site, _project).Select(x => x.Interpreter)) {
                 if (!existing.Remove(interp)) {
                     Interpreters.Insert(i, new InterpreterView(interp, interp.Configuration.Description, interp == def));
                 }

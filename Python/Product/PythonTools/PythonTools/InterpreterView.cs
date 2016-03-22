@@ -38,11 +38,11 @@ namespace Microsoft.PythonTools {
             IServiceProvider serviceProvider,
             PythonProjectNode project
         ) {
-            var knownProviders = serviceProvider.GetComponentModel().GetExtensions<IPythonInterpreterFactoryProvider>();
+            var knownProviders = serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
 
             return knownProviders
-                //.Where(p => !(p is LoadedProjectInterpreterFactoryProvider))
-                .SelectMany(p => p.GetInterpreterFactories())
+                .Interpreters
+                .Where(p => !p.Configuration.Id.StartsWith("MSBuild|"))
                 .Where(PythonInterpreterFactoryExtensions.IsUIVisible)
                 .OrderBy(fact => fact.Configuration.Description)
                 .ThenBy(fact => fact.Configuration.Version)

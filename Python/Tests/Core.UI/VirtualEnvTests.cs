@@ -481,6 +481,14 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
             public void InterpreterUnloaded(object context, InterpreterConfiguration factory) {
             }
+
+            public event EventHandler<ProjectChangedEventArgs> ProjectChanged {
+                add {
+
+                }
+                remove {
+                }
+            }
         }
 
         class MockLogger : IInterpreterLog {

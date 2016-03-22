@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -63,7 +64,25 @@ namespace Microsoft.PythonTools.Interpreter {
         private void InitializeContexts() {
             foreach (var provider in _contextProviders) {
                 provider.Value.ProjectsChanaged += Provider_ProjectContextsChanged;
+                provider.Value.ProjectChanged += Provider_ProjectChanged;
                 Provider_ProjectContextsChanged(provider.Value, EventArgs.Empty);
+            }
+        }
+
+        private void Provider_ProjectChanged(object sender, ProjectChangedEventArgs e) {
+            string filename = e.Project as string;
+            if (filename == null) {
+                var proj = e.Project as MSBuild.Project;
+                if (proj != null) {
+                    filename = proj.FullPath;
+                }
+            }
+
+            ProjectInfo projInfo;
+            if (filename != null && _projects.TryGetValue(filename, out projInfo)) {
+                if (DiscoverInterpreters(projInfo)) {
+                    OnInterpreterFactoriesChanged();
+                }
             }
         }
 
@@ -98,6 +117,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public static string GetInterpreterId(string file, string id) {
             return String.Join("|", MSBuildProviderName, id, file);
+        }
+
+        public static string GetProjectiveRelativeId(string interpreterId) {
+            return interpreterId.Split(new[] { '|' }, 3)[1];
         }
 
         private void Provider_ProjectContextsChanged(object sender, EventArgs e) {
@@ -238,8 +261,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 // later.
                 bool hasError = false;
 
+                bool hasDescription = true;
                 var description = item.GetMetadataValue(MSBuildConstants.DescriptionKey);
                 if (string.IsNullOrEmpty(description)) {
+                    hasDescription = false;
                     description = PathUtils.CreateFriendlyDirectoryPath(projectHome, dir);
                 }
 
@@ -315,6 +340,12 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (hasError) {
                     info = new ErrorFactoryInfo(item, fullId, ver, description, dir);
                 } else {
+                    Debug.Assert(baseInterp != null, "we reported an error if we didn't have a base interpreter");
+
+                    if (!hasDescription) {
+                        description = string.Format("{0} ({1})", description, baseInterp.Description);
+                    }
+
                     info = new ConfiguredFactoryInfo(
                         this,
                         item,

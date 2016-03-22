@@ -279,7 +279,7 @@ namespace Microsoft.PythonTools.Project {
                 item = BuildProject.AddItem(MSBuildConstants.InterpreterItem,
                     PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
                     new Dictionary<string, string> {
-                        { MSBuildConstants.IdKey, derived.Configuration.Id },
+                        { MSBuildConstants.IdKey, MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(derived.Configuration.Id) },
                         { MSBuildConstants.BaseInterpreterKey, derived.BaseInterpreter.Configuration.Id  },
                         { MSBuildConstants.VersionKey, derived.BaseInterpreter.Configuration.Version.ToString() },
                         { MSBuildConstants.DescriptionKey, derived.Configuration.Description },
@@ -303,7 +303,7 @@ namespace Microsoft.PythonTools.Project {
                 item = BuildProject.AddItem(MSBuildConstants.InterpreterItem,
                     PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
                     new Dictionary<string, string> {
-                        { MSBuildConstants.IdKey, factory.Configuration.Id },
+                        { MSBuildConstants.IdKey, MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(factory.Configuration.Id) },
                         { MSBuildConstants.VersionKey, factory.Configuration.Version.ToString() },
                         { MSBuildConstants.DescriptionKey, factory.Configuration.Description },
                         { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, factory.Configuration.InterpreterPath) },
@@ -318,8 +318,11 @@ namespace Microsoft.PythonTools.Project {
                 _validFactories.Add(factory.Configuration.Id);
             }
 
-            InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
+            Site.GetComponentModel().GetService<VsProjectContextProvider>().OnProjectChanged(
+                BuildProject
+            );
             UpdateActiveInterpreter();
+            InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -2454,10 +2457,22 @@ namespace Microsoft.PythonTools.Project {
             var rootPath = PathUtils.GetAbsoluteDirectoryPath(projectHome, options.PrefixPath);
 
             IPythonInterpreterFactory fact;
-            var id = MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(
+
+            string id = MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(
                 BuildProject.FullPath,
-                Guid.NewGuid().ToString("N")    // TODO: More friendly name...
+                Path.GetFileName(PathUtils.TrimEndSeparator(options.PrefixPath))
             );
+
+            var interpReg = Site.GetComponentModel().GetService<IInterpreterRegistryService>();
+
+            int counter = 1;
+            while (interpReg.FindConfiguration(id) != null) {
+                id = MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(
+                    BuildProject.FullPath,
+                    Path.GetDirectoryName(rootPath) + counter++
+                );
+            }
+            
             var baseInterp = Site.GetComponentModel().DefaultExportProvider
                 .GetInterpreterFactory(options.Id) as PythonInterpreterFactoryWithDatabase;
             if (baseInterp != null) {

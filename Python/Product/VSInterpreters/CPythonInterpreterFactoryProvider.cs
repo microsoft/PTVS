@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         #endregion
 
-        private static bool TryParsePythonVersion(string spec, out Version version, out ProcessorArchitecture? arch) {
+        private static bool TryParsePythonVersion(string spec, out Version version, out ProcessorArchitecture? arch, ref string id) {
             version = null;
             arch = null;
 
@@ -130,6 +130,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             if (m.Groups["suffix"].Value == "-32") {
                 arch = ProcessorArchitecture.X86;
+                id = id.Substring(0, id.Length - 3);
             }
 
             return true;
@@ -173,12 +174,13 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private bool TryRegisterInterpreter(HashSet<string> registeredPaths, RegistryKey vendorKey, string key, ProcessorArchitecture? arch) {
             Version version = null;
-            ProcessorArchitecture? arch2;
+            ProcessorArchitecture? arch2 = null;
 
             using (var interpKey = vendorKey.OpenSubKey(key)) {
+                string id = key;
                 var versionValue = interpKey.GetValue("SysVersion") as string;
-                if (!TryParsePythonVersion(versionValue, out version, out arch2) &&
-                    !TryParsePythonVersion(key, out version, out arch2)) {
+                if (!Version.TryParse(versionValue, out version) &&
+                    !TryParsePythonVersion(key, out version, out arch2, ref id)) {
                     version = new Version(2, 7);
                 }
 

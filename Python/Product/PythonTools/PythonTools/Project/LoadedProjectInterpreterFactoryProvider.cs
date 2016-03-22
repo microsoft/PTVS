@@ -40,19 +40,17 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public void UpdateProject(PythonProjectNode node, MSBuild.Project project) {
-            bool changed = false;
             lock (_projects) {
                 if (project == null) {
-                    changed = _projects.Remove(node);
+                    _projects.Remove(node);
                 } else if (!_projects.ContainsKey(node) || _projects[node] != project) {
                     _projects[node] = project;
-                    changed = true;
                 }
             }
 
-            if (changed) {
-                ProjectsChanaged?.Invoke(this, EventArgs.Empty);
-            }
+            // Always raise the event, this also occurs when we're adding projects
+            // to the MSBuild.Project.
+            ProjectsChanaged?.Invoke(this, EventArgs.Empty);
         }
 
         public void InterpreterLoaded(object context, InterpreterConfiguration configuration) {
@@ -80,6 +78,11 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public event EventHandler ProjectsChanaged;
+        public event EventHandler<ProjectChangedEventArgs> ProjectChanged;
+
+        public void OnProjectChanged(object project) {
+            ProjectChanged?.Invoke(this, new ProjectChangedEventArgs(project));
+        }
 
         public IEnumerable<object> Projects {
             get {

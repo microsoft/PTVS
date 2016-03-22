@@ -45,5 +45,12 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public event EventHandler ProjectsChanaged;
+        public event EventHandler<ProjectChangedEventArgs> ProjectChanged {
+            add {
+                
+            }
+            remove {
+            }
+        }
     }
 }

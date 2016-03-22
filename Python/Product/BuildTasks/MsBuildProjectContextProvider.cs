@@ -60,5 +60,13 @@ namespace Microsoft.PythonTools.BuildTasks {
         }
 
         public event EventHandler ProjectsChanaged;
+
+        public event EventHandler<ProjectChangedEventArgs> ProjectChanged {
+            add {
+
+            }
+            remove {
+            }
+        }
     }
 }
