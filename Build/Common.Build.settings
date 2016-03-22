@@ -24,7 +24,7 @@
     <VSTargetName Condition="'$(VSTarget)' == '11.0'">2012</VSTargetName>
     <VSTargetName Condition="'$(VSTarget)' == '10.0'">2010</VSTargetName>
     
-    <BuildNumber Condition="'$(BuildNumber)' == ''">$(TF_BUILD_BuildNumber)</BuildNumber>
+    <BuildNumber Condition="'$(BuildNumber)' == ''">$(BUILD_BUILDNUMBER)</BuildNumber>
     <BuildNumber Condition="'$(BuildNumber)' == ''">1000.00</BuildNumber>
     <!--
     The version number that will identify a specific build. This appears in
@@ -62,7 +62,7 @@
     <BuildRoot Condition="!HasTrailingSlash($(BuildRoot))">$(BuildRoot)\</BuildRoot>
     <TargetsPath>$(BuildRoot)Build</TargetsPath>
 
-    <PackagesPath Condition="'$(PackagesPath)' == ''">$(TF_BUILD_BinariesDirectory)</PackagesPath>
+    <PackagesPath Condition="'$(PackagesPath)' == ''">$(BUILD_BINARIESDIRECTORY)</PackagesPath>
     <PackagesPath Condition="'$(PackagesPath)' == ''">$(BuildRoot)\BuildOutput</PackagesPath>
     <PackagesPath Condition="!HasTrailingSlash($(PackagesPath))">$(PackagesPath)\</PackagesPath>
 
@@ -74,7 +74,7 @@
     Rather than customizing OutputPath or IntermediateOutputPath in projects,
     $(OutputPathSuffix) and $(IntermediateOutputPathSuffix) should be set.
     -->
-    <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(TF_BUILD_BinariesDirectory)</BuildOutputRoot>
+    <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BUILD_BINARIESDIRECTORY)</BuildOutputRoot>
     <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BuildRoot)\BuildOutput\$(Configuration)$(VSTarget)\</BuildOutputRoot>
     <BuildOutputRoot Condition="!HasTrailingSlash($(BuildOutputRoot))">$(BuildOutputRoot)\</BuildOutputRoot>
 

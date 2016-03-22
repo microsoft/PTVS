@@ -20,7 +20,7 @@ if ($source) {
     .\nuget.exe sources add -Name PreBuildSource -Source $source
 }
 if ($env:TF_BUILD_BinariesDirectory) {
-    $outdir = "${env:TF_BUILD_BinariesDirectory}"
+    $outdir = "${env:BUILD_BINARIESDIRECTORY}"
 } else {
     $outdir = "$buildroot\BuildOutput"
 }
