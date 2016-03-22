@@ -27,6 +27,7 @@ $AuthenticodeAndStrongNameFiles = @(
     "Microsoft.PythonTools.Uwp.dll",
     "Microsoft.PythonTools.VsCommon.dll",
     "Microsoft.PythonTools.VSInterpreters.dll",
+    "Microsoft.PythonTools.XamlDesignerSupport.dll",
     "Microsoft.PythonTools.WebRole.dll",
     "Microsoft.PythonTools.AzureSetup.exe"
 ) | %{ @{path="$build\raw\binaries\$_"; name="$_"} } | ?{ Test-Path "$($_.path)" }

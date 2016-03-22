@@ -94,11 +94,7 @@
     <ProjectReference2 Include="$(BuildRoot)Python\Product\ImportWizard\ImportWizard.csproj" />
     <ProjectReference2 Include="$(BuildRoot)Python\Product\ProjectWizards\ProjectWizards.csproj" />
     <ProjectReference2 Include="$(BuildRoot)Python\Product\TestAdapter\TestAdapter.csproj" />
-    <Reference Include="Microsoft.Windows.Design.Host, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
+    <ProjectReference2 Include="$(BuildRoot)Python\Product\XamlDesignerSupport\XamlDesignerSupport.csproj" />
     <Reference Include="Microsoft.VisualStudio.WindowsAzure.CommonAzureTools.Contracts.1.2">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(DevEnvDir)Extensions\Microsoft\Windows Azure Tools\Common\Microsoft.VisualStudio.WindowsAzure.CommonAzureTools.Contracts.1.2.dll</HintPath>
@@ -350,7 +346,6 @@
     <Compile Include="PythonTools\Project\Pip.cs" />
     <Compile Include="PythonTools\Project\PythonProjectImageName.cs" />
     <Compile Include="PythonTools\Project\VirtualEnv.cs" />
-    <Compile Include="PythonTools\Project\XamlDesignerSupport.cs" />
     <Compile Include="PythonTools\PythonAnalysisClassifier.cs" />
     <Compile Include="PythonTools\PythonAnalysisClassifierProvider.cs" />
     <Compile Include="PythonTools\PythonInterpreterFactoryExtensions.cs" />
@@ -592,7 +587,6 @@
     <Compile Include="PythonTools\Repl\AttachDebuggerReplCommand.cs" />
     <Compile Include="PythonTools\Repl\LoadReplCommand.cs" />
     <Compile Include="PythonTools\Repl\OverloadDoc.cs" />
-    <Compile Include="PythonTools\Designer\WpfEventBindingProvider.cs" />
     <Compile Include="PythonTools\PythonClassifier.cs" />
     <Compile Include="PythonTools\PythonPredefinedClassificationTypeNames.cs" />
     <Compile Include="PythonTools\Editor\BraceMatcher.cs" />

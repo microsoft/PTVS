@@ -16,7 +16,9 @@
 
 using System;
 using System.IO;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
@@ -27,37 +29,32 @@ namespace Microsoft.PythonTools.Project {
             : base(root, e) {
         }
 
-        protected internal object DesignerContext {
-            get {
-                if (_designerContext == null) {
-                    _designerContext = XamlDesignerSupport.CreateDesignerContext();
-                    //Set the EventBindingProvider for this XAML file so the designer will call it
-                    //when event handlers need to be generated
-                    var dirName = Path.GetDirectoryName(Url);
-                    var fileName = Path.GetFileNameWithoutExtension(Url);
-                    var filenameWithoutExt = Path.Combine(dirName, fileName);
-
-                    // look for fob.py
-                    var child = ProjectMgr.FindNodeByFullPath(filenameWithoutExt + PythonConstants.FileExtension);
-                    if (child == null) {
-                        // then look for fob.pyw
-                        child = ProjectMgr.FindNodeByFullPath(filenameWithoutExt + PythonConstants.WindowsFileExtension);
-                    }
-
-                    if (child != null) {
-                        XamlDesignerSupport.InitializeEventBindingProvider(_designerContext, child as PythonFileNode);
-                    }
-                }
-                return _designerContext;
-            }
-        }
-
         public override int QueryService(ref Guid guidService, out object result) {
-            if (XamlDesignerSupport.DesignerContextType != null &&
-                guidService == XamlDesignerSupport.DesignerContextType.GUID &&
+            var model = ProjectMgr.GetService(typeof(SComponentModel)) as IComponentModel;
+            var designerSupport = model?.GetService<IXamlDesignerSupport>();
+            if (designerSupport != null &&
+                guidService == designerSupport.DesignerContextTypeGuid &&
                 Path.GetExtension(Url).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
                 // Create a DesignerContext for the XAML designer for this file
-                result = DesignerContext;
+                if (_designerContext == null) {
+                    _designerContext = designerSupport.CreateDesignerContext();
+                    var child = (
+                        // look for spam.py
+                        ProjectMgr.FindNodeByFullPath(Path.ChangeExtension(Url, PythonConstants.FileExtension)) ??
+                        // then look for spam.pyw
+                        ProjectMgr.FindNodeByFullPath(Path.ChangeExtension(Url, PythonConstants.WindowsFileExtension))
+                    ) as CommonFileNode;
+
+                    if (child != null) {
+                        designerSupport.InitializeEventBindingProvider(
+                            _designerContext,
+                            (child as PythonFileNode)?.GetProjectEntry(),
+                            () => child.GetTextView(),
+                            () => child.GetTextBuffer()
+                        );
+                    }
+                }
+                result = _designerContext;
                 return VSConstants.S_OK;
             }
 
