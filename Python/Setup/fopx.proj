@@ -1,0 +1,96 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="SetupProjectBefore.settings" />
+  <Import Project="$(TargetsPath)\Common.Shim.targets" />
+
+  <Import Project="$(TargetsPath)\MicroBuild.props" />
+
+  <ItemGroup>
+    <FopxItem Include="$(LayoutOutputPath)Microsoft.PythonTools">
+      <TargetName>Core</TargetName>
+      <FopxSubPath>Common7\IDE\Extensions\Microsoft\Python\Core\</FopxSubPath>
+    </FopxItem>
+    <FopxItem Include="$(LayoutOutputPath)Microsoft.PythonTools.Django">
+      <TargetName>Django</TargetName>
+      <FopxSubPath>Common7\IDE\Extensions\Microsoft\Python\Django\</FopxSubPath>
+    </FopxItem>
+    <FopxItem Include="$(LayoutOutputPath)Microsoft.PythonTools.IronPython">
+      <TargetName>IronPython</TargetName>
+      <FopxSubPath>Common7\IDE\Extensions\Microsoft\Python\IronPython\</FopxSubPath>
+    </FopxItem>
+    <FopxItem Include="$(LayoutOutputPath)Microsoft.PythonTools.Profiling">
+      <TargetName>Profiling</TargetName>
+      <FopxSubPath>Common7\IDE\Extensions\Microsoft\Python\Profiling\</FopxSubPath>
+    </FopxItem>
+    <FopxItem Include="$(LayoutOutputPath)Microsoft.PythonTools.Uwp">
+      <TargetName>Uwp</TargetName>
+      <FopxSubPath>Common7\IDE\Extensions\Microsoft\Python\Uwp\</FopxSubPath>
+    </FopxItem>
+    <FopxItem Include="$(BuildRoot)\Python\Templates\Core">
+      <TargetName>Core.Templates</TargetName>
+      <FopxSubPath>Common7\IDE\</FopxSubPath>
+    </FopxItem>
+    <FopxItem Include="$(BuildRoot)\Python\Templates\Django">
+      <TargetName>Django.Templates</TargetName>
+      <FopxSubPath>Common7\IDE\</FopxSubPath>
+    </FopxItem>
+    <FopxItem Include="$(BuildRoot)\Python\Templates\IronPython">
+      <TargetName>IronPython.Templates</TargetName>
+      <FopxSubPath>Common7\IDE\</FopxSubPath>
+    </FopxItem>
+    <FopxItem Include="$(BuildRoot)\Python\Templates\Uwp">
+      <TargetName>Uwp.Templates</TargetName>
+      <FopxSubPath>Common7\IDE\</FopxSubPath>
+    </FopxItem>
+    <FopxItem Include="$(BuildRoot)\Python\Templates\Web">
+      <TargetName>Web.Templates</TargetName>
+      <FopxSubPath>Common7\IDE\</FopxSubPath>
+    </FopxItem>
+  </ItemGroup>
+
+  <ItemGroup>
+    <FilesToSign Include="@(FopxItem->'$(SetupOutputPath)Microsoft.Python.%(TargetName).fopx')">
+      <Authenticode>Vsix</Authenticode>
+      <SignedPath>%(FullPath)</SignedPath>
+      <UnsignedPath>$(UnsignedOutputPath)%(Filename)%(Extension)</UnsignedPath>
+    </FilesToSign>
+  </ItemGroup>
+
+  <Target Name="_CollectSourceItems">
+    <ItemGroup>
+      <FopxSourceItem Include="%(FopxItem.Identity)\**\*" Exclude="**\*.pdb">
+        <TargetDir>$(FopxOutputPath)%(FopxItem.TargetName)\%(FopxItem.FopxSubPath)</TargetDir>
+      </FopxSourceItem>
+      <FopxSourceItem>
+        <TargetDir>%(TargetDir)%(RecursiveDir)</TargetDir>
+        <TargetDir Condition="!HasTrailingSlash(%(TargetDir))">%(TargetDir)\</TargetDir>
+      </FopxSourceItem>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CopyToLayout" Inputs="@(FopxSourceItem)" Outputs="@(FopxSourceItem->'%(TargetDir)%(Filename)%(Extension)')">
+    <Message Text="Dest: %(FopxSourceItem.TargetDir)" Importance="high" />
+    <MakeDir Directories="%(FopxSourceItem.TargetDir)" />
+    <Copy SourceFiles="@(FopxSourceItem)" DestinationFolder="%(FopxSourceItem.TargetDir)" />
+  </Target>
+
+  <Target Name="_CreateFopx"
+          Inputs="@(FopxItem)"
+          Outputs="@(FopxItem->'$(SetupOutputPath)Microsoft.Python.%(TargetName).fopx')">
+    <Exec Command='"$(PackagesPath)\VS.Tools.Setup.FopCreator\FopCreator.exe" /layoutdir "$(FopxOutputPath)%(FopxItem.TargetName)" /outputfopx "$(SetupOutputPath)Microsoft.Python.%(FopxItem.TargetName).fopx"'
+          Condition="Exists('$(FopxOutputPath)%(FopxItem.TargetName)')" />
+  </Target>
+
+  <Target Name="Compile" DependsOnTargets="_CollectSourceItems;_CopyToLayout;_CreateFopx" />
+
+  <Target Name="ListFiles" DependsOnTargets="_CollectSourceItems">
+    <Message Text="Source Items: @(FopxSourceItem->'%(FullPath)
+ -> %(TargetDir)
+','')" Importance="high" />
+  </Target>
+
+  <Target Name="_PreserveUnsigned" Inputs="%(FilesToSign.SignedPath)" Outputs="%(FilesToSign.UnsignedPath)" BeforeTargets="SignFiles">
+    <Copy SourceFiles="%(FilesToSign.SignedPath)" DestinationFiles="%(FilesToSign.UnsignedPath)" />
+  </Target>
+
+  <Import Project="$(TargetsPath)\MicroBuild.targets" />
+</Project>

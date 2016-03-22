@@ -42,6 +42,7 @@
     <UseVSSDKTemplateOnly>true</UseVSSDKTemplateOnly>
     <CreateVsixContainer>true</CreateVsixContainer>
     <DeployExtension>$(BuildingInsideVisualStudio)</DeployExtension>
+    <NoWarn>$(NoWarn);2008</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>

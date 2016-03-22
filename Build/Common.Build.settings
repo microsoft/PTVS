@@ -61,6 +61,10 @@
     <BuildRoot Condition="!HasTrailingSlash($(BuildRoot))">$(BuildRoot)\</BuildRoot>
     <TargetsPath>$(BuildRoot)Build</TargetsPath>
 
+    <PackagesPath Condition="'$(PackagesPath)' == ''">$(TF_BUILD_BinariesDirectory)</PackagesPath>
+    <PackagesPath Condition="'$(PackagesPath)' == ''">$(BuildRoot)\BuildOutput</PackagesPath>
+    <PackagesPath Condition="!HasTrailingSlash($(PackagesPath))">$(PackagesPath)\</PackagesPath>
+
     <PTVSPRPath Condition="'$(PTVSPRPath)' == ''">$(BuildRoot)..\PTVS-pr\</PTVSPRPath>
     <PTVSSamplesPath Condition="'$(PTVSSamplesPath)' == ''">$(BuildRoot)Python\Samples\</PTVSSamplesPath>
 
@@ -87,6 +91,9 @@
 
     <SetupOutputPath Condition="'$(SetupOutputPath)' == ''">$(BuildOutputRoot)raw\setup\</SetupOutputPath>
     <SetupOutputPath Condition="!HasTrailingSlash($(SetupOutputPath))">$(SetupOutputPath)\</SetupOutputPath>
+
+    <FopxOutputPath Condition="'$(FopxOutputPath)' == ''">$(BuildOutputRoot)raw\fopx\</FopxOutputPath>
+    <FopxOutputPath Condition="!HasTrailingSlash($(FopxOutputPath))">$(FopxOutputPath)\</FopxOutputPath>
 
     <ToolsOutputPath Condition="'$(ToolsOutputPath)' == ''">$(BuildOutputRoot)raw\tools\</ToolsOutputPath>
     <ToolsOutputPath Condition="!HasTrailingSlash($(ToolsOutputPath))">$(ToolsOutputPath)\</ToolsOutputPath>
@@ -194,4 +201,9 @@
   <PropertyGroup>
     <CodeAnalysisRuleSet>$(BuildRoot)\Build\xTVS.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+
+  <!-- Check for the VSSDK Build Tools arbitrarily to see whether we should run the script. -->
+  <Target Name="_EnsureDependenciesInstalled" BeforeTargets="PrepareForBuild" Condition="!Exists('$(PackagesPath)Microsoft.VSSDK.BuildTools')">
+    <Exec Command='powershell.exe -ExecutionPolicy Bypass -File "$(TargetsPath)\PreBuild.ps1" -VsTarget $(VSTarget)' />
+  </Target>
 </Project>
