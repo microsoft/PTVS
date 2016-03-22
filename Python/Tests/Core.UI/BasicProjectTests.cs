@@ -118,18 +118,14 @@ namespace PythonToolsUITests {
                 Assert.IsNotNull(props);
 
                 var oldDefaultInterp = props.Item("DefaultInterpreter").Value;
-                var oldDefaultVersion = props.Item("DefaultInterpreterVersion").Value;
 
                 app.OnDispose(() => {
                     props.Item("DefaultInterpreter").Value = oldDefaultInterp;
-                    props.Item("DefaultInterpreterVersion").Value = oldDefaultVersion;
                 });
 
-                props.Item("DefaultInterpreter").Value = Guid.Empty;
-                props.Item("DefaultInterpreterVersion").Value = "2.7";
+                props.Item("DefaultInterpreter").Value = "";
 
-                Assert.AreEqual(Guid.Empty, props.Item("DefaultInterpreter").Value);
-                Assert.AreEqual("2.7", props.Item("DefaultInterpreterVersion").Value);
+                Assert.AreEqual("", props.Item("DefaultInterpreter").Value);
             }
         }
 
