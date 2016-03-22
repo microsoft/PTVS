@@ -20,7 +20,6 @@ using System.ComponentModel.Composition;
 namespace Microsoft.PythonTools.Editor.BraceCompletion {
     [Export(typeof(IBraceCompletionContext))]
     internal class BraceCompletionContext : IBraceCompletionContext {
-
         public bool AllowOverType(IBraceCompletionSession session) {
             return true;
         }

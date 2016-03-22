@@ -45,12 +45,17 @@ namespace Microsoft.PythonTools.Editor.BraceCompletion {
             Debug.Assert(openingPoint.Position >= 0, "SnapshotPoint.Position should always be zero or positive.");
 
             if (openingPoint.Position > 0) {
-                var classificationSpans = openingPoint.Snapshot.TextBuffer.GetPythonClassifier().GetClassificationSpans(new SnapshotSpan(openingPoint - 1, 1));
+                var classificationSpans = openingPoint.Snapshot.TextBuffer
+                    .GetPythonClassifier()
+                    .GetClassificationSpans(new SnapshotSpan(openingPoint - 1, 1));
+
                 foreach (var span in classificationSpans) {
-                    if (span.ClassificationType.IsOfType("comment"))
+                    if (span.ClassificationType.IsOfType("comment")) {
                         return false;
-                    if (span.ClassificationType.IsOfType("string"))
+                    }
+                    if (span.ClassificationType.IsOfType("string")) {
                         return false;
+                    }
                 }
             }
             return true;
