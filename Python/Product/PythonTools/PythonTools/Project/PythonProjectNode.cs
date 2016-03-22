@@ -1163,6 +1163,7 @@ namespace Microsoft.PythonTools.Project {
                 PythonLogEvent.AnalysisExitedAbnormally,
                 msg.ToString()
             );
+            EventLog.WriteEntry(Strings.ProductTitle, msg.ToString(), EventLogEntryType.Error, 9998);
             Site.GetUIThread().InvokeAsync(ReanalyzeProject).DoNotWait();
         }
 
