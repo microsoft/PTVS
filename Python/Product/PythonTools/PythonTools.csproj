@@ -242,6 +242,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
+    <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />
+    <Compile Include="PythonTools\ProvideBraceCompletionAttribute.cs" />
     <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
     <Compile Include="PythonTools\Repl\InlineReplAdornment.cs" />
     <Compile Include="PythonTools\Repl\InlineReplAdornmentManager.cs" />
