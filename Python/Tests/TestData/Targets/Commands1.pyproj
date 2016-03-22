@@ -20,7 +20,7 @@
     <InterpreterId>Global|PythonCore|2.7|x86</InterpreterId>
   </PropertyGroup>
   <ItemGroup>
-    <InterpreterReference Include="Global;PythonCore;2.5;x86" />
+    <InterpreterReference Include="Global|PythonCore|2.5|x86" />
     <InterpreterReference Include="Global|PythonCore|2.7|x86" />
     <InterpreterReference Include="Global|PythonCore|3.3|x86" />
     <InterpreterReference Include="Global|PythonCore|2.5|x64" />
