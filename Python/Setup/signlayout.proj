@@ -18,7 +18,7 @@
         Microsoft.PythonTools.Analyzer.exe;
         Microsoft.PythonTools.Attacher.exe;
         Microsoft.PythonTools.AttacherX86.exe;
-        Microsoft.PythonTools.AzureSetup.exe
+        Microsoft.PythonTools.AzureSetup.exe;
         Microsoft.PythonTools.BuildTasks.dll;
         Microsoft.PythonTools.Debugger.dll;
         Microsoft.PythonTools.Django.dll;
@@ -48,7 +48,7 @@
         PyDebugAttach.dll;
         PyDebugAttachX86.dll;
         VsPyProf.dll;
-        VsPyProfX86.dll
+        VsPyProfX86.dll;
         "/>
 
     <FilesToSign Include="@(ManagedFiles->'$(BinariesOutputPath)%(Identity)')">
