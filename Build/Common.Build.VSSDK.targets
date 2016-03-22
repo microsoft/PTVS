@@ -76,13 +76,11 @@
   </Target>
 
   <PropertyGroup>
-    <VSSDKTargets Condition="$(VSTarget) == '14.0'">$(BuildOutputRoot)Microsoft.VSSDK.BuildTools.14.0.23205\tools\VSSDK\Microsoft.VsSDK.targets</VSSDKTargets>
-    <VSSDKTargets Condition="$(VSTarget) == '15.0'">$(BuildOutputRoot)Microsoft.VSSDK.BuildTools.15.0.25001-Dev15CTP1\tools\VSSDK\Microsoft.VsSDK.targets</VSSDKTargets>
+    <VSSDKTargets>$(PackagesPath)Microsoft.VSSDK.BuildTools\tools\VSSDK\Microsoft.VsSDK.targets</VSSDKTargets>
   </PropertyGroup>
   
   <!-- Import the VS SDK headers -->
-  <Import Project="$(VSSDKTargets)" Condition="Exists($(VSSDKTargets))" />
-  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="!Exists($(VSSDKTargets))" />
+  <Import Project="$(VSSDKTargets)" />
 
   <!-- For non-debug builds, don't copy debug symbols -->
   <Target Name="_ClearVSIXSourceItemLocalOnly"
