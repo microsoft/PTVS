@@ -24,6 +24,7 @@
     <VSTargetName Condition="'$(VSTarget)' == '11.0'">2012</VSTargetName>
     <VSTargetName Condition="'$(VSTarget)' == '10.0'">2010</VSTargetName>
     
+    <BuildNumber Condition="'$(BuildNumber)' == ''">$(TF_BUILD_BuildNumber)</BuildNumber>
     <BuildNumber Condition="'$(BuildNumber)' == ''">1000.00</BuildNumber>
     <!--
     The version number that will identify a specific build. This appears in
