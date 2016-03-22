@@ -1,4 +1,4 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(BUILD_SOURCESDIRECTORY)\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets"
-          Condition="Exists('$(BUILD_SOURCESDIRECTORY)\packages\MicroBuild.Core.0.2.0\build\MicroBuild.Core.targets')" />
+  <Import Project="$(PackagesPath)MicroBuild.Core\build\MicroBuild.Core.targets"
+          Condition="Exists('$(PackagesPath)MicroBuild.Core\build\MicroBuild.Core.targets')" />
 </Project>

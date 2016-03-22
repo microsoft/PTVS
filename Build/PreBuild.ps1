@@ -4,7 +4,8 @@ param ($vstarget, $source, [switch] $clean)
 $packages = @(
     @{ name="Microsoft.VSSDK.BuildTools"; version=@{ "14.0"="14.0.23205"; "15.0"="15.0.25001-Dev15CTP1" }; required=$true },
     @{ name="Newtonsoft.Json"; version=@{ "14.0"="6.0.8"; "15.0"="6.0.8" }; required=$true },
-    @{ name="VS.Tools.Setup.FopCreator"; version=@{ "14.0"="1.0.16022601"; "15.0"="1.0.16022601" }; required=$false }
+    @{ name="VS.Tools.Setup.FopCreator"; version=@{ "14.0"="1.0.16022601"; "15.0"="1.0.16022601" }; required=$false },
+    @{ name="MicroBuild.Core"; version=@{ "14.0"="0.2.0"; "15.0"="0.2.0" }; required=$false }
 )
 
 
