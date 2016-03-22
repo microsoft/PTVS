@@ -1540,8 +1540,12 @@ namespace Microsoft.PythonTools.Intellisense {
             if (res != null) {
                 ITrackingSpan selectionSpan = null;
                 if (selectResult) {
+                    var translator = new LocationTracker(lastAnalyzed, buffer, res.version);
                     selectionSpan = view.TextBuffer.CurrentSnapshot.CreateTrackingSpan(
-                        Span.FromBounds(res.startIndex, res.endIndex),
+                        Span.FromBounds(
+                            translator.TranslateForward(res.startIndex), 
+                            translator.TranslateForward(res.endIndex)
+                        ),
                         SpanTrackingMode.EdgeInclusive
                     );
                 }

@@ -21,8 +21,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using MSBuild = Microsoft.Build.Evaluation;
@@ -411,10 +409,12 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 foreach (var added in newFactories.Except(previousFactories)) {
                     foreach (var factory in factories) {
-                        projectInfo.Context.InterpreterLoaded(
-                            projectInfo.Project,
-                            factory.Value.Config
-                        );
+                        if (factory.Value.Config.Id.StartsWith(MSBuildProviderName + "|")) {
+                            projectInfo.Context.InterpreterLoaded(
+                                projectInfo.Project,
+                                factory.Value.Config
+                            );
+                        }
                     }
                 }
             }

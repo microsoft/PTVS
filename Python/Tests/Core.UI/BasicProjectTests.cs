@@ -1090,7 +1090,7 @@ namespace PythonToolsUITests {
                     dis.SetDefault(app.InterpreterService.FindInterpreter(testPython.Id));
                     Assert.IsTrue(evt.WaitOne(10000), "Timed out waiting for analyzer change");
                 }
-
+                analyzer = pyproj.GetAnalyzer();
                 for (int retries = 10; retries > 0 && analyzer.GetModulesResult(true).Result.Where(x => x.Name == "native_module").FirstOrDefault() == null; --retries) {
                     Thread.Sleep(500);
                 }

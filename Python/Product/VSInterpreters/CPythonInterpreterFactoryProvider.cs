@@ -226,7 +226,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         }
                     }
 
-                    string newId = CPythonInterpreterFactoryConstants.GetIntepreterId(GetVendorName(vendorKey), arch ?? arch2, key);
+                    string newId = CPythonInterpreterFactoryConstants.GetIntepreterId(GetVendorName(vendorKey), actualArch, id);
                     InterpreterInformation existing;
 
                     _factories.TryGetValue(newId, out existing);

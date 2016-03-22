@@ -83,6 +83,9 @@ namespace Microsoft.PythonTools.Project {
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
             ActiveInterpreterChanged += OnActiveInterpreterChanged;
             InterpreterFactoriesChanged += OnInterpreterFactoriesChanged;
+            // _active starts as null, so we need to start with this event
+            // hooked up.
+            InterpreterOptions.DefaultInterpreterChanged += GlobalDefaultInterpreterChanged;
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
@@ -157,9 +160,15 @@ namespace Microsoft.PythonTools.Project {
             Site.GetUIThread().Invoke(() => RefreshInterpreters());
         }
 
+        public IInterpreterOptionsService InterpreterOptions {
+            get {
+                return Site.GetComponentModel().GetService<IInterpreterOptionsService>();
+            }
+        }
+
         public IPythonInterpreterFactory ActiveInterpreter {
             get {
-                return _active ?? Site.GetPythonToolsService().DefaultInterpreter;
+                return _active ?? InterpreterOptions.DefaultInterpreter;
             }
             internal set {
                 Debug.Assert(this.FileName != null);
@@ -185,12 +194,12 @@ namespace Microsoft.PythonTools.Project {
                 if (_active != oldActive) {
                     if (oldActive == null) {
                         // No longer need to listen to this event
-                        var defaultInterp = Site.GetPythonToolsService().DefaultInterpreter as PythonInterpreterFactoryWithDatabase;
+                        var defaultInterp = InterpreterOptions.DefaultInterpreter as PythonInterpreterFactoryWithDatabase;
                         if (defaultInterp != null) {
                             defaultInterp.NewDatabaseAvailable -= OnNewDatabaseAvailable;
                         }
 
-                        Site.GetPythonToolsService().DefaultInterpreterChanged -= GlobalDefaultInterpreterChanged;
+                        InterpreterOptions.DefaultInterpreterChanged -= GlobalDefaultInterpreterChanged;
                     } else {
                         var oldInterpWithDb = oldActive as PythonInterpreterFactoryWithDatabase;
                         if (oldInterpWithDb != null) {
@@ -211,9 +220,9 @@ namespace Microsoft.PythonTools.Project {
                         BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, "");
                         // Need to start listening to this event
 
-                        Site.GetPythonToolsService().DefaultInterpreterChanged += GlobalDefaultInterpreterChanged;
+                        InterpreterOptions.DefaultInterpreterChanged += GlobalDefaultInterpreterChanged;
 
-                        var defaultInterp = Site.GetPythonToolsService().DefaultInterpreter as PythonInterpreterFactoryWithDatabase;
+                        var defaultInterp = InterpreterOptions.DefaultInterpreter as PythonInterpreterFactoryWithDatabase;
                         if (defaultInterp != null) {
                             defaultInterp.NewDatabaseAvailable += OnNewDatabaseAvailable;
                         }
@@ -1200,8 +1209,7 @@ namespace Microsoft.PythonTools.Project {
                 // May occur if we are racing with Dispose(), so the factory we
                 // return isn't important, but it has to be non-null to fulfil
                 // the contract.
-                var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
-                return service.DefaultInterpreter;
+                return InterpreterOptions.DefaultInterpreter;
             }
 
 
@@ -2317,7 +2325,7 @@ namespace Microsoft.PythonTools.Project {
         #region Virtual Env support
 
         private void ShowAddInterpreter() {
-            var service = Site.GetComponentModel().GetService<IInterpreterOptionsService>();
+            var service = InterpreterOptions;
 
             var result = Project.AddInterpreter.ShowDialog(this, service);
             if (result == null) {

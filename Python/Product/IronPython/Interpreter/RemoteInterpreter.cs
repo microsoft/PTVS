@@ -1218,6 +1218,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     case BuiltinTypeId.Unknown: return MakeHandle(GetTypeFromType(typeof(DynamicNull)));
                     case BuiltinTypeId.Object: return MakeHandle(GetTypeFromType(typeof(object)));
                     case BuiltinTypeId.Set: return MakeHandle(GetTypeFromType(typeof(SetCollection)));
+                    case BuiltinTypeId.FrozenSet: return MakeHandle(GetTypeFromType(typeof(FrozenSetCollection)));
                     case BuiltinTypeId.Str: return MakeHandle(GetTypeFromType(typeof(string)));
                     case BuiltinTypeId.Unicode: return MakeHandle(GetTypeFromType(typeof(string)));
                     case BuiltinTypeId.Bytes: return MakeHandle(GetTypeFromType(typeof(string)));   // keep strings and bytes the same on Ipy because '' and u'abc' create the same type

@@ -53,6 +53,7 @@ namespace Microsoft.PythonTools.Profiling {
             var componentService = (IComponentModel)(serviceProvider.GetService(typeof(SComponentModel)));
             
             var interpreterProviders = componentService.DefaultExportProvider.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>();
+            var interpreterOptions = componentService.GetService<IInterpreterOptionsService>();
             var pythonService = componentService.GetService<PythonToolsService>();
 
             var availableInterpreters = interpreterProviders.GetConfigurations().Select(
@@ -78,7 +79,7 @@ namespace Microsoft.PythonTools.Profiling {
             PropertyChanged += new PropertyChangedEventHandler(StandaloneTargetView_PropertyChanged);
 
             if (IsAnyAvailableInterpreters) {
-                var defaultId = pythonService.DefaultInterpreterId;
+                var defaultId = interpreterOptions.DefaultInterpreterId;
                 Interpreter = AvailableInterpreters.FirstOrDefault(v => v.Id == defaultId);
             }
         }

@@ -171,7 +171,7 @@ namespace TestUtilities {
         private static PythonVersion TryGetCPythonPath(PythonLanguageVersion version, RegistryKey python, bool x64) {
             if (python != null) {
                 string versionStr = version.ToString().Substring(1);
-                versionStr = versionStr[0] + "." + versionStr[1];
+                string id = versionStr = versionStr[0] + "." + versionStr[1];
                 if (!x64 && version >= PythonLanguageVersion.V35) {
                     versionStr += "-32";
                 }
@@ -189,7 +189,7 @@ namespace TestUtilities {
                                     CPythonInterpreterFactoryConstants.GetIntepreterId(
                                         "PythonCore",
                                         arch,
-                                        versionStr
+                                        id
                                     ),
                                     false,
                                     false,
@@ -202,7 +202,7 @@ namespace TestUtilities {
                                     CPythonInterpreterFactoryConstants.GetIntepreterId(
                                         "PythonCore",
                                         arch,
-                                        versionStr
+                                        id
                                     ),
                                     true,
                                     false,
