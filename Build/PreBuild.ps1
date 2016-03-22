@@ -19,7 +19,7 @@ pushd "$buildroot\Build"
 if ($source) {
     .\nuget.exe sources add -Name PreBuildSource -Source $source
 }
-if ($env:TF_BUILD_BinariesDirectory) {
+if ($env:BUILD_BINARIESDIRECTORY) {
     $outdir = "${env:BUILD_BINARIESDIRECTORY}"
 } else {
     $outdir = "$buildroot\BuildOutput"
