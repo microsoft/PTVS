@@ -43,7 +43,7 @@
       <Output TaskParameter="TargetOutputs" ItemName="_VSIXSourceItem"/>
     </MSBuild>
 
-    <CallTarget Targets="$(IncludeVSIXItemsFromTargets)" UseResultsCache="true">
+    <CallTarget Targets="$(IncludeVSIXItemsFromTargets)" UseResultsCache="true" Condition="'$(IncludeVSIXItemsFromTargets)' != ''">
       <Output TaskParameter="TargetOutputs" ItemName="_VSIXSourceItem"/>
     </CallTarget>
 
