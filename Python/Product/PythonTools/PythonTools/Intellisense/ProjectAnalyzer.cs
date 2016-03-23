@@ -1768,6 +1768,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 );
 
                 if (outliningTags != null && outliningTags.version >= lastVersion.VersionNumber) {
+                    Debug.WriteLine("Translating from {0} to {1}", outliningTags.version, snapshot.TextBuffer.CurrentSnapshot);
                     var translator = new LocationTracker(
                         lastVersion,
                         snapshot.TextBuffer,

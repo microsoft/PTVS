@@ -440,8 +440,8 @@ def func():
 import sys
 pass");
 
-                AutoIndentTest(app, project, "a_list = [1, 2, 3]\rimport os\rpass", @"a_list = [1, 2, 3]
-import os
+                AutoIndentTest(app, project, "a_list = [1, 2, 3]\rimport sys\rpass", @"a_list = [1, 2, 3]
+import sys
 pass");
 
                 AutoIndentTest(app, project, "class C:\rdef fob(self):\r'doc string'\rpass", @"class C:

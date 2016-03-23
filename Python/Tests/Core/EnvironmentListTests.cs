@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -38,7 +39,6 @@ using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
 
-#if FALSE
 namespace PythonToolsUITests {
     [TestClass]
     public class EnvironmentListTests {
@@ -103,7 +103,9 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
         public async Task InterpretersRaceCondition() {
-            var service = GetInterpreterOptionsService(defaultProviders: false);
+            var container = GetInterpreterOptionsService(defaultProviders: false);
+            var service = container.GetExportedValue<IInterpreterOptionsService>();
+            var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
             var provider = new MockPythonInterpreterFactoryProvider("Test Provider");
             var factories = Enumerable.Repeat(0, 5).Select(
                 i => new MockPythonInterpreterFactory(
@@ -111,7 +113,7 @@ namespace PythonToolsUITests {
                     MockInterpreterConfiguration(new Version(2, 7))
                 )
             ).ToList();
-            ((InterpreterOptionsService)service).SetProviders(new[] {
+            ((InterpreterRegistryService)interpreters).SetProviders(new[] {
                 new Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>(
                     () => provider,
                     new Dictionary<string, object>() {
@@ -134,15 +136,15 @@ namespace PythonToolsUITests {
                         }
 
                         ct.ThrowIfCancellationRequested();
-                        var interpreters = service.Interpreters.ToList();
-                        Trace.TraceInformation("Got {0} interpreters", interpreters.Count);
+                        var interpretersList = interpreters.Interpreters.ToList();
+                        Trace.TraceInformation("Got {0} interpreters", interpretersList.Count);
                     } catch (OperationCanceledException) {
                     } catch (Exception ex) {
                         edi = ExceptionDispatchInfo.Capture(ex);
                     }
                 });
             };
-            service.InterpretersChanged += interpretersChanged;
+            interpreters.InterpretersChanged += interpretersChanged;
 
             var t1 = Task.Run(() => {
                 while (!ct.IsCancellationRequested) {
@@ -157,8 +159,8 @@ namespace PythonToolsUITests {
             var t2 = Task.Run(() => {
                 try {
                     while (!ct.IsCancellationRequested) {
-                        var interpreters = service.InterpretersOrDefault.ToList();
-                        Trace.TraceInformation("Got {0} interpreters or default", interpreters.Count);
+                        var interpretersList = interpreters.InterpretersOrDefault.ToList();
+                        Trace.TraceInformation("Got {0} interpreters or default", interpretersList.Count);
                         Thread.Sleep(10);
                     }
                 } finally {
@@ -176,7 +178,7 @@ namespace PythonToolsUITests {
                 await t2;
             } catch (OperationCanceledException) {
             } finally {
-                service.InterpretersChanged -= interpretersChanged;
+                interpreters.InterpretersChanged -= interpretersChanged;
             }
         }
 
@@ -190,9 +192,10 @@ namespace PythonToolsUITests {
 
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
-                var service = GetInterpreterOptionsService();
-                var oldDefault = service.DefaultInterpreter;
-                var oldProviders = ((InterpreterOptionsService)service).SetProviders(new[] {
+                var container = GetInterpreterOptionsService(defaultProviders: false);
+                var service = container.GetExportedValue<IInterpreterOptionsService>();
+                var interpreters = container.GetExportedValue<IInterpreterRegistryService>(); var oldDefault = service.DefaultInterpreter;
+                var oldProviders = ((InterpreterRegistryService)interpreters).SetProviders(new[] {
                     new Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>(
                         () => mockProvider,
                         new Dictionary<string, object>() {
@@ -220,7 +223,7 @@ namespace PythonToolsUITests {
                         wpf.Invoke(() => environments.First(ev => ev.IsDefault).Description)
                     );
                 } finally {
-                    ((InterpreterOptionsService)service).SetProviders(oldProviders);
+                    ((InterpreterRegistryService)interpreters).SetProviders(oldProviders);
                     service.DefaultInterpreter = oldDefault;
                 }
             }
@@ -385,7 +388,10 @@ namespace PythonToolsUITests {
         public void InstalledFactories() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
-                list.Service = GetInterpreterOptionsService();
+                var container = GetInterpreterOptionsService(defaultProviders: false);
+                var service = container.GetExportedValue<IInterpreterOptionsService>();
+                var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
+                list.Service = service;
 
                 var expected = new HashSet<string>(
                     PythonPaths.Versions
@@ -413,7 +419,10 @@ namespace PythonToolsUITests {
         public void AddUpdateRemoveConfigurableFactory() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
-                list.Service = GetInterpreterOptionsService();
+                var container = GetInterpreterOptionsService(defaultProviders: false);
+                var service = container.GetExportedValue<IInterpreterOptionsService>();
+                var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
+                list.Service = service;
 
                 var before = wpf.Invoke(() => new HashSet<string>(
                     list.Environments.Select(ev => (string)ev.InterpreterPath),
@@ -472,7 +481,10 @@ namespace PythonToolsUITests {
         public async Task AddUpdateRemoveConfigurableFactoryThroughUI() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
-                list.Service = GetInterpreterOptionsService();
+                var container = GetInterpreterOptionsService(defaultProviders: false);
+                var service = container.GetExportedValue<IInterpreterOptionsService>();
+                var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
+                list.Service = service;
 
                 var before = wpf.Invoke(() => new HashSet<string>(
                     list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Configuration.Id)));
@@ -485,7 +497,7 @@ namespace PythonToolsUITests {
 
                 Console.WriteLine("Added {0}", AssertUtil.MakeText(difference));
                 Assert.AreEqual(1, difference.Count, "Did not add a new environment");
-                var newEnv = list.Service.Interpreters.Single(f => difference.Contains(f.Configuration.Id));
+                var newEnv = interpreters.Interpreters.Single(f => difference.Contains(f.Configuration.Id));
 
                 Assert.IsTrue(list.Service.IsConfigurable(newEnv.Configuration.Id), "Did not add a configurable environment");
 
@@ -582,15 +594,16 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(1)]
         public void ChangeDefault() {
-            var service = GetInterpreterOptionsService();
-            using (var defaultChanged = new AutoResetEvent(false))
+            var container = GetInterpreterOptionsService(defaultProviders: false);
+            var service = container.GetExportedValue<IInterpreterOptionsService>();
+            var interpreters = container.GetExportedValue<IInterpreterRegistryService>(); using (var defaultChanged = new AutoResetEvent(false))
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
                 service.DefaultInterpreterChanged += (s, e) => { defaultChanged.Set(); };
                 list.Service = service;
                 var originalDefault = service.DefaultInterpreter;
                 try {
-                    foreach (var interpreter in service.Interpreters) {
+                    foreach (var interpreter in interpreters.Interpreters) {
                         var environment = list.Environments.FirstOrDefault(ev =>
                             ev.Factory == interpreter
                         );
@@ -849,7 +862,7 @@ namespace PythonToolsUITests {
             }
         }
 
-        static IInterpreterOptionsService GetInterpreterOptionsService(bool defaultProviders = true) {
+        static CompositionContainer GetInterpreterOptionsService(bool defaultProviders = true) {
             var sp = new MockServiceProvider();
             sp.Services[typeof(SVsActivityLog).GUID] = new MockActivityLog();
             var settings = new MockSettingsManager();
@@ -870,7 +883,7 @@ namespace PythonToolsUITests {
             } else {
                 settings.Store.CreateCollection(InterpreterOptionsServiceProvider.SuppressFactoryProvidersCollection);
             }
-            return InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp);
+            return InterpreterOptionsServiceProvider.CreateContainer(sp, typeof(IInterpreterRegistryService));
         }
 
 #endregion
@@ -947,4 +960,3 @@ namespace PythonToolsUITests {
         }
     }
 }
-#endif

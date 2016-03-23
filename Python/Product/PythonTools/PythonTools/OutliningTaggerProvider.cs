@@ -139,7 +139,9 @@ namespace Microsoft.PythonTools {
                     if (start != -1 && end != -1) {
                         int length = end - headerIndex;
                         if (length > 0) {
-                            var span = GetFinalSpan(snapshot,
+                            Debug.Assert(start + length <= snapshot.Length, String.Format("{0} + {1} <= {2} end was {3}", start, length, snapshot.Length, end));
+                            var span = GetFinalSpan(
+                                snapshot,
                                 headerIndex,
                                 length
                             );
@@ -159,7 +161,6 @@ namespace Microsoft.PythonTools {
             }
 
             private static Span GetFinalSpan(ITextSnapshot snapshot, int start, int length) {
-                Debug.Assert(start + length <= snapshot.Length, String.Format("{0} + {1} <= {2}", start, length, snapshot.Length));
                 int cnt = 0;
                 var text = snapshot.GetText(start, length);
 

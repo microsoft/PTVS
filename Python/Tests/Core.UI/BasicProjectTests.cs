@@ -796,14 +796,11 @@ namespace PythonToolsUITests {
 
                 var doc = app.GetDocument(program.Document.FullName);
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "str");
+                WaitForDescription(snapshot, "a", "str");
 
                 CompileFile("ClassLibraryBool.cs", dllPath);
 
-                Thread.Sleep(2000); // allow time to reload the new DLL
-                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
-
-                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "bool");
+                WaitForDescription(snapshot, "a", "bool");
             }
         }
 
@@ -868,7 +865,7 @@ namespace PythonToolsUITests {
 
                 Thread.Sleep(100);
             }
-            AssertUtil.ContainsExactly(descriptions, "bool");
+            AssertUtil.ContainsExactly(descriptions, expected);
         }
 
         /// <summary>
