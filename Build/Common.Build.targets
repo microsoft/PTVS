@@ -1,8 +1,9 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="Common.Build.CSharp.targets" Condition="'$(Language)' == 'C#'" />
-  <Import Project="Common.Build.VSSDK.targets" Condition="$(UseVSSDK) or $(UseVSSDKTemplateOnly)" />
-  <Import Project="Common.Build.Cpp.targets" Condition="'$(Language)' == 'C++'" />
-  <Import Project="Common.Build.Wix.targets" Condition="'$(Language)' == 'WiX'" />
+  <Import Project="$(TargetsPath)\Common.Build.CSharp.targets" Condition="'$(Language)' == 'C#'" />
+  <Import Project="$(TargetsPath)\Common.Build.VSSDK.targets" Condition="$(UseVSSDK) or $(UseVSSDKTemplateOnly)" />
+  <Import Project="$(TargetsPath)\Common.Build.Cpp.targets" Condition="'$(Language)' == 'C++'" />
+  <Import Project="$(TargetsPath)\Common.Build.Wix.targets" Condition="'$(Language)' == 'WiX'" />
+  <Import Project="$(TargetsPath)\MicroBuild.targets" />
 
   <!--
   Transforms ProjectReference2 items into references that will be built

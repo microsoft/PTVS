@@ -189,6 +189,7 @@
   <Import Project="$(TargetsPath)\Common.Build.CSharp.settings" Condition="'$(MSBuildProjectExtension)' == '.csproj' or '$(MSBuildProjectExtension)' == '.tmp_proj'" />
   <Import Project="$(TargetsPath)\Common.Build.Cpp.settings" Condition="'$(MSBuildProjectExtension)' == '.vcxproj'" />
   <Import Project="$(TargetsPath)\Common.Build.Wix.settings" Condition="'$(MSBuildProjectExtension)' == '.wixproj'" />
+  <Import Project="$(TargetsPath)\MicroBuild.props" />
 
   <ItemGroup>
     <CodeAnalysisDictionary Include="$(BuildRoot)\Build\CustomDictionary.xml" />
