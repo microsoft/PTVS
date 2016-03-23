@@ -113,7 +113,7 @@ namespace Microsoft.PythonTools {
             InitializeLogging();
         }
 
-        void IDisposable.Dispose() {
+        public void Dispose() {
             // This will probably never be called by VS, but we use it in unit
             // tests to avoid leaking memory when we reinitialize state between
             // each test.
