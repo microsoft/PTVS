@@ -103,6 +103,16 @@ namespace Microsoft.PythonTools.BuildTasks {
                     project = collection.LoadProject(_projectPath);
                 }
 
+                if (id == null) {
+                    id = project.GetPropertyValue("InterpreterId");
+                    if (String.IsNullOrWhiteSpace(id)) {
+                        var options = exports.GetExportedValueOrDefault<IInterpreterOptionsService>();
+                        if (options != null) {
+                            id = options.DefaultInterpreterId;
+                        }
+                    }
+                }
+
                 var projectHome = PathUtils.GetAbsoluteDirectoryPath(
                     project.DirectoryPath,
                     project.GetPropertyValue("ProjectHome")
@@ -117,8 +127,13 @@ namespace Microsoft.PythonTools.BuildTasks {
                     SearchPaths = new string[0];
                 }
 
-                var projectContext = exports.GetExportedValue<MsBuildProjectContextProvider>();
-                projectContext.AddContext(project);
+                // MsBuildProjectContextProvider isn't available in-proc, instead we rely upon the
+                // already loaded VsProjectContextProvider which is loaded in proc and already
+                // aware of the projects loaded in Solution Explorer.
+                var projectContext = exports.GetExportedValueOrDefault<MsBuildProjectContextProvider>();
+                if (projectContext != null) {
+                    projectContext.AddContext(project);
+                }
                 try {
                     var factoryProviders = exports.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>();
 
@@ -149,7 +164,9 @@ namespace Microsoft.PythonTools.BuildTasks {
                         return true;
                     }
                 } finally {
-                    projectContext.RemoveContext(project);
+                    if (projectContext != null) {
+                        projectContext.RemoveContext(project);
+                    }
                 }
 
             } catch (Exception ex) {
