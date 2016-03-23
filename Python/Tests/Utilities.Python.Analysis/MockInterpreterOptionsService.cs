@@ -135,7 +135,8 @@ namespace TestUtilities.Python {
         }
 
         public bool IsConfigurable(string id) {
-            throw new NotImplementedException();
+            return true;
+            //throw new NotImplementedException();
         }
 
         public IPythonInterpreterFactory FindInterpreter(string id) {

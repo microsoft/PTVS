@@ -27,7 +27,7 @@
   </ItemGroup>
   <ItemGroup>
     <Interpreter Include="env\">
-      <Id>INVALID ID</Id>
+      <Id></Id>
       <Description>Invalid Id</Description>
     </Interpreter>
     <Interpreter Include="env\">

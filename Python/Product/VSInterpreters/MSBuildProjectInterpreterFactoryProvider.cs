@@ -367,7 +367,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             // <InterpreterReference Include="{factoryProviderId}|{interpreterId}" />
-            foreach (var item in project.GetItems(MSBuildConstants.InterpreterReferenceItem)) {
+           /* foreach (var item in project.GetItems(MSBuildConstants.InterpreterReferenceItem)) {
                 string id = item.EvaluatedInclude;
 
                 var config = _factoryProviders.GetConfiguration(id);
@@ -379,7 +379,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 MergeFactory(projectInfo, factories, info);
-            }
+            }*/
 
             HashSet<FactoryInfo> previousFactories = new HashSet<FactoryInfo>();
             if (projectInfo.Factories != null) {

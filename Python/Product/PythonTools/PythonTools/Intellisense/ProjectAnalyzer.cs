@@ -434,9 +434,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 var monitoredResult = await MonitorTextBufferAsync(buffers[0]);
-
-                for (int i = 1; i < buffers.Length; i++) {
-                    monitoredResult.BufferParser.AddBuffer(buffers[i]);
+                if (monitoredResult.AnalysisEntry != null) {
+                    for (int i = 1; i < buffers.Length; i++) {
+                        monitoredResult.BufferParser.AddBuffer(buffers[i]);
+                    }
                 }
 
                 oldParser._analysis.OnNewAnalysisEntry();
@@ -492,6 +493,9 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         internal async Task<MonitoredBufferResult> MonitorTextBufferAsync(ITextBuffer textBuffer) {
             var entry = await CreateProjectEntryAsync(textBuffer, new SnapshotCookie(textBuffer.CurrentSnapshot)).ConfigureAwait(false);
+            if (entry == null) {
+                return default(MonitoredBufferResult);
+            }
 
             if (!textBuffer.Properties.ContainsProperty(typeof(IInteractiveEvaluator))) {
                 ConnectErrorList(entry, textBuffer);

@@ -72,13 +72,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 var entry = analyzer.MonitorTextBufferAsync(buffer).Result;
-                _hookedCloseEvents[textView] = Tuple.Create(entry.BufferParser, analyzer);
-                textView.Closed += TextView_Closed;
+                if (entry.AnalysisEntry != null) {
+                    _hookedCloseEvents[textView] = Tuple.Create(entry.BufferParser, analyzer);
+                    textView.Closed += TextView_Closed;
 
-                for (int i = 1; i < subjectBuffers.Count; i++) {
-                    entry.BufferParser.AddBuffer(subjectBuffers[i]);
+                    for (int i = 1; i < subjectBuffers.Count; i++) {
+                        entry.BufferParser.AddBuffer(subjectBuffers[i]);
+                    }
+                    controller.SetBufferParser(entry.BufferParser);
                 }
-                controller.SetBufferParser(entry.BufferParser);
             }
             return controller;
         }

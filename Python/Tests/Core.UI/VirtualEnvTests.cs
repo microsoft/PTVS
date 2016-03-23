@@ -223,19 +223,19 @@ namespace PythonToolsUITests {
 
                 Assert.AreNotEqual(null, project.ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
 
-                var id0 = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
+                var id0 = (string)project.Properties.Item("InterpreterId").Value;
 
                 string envName1, envName2;
                 var env1 = app.CreateVirtualEnvironment(project, out envName1);
                 var env2 = app.CreateVirtualEnvironment(project, out envName2);
 
-                var id1 = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
+                var id1 = (string)project.Properties.Item("InterpreterId").Value;
                 Assert.AreNotEqual(id0, id1);
 
                 env2.Select();
                 app.Dte.ExecuteCommand("Python.ActivateEnvironment");
 
-                var id2 = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
+                var id2 = (string)project.Properties.Item("InterpreterId").Value;
                 Assert.AreNotEqual(id0, id2);
                 Assert.AreNotEqual(id1, id2);
 
@@ -243,7 +243,7 @@ namespace PythonToolsUITests {
                 app.SolutionExplorerTreeView.SelectProject(project);
                 app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"" + envName1 + "\"");
 
-                var id1b = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
+                var id1b = (string)project.Properties.Item("InterpreterId").Value;
                 Assert.AreEqual(id1, id1b);
             }
         }
@@ -290,12 +290,7 @@ namespace PythonToolsUITests {
                 var project = CreateTemporaryProject(app);
 
                 string envName, envPath;
-                TreeNode env;
-                using (var ps = new ProcessScope("Microsoft.PythonTools.Analyzer")) {
-                    env = app.CreateVirtualEnvironment(project, out envName, out envPath);
-
-                    Assert.IsFalse(ps.WaitForNewProcess(TimeSpan.FromSeconds(10)).Any(), "Unexpected analyzer processes");
-                }
+                TreeNode env = app.CreateVirtualEnvironment(project, out envName, out envPath);
 
                 // Need to wait some more for the database to be loaded.
                 app.WaitForNoDialog(TimeSpan.FromSeconds(10.0));
@@ -495,7 +490,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             public readonly StringBuilder Errors = new StringBuilder();
 
             public void Log(string msg) {
-                Errors.Append(msg);
+                Errors.AppendLine(msg);
             }
         }
 
@@ -519,7 +514,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                         .Split('\r', '\n')
                         .Where(s => !string.IsNullOrEmpty(s))
                         .Select(s => s.Trim()),
-                        @"Interpreter $env\ has invalid value for 'Id': INVALID ID",
+                        @"Interpreter $env\ has invalid value for 'Id':",
                         @"Interpreter $env\ has invalid value for 'Version': INVALID VERSION",
                         @"Interpreter $env\ has invalid value for 'BaseInterpreter': INVALID BASE",
                         @"Interpreter $env\ has invalid value for 'InterpreterPath': INVALID<>PATH",
@@ -547,8 +542,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                         "Invalid InterpreterPath (unavailable)",
                         "Invalid WindowsInterpreterPath (unavailable)",
                         "Invalid LibraryPath (unavailable)",
-                        "Absent BaseInterpreter (unavailable)",
-                        "Unknown Python 2.7"
+                        "Absent BaseInterpreter (unavailable)"
                     );
                 }
             } finally {
