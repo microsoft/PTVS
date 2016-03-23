@@ -409,12 +409,12 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 foreach (var added in newFactories.Except(previousFactories)) {
                     foreach (var factory in factories) {
-                        if (factory.Value.Config.Id.StartsWith(MSBuildProviderName + "|")) {
+                        //if (factory.Value.Config.Id.StartsWith(MSBuildProviderName + "|")) {
                             projectInfo.Context.InterpreterLoaded(
                                 projectInfo.Project,
                                 factory.Value.Config
                             );
-                        }
+                        //}
                     }
                 }
             }
@@ -606,7 +606,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 return Config.GetHashCode() ^ _dir?.GetHashCode() ?? 0;
             }
         }
-
+#if FALSE
         sealed class ReferenceFactoryInfo : FactoryInfo {
             private readonly MSBuildProjectInterpreterFactoryProvider _owner;
 
@@ -636,7 +636,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 return Config.GetHashCode();
             }
         }
-
+#endif
 
         sealed class ProjectInfo : IDisposable {
             public readonly MSBuild.Project Project;
