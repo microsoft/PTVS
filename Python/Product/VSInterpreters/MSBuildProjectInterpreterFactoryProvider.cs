@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
                     // Then remove any existing projects that are no longer there
                     var toRemove = _projects
-                        .Where(x => x.Value.Context == contextProvider && !seen.Contains(x.Value.Project.FullPath))
+                        .Where(x => x.Value.Context == contextProvider && !seen.Contains(x.Key))
                         .Select(x => x.Key)
                         .ToArray();
 

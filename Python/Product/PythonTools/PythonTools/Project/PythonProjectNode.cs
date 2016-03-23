@@ -133,7 +133,7 @@ namespace Microsoft.PythonTools.Project {
                     _validFactories.Add(id);
                 }
             }
-            
+
             // Add any custom commands
             _customCommands = CustomCommand.GetCommands(project, this).ToList();
             _customCommandsDisplayLabel = CustomCommand.GetCommandsDisplayLabel(project, this);
@@ -331,6 +331,15 @@ namespace Microsoft.PythonTools.Project {
             );
             UpdateActiveInterpreter();
             InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+
+        protected override void SaveMSBuildProjectFile(string filename) {
+            base.SaveMSBuildProjectFile(filename);
+            Site.GetComponentModel().GetService<VsProjectContextProvider>().UpdateProject(
+                this,
+                BuildProject
+            );
         }
 
         /// <summary>
@@ -955,8 +964,8 @@ namespace Microsoft.PythonTools.Project {
                         string file = fileProject.Key;
                         var projectEntry = fileProject.Value;
                         string searchPathEntry = fileProject.Value.SearchPathEntry;
-                        if (projectEntry != null && 
-                            searchPathEntry != null && 
+                        if (projectEntry != null &&
+                            searchPathEntry != null &&
                             !newDirs.Contains(searchPathEntry)) {
                             _analyzer.UnloadFileAsync(projectEntry);
                         }
@@ -2483,7 +2492,7 @@ namespace Microsoft.PythonTools.Project {
                     Path.GetDirectoryName(rootPath) + counter++
                 );
             }
-            
+
             var baseInterp = Site.GetComponentModel().DefaultExportProvider
                 .GetInterpreterFactory(options.Id) as PythonInterpreterFactoryWithDatabase;
             if (baseInterp != null) {
