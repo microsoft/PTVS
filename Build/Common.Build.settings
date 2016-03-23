@@ -146,9 +146,6 @@
 
     <DevEnvDir>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\VisualStudio\$(VSTarget)', 'InstallDir', null, RegistryView.Registry32))\</DevEnvDir>
     <VSSDKDir>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\VisualStudio\VSIP\$(VSTarget)', 'InstallDir', null, RegistryView.Registry32))\</VSSDKDir>
-
-    <MicroBuildSentinelFile>DO NOT USE</MicroBuildSentinelFile>
-    <MicroBuildPluginDirectory>$(BuildOutputRoot)</MicroBuildPluginDirectory>
   </PropertyGroup>
 
   <PropertyGroup>
