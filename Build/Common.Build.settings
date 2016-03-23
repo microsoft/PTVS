@@ -39,6 +39,7 @@
     <StableVersion Condition="$(StableVersion) == ''">$(StableVersionPrefix).$(VSTargetName)</StableVersion>
     
     <!-- When true, increases build restrictions to ensure complete public releases -->
+    <ReleaseBuild Condition="'$(ReleaseBuild)' == '' and '$(SignType)' == 'real'">true</ReleaseBuild>
     <ReleaseBuild Condition="'$(ReleaseBuild)' == ''">false</ReleaseBuild>
 
     <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Dev'">Dev $([System.DateTime]::Now.ToString(`yyyy-MM-dd`))</CustomBuildIdentifier>
