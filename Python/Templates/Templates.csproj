@@ -44,6 +44,8 @@
     <DeployExtension>$(BuildingInsideVisualStudio)</DeployExtension>
     <NoWarn>$(NoWarn);2008</NoWarn>
     <RunCodeAnalysis>false</RunCodeAnalysis>
+    <MicroBuild_FXCop>false</MicroBuild_FXCop>
+    <MicroBuild_APIScan>false</MicroBuild_APIScan>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
