@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
@@ -72,6 +73,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _cache = PipPackageCache.GetCache(_index, _indexName);
         }
 
+        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_pipCancel",
+            Justification = "False detection")]
         public void Dispose() {
             _cancelAll.Cancel();
             _cancelAll.Dispose();
