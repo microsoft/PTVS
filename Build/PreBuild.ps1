@@ -1,4 +1,4 @@
-param ($vstarget, $source, [switch] $clean)
+param ($vstarget, $source, [switch] $clean, [switch] $full)
 
 # This is the list of packages we require to build, and the version to use for each supported $vstarget
 $packages = @(
@@ -8,10 +8,17 @@ $packages = @(
     @{ name="MicroBuild.Core"; version=@{ "14.0"="0.2.0"; "15.0"="0.2.0" }; required=$false }
 )
 
+if ($full) {
+    $packages += @(
+        @{ name="Wix"; version=@{ "14.0"="3.9.2.1"; "15.0"="3.9.2.1" }; required=$false }
+    )
+}
 
 "Restoring Packages"
 
-if ($vstarget.ToString() -match "^\d\d$") {
+if (-not $vstarget) {
+    $vstarget = "14.0"
+} elseif ($vstarget.ToString() -match "^\d\d$") {
     $vstarget = "$vstarget.0"
 }
 

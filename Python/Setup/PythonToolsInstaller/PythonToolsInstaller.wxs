@@ -218,10 +218,6 @@
       <MergeRef Id="Merge_PythonTools"/>
       <MergeRef Id="Merge_Profiling"/>
 
-      <?if "$(var.IncludeVsLogger)" ~= "True" ?>
-      <MergeRef Id="Merge_VsLogger"/>
-      <?endif?>
-
       <Feature Id="Feature_Django" AllowAdvertise="no" Level="1" Title="Django integration" Description="Django integration">
         <MergeRef Id="Merge_Django"/>
       </Feature>

@@ -8,7 +8,7 @@
     </MSBuildAllProjects>
   </PropertyGroup>
 
-  <Import Project="$(BuildRoot)\BuildOutput\WiX.3.9.2.1\build\wix.props" />
+  <Import Project="$(BuildRoot)\BuildOutput\WiX\build\wix.props" />
 
   <PropertyGroup>
     <Language>WiX</Language>
