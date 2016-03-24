@@ -2,8 +2,6 @@
   <Import Project="SetupProjectBefore.settings" />
   <Import Project="$(TargetsPath)\Common.Shim.targets" />
 
-  <Import Project="$(TargetsPath)\MicroBuild.props" />
-
   <ItemGroup>
     <FopxItem Include="$(LayoutOutputPath)Microsoft.PythonTools">
       <TargetName>Core</TargetName>
