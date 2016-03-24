@@ -695,9 +695,19 @@ namespace Microsoft.PythonTools.Intellisense {
                 // previous line which only covers white space.
                 body.SetLeadingWhiteSpace(ast, body.GetIndentationLevel(ast));
 
+                int length = walker.Target.End - walker.Target.StartIncludingIndentation;
+                if (code[walker.Target.End] == '\r') {
+                    length++;
+                    if (walker.Target.End + 1 < code.Length &&
+                        code[walker.Target.End + 1] == '\n') {
+                        length++;
+                    }
+                } else if (code[walker.Target.End] == '\n') {
+                    length++;
+                }
                 var selectedCode = code.Substring(
                     walker.Target.StartIncludingIndentation,
-                    walker.Target.End - walker.Target.StartIncludingIndentation
+                    length
                 );
 
                 return new AP.FormatCodeResponse() {
@@ -707,7 +717,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     changes = selectedCode.ReplaceByLines(
                         body.ToCodeString(ast, request.options),
                         request.newLine
-                    )
+                    ).Select(
+                        x => new AP.ChangeInfo() {
+                            start = x.start + walker.Target.StartIncludingIndentation,
+                            length = x.length,
+                            newText = x.newText
+                        }
+                    ).ToArray()
                 };
             }
 

@@ -1562,7 +1562,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal async Task RemoveImportsAsync(ITextBuffer textBuffer, bool allScopes) {
+        internal async Task RemoveImportsAsync(ITextBuffer textBuffer, int index, bool allScopes) {
             var fileInfo = textBuffer.GetAnalysisEntry();
             await fileInfo.EnsureCodeSyncedAsync(textBuffer);
             var lastAnalyzed = fileInfo.GetAnalysisVersion(textBuffer);
@@ -1571,7 +1571,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 new AP.RemoveImportsRequest() {
                     fileId = fileInfo.FileId,
                     bufferId = fileInfo.GetBufferId(textBuffer),
-                    allScopes = allScopes
+                    allScopes = allScopes,
+                    index = index
                 }
             );
 

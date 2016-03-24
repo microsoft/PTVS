@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     AP.ChangeInfo.FromBounds(
                         "",
                         _oldLines[endOldLine - (oldLineCount - newLineCount)].Start,
-                        _oldLines[endOldLine - 1].End
+                        _oldLines[endOldLine - 1].EndIncludingLineBreak
                     )
                 );
             } else if (oldLineCount < newLineCount) {
