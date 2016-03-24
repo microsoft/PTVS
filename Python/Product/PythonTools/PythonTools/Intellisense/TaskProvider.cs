@@ -985,6 +985,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void RefreshTokens() {
             var taskInfo = (IVsCommentTaskInfo)_serviceProvider.GetService(typeof(SVsTaskList));
             if (taskInfo == null) {
+                _tokens = new Dictionary<string, VSTASKPRIORITY>();
                 return;
             }
 
