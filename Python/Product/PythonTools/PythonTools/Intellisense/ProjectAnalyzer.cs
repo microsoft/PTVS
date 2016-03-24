@@ -86,22 +86,19 @@ namespace Microsoft.PythonTools.Intellisense {
             : this(serviceProvider, factory.CreateInterpreter(), factory) {
         }
 
-        internal async Task<VersionedResponse<AP.UnresolvedImportsResponse>> GetMissingImportsAsync(ITextBuffer textBuffer) {
-            AnalysisEntry analysisEntry;
-            if (textBuffer.TryGetAnalysisEntry(out analysisEntry)) {
-                var lastVersion = analysisEntry.GetAnalysisVersion(textBuffer);
+        internal async Task<VersionedResponse<AP.UnresolvedImportsResponse>> GetMissingImportsAsync(AnalysisEntry analysisEntry, ITextBuffer textBuffer) {
+            var lastVersion = analysisEntry.GetAnalysisVersion(textBuffer);
 
-                var resp = await SendRequestAsync(
-                    new AP.UnresolvedImportsRequest() {
-                        fileId = analysisEntry.FileId,
-                        bufferId = analysisEntry.GetBufferId(textBuffer)
-                    },
-                    null
-                );
+            var resp = await SendRequestAsync(
+                new AP.UnresolvedImportsRequest() {
+                    fileId = analysisEntry.FileId,
+                    bufferId = analysisEntry.GetBufferId(textBuffer)
+                },
+                null
+            ).ConfigureAwait(false);
 
-                if (resp != null) {
-                    return VersionedResponse(resp, textBuffer, lastVersion);
-                }
+            if (resp != null) {
+                return VersionedResponse(resp, textBuffer, lastVersion);
             }
 
             return null;

@@ -15,18 +15,10 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Windows.Threading;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Adornments;
-using Microsoft.VisualStudio.Text.Tagging;
 
 namespace Microsoft.PythonTools.Intellisense {
     sealed class UnresolvedImportSquiggleProvider {
@@ -43,6 +35,9 @@ namespace Microsoft.PythonTools.Intellisense {
         public void ListenForNextNewAnalysis(AnalysisEntry entry, ITextBuffer buffer) {
             if (entry != null && !string.IsNullOrEmpty(entry.Path)) {
                 buffer.RegisterForNewAnalysis(newEntry => OnNewAnalysis(newEntry, buffer));
+                if (entry.IsAnalyzed) {
+                    OnNewAnalysis(entry, buffer);
+                }
             }
         }
 
@@ -52,35 +47,35 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (service == null || !service.GeneralOptions.UnresolvedImportWarning) {
                     return;
                 }
+            }
 
-                var missingImports = await entry.Analyzer.GetMissingImportsAsync(buffer);
-                if (missingImports != null) {
-                    var missing = missingImports.Data;
-                    if (missing.unresolved.Any()) {
-                        var translator = missingImports.GetTracker(missingImports.Data.version);
-                        if (translator != null) {
-                            var f = new TaskProviderItemFactory(translator);
+            var missingImports = await entry.Analyzer.GetMissingImportsAsync(entry, buffer);
+            if (missingImports != null) {
+                var missing = missingImports.Data;
 
-                            _taskProvider.ReplaceItems(
-                                entry,
-                                VsProjectAnalyzer.UnresolvedImportMoniker,
-                                missingImports.Data.unresolved.Select(t => f.FromUnresolvedImport(
-                                    _serviceProvider,
-                                    entry.Analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
-                                    t.name,
-                                    new SourceSpan(
-                                        new SourceLocation(t.startIndex, t.startLine, t.startColumn),
-                                        new SourceLocation(t.endIndex, t.endLine, t.endColumn)
-                                    )
-                                )).ToList()
-                            );
-                        }
-                    } else {
-                        _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
+                if (missing.unresolved.Any()) {
+                    var translator = missingImports.GetTracker(missingImports.Data.version);
+                    if (translator != null) {
+                        var f = new TaskProviderItemFactory(translator);
+
+                        _taskProvider.ReplaceItems(
+                            entry,
+                            VsProjectAnalyzer.UnresolvedImportMoniker,
+                            missingImports.Data.unresolved.Select(t => f.FromUnresolvedImport(
+                                _serviceProvider,
+                                entry.Analyzer.InterpreterFactory as IPythonInterpreterFactoryWithDatabase,
+                                t.name,
+                                new SourceSpan(
+                                    new SourceLocation(t.startIndex, t.startLine, t.startColumn),
+                                    new SourceLocation(t.endIndex, t.endLine, t.endColumn)
+                                )
+                            )).ToList()
+                        );
                     }
+                } else {
+                    _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
                 }
             }
         }
-
     }
 }

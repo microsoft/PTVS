@@ -269,6 +269,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     return true;
                 }
             }
+
+            public override string ToString() {
+                return "Replace " + _key.Moniker + " " + _items.Count + " " + _key.Entry?.Path;
+            }
         }
 
         sealed class AppendMessage : WorkerMessage {
@@ -286,6 +290,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     return true;
                 }
             }
+
+            public override string ToString() {
+                return "Append " + _key.Moniker + " " + _key.Entry?.Path;
+            }
         }
 
         sealed class ClearMessage : WorkerMessage {
@@ -302,6 +310,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     // Always return true to ensure the refresh occurs
                     return true;
                 }
+            }
+
+            public override string ToString() {
+                return "Clear " + _key.Moniker + " " + _key.Entry?.Path;
             }
         }
 
@@ -490,29 +502,40 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void Worker(object param) {
-            var self = (Thread)param;
-            if (Interlocked.CompareExchange(ref _worker, self, null) != null) {
-                // Not us, so abort
-                return;
-            }
-
-            try {
-                WorkerWorker();
-            } catch (OperationCanceledException) {
-                Debug.WriteLine(string.Format("Operation cancellled... {0}", DateTime.Now));
-
-            } catch (ObjectDisposedException ex) {
-                Trace.TraceError(ex.ToString());
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
+            for (;;) {
+                var self = (Thread)param;
+                if (Interlocked.CompareExchange(ref _worker, self, null) != null) {
+                    // Not us, so abort
+                    return;
                 }
-                ex.ReportUnhandledException(_serviceProvider, GetType());
-            } finally {
-                var oldWorker = Interlocked.CompareExchange(ref _worker, null, self);
-                Debug.WriteLine(string.Format("Checking worker... {0}", DateTime.Now));
-                Debug.Assert(oldWorker == self, "Worker was changed while running");
-                Debug.WriteLine(string.Format("Worker exiting... {0}", DateTime.Now));
+
+                try {
+                    WorkerWorker();
+                } catch (OperationCanceledException) {
+                    Debug.WriteLine(string.Format("Operation cancellled... {0}", DateTime.Now));
+
+                } catch (ObjectDisposedException ex) {
+                    Trace.TraceError(ex.ToString());
+                } catch (Exception ex) {
+                    if (ex.IsCriticalException()) {
+                        throw;
+                    }
+                    ex.ReportUnhandledException(_serviceProvider, GetType());
+                } finally {
+                    var oldWorker = Interlocked.CompareExchange(ref _worker, null, self);
+                    Debug.WriteLine(string.Format("Checking worker... {0}", DateTime.Now));
+                    Debug.Assert(oldWorker == self, "Worker was changed while running");
+                    Debug.WriteLine(string.Format("Worker exiting... {0}", DateTime.Now));
+                }
+
+                // check for work after clearing out _worker so that we don't race with
+                // StartWorker and end up with no worker.
+                lock (_workerQueue) {
+                    if (_workerQueue.Count == 0) {
+                        break;
+                    }
+                    Debug.WriteLine("Spinning to try and become worker again...");
+                }
             }
         }
 
@@ -532,7 +555,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             break;
                         }
                         msg = _workerQueue.Dequeue();
-                        Debug.WriteLine(string.Format("Processing msg... {0} {1}", DateTime.Now, msg.GetType()));
+                        Debug.WriteLine(string.Format("{2} Processing msg... {0} {1}", DateTime.Now, msg, GetType()));
                     }
 
                     if (msg is WorkerMessage.FlushMessage) {
@@ -542,7 +565,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         // Apply the message to our collection
                         changed |= msg.Apply(_items, _itemsLock);
                     }
-                    Debug.WriteLine(string.Format("Done processing msg... {0} {1}", DateTime.Now, msg.GetType()));
+                    Debug.WriteLine(string.Format("{2} Done processing msg... {0} {1}", DateTime.Now, msg, GetType()));
                     // Every second, we want to force another update
                     if (changed) {
                         var currentTime = DateTime.Now;
