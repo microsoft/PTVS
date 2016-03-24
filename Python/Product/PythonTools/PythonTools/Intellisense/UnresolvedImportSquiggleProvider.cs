@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void ListenForNextNewAnalysis(AnalysisEntry entry, ITextBuffer buffer) {
             if (entry != null && !string.IsNullOrEmpty(entry.Path)) {
-                buffer.RegisterForNewAnalysisEntry(newEntry => OnNewAnalysis(newEntry, buffer));
+                buffer.RegisterForNewAnalysis(newEntry => OnNewAnalysis(newEntry, buffer));
             }
         }
 
