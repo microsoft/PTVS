@@ -89,27 +89,48 @@
       <Name>Microsoft.PythonTools.Common</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemDefinitionGroup>
-    <ZipProject>
-      <Language>Python</Language>
-      <OutputSubPath>Machine Learning</OutputSubPath>
-    </ZipProject>
-  </ItemDefinitionGroup>
   <ItemGroup>
     <EmbeddedResource Include="ML\service_code.py" />
     <EmbeddedResource Include="ML\bottle_dashboard_template.tpl" />
     <EmbeddedResource Include="ML\bottle_form_template.tpl" />
     <EmbeddedResource Include="ML\bottle_form_route.py" />
     <EmbeddedResource Include="ML\bottle_dashboard_route.py" />
-    <ZipProject Include="ProjectTemplates\ClassifierTemplate\ClassifierTemplate.pyproj" />
-    <ZipProject Include="ProjectTemplates\ClassifierTemplate\ClassifierTemplate.vstemplate" />
-    <ZipProject Include="ProjectTemplates\ClassifierTemplate\classifier.py" />
-    <ZipProject Include="ProjectTemplates\ClusteringTemplate\ClusteringTemplate.pyproj" />
-    <ZipProject Include="ProjectTemplates\ClusteringTemplate\ClusteringTemplate.vstemplate" />
-    <ZipProject Include="ProjectTemplates\ClusteringTemplate\clustering.py" />
-    <ZipProject Include="ProjectTemplates\RegressionTemplate\regression.py" />
-    <ZipProject Include="ProjectTemplates\RegressionTemplate\RegressionTemplate.pyproj" />
-    <ZipProject Include="ProjectTemplates\RegressionTemplate\RegressionTemplate.vstemplate" />
+    <Content Include="ProjectTemplates\ClassifierTemplate\ClassifierTemplate.pyproj">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ProjectTemplates\Python\Machine Learning\Classifier</VSIXSubPath>
+    </Content>
+    <Content Include="ProjectTemplates\ClassifierTemplate\ClassifierTemplate.vstemplate">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ProjectTemplates\Python\Machine Learning\Classifier</VSIXSubPath>
+    </Content>
+    <Content Include="ProjectTemplates\ClassifierTemplate\classifier.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ProjectTemplates\Python\Machine Learning\Classifier</VSIXSubPath>
+    </Content>
+    <Content Include="ProjectTemplates\ClusteringTemplate\ClusteringTemplate.pyproj">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ProjectTemplates\Python\Machine Learning\Clustering</VSIXSubPath>
+    </Content>
+    <Content Include="ProjectTemplates\ClusteringTemplate\ClusteringTemplate.vstemplate">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ProjectTemplates\Python\Machine Learning\Clustering</VSIXSubPath>
+    </Content>
+    <Content Include="ProjectTemplates\ClusteringTemplate\clustering.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ProjectTemplates\Python\Machine Learning\Clustering</VSIXSubPath>
+    </Content>
+    <Content Include="ProjectTemplates\RegressionTemplate\regression.py">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ProjectTemplates\Python\Machine Learning\Regression</VSIXSubPath>
+    </Content>
+    <Content Include="ProjectTemplates\RegressionTemplate\RegressionTemplate.pyproj">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ProjectTemplates\Python\Machine Learning\Regression</VSIXSubPath>
+    </Content>
+    <Content Include="ProjectTemplates\RegressionTemplate\RegressionTemplate.vstemplate">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>ProjectTemplates\Python\Machine Learning\Regression</VSIXSubPath>
+    </Content>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>

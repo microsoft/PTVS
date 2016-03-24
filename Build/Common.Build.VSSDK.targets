@@ -147,7 +147,7 @@
   Zip folders containing VSIX files. These folders must have been created
   by previously having built the project.
   -->
-  <Target Name="_GetRezipVSIXFiles" Condition="$([msbuild]::ValueOrDefault($(RezipVSIXFiles), `false`))">
+  <Target Name="_GetRezipVSIXContainers" Condition="$([msbuild]::ValueOrDefault($(RezipVSIXFiles), `false`))">
     <ItemGroup>
       <VSIX Include="$(CopyVsixExtensionRoot)*\extension.vsixmanifest" />
       <VSIX>
@@ -157,26 +157,27 @@
     </ItemGroup>
   </Target>
   
-  <Target Name="_RezipSingleVSIX_Dev12_14" DependsOnTargets="_GetRezipVSIXFiles" BeforeTargets="Build" Inputs="@(VSIX)" Outputs="%(VSIX.Container)" Condition="'$(VSTarget)' == '12.0' or '$(VSTarget)' == '14.0'">
-    <Message Text="Rezipping %(VSIX.SourceDir) to %(VSIX.Container)" Importance="high" />
-    
+  <Target Name="_GetRezipVSIXFiles" DependsOnTargets="_GetRezipVSIXContainers" Condition="$([msbuild]::ValueOrDefault($(RezipVSIXFiles), `false`))">
     <ItemGroup>
-      <_VSIXSourceItems Include="%(VSIX.SourceDir)**\*" />
+      <_VSIXSourceItems Include="%(VSIX.SourceDir)**\*">
+        <Container>%(VSIX.Container)</Container>
+      </_VSIXSourceItems>
       <_VSIXSourceItems>
         <TargetPath>%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
       </_VSIXSourceItems>
     </ItemGroup>
+  </Target>
+  
+  <Target Name="_RezipSingleVSIX" DependsOnTargets="_GetRezipVSIXFiles" BeforeTargets="Build" Inputs="@(_VSIXSourceItems)" Outputs="%(_VSIXSourceItems.Container)">
+    <Message Text="Rezipping %(_VSIXSourceItems.Container)" Importance="high" />
     
-    <PropertyGroup>
-      <_Container>%(VSIX.Container)</_Container>
-    </PropertyGroup>
-
-    <CreateZipPackage Files="@(_VSIXSourceItems)" ZipPackage="$(_Container)" CompressionLevel="$(ZipPackageCompressionLevel)">
+    <CreateZipPackage Files="@(_VSIXSourceItems)" ZipPackage="%(_VSIXSourceItems.Container)" CompressionLevel="$(ZipPackageCompressionLevel)">
       <Output TaskParameter="ZipPackage" ItemName="FileWrites" />
+      <Output TaskParameter="ZipPackage" ItemName="_VsixToSign" />
     </CreateZipPackage>
 
     <ItemGroup>
-      <FilesToSign Include="$(_Container)">
+      <FilesToSign Include="@(_VsixToSign)">
         <Authenticode>vsix</Authenticode>
       </FilesToSign>
     </ItemGroup>

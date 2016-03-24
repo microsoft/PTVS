@@ -9,4 +9,5 @@
   </PropertyGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.VSSDK.targets"/>
+  <Import Project="$(TargetsPath)\MicroBuild.targets" />
 </Project>
