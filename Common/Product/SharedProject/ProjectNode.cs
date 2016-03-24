@@ -2895,6 +2895,11 @@ namespace Microsoft.VisualStudioTools.Project {
                         continue;
                     }
 
+                    if (Path.GetFileName(link) != Path.GetFileName(item.EvaluatedInclude)) {
+                        // Changing the filename, don't allow that.
+                        continue;
+                    }
+
                     if (!Path.IsPathRooted(item.EvaluatedInclude)) {
                         var itemPath = CommonUtils.GetAbsoluteFilePath(ProjectHome, item.EvaluatedInclude);
                         if (CommonUtils.IsSubpathOf(ProjectHome, itemPath)) {
