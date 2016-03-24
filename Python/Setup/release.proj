@@ -11,6 +11,9 @@
     <ReleaseFile Include="$(SetupOutputPath)en-us\PythonToolsInstaller.msi">
       <Name>PTVS$(_CBI) VS $(VSTargetName).msi</Name>
     </ReleaseFile>
+    <ReleaseFile Include="$(SetupOutputPath)en-us\PythonToolsInstaller.msi">
+      <Name>PTVS$(_CBI.Replace(` `, `_`).Replace(`.`, `_`).Replace(`-`, `_`))_VS_$(VSTargetName).msi</Name>
+    </ReleaseFile>
     <ReleaseFile Include="$(SetupOutputPath)Microsoft.PythonTools.ML.vsix" Condition="Exists('$(SetupOutputPath)Microsoft.PythonTools.ML.vsix')">
       <Name>PTVS ML$(_CBI).vsix</Name>
     </ReleaseFile>
@@ -18,7 +21,11 @@
       <Name>PTVS Samples$(_CBI).vsix</Name>
     </ReleaseFile>
     <ReleaseFile Include="$(SetupOutputPath)*.fopx">
-      <Name>%(Filename)%(Extension)</Name>
+      <Name>%(Filename).$(VSTarget)%(Extension)</Name>
+    </ReleaseFile>
+
+    <ReleaseFile Include="$(SetupOutputPath)*.vsix" Exclude="@(ReleaseFile)">
+      <Name>%(Filename).$(VSTarget)%(Extension)</Name>
     </ReleaseFile>
   </ItemGroup>
 
