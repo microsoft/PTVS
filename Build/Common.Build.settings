@@ -85,6 +85,7 @@
     <LayoutOutputPath Condition="'$(LayoutOutputPath)' == ''">$(BuildOutputRoot)layout\</LayoutOutputPath>
     <LayoutOutputPath Condition="!HasTrailingSlash($(LayoutOutputPath))">$(LayoutOutputPath)\</LayoutOutputPath>
 
+    <ReleaseOutputPath Condition="'$(ReleaseOutputPath)' == '' and '$(BUILD_STAGINGDIRECTORY)' != ''">$(BUILD_STAGINGDIRECTORY)\release\</ReleaseOutputPath>
     <ReleaseOutputPath Condition="'$(ReleaseOutputPath)' == ''">$(BuildOutputRoot)release\</ReleaseOutputPath>
     <ReleaseOutputPath Condition="!HasTrailingSlash($(ReleaseOutputPath))">$(ReleaseOutputPath)\</ReleaseOutputPath>
 
