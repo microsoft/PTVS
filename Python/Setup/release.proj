@@ -8,10 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ReleaseFile Include="$(SetupOutputPath)en-us\PythonToolsInstaller.msi">
+    <ReleaseFile Include="$(SetupOutputPath)en-us\PythonToolsInstaller.msi" Condition="Exists('$(SetupOutputPath)en-us\PythonToolsInstaller.msi')">
       <Name>PTVS$(_CBI) VS $(VSTargetName).msi</Name>
     </ReleaseFile>
-    <ReleaseFile Include="$(SetupOutputPath)en-us\PythonToolsInstaller.msi">
+    <ReleaseFile Include="$(SetupOutputPath)en-us\PythonToolsInstaller.msi" Condition="Exists('$(SetupOutputPath)en-us\PythonToolsInstaller.msi')">
       <Name>PTVS$(_CBI.Replace(` `, `_`).Replace(`.`, `_`).Replace(`-`, `_`))_VS_$(VSTargetName).msi</Name>
     </ReleaseFile>
     <ReleaseFile Include="$(SetupOutputPath)Microsoft.PythonTools.ML.vsix" Condition="Exists('$(SetupOutputPath)Microsoft.PythonTools.ML.vsix')">
@@ -24,7 +24,7 @@
       <Name>%(Filename).$(VSTarget)%(Extension)</Name>
     </ReleaseFile>
 
-    <ReleaseFile Include="$(SetupOutputPath)*.vsix" Exclude="@(ReleaseFile)">
+    <ReleaseFile Include="$(SetupOutputPath)*.vsix">
       <Name>%(Filename).$(VSTarget)%(Extension)</Name>
     </ReleaseFile>
   </ItemGroup>
