@@ -11,7 +11,7 @@
       <TargetName>Django</TargetName>
       <FopxSubPath>Common7\IDE\Extensions\Microsoft\Python\Django\</FopxSubPath>
     </FopxItem>
-    <FopxItem Include="$(LayoutOutputPath)Microsoft.PythonTools.IronPython">
+    <FopxItem Include="$(LayoutOutputPath)Microsoft.PythonTools.IronPython" Condition="$(IncludeIronPython)">
       <TargetName>IronPython</TargetName>
       <FopxSubPath>Common7\IDE\Extensions\Microsoft\Python\IronPython\</FopxSubPath>
     </FopxItem>
@@ -19,7 +19,7 @@
       <TargetName>Profiling</TargetName>
       <FopxSubPath>Common7\IDE\Extensions\Microsoft\Python\Profiling\</FopxSubPath>
     </FopxItem>
-    <FopxItem Include="$(LayoutOutputPath)Microsoft.PythonTools.Uwp">
+    <FopxItem Include="$(LayoutOutputPath)Microsoft.PythonTools.Uwp" Condition="$(IncludeUwp)">
       <TargetName>Uwp</TargetName>
       <FopxSubPath>Common7\IDE\Extensions\Microsoft\Python\Uwp\</FopxSubPath>
     </FopxItem>
@@ -31,7 +31,7 @@
       <TargetName>Django.Templates</TargetName>
       <FopxSubPath>Common7\IDE\</FopxSubPath>
     </FopxItem>
-    <FopxItem Include="$(BuildRoot)\Python\Templates\IronPython">
+    <FopxItem Include="$(BuildRoot)\Python\Templates\IronPython" Condition="$(IncludeIronPython)">
       <TargetName>IronPython.Templates</TargetName>
       <FopxSubPath>Common7\IDE\</FopxSubPath>
     </FopxItem>
@@ -39,7 +39,7 @@
       <TargetName>Sample.Templates</TargetName>
       <FopxSubPath>Common7\IDE\</FopxSubPath>
     </FopxItem>
-    <FopxItem Include="$(BuildRoot)\Python\Templates\Uwp">
+    <FopxItem Include="$(BuildRoot)\Python\Templates\Uwp" Condition="$(IncludeUwp)">
       <TargetName>Uwp.Templates</TargetName>
       <FopxSubPath>Common7\IDE\</FopxSubPath>
     </FopxItem>
