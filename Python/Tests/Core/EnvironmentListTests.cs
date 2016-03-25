@@ -58,12 +58,12 @@ namespace PythonToolsUITests {
         }
 
 
-        private static InterpreterConfiguration MockInterpreterConfiguration(Version version, InterpreterUIMode uiMode) {
-            return new InterpreterConfiguration(Guid.NewGuid().ToString(), null, null, null, null, null, null, ProcessorArchitecture.None, version, uiMode);
+        private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version, InterpreterUIMode uiMode) {
+            return new InterpreterConfiguration(Guid.NewGuid().ToString(), description, null, null, null, null, null, ProcessorArchitecture.None, version, uiMode);
         }
 
-        private static InterpreterConfiguration MockInterpreterConfiguration(Version version) {
-            return new InterpreterConfiguration(Guid.NewGuid().ToString(), "", version);
+        private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version) {
+            return new InterpreterConfiguration(Guid.NewGuid().ToString(), description, version);
         }
 
         private static InterpreterConfiguration MockInterpreterConfiguration(string path) {
@@ -76,20 +76,21 @@ namespace PythonToolsUITests {
             var sp = new MockServiceProvider();
             var mockService = new MockInterpreterOptionsService();
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 1",
-                new MockPythonInterpreterFactory("Test Factory 1", MockInterpreterConfiguration(new Version(2, 7))),
-                new MockPythonInterpreterFactory("Test Factory 2", MockInterpreterConfiguration(new Version(3, 0))),
-                new MockPythonInterpreterFactory("Test Factory 3", MockInterpreterConfiguration(new Version(3, 3)))
+                new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 1", new Version(2, 7))),
+                new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 2", new Version(3, 0))),
+                new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 3", new Version(3, 3)))
             ));
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 2",
-                new MockPythonInterpreterFactory("Test Factory 4", MockInterpreterConfiguration(new Version(2, 7))),
-                new MockPythonInterpreterFactory("Test Factory 5", MockInterpreterConfiguration(new Version(3, 0))),
-                new MockPythonInterpreterFactory("Test Factory 6", MockInterpreterConfiguration(new Version(3, 3))),
-                new MockPythonInterpreterFactory("Hidden Factory 7", MockInterpreterConfiguration(new Version(3, 3), InterpreterUIMode.Hidden))
+                new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 4", new Version(2, 7))),
+                new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 5", new Version(3, 0))),
+                new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 6", new Version(3, 3))),
+                new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 7", new Version(3, 3), InterpreterUIMode.Hidden))
             ));
 
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
                 list.Service = mockService;
+                list.Interpreters = mockService;
                 var environments = list.Environments;
 
                 Assert.AreEqual(6, environments.Count);
@@ -106,13 +107,12 @@ namespace PythonToolsUITests {
             var container = GetInterpreterOptionsService(defaultProviders: false);
             var service = container.GetExportedValue<IInterpreterOptionsService>();
             var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
-            var provider = new MockPythonInterpreterFactoryProvider("Test Provider");
             var factories = Enumerable.Repeat(0, 5).Select(
                 i => new MockPythonInterpreterFactory(
-                    string.Format("Test Factory {0}", i),
-                    MockInterpreterConfiguration(new Version(2, 7))
+                    MockInterpreterConfiguration(string.Format("Test Factory {0}", i), new Version(2, 7))
                 )
             ).ToList();
+            var provider = new MockPythonInterpreterFactoryProvider("Test Provider", factories.ToArray());
             ((InterpreterRegistryService)interpreters).SetProviders(new[] {
                 new Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>(
                     () => provider,
@@ -185,16 +185,17 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(1)]
         public void NonDefaultInterpreter() {
             var mockProvider = new MockPythonInterpreterFactoryProvider("Test Provider 1",
-                new MockPythonInterpreterFactory("Test Factory 1", MockInterpreterConfiguration(new Version(2, 7))),
-                new MockPythonInterpreterFactory("Test Factory 2", MockInterpreterConfiguration(new Version(3, 0), InterpreterUIMode.CannotBeDefault)),
-                new MockPythonInterpreterFactory("Test Factory 3", MockInterpreterConfiguration(new Version(3, 3), InterpreterUIMode.CannotBeAutoDefault))
+                new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 1", new Version(2, 7))),
+                new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 2", new Version(3, 0), InterpreterUIMode.CannotBeDefault)),
+                new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 3", new Version(3, 3), InterpreterUIMode.CannotBeAutoDefault))
             );
 
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
                 var container = GetInterpreterOptionsService(defaultProviders: false);
                 var service = container.GetExportedValue<IInterpreterOptionsService>();
-                var interpreters = container.GetExportedValue<IInterpreterRegistryService>(); var oldDefault = service.DefaultInterpreter;
+                var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
+                var oldDefault = service.DefaultInterpreter;
                 var oldProviders = ((InterpreterRegistryService)interpreters).SetProviders(new[] {
                     new Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>(
                         () => mockProvider,
@@ -205,6 +206,7 @@ namespace PythonToolsUITests {
                 });
                 try {
                     list.Service = service;
+                    list.Interpreters = interpreters;
                     var environments = list.Environments;
 
                     AssertUtil.AreEqual(
@@ -215,12 +217,6 @@ namespace PythonToolsUITests {
                     AssertUtil.AreEqual(
                         wpf.Invoke(() => environments.Select(ev => ev.CanBeDefault).ToList()),
                         true, false, true
-                    );
-
-                    // TF 1 should have been selected as the default
-                    Assert.AreEqual(
-                        "Test Factory 1",
-                        wpf.Invoke(() => environments.First(ev => ev.IsDefault).Description)
                     );
                 } finally {
                     ((InterpreterRegistryService)interpreters).SetProviders(oldProviders);
@@ -235,22 +231,23 @@ namespace PythonToolsUITests {
             using (var wpf = new WpfProxy())
             using (var list = wpf.Invoke(() => new EnvironmentListProxy(wpf))) {
                 var provider = new MockPythonInterpreterFactoryProvider("Test Provider 1",
-                    new MockPythonInterpreterFactory("Test Factory 1", MockInterpreterConfiguration(new Version(2, 7))),
-                    new MockPythonInterpreterFactory("Test Factory 2", MockInterpreterConfiguration(new Version(3, 0))),
-                    new MockPythonInterpreterFactory("Test Factory 3", MockInterpreterConfiguration(new Version(3, 3)))
+                    new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 1", new Version(2, 7))),
+                    new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 2", new Version(3, 0))),
+                    new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 3", new Version(3, 3)))
                 );
 
                 list.Service = mockService;
+                list.Interpreters = mockService;
 
                 Assert.AreEqual(0, list.Environments.Count);
 
                 mockService.AddProvider(provider);
                 Assert.AreEqual(3, list.Environments.Count);
-                provider.AddFactory(new MockPythonInterpreterFactory("Test Factory 4", MockInterpreterConfiguration(new Version(2, 7))));
+                provider.AddFactory(new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 4", new Version(2, 7))));
                 Assert.AreEqual(4, list.Environments.Count);
-                provider.AddFactory(new MockPythonInterpreterFactory("Test Factory 5", MockInterpreterConfiguration(new Version(3, 0))));
+                provider.AddFactory(new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 5", new Version(3, 0))));
                 Assert.AreEqual(5, list.Environments.Count);
-                provider.AddFactory(new MockPythonInterpreterFactory("Test Factory 6", MockInterpreterConfiguration(new Version(3, 3))));
+                provider.AddFactory(new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 6", new Version(3, 3))));
                 Assert.AreEqual(6, list.Environments.Count);
             }
         }
@@ -263,6 +260,7 @@ namespace PythonToolsUITests {
                 var provider = new MockPythonInterpreterFactoryProvider("Test Provider");
                 service.AddProvider(provider);
                 list.Service = service;
+                list.Interpreters = service;
 
                 foreach (string invalidPath in new string[] { 
                     null, 
@@ -273,7 +271,6 @@ namespace PythonToolsUITests {
                     Console.WriteLine("Path: <{0}>", invalidPath ?? "(null)");
                     provider.RemoveAllFactories();
                     provider.AddFactory(new MockPythonInterpreterFactory(
-                        "Test Factory",
                         new InterpreterConfiguration(
                             "Mock;" + Guid.NewGuid().ToString(),
                             "Test Factory",
@@ -303,12 +300,12 @@ namespace PythonToolsUITests {
                 var provider = new MockPythonInterpreterFactoryProvider("Test Provider");
                 service.AddProvider(provider);
                 list.Service = service;
+                list.Interpreters = service;
 
                 foreach (var version in PythonPaths.Versions) {
                     Console.WriteLine("Path: <{0}>", version.InterpreterPath);
                     provider.RemoveAllFactories();
                     provider.AddFactory(new MockPythonInterpreterFactory(
-                        "Test Factory",
                         version.Configuration
                     ));
                     var view = list.Environments.Single();
@@ -323,7 +320,6 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(1)]
         public void RefreshDBStates() {
             using (var fact = new MockPythonInterpreterFactory(
-                "Test Factory 1",
                 MockInterpreterConfiguration(
                     PythonPaths.Versions.First().InterpreterPath
                 ),
@@ -336,6 +332,7 @@ namespace PythonToolsUITests {
                 var mockService = new MockInterpreterOptionsService();
                 mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 1", fact));
                 list.Service = mockService;
+                list.Interpreters = mockService;
                 var view = list.Environments.Single();
 
                 Assert.IsFalse(wpf.Invoke(() => view.IsRefreshingDB));
@@ -392,6 +389,7 @@ namespace PythonToolsUITests {
                 var service = container.GetExportedValue<IInterpreterOptionsService>();
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
                 list.Service = service;
+                list.Interpreters = interpreters;
 
                 var expected = new HashSet<string>(
                     PythonPaths.Versions
@@ -423,14 +421,16 @@ namespace PythonToolsUITests {
                 var service = container.GetExportedValue<IInterpreterOptionsService>();
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
                 list.Service = service;
+                list.Interpreters = interpreters;
 
                 var before = wpf.Invoke(() => new HashSet<string>(
                     list.Environments.Select(ev => (string)ev.InterpreterPath),
                     StringComparer.OrdinalIgnoreCase
                 ));
-                
+
+                var id = Guid.NewGuid().ToString();
                 var fact = list.Service.AddConfigurableInterpreter(new InterpreterFactoryCreationOptions {
-                    Id = Guid.NewGuid().ToString(),
+                    Id = id,
                     LanguageVersionString = "2.7",
                     // The actual file doesn't matter, except to test that it
                     // is added
@@ -450,7 +450,7 @@ namespace PythonToolsUITests {
                     );
 
                     list.Service.AddConfigurableInterpreter(new InterpreterFactoryCreationOptions {
-                        Id = fact,
+                        Id = id,
                         LanguageVersionString = "2.7",
                         InterpreterPath = TestData.GetPath("HelloWorld2\\HelloWorld.pyproj")
                     });
@@ -485,6 +485,7 @@ namespace PythonToolsUITests {
                 var service = container.GetExportedValue<IInterpreterOptionsService>();
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
                 list.Service = service;
+                list.Interpreters = interpreters;
 
                 var before = wpf.Invoke(() => new HashSet<string>(
                     list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Configuration.Id)));
@@ -512,95 +513,18 @@ namespace PythonToolsUITests {
                 AssertUtil.ContainsExactly(afterRemove, before);
             }
         }
-#if FALSE
-        [TestMethod, Priority(1)]
-        public void LoadUnloadProjectFactories() {
-            var service = new MockInterpreterOptionsService();
-            var mockProvider = new MockPythonInterpreterFactoryProvider("Test Provider");
-            mockProvider.AddFactory(new MockPythonInterpreterFactory("Test Environment", MockInterpreterConfiguration(new Version(2, 7))));
-            service.AddProvider(mockProvider);
-
-            var loaded = new LoadedProjectInterpreterFactoryProvider();
-            service.AddProvider(loaded);
-            using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
-                list.Service = service;
-
-                // List only contains one entry
-                AssertUtil.ContainsExactly(
-                    wpf.Invoke(() => list.Environments.Select(ev => ev.Description).ToList()),
-                    "Test Environment"
-                );
-
-                var project = new MockPythonInterpreterFactoryProvider("Fake Project");
-                project.AddFactory(new MockPythonInterpreterFactory("Fake Environment", MockInterpreterConfiguration(new Version(2, 7))));
-
-                loaded.ProjectLoaded(project, null);
-
-                // List now contains two entries
-                AssertUtil.ContainsExactly(
-                    wpf.Invoke(() => list.Environments.Select(ev => ev.Description).ToList()),
-                    "Test Environment",
-                    "Fake Environment"
-                );
-
-                loaded.ProjectUnloaded(project);
-
-                // List only has one entry again
-                AssertUtil.ContainsExactly(
-                    wpf.Invoke(() => list.Environments.Select(ev => ev.Description).ToList()),
-                    "Test Environment"
-                );
-            }
-        }
-
-
-        [TestMethod, Priority(1)]
-        public void AddRemoveProjectFactories() {
-            var service = new MockInterpreterOptionsService();
-            var loaded = new LoadedProjectInterpreterFactoryProvider();
-            service.AddProvider(loaded);
-            using (var wpf = new WpfProxy())
-            using (var list = new EnvironmentListProxy(wpf)) {
-                list.Service = service;
-
-                // List should be empty
-                AssertUtil.ContainsExactly(list.Environments);
-
-                var project = new MockPythonInterpreterFactoryProvider("Fake Project");
-
-                loaded.ProjectLoaded(project, null);
-
-                // List is still empty
-                AssertUtil.ContainsExactly(list.Environments);
-
-                project.AddFactory(new MockPythonInterpreterFactory("Fake Environment", MockInterpreterConfiguration(new Version(2, 7))));
-
-                // List now contains one project
-                AssertUtil.ContainsExactly(
-                    wpf.Invoke(() => list.Environments.Select(ev => ev.Description).ToList()),
-                    "Fake Environment"
-                );
-
-                project.RemoveAllFactories();
-
-                // List is empty again
-                AssertUtil.ContainsExactly(list.Environments);
-
-                loaded.ProjectUnloaded(project);
-            }
-        }
-#endif
 
         [TestMethod, Priority(1)]
         public void ChangeDefault() {
             var container = GetInterpreterOptionsService(defaultProviders: false);
             var service = container.GetExportedValue<IInterpreterOptionsService>();
-            var interpreters = container.GetExportedValue<IInterpreterRegistryService>(); using (var defaultChanged = new AutoResetEvent(false))
+            var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
+            using (var defaultChanged = new AutoResetEvent(false))
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
                 service.DefaultInterpreterChanged += (s, e) => { defaultChanged.Set(); };
                 list.Service = service;
+                list.Interpreters = interpreters;
                 var originalDefault = service.DefaultInterpreter;
                 try {
                     foreach (var interpreter in interpreters.Interpreters) {
@@ -634,6 +558,7 @@ namespace PythonToolsUITests {
             using (var list = new EnvironmentListProxy(wpf)) {
                 list.CreatePipExtension = true;
                 list.Service = service;
+                list.Interpreters = service;
 
                 var environment = list.Environments.Single();
                 var pip = (PipExtensionProvider)list.GetExtensionOrAssert<PipExtensionProvider>(environment);
@@ -731,7 +656,7 @@ namespace PythonToolsUITests {
             return true;
         }
 
-        private IInterpreterOptionsService MakeEmptyVEnv() {
+        private MockInterpreterOptionsService MakeEmptyVEnv() {
             var python = PythonPaths.Versions.FirstOrDefault(p =>
                 p.IsCPython && Directory.Exists(Path.Combine(p.LibPath, "venv"))
             );
@@ -763,7 +688,6 @@ namespace PythonToolsUITests {
             var service = new MockInterpreterOptionsService();
             var provider = new MockPythonInterpreterFactoryProvider("VEnv Provider");
             provider.AddFactory(new MockPythonInterpreterFactory(
-                Path.GetFileName(PathUtils.TrimEndSeparator(env)),
                 new InterpreterConfiguration(
                     "Mock;" + Guid.NewGuid().ToString(),
                     Path.GetFileName(PathUtils.TrimEndSeparator(env)),
@@ -826,6 +750,15 @@ namespace PythonToolsUITests {
                 }
             }
 
+            public IInterpreterRegistryService Interpreters {
+                get {
+                    return _proxy.Invoke(() => Window.Interpreters);
+                }
+                set {
+                    _proxy.Invoke(() => { Window.Interpreters = value; });
+                }
+            }
+
             public List<EnvironmentView> Environments {
                 get {
                     return _proxy.Invoke(() => 
@@ -883,7 +816,7 @@ namespace PythonToolsUITests {
             } else {
                 settings.Store.CreateCollection(InterpreterOptionsServiceProvider.SuppressFactoryProvidersCollection);
             }
-            return InterpreterOptionsServiceProvider.CreateContainer(sp, typeof(IInterpreterRegistryService));
+            return InterpreterOptionsServiceProvider.CreateContainer(sp, typeof(IInterpreterRegistryService), typeof(IInterpreterOptionsService));
         }
 
 #endregion

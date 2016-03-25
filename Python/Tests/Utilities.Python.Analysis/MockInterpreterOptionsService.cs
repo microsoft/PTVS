@@ -30,7 +30,7 @@ namespace TestUtilities.Python {
 
         public MockInterpreterOptionsService() {
             _providers = new List<IPythonInterpreterFactoryProvider>();
-            _noInterpretersValue = new MockPythonInterpreterFactory("No Interpreters", new InterpreterConfiguration("2.7", "No Interpreters", new Version(2, 7)));
+            _noInterpretersValue = new MockPythonInterpreterFactory(new InterpreterConfiguration("2.7", "No Interpreters", new Version(2, 7)));
         }
 
         public void AddProvider(IPythonInterpreterFactoryProvider provider) {

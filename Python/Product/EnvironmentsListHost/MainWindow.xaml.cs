@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window {
-        readonly IInterpreterOptionsService _service = new InterpreterOptionsService(null);
+        readonly IInterpreterOptionsService _service = new InterpreterOptionsService(null, null);
 
 
         public MainWindow() {

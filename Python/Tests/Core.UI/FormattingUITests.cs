@@ -118,7 +118,7 @@ z=3", new Span[0]);
             var pyService = VSTestContext.ServiceProvider.GetPythonToolsService();
             pyService.SetFormattingOption("SpacesAroundBinaryOperators", true);
 
-            FormattingTest("linereduction.py", null, "(a + b + c + d + e + f)\r\n", new[] { new Span(0, 41) });
+            FormattingTest("linereduction.py", null, "(a + b + c + d + e + f)\r\n", new[] { new Span(0, 23), Span.FromBounds(25, 50) });
         }
 
         /// <summary>

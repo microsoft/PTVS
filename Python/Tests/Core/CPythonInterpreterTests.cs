@@ -39,7 +39,7 @@ namespace PythonToolsTests {
             var factories = provider.GetInterpreterFactories().ToArray();
 
             foreach (var factory in factories) {
-                if (factory.Configuration.Id.StartsWith("Global;")) {
+                if (factory.Configuration.Id.StartsWith("Global|")) {
                     Assert.IsTrue(factory.Configuration.Description.StartsWith("Python"), "non 'Python' interpreter");
                     Assert.IsTrue(factory.Configuration.Version.Major == 2 || factory.Configuration.Version.Major == 3, "unknown 32-bit version");
                     Assert.IsNotNull(factory.CreateInterpreter(), "32-bit failed to create interpreter");

@@ -28,6 +28,7 @@ namespace Microsoft.PythonTools.Interpreter {
     [PartCreationPolicy(CreationPolicy.Shared)]
     sealed class InterpreterOptionsService : IInterpreterOptionsService {
         private readonly Lazy<IInterpreterRegistryService> _registryService;
+        private readonly Lazy<CPythonInterpreterFactoryProvider> _cpythonProvider;
         private bool _defaultInterpreterWatched;
         private string _defaultInterpreterId;
         IPythonInterpreterFactory _defaultInterpreter;
@@ -51,8 +52,9 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string PythonInterpreterKey = "SOFTWARE\\Python\\VisualStudio";
 
         [ImportingConstructor]
-        public InterpreterOptionsService([Import]Lazy<IInterpreterRegistryService> registryService) {
+        public InterpreterOptionsService([Import]Lazy<IInterpreterRegistryService> registryService, Lazy<CPythonInterpreterFactoryProvider> cpythonProvider) {
             _registryService = registryService;
+            _cpythonProvider = cpythonProvider;
         }
 
 
@@ -235,6 +237,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
+            // ensure we're up to date...
+            _cpythonProvider.Value.DiscoverInterpreterFactories();
+
             return CPythonInterpreterFactoryConstants.GetIntepreterId(
                 "VisualStudio",
                 options.Architecture,
@@ -243,12 +248,22 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public void RemoveConfigurableInterpreter(string id) {
-            var collection = PythonInterpreterKey + "\\" + id;
-            Registry.CurrentUser.DeleteSubKeyTree(collection);
+            if (id.StartsWith("Global|VisualStudio|")) {
+                var key = id.Split(new[] { '|' } , 4);
+                if (key.Length == 4) {
+                    var collection = PythonInterpreterKey + "\\" + key[2];
+                    try {
+                        Registry.CurrentUser.DeleteSubKeyTree(collection);
+
+                        _cpythonProvider.Value.DiscoverInterpreterFactories();
+                    } catch (ArgumentException) {
+                    }
+                }
+            }
         }
 
         public bool IsConfigurable(string id) {
-            return id.StartsWith("Global;VisualStudio;");
+            return id.StartsWith("Global|VisualStudio|");
         }
     }
 }

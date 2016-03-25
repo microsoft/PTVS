@@ -208,7 +208,7 @@ namespace PythonToolsTests {
         ) {
             var mockService = new MockInterpreterOptionsService();
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider",
-                new MockPythonInterpreterFactory("Test Python", python.Configuration)
+                new MockPythonInterpreterFactory(python.Configuration)
             ));
 
             using (var wpf = new WpfProxy()) {

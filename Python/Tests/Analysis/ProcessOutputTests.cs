@@ -83,7 +83,7 @@ namespace AnalysisTests {
         private static IEnumerable<IPythonInterpreterFactory> Factories {
             get {
                 foreach (var interp in PythonPaths.Versions.Where(p => File.Exists(p.InterpreterPath))) {
-                    yield return new MockPythonInterpreterFactory("Test Interpreter",
+                    yield return new MockPythonInterpreterFactory(
                         new InterpreterConfiguration(
                             "Mock;" + Guid.NewGuid().ToString(),
                             "Test Interpreter",

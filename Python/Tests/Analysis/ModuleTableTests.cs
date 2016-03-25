@@ -46,8 +46,9 @@ namespace AnalysisTests {
 
         [TestMethod]
         public void RemovedModule() {
-            var config = new InterpreterConfiguration("", "", new Version(3, 5));
-            var fact = new MockPythonInterpreterFactory(Guid.NewGuid().ToString(), config);
+            var id = Guid.NewGuid().ToString();
+            var config = new InterpreterConfiguration(id, id, new Version(3, 5));
+            var fact = new MockPythonInterpreterFactory(config);
             var interp = new MockPythonInterpreter(fact);
             var modules = new ModuleTable(null, interp);
 

@@ -35,11 +35,7 @@ namespace TestUtilities.Python {
         public const string InvalidReason = "Database is invalid";
         public const string MissingModulesReason = "Database is missing modules";
 
-        public MockPythonInterpreterFactory(
-            string description,
-            InterpreterConfiguration config,
-            bool withStatusUpdater = false
-        ) {
+        public MockPythonInterpreterFactory(InterpreterConfiguration config, bool withStatusUpdater = false) {
             _config = config;
 
             _isCurrent = false;
@@ -58,12 +54,6 @@ namespace TestUtilities.Python {
         public InterpreterConfiguration Configuration {
             get {
                 return _config;
-            }
-        }
-
-        public Guid Id {
-            get {
-                return Guid.Empty;
             }
         }
 

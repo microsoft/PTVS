@@ -345,6 +345,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     return;
                 }
             }
+
+            OnInterpretersChanged();
         }
 
         public InterpreterConfiguration FindConfiguration(string id) {

@@ -302,8 +302,8 @@ namespace PythonToolsUITests {
                             var model = app.GetService<IComponentModel>(typeof(SComponentModel));
                             var interpreterService = model.GetService<IInterpreterRegistryService>();
                             var optionsService = model.GetService<IInterpreterOptionsService>();
-                            var newInterpreter = interpreterService.FindInterpreter("Global;PythonCore;3.4;x86")
-                                ?? interpreterService.FindInterpreter("Global;PythonCore;2.7;x86");
+                            var newInterpreter = interpreterService.FindInterpreter("Global|PythonCore|3.4|x86")
+                                ?? interpreterService.FindInterpreter("Global|PythonCore|2.7|x86");
                             Assert.IsNotNull(newInterpreter);
                             optionsService.DefaultInterpreter = newInterpreter;
                             break;
@@ -733,7 +733,7 @@ namespace PythonToolsUITests {
                     service,
                     true,
                     Path.Combine(pyProj.ProjectHome, "env"),
-                    service.FindInterpreter("Global;PythonCore;" + pythonVersion + ";x86"),
+                    service.FindInterpreter("Global|PythonCore|" + pythonVersion + "|x86"),
                     Version.Parse(pythonVersion) >= new Version(3, 3)
                 );
             });

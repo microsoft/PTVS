@@ -29,6 +29,7 @@ using Microsoft.Win32;
 namespace Microsoft.PythonTools.Interpreter {
     [InterpreterFactoryId(FactoryProviderName)]
     [Export(typeof(IPythonInterpreterFactoryProvider))]
+    [Export(typeof(CPythonInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class CPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
         private readonly Dictionary<string, InterpreterInformation> _factories = new Dictionary<string, InterpreterInformation>();
@@ -136,18 +137,18 @@ namespace Microsoft.PythonTools.Interpreter {
             return true;
         }
 
-        private bool RegisterInterpreters(HashSet<string> registeredPaths, RegistryKey pythonKey, ProcessorArchitecture? arch) {
+        private bool RegisterInterpreters(HashSet<string> registeredPaths, HashSet<string> registeredIds, RegistryKey pythonKey, ProcessorArchitecture? arch) {
             bool anyAdded = false;
             foreach (var subKeyName in pythonKey.GetSubKeyNames()) {
                 using (var python = pythonKey.OpenSubKey(subKeyName)) {
-                    anyAdded |= RegisterVendor(registeredPaths, python, arch);
+                    anyAdded |= RegisterVendor(registeredPaths, registeredIds, python, arch);
                 }
             }
 
             return anyAdded;
         }
 
-        private bool RegisterVendor(HashSet<string> registeredPaths, RegistryKey vendorKey, ProcessorArchitecture? arch) {
+        private bool RegisterVendor(HashSet<string> registeredPaths, HashSet<string> registeredIds, RegistryKey vendorKey, ProcessorArchitecture? arch) {
             bool anyAdded = false;
             string[] subKeyNames = null;
             for (int retries = 5; subKeyNames == null && retries > 0; --retries) {
@@ -166,13 +167,13 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             foreach (var key in subKeyNames) {
-                anyAdded |= TryRegisterInterpreter(registeredPaths, vendorKey, key, arch);
+                anyAdded |= TryRegisterInterpreter(registeredPaths, registeredIds, vendorKey, key, arch);
 
             }
             return anyAdded;
         }
 
-        private bool TryRegisterInterpreter(HashSet<string> registeredPaths, RegistryKey vendorKey, string key, ProcessorArchitecture? arch) {
+        private bool TryRegisterInterpreter(HashSet<string> registeredPaths, HashSet<string> registeredIds, RegistryKey vendorKey, string key, ProcessorArchitecture? arch) {
             Version version = null;
             ProcessorArchitecture? arch2 = null;
 
@@ -230,12 +231,13 @@ namespace Microsoft.PythonTools.Interpreter {
                     InterpreterInformation existing;
 
                     _factories.TryGetValue(newId, out existing);
-                    try { 
+                    try {
                         var interpPath = installPath.GetValue("ExecutablePath") as string ?? Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
                         var windowsPath = installPath.GetValue("WindowedExecutablePath") as string ?? Path.Combine(basePath, CPythonInterpreterFactoryConstants.WindowsExecutable);
                         var libraryPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.LibrarySubPath);
                         string prefixPath = Path.GetDirectoryName(interpPath);
 
+                        registeredIds.Add(newId);
                         var newConfig = new InterpreterConfiguration(
                             newId,
                             string.Format("{0} {1}", description, version),
@@ -247,7 +249,7 @@ namespace Microsoft.PythonTools.Interpreter {
                             actualArch ?? ProcessorArchitecture.None,
                             version
                         );
-                        if (existing == null || newConfig != existing.Configuration) {
+                        if (existing == null || !newConfig.Equals(existing.Configuration)) {
                             _factories[newId] = new InterpreterInformation(newConfig);
                             return true;
                         }
@@ -264,31 +266,38 @@ namespace Microsoft.PythonTools.Interpreter {
             return vendorKey.Name.Substring(vendorKey.Name.LastIndexOf('\\') + 1);
         }
 
-        private void DiscoverInterpreterFactories() {
+        internal void DiscoverInterpreterFactories() {
             bool anyAdded = false;
-            HashSet<string> registeredPaths = new HashSet<string>();
-            var arch = Environment.Is64BitOperatingSystem ? null : (ProcessorArchitecture?)ProcessorArchitecture.X86;
-            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default)) {
+            lock (this) {
+                HashSet<string> registeredPaths = new HashSet<string>();
+                HashSet<string> registeredIds = new HashSet<string>();
+                var arch = Environment.Is64BitOperatingSystem ? null : (ProcessorArchitecture?)ProcessorArchitecture.X86;
+                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default)) {
+                    using (var python = baseKey.OpenSubKey(PythonPath)) {
+                        if (python != null) {
+                            anyAdded |= RegisterInterpreters(registeredPaths, registeredIds, python, arch);
+                        }
+                    }
+                }
+
+                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
                 using (var python = baseKey.OpenSubKey(PythonPath)) {
                     if (python != null) {
-                        anyAdded |= RegisterInterpreters(registeredPaths, python, arch);
+                        anyAdded |= RegisterInterpreters(registeredPaths, registeredIds, python, ProcessorArchitecture.X86);
                     }
                 }
-            }
 
-            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
-            using (var python = baseKey.OpenSubKey(PythonPath)) {
-                if (python != null) {
-                    anyAdded |= RegisterInterpreters(registeredPaths, python, ProcessorArchitecture.X86);
-                }
-            }
-
-            if (Environment.Is64BitOperatingSystem) {
-                using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
-                using (var python64 = baseKey.OpenSubKey(PythonPath)) {
-                    if (python64 != null) {
-                        anyAdded |= RegisterInterpreters(registeredPaths, python64, ProcessorArchitecture.Amd64);
+                if (Environment.Is64BitOperatingSystem) {
+                    using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
+                    using (var python64 = baseKey.OpenSubKey(PythonPath)) {
+                        if (python64 != null) {
+                            anyAdded |= RegisterInterpreters(registeredPaths, registeredIds, python64, ProcessorArchitecture.Amd64);
+                        }
                     }
+                }
+
+                foreach (var unregistered in _factories.Keys.Except(registeredIds).ToArray()) {
+                    _factories.Remove(unregistered);
                 }
             }
 

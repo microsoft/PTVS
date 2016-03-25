@@ -20,6 +20,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -48,7 +49,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private readonly object _listenerLock = new object();
         private int _listenerTimeToLive;
         const int _listenerDefaultTimeToLive = 120;
-        
+
         private bool _isDisposed;
 
         public static readonly RoutedCommand UnhandledException = new RoutedCommand();
@@ -69,7 +70,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
             set {
                 _site = value;
-                if(value != null) {
+                if (value != null) {
                     var compModel = _site.GetService(typeof(SComponentModel)) as IComponentModel;
                     Service = compModel.GetService<IInterpreterOptionsService>();
                     Interpreters = compModel.GetService<IInterpreterRegistryService>();
@@ -99,7 +100,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             if (double.IsNaN(width) || double.IsNaN(height)) {
                 return;
             }
-            
+
             if (width <= height * 0.9 || width < 400) {
                 SwitchToVerticalLayout();
             } else if (width >= height * 1.1) {
@@ -114,8 +115,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             VerticalLayout.Visibility = Visibility.Collapsed;
             BindingOperations.ClearBinding(ContentView_Vertical, ContentControl.ContentProperty);
             BindingOperations.SetBinding(ContentView_Horizontal, ContentControl.ContentProperty, new Binding {
-                Path=new PropertyPath("CurrentItem.WpfObject"),
-                Source=FindResource("SortedExtensions")
+                Path = new PropertyPath("CurrentItem.WpfObject"),
+                Source = FindResource("SortedExtensions")
             });
             HorizontalLayout.Visibility = Visibility.Visible;
             UpdateLayout();
@@ -277,7 +278,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private async Task StartRefreshDBAsync(EnvironmentView view) {
             view.IsRefreshingDB = true;
             view.IsRefreshDBProgressIndeterminate = true;
-            
+
             var tcs = new TaskCompletionSource<int>();
             ((IPythonInterpreterFactoryWithDatabase)view.Factory).GenerateDatabase(
                 Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ?
@@ -374,6 +375,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 if (_service != null) {
                     _interpreters.InterpretersChanged += Service_InterpretersChanged;
                 }
+                if (_service != null) {
+                    Dispatcher.InvokeAsync(FirstUpdateEnvironments).Task.DoNotWait();
+                }
             }
         }
 
@@ -389,7 +393,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 if (_service != null) {
                     _service.DefaultInterpreterChanged += Service_DefaultInterpreterChanged;
                 }
-                Dispatcher.InvokeAsync(FirstUpdateEnvironments).Task.DoNotWait();
+                if (_interpreters != null) {
+                    Dispatcher.InvokeAsync(FirstUpdateEnvironments).Task.DoNotWait();
+                }
             }
         }
 
@@ -448,9 +454,16 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 name = string.Format(fmt, i);
             }
 
+            string id = name;
+            int count = 1;
+            while (_interpreters.FindConfiguration(CPythonInterpreterFactoryConstants.GetIntepreterId("VisualStudio", ProcessorArchitecture.X86, id)) != null) {
+                id = name + count++;
+            }
+
             var factory = _service.AddConfigurableInterpreter(new InterpreterFactoryCreationOptions {
-                Id = Guid.NewGuid().ToString(),
-                Description = name
+                Id = id,
+                Description = name,
+                InterpreterPath = "python\\python.exe"
             });
 
             UpdateEnvironments(factory);
