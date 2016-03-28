@@ -52,7 +52,15 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        protected virtual void Dispose(bool disposing) { }
+        protected virtual void Dispose(bool disposing) {
+            if (disposing) {
+                Project = null;
+                var control = Control;
+                if (control != null && !control.IsDisposed) {
+                    control.Dispose();
+                }
+            }
+        }
 
         public abstract Control Control {
             get;
@@ -273,11 +281,6 @@ namespace Microsoft.VisualStudioTools.Project {
 
         void IPropertyPage.Deactivate() {
             Dispose();
-            Project = null;
-            var control = Control;
-            if (control != null && !control.IsDisposed) {
-                control.Dispose();
-            }
         }
 
         void IPropertyPage.GetPageInfo(PROPPAGEINFO[] pPageInfo) {
