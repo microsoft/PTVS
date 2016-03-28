@@ -4,6 +4,7 @@
     <DisplayName>Python Tools for Visual Studio</DisplayName>
     <Description xml:space="preserve">Provides support for editing and debugging Python programs.</Description>
     <MoreInfo>http://aka.ms/ptvs</MoreInfo>
+    <License>Python Tools for VS License.rtf</License>
     <GettingStartedGuide>http://aka.ms/ptvstutorial</GettingStartedGuide>
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
@@ -39,6 +40,7 @@
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.EnvironmentsList;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|TestAdapter;_GetTargetPath|" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|XamlDesignerSupport;_GetTargetPath|" />
     <Asset Type="UnitTestExtension" Path="|TestAdapter;_GetTargetPath|" />
     <Asset Type="DebuggerEngineExtension" Path="DkmDebugger.vsdconfig" />
     <Asset Type="NativeVisualizer" Path="PythonDkm.natvis" />

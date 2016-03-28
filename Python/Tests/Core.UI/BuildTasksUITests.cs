@@ -464,7 +464,7 @@ namespace PythonToolsUITests {
     public class BuildTasksUI26Tests : BuildTasksUI27Tests {
         internal override PythonVersion PythonVersion {
             get {
-                return PythonPaths.Python26 ?? PythonPaths.Python25_x64;
+                return PythonPaths.Python26 ?? PythonPaths.Python26_x64;
             }
         }
     }

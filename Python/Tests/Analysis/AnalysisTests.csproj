@@ -70,6 +70,7 @@
     <Compile Include="DeserializationTests.cs" />
     <Compile Include="DotNetAnalysis\Generics.cs" />
     <Compile Include="ModulePathTests.cs" />
+    <Compile Include="ModuleTableTests.cs" />
     <Compile Include="ProcessOutputTests.cs" />
     <Compile Include="MutateStdLibTest.cs" />
     <Compile Include="TestExpressions.cs" />

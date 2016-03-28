@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.Analysis {
                 var mod = await Task.Run(() => _interpreter.ImportModule(name)).ConfigureAwait(false);
                 res.Module = GetBuiltinModule(mod);
             }
-            if (firstImport && res != null && res.Module != null) {
+            if (firstImport && res != null && res.Module != null && _analyzer != null) {
                 await Task.Run(() => _analyzer.DoDelayedSpecialization(name)).ConfigureAwait(false);
             }
             if (res != null && res.Module == null) {
@@ -118,7 +118,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (res != null && res.Module == null) {
                 res.Module = GetBuiltinModule(_interpreter.ImportModule(name));
             }
-            if (firstImport && res != null && res.Module != null) {
+            if (firstImport && res != null && res.Module != null && _analyzer != null) {
                 _analyzer.DoDelayedSpecialization(name);
             }
             return res != null && res.Module != null;
@@ -159,7 +159,12 @@ namespace Microsoft.PythonTools.Analysis {
 
                 var builtinModule = moduleRef.Module as BuiltinModule;
                 if (builtinModule != null) {
-                    if (!newNames.Contains(name)) {
+                    IPythonModule newModule = null;
+                    if (newNames.Contains(name)) {
+                        newModule = _interpreter.ImportModule(name);
+                    }
+
+                    if (newModule == null) {
                         // this module was unloaded
                         ModuleReference dummy;
                         _modules.TryRemove(name, out dummy);
@@ -169,15 +174,12 @@ namespace Microsoft.PythonTools.Analysis {
                         foreach (var child in builtinModule.InterpreterModule.GetChildrenModules()) {
                             _modules.TryRemove(builtinModule.Name + "." + child, out dummy);
                         }
-                    } else {
+                    } else if (builtinModule.InterpreterModule != newModule) {
                         // this module was replaced with a new module
-                        var newModule = _interpreter.ImportModule(name);
-                        if (builtinModule.InterpreterModule != newModule) {
-                            BuiltinModule removedModule;
-                            _builtinModuleTable.TryRemove(builtinModule.InterpreterModule, out removedModule);
-                            moduleRef.Module = GetBuiltinModule(newModule);
-                            ImportChildren(newModule);
-                        }
+                        BuiltinModule removedModule;
+                        _builtinModuleTable.TryRemove(builtinModule.InterpreterModule, out removedModule);
+                        moduleRef.Module = GetBuiltinModule(newModule);
+                        ImportChildren(newModule);
                     }
                 }
             }
@@ -206,7 +208,7 @@ namespace Microsoft.PythonTools.Analysis {
                         var mod = value as IModule;
                         if (mod != null) {
                             _modules[fullname] = new ModuleReference(mod);
-                            _analyzer.DoDelayedSpecialization(fullname);
+                            _analyzer?.DoDelayedSpecialization(fullname);
                         }
                     }
                 }
@@ -217,11 +219,11 @@ namespace Microsoft.PythonTools.Analysis {
 
         public IEnumerator<KeyValuePair<string, ModuleLoadState>> GetEnumerator() {
             var unloadedNames = new HashSet<string>(_interpreter.GetModuleNames(), StringComparer.Ordinal);
-            var unresolvedNames = _analyzer.GetAllUnresolvedModuleNames();
+            var unresolvedNames = _analyzer?.GetAllUnresolvedModuleNames();
 
             foreach (var keyValue in _modules) {
                 unloadedNames.Remove(keyValue.Key);
-                unresolvedNames.Remove(keyValue.Key);
+                unresolvedNames?.Remove(keyValue.Key);
                 yield return new KeyValuePair<string, ModuleLoadState>(keyValue.Key, new InitializedModuleLoadState(keyValue.Value));
             }
 
@@ -229,8 +231,10 @@ namespace Microsoft.PythonTools.Analysis {
                 yield return new KeyValuePair<string, ModuleLoadState>(name, new UninitializedModuleLoadState(this, name));
             }
 
-            foreach (var name in unresolvedNames) {
-                yield return new KeyValuePair<string, ModuleLoadState>(name, new UnresolvedModuleLoadState());
+            if (unresolvedNames != null) {
+                foreach (var name in unresolvedNames) {
+                    yield return new KeyValuePair<string, ModuleLoadState>(name, new UnresolvedModuleLoadState());
+                }
             }
         }
 

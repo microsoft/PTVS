@@ -4,10 +4,15 @@
 
   <ItemGroup>
     <ProjectFile Include="$(BuildRoot)\Common\Product\dirs.proj"/>
-    
+
+    <ProjectFile Include="Common\Common.csproj"/>
+    <ProjectFile Include="VsCommon\VsCommon.csproj"/>
+
     <ProjectFile Include="Analysis\Analysis.csproj"/>
     <ProjectFile Include="VSInterpreters\VSInterpreters.csproj"/>
     <ProjectFile Include="Analyzer\Analyzer.csproj"/>
+
+    <ProjectFile Include="XamlDesignerSupport\XamlDesignerSupport.csproj"/>
 
     <ProjectFile Include="PyDebugAttach\PyDebugAttach.vcxproj"/>
     <ProjectFile Include="PyDebugAttach\PyDebugAttachX86.vcxproj"/>
@@ -36,8 +41,6 @@
     <ProjectFile Include="WebRole\WebRole.csproj"/>
     <ProjectFile Include="Django\Django.csproj"/>
 
-    <ProjectFile Include="$(PTVSPRPath)VsLogger\VsLogger.csproj" Condition="'$(IncludeVsLogger)' == 'True'"/>
-    
     <ProjectFile Include="AnalysisBrowser\AnalysisBrowser.csproj" Condition="$(VSTarget) != '15.0'" />
     <ProjectFile Include="AnalysisMemoryTester\AnalysisMemoryTester.csproj" Condition="$(VSTarget) != '15.0'" />
     <ProjectFile Include="EnvironmentsListHost\EnvironmentsListHost.csproj" Condition="$(VSTarget) != '15.0'" />
@@ -45,6 +48,9 @@
     <ProjectFile Include="ML\ML.csproj" Condition="'$(IncludeML)' == 'True'"/>
     
     <ProjectFile Include="Uwp\Uwp.csproj" Condition="'$(IncludeUwp)' == 'True'"/>
+    
+    <ProjectFile Include="..\Templates\Templates.csproj" />
+    <ProjectFile Include="..\Templates\Samples.csproj" />
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

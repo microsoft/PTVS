@@ -18,11 +18,8 @@
     <ResolveAssemblyReferencesDependsOn>$(ResolveAssemblyReferencesDependsOn);_AddPTVSReferences</ResolveAssemblyReferencesDependsOn>
   </PropertyGroup>
   <Target Name="_AddPTVSReferences">
-    <ItemGroup>
-      <_ReferenceDirectories Include="$(BuildRoot)BuildOutput\**\PTVS.References.$(VSTarget)*.nupkg" />
-    </ItemGroup>
     <PropertyGroup>
-      <AssemblySearchPaths>@(_ReferenceDirectories->'%(RootDir)%(Directory)lib');$(AssemblySearchPaths);$(DevEnvDir)PrivateAssemblies</AssemblySearchPaths>
+      <AssemblySearchPaths>$(BuildRoot)Python\References\Dev$(VSTarget);$(AssemblySearchPaths);$(DevEnvDir)PrivateAssemblies</AssemblySearchPaths>
     </PropertyGroup>
   </Target>
 

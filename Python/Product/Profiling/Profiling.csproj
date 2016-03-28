@@ -125,6 +125,7 @@
     <Compile Include="Profiling\SessionNode.cs" />
     <Compile Include="Profiling\StandaloneTargetView.cs" />
     <Compile Include="Profiling\TreeViewIconIndex.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProvideFileFilterAttribute.cs" />
     <Compile Include="GlobalSuppressions.cs" />
     <Compile Include="PythonProfilingPackage.cs" />
@@ -174,15 +175,18 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
+    <Content Include="..\PythonTools\Python Tools for VS License.rtf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
     <EmbeddedResource Include="..\Icons\Dev$(VSTarget)\ProfilingTreeView.bmp" />
     <Content Include="vspyprof.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Properties\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Page Include="Profiling\CompareReportsWindow.xaml">
       <SubType>Designer</SubType>

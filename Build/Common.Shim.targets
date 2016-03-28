@@ -8,7 +8,7 @@
   
   <Target Name="Compile" />
   
-  <Target Name="Build" />
+  <Target Name="Build" DependsOnTargets="Compile" />
   <Target Name="BeforeBuild" BeforeTargets="Build" />
   <Target Name="AfterBuild" AfterTargets="Build" />
 

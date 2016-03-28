@@ -39,7 +39,8 @@ namespace Microsoft.PythonTools.Django.Project {
         IVsProjectFlavorCfgProvider,
         IVsProject,
         IDjangoProject,
-        IVsFilterAddProjectItemDlg
+        IVsFilterAddProjectItemDlg,
+        IDisposable
     {
         internal DjangoPackage _package;
         internal IVsProject _innerProject;
@@ -55,6 +56,20 @@ namespace Microsoft.PythonTools.Django.Project {
 #endif
 
         public DjangoProject() {
+        }
+
+        public void Dispose() {
+            Dispose(true);
+        }
+
+        protected void Dispose(bool disposing) {
+            if (disposing) {
+                var analyzer = _analyzer;
+                _analyzer = null;
+                if (analyzer != null) {
+                    analyzer.Dispose();
+                }
+            }
         }
 
         public DjangoAnalyzer Analyzer {

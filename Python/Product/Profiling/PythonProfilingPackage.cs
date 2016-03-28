@@ -82,6 +82,17 @@ namespace Microsoft.PythonTools.Profiling {
             Instance = this;
         }
 
+        protected override void Dispose(bool disposing) {
+            if (disposing) {
+                var process = _profilingProcess;
+                _profilingProcess = null;
+                if (process != null) {
+                    process.Dispose();
+                }
+            }
+            base.Dispose(disposing);
+        }
+
         /// <summary>
         /// Initialization of the package; this method is called right after the package is sited, so this is the place
         /// where you can put all the initilaization code that rely on services provided by VisualStudio.
