@@ -23,6 +23,77 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities {
     public static class FileUtils {
+        public static IEnumerable<string> EnumerateDirectories(
+            string root,
+            bool recurse = true,
+            bool fullPaths = true
+        ) {
+            var queue = new Queue<string>();
+            if (!root.EndsWith("\\")) {
+                root += "\\";
+            }
+            queue.Enqueue(root);
+
+            while (queue.Any()) {
+                var path = queue.Dequeue();
+                if (!path.EndsWith("\\")) {
+                    path += "\\";
+                }
+
+                IEnumerable<string> dirs = null;
+                try {
+                    dirs = Directory.GetDirectories(path);
+                } catch (UnauthorizedAccessException) {
+                } catch (IOException) {
+                }
+                if (dirs == null) {
+                    continue;
+                }
+
+                foreach (var d in dirs) {
+                    if (!fullPaths && !d.StartsWith(root, StringComparison.OrdinalIgnoreCase)) {
+                        continue;
+                    }
+                    if (recurse) {
+                        queue.Enqueue(d);
+                    }
+                    yield return fullPaths ? d : d.Substring(root.Length);
+                }
+            }
+        }
+
+        public static IEnumerable<string> EnumerateFiles(
+            string root,
+            string pattern = "*",
+            bool recurse = true,
+            bool fullPaths = true
+        ) {
+            if (!root.EndsWith("\\")) {
+                root += "\\";
+            }
+
+            foreach (var dir in Enumerable.Repeat(root, 1).Concat(EnumerateDirectories(root, recurse, fullPaths))) {
+                var fullDir = (fullPaths || Path.IsPathRooted(dir)) ? dir : (root + dir);
+
+                IEnumerable<string> files = null;
+                try {
+                    files = Directory.GetFiles(fullDir, pattern);
+                } catch (UnauthorizedAccessException) {
+                } catch (IOException) {
+                }
+                if (files == null) {
+                    continue;
+                }
+
+                foreach (var f in files) {
+                    if (!fullPaths && !f.StartsWith(root, StringComparison.OrdinalIgnoreCase)) {
+                        continue;
+                    }
+                    yield return fullPaths ? f : f.Substring(root.Length);
+                }
+            }
+        }
+
         public static void CopyDirectory(string sourceDir, string destDir) {
             sourceDir = sourceDir.TrimEnd('\\');
             destDir = destDir.TrimEnd('\\');
@@ -31,12 +102,8 @@ namespace TestUtilities {
             } catch (IOException) {
             }
 
-            var newDirectories = new HashSet<string>(from d in Directory.EnumerateDirectories(sourceDir, "*", SearchOption.AllDirectories)
-                                                     where d.StartsWith(sourceDir)
-                                                     select d.Substring(sourceDir.Length + 1), StringComparer.OrdinalIgnoreCase);
-            newDirectories.ExceptWith(from d in Directory.EnumerateDirectories(destDir, "*", SearchOption.AllDirectories)
-                                      where d.StartsWith(destDir)
-                                      select d.Substring(destDir.Length + 1));
+            var newDirectories = new HashSet<string>(EnumerateDirectories(sourceDir, fullPaths: false), StringComparer.OrdinalIgnoreCase);
+            newDirectories.ExceptWith(EnumerateDirectories(destDir, fullPaths: false));
 
             foreach (var newDir in newDirectories.OrderBy(i => i.Length).Select(i => Path.Combine(destDir, i))) {
                 try {
@@ -46,12 +113,8 @@ namespace TestUtilities {
                 }
             }
 
-            var newFiles = new HashSet<string>(from f in Directory.EnumerateFiles(sourceDir, "*", SearchOption.AllDirectories)
-                                               where f.StartsWith(sourceDir)
-                                               select f.Substring(sourceDir.Length + 1), StringComparer.OrdinalIgnoreCase);
-            newFiles.ExceptWith(from f in Directory.EnumerateFiles(destDir, "*", SearchOption.AllDirectories)
-                                where f.StartsWith(destDir)
-                                select f.Substring(destDir.Length + 1));
+            var newFiles = new HashSet<string>(EnumerateFiles(sourceDir, fullPaths: false), StringComparer.OrdinalIgnoreCase);
+            newFiles.ExceptWith(EnumerateFiles(destDir, fullPaths: false));
 
             foreach (var newFile in newFiles) {
                 var copyFrom = Path.Combine(sourceDir, newFile);
