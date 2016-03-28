@@ -73,13 +73,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _cache = PipPackageCache.GetCache(_index, _indexName);
         }
 
-        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_pipCancel",
-            Justification = "False detection")]
         public void Dispose() {
             _cancelAll.Cancel();
             _cancelAll.Dispose();
             _pipLock.Dispose();
-            _pipCancel?.Dispose();
+            var pipCancel = _pipCancel;
+            if (pipCancel != null) {
+                pipCancel.Dispose();
+            }
         }
 
         public int SortPriority {

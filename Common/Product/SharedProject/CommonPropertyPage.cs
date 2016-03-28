@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -30,10 +31,28 @@ namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
     /// Base class for property pages based on a WinForm control.
     /// </summary>
-    public abstract class CommonPropertyPage : IPropertyPage {
+    public abstract class CommonPropertyPage : IPropertyPage, IDisposable {
         private IPropertyPageSite _site;
         private bool _dirty, _loading;
         private CommonProjectNode _project;
+        private bool _disposed;
+
+        public void Dispose() {
+            if (!_disposed) {
+                Dispose(true);
+                GC.SuppressFinalize(this);
+                _disposed = true;
+            }
+        }
+
+        ~CommonPropertyPage() {
+            if (!_disposed) {
+                Dispose(false);
+                _disposed = true;
+            }
+        }
+
+        protected virtual void Dispose(bool disposing) { }
 
         public abstract Control Control {
             get;
@@ -237,7 +256,10 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         void IPropertyPage.Activate(IntPtr hWndParent, RECT[] pRect, int bModal) {
-            NativeMethods.SetParent(Control.Handle, hWndParent);
+            var control = Control;
+            Debug.Assert(control != null, "Cannot activate property page with no control");
+            Debug.Assert(!control.IsDisposed, "Cannot reactivate property page");
+            NativeMethods.SetParent(control.Handle, hWndParent);
         }
 
         int IPropertyPage.Apply() {
@@ -250,8 +272,12 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         void IPropertyPage.Deactivate() {
+            Dispose();
             Project = null;
-            Control.Dispose();
+            var control = Control;
+            if (control != null && !control.IsDisposed) {
+                control.Dispose();
+            }
         }
 
         void IPropertyPage.GetPageInfo(PROPPAGEINFO[] pPageInfo) {

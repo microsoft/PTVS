@@ -21,7 +21,7 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid(GuidList.guidDjangoPropertyPageString)]
-    class DjangoPropertyPage : CommonPropertyPage, IDisposable {
+    class DjangoPropertyPage : CommonPropertyPage {
         private readonly DjangoPropertyPageControl _control;
 
         public const string SettingModulesSetting = "DjangoSettingsModule";
@@ -31,16 +31,13 @@ namespace Microsoft.PythonTools.Django.Project {
             _control = new DjangoPropertyPageControl(this);
         }
 
-        public void Dispose() {
-            Dispose(true);
-        }
-
-        protected void Dispose(bool disposing) {
+        protected override void Dispose(bool disposing) {
             if (disposing) {
                 _control.Dispose();
             }
+            base.Dispose(disposing);
         }
-        
+
         public override Control Control {
             get { return _control; }
         }
