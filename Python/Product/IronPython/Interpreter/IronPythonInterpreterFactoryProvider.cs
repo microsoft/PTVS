@@ -27,7 +27,7 @@ using Microsoft.Win32;
 namespace Microsoft.IronPythonTools.Interpreter {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    class IronPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
+    sealed class IronPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
         private IPythonInterpreterFactory _interpreter;
         private IPythonInterpreterFactory _interpreterX64;
         const string IronPythonCorePath = "Software\\IronPython";
@@ -38,6 +38,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 StartWatching(RegistryHive.LocalMachine, RegistryView.Registry32);
             }
         }
+
+        public void Dispose() {
+            (_interpreter as IDisposable)?.Dispose();
+            (_interpreterX64 as IDisposable)?.Dispose();
+        }
+
 
         private void StartWatching(RegistryHive hive, RegistryView view, int retries = 5) {
             var tag = RegistryWatcher.Instance.TryAdd(

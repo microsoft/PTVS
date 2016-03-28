@@ -1,11 +1,11 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(WixTargetsPath)" />
+  <Import Project="$(WixTargetsPath)" Condition="Exists($(WixTargetsPath))" />
 
   <!-- Identifies the files that need signing. -->
   <Target Name="SignMsi">
     <ItemGroup>
       <FilesToSign Include="@(SignMsi)">
-        <Authenticode>MicrosoftSHA1</Authenticode>
+        <Authenticode>Microsoft400</Authenticode>
       </FilesToSign>
     </ItemGroup>
   </Target>

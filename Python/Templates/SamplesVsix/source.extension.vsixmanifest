@@ -4,6 +4,7 @@
     <DisplayName>Python Tools for Visual Studio - Samples</DisplayName>
     <Description xml:space="preserve">Python Tools for Visual Studio sample project templates.</Description>
     <MoreInfo>http://aka.ms/ptvs</MoreInfo>
+    <License>Python Tools for VS License.rtf</License>
     <GettingStartedGuide>http://aka.ms/ptvstutorial</GettingStartedGuide>
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
@@ -11,7 +12,7 @@
   <!-- Version="14.0" specifies the minimum (not the maximum) version, and the
        Id specifications are minimums; any SKU equal or 'higher' will accept
        them. -->
-  <Installation InstalledByMsi="true">
+  <Installation>
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="14.0" />
     <InstallationTarget Id="Microsoft.VisualStudio.IntegratedShell" Version="14.0" />
     <InstallationTarget Id="Microsoft.VisualStudio.WDExpress" Version="14.0" />

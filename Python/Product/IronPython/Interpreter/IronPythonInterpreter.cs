@@ -126,7 +126,6 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
 #if DEBUG
-        [Serializable]
         class AssertListenerInitializer {
             private readonly TraceListener _listener;
 

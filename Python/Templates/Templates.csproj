@@ -42,6 +42,10 @@
     <UseVSSDKTemplateOnly>true</UseVSSDKTemplateOnly>
     <CreateVsixContainer>true</CreateVsixContainer>
     <DeployExtension>$(BuildingInsideVisualStudio)</DeployExtension>
+    <NoWarn>$(NoWarn);2008</NoWarn>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <MicroBuild_FXCop>false</MicroBuild_FXCop>
+    <MicroBuild_APIScan>false</MicroBuild_APIScan>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -49,7 +53,25 @@
   <ItemGroup>
     <None Include="source.extension.vsixmanifest" />
     <None Include="DO NOT MODIFY PROJECT.txt" />
+    <Content Include="..\Product\Icons\Dev$(VSTarget)\PythonProject.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="..\Product\Icons\Dev$(VSTarget)\PythonProjectBig.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="..\Product\PythonTools\Python Tools for VS License.rtf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
     <None Include="SharedFiles\**\*">
+      <IncludeInVsix>false</IncludeInVsix>
+    </None>
+    <None Include="ReadmeFiles\**\*">
       <IncludeInVsix>false</IncludeInVsix>
     </None>
     <Content Include="Core\ItemTemplates\**\*;Django\ItemTemplates\**\*;IronPython\ItemTemplates\**\*;Web\ItemTemplates\**\*">
