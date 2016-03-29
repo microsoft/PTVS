@@ -1555,7 +1555,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         )
                     );
                     Debug.Assert(
-                        end < view.TextBuffer.CurrentSnapshot.Length, 
+                        end <= view.TextBuffer.CurrentSnapshot.Length, 
                         String.Format(
                             "Bad span: {0} vs {1} (was {2} before translation, from {3} to {4})", 
                             end, 

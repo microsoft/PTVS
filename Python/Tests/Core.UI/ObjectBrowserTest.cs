@@ -751,7 +751,7 @@ namespace PythonToolsUITests {
                 System.Threading.Thread.Sleep(1000);
 
                 str = app.Dte.ActiveWindow.Caption;
-                Assert.IsTrue(str.Contains("3 matches found"), str);
+                Assert.IsTrue(str.Contains("2 matches found"), str);
             }
         }
 

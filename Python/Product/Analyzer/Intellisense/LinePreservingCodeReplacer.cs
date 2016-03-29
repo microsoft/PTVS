@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.Intellisense {
+    using System.Linq;
     using AP = AnalysisProtocol;
 
     /// <summary>
@@ -52,7 +53,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             int curOldLine = 0;
             for (int curNewLine = 0; curOldLine < _oldLines.Length && curNewLine < _newLines.Length; curOldLine++) {
-                if (_oldLines[curOldLine] == _newLines[curNewLine]) {
+                if (_oldLines[curOldLine].Text == _newLines[curNewLine].Text) {
                     curNewLine++;
                     continue;
                 }
@@ -132,9 +133,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     new AP.ChangeInfo() {
                         newText = string.Join(
                             _newLine,
-                            _newLines,
-                            excessNewLineStart,
-                            endNewLine - excessNewLineStart
+                            _newLines.Skip(excessNewLineStart).Take(endNewLine - excessNewLineStart).Select(x => x.Text)
                         ) + _newLine,
                         start = _oldLines[endOldLine - 1].EndIncludingLineBreak,
                         length = 0,

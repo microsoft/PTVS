@@ -571,7 +571,7 @@ namespace PythonToolsUITests {
                 Assert.AreEqual(true, pip.IsPipInstalled, "pip was not installed");
 
                 var packages = pip.GetInstalledPackagesAsync().GetAwaiter().GetResult();
-                AssertUtil.ContainsExactly(packages.Select(pv => pv.Name), "pip", "setuptools", "wheel");
+                AssertUtil.ContainsAtLeast(packages.Select(pv => pv.Name), "pip", "setuptools");
 
                 task = wpf.Invoke(() => pip.InstallPackage("ptvsd", true).ContinueWith<bool>(LogException));
                 Assert.IsTrue(task.Wait(TimeSpan.FromSeconds(60.0)), "pip install ptvsd timed out");

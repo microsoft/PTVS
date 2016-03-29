@@ -47,6 +47,10 @@ namespace Microsoft.PythonTools.Intellisense {
             return new Statement[0];
         }
 
+        public abstract int StartIncludingLeadingWhiteSpace {
+            get;
+        }
+
         /// <summary>
         /// Returns the start of the selection including any indentation on the current line, but
         /// excluding any previous lines of pure white space or comments.
@@ -121,6 +125,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        public override int StartIncludingLeadingWhiteSpace {
+            get {
+                return _node.GetStartIncludingLeadingWhiteSpace(Parents[0] as PythonAst);
+            }
+        }
+
         public override int StartIncludingIndentation {
             get { return _node.GetStartIncludingIndentation(Parents[0] as PythonAst); }
         }
@@ -185,6 +195,15 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        public override int StartIncludingLeadingWhiteSpace {
+            get {
+                if (_suite.Statements.Count == 0) {
+                    return _suite.GetStartIncludingLeadingWhiteSpace(Parents[0] as PythonAst);
+                }
+                return _suite.Statements[_start].GetStartIncludingLeadingWhiteSpace(Parents[0] as PythonAst);
+            }
+        }
+
         public override int StartIncludingIndentation {
             get {
                 if (_suite.Statements.Count == 0) {
@@ -228,6 +247,9 @@ namespace Microsoft.PythonTools.Intellisense {
     static class NodeExtensions {
         internal static int GetStartIncludingIndentation(this Node self, PythonAst ast) {
             return self.StartIndex - (self.GetIndentationLevel(ast) ?? "").Length;
+        }
+        internal static int GetStartIncludingLeadingWhiteSpace(this Node self, PythonAst ast) {
+            return self.StartIndex - (self.GetLeadingWhiteSpace(ast) ?? "").Length;
         }
     }
 }

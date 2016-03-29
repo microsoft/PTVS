@@ -690,28 +690,37 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 var body = walker.Target.GetNode(ast);
 
-                // remove any leading comments before round tripping, not selecting them
-                // gives a nicer overall experience, otherwise we have a selection to the
-                // previous line which only covers white space.
-                body.SetLeadingWhiteSpace(ast, body.GetIndentationLevel(ast));
 
-                int length = walker.Target.End - walker.Target.StartIncludingIndentation;
-                if (code[walker.Target.End] == '\r') {
-                    length++;
-                    if (walker.Target.End + 1 < code.Length &&
-                        code[walker.Target.End + 1] == '\n') {
+                int whitspaceStart = walker.Target.StartIncludingIndentation;
+
+                int start;
+                if (request.startIndex <= walker.Target.StartIncludingLeadingWhiteSpace) {
+                    // we've selected the leading comments, format them too...
+                    start = walker.Target.StartIncludingLeadingWhiteSpace;
+                } else {
+                    // the user didn't have any comments selected, don't reformat them
+                    body.SetLeadingWhiteSpace(ast, body.GetIndentationLevel(ast));
+
+                    start = walker.Target.StartIncludingIndentation;
+                }
+
+                int length = walker.Target.End - start;
+                if (walker.Target.End < code.Length) {
+                    if (code[walker.Target.End] == '\r') {
+                        length++;
+                        if (walker.Target.End + 1 < code.Length &&
+                            code[walker.Target.End + 1] == '\n') {
+                            length++;
+                        }
+                    } else if (code[walker.Target.End] == '\n') {
                         length++;
                     }
-                } else if (code[walker.Target.End] == '\n') {
-                    length++;
                 }
-                var selectedCode = code.Substring(
-                    walker.Target.StartIncludingIndentation,
-                    length
-                );
+
+                var selectedCode = code.Substring(start, length);
 
                 return new AP.FormatCodeResponse() {
-                    startIndex = walker.Target.StartIncludingIndentation,
+                    startIndex = start,
                     endIndex = walker.Target.End,
                     version = version,
                     changes = selectedCode.ReplaceByLines(
@@ -719,7 +728,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         request.newLine
                     ).Select(
                         x => new AP.ChangeInfo() {
-                            start = x.start + walker.Target.StartIncludingIndentation,
+                            start = x.start + start,
                             length = x.length,
                             newText = x.newText
                         }
