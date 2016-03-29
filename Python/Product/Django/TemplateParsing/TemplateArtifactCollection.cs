@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
            }
 
            foreach (var separatorInfo in _separatorInfos) {
-               if (IsDestructiveChangeForSeparator(separatorInfo, itemsInRange, start, oldLength, newLength, oldText, newText)) {
+               if (IsADestructiveChangeForSeparator(separatorInfo, itemsInRange, start, oldLength, newLength, oldText, newText)) {
                     return true;
                 }
             }
@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             return false;
         }
 
-        private bool IsDestructiveChangeForSeparator(
+        private static bool IsADestructiveChangeForSeparator(
             ISensitiveFragmentSeparatorsInfo separatorInfo,
             IEnumerable<IArtifact> itemsInRange,
             int start,

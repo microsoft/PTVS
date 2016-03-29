@@ -6,4 +6,9 @@
     <IntermediateOutputPathSuffix>Test_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
   </PropertyGroup>
   <Import Project="$(BuildRoot)\Build\Common.Build.settings" />
+  <PropertyGroup>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <MicroBuild_FXCop>false</MicroBuild_FXCop>
+    <MicroBuild_APIScan>false</MicroBuild_APIScan>
+  </PropertyGroup>
 </Project>

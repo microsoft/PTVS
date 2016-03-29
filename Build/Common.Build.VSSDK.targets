@@ -14,7 +14,7 @@
     <DeployExtension Condition="'$(DeployExtension)' == ''">false</DeployExtension>
     <CopyBuildOutputToOutputDirectory>false</CopyBuildOutputToOutputDirectory>
     <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
-    <IncludeVSIXItemsFromTargets>BuiltVsixTemplateItems</IncludeVSIXItemsFromTargets>
+    <IncludeVSIXItemsFromTargets></IncludeVSIXItemsFromTargets>
   </PropertyGroup>
 
   <PropertyGroup Condition="!$(UseVSSDK) and !$(UseVSSDKTemplateOnly)">
@@ -76,13 +76,11 @@
   </Target>
 
   <PropertyGroup>
-    <VSSDKTargets Condition="$(VSTarget) == '14.0'">$(BuildOutputRoot)Microsoft.VSSDK.BuildTools.14.0.23205\tools\VSSDK\Microsoft.VsSDK.targets</VSSDKTargets>
-    <VSSDKTargets Condition="$(VSTarget) == '15.0'">$(BuildOutputRoot)Microsoft.VSSDK.BuildTools.15.0.25001-Dev15CTP1\tools\VSSDK\Microsoft.VsSDK.targets</VSSDKTargets>
+    <VSSDKTargets>$(PackagesPath)Microsoft.VSSDK.BuildTools\tools\VSSDK\Microsoft.VsSDK.targets</VSSDKTargets>
   </PropertyGroup>
   
   <!-- Import the VS SDK headers -->
-  <Import Project="$(VSSDKTargets)" Condition="Exists($(VSSDKTargets))" />
-  <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="!Exists($(VSSDKTargets))" />
+  <Import Project="$(VSSDKTargets)" />
 
   <!-- For non-debug builds, don't copy debug symbols -->
   <Target Name="_ClearVSIXSourceItemLocalOnly"
@@ -111,38 +109,6 @@
     <ValidateVsixPartsDependsOn>DetokenizeVsixManifestFile;$(ValidateVsixPartsDependsOn)</ValidateVsixPartsDependsOn>
   </PropertyGroup>
 
-  <!-- Provide a target to include templates -->
-  <Target Name="BuiltVsixTemplateItems"
-          DependsOnTargets="ZipProjects;ZipItems"
-          Returns="@(TemplateZip)">
-    <ItemGroup>
-      <TemplateZip Include="@(IntermediateZipItem)">
-        <TemplateSubPath>ItemTemplates\%(IntermediateZipItem.Language)\%(IntermediateZipItem.OutputSubPath)\%(IntermediateZipItem.Culture)</TemplateSubPath>
-      </TemplateZip>
-      <TemplateZip Include="@(IntermediateZipProject)">
-        <TemplateSubPath>ProjectTemplates\%(IntermediateZipProject.Language)\%(IntermediateZipProject.OutputSubPath)\%(IntermediateZipProject.Culture)</TemplateSubPath>
-      </TemplateZip>
-    </ItemGroup>
-  </Target>
-
-  <PropertyGroup>
-    <IncludeVSIXItemsFromTargets Condition="!$(UseVSSDKTemplateOnly)">$(IncludeVSIXItemsFromTargets);BuiltVsixTemplateItems</IncludeVSIXItemsFromTargets>
-  </PropertyGroup>
-
-
-  <!-- Copy built templates to the project's output directory -->
-  <Target Name="CopyTemplatesToOutput"
-          DependsOnTargets="BuiltVsixTemplateItems"
-          Inputs="@(TemplateZip)"
-          Outputs="@(TemplateZip->'$(OutputPath)%(TemplateSubPath)\%(Filename)%(Extension)')"
-          AfterTargets="CopyFilesToOutputDirectory">
-    <Copy SourceFiles="@(TemplateZip)"
-          DestinationFiles="@(TemplateZip->'$(OutputPath)%(TemplateSubPath)\%(Filename)%(Extension)')"
-          SkipUnchangedFiles="true">
-      <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
-    </Copy>
-  </Target>
-  
   <!-- Copy extension files to the project's output directory -->
   <Target Name="CopyVSSDKFilesToOutput"
           DependsOnTargets="CopyVsixManifestFile;CopyPkgDef"
@@ -181,7 +147,7 @@
   Zip folders containing VSIX files. These folders must have been created
   by previously having built the project.
   -->
-  <Target Name="_GetRezipVSIXFiles" Condition="$([msbuild]::ValueOrDefault($(RezipVSIXFiles), `false`))">
+  <Target Name="_GetRezipVSIXContainers" Condition="$([msbuild]::ValueOrDefault($(RezipVSIXFiles), `false`))">
     <ItemGroup>
       <VSIX Include="$(CopyVsixExtensionRoot)*\extension.vsixmanifest" />
       <VSIX>
@@ -191,68 +157,29 @@
     </ItemGroup>
   </Target>
   
-  <Target Name="_RezipSingleVSIX_Dev12_14" DependsOnTargets="_GetRezipVSIXFiles" BeforeTargets="Build" Inputs="@(VSIX)" Outputs="%(VSIX.Container)" Condition="'$(VSTarget)' == '12.0' or '$(VSTarget)' == '14.0'">
-    <Message Text="Rezipping %(VSIX.SourceDir) to %(VSIX.Container)" Importance="high" />
-    
+  <Target Name="_GetRezipVSIXFiles" DependsOnTargets="_GetRezipVSIXContainers" Condition="$([msbuild]::ValueOrDefault($(RezipVSIXFiles), `false`))">
     <ItemGroup>
-      <_VSIXSourceItems Include="%(VSIX.SourceDir)**\*" />
+      <_VSIXSourceItems Include="%(VSIX.SourceDir)**\*">
+        <Container>%(VSIX.Container)</Container>
+      </_VSIXSourceItems>
       <_VSIXSourceItems>
         <TargetPath>%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
       </_VSIXSourceItems>
     </ItemGroup>
+  </Target>
+  
+  <Target Name="_RezipSingleVSIX" DependsOnTargets="_GetRezipVSIXFiles" BeforeTargets="Build" Inputs="@(_VSIXSourceItems)" Outputs="%(_VSIXSourceItems.Container)">
+    <Message Text="Rezipping %(_VSIXSourceItems.Container)" Importance="high" />
     
-    <PropertyGroup>
-      <_Container>%(VSIX.Container)</_Container>
-    </PropertyGroup>
-
-    <CreateZipPackage Files="@(_VSIXSourceItems)" ZipPackage="$(_Container)" CompressionLevel="$(ZipPackageCompressionLevel)">
+    <CreateZipPackage Files="@(_VSIXSourceItems)" ZipPackage="%(_VSIXSourceItems.Container)" CompressionLevel="$(ZipPackageCompressionLevel)">
       <Output TaskParameter="ZipPackage" ItemName="FileWrites" />
-      <Output TaskParameter="ZipPackage" ItemName="_FilesToSign" />
+      <Output TaskParameter="ZipPackage" ItemName="_VsixToSign" />
     </CreateZipPackage>
 
     <ItemGroup>
-      <FilesToSign Include="$(_Container)">
+      <FilesToSign Include="@(_VsixToSign)">
         <Authenticode>vsix</Authenticode>
       </FilesToSign>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_RezipSingleVSIX_Dev10_11" DependsOnTargets="_GetRezipVSIXFiles" BeforeTargets="Build" Inputs="@(VSIX)" Outputs="%(VSIX.Container)" Condition="'$(VSTarget)' == '10.0' or '$(VSTarget)' == '11.0'">
-    <Message Text="Rezipping %(VSIX.SourceDir)" Importance="high" />
-    
-    <ItemGroup>
-      <_VSIXSourceItems Include="%(VSIX.SourceDir)**\*" />
-      <_VSIXSourceItems>
-        <TargetPath>%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
-      </_VSIXSourceItems>
-    </ItemGroup>
-
-    <PropertyGroup>
-      <_Container>%(VSIX.Container)</_Container>
-    </PropertyGroup>
-
-    <CreateZipPackage Files="@(_VSIXSourceItems)" ZipPackage="$(_Container)">
-      <Output TaskParameter="ZipPackage" ItemName="FileWrites" />
-    </CreateZipPackage>
-  </Target>
-
-  <!--
-  Transforms TransformedZipProject items into ZipProject items with textual
-  replacement of the VS target version.
-  
-  The original files should include an extra extension (typically .base)
-  which will be stripped when the file is tranformed.
-  -->
-  <Target Name="TransformZipProject"
-          BeforeTargets="MainResourcesGeneration"
-          Condition="'@(TransformedZipProject)' != ''">
-    <WriteLinesToFile
-      File="@(TransformedZipProject->'%(RootDir)%(Directory)%(Filename)')"
-      Lines="$([System.IO.File]::ReadAllText('%(fullpath)').Replace(&quot;_VSVERSION_&quot;,&quot;$(VSTarget)&quot;))"
-      Overwrite="true"/>
-
-    <ItemGroup>
-      <ZipProject Include="@(TransformedZipProject->'%(RootDir)%(Directory)%(Filename)')" />
     </ItemGroup>
   </Target>
 

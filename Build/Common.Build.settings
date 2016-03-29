@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" TreatAsLocalProperty="BuildOutputRoot;BuildRoot;OutputPathSuffix;OutputPath;IntermediateOutputPath">
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" TreatAsLocalProperty="BuildOutputRoot;BuildRoot;OutputPathSuffix;OutputPath;IntermediateOutputPath;ReleaseOutputPath">
 
   <!-- Ensures that if this file changes it forces a rebuild -->
   <PropertyGroup>
@@ -24,6 +24,7 @@
     <VSTargetName Condition="'$(VSTarget)' == '11.0'">2012</VSTargetName>
     <VSTargetName Condition="'$(VSTarget)' == '10.0'">2010</VSTargetName>
     
+    <BuildNumber Condition="'$(BuildNumber)' == ''">$(BUILD_BUILDNUMBER)</BuildNumber>
     <BuildNumber Condition="'$(BuildNumber)' == ''">1000.00</BuildNumber>
     <!--
     The version number that will identify a specific build. This appears in
@@ -38,6 +39,7 @@
     <StableVersion Condition="$(StableVersion) == ''">$(StableVersionPrefix).$(VSTargetName)</StableVersion>
     
     <!-- When true, increases build restrictions to ensure complete public releases -->
+    <ReleaseBuild Condition="'$(ReleaseBuild)' == '' and '$(SignType)' == 'real'">true</ReleaseBuild>
     <ReleaseBuild Condition="'$(ReleaseBuild)' == ''">false</ReleaseBuild>
 
     <CustomBuildIdentifier Condition="'$(CustomBuildIdentifierTemplate)' == 'Dev'">Dev $([System.DateTime]::Now.ToString(`yyyy-MM-dd`))</CustomBuildIdentifier>
@@ -61,15 +63,16 @@
     <BuildRoot Condition="!HasTrailingSlash($(BuildRoot))">$(BuildRoot)\</BuildRoot>
     <TargetsPath>$(BuildRoot)Build</TargetsPath>
 
-    <PTVSPRPath Condition="'$(PTVSPRPath)' == ''">$(BuildRoot)..\PTVS-pr\</PTVSPRPath>
-    <PTVSSamplesPath Condition="'$(PTVSSamplesPath)' == ''">$(BuildRoot)Python\Samples\</PTVSSamplesPath>
+    <PackagesPath Condition="'$(PackagesPath)' == ''">$(BUILD_BINARIESDIRECTORY)</PackagesPath>
+    <PackagesPath Condition="'$(PackagesPath)' == ''">$(BuildRoot)\BuildOutput</PackagesPath>
+    <PackagesPath Condition="!HasTrailingSlash($(PackagesPath))">$(PackagesPath)\</PackagesPath>
 
     <!-- BuildOutputRoot contains all build files.
     
     Rather than customizing OutputPath or IntermediateOutputPath in projects,
     $(OutputPathSuffix) and $(IntermediateOutputPathSuffix) should be set.
     -->
-    <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(TF_BUILD_BinariesDirectory)</BuildOutputRoot>
+    <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BUILD_BINARIESDIRECTORY)</BuildOutputRoot>
     <BuildOutputRoot Condition="'$(BuildOutputRoot)' == ''">$(BuildRoot)\BuildOutput\$(Configuration)$(VSTarget)\</BuildOutputRoot>
     <BuildOutputRoot Condition="!HasTrailingSlash($(BuildOutputRoot))">$(BuildOutputRoot)\</BuildOutputRoot>
 
@@ -82,11 +85,15 @@
     <LayoutOutputPath Condition="'$(LayoutOutputPath)' == ''">$(BuildOutputRoot)layout\</LayoutOutputPath>
     <LayoutOutputPath Condition="!HasTrailingSlash($(LayoutOutputPath))">$(LayoutOutputPath)\</LayoutOutputPath>
 
+    <ReleaseOutputPath Condition="'$(ReleaseOutputPath)' == '' and '$(BUILD_STAGINGDIRECTORY)' != ''">$(BUILD_STAGINGDIRECTORY)\release\</ReleaseOutputPath>
     <ReleaseOutputPath Condition="'$(ReleaseOutputPath)' == ''">$(BuildOutputRoot)release\</ReleaseOutputPath>
     <ReleaseOutputPath Condition="!HasTrailingSlash($(ReleaseOutputPath))">$(ReleaseOutputPath)\</ReleaseOutputPath>
 
     <SetupOutputPath Condition="'$(SetupOutputPath)' == ''">$(BuildOutputRoot)raw\setup\</SetupOutputPath>
     <SetupOutputPath Condition="!HasTrailingSlash($(SetupOutputPath))">$(SetupOutputPath)\</SetupOutputPath>
+
+    <FopxOutputPath Condition="'$(FopxOutputPath)' == ''">$(BuildOutputRoot)raw\fopx\</FopxOutputPath>
+    <FopxOutputPath Condition="!HasTrailingSlash($(FopxOutputPath))">$(FopxOutputPath)\</FopxOutputPath>
 
     <ToolsOutputPath Condition="'$(ToolsOutputPath)' == ''">$(BuildOutputRoot)raw\tools\</ToolsOutputPath>
     <ToolsOutputPath Condition="!HasTrailingSlash($(ToolsOutputPath))">$(ToolsOutputPath)\</ToolsOutputPath>
@@ -141,9 +148,6 @@
 
     <DevEnvDir>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\VisualStudio\$(VSTarget)', 'InstallDir', null, RegistryView.Registry32))\</DevEnvDir>
     <VSSDKDir>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\VisualStudio\VSIP\$(VSTarget)', 'InstallDir', null, RegistryView.Registry32))\</VSSDKDir>
-
-    <MicroBuildSentinelFile>DO NOT USE</MicroBuildSentinelFile>
-    <MicroBuildPluginDirectory>$(BuildOutputRoot)</MicroBuildPluginDirectory>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -186,6 +190,7 @@
   <Import Project="$(TargetsPath)\Common.Build.CSharp.settings" Condition="'$(MSBuildProjectExtension)' == '.csproj' or '$(MSBuildProjectExtension)' == '.tmp_proj'" />
   <Import Project="$(TargetsPath)\Common.Build.Cpp.settings" Condition="'$(MSBuildProjectExtension)' == '.vcxproj'" />
   <Import Project="$(TargetsPath)\Common.Build.Wix.settings" Condition="'$(MSBuildProjectExtension)' == '.wixproj'" />
+  <Import Project="$(TargetsPath)\MicroBuild.props" />
 
   <ItemGroup>
     <CodeAnalysisDictionary Include="$(BuildRoot)\Build\CustomDictionary.xml" />
@@ -194,4 +199,9 @@
   <PropertyGroup>
     <CodeAnalysisRuleSet>$(BuildRoot)\Build\xTVS.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
+
+  <!-- Check for the VSSDK Build Tools arbitrarily to see whether we should run the script. -->
+  <Target Name="_EnsureDependenciesInstalled" BeforeTargets="PrepareForBuild" Condition="!Exists('$(PackagesPath)Microsoft.VSSDK.BuildTools')">
+    <Exec Command='powershell.exe -ExecutionPolicy Bypass -File "$(TargetsPath)\PreBuild.ps1" -VsTarget $(VSTarget)' />
+  </Target>
 </Project>

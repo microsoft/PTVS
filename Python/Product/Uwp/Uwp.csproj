@@ -222,6 +222,11 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
+    <Content Include="..\PythonTools\Python Tools for VS License.rtf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">

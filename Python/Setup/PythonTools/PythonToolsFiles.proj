@@ -26,6 +26,7 @@
                    !(bindpath.bin)\Microsoft.PythonTools.VSCommon.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.VSInterpreters.dll;
                    !(bindpath.bin)\Newtonsoft.Json.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.XamlDesignerSupport.dll;
                    pip_downloader.py" />
 
     <!-- Analyzer -->

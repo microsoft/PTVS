@@ -27,10 +27,11 @@ namespace Microsoft.PythonTools.Profiling {
     /// 
     /// The minimal implementation needs to implement GetProperty.
     /// </summary>
-    abstract class BaseHierarchyNode : IVsUIHierarchy {
+    abstract class BaseHierarchyNode : IVsUIHierarchy, IDisposable {
         private ServiceProvider _serviceProvider;
         private Dictionary<uint, IVsHierarchyEvents> _events = new Dictionary<uint, IVsHierarchyEvents>();
         private uint _eventCounter;
+        private bool _isDisposed = false;
 
         #region IVsUIHierarchy Members
 
@@ -147,6 +148,21 @@ namespace Microsoft.PythonTools.Profiling {
             foreach (var ev in _events.Values) {
                 ev.OnPropertyChanged(itemid, propid, flags);
             }
+        }
+
+
+        protected virtual void Dispose(bool disposing) {
+            if (!_isDisposed) {
+                if (disposing) {
+                    _serviceProvider.Dispose();
+                }
+
+                _isDisposed = true;
+            }
+        }
+
+        public void Dispose() {
+            Dispose(true);
         }
     }
 }

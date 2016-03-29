@@ -187,6 +187,7 @@ namespace Microsoft.PythonTools {
     // TODO: Restore attribute and remove entry from Repl.v15.0.pkgdef
     [ProvideInteractiveWindow(GuidList.guidPythonInteractiveWindow, Style = VsDockStyle.Linked, Orientation = ToolWindowOrientation.none, Window = ToolWindowGuids80.Outputwindow)]
 #endif
+    [ProvideBraceCompletion(PythonCoreConstants.ContentType)]
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "Object is owned by VS and cannot be disposed")]
     public sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {

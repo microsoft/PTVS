@@ -328,7 +328,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 } catch (Exception ex) {
                     return string.Format(
                         culture,
-                        "Error reading {0}. Please let analysis complete and try again.",
+                        "Error reading {0}. Please let analysis complete and try again.\r\n{1}",
                         analysisLog,
                         ex
                     );

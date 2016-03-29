@@ -103,14 +103,9 @@
     <ProjectReference2 Include="$(BuildRoot)Python\Product\ImportWizard\ImportWizard.csproj" />
     <ProjectReference2 Include="$(BuildRoot)Python\Product\ProjectWizards\ProjectWizards.csproj" />
     <ProjectReference2 Include="$(BuildRoot)Python\Product\TestAdapter\TestAdapter.csproj" />
-    <Reference Include="Microsoft.Windows.Design.Host, Version=4.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(DevEnvDir)PrivateAssemblies\Microsoft.Windows.Design.Host.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
+    <ProjectReference2 Include="$(BuildRoot)Python\Product\XamlDesignerSupport\XamlDesignerSupport.csproj" />
     <Reference Include="Microsoft.VisualStudio.WindowsAzure.CommonAzureTools.Contracts.1.2">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(DevEnvDir)Extensions\Microsoft\Windows Azure Tools\Common\Microsoft.VisualStudio.WindowsAzure.CommonAzureTools.Contracts.1.2.dll</HintPath>
       <Private>false</Private>
     </Reference>
   </ItemGroup>
@@ -119,9 +114,6 @@
       <ItemGroup>
         <Reference Include="Microsoft.VisualStudio.Web.WindowsAzure.Contracts, Version=2.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
           <SpecificVersion>True</SpecificVersion>
-          <HintPath Condition="Exists('$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)PrivateAssemblies\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
-          <HintPath Condition="Exists('$(DevEnvDir)Extensions\Microsoft\Web Tools\WindowsAzure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)Extensions\Microsoft\Web Tools\WindowsAzure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
-          <HintPath Condition="Exists('$(DevEnvDir)Extensions\Microsoft\Web Tools Azure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll')">$(DevEnvDir)Extensions\Microsoft\Web Tools Azure\Microsoft.VisualStudio.Web.WindowsAzure.Contracts.dll</HintPath>
           <Private>false</Private>
         </Reference>
       </ItemGroup>
@@ -272,6 +264,9 @@
     <Compile Include="PythonTools\Intellisense\AnalysisEntry.cs" />
     <Compile Include="PythonTools\Intellisense\QuickInfo.cs" />
     <Compile Include="PythonTools\Intellisense\VersionedResponse.cs" />
+    <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
+    <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />
+    <Compile Include="PythonTools\ProvideBraceCompletionAttribute.cs" />
     <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
     <Compile Include="PythonTools\Repl\InlineReplAdornment.cs" />
     <Compile Include="PythonTools\Repl\InlineReplAdornmentManager.cs" />
@@ -375,7 +370,6 @@
     <Compile Include="PythonTools\Project\Pip.cs" />
     <Compile Include="PythonTools\Project\PythonProjectImageName.cs" />
     <Compile Include="PythonTools\Project\VirtualEnv.cs" />
-    <Compile Include="PythonTools\Project\XamlDesignerSupport.cs" />
     <Compile Include="PythonTools\PythonAnalysisClassifier.cs" />
     <Compile Include="PythonTools\PythonAnalysisClassifierProvider.cs" />
     <Compile Include="PythonTools\PythonInterpreterFactoryExtensions.cs" />
@@ -605,7 +599,6 @@
     <Compile Include="PythonTools\Repl\AttachDebuggerReplCommand.cs" />
     <Compile Include="PythonTools\Repl\LoadReplCommand.cs" />
     <Compile Include="PythonTools\Repl\OverloadDoc.cs" />
-    <Compile Include="PythonTools\Designer\WpfEventBindingProvider.cs" />
     <Compile Include="PythonTools\PythonClassifier.cs" />
     <Compile Include="PythonTools\PythonPredefinedClassificationTypeNames.cs" />
     <Compile Include="PythonTools\Editor\BraceMatcher.cs" />

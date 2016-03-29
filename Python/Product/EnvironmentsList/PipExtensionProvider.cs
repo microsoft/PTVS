@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
@@ -27,7 +28,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
-    public sealed class PipExtensionProvider : IEnvironmentViewExtension {
+    public sealed class PipExtensionProvider : IEnvironmentViewExtension, IDisposable {
         private readonly IPythonInterpreterFactory _factory;
         private readonly Uri _index;
         private readonly string _indexName;
@@ -70,6 +71,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 _indexName = string.IsNullOrEmpty(indexName) ? _index.Host : indexName;
             }
             _cache = PipPackageCache.GetCache(_index, _indexName);
+        }
+
+        [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_pipCancel",
+            Justification = "False detection")]
+        public void Dispose() {
+            _cancelAll.Cancel();
+            _cancelAll.Dispose();
+            _pipLock.Dispose();
+            _pipCancel?.Dispose();
         }
 
         public int SortPriority {

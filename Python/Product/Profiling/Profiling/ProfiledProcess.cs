@@ -25,7 +25,7 @@ using Microsoft.VisualStudioTools.Project;
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Profiling {
-    class ProfiledProcess {
+    sealed class ProfiledProcess : IDisposable {
         private readonly string _exe, _args, _dir;
         private readonly ProcessorArchitecture _arch;
         private readonly Process _process;
@@ -76,6 +76,10 @@ namespace Microsoft.PythonTools.Profiling {
 
             _process = new Process();
             _process.StartInfo = processInfo;
+        }
+
+        public void Dispose() {
+            _process.Dispose();
         }
 
         public void StartProfiling(string filename) {

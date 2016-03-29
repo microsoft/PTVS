@@ -37,6 +37,7 @@ using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
+using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -598,9 +599,14 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override int QueryService(ref Guid guidService, out object result) {
-            if (XamlDesignerSupport.DesignerContextType != null &&
-                guidService == XamlDesignerSupport.DesignerContextType.GUID) {
+            var model = GetService(typeof(SComponentModel)) as IComponentModel;
+            var designerSupport = model?.GetService<IXamlDesignerSupport>();
+
+            if (designerSupport != null && guidService == designerSupport.DesignerContextTypeGuid) {
                 result = DesignerContext;
+                if (result == null) {
+                    result = DesignerContext = designerSupport?.CreateDesignerContext();
+                }
                 return VSConstants.S_OK;
             }
             return base.QueryService(ref guidService, out result);
@@ -1021,10 +1027,11 @@ namespace Microsoft.PythonTools.Project {
 
         internal object DesignerContext {
             get {
-                if (_designerContext == null) {
-                    _designerContext = XamlDesignerSupport.CreateDesignerContext();
-                }
                 return _designerContext;
+            }
+            private set {
+                Debug.Assert(_designerContext == null, "Should only set DesignerContext once");
+                _designerContext = value;
             }
         }
 

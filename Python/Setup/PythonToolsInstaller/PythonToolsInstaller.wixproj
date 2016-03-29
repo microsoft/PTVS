@@ -10,7 +10,6 @@
     <DefineSolutionProperties>false</DefineSolutionProperties>
     <DefineConstants>
       $(DefineConstants);
-      IncludeVsLogger=$(IncludeVsLogger);
       IncludeUwp=$(IncludeUwp);
       IncludeIronPython=$(IncludeIronPython);
     </DefineConstants>
@@ -76,10 +75,6 @@
     <ProjectReference Include="$(BuildRoot)\Python\Setup\Uwp\Uwp.wixproj">
       <Name>UwpMsm</Name>
       <Project>{83946E81-7A1B-4D3B-927F-4CD67AC95BE7}</Project>
-    </ProjectReference>
-    <ProjectReference Include="$(PTVSPRPath)VsLoggerSetup\VsLogger.wixproj" Condition="'$(IncludeVsLogger)' == 'True'">
-      <Name>VsLoggerMsm</Name>
-      <Project>{639BFC80-B31B-4D3F-9DF3-A65913000B4B}</Project>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

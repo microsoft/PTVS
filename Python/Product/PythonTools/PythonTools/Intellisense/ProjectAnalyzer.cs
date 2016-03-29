@@ -1437,7 +1437,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return res?.names ?? Array.Empty<string>();
         }
 
-        internal async Task<VersionedResponse<AP.MethodInsertionLocationResponse>> GetInsertionPointAsync(AnalysisEntry entry, ITextBuffer textBuffer, string className) {
+        internal async Task<InsertionPoint> GetInsertionPointAsync(AnalysisEntry entry, ITextBuffer textBuffer, string className) {
             var lastVersion = entry.GetAnalysisVersion(textBuffer);
 
             var res = await SendRequestAsync(
@@ -1449,10 +1449,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 ).ConfigureAwait(false);
 
             if (res != null) {
-                return VersionedResponse(
-                    res,
-                    textBuffer,
-                    lastVersion
+                var translator = new LocationTracker(lastVersion, textBuffer, res.version);
+
+                return new InsertionPoint(
+                    translator.TranslateForward(res.location),
+                    res.indentation
                 );
             }
             return null;
