@@ -37,10 +37,8 @@ namespace Microsoft.PythonTools.Interpreter {
         // The second is a static registry entry for the local machine and/or
         // the current user (HKCU takes precedence), intended for being set by
         // other installers.
-        private const string FactoryProvidersRegKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion + @"\InterpreterFactories";
         private const string DefaultInterpreterOptionsCollection = @"SOFTWARE\\Microsoft\\PythonTools\\Interpreters";
         private const string DefaultInterpreterSetting = "DefaultInterpreter";
-        private const string DefaultInterpreterVersionSetting = "DefaultInterpreterVersion";
 
         private const string PathKey = "ExecutablePath";
         private const string WindowsPathKey = "WindowedExecutablePath";
