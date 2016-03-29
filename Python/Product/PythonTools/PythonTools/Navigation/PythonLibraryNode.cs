@@ -19,8 +19,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Language;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -52,9 +55,9 @@ namespace Microsoft.PythonTools.Navigation {
                 case PythonMemberType.Class:
                     return LibraryNodeType.Classes;
                 case PythonMemberType.Function:
-                    if (parent is PythonFileLibraryNode) {
-                        return LibraryNodeType.Classes;
-                    }
+                    //if (parent is PythonFileLibraryNode) {
+                    //    return LibraryNodeType.Classes | LibraryNodeType.Members;
+                    //}
                     return LibraryNodeType.Members;
                 default:
                     return LibraryNodeType.Members;
@@ -171,8 +174,32 @@ namespace Microsoft.PythonTools.Navigation {
                     }
                 }
             }
+        }
+
+        public override IVsSimpleObjectList2 FindReferences() {
+            var analyzer = this.Hierarchy.GetPythonProject().GetAnalyzer();
 
 
+            List<AnalysisVariable> vars = new List<AnalysisVariable>();
+            if (analyzer != null) {
+                foreach (var value in _value.Values) {
+                    foreach (var reference in value.locations) {
+                        var entry = analyzer.GetAnalysisEntryFromPath(reference.file);
+                        var analysis = VsProjectAnalyzer.AnalyzeExpressionAsync(
+                            entry, 
+                            Name, 
+                            new SourceLocation(0, reference.line, reference.column)
+                        ).Result;
+                        vars.AddRange(analysis.Variables);
+                    }
+                }
+            }
+
+            return EditFilter.GetFindRefLocations(
+                Site,
+                Name,
+                vars.ToArray()
+            );
         }
 
         public override int GetLibGuid(out Guid pGuid) {

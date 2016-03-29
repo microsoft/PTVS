@@ -98,5 +98,11 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 return (_ownerHierarchy as ProjectNode).Site;
             }
         }
+
+        public ProjectNode Hierarchy {
+            get {
+                return _ownerHierarchy as ProjectNode;
+            }
+        }
     }
 }

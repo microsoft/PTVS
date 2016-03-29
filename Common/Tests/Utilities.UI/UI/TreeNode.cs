@@ -143,6 +143,10 @@ namespace TestUtilities.UI
                         break;
                 }
             } catch (InvalidOperationException) {
+                Console.WriteLine("Can't expand/collapse");
+                foreach (var pattern in Element.GetSupportedPatterns()) {
+                    Console.WriteLine("{0} {1}", pattern.Id, pattern.ProgrammaticName);
+                }
                 Element.GetInvokePattern().Invoke();
             }
         }

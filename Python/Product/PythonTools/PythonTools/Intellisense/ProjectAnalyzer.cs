@@ -648,7 +648,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 fileId = file.FileId
             };
 
-            var definitions = await file.Analyzer.SendRequestAsync(req);
+            var definitions = await file.Analyzer.SendRequestAsync(req).ConfigureAwait(false);
             if (definitions != null) {
                 return new ExpressionAnalysis(
                     expr,
@@ -1538,15 +1538,36 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             );
 
-            if (res != null) {
+            if (res != null && res.version != -1) {
                 ITrackingSpan selectionSpan = null;
                 if (selectResult) {
                     var translator = new LocationTracker(lastAnalyzed, buffer, res.version);
+                    int start = translator.TranslateForward(res.startIndex);
+                    int end = translator.TranslateForward(res.endIndex);
+                    Debug.Assert(
+                        start < view.TextBuffer.CurrentSnapshot.Length, 
+                        String.Format("Bad span: {0} vs {1} (was {2} before translation, from {3} to {4})", 
+                            start, 
+                            view.TextBuffer.CurrentSnapshot.Length, 
+                            res.startIndex,
+                            res.version,
+                            view.TextBuffer.CurrentSnapshot.Version.VersionNumber
+                        )
+                    );
+                    Debug.Assert(
+                        end < view.TextBuffer.CurrentSnapshot.Length, 
+                        String.Format(
+                            "Bad span: {0} vs {1} (was {2} before translation, from {3} to {4})", 
+                            end, 
+                            view.TextBuffer.CurrentSnapshot.Length, 
+                            res.endIndex,
+                            res.version,
+                            view.TextBuffer.CurrentSnapshot.Version.VersionNumber
+                        )
+                    );
+
                     selectionSpan = view.TextBuffer.CurrentSnapshot.CreateTrackingSpan(
-                        Span.FromBounds(
-                            translator.TranslateForward(res.startIndex), 
-                            translator.TranslateForward(res.endIndex)
-                        ),
+                        Span.FromBounds(start, end),
                         SpanTrackingMode.EdgeInclusive
                     );
                 }

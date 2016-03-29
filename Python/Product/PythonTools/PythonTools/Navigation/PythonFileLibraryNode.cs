@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Navigation {
     class PythonFileLibraryNode : LibraryNode {
         private readonly HierarchyNode _hierarchy;
         public PythonFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename)
-            : base(parent, name, filename, LibraryNodeType.Package | LibraryNodeType.Classes, children: new PythonFileChildren((PythonFileNode)hierarchy)) {
+            : base(parent, name, filename, LibraryNodeType.Namespaces, children: new PythonFileChildren((PythonFileNode)hierarchy)) {
             _hierarchy = hierarchy;
 
             ((PythonFileChildren)Children)._parent = this;

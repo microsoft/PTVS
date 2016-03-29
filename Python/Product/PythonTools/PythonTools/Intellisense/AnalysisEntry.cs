@@ -119,7 +119,11 @@ namespace Microsoft.PythonTools.Intellisense {
         public int GetBufferId(ITextBuffer buffer) {
             var bufferParser = BufferParser;
             if (bufferParser != null) {
-                return bufferParser.GetBufferId(buffer);
+                var res = bufferParser.GetBufferId(buffer);
+                if (res != null) {
+                    return res.Value;
+                }
+                // Race with the buffer closing...
             }
 
             // No buffer parser associated with the file yet.  This can happen when
@@ -135,7 +139,13 @@ namespace Microsoft.PythonTools.Intellisense {
         public ITextVersion GetAnalysisVersion(ITextBuffer buffer) {
             var bufferParser = BufferParser;
             if (bufferParser != null) {
-                return bufferParser.GetAnalysisVersion(buffer);
+                var res = bufferParser.GetAnalysisVersion(buffer);
+                if (res != null) {
+                    // Analysis version has gone away, this can happen
+                    // if the text view is getting closed while we're
+                    // trying to perform an operation.
+                    return res;
+                }
             }
 
             // See GetBufferId above, this is really just defense in depth...

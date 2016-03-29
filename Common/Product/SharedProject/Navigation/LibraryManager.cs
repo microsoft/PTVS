@@ -65,7 +65,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
         }
 
         public virtual LibraryNode CreateFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename) {
-            return new LibraryNode(null, name, filename, LibraryNodeType.Package | LibraryNodeType.Classes);
+            return new LibraryNode(null, name, filename, LibraryNodeType.Namespaces);
         }
 
         private object GetPackageService(Type/*!*/ type) {

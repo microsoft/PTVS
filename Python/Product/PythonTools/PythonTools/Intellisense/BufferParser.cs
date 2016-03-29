@@ -96,7 +96,12 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         public ITextVersion GetAnalysisVersion(ITextBuffer buffer) {
             lock (this) {
-                return _bufferInfo[buffer]._analysisVersion;
+                BufferInfo info;
+                if (_bufferInfo.TryGetValue(buffer, out info)) {
+                    return info._analysisVersion;
+                }
+
+                return null;
             }
         }
 
@@ -141,9 +146,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal int GetBufferId(ITextBuffer buffer) { 
+        internal int? GetBufferId(ITextBuffer buffer) { 
             lock (this) {
-                return _bufferInfo[buffer].Id;
+                BufferInfo info;
+                if (_bufferInfo.TryGetValue(buffer, out info)) {
+                    return info.Id;
+                }
+                return null;
             }
         }
 

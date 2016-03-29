@@ -315,7 +315,7 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return Path.Combine(
                     PythonTypeDatabase.CompletionDatabasePath,
-                    Configuration.Id    .Replace('|', '\\').ToString()
+                    Configuration.Id.Replace('|', '\\').ToString()
                 );
             }
         }

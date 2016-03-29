@@ -2323,7 +2323,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                     ZipArchiveEntry zipEntry = entryQueue.Dequeue();
                     IProjectEntry projEntry = AnalyzeZipArchiveEntry(zipFileName, zipEntry, analyzeNextEntry);
-                    if (onFileAnalyzed != null) {
+                    if (onFileAnalyzed != null && projEntry != null) {
                         onFileAnalyzed(projEntry);
                     }
                 } catch (InvalidDataException ex) {

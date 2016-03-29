@@ -20,6 +20,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Threading;
 using Microsoft.PythonTools.Analysis;
@@ -491,7 +492,10 @@ namespace Microsoft.PythonTools.Navigation {
                     )
                 );
 
-                await _dispatcher.BeginInvoke(callback, DispatcherPriority.Background);
+                try {
+                    await _dispatcher.BeginInvoke(callback, DispatcherPriority.Background);
+                } catch (TaskCanceledException) {
+                }
             }
         }
 

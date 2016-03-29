@@ -251,6 +251,10 @@ namespace Microsoft.VisualStudioTools.Navigation {
             // Do nothing.
         }
 
+        public virtual IVsSimpleObjectList2 FindReferences() {
+            return null;
+        }
+
         public virtual string Name {
             get {
                 return _name;
