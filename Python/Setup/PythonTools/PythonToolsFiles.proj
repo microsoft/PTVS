@@ -20,7 +20,7 @@
                    !(bindpath.bin)\Microsoft.PythonTools.Analysis.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.Common.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.EnvironmentsList.dll;
-                   !(bindpath.bin)\Microsoft.PythonTools.JsonComm.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.Ipc.Json.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.ImportWizard.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.ProjectWizards.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.VSCommon.dll;

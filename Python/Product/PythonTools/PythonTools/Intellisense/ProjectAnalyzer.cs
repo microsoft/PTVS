@@ -79,13 +79,6 @@ namespace Microsoft.PythonTools.Intellisense {
         internal Task ReloadTask;
         internal int _parsePending;
 
-
-        internal VsProjectAnalyzer(
-            IServiceProvider serviceProvider,
-            IPythonInterpreterFactory factory)
-            : this(serviceProvider, factory.CreateInterpreter(), factory) {
-        }
-
         internal async Task<VersionedResponse<AP.UnresolvedImportsResponse>> GetMissingImportsAsync(AnalysisEntry analysisEntry, ITextBuffer textBuffer) {
             var lastVersion = analysisEntry.GetAnalysisVersion(textBuffer);
 
@@ -106,7 +99,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal VsProjectAnalyzer(
             IServiceProvider serviceProvider,
-            IPythonInterpreter interpreter,
             IPythonInterpreterFactory factory,
             bool implicitProject = true,
             string projectFile = null

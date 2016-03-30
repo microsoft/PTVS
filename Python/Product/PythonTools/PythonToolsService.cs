@@ -221,7 +221,6 @@ namespace Microsoft.PythonTools {
             EnsureCompletionDb(defaultFactory);
             return new VsProjectAnalyzer(
                 _container,
-                defaultFactory.CreateInterpreter(),
                 defaultFactory
             );
         }

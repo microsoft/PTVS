@@ -983,14 +983,17 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async void AnalyzeSearchPaths(IEnumerable<string> newDirs) {
-            // now add all of the missing files, any dups will automatically not be re-analyzed
-            foreach (var dir in newDirs) {
-                if (File.Exists(dir)) {
-                    // If it's a file and not a directory, parse it as a .zip
-                    // file in accordance with PEP 273.
-                    await _analyzer.AnalyzeZipArchiveAsync(dir);
-                } else if (Directory.Exists(dir)) {
-                    await _analyzer.AnalyzeDirectoryAsync(dir);
+            var analyzer = _analyzer;
+            if (analyzer != null) {
+                // now add all of the missing files, any dups will automatically not be re-analyzed
+                foreach (var dir in newDirs) {
+                    if (File.Exists(dir)) {
+                        // If it's a file and not a directory, parse it as a .zip
+                        // file in accordance with PEP 273.
+                        await analyzer.AnalyzeZipArchiveAsync(dir);
+                    } else if (Directory.Exists(dir)) {
+                        await analyzer.AnalyzeDirectoryAsync(dir);
+                    }
                 }
             }
         }
@@ -1157,7 +1160,6 @@ namespace Microsoft.PythonTools.Project {
             var factory = GetInterpreterFactory();
             var res = new VsProjectAnalyzer(
                 Site,
-                factory.CreateInterpreter(),
                 factory,
                 false,
                 BuildProject.FullPath

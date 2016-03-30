@@ -13,7 +13,7 @@
 
     <Component Id="InterpreterRegistration" Directory="Dir_VSInstallLocation" Guid="{03676467-1137-4F09-91CA-46078779B760}">
       <RegistryKey Root='HKCU' Key='Software\Microsoft\PythonTools\3.0\InterpreterFactories\Uwp'>
-        <RegistryValue Type='string' Name='CodeBase' Value='[Dir_VSInstallLocation]\Microsoft.PythonTools.Uwp.Interpreter.dll'/>
+        <RegistryValue Type='string' Name='CodeBase' Value='[Dir_VSInstallLocation]Microsoft.PythonTools.Uwp.Interpreter.dll'/>
       </RegistryKey>
     </Component>    
 
