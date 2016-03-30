@@ -21,7 +21,7 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Uwp.Project {
     [Guid(GuidList.guidUwpPropertyPageString)]
-    class PythonUwpPropertyPage : CommonPropertyPage, IDisposable {
+    class PythonUwpPropertyPage : CommonPropertyPage {
         private readonly PythonUwpPropertyPageControl _control;
 
         public const string RemoteDeviceSetting = "RemoteDebugMachine";
@@ -33,14 +33,11 @@ namespace Microsoft.PythonTools.Uwp.Project {
             _control = new PythonUwpPropertyPageControl(this);
         }
 
-        public void Dispose() {
-            Dispose(true);
-        }
-
-        protected void Dispose(bool disposing) {
+        protected override void Dispose(bool disposing) {
             if (disposing) {
                 _control.Dispose();
             }
+            base.Dispose(disposing);
         }
         
         public override Control Control {
