@@ -221,9 +221,9 @@ namespace Microsoft.PythonTools.Project {
             if (Directory.Exists(path) && Directory.EnumerateFileSystemEntries(path).Any()) {
                 WillCreateVirtualEnv = false;
 
-                var options = VirtualEnv.FindInterpreterOptions(path, _interpreterService);
-                if (options != null && File.Exists(options.InterpreterPath)) {
-                    var baseInterp = _interpreterService.FindInterpreter(options.Id);
+                var config = VirtualEnv.FindInterpreterConfiguration(path, _interpreterService);
+                if (config != null && File.Exists(config.InterpreterPath)) {
+                    var baseInterp = _interpreterService.FindInterpreter(config.Id);
                     InterpreterView baseInterpView;
                     if (baseInterp != null &&
                         (baseInterpView = Interpreters.FirstOrDefault(iv => iv.Interpreter == baseInterp)) != null) {

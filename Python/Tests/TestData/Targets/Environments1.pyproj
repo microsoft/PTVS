@@ -29,7 +29,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Interpreter Include="env\">
-      <Id>{f7bb6716-ecef-4beb-87b9-2a60d1565ffe}</Id>
+      <Id>env</Id>
       <BaseInterpreter>Global|PythonCore|2.7|x86</BaseInterpreter>
       <Version>2.7</Version>
       <Description>env (Python 2.7)</Description>
@@ -39,7 +39,7 @@
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
     </Interpreter>
     <Interpreter Include="env2\">
-      <Id>{eb7f27e8-1110-4bfa-9678-8ec954a484fa}</Id>
+      <Id>env2</Id>
       <BaseInterpreter>Global|PythonCore|2.7|x86</BaseInterpreter>
       <Version>3.3</Version>
       <Description>env2 (Python 3.3)</Description>

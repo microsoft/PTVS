@@ -283,11 +283,11 @@ namespace PythonToolsTests {
                 );
 
                 AssertUtil.ContainsExactly(
-                    analyzer.GetValues(entry2, "x", loc),
+                    analyzer.GetValueDescriptions(entry2, "x", loc),
                     "int"
                 );
 
-                analyzer.UnloadFileAsync(entry1);
+                analyzer.UnloadFileAsync(entry1).Wait();
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
                 // Even though module1 has been unloaded, we still know that
@@ -298,7 +298,7 @@ namespace PythonToolsTests {
                 );
 
                 AssertUtil.ContainsExactly(
-                    analyzer.GetValues(entry2, "x", loc)
+                    analyzer.GetValueDescriptions(entry2, "x", loc)
                 );
 
                 analyzer.AnalyzeFileAsync(m1Path).Wait();
@@ -310,7 +310,7 @@ namespace PythonToolsTests {
                 );
 
                 AssertUtil.ContainsExactly(
-                    analyzer.GetValues(entry2, "x", loc),
+                    analyzer.GetValueDescriptions(entry2, "x", loc),
                     "int"
                 );
             }

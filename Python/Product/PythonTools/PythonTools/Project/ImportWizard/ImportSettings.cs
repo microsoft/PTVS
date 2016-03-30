@@ -405,11 +405,11 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 );
             }
             if (virtualEnvPaths != null && virtualEnvPaths.Any() && service != null) {
-                foreach (var options in virtualEnvPaths.Select(p => VirtualEnv.FindInterpreterOptions(p, service))) {
-                    AddVirtualEnvironment(project, sourcePath, options);
+                foreach (var config in virtualEnvPaths.Select(p => VirtualEnv.FindInterpreterConfiguration(p, service))) {
+                    AddVirtualEnvironment(project, sourcePath, config);
 
                     if (string.IsNullOrEmpty(interpreterId.Value)) {
-                        interpreterId.Value = options.Id;
+                        interpreterId.Value = config.Id;
                     }
                 }
             }
@@ -433,18 +433,18 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         private static ProjectItemElement AddVirtualEnvironment(
             ProjectRootElement project,
             string sourcePath,
-            InterpreterFactoryCreationOptions options
+            InterpreterConfiguration config
         ) {
-            var prefixPath = options.PrefixPath ?? string.Empty;
-            var interpreterPath = string.IsNullOrEmpty(options.InterpreterPath) ?
+            var prefixPath = config.PrefixPath ?? string.Empty;
+            var interpreterPath = string.IsNullOrEmpty(config.InterpreterPath) ?
                 string.Empty :
-                PathUtils.GetRelativeFilePath(prefixPath, options.InterpreterPath);
-            var windowInterpreterPath = string.IsNullOrEmpty(options.WindowInterpreterPath) ?
+                PathUtils.GetRelativeFilePath(prefixPath, config.InterpreterPath);
+            var windowInterpreterPath = string.IsNullOrEmpty(config.WindowsInterpreterPath) ?
                 string.Empty :
-                PathUtils.GetRelativeFilePath(prefixPath, options.WindowInterpreterPath);
-            var libraryPath = string.IsNullOrEmpty(options.LibraryPath) ?
+                PathUtils.GetRelativeFilePath(prefixPath, config.WindowsInterpreterPath);
+            var libraryPath = string.IsNullOrEmpty(config.LibraryPath) ?
                 string.Empty :
-                PathUtils.GetRelativeDirectoryPath(prefixPath, options.LibraryPath);
+                PathUtils.GetRelativeDirectoryPath(prefixPath, config.LibraryPath);
             prefixPath = PathUtils.GetRelativeDirectoryPath(sourcePath, prefixPath);
 
             return project.AddItem(
@@ -452,14 +452,14 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 prefixPath,
                 new Dictionary<string, string> {
                     { MSBuildConstants.IdKey, Guid.NewGuid().ToString("B") },
-                    { MSBuildConstants.DescriptionKey, options.Description },
-                    { MSBuildConstants.BaseInterpreterKey, options.Id },
+                    { MSBuildConstants.DescriptionKey, config.Description },
+                    { MSBuildConstants.BaseInterpreterKey, config.Id },
                     { MSBuildConstants.InterpreterPathKey, interpreterPath },
                     { MSBuildConstants.WindowsPathKey, windowInterpreterPath },
                     { MSBuildConstants.LibraryPathKey, libraryPath },
-                    { MSBuildConstants.VersionKey, options.LanguageVersionString },
-                    { MSBuildConstants.ArchitectureKey, options.ArchitectureString },
-                    { MSBuildConstants.PathEnvVarKey, options.PathEnvironmentVariableName }
+                    { MSBuildConstants.VersionKey, config.Version.ToString() },
+                    { MSBuildConstants.ArchitectureKey, config.Architecture.ToString() },
+                    { MSBuildConstants.PathEnvVarKey, config.PathEnvironmentVariable }
                 }
             );
         }

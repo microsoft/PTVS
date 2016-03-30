@@ -178,6 +178,10 @@ namespace Microsoft.PythonTools.Interpreter {
             ProcessorArchitecture? arch2 = null;
 
             using (var interpKey = vendorKey.OpenSubKey(key)) {
+                if (interpKey == null) {
+                    // the key unexpectedly disappeared
+                    return false;
+                }
                 string id = key;
                 var versionValue = interpKey.GetValue("SysVersion") as string;
                 if ((versionValue == null || !Version.TryParse(versionValue, out version)) &&
@@ -230,30 +234,32 @@ namespace Microsoft.PythonTools.Interpreter {
                     string newId = CPythonInterpreterFactoryConstants.GetIntepreterId(GetVendorName(vendorKey), actualArch, id);
                     InterpreterInformation existing;
 
-                    _factories.TryGetValue(newId, out existing);
-                    try {
-                        var interpPath = installPath.GetValue("ExecutablePath") as string ?? Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
-                        var windowsPath = installPath.GetValue("WindowedExecutablePath") as string ?? Path.Combine(basePath, CPythonInterpreterFactoryConstants.WindowsExecutable);
-                        var libraryPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.LibrarySubPath);
-                        string prefixPath = Path.GetDirectoryName(interpPath);
+                    lock(_factories) {
+                        _factories.TryGetValue(newId, out existing);
+                        try {
+                            var interpPath = installPath.GetValue("ExecutablePath") as string ?? Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
+                            var windowsPath = installPath.GetValue("WindowedExecutablePath") as string ?? Path.Combine(basePath, CPythonInterpreterFactoryConstants.WindowsExecutable);
+                            var libraryPath = Path.Combine(basePath, CPythonInterpreterFactoryConstants.LibrarySubPath);
+                            string prefixPath = Path.GetDirectoryName(interpPath);
 
-                        registeredIds.Add(newId);
-                        var newConfig = new InterpreterConfiguration(
-                            newId,
-                            string.Format("{0} {1}", description, version),
-                            prefixPath,
-                            interpPath,
-                            windowsPath,
-                            libraryPath,
-                            CPythonInterpreterFactoryConstants.PathEnvironmentVariableName,
-                            actualArch ?? ProcessorArchitecture.None,
-                            version
-                        );
-                        if (existing == null || !newConfig.Equals(existing.Configuration)) {
-                            _factories[newId] = new InterpreterInformation(newConfig);
-                            return true;
+                            registeredIds.Add(newId);
+                            var newConfig = new InterpreterConfiguration(
+                                newId,
+                                string.Format("{0} {1}", description, version),
+                                prefixPath,
+                                interpPath,
+                                windowsPath,
+                                libraryPath,
+                                CPythonInterpreterFactoryConstants.PathEnvironmentVariableName,
+                                actualArch ?? ProcessorArchitecture.None,
+                                version
+                            );
+                            if (existing == null || !newConfig.Equals(existing.Configuration)) {
+                                _factories[newId] = new InterpreterInformation(newConfig);
+                                return true;
+                            }
+                        } catch (ArgumentException) {
                         }
-                    } catch (ArgumentException) {
                     }
 
                     return false;

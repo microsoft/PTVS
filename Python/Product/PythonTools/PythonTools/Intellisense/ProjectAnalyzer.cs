@@ -621,22 +621,35 @@ namespace Microsoft.PythonTools.Intellisense {
             var analysis = GetApplicableExpression(point);
 
             if (analysis != null) {
-                var location = analysis.Location;
-                var req = new AP.ValueDescriptionRequest() {
-                    expr = analysis.Text,
-                    column = location.Column,
-                    index = location.Index,
-                    line = location.Line,
-                    fileId = analysis.Entry.FileId
-                };
-
-                var res = await analysis.Entry.Analyzer.SendRequestAsync(req).ConfigureAwait(false);
-                if (res != null) {
-                    return res.descriptions;
-                }
+                return await GetValueDescriptionsAsync(file, analysis.Text, analysis.Location).ConfigureAwait(false);
             }
 
             return Array.Empty<string>();
+        }
+
+        internal static async Task<string[]> GetValueDescriptionsAsync(AnalysisEntry file, string expr, SourceLocation location) {
+            var req = new AP.ValueDescriptionRequest() {
+                expr = expr,
+                column = location.Column,
+                index = location.Index,
+                line = location.Line,
+                fileId = file.FileId
+            };
+
+            var res = await file.Analyzer.SendRequestAsync(req).ConfigureAwait(false);
+            if (res != null) {
+                return res.descriptions;
+            }
+
+            return Array.Empty<string>();
+        }
+
+        internal string[] GetValueDescriptions(AnalysisEntry entry, string expr, SourceLocation translatedLocation) {
+            return GetValueDescriptionsAsync(
+                entry,
+                expr,
+                translatedLocation
+            ).Result;
         }
 
         internal static async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry file, string expr, SourceLocation location) {
@@ -1274,8 +1287,11 @@ namespace Microsoft.PythonTools.Intellisense {
             await SendRequestAsync(new AP.RemoveDirectoryRequest() { dir = directory }).ConfigureAwait(false);
         }
 
-        internal async void UnloadFileAsync(AnalysisEntry entry) {
+        internal async Task UnloadFileAsync(AnalysisEntry entry) {
+            _analysisComplete = false;
             await SendRequestAsync(new AP.UnloadFileRequest() { fileId = entry.FileId }).ConfigureAwait(false);
+            AnalysisEntry removed;
+            _projectFiles.TryRemove(entry.Path, out removed);
 
             _errorProvider.Clear(entry, ParserTaskMoniker);
             _errorProvider.Clear(entry, UnresolvedImportMoniker);
@@ -1409,14 +1425,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return Enumerable.Empty<CompletionResult>();
-        }
-
-        internal IEnumerable<string> GetValues(AnalysisEntry entry, string expr, SourceLocation translatedLocation) {
-            return GetValueDescriptionsAsync(
-                entry,
-                expr,
-                new SnapshotPoint(entry.BufferParser.Buffers.Last().CurrentSnapshot, translatedLocation.Index)
-            ).Result;
         }
 
         private BufferParser GetBufferParser(ITextBuffer textBuffer) {
@@ -1647,6 +1655,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 newLine = view.Options.GetNewLineCharacter(),
                 startIndex = view.Selection.Start.Position,
                 endIndex = view.Selection.End.Position,
+                parameters = parameters,
                 name = name,
                 scope = targetScope,
                 shouldExpandSelection = true

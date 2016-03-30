@@ -93,8 +93,8 @@ class Oar(object):
 ";
 
             var options = new CodeFormattingOptions() {
-                SpaceBeforeClassDeclarationParen = true,
-                SpaceWithinFunctionDeclarationParens = true
+                SpaceBeforeClassDeclarationParen = false,
+                SpaceWithinFunctionDeclarationParens = false
             };
 
             CodeFormattingTest(input, new Span(input.Length, 0), input, null, options);
@@ -178,6 +178,7 @@ class Oar(object):
                 var buffer = new MockTextBuffer(input, PythonCoreConstants.ContentType, "C:\\fob.py");
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var view = new MockTextView(buffer);
+                analyzer.MonitorTextBufferAsync(buffer).Wait();
                 var selectionSpan = new SnapshotSpan(
                     buffer.CurrentSnapshot,
                     ExtractMethodTests.GetSelectionSpan(input, selection)

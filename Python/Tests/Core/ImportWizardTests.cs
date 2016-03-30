@@ -133,7 +133,7 @@ namespace PythonToolsTests {
                 settings.SourcePath = TestData.GetPath("TestData\\HelloWorld\\");
                 settings.Filters = "*.py;*.pyproj";
 
-                var interpreter = new PythonInterpreterView("Test", Guid.NewGuid().ToString(), null);
+                var interpreter = new PythonInterpreterView("Test", "Test|Blah", null);
                 settings.Dispatcher.Invoke((Action)(() => settings.AvailableInterpreters.Add(interpreter)));
                 //settings.AddAvailableInterpreter(interpreter);
                 settings.SelectedInterpreter = interpreter;
@@ -144,7 +144,7 @@ namespace PythonToolsTests {
                 Assert.AreEqual(settings.ProjectPath, path);
                 var proj = XDocument.Load(path);
 
-                Assert.AreEqual(interpreter.Id, Guid.Parse(proj.Descendant("InterpreterId").Value));
+                Assert.AreEqual(interpreter.Id, proj.Descendant("InterpreterId").Value);
 
                 var interp = proj.Descendant("InterpreterReference");
                 Assert.AreEqual(string.Format("{0}", interpreter.Id),
@@ -208,7 +208,20 @@ namespace PythonToolsTests {
         ) {
             var mockService = new MockInterpreterOptionsService();
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider",
-                new MockPythonInterpreterFactory(python.Configuration)
+                new MockPythonInterpreterFactory(
+                    new InterpreterConfiguration(
+                        python.Configuration.Id,
+                        "Test Python",
+                        python.Configuration.PrefixPath,
+                        python.Configuration.InterpreterPath,
+                        python.Configuration.WindowsInterpreterPath,
+                        python.Configuration.LibraryPath,
+                        python.Configuration.PathEnvironmentVariable,
+                        python.Configuration.Architecture,
+                        python.Configuration.Version,
+                        python.Configuration.UIMode
+                    )
+                )
             ));
 
             using (var wpf = new WpfProxy()) {
@@ -276,7 +289,7 @@ namespace PythonToolsTests {
                     Assert.AreEqual("env", env.Descendant("Description").Value);
                     Assert.AreEqual("", env.Descendant("InterpreterPath").Value);
                     Assert.AreEqual("", env.Descendant("WindowsInterpreterPath").Value);
-                    Assert.AreEqual(Guid.Empty.ToString("B"), env.Descendant("BaseInterpreter").Value);
+                    Assert.AreEqual("", env.Descendant("BaseInterpreter").Value);
                     Assert.AreEqual("", env.Descendant("PathEnvironmentVariable").Value);
                 } else {
                     Assert.AreEqual("env (Test Python)", env.Descendant("Description").Value);

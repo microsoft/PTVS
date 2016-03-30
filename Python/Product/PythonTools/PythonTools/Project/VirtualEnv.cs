@@ -142,17 +142,16 @@ namespace Microsoft.PythonTools.Project {
             await ContinueCreate(provider, factory, path, false, output);
         }
 
-        public static InterpreterFactoryCreationOptions FindInterpreterOptions(
+        public static InterpreterConfiguration FindInterpreterConfiguration(
             string prefixPath,
             IInterpreterRegistryService service,
             IPythonInterpreterFactory baseInterpreter = null
         ) {
-            var result = new InterpreterFactoryCreationOptions();
+            string id, description, pathVar;
+            ProcessorArchitecture arch;
+            Version version;
 
             var libPath = DerivedInterpreterFactory.FindLibPath(prefixPath);
-
-            result.PrefixPath = prefixPath;
-            result.LibraryPath = libPath;
 
             if (baseInterpreter == null) {
                 baseInterpreter = DerivedInterpreterFactory.FindBaseInterpreterFromVirtualEnv(
@@ -169,36 +168,41 @@ namespace Microsoft.PythonTools.Project {
                 interpExe = Path.GetFileName(baseInterpreter.Configuration.InterpreterPath);
                 winterpExe = Path.GetFileName(baseInterpreter.Configuration.WindowsInterpreterPath);
                 var scripts = new[] { "Scripts", "bin" };
-                result.InterpreterPath = PathUtils.FindFile(prefixPath, interpExe, firstCheck: scripts);
-                result.WindowInterpreterPath = PathUtils.FindFile(prefixPath, winterpExe, firstCheck: scripts);
-                result.PathEnvironmentVariableName = baseInterpreter.Configuration.PathEnvironmentVariable;
-            } else {
-                result.InterpreterPath = string.Empty;
-                result.WindowInterpreterPath = string.Empty;
-                result.PathEnvironmentVariableName = string.Empty;
-            }
-
-            if (baseInterpreter != null) {
-                result.Description = string.Format(
+                interpExe = PathUtils.FindFile(prefixPath, interpExe, firstCheck: scripts);
+                winterpExe = PathUtils.FindFile(prefixPath, winterpExe, firstCheck: scripts);
+                pathVar = baseInterpreter.Configuration.PathEnvironmentVariable;
+                description = string.Format(
                     "{0} ({1})",
                     PathUtils.GetFileOrDirectoryName(prefixPath),
                     baseInterpreter.Configuration.Description
                 );
 
-                result.Id = baseInterpreter.Configuration.Id;
-                result.LanguageVersion = baseInterpreter.Configuration.Version;
-                result.Architecture = baseInterpreter.Configuration.Architecture;
-                result.WatchLibraryForNewModules = true;
+                id = baseInterpreter.Configuration.Id;
+                version = baseInterpreter.Configuration.Version;
+                arch = baseInterpreter.Configuration.Architecture;
             } else {
-                result.Description = PathUtils.GetFileOrDirectoryName(prefixPath);
+                interpExe = string.Empty;
+                winterpExe = string.Empty;
+                pathVar = string.Empty;
+                description = PathUtils.GetFileOrDirectoryName(prefixPath);
 
-                result.Id = null;
-                result.LanguageVersion = new Version(0, 0);
-                result.Architecture = ProcessorArchitecture.None;
-                result.WatchLibraryForNewModules = false;
+                id = string.Empty;
+                version = new Version(0, 0);
+                arch = ProcessorArchitecture.None;
             }
 
-            return result;
+            return new InterpreterConfiguration(
+                id,
+                description,
+                prefixPath,
+                interpExe,
+                winterpExe,
+                libPath,
+                pathVar,
+                arch,
+                version,
+                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase
+            );
         }
 
         // This helper function is not yet needed, but may be useful at some point.

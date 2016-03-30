@@ -180,7 +180,7 @@ namespace Microsoft.PythonTools.Project {
         public override void Remove(bool removeFromStorage) {
             var analysis = GetAnalysisEntry();
             if (analysis != null) {
-                ((PythonProjectNode)ProjectMgr).GetAnalyzer().UnloadFileAsync(analysis);
+                ((PythonProjectNode)ProjectMgr).GetAnalyzer().UnloadFileAsync(analysis).DoNotWait();
             }
 
             if (Url.EndsWith(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase) && removeFromStorage) {
@@ -250,7 +250,7 @@ namespace Microsoft.PythonTools.Project {
                 var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
                 var analysis = GetAnalysisEntry();
                 if (analysis != null) {
-                    analyzer.UnloadFileAsync(analysis);
+                    analyzer.UnloadFileAsync(analysis).DoNotWait();
                 }
 
                 var textBuffer = GetTextBuffer(false);
@@ -275,7 +275,7 @@ namespace Microsoft.PythonTools.Project {
             var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
             var analysis = GetAnalysisEntry();
             if (analysis != null) {
-                analyzer.UnloadFileAsync(analysis);
+                analyzer.UnloadFileAsync(analysis).DoNotWait();
             }
 
             return base.ExcludeFromProject();

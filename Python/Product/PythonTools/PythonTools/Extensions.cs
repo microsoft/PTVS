@@ -257,7 +257,7 @@ namespace Microsoft.PythonTools {
         }
         
         internal static bool TryGetAnalysisEntry(this ITextBuffer buffer, out AnalysisEntry entry) {
-            return buffer.Properties.TryGetProperty<AnalysisEntry>(typeof(AnalysisEntry), out entry);
+            return buffer.Properties.TryGetProperty(typeof(AnalysisEntry), out entry);
         }
 
         internal static bool TryGetPythonProjectEntry(this ITextBuffer buffer, out AnalysisEntry entry) {

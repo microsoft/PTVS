@@ -205,7 +205,12 @@ namespace Microsoft.PythonTools.BuildTasks {
         }
 
         private ExportProvider FromOutOfProc() {
-            return InterpreterCatalog.CreateContainer(new CatalogLog(_log), typeof(MsBuildProjectContextProvider));
+            return InterpreterCatalog.CreateContainer(
+                new CatalogLog(_log), 
+                typeof(MsBuildProjectContextProvider), 
+                typeof(IInterpreterRegistryService), 
+                typeof(IInterpreterOptionsService)
+            );
         }
     }
 

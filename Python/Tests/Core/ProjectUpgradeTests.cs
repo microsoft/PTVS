@@ -86,7 +86,7 @@ namespace PythonToolsTests {
                 // Use a copy of the project so we don't interfere with other
                 // tests using them.
                 var origProject = Path.Combine("TestData", "ProjectUpgrade", testCase.Name);
-                var tempProject = Path.Combine(TestData.GetTempPath("ProjectUpgrade"), testCase.Name);
+                var tempProject = Path.Combine(TestData.GetTempPath("ProjectUpgrade", true), testCase.Name);
                 File.Copy(origProject, tempProject);
 
                 var hr = upgrade.UpgradeProject(
@@ -183,7 +183,7 @@ namespace PythonToolsTests {
                 // Use a copy of the project so we don't interfere with other
                 // tests using them.
                 var origProject = Path.Combine("TestData", "ProjectUpgrade", testCase.Name);
-                var tempProject = Path.Combine(TestData.GetTempPath("ProjectUpgrade"), testCase.Name);
+                var tempProject = Path.Combine(TestData.GetTempPath("ProjectUpgrade", true), testCase.Name);
                 File.Copy(origProject, tempProject);
 
                 var hr = upgrade.UpgradeProject(
@@ -232,7 +232,7 @@ namespace PythonToolsTests {
 
             var upgrade = (IVsProjectUpgradeViaFactory)factory;
             var origProject = TestData.GetPath("TestData\\ProjectUpgrade\\OldCommonProps.pyproj");
-            var tempProject = Path.Combine(TestData.GetTempPath("ProjectUpgrade"), "OldCommonProps.pyproj");
+            var tempProject = Path.Combine(TestData.GetTempPath("ProjectUpgrade", true), "OldCommonProps.pyproj");
             File.Copy(origProject, tempProject);
 
             int actual;
@@ -270,7 +270,7 @@ namespace PythonToolsTests {
 
             var upgrade = (IVsProjectUpgradeViaFactory)factory;
             var origProject = TestData.GetPath("TestData\\ProjectUpgrade\\OldCommonTargets.pyproj");
-            var tempProject = Path.Combine(TestData.GetTempPath("ProjectUpgrade"), "OldCommonTargets.pyproj");
+            var tempProject = Path.Combine(TestData.GetTempPath("ProjectUpgrade", true), "OldCommonTargets.pyproj");
             File.Copy(origProject, tempProject);
 
             int actual;

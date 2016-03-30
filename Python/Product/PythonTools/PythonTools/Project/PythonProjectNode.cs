@@ -962,7 +962,7 @@ namespace Microsoft.PythonTools.Project {
                         if (projectEntry != null &&
                             searchPathEntry != null &&
                             !newDirs.Contains(searchPathEntry)) {
-                            _analyzer.UnloadFileAsync(projectEntry);
+                            _analyzer.UnloadFileAsync(projectEntry).DoNotWait();
                         }
                     }
 
@@ -2407,20 +2407,20 @@ namespace Microsoft.PythonTools.Project {
 
             var rootPath = PathUtils.GetAbsoluteDirectoryPath(ProjectHome, path);
             foreach (var fact in InterpreterFactories) {
-                var config = fact.Configuration;
-                var rootPrefix = PathUtils.EnsureEndSeparator(config.PrefixPath);
+                var existingConfig = fact.Configuration;
+                var rootPrefix = PathUtils.EnsureEndSeparator(existingConfig.PrefixPath);
 
                 if (rootPrefix.Equals(rootPath, StringComparison.OrdinalIgnoreCase)) {
                     return fact;
                 }
             }
 
-            var options = VirtualEnv.FindInterpreterOptions(path, service, baseInterp);
-            if (options == null || !File.Exists(options.InterpreterPath)) {
+            var config = VirtualEnv.FindInterpreterConfiguration(path, service, baseInterp);
+            if (config == null || !File.Exists(config.InterpreterPath)) {
                 throw new InvalidOperationException(Strings.VirtualEnvAddFailed);
             }
             if (!create) {
-                baseInterp = service.FindInterpreter(options.Id);
+                baseInterp = service.FindInterpreter(config.Id);
             }
 
             if (!QueryEditProjectFile(false)) {
@@ -2429,7 +2429,7 @@ namespace Microsoft.PythonTools.Project {
 
             string id;
             try {
-                id = CreateInterpreterFactory(options);
+                id = CreateInterpreterFactory(config);
             } catch (ArgumentException ex) {
                 TaskDialog.ForException(Site, ex, issueTrackerUrl: IssueTrackerUrl).ShowModal();
                 return null;
@@ -2444,7 +2444,7 @@ namespace Microsoft.PythonTools.Project {
         /// <see cref="InterpreterFactoriesChanged"/> event and potentially
         /// display UI.
         /// </summary>
-        /// <param name="options">
+        /// <param name="config">
         /// <para>The options for the new interpreter:</para>
         /// <para>Guid: ID of the base interpreter.</para>
         /// <para>Version: Version of the base interpreter. This will also be
@@ -2468,15 +2468,15 @@ namespace Microsoft.PythonTools.Project {
         /// in "\\Scripts", the last segment is also removed.</para>
         /// </param>
         /// <returns>The ID of the created interpreter.</returns>
-        public string CreateInterpreterFactory(InterpreterFactoryCreationOptions options) {
+        public string CreateInterpreterFactory(InterpreterConfiguration config) {
             var projectHome = ProjectHome;
-            var rootPath = PathUtils.GetAbsoluteDirectoryPath(projectHome, options.PrefixPath);
+            var rootPath = PathUtils.GetAbsoluteDirectoryPath(projectHome, config.PrefixPath);
 
             IPythonInterpreterFactory fact;
 
             string id = MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(
                 BuildProject.FullPath,
-                Path.GetFileName(PathUtils.TrimEndSeparator(options.PrefixPath))
+                Path.GetFileName(PathUtils.TrimEndSeparator(config.PrefixPath))
             );
 
             var interpReg = Site.GetComponentModel().GetService<IInterpreterRegistryService>();
@@ -2489,14 +2489,14 @@ namespace Microsoft.PythonTools.Project {
                 );
             }
 
-            var baseInterp = InterpreterRegistry.FindInterpreter(options.Id) as PythonInterpreterFactoryWithDatabase;
+            var baseInterp = InterpreterRegistry.FindInterpreter(config.Id) as PythonInterpreterFactoryWithDatabase;
             if (baseInterp != null) {
-                var pathVar = options.PathEnvironmentVariableName;
+                var pathVar = config.PathEnvironmentVariable;
                 if (string.IsNullOrEmpty(pathVar)) {
                     pathVar = baseInterp.Configuration.PathEnvironmentVariable;
                 }
 
-                var description = options.Description;
+                var description = config.Description;
                 if (string.IsNullOrEmpty(description)) {
                     description = PathUtils.CreateFriendlyDirectoryPath(projectHome, rootPath);
                     int i = description.LastIndexOf("\\scripts", StringComparison.OrdinalIgnoreCase);
@@ -2507,37 +2507,16 @@ namespace Microsoft.PythonTools.Project {
 
                 fact = new DerivedInterpreterFactory(
                     baseInterp,
-                    new InterpreterConfiguration(
-                        id,
-                        description,
-                        options.PrefixPath,
-                        options.InterpreterPath,
-                        options.WindowInterpreterPath,
-                        options.LibraryPath,
-                        options.PathEnvironmentVariableName,
-                        baseInterp.Configuration.Architecture,
-                        baseInterp.Configuration.Version,
-                        InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase
-                    ),
+                    config,
                     new InterpreterFactoryCreationOptions {
                         WatchLibraryForNewModules = true
                     }
                 );
             } else {
                 fact = InterpreterFactoryCreator.CreateInterpreterFactory(
-                    new InterpreterConfiguration(
-                        id,
-                        options.Description,
-                        options.PrefixPath,
-                        options.InterpreterPath,
-                        options.WindowInterpreterPath,
-                        options.LibraryPath,
-                        options.PathEnvironmentVariableName ?? "PYTHONPATH",
-                        options.Architecture,
-                        options.LanguageVersion
-                    ),
+                    config,
                     new InterpreterFactoryCreationOptions {
-                        WatchLibraryForNewModules = options.WatchLibraryForNewModules
+                        WatchLibraryForNewModules = true
                     }
                 );
             }

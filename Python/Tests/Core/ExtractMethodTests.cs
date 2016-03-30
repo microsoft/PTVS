@@ -1704,6 +1704,7 @@ async def f():
                 var buffer = new MockTextBuffer(input, "Python", "C:\\fob.py");
                 var view = new MockTextView(buffer);
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                analyzer.MonitorTextBufferAsync(buffer).Wait();
                 var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
 
                 view.Selection.Select(

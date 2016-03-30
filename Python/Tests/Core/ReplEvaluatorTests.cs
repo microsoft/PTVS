@@ -103,7 +103,16 @@ namespace PythonToolsTests {
                 var window = new MockReplWindow(evaluator);
                 await evaluator._Initialize(window);
 
-                await evaluator.ExecuteText("globals()['my_new_value'] = 123");
+                // Run the ExecuteText on another thread so that we don't continue
+                // onto the REPL evaluation thread, which leads to GetMemberNames being
+                // blocked as it's hogging the event loop.
+                AutoResetEvent are = new AutoResetEvent(false);
+                ThreadPool.QueueUserWorkItem(async (x) => {
+                        await evaluator.ExecuteText("globals()['my_new_value'] = 123");
+                        are.Set();
+                    }
+                );
+                are.WaitOne();
                 var names = evaluator.GetMemberNames("");
                 Assert.IsNotNull(names);
                 AssertUtil.ContainsAtLeast(names.Select(m => m.Name), "my_new_value");
