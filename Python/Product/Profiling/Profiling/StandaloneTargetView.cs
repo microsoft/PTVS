@@ -54,13 +54,14 @@ namespace Microsoft.PythonTools.Profiling {
             
             var interpreterProviders = componentService.DefaultExportProvider.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>();
             var interpreterOptions = componentService.GetService<IInterpreterOptionsService>();
+            var registry = componentService.GetService<IInterpreterRegistryService>();
             var pythonService = componentService.GetService<PythonToolsService>();
 
-            var availableInterpreters = interpreterProviders.GetConfigurations().Select(
-                factory => new PythonInterpreterView(
-                    factory.Value.Description, 
-                    factory.Key, 
-                    factory.Value.InterpreterPath
+            var availableInterpreters = registry.Configurations.Select(
+                config => new PythonInterpreterView(
+                    config.Description, 
+                    config.Id, 
+                    config.InterpreterPath
                 )
             ).ToList();
 

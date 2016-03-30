@@ -70,7 +70,7 @@ namespace Microsoft.PythonTools.Repl {
             string id,
             IInterpreterRegistryService interpreterService
         ) {
-            var factory = serviceProvider.GetComponentModel().DefaultExportProvider.GetInterpreterFactory(id);
+            var factory = interpreterService.FindInterpreter(id);
             if (factory == null) {
                 try {
                     factory = new UnavailableFactory(id);
@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Repl {
                 return;
             }
 
-            var interpreter = _serviceProvider.GetComponentModel().DefaultExportProvider.GetInterpreterFactory(current.Configuration.Id);
+            var interpreter = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>().FindInterpreter(current.Configuration.Id);
             if (interpreter != null && interpreter != current) {
                 // the interpreter has been reconfigured, we want the new settings
                 _interpreter = interpreter;

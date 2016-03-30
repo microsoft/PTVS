@@ -17,7 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
-using System.IO;
 using System.Linq;
 using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
@@ -40,6 +39,17 @@ namespace Microsoft.PythonTools.BuildTasks {
             BuildEngine = buildEngine;
             _projectPath = projectPath;
             _log = new TaskLoggingHelper(this);
+        }
+
+        class CatalogLog : ICatalogLog {
+            private readonly TaskLoggingHelper _helper;
+            public CatalogLog(TaskLoggingHelper helper) {
+                _helper = helper;
+            }
+
+            public void Log(string msg) {
+                _helper.LogWarning(msg);
+            }
         }
 
         /// <summary>
@@ -135,9 +145,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                     projectContext.AddContext(project);
                 }
                 try {
-                    var factoryProviders = exports.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>();
-
-                    var factory = factoryProviders.GetInterpreterFactory(id);
+                    var factory = exports.GetExportedValue<IInterpreterRegistryService>().FindInterpreter(id);
 
                     if (factory == null) {
                         _log.LogError(
@@ -196,8 +204,8 @@ namespace Microsoft.PythonTools.BuildTasks {
             return null;
         }
 
-        private static ExportProvider FromOutOfProc() {
-            return InterpreterCatalog.CreateContainer<MsBuildProjectContextProvider>();
+        private ExportProvider FromOutOfProc() {
+            return InterpreterCatalog.CreateContainer(new CatalogLog(_log), typeof(MsBuildProjectContextProvider));
         }
     }
 

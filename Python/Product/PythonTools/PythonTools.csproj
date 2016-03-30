@@ -257,6 +257,7 @@
     <Compile Include="PythonTools\Intellisense\AnalysisVariable.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionResult.cs" />
     <Compile Include="PythonTools\Intellisense\ExpressionAnalysis.cs" />
+    <Compile Include="PythonTools\Intellisense\InterpreterLog.cs" />
     <Compile Include="PythonTools\Intellisense\LocationTracker.cs" />
     <Compile Include="PythonTools\Intellisense\NavigationInfo.cs" />
     <Compile Include="PythonTools\Intellisense\FileCookie.cs" />
@@ -479,7 +480,6 @@
     <Compile Include="PythonTools\Project\PythonEncodingDetector.cs" />
     <Compile Include="PythonTools\Project\PythonProjectReferenceNode.cs" />
     <Compile Include="PythonTools\Project\PythonReferenceContainerNode.cs" />
-    <Compile Include="PythonTools\ProvidePythonInterpreterFactoryProviderAttribute.cs" />
     <Compile Include="PythonTools\Refactoring\ExtractMethodRequestView.cs" />
     <Compile Include="PythonTools\Refactoring\RenameVariableRequestView.cs" />
     <Compile Include="PythonTools\Repl\BasePythonReplEvaluator.cs" />

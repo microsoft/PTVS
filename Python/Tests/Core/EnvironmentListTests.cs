@@ -104,7 +104,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
         public async Task InterpretersRaceCondition() {
-            var container = GetInterpreterOptionsService(defaultProviders: false);
+            var container = CreateCompositionContainer();
             var service = container.GetExportedValue<IInterpreterOptionsService>();
             var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
             var factories = Enumerable.Repeat(0, 5).Select(
@@ -192,7 +192,7 @@ namespace PythonToolsUITests {
 
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
-                var container = GetInterpreterOptionsService(defaultProviders: false);
+                var container = CreateCompositionContainer();
                 var service = container.GetExportedValue<IInterpreterOptionsService>();
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
                 var oldDefault = service.DefaultInterpreter;
@@ -262,10 +262,10 @@ namespace PythonToolsUITests {
                 list.Service = service;
                 list.Interpreters = service;
 
-                foreach (string invalidPath in new string[] { 
-                    null, 
-                    "", 
-                    "NOT A REAL PATH", 
+                foreach (string invalidPath in new string[] {
+                    null,
+                    "",
+                    "NOT A REAL PATH",
                     string.Join("\\", Path.GetInvalidPathChars().Select(c => c.ToString()))
                 }) {
                     Console.WriteLine("Path: <{0}>", invalidPath ?? "(null)");
@@ -385,7 +385,7 @@ namespace PythonToolsUITests {
         public void InstalledFactories() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
-                var container = GetInterpreterOptionsService(defaultProviders: false);
+                var container = CreateCompositionContainer();
                 var service = container.GetExportedValue<IInterpreterOptionsService>();
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
                 list.Service = service;
@@ -417,7 +417,7 @@ namespace PythonToolsUITests {
         public void AddUpdateRemoveConfigurableFactory() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
-                var container = GetInterpreterOptionsService(defaultProviders: false);
+                var container = CreateCompositionContainer();
                 var service = container.GetExportedValue<IInterpreterOptionsService>();
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
                 list.Service = service;
@@ -481,7 +481,7 @@ namespace PythonToolsUITests {
         public async Task AddUpdateRemoveConfigurableFactoryThroughUI() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
-                var container = GetInterpreterOptionsService(defaultProviders: false);
+                var container = CreateCompositionContainer();
                 var service = container.GetExportedValue<IInterpreterOptionsService>();
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
                 list.Service = service;
@@ -516,7 +516,7 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(1)]
         public void ChangeDefault() {
-            var container = GetInterpreterOptionsService(defaultProviders: false);
+            var container = CreateCompositionContainer();
             var service = container.GetExportedValue<IInterpreterOptionsService>();
             var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
             using (var defaultChanged = new AutoResetEvent(false))
@@ -645,7 +645,7 @@ namespace PythonToolsUITests {
             }
         }
 
-#region Test Helpers
+        #region Test Helpers
 
         private static bool LogException(Task task) {
             var ex = task.Exception;
@@ -761,7 +761,7 @@ namespace PythonToolsUITests {
 
             public List<EnvironmentView> Environments {
                 get {
-                    return _proxy.Invoke(() => 
+                    return _proxy.Invoke(() =>
                         Window._environments
                             .Except(EnvironmentView.AddNewEnvironmentViewOnce.Value)
                             .Except(EnvironmentView.OnlineHelpViewOnce.Value)
@@ -788,38 +788,23 @@ namespace PythonToolsUITests {
                 return ext;
             }
 
-             public T GetExtensionOrAssert<T>(EnvironmentView view) where T : IEnvironmentViewExtension {
+            public T GetExtensionOrAssert<T>(EnvironmentView view) where T : IEnvironmentViewExtension {
                 var ext = GetExtensionOrDefault<T>(view);
                 Assert.IsNotNull(ext, "Unable to get " + typeof(T).Name);
                 return ext;
             }
         }
 
-        static CompositionContainer GetInterpreterOptionsService(bool defaultProviders = true) {
+        static CompositionContainer CreateCompositionContainer(bool defaultProviders = true) {
             var sp = new MockServiceProvider();
             sp.Services[typeof(SVsActivityLog).GUID] = new MockActivityLog();
             var settings = new MockSettingsManager();
             sp.Services[typeof(SVsSettingsManager).GUID] = settings;
-            if (defaultProviders) {
-                settings.Store.AddSetting(
-                    InterpreterOptionsServiceProvider.FactoryProvidersCollection + "\\CPythonAndConfigurable",
-                    InterpreterOptionsServiceProvider.FactoryProviderCodeBaseSetting,
-                    typeof(CPythonInterpreterFactoryConstants).Assembly.Location
-                );
-#if FALSE
-                settings.Store.AddSetting(
-                    InterpreterOptionsServiceProvider.FactoryProvidersCollection + "\\LoadedProjects",
-                    InterpreterOptionsServiceProvider.FactoryProviderCodeBaseSetting,
-                    typeof(LoadedProjectInterpreterFactoryProvider).Assembly.Location
-                );
-#endif
-            } else {
-                settings.Store.CreateCollection(InterpreterOptionsServiceProvider.SuppressFactoryProvidersCollection);
-            }
-            return InterpreterOptionsServiceProvider.CreateContainer(sp, typeof(IInterpreterRegistryService), typeof(IInterpreterOptionsService));
+
+            return InterpreterCatalog.CreateContainer(typeof(IInterpreterRegistryService), typeof(IInterpreterOptionsService));
         }
 
-#endregion
+        #endregion
     }
 
     class TestPipPackageCache : PipPackageCache {

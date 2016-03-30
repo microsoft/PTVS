@@ -20,6 +20,7 @@ using System.ComponentModel.Composition.Hosting;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
@@ -40,7 +41,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private static CompositionContainer CreateCompositionContainer() {
             var app = VisualStudioProxy.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
-            return InterpreterOptionsServiceProvider.CreateContainer(app, typeof(IInterpreterOptionsService), typeof(TestDiscoverer));
+            return InterpreterCatalog.CreateContainer(typeof(IInterpreterRegistryService), typeof(IInterpreterOptionsService), typeof(TestDiscoverer));
         }
 
         internal TestDiscoverer(CompositionContainer container) {

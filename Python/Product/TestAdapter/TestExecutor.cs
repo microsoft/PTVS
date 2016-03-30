@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         public TestExecutor() {
             _app = VisualStudioProxy.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
-            _container = InterpreterOptionsServiceProvider.CreateContainer(_app, typeof(IInterpreterRegistryService), typeof(IInterpreterOptionsService), typeof(TestExecutorProjectContext));
+            _container = InterpreterCatalog.CreateContainer(typeof(IInterpreterRegistryService), typeof(IInterpreterOptionsService), typeof(TestExecutorProjectContext));
             _interpreterService = _container.GetExportedValue<IInterpreterOptionsService>();
         }
 

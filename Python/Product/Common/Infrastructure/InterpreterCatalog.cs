@@ -19,9 +19,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
+using System.Linq;
 using Microsoft.Win32;
 
-namespace Microsoft.PythonTools.BuildTasks {
+namespace Microsoft.PythonTools.Infrastructure {
     public static class InterpreterCatalog {
         internal const string FactoryProvidersCollection = @"PythonTools\InterpreterFactories";
         // If this collection exists in the settings provider, no factories will
@@ -33,67 +34,73 @@ namespace Microsoft.PythonTools.BuildTasks {
         private const string FactoryProvidersRegKeyBase = @"Software\Microsoft\PythonTools\";
         private const string FactoryProvidersRegKeySuffix = @"\InterpreterFactories";
 
-        public static T GetService<T>() {
-            CompositionContainer container = CreateContainer<T>();
-
-            return container.GetExportedValue<T>();
+        public static CompositionContainer CreateContainer(params Type[] additionalTypes) {
+            return CreateContainer(null, additionalTypes);
         }
 
-        public static CompositionContainer CreateContainer<T>() {
-            var paths = GetProviderPaths(
-                typeof(T)
-            );
+        public static CompositionContainer CreateContainer(ICatalogLog log, params Type[] additionalTypes) {
+            return CreateContainer(log, GetProviderPaths(additionalTypes).ToArray());
+        }
 
-            var container = CreateCatelog(paths);
-            return container;
+        public static CompositionContainer CreateContainer(ICatalogLog log, params string[] paths) {
+            return CreateCatelog(log, paths);
         }
 
         private static void LoadOneProvider(
+            ICatalogLog log,
             string codebase,
             AggregateCatalog catalog
         ) {
 
             AssemblyCatalog assemblyCatalog = null;
 
-            const string FailedToLoadAssemblyMessage = "Failed to load interpreter provider assembly";
+            const string FailedToLoadAssemblyMessage = "Failed to load interpreter provider assembly {0} {1}";
             try {
                 assemblyCatalog = new AssemblyCatalog(codebase);
             } catch (Exception ex) {
-                LogException(FailedToLoadAssemblyMessage, codebase, ex);
+                log.Log(String.Format(FailedToLoadAssemblyMessage, codebase, ex));
             }
 
             if (assemblyCatalog == null) {
                 return;
             }
 
-            const string FailedToLoadMessage = "Failed to load interpreter provider";
+            const string FailedToLoadMessage = "Failed to load interpreter provider {0} {1}";
             try {
                 catalog.Catalogs.Add(assemblyCatalog);
             } catch (Exception ex) {
-                LogException(FailedToLoadMessage, codebase, ex);
+                log.Log(String.Format(FailedToLoadMessage, codebase, ex));
             }
         }
 
-        public static IEnumerable<string> GetProviderPaths(Type type) {
+        public static IEnumerable<string> GetProviderPaths(Type[] types) {
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var seenIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase); ;
             var catalog = new List<ComposablePartCatalog>();
 
-            foreach (var baseKey in new[] { Registry.CurrentUser, Registry.LocalMachine }) {
-                var version = Version.Parse(AssemblyVersionInfo.Version);
+            var version = Version.Parse(AssemblyVersionInfo.Version);
 
-                // Load all of the compatible versions up to our current version.
-                for (int minorVersion = 0; minorVersion <= version.Minor; minorVersion++) {
+            // Load all of the compatible versions up to our current version.
+            // Load in reverse order so we pick up the most featureful compatible version.
+            for (int minorVersion = version.Minor; minorVersion >= 0; minorVersion--) {
+
+                foreach (var baseKey in new[] { Registry.CurrentUser, Registry.LocalMachine }) {
 
                     var keyName = FactoryProvidersRegKeyBase + version.Major + "." + minorVersion + FactoryProvidersRegKeySuffix;
 
                     using (var key = baseKey.OpenSubKey(keyName)) {
                         if (key != null) {
                             foreach (var idStr in key.GetSubKeyNames()) {
-                                using (var subkey = key.OpenSubKey(idStr)) {
-                                    if (subkey != null) {
-                                        var asm = subkey.GetValue(FactoryProviderCodeBaseSetting, "") as string;
-                                        if (asm != null) {
-                                            seen.Add(asm);
+                                // if we've seen this ID before don't re-register it, we only
+                                // want to pick up the latest compatible version.
+                                if (!seenIds.Contains(idStr)) {
+                                    using (var subkey = key.OpenSubKey(idStr)) {
+                                        if (subkey != null) {
+                                            var asm = subkey.GetValue(FactoryProviderCodeBaseSetting, "") as string;
+                                            if (asm != null) {
+                                                seenIds.Add(idStr);
+                                                seen.Add(asm);
+                                            }
                                         }
                                     }
                                 }
@@ -103,16 +110,18 @@ namespace Microsoft.PythonTools.BuildTasks {
                 }
             }
 
-            if (type != null) {
+            foreach (var type in types) {
                 seen.Add(type.Assembly.Location);
             }
+
             return seen;
         }
 
-        private static CompositionContainer CreateCatelog(IEnumerable<string> asms) {
+        private static CompositionContainer CreateCatelog(ICatalogLog log, IEnumerable<string> asms) {
             var catalog = new AggregateCatalog();
             foreach (var codeBase in asms) {
                 LoadOneProvider(
+                    log,
                     codeBase,
                     catalog
                 );
@@ -120,39 +129,5 @@ namespace Microsoft.PythonTools.BuildTasks {
 
             return new CompositionContainer(catalog);
         }
-
-        private static void LogException(
-            string message,
-            string path,
-            Exception ex,
-            IEnumerable<object> data = null
-        ) {
-            //if (log == null) {
-            //    return;
-            //}
-
-            //var fullMessage = string.Format("{1}:{0}{2}{0}{3}",
-            //    Environment.NewLine,
-            //    message,
-            //    ex,
-            //    data == null ? string.Empty : string.Join(Environment.NewLine, data)
-            //).Trim();
-
-            //if (string.IsNullOrEmpty(path)) {
-            //    log.LogEntry(
-            //        (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_ERROR,
-            //        "Python Tools",
-            //        fullMessage
-            //    );
-            //} else {
-            //    log.LogEntryPath(
-            //        (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_ERROR,
-            //        "Python Tools",
-            //        fullMessage,
-            //        path
-            //    );
-            //}
-        }
-
     }
 }

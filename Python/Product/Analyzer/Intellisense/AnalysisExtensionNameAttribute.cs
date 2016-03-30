@@ -17,7 +17,7 @@
 using System;
 using System.ComponentModel.Composition;
 
-namespace Microsoft.PythonTools.Interpreter {
+namespace Microsoft.PythonTools.Intellisense {
     [MetadataAttribute]
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Field, AllowMultiple = false)]
 

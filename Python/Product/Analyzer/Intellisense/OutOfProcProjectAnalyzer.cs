@@ -216,6 +216,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 projectContextProvider.AddContext(request.projectFile);
             }
 
+            var registry = _container.GetExportedValue<IInterpreterRegistryService>();
             IPythonInterpreterFactory factory = null;
             Version analysisVersion;
             if (request.interpreterId.StartsWith("AnalysisOnly;")) {
@@ -232,7 +233,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(analysisVersion, null, dbDirs);
                 }
             } else {
-                factory = _container.GetInterpreterFactory(request.interpreterId);
+                factory = registry.FindInterpreter(request.interpreterId);
             }
 
             if (factory == null) {
@@ -244,7 +245,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _interpreterFactory = factory;
-            _allConfigs = _container.GetConfigurations().Values.ToArray();
+            _allConfigs = registry.Configurations.ToArray();
 
             var interpreter = factory.CreateInterpreter();
             if (interpreter != null) {

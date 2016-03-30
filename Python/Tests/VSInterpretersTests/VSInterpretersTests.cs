@@ -21,8 +21,10 @@ using System.ComponentModel.Composition.Hosting;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -91,8 +93,12 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace FactoryProviderSuccess {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
+    [InterpreterFactoryId(""Success"")]
     public class FactoryProviderSuccess : IPythonInterpreterFactoryProvider {
-        public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() { yield break; }
+        public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+            return null;
+        }
+        public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() { yield break; }
         public event EventHandler InterpreterFactoriesChanged { add { } remove { } }
     }
 }", path);
@@ -101,53 +107,58 @@ namespace FactoryProviderSuccess {
 
         [TestMethod, Priority(1)]
         public void ProviderLoadLog_Success() {
-            var sp = new MockServiceProvider();
-            var log = new MockActivityLog();
-            sp.Services[typeof(SVsActivityLog).GUID] = log;
-            var sm = new MockSettingsManager();
-            sp.Services[typeof(SVsSettingsManager).GUID] = sm;
+            var path = FactoryProviderTypeLoadErrorPath;
 
-            var path = FactoryProviderSuccessPath;
-            
-            sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
+            var catalogLog = new MockLogger();
+            var container = InterpreterCatalog.CreateContainer(
+                catalogLog,
+                typeof(IInterpreterOptionsService).Assembly.Location,
+                typeof(IInterpreterRegistryService).Assembly.Location,
+                GetType().Assembly.Location
+            );
 
-            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp, typeof(IInterpreterOptionsService), typeof(IInterpreterRegistryService));
+            var log = container.GetExport<MockLogger>().Value;
+            var service = container.GetExportedValue<IInterpreterOptionsService>();
+            var registry = container.GetExportedValue<IInterpreterRegistryService>();
 
-            bool match = false;
-            foreach (var msg in log.AllItems) {
-                Console.WriteLine(msg);
-                match |= new Regex(@"Information//Python Tools//Loading interpreter provider assembly.*//" + Regex.Escape(path)).IsMatch(msg);
+            foreach (var interpreter in registry.Configurations) {
+                Console.WriteLine(interpreter);
             }
 
-            Assert.IsTrue(match);
+            foreach (var item in log.AllItems) {
+                Console.WriteLine(item);
+            }
 
-            //Assert.AreEqual(3, service.KnownProviders.Count());
+            Assert.AreEqual(0, log.AllItems.Count);
         }
 
         [TestMethod, Priority(1)]
         public void ProviderLoadLog_FileNotFound() {
-            var sp = new MockServiceProvider();
-            var log = new MockActivityLog();
-            sp.Services[typeof(SVsActivityLog).GUID] = log;
-            var sm = new MockSettingsManager();
-            sp.Services[typeof(SVsSettingsManager).GUID] = sm;
+            var catalogLog = new MockLogger();
 
             var path = Path.ChangeExtension(Path.GetTempFileName(), "dll");
             File.Delete(path);
             Assert.IsFalse(File.Exists(path));
 
-            sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
+            var container = InterpreterCatalog.CreateContainer(
+                catalogLog,
+                typeof(IInterpreterOptionsService).Assembly.Location,
+                typeof(IInterpreterRegistryService).Assembly.Location,
+                GetType().Assembly.Location,
+                path
+            );
 
-            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp, typeof(IInterpreterOptionsService), typeof(IInterpreterRegistryService));
+            var log = container.GetExport<MockLogger>().Value;
+            var service = container.GetExportedValue<IInterpreterOptionsService>();
+            var registry = container.GetExportedValue<IInterpreterRegistryService>();
 
-            foreach (var msg in log.AllItems) {
-                Console.WriteLine(msg);
+            foreach (var interpreter in registry.Configurations) {
+                Console.WriteLine(interpreter);
             }
 
-            AssertUtil.AreEqual(
-                new Regex(@"Error//Python Tools//Failed to load interpreter provider assembly.+System\.IO\.FileNotFoundException.+//" + Regex.Escape(path)),
-                log.ErrorsAndWarnings.Single()
-            );
+            var error = catalogLog.AllItems.Single();
+            Assert.IsTrue(error.StartsWith("Failed to load interpreter provider assembly"));
+            Assert.AreNotEqual(-1, error.IndexOf("System.IO.FileNotFoundException: "));
         }
 
         private static string FactoryProviderCorruptPath {
@@ -180,26 +191,31 @@ namespace FactoryProviderSuccess {
 
         [TestMethod, Priority(1)]
         public void ProviderLoadLog_CorruptImage() {
-            var sp = new MockServiceProvider();
-            var log = new MockActivityLog();
-            sp.Services[typeof(SVsActivityLog).GUID] = log;
-            var sm = new MockSettingsManager();
-            sp.Services[typeof(SVsSettingsManager).GUID] = sm;
+            var catalogLog = new MockLogger();
 
-            var path = FactoryProviderCorruptPath;
+            var path = Path.ChangeExtension(Path.GetTempFileName(), "dll");
+            File.Delete(path);
+            Assert.IsFalse(File.Exists(path));
 
-            sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
+            var container = InterpreterCatalog.CreateContainer(
+                catalogLog,
+                typeof(IInterpreterOptionsService).Assembly.Location,
+                typeof(IInterpreterRegistryService).Assembly.Location,
+                GetType().Assembly.Location,
+                FactoryProviderCorruptPath
+            );
 
-            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp, typeof(IInterpreterOptionsService), typeof(IInterpreterRegistryService));
+            var log = container.GetExport<MockLogger>().Value;
+            var service = container.GetExportedValue<IInterpreterOptionsService>();
+            var registry = container.GetExportedValue<IInterpreterRegistryService>();
 
-            foreach (var msg in log.AllItems) {
-                Console.WriteLine(msg);
+            foreach (var interpreter in registry.Configurations) {
+                Console.WriteLine(interpreter);
             }
 
-            AssertUtil.AreEqual(
-                new Regex(@"Error//Python Tools//Failed to load interpreter provider assembly.+System\.BadImageFormatException.+//" + Regex.Escape(path)),
-                log.ErrorsAndWarnings.Single()
-            );
+            var error = catalogLog.AllItems.Single();
+            Assert.IsTrue(error.StartsWith("Failed to load interpreter provider assembly"));
+            Assert.AreNotEqual(-1, error.IndexOf("System.BadImageFormatException: "));
         }
 
 
@@ -219,11 +235,15 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace FactoryProviderTypeLoadException {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
+    [InterpreterFactoryId(""TypeError"")]
     public class FactoryProviderTypeLoadException : IPythonInterpreterFactoryProvider {
         static FactoryProviderTypeLoadException() {
             throw new Exception();
         }
-        public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() { yield break; }
+        public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+            return null;
+        }
+        public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() { yield break; }
         public event EventHandler InterpreterFactoriesChanged { add { } remove { } }
     }
 }", path);
@@ -232,54 +252,63 @@ namespace FactoryProviderTypeLoadException {
 
         [TestMethod, Priority(1)]
         public void ProviderLoadLog_TypeLoadException() {
-            var sp = new MockServiceProvider();
-            var log = new MockActivityLog();
-            sp.Services[typeof(SVsActivityLog).GUID] = log;
-            var sm = new MockSettingsManager();
-            sp.Services[typeof(SVsSettingsManager).GUID] = sm;
-
             var path = FactoryProviderTypeLoadErrorPath;
 
-            sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test", "CodeBase", path);
+            var catalogLog = new MockLogger();
+            var container = InterpreterCatalog.CreateContainer(
+                catalogLog, 
+                FactoryProviderTypeLoadErrorPath, 
+                typeof(IInterpreterOptionsService).Assembly.Location, 
+                typeof(IInterpreterRegistryService).Assembly.Location,
+                GetType().Assembly.Location
+            );
 
-            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp, typeof(IInterpreterOptionsService), typeof(IInterpreterRegistryService));
+            var log = container.GetExport<MockLogger>().Value; 
+            var service = container.GetExportedValue<IInterpreterOptionsService>();
+            var registry = container.GetExportedValue<IInterpreterRegistryService>();
+
+            foreach (var interpreter in registry.Configurations) {
+                Console.WriteLine(interpreter);
+            }
 
             bool isMatch = false;
             foreach (var msg in log.AllItems) {
                 Console.WriteLine(msg);
-                isMatch |= new Regex(@"Error//Python Tools//Failed to import factory providers.*System\.ComponentModel\.Composition\.CompositionException").IsMatch(msg);
+                isMatch |= new Regex(@"Failed to get interpreter factory value:.*System\.ComponentModel\.Composition\.CompositionException").IsMatch(msg);
             }
 
-            //Assert.IsTrue(isMatch);
+            Assert.IsTrue(isMatch);
 
-            //Assert.AreEqual(2, service.KnownProviders.Count());
+            Assert.IsNotNull(registry.Configurations.FirstOrDefault());
         }
 
         [TestMethod, Priority(1)]
         public void ProviderLoadLog_SuccessAndFailure() {
-            var sp = new MockServiceProvider();
-            var log = new MockActivityLog();
-            sp.Services[typeof(SVsActivityLog).GUID] = log;
-            var sm = new MockSettingsManager();
-            sp.Services[typeof(SVsSettingsManager).GUID] = sm;
+            var path = FactoryProviderTypeLoadErrorPath;
 
-            var path1 = FactoryProviderTypeLoadErrorPath;
-            var path2 = FactoryProviderSuccessPath;
+            var catalogLog = new MockLogger();
+            var container = InterpreterCatalog.CreateContainer(
+                catalogLog,
+                FactoryProviderTypeLoadErrorPath,
+                FactoryProviderSuccessPath,
+                typeof(IInterpreterOptionsService).Assembly.Location,
+                typeof(IInterpreterRegistryService).Assembly.Location,
+                GetType().Assembly.Location
+            );
 
-            sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test1", "CodeBase", path1);
-            sm.Store.AddSetting(@"PythonTools\InterpreterFactories\Test2", "CodeBase", path2);
+            var log = container.GetExport<MockLogger>().Value;
+            var service = container.GetExportedValue<IInterpreterOptionsService>();
+            var registry = container.GetExportedValue<IInterpreterRegistryService>();
 
-            var service = InterpreterOptionsServiceProvider.GetService<IInterpreterOptionsService>(sp, typeof(IInterpreterOptionsService), typeof(IInterpreterRegistryService));
-
-            bool isMatch = false;
-            foreach (var msg in log.AllItems) {
-                Console.WriteLine(msg);
-                isMatch |= new Regex(@"Error//Python Tools//Failed to import factory providers.*System\.ComponentModel\.Composition\.CompositionException").IsMatch(msg);
+            foreach (var interpreter in registry.Configurations) {
+                Console.WriteLine(interpreter);
             }
 
-            //Assert.IsTrue(isMatch);
+            foreach (var item in log.AllItems) {
+                Console.WriteLine(item);
+            }
 
-            //Assert.AreEqual(3, service.KnownProviders.Count());
+            Assert.AreEqual(1, log.AllItems.Count);
         }
 
         [TestMethod, Priority(0)]
@@ -302,4 +331,16 @@ namespace FactoryProviderTypeLoadException {
             }
         }
     }
+
+    [Export(typeof(IInterpreterLog))]
+    [Export(typeof(MockLogger))]
+    [PartCreationPolicy(CreationPolicy.Shared)]
+    class MockLogger : ICatalogLog, IInterpreterLog {
+        public readonly List<string> AllItems = new List<string>();
+
+        public void Log(string msg) {
+            AllItems.Add(msg);
+        }
+    }
+
 }

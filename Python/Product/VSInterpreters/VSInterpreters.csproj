@@ -67,14 +67,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AnalysisExtensionNameAttribute.cs" />
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="ConfigurablePythonInterpreterFactoryProvider.cs" />
     <Compile Include="CPythonInterpreterFactoryConstants.cs" />
     <Compile Include="CPythonInterpreterFactoryProvider.cs" />
     <Compile Include="DerivedInterpreterFactory.cs" />
-    <Compile Include="IAnalysisExtension.cs" />
-    <Compile Include="IInterpreterLog.cs" />
     <Compile Include="IInterpreterOptionsService.cs" />
     <Compile Include="InterpreterOptionsService.cs" />
     <Compile Include="MSBuildConstants.cs" />

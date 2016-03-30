@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,16 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel;
-using Microsoft.IronPythonTools.Interpreter;
-using Microsoft.PythonTools;
-using Microsoft.VisualStudio.Shell;
 
-namespace Microsoft.IronPythonTools {
-    [PackageRegistration(UseManagedResourcesOnly = true)]
-    [Description("Python Tools IronPython Interpreter")]
-    class IpyToolsPackage : Package {
-        public IpyToolsPackage() {
-        }
+
+namespace Microsoft.PythonTools.Infrastructure {
+    public interface ICatalogLog {
+        void Log(string msg);
     }
 }

@@ -37,9 +37,13 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private Dictionary<IPythonInterpreterFactory, Dictionary<object, LockInfo>> _locks;
         private readonly object _locksLock = new object();
+        private readonly Lazy<IInterpreterLog>[] _loggers;
+        private const string InterpreterFactoryIdMetadata = "InterpreterFactoryId";
+
         [ImportingConstructor]
-        public InterpreterRegistryService([ImportMany]params Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] providers) {
+        public InterpreterRegistryService([ImportMany]Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] providers, [ImportMany]Lazy<IInterpreterLog>[] loggers) {
             _providers = providers;
+            _loggers = loggers;
         }
 
         public IEnumerable<IPythonInterpreterFactory> Interpreters {
@@ -50,14 +54,15 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public IEnumerable<InterpreterConfiguration> Configurations {
             get {
-                return _providers.GetConfigurations().Values
+                return GetConfigurations()
+                    .Values
                     .OrderBy(config => config.Description)
                     .ThenBy(config => config.Version);
             }
         }
 
         public IPythonInterpreterFactory FindInterpreter(string id) {
-            return _providers.GetInterpreterFactory(id);
+            return GetFactoryProvider(id)?.GetInterpreterFactory(id);
         }
 
         public event EventHandler InterpretersChanged {
@@ -75,14 +80,8 @@ namespace Microsoft.PythonTools.Interpreter {
             if (!_factoryChangesWatched) {
                 BeginSuppressInterpretersChangedEvent();
                 try {
-                    foreach (var provider in _providers) {
-                        IPythonInterpreterFactoryProvider providerValue;
-                        try {
-                            providerValue = provider.Value;
-                        } catch (CompositionException) {
-                            continue;
-                        }
-                        providerValue.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
+                    foreach (var provider in GetProviders()) {
+                        provider.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
                     }
                 } finally {
                     EndSuppressInterpretersChangedEvent();
@@ -269,7 +268,8 @@ namespace Microsoft.PythonTools.Interpreter {
             private IPythonInterpreterFactoryProvider GetFactoryProvider(Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>> lazy) {
                 try {
                     return lazy.Value;
-                } catch (CompositionException) {
+                } catch (CompositionException ce) {
+                    _owner.Log("Failed to get interpreter factory value: {0}", ce);
                     return null;
                 }
             }
@@ -350,7 +350,29 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public InterpreterConfiguration FindConfiguration(string id) {
-            return _providers.GetConfiguration(id);
+            var factoryProvider = GetFactoryProvider(id);
+            if (factoryProvider != null) {
+                return factoryProvider
+                    .GetInterpreterConfigurations()
+                    .Where(x => x.Id == id)
+                    .FirstOrDefault();
+            }
+            return null;
+        }
+
+        private IPythonInterpreterFactoryProvider GetFactoryProvider(string id) {
+            var interpAndId = id.Split(new[] { '|' }, 2);
+            if (interpAndId.Length == 2) {
+                for (int i = 0; i < _providers.Length; i++) {
+                    object value;
+                    if (_providers[i].Metadata.TryGetValue(InterpreterFactoryIdMetadata, out value) &&
+                        value is string &&
+                        (string)value == interpAndId[0]) {
+                        return LoadFactory(i);
+                    }
+                }
+            }
+            return null;
         }
 
         sealed class LockInfo : IDisposable {
@@ -359,6 +381,67 @@ namespace Microsoft.PythonTools.Interpreter {
 
             public void Dispose() {
                 _lock.Dispose();
+            }
+        }
+
+        private void Log(string msg, params object[] args) {
+            Log(string.Format(msg, args));
+        }
+
+        private Dictionary<string, InterpreterConfiguration> GetConfigurations() {
+            Dictionary<string, InterpreterConfiguration> res = new Dictionary<string, InterpreterConfiguration>();
+            foreach (var provider in GetProviders()) {
+                foreach (var config in provider.GetInterpreterConfigurations()) {
+                    res[config.Id] = config;
+                }
+            }
+
+            return res;
+        }
+
+        private IEnumerable<IPythonInterpreterFactoryProvider> GetProviders() {
+            foreach (var keyValue in GetProvidersAndMetadata()) {
+                yield return keyValue.Key;
+            }
+        }
+
+        private IEnumerable<KeyValuePair<IPythonInterpreterFactoryProvider, Dictionary<string, object>>> GetProvidersAndMetadata() {
+            for (int i = 0; i < _providers.Length; i++) {
+                IPythonInterpreterFactoryProvider value = LoadFactory(i);
+                if (value != null) {
+                    yield return new KeyValuePair<IPythonInterpreterFactoryProvider, Dictionary<string, object>>(value, _providers[i].Metadata);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles creating the factory value and logging any failures.
+        /// </summary>
+        private IPythonInterpreterFactoryProvider LoadFactory(int i) {
+            IPythonInterpreterFactoryProvider value = null;
+            try {
+                var provider = _providers[i];
+                if (provider != null) {
+                    value = provider.Value;
+                }
+            } catch (CompositionException ce) {
+                Log("Failed to get interpreter factory value: {0}", ce);
+                _providers[i] = null;
+            }
+
+            return value;
+        }
+
+        private void Log(string msg) {
+            foreach (var logger in _loggers) {
+                IInterpreterLog loggerValue = null;
+                try {
+                    loggerValue = logger.Value;
+                } catch (CompositionException) {
+                }
+                if (loggerValue != null) {
+                    loggerValue.Log(msg);
+                }
             }
         }
     }

@@ -312,12 +312,12 @@ namespace Microsoft.PythonTools.Profiling {
 
         private static void ProfileStandaloneTarget(SessionNode session, StandaloneTarget runTarget, bool openReport) {
             var model = (IComponentModel)(session._serviceProvider.GetService(typeof(SComponentModel)));
-            var factories = model.DefaultExportProvider.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>();
+            var registry = model.DefaultExportProvider.GetExportedValue<IInterpreterRegistryService>();
 
             var interpreterPath = runTarget.InterpreterPath;
             var arch = ProcessorArchitecture.X86;
             if (runTarget.PythonInterpreter != null) {
-                var interpreter = factories.GetInterpreterFactory(runTarget.PythonInterpreter.Id);
+                var interpreter = registry.FindInterpreter(runTarget.PythonInterpreter.Id);
                 if (interpreter == null) {
                     return;
                 }

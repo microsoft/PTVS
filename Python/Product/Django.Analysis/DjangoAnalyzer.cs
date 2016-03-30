@@ -24,6 +24,7 @@ using System.Runtime.CompilerServices;
 using System.Web.Script.Serialization;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Django.Analysis {

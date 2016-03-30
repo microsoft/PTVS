@@ -21,7 +21,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 
-namespace Microsoft.PythonTools.Interpreter {
+namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Provides an extension which registers against a given analyzer.
     /// </summary>

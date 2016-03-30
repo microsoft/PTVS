@@ -167,8 +167,15 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        public IInterpreterRegistryService InterpreterRegistry {
+            get {
+                return Site.GetComponentModel().GetService<IInterpreterRegistryService>();
+            }
+        }
+
         public IPythonInterpreterFactory ActiveInterpreter {
             get {
+                
                 return _active ?? InterpreterOptions.DefaultInterpreter;
             }
             internal set {
@@ -184,7 +191,7 @@ namespace Microsoft.PythonTools.Project {
                         // TODO: We should have better ordering than this...
                         var compModel = Site.GetComponentModel();
 
-                        _active = compModel.DefaultExportProvider.GetInterpreterFactory(
+                        _active = InterpreterRegistry.FindInterpreter(
                                 _validFactories.ToList().OrderBy(f => f).LastOrDefault()
                         );
                     } else {
@@ -298,7 +305,7 @@ namespace Microsoft.PythonTools.Project {
                         { MSBuildConstants.PathEnvVarKey, derived.Configuration.PathEnvironmentVariable },
                         { MSBuildConstants.ArchitectureKey, derived.Configuration.Architecture.ToString() }
                     }).FirstOrDefault();
-            } else if (compModel.DefaultExportProvider.GetInterpreterFactory(factory.Configuration.Id) != null) {
+            } else if (InterpreterRegistry.FindInterpreter(factory.Configuration.Id) != null) {
                 // The interpreter exists globally, so add a reference.
                 item = BuildProject.AddItem(MSBuildConstants.InterpreterReferenceItem,
                     string.Format("{0:B}\\{1}", factory.Configuration.Id, factory.Configuration.Version)
@@ -388,7 +395,7 @@ namespace Microsoft.PythonTools.Project {
                 if (newActive == null ||
                     _validFactories.Count == 0 ||
                     !_validFactories.Contains(newActive.Configuration.Id)) {
-                    newActive = Site.GetComponentModel().DefaultExportProvider.GetInterpreterFactory(
+                    newActive = InterpreterRegistry.FindInterpreter(
                         BuildProject.GetPropertyValue(MSBuildConstants.InterpreterIdProperty)
                     );
                 }
@@ -404,21 +411,21 @@ namespace Microsoft.PythonTools.Project {
         internal IEnumerable<InterpreterConfiguration> InterpreterConfigurations {
             get {
                 var compModel = Site.GetComponentModel();
-                var configs = compModel.DefaultExportProvider.GetConfigurations();
+                var registry = compModel.GetService<IInterpreterRegistryService>();
+                var configs = registry.Configurations;
                 if (_validFactories.Count == 0) {
                     // all non-project specific configs are valid...
                     var vsProjContext = compModel.GetService<VsProjectContextProvider>();
                     foreach (var config in configs) {
-                        if (!vsProjContext.IsProjectSpecific(config.Value)) {
-                            yield return config.Value;
+                        if (!vsProjContext.IsProjectSpecific(config)) {
+                            yield return config;
                         }
                     }
                 } else {
                     // we have a list of registered factories, only include those...
                     foreach (var config in _validFactories) {
-                        var interp = compModel.DefaultExportProvider.GetInterpreterFactory(config);
-                        InterpreterConfiguration value;
-                        if (configs.TryGetValue(config, out value)) {
+                        var value = registry.FindConfiguration(config);
+                        if (value != null) {
                             yield return value;
                         }
                     }
@@ -429,28 +436,10 @@ namespace Microsoft.PythonTools.Project {
         internal IEnumerable<IPythonInterpreterFactory> InterpreterFactories {
             get {
                 var compModel = Site.GetComponentModel();
-                if (_validFactories.Count == 0) {
-                    // all non-project specific configs are valid...
-                    var vsProjContext = compModel.GetService<VsProjectContextProvider>();
-                    var configs = compModel.DefaultExportProvider.GetConfigurations();
-                    foreach (var config in configs) {
-                        if (!vsProjContext.IsProjectSpecific(config.Value)) {
-                            var res = compModel.DefaultExportProvider.GetInterpreterFactory(config.Key);
-                            if (res == null) {
-                                continue;
-                            }
-                            yield return res;
-                        }
-                    }
-                } else {
-                    // we have a list of registered factories, only include those...
-                    foreach (var config in _validFactories) {
-                        var interp = compModel.DefaultExportProvider.GetInterpreterFactory(config);
-                        if (interp != null) {
-                            yield return interp;
-                        }
-                    }
-                }
+                var registry = compModel.GetService<IInterpreterRegistryService>();
+                return InterpreterConfigurations
+                    .Select(x => registry.FindInterpreter(x.Id))
+                    .Where(x => x != null);
             }
         }
 
@@ -656,7 +645,7 @@ namespace Microsoft.PythonTools.Project {
                 !string.IsNullOrEmpty(id = GetProjectProperty(MSBuildConstants.InterpreterIdProperty))) {
                 // The interpreter in the project file has no reference, so
                 // find and add it.
-                var interpFact = Site.GetComponentModel().DefaultExportProvider.GetInterpreterFactory(
+                var interpFact = InterpreterRegistry.FindInterpreter(
                     id
                 );
                 if (interpFact != null && QueryEditProjectFile(false)) {
@@ -2445,7 +2434,7 @@ namespace Microsoft.PythonTools.Project {
                 TaskDialog.ForException(Site, ex, issueTrackerUrl: IssueTrackerUrl).ShowModal();
                 return null;
             }
-            return Site.GetComponentModel().DefaultExportProvider.GetInterpreterFactory(id);
+            return InterpreterRegistry.FindInterpreter(id);
         }
 
 
@@ -2500,8 +2489,7 @@ namespace Microsoft.PythonTools.Project {
                 );
             }
 
-            var baseInterp = Site.GetComponentModel().DefaultExportProvider
-                .GetInterpreterFactory(options.Id) as PythonInterpreterFactoryWithDatabase;
+            var baseInterp = InterpreterRegistry.FindInterpreter(options.Id) as PythonInterpreterFactoryWithDatabase;
             if (baseInterp != null) {
                 var pathVar = options.PathEnvironmentVariableName;
                 if (string.IsNullOrEmpty(pathVar)) {

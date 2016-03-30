@@ -47,23 +47,35 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly Lazy<IProjectContextProvider>[] _contextProviders;
         private readonly Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] _factoryProviders;
         public const string MSBuildProviderName = "MSBuild";
+        private const string InterpreterFactoryIdMetadata = "InterpreterFactoryId";
+        private bool _initialized;
 
         [ImportingConstructor]
         public MSBuildProjectInterpreterFactoryProvider(
-            [ImportMany]Lazy<IProjectContextProvider>[] contextProviders, 
+            [ImportMany]Lazy<IProjectContextProvider>[] contextProviders,
             [ImportMany]Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>[] factoryProviders,
             [ImportMany]Lazy<IInterpreterLog>[] loggers) {
             _factoryProviders = factoryProviders;
             _loggers = loggers;
             _contextProviders = contextProviders;
-            InitializeContexts();
         }
 
-        private void InitializeContexts() {
-            foreach (var provider in _contextProviders) {
-                provider.Value.ProjectsChanaged += Provider_ProjectContextsChanged;
-                provider.Value.ProjectChanged += Provider_ProjectChanged;
-                Provider_ProjectContextsChanged(provider.Value, EventArgs.Empty);
+        private void EnsureInitialized() {
+            if (!_initialized) {
+                _initialized = true;
+
+                foreach (var provider in _contextProviders) {
+                    IProjectContextProvider providerValue;
+                    try {
+                        providerValue = provider.Value;
+                    } catch (CompositionException ce) {
+                        Log("Failed to get IProjectContextProvider {0}", ce);
+                        continue;
+                    }
+                    providerValue.ProjectsChanaged += Provider_ProjectContextsChanged;
+                    providerValue.ProjectChanged += Provider_ProjectChanged;
+                    Provider_ProjectContextsChanged(providerValue, EventArgs.Empty);
+                }
             }
         }
 
@@ -87,6 +99,8 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler InterpreterFactoriesChanged;
 
         public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
+            EnsureInitialized();
+
             foreach (var project in _projects) {
                 if (project.Value.Factories != null) {
                     foreach (var fact in project.Value.Factories) {
@@ -97,6 +111,8 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+            EnsureInitialized();
+
             var pathAndId = id.Split(new[] { '|' }, 3);
             if (pathAndId.Length == 3) {
                 var path = pathAndId[2];
@@ -195,14 +211,13 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private void Log(string msg) {
             foreach (var logger in _loggers) {
-                IInterpreterLog loggerValue = null;
+                IInterpreterLog loggerValue;
                 try {
                     loggerValue = logger.Value;
                 } catch (CompositionException) {
+                    continue;
                 }
-                if (loggerValue != null) {
-                    loggerValue.Log(msg);
-                }
+                loggerValue.Log(msg);
             }
         }
 
@@ -274,7 +289,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     // the pyvenv.cfg/orig-prefix.txt files later.
                     // Using an empty GUID will always go straight to the
                     // later lookup.
-                    baseInterp = _factoryProviders.GetConfiguration(value);
+                    baseInterp = FindConfiguration(value);
                 }
 
                 var path = item.GetMetadataValue(MSBuildConstants.InterpreterPathKey);
@@ -451,10 +466,8 @@ namespace Microsoft.PythonTools.Interpreter {
             string basePath = DerivedInterpreterFactory.GetOrigPrefixPath(prefixPath, libPath);
 
             if (Directory.Exists(basePath)) {
-                foreach (var provider in _factoryProviders) {
-                    var value = provider.Value;
-
-                    foreach (var config in value.GetInterpreterConfigurations()) {
+                foreach (var provider in GetProvidersAndMetadata()) {
+                    foreach (var config in provider.Key.GetInterpreterConfigurations()) {
                         if (PathUtils.IsSamePath(config.PrefixPath, basePath)) {
                             return config;
                         }
@@ -536,7 +549,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             protected override void CreateFactory() {
                 if (_baseConfig != null) {
-                    var baseInterp = _factoryProvider._factoryProviders.GetInterpreterFactory(_baseConfig.Id) as PythonInterpreterFactoryWithDatabase;
+                    var baseInterp = _factoryProvider.FindInterpreter(_baseConfig.Id) as PythonInterpreterFactoryWithDatabase;
                     if (baseInterp != null) {
                         _factory = new DerivedInterpreterFactory(
                             baseInterp,
@@ -668,5 +681,58 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
         }
+
+        /* We can't use IInterpreterRegistryService here because we need to do
+           this during initilization, and we don't have access to it until after
+           our ctor has run.  So we do our own interpreter discovery */
+        private IPythonInterpreterFactory FindInterpreter(string id) {
+            return GetFactoryProvider(id)?.GetInterpreterFactory(id);
+        }
+
+        private InterpreterConfiguration FindConfiguration(string id) {
+            var factoryProvider = GetFactoryProvider(id);
+            if (factoryProvider != null) {
+                return factoryProvider
+                    .GetInterpreterConfigurations()
+                    .Where(x => x.Id == id)
+                    .FirstOrDefault();
+            }
+            return null;
+        }
+
+
+        private IPythonInterpreterFactoryProvider GetFactoryProvider(string id) {
+            var interpAndId = id.Split(new[] { '|' }, 2);
+            if (interpAndId.Length == 2) {
+                foreach (var provider in GetProvidersAndMetadata()) {
+                    object value;
+                    if (provider.Value.TryGetValue(InterpreterFactoryIdMetadata, out value) &&
+                        value is string &&
+                        (string)value == interpAndId[0]) {
+                        return provider.Key;
+                    }
+                }
+            }
+            return null;
+        }
+
+        private IEnumerable<KeyValuePair<IPythonInterpreterFactoryProvider, Dictionary<string, object>>> GetProvidersAndMetadata() {
+            for (int i = 0; i < _factoryProviders.Length; i++) {
+                IPythonInterpreterFactoryProvider value = null;
+                try {
+                    var provider = _factoryProviders[i];
+                    if (provider != null) {
+                        value = provider.Value;
+                    }
+                } catch (CompositionException ce) {
+                    Log("Failed to get interpreter factory value: {0}", ce);
+                    _factoryProviders[i] = null;
+                }
+                if (value != null) {
+                    yield return new KeyValuePair<IPythonInterpreterFactoryProvider, Dictionary<string, object>>(value, _factoryProviders[i].Metadata);
+                }
+            }
+        }
+
     }
 }

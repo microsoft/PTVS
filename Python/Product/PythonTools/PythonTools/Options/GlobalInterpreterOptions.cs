@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Options {
 
         public void Save() {
             _interpreterOptions.DefaultInterpreter =
-                _pyService.ComponentModel.DefaultExportProvider.GetInterpreterFactory(DefaultInterpreter);
+                _interpreters.FindInterpreter(DefaultInterpreter);
                 _interpreters.Interpreters.LastOrDefault();
             DefaultInterpreter = _interpreterOptions.DefaultInterpreter.Configuration.Id;
             DefaultInterpreterVersion = _interpreterOptions.DefaultInterpreter.Configuration.Version;
@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         internal void UpdateInterpreter() {
-            var interpreter = _pyService.ComponentModel.DefaultExportProvider.GetInterpreterFactory(DefaultInterpreter);
+            var interpreter = _interpreters.FindInterpreter(DefaultInterpreter);
             if (interpreter != null) {
                 _interpreterOptions.DefaultInterpreter = interpreter;
             }
