@@ -50,8 +50,14 @@ namespace Microsoft.PythonTools.Intellisense {
             public override string command => Command;
 
             public string[] mefExtensions;
-            public string interpreterId, projectFile;
+            public string interpreterId, projectFile, projectHome;
 
+            public DerivedInterpreter[] derivedInterpreters;
+
+        }
+
+        public sealed class DerivedInterpreter {
+            public string name, id, description, version, baseInterpreter, path, windowsPath, libPath, pathEnvVar, arch;
         }
 
         public sealed class InitializeResponse : Response {

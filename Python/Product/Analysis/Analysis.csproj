@@ -74,6 +74,7 @@
     <Compile Include="Interpreter\Default\CPythonSequenceType.cs" />
     <Compile Include="Interpreter\IInterpreterLog.cs" />
     <Compile Include="Interpreter\IInterpreterRegistryService.cs" />
+    <Compile Include="Interpreter\InMemoryProject.cs" />
     <Compile Include="Interpreter\InterpreterFactoryIdAttribute.cs" />
     <Compile Include="Interpreter\InterpreterRegistryConstants.cs" />
     <Compile Include="Interpreter\InterpreterRegistryService.cs" />

@@ -213,7 +213,30 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (request.projectFile != null) {
                 var projectContextProvider = _container.GetExportedValue<OutOfProcProjectContextProvider>();
-                projectContextProvider.AddContext(request.projectFile);
+                projectContextProvider.AddContext(
+                    new InMemoryProject(
+                        request.projectFile,
+                        new Dictionary<string, object>() {
+                            { "ProjectHome", request.projectHome },
+                            {  "Interpreters",
+                                request.derivedInterpreters.Select(
+                                    interp => new Dictionary<string, string>() {
+                                        { "EvaluatedInclude", interp.name },
+                                        { MSBuildConstants.IdKey,              interp.id },
+                                        { MSBuildConstants.VersionKey,         interp.version },
+                                        { MSBuildConstants.DescriptionKey,     interp.description },
+                                        { MSBuildConstants.BaseInterpreterKey, interp.baseInterpreter },
+                                        { MSBuildConstants.InterpreterPathKey, interp.path },
+                                        { MSBuildConstants.WindowsPathKey,     interp.windowsPath },
+                                        { MSBuildConstants.LibraryPathKey,     interp.libPath },
+                                        { MSBuildConstants.PathEnvVarKey,      interp.pathEnvVar },
+                                        { MSBuildConstants.ArchitectureKey,    interp.arch }
+                                    }
+                                ).ToArray()
+                            }
+                        }
+                    )
+                );
             }
 
             var registry = _container.GetExportedValue<IInterpreterRegistryService>();

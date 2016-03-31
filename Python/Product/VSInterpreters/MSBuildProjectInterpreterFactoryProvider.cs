@@ -158,17 +158,27 @@ namespace Microsoft.PythonTools.Interpreter {
 
                         if (projContext != null) {
                             if (!_projects.ContainsKey(projContext.FullPath)) {
-                                var projInfo = new ProjectInfo(projContext, contextProvider);
+                                var projInfo = new MSBuildProjectInfo(projContext, projContext.FullPath, contextProvider);
                                 _projects[projContext.FullPath] = projInfo;
                                 added.Add(projInfo);
                             }
                             seen.Add(projContext.FullPath);
                         }
+
+                        var inMemory = context as InMemoryProject;
+                        if (inMemory != null) {
+                            if (!_projects.ContainsKey(inMemory.FullPath)) {
+                                var projInfo = new InMemoryProjectInfo(inMemory, inMemory.FullPath, contextProvider);
+                                _projects[inMemory.FullPath] = projInfo;
+                                added.Add(projInfo);
+                            }
+                            seen.Add(inMemory.FullPath);
+                        }
                     }
 
                     // Then remove any existing projects that are no longer there
                     var toRemove = _projects
-                        .Where(x => x.Value.Context == contextProvider && !seen.Contains(x.Key))
+                        .Where(x => x.Value.ContextProvider == contextProvider && !seen.Contains(x.Key))
                         .Select(x => x.Key)
                         .ToArray();
 
@@ -237,21 +247,22 @@ namespace Microsoft.PythonTools.Interpreter {
             //   <PathEnvironmentVariable>...</PathEnvironmentVariable>
             //   <Description>...</Description>
             // </Interpreter>
-            var project = projectInfo.Project;
-
-            var projectHome = PathUtils.GetAbsoluteDirectoryPath(project.DirectoryPath, project.GetPropertyValue("ProjectHome"));
+            var projectHome = PathUtils.GetAbsoluteDirectoryPath(
+                Path.GetDirectoryName(projectInfo.FullPath),
+                projectInfo.GetPropertyValue("ProjectHome")
+            );
             var factories = new Dictionary<string, FactoryInfo>();
-            foreach (var item in project.GetItems(MSBuildConstants.InterpreterItem)) {
+            foreach (var item in projectInfo.GetInterpreters()) {
                 // Errors in these options are fatal, so we set anyError and
                 // continue with the next entry.
-                var dir = item.EvaluatedInclude;
+                var dir = GetValue(item, "EvaluatedInclude");
                 if (!PathUtils.IsValidPath(dir)) {
                     Log("Interpreter has invalid path: {0}", dir ?? "(null)");
                     continue;
                 }
                 dir = PathUtils.GetAbsoluteDirectoryPath(projectHome, dir);
 
-                var id = item.GetMetadataValue(MSBuildConstants.IdKey);
+                var id = GetValue(item, MSBuildConstants.IdKey);
                 if (string.IsNullOrEmpty(id)) {
                     Log("Interpreter {0} has invalid value for '{1}': {2}", dir, MSBuildConstants.IdKey, id);
                     continue;
@@ -261,7 +272,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     continue;
                 }
 
-                var verStr = item.GetMetadataValue(MSBuildConstants.VersionKey);
+                var verStr = GetValue(item, MSBuildConstants.VersionKey);
                 Version ver;
                 if (string.IsNullOrEmpty(verStr) || !Version.TryParse(verStr, out ver)) {
                     Log("Interpreter {0} has invalid value for '{1}': {2}", dir, MSBuildConstants.VersionKey, verStr);
@@ -275,24 +286,15 @@ namespace Microsoft.PythonTools.Interpreter {
                 bool hasError = false;
 
                 bool hasDescription = true;
-                var description = item.GetMetadataValue(MSBuildConstants.DescriptionKey);
+                var description = GetValue(item, MSBuildConstants.DescriptionKey);
                 if (string.IsNullOrEmpty(description)) {
                     hasDescription = false;
                     description = PathUtils.CreateFriendlyDirectoryPath(projectHome, dir);
                 }
 
-                var value = item.GetMetadataValue(MSBuildConstants.BaseInterpreterKey);
-                InterpreterConfiguration baseInterp = null;
-                if (!string.IsNullOrEmpty(value)) {
-                    // It's a valid GUID, so find a suitable base. If we
-                    // don't find one now, we'll try and figure it out from
-                    // the pyvenv.cfg/orig-prefix.txt files later.
-                    // Using an empty GUID will always go straight to the
-                    // later lookup.
-                    baseInterp = FindConfiguration(value);
-                }
+                var baseInterpId = GetValue(item, MSBuildConstants.BaseInterpreterKey);
 
-                var path = item.GetMetadataValue(MSBuildConstants.InterpreterPathKey);
+                var path = GetValue(item, MSBuildConstants.InterpreterPathKey);
                 if (!PathUtils.IsValidPath(path)) {
                     Log("Interpreter {0} has invalid value for '{1}': {2}", dir, MSBuildConstants.InterpreterPathKey, path);
                     hasError = true;
@@ -300,7 +302,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     path = PathUtils.GetAbsoluteFilePath(dir, path);
                 }
 
-                var winPath = item.GetMetadataValue(MSBuildConstants.WindowsPathKey);
+                var winPath = GetValue(item, MSBuildConstants.WindowsPathKey);
                 if (!PathUtils.IsValidPath(winPath)) {
                     Log("Interpreter {0} has invalid value for '{1}': {2}", dir, MSBuildConstants.WindowsPathKey, winPath);
                     hasError = true;
@@ -308,7 +310,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     winPath = PathUtils.GetAbsoluteFilePath(dir, winPath);
                 }
 
-                var libPath = item.GetMetadataValue(MSBuildConstants.LibraryPathKey);
+                var libPath = GetValue(item, MSBuildConstants.LibraryPathKey);
                 if (string.IsNullOrEmpty(libPath)) {
                     libPath = "lib";
                 }
@@ -319,7 +321,17 @@ namespace Microsoft.PythonTools.Interpreter {
                     libPath = PathUtils.GetAbsoluteDirectoryPath(dir, libPath);
                 }
 
-                var pathVar = item.GetMetadataValue(MSBuildConstants.PathEnvVarKey);
+                InterpreterConfiguration baseInterp = null;
+                if (!string.IsNullOrEmpty(baseInterpId)) {
+                    // It's a valid GUID, so find a suitable base. If we
+                    // don't find one now, we'll try and figure it out from
+                    // the pyvenv.cfg/orig-prefix.txt files later.
+                    // Using an empty GUID will always go straight to the
+                    // later lookup.
+                    baseInterp = FindConfiguration(baseInterpId);
+                }
+
+                var pathVar = GetValue(item, MSBuildConstants.PathEnvVarKey);
                 if (string.IsNullOrEmpty(pathVar)) {
                     if (baseInterp != null) {
                         pathVar = baseInterp.PathEnvironmentVariable;
@@ -329,8 +341,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 string arch = null;
+
                 if (baseInterp == null) {
-                    arch = item.GetMetadataValue(MSBuildConstants.ArchitectureKey);
+                    arch = GetValue(item, MSBuildConstants.ArchitectureKey);
                     if (string.IsNullOrEmpty(arch)) {
                         arch = "x86";
                     }
@@ -342,16 +355,16 @@ namespace Microsoft.PythonTools.Interpreter {
                     baseInterp = FindBaseInterpreterFromVirtualEnv(dir, libPath);
 
                     if (baseInterp == null) {
-                        Log("Interpreter {0} has invalid value for '{1}': {2}", dir, MSBuildConstants.BaseInterpreterKey, value ?? "(null)");
+                        Log("Interpreter {0} has invalid value for '{1}': {2}", dir, MSBuildConstants.BaseInterpreterKey, baseInterpId ?? "(null)");
                         hasError = true;
                     }
                 }
 
-                string fullId = GetInterpreterId(project.FullPath, id);
+                string fullId = GetInterpreterId(projectInfo.FullPath, id);
 
                 FactoryInfo info;
                 if (hasError) {
-                    info = new ErrorFactoryInfo(item, fullId, ver, description, dir);
+                    info = new ErrorFactoryInfo(fullId, ver, description, dir);
                 } else {
                     Debug.Assert(baseInterp != null, "we reported an error if we didn't have a base interpreter");
 
@@ -361,7 +374,6 @@ namespace Microsoft.PythonTools.Interpreter {
 
                     info = new ConfiguredFactoryInfo(
                         this,
-                        item,
                         baseInterp,
                         new InterpreterConfiguration(
                             fullId,
@@ -381,21 +393,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 MergeFactory(projectInfo, factories, info);
             }
 
-            // <InterpreterReference Include="{factoryProviderId}|{interpreterId}" />
-           /* foreach (var item in project.GetItems(MSBuildConstants.InterpreterReferenceItem)) {
-                string id = item.EvaluatedInclude;
-
-                var config = _factoryProviders.GetConfiguration(id);
-                FactoryInfo info;
-                if (config == null) {
-                    info = new ErrorFactoryInfo(item, id, new Version(0, 0), "Missing interpreter", "");
-                } else {
-                    info = new ReferenceFactoryInfo(this, config, item);
-                }
-
-                MergeFactory(projectInfo, factories, info);
-            }*/
-
             HashSet<FactoryInfo> previousFactories = new HashSet<FactoryInfo>();
             if (projectInfo.Factories != null) {
                 previousFactories.UnionWith(projectInfo.Factories.Values);
@@ -411,8 +408,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 foreach (var removed in previousFactories.Except(newFactories)) {
-                    projectInfo.Context.InterpreterUnloaded(
-                        projectInfo.Project,
+                    projectInfo.ContextProvider.InterpreterUnloaded(
+                        projectInfo.Context,
                         removed.Config
                     );
 
@@ -424,12 +421,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 foreach (var added in newFactories.Except(previousFactories)) {
                     foreach (var factory in factories) {
-                        //if (factory.Value.Config.Id.StartsWith(MSBuildProviderName + "|")) {
-                            projectInfo.Context.InterpreterLoaded(
-                                projectInfo.Project,
-                                factory.Value.Config
-                            );
-                        //}
+                        projectInfo.ContextProvider.InterpreterLoaded(
+                            projectInfo.Context,
+                            factory.Value.Config
+                        );
                     }
                 }
             }
@@ -515,14 +510,20 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        private static string GetValue(Dictionary<string, string> from, string name) {
+            string res;
+            if (!from.TryGetValue(name, out res)) {
+                return String.Empty;
+            }
+            return res;
+        }
+
         class FactoryInfo {
-            public readonly MSBuild.ProjectItem ProjectItem;
             public readonly InterpreterConfiguration Config;
             protected IPythonInterpreterFactory _factory;
 
-            public FactoryInfo(MSBuild.ProjectItem projectItem, InterpreterConfiguration configuration) {
+            public FactoryInfo(InterpreterConfiguration configuration) {
                 Config = configuration;
-                ProjectItem = projectItem;
             }
 
             protected virtual void CreateFactory() {
@@ -542,7 +543,7 @@ namespace Microsoft.PythonTools.Interpreter {
             private readonly InterpreterConfiguration _baseConfig;
             private readonly MSBuildProjectInterpreterFactoryProvider _factoryProvider;
 
-            public ConfiguredFactoryInfo(MSBuildProjectInterpreterFactoryProvider factoryProvider, MSBuild.ProjectItem projectItem, InterpreterConfiguration baseConfig, InterpreterConfiguration config) : base(projectItem, config) {
+            public ConfiguredFactoryInfo(MSBuildProjectInterpreterFactoryProvider factoryProvider, InterpreterConfiguration baseConfig, InterpreterConfiguration config) : base(config) {
                 _factoryProvider = factoryProvider;
                 _baseConfig = baseConfig;
             }
@@ -593,7 +594,7 @@ namespace Microsoft.PythonTools.Interpreter {
         sealed class ErrorFactoryInfo : FactoryInfo {
             private string _dir;
 
-            public ErrorFactoryInfo(MSBuild.ProjectItem projectItem, string id, Version ver, string description, string dir) : base(projectItem, new InterpreterConfiguration(id, description, ver)) {
+            public ErrorFactoryInfo(string id, Version ver, string description, string dir) : base(new InterpreterConfiguration(id, description, ver)) {
                 _dir = dir;
             }
 
@@ -619,47 +620,97 @@ namespace Microsoft.PythonTools.Interpreter {
                 return Config.GetHashCode() ^ _dir?.GetHashCode() ?? 0;
             }
         }
-#if FALSE
-        sealed class ReferenceFactoryInfo : FactoryInfo {
-            private readonly MSBuildProjectInterpreterFactoryProvider _owner;
 
-            public ReferenceFactoryInfo(MSBuildProjectInterpreterFactoryProvider owner, InterpreterConfiguration config, MSBuild.ProjectItem projectItem) : base(projectItem, config) {
-                _owner = owner;
+        /// <summary>
+        /// Represents an MSBuild project file.  The file could have either been read from 
+        /// disk or it could be a project file running inside of the IDE which is being
+        /// used for a Python project node.
+        /// </summary>
+        sealed class MSBuildProjectInfo : ProjectInfo {
+            public readonly MSBuild.Project Project;
+
+            public MSBuildProjectInfo(MSBuild.Project project, string filename, IProjectContextProvider context) : base(filename, context) {
+                Project = project;
             }
 
-            protected override void CreateFactory() {
-                var existing = _owner._factoryProviders.GetInterpreterFactory(Config.Id);
-
-                if (existing != null) {
-                    _factory = existing;
-                } else {
-                    _factory = new NotFoundInterpreterFactory(Config.Id, new Version(0, 0));
+            public override object Context {
+                get {
+                    return Project;
                 }
             }
 
-            public override bool Equals(object obj) {
-                ReferenceFactoryInfo other = obj as ReferenceFactoryInfo;
-                if (other != null) {
-                    return other.Config == Config;
-                }
-                return false;
+            public override string GetPropertyValue(string name) {
+                return Project.GetPropertyValue(name);
             }
 
-            public override int GetHashCode() {
-                return Config.GetHashCode();
+            internal override IEnumerable<Dictionary<string, string>> GetInterpreters() {
+                return Project.GetItems(MSBuildConstants.InterpreterItem).Select(
+                    interp => new Dictionary<string, string>() {
+                        { "EvaluatedInclude", interp.EvaluatedInclude },
+                        { MSBuildConstants.IdKey,              interp.GetMetadataValue(MSBuildConstants.IdKey) },
+                        { MSBuildConstants.VersionKey,         interp.GetMetadataValue(MSBuildConstants.VersionKey) },
+                        { MSBuildConstants.DescriptionKey,     interp.GetMetadataValue(MSBuildConstants.DescriptionKey) },
+                        { MSBuildConstants.BaseInterpreterKey, interp.GetMetadataValue(MSBuildConstants.BaseInterpreterKey) },
+                        { MSBuildConstants.InterpreterPathKey, interp.GetMetadataValue(MSBuildConstants.InterpreterPathKey) },
+                        { MSBuildConstants.WindowsPathKey,     interp.GetMetadataValue(MSBuildConstants.WindowsPathKey) },
+                        { MSBuildConstants.LibraryPathKey,     interp.GetMetadataValue(MSBuildConstants.LibraryPathKey) },
+                        { MSBuildConstants.PathEnvVarKey,      interp.GetMetadataValue(MSBuildConstants.PathEnvVarKey) },
+                        { MSBuildConstants.ArchitectureKey,    interp.GetMetadataValue(MSBuildConstants.ArchitectureKey) }
+                    }
+                );
             }
         }
-#endif
 
-        sealed class ProjectInfo : IDisposable {
-            public readonly MSBuild.Project Project;
-            public readonly IProjectContextProvider Context;
+        /// <summary>
+        /// Gets information about an "in-memory" project.  Supports reading interpreters from
+        /// a project when we're out of proc that haven't yet been committed to disk.
+        /// </summary>
+        sealed class InMemoryProjectInfo : ProjectInfo {
+            public readonly InMemoryProject Project;
+
+            public InMemoryProjectInfo(InMemoryProject project, string filename, IProjectContextProvider context) : base(filename, context) {
+                Project = project;
+            }
+
+            public override object Context {
+                get {
+                    return Project;
+                }
+            }
+
+            public override string GetPropertyValue(string name) {
+                object res;
+                if (Project.Properties.TryGetValue(name, out res) && res is string) {
+                    return (string)res;
+                }
+
+                return String.Empty;
+            }
+
+            internal override IEnumerable<Dictionary<string, string>> GetInterpreters() {
+                object interps;
+                if (Project.Properties.TryGetValue("Interpreters", out interps) &&
+                    interps is IEnumerable<Dictionary<string, string>>) {
+                    return (IEnumerable<Dictionary<string, string>>)interps;
+                }
+
+                return Array.Empty<Dictionary<string, string>>();
+            }
+        }
+
+        /// <summary>
+        /// Tracks data about a project.  Specific subclasses deal with how the underlying project
+        /// is being stored. 
+        /// </summary>
+        abstract class ProjectInfo : IDisposable {
+            public readonly IProjectContextProvider ContextProvider;
+            public readonly string FullPath;
             public Dictionary<string, FactoryInfo> Factories;
             public readonly Dictionary<string, string> RootPaths = new Dictionary<string, string>();
 
-            public ProjectInfo(MSBuild.Project project, IProjectContextProvider context) {
-                Context = context;
-                Project = project;
+            public ProjectInfo(string filename, IProjectContextProvider context) {
+                FullPath = filename;
+                ContextProvider = context;
             }
 
             public void Dispose() {
@@ -672,6 +723,14 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
             }
+
+            public abstract object Context {
+                get;
+            }
+
+            public abstract string GetPropertyValue(string name);
+
+            internal abstract IEnumerable<Dictionary<string, string>> GetInterpreters();
         }
 
         public void Dispose() {

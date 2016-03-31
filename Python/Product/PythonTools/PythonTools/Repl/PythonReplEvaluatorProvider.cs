@@ -71,14 +71,9 @@ namespace Microsoft.PythonTools.Repl {
         /// Creates an interactive evaluator programmatically for some plugin
         /// </summary>
         private IInteractiveEvaluator CreateConfigurableEvaluator(string replId) {
-            string[] components = replId.Split(new[] { '|' }, 4);
-            if (components.Length == 5) {
+            string[] components = replId.Split(new[] { '|' }, 2);
+            if (components.Length == 2) {
                 string interpreter = components[1];
-                // string userId = components[2];
-                // We don't care about the user identifier - it is there to
-                // ensure that evaluators can be distinguished within a project
-                // and/or with the same interpreter.
-                string projectName = components[3];
 
                 var factory = _interpreterService.FindInterpreter(interpreter);
 
@@ -86,13 +81,18 @@ namespace Microsoft.PythonTools.Repl {
                     var replOptions = new ConfigurablePythonReplOptions();
                     replOptions.InterpreterFactory = factory;
 
-                    var solution = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-                    if (solution != null) {
-                        foreach (var pyProj in solution.EnumerateLoadedPythonProjects()) {
-                            var name = ((IVsHierarchy)pyProj).GetRootCanonicalName();
-                            if (string.Equals(name, projectName, StringComparison.OrdinalIgnoreCase)) {
-                                replOptions.Project = pyProj;
-                                break;
+                    if (interpreter.StartsWith(MSBuildProjectInterpreterFactoryProvider.MSBuildProviderName + "|")) {
+                        string[] projectComponents = interpreter.Split(new[] { '|' }, 3);
+                        string projectName = projectComponents[2];
+
+                        var solution = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
+                        if (solution != null) {
+                            foreach (var pyProj in solution.EnumerateLoadedPythonProjects()) {
+                                var name = ((IVsHierarchy)pyProj).GetRootCanonicalName();
+                                if (string.Equals(name, projectName, StringComparison.OrdinalIgnoreCase)) {
+                                    replOptions.Project = pyProj;
+                                    break;
+                                }
                             }
                         }
                     }
@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Repl {
 
         internal static string GetReplId(string id, PythonProjectNode project, bool alwaysPerProject) {
             if (alwaysPerProject || IsProjectSpecific(id, project)) {
-                return GetConfigurableReplId(id, (IVsHierarchy)project, "");
+                return GetConfigurableReplId(id, (IVsHierarchy)project);
             } else {
                 return String.Format("{0} {1}",
                     _replGuid,
@@ -138,12 +138,10 @@ namespace Microsoft.PythonTools.Repl {
             );
         }
 
-        internal static string GetConfigurableReplId(string id, IVsHierarchy project, string userId) {
-            return String.Format("{0}|{1}|{2}|{3}",
+        internal static string GetConfigurableReplId(string id, IVsHierarchy project) {
+            return String.Format("{0}|{1}",
                 _configurableGuid,
-                id,
-                userId,
-                project != null ? project.GetRootCanonicalName() : ""
+                id
             );
         }
     }

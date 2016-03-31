@@ -446,7 +446,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 var project = app.OpenProject(@"TestData\Environments\Unknown.sln");
 
                 app.ExecuteCommand("Debug.Start");
-                PythonVisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Unknown Python 2.7", "incorrectly configured");
+                PythonVisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Global|PythonCore|2.8|x86", "incorrectly configured");
             }
         }
 
@@ -508,6 +508,8 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                     new[] { new Lazy<IProjectContextProvider>(() => contextProvider) },
                     null,
                     new[] { new Lazy<IInterpreterLog>(() => logger) })) {
+                    var configs = provider.GetInterpreterConfigurations().ToArray();
+                    // force the load...
                     AssertUtil.AreEqual(
                         logger.Errors.ToString()
                         .Replace(TestData.GetPath("TestData\\Environments\\"), "$")
@@ -599,7 +601,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
                 app.ServiceProvider.GetUIThread().Invoke(() => {
                     var pp = project.GetPythonProject();
-                    pp.AddInterpreter(dis.CurrentDefault);
+                    pp.AddInterpreter(dis.CurrentDefault.Configuration.Id);
                 });
 
                 var envName = dis.CurrentDefault.Configuration.Description;

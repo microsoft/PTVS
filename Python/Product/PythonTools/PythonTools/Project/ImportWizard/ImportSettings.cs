@@ -405,11 +405,15 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 );
             }
             if (virtualEnvPaths != null && virtualEnvPaths.Any() && service != null) {
-                foreach (var config in virtualEnvPaths.Select(p => VirtualEnv.FindInterpreterConfiguration(p, service))) {
-                    AddVirtualEnvironment(project, sourcePath, config);
+                foreach (var path in virtualEnvPaths) {
+                    var id = MSBuildProjectInterpreterFactoryProvider.GetInterpreterId("$(MSBuildProjectFullPath)", Path.GetFileName(sourcePath));
+                    var config = VirtualEnv.FindInterpreterConfiguration(id, path, service);
+                    if (config != null) {
+                        AddVirtualEnvironment(project, sourcePath, config);
 
-                    if (string.IsNullOrEmpty(interpreterId.Value)) {
-                        interpreterId.Value = config.Id;
+                        if (string.IsNullOrEmpty(interpreterId.Value)) {
+                            interpreterId.Value = id;
+                        }
                     }
                 }
             }
@@ -451,7 +455,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 MSBuildConstants.InterpreterItem,
                 prefixPath,
                 new Dictionary<string, string> {
-                    { MSBuildConstants.IdKey, Guid.NewGuid().ToString("B") },
+                    { MSBuildConstants.IdKey, Path.GetFileName(sourcePath) },
                     { MSBuildConstants.DescriptionKey, config.Description },
                     { MSBuildConstants.BaseInterpreterKey, config.Id },
                     { MSBuildConstants.InterpreterPathKey, interpreterPath },

@@ -812,6 +812,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The environment &quot;{0}&quot; appears to be incorrectly configured or missing. You may need to install it or re-create a virtual environment..
+        /// </summary>
+        public static string MissingEnvironmentUnknownVersion {
+            get {
+                return ResourceManager.GetString("MissingEnvironmentUnknownVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Module.
         /// </summary>
         public static string ModuleClassificationType {

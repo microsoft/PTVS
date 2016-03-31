@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Project {
             
             var interp = _control.DefaultInterpreter;
             if (interp != null && !PythonProject.InterpreterFactories.Contains(interp)) {
-                PythonProject.AddInterpreter(interp);
+                PythonProject.AddInterpreter(interp.Configuration.Id);
             }
             PythonProject.SetInterpreterFactory(_control.DefaultInterpreter);
             IsDirty = false;

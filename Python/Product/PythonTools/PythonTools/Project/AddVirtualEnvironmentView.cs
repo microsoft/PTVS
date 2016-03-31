@@ -221,7 +221,7 @@ namespace Microsoft.PythonTools.Project {
             if (Directory.Exists(path) && Directory.EnumerateFileSystemEntries(path).Any()) {
                 WillCreateVirtualEnv = false;
 
-                var config = VirtualEnv.FindInterpreterConfiguration(path, _interpreterService);
+                var config = VirtualEnv.FindInterpreterConfiguration(null, path, _interpreterService);
                 if (config != null && File.Exists(config.InterpreterPath)) {
                     var baseInterp = _interpreterService.FindInterpreter(config.Id);
                     InterpreterView baseInterpView;

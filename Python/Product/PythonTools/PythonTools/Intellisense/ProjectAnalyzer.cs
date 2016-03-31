@@ -36,13 +36,15 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
+using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.Intellisense {
+    using VisualStudioTools;
     using AP = AnalysisProtocol;
 
     public sealed class VsProjectAnalyzer : IDisposable {
         internal readonly Process _analysisProcess;
-        private readonly Connection _conn;
+        private Connection _conn;
         // For entries that were loaded from a .zip file, IProjectEntry.Properties[_zipFileName] contains the full path to that archive.
         private static readonly object _zipFileName = new { Name = "ZipFileName" };
 
@@ -101,7 +103,7 @@ namespace Microsoft.PythonTools.Intellisense {
             IServiceProvider serviceProvider,
             IPythonInterpreterFactory factory,
             bool implicitProject = true,
-            string projectFile = null
+            MSBuild.Project projectFile = null
         ) {
             _errorProvider = (ErrorTaskProvider)serviceProvider.GetService(typeof(ErrorTaskProvider));
             _commentTaskProvider = (CommentTaskProvider)serviceProvider.GetService(typeof(CommentTaskProvider));
@@ -134,23 +136,46 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var initialize = new AP.InitializeRequest() {
                 interpreterId = factory.Configuration.Id,
-                projectFile = projectFile,
                 mefExtensions = providers.ToArray()
             };
 
+            if (projectFile != null) { 
+                initialize.projectFile = projectFile.FullPath;
+                initialize.projectHome = CommonUtils.GetAbsoluteDirectoryPath(
+                    Path.GetDirectoryName(projectFile.FullPath),
+                    projectFile.GetPropertyValue(CommonConstants.ProjectHome)
+                );
+                initialize.derivedInterpreters = projectFile.GetItems(MSBuildConstants.InterpreterItem).Select(
+                    interp => new AP.DerivedInterpreter() {
+                        name = interp.EvaluatedInclude,
+                        id = interp.GetMetadataValue(MSBuildConstants.IdKey),
+                        description = interp.GetMetadataValue(MSBuildConstants.DescriptionKey),
+                        version = interp.GetMetadataValue(MSBuildConstants.VersionKey),
+                        baseInterpreter = interp.GetMetadataValue(MSBuildConstants.BaseInterpreterKey),
+                        path = interp.GetMetadataValue(MSBuildConstants.InterpreterPathKey),
+                        windowsPath = interp.GetMetadataValue(MSBuildConstants.WindowsPathKey),
+                        arch = interp.GetMetadataValue(MSBuildConstants.ArchitectureKey),
+                        libPath = interp.GetMetadataValue(MSBuildConstants.LibraryPathKey),
+                        pathEnvVar = interp.GetMetadataValue(MSBuildConstants.PathEnvVarKey)
+                    }
+                ).ToArray();
+            }
+
             SendRequestAsync(initialize).ContinueWith(
                 task => {
-                    // TODO: Log any warnings/errors
                     var result = task.Result;
-                    Console.WriteLine(result);
+                    if (!String.IsNullOrWhiteSpace(result.error)) {
+                        _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOpertionFailed, "Initialization: " + result.error);
+                        _conn = null;
+                    } else {
+                        SendEventAsync(
+                            new AP.OptionsChangedEvent() {
+                                indentation_inconsistency_severity = _pyService.GeneralOptions.IndentationInconsistencySeverity
+                            }
+                        ).Wait();
+                    }
                 }
             );
-
-            SendEventAsync(
-                new AP.OptionsChangedEvent() {
-                    indentation_inconsistency_severity = _pyService.GeneralOptions.IndentationInconsistencySeverity
-                }
-            ).Wait();
 
             CommentTaskTokensChanged(null, EventArgs.Empty);
         }
@@ -1317,10 +1342,14 @@ namespace Microsoft.PythonTools.Intellisense {
         #endregion
 
         internal async Task<T> SendRequestAsync<T>(Request<T> request, T defaultValue = default(T)) where T : Response, new() {
+            var conn = _conn;
+            if (conn == null) {
+                return default(T);
+            }
             Debug.WriteLine(String.Format("{1} Sending request {0}", request.command, DateTime.Now));
             T res = defaultValue;
             try {
-                res = await _conn.SendRequestAsync(request, _processExitedCancelSource.Token).ConfigureAwait(false);
+                res = await conn.SendRequestAsync(request, _processExitedCancelSource.Token).ConfigureAwait(false);
             } catch (OperationCanceledException) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
             } catch(IOException) {
@@ -1333,9 +1362,13 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async Task SendEventAsync(Event eventValue)  {
+            var conn = _conn;
+            if (conn == null) {
+                return;
+            }
             Debug.WriteLine(String.Format("{1} Sending event {0}", eventValue.name, DateTime.Now));
             try {
-                await _conn.SendEventAsync(eventValue).ConfigureAwait(false);
+                await conn.SendEventAsync(eventValue).ConfigureAwait(false);
             } catch (OperationCanceledException) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
             } catch (IOException) {
@@ -1616,9 +1649,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 cancel = _processExitedCancelSource.Token;
             }
 
+            var conn = _conn;
+            if(conn == null) {
+                return new ExportedMemberInfo[0];
+            }
+
             try {
                 try {
-                    return (await _conn.SendRequestAsync(new AP.AvailableImportsRequest() {
+                    return (await conn.SendRequestAsync(new AP.AvailableImportsRequest() {
                         name = name
                     }, cancel)).imports.Select(x => new ExportedMemberInfo(x.fromName, x.importName));
                 } catch (OperationCanceledException) {
