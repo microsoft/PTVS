@@ -76,6 +76,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly PythonToolsService _pyService;
         internal readonly IServiceProvider _serviceProvider;
         private readonly CancellationTokenSource _processExitedCancelSource = new CancellationTokenSource();
+        private readonly HashSet<ProjectReference> _references = new HashSet<ProjectReference>();
         private bool _disposing;
 
         internal Task ReloadTask;
@@ -1608,7 +1609,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 ApplyChanges(res.changes, lastAnalyzed, buffer, res.version);
 
-                if (selectResult) {
+                if (selectResult && !view.IsClosed) {
                     view.Selection.Select(selectionSpan.GetSpan(view.TextBuffer.CurrentSnapshot), false);
                 }
             }
@@ -1783,22 +1784,25 @@ namespace Microsoft.PythonTools.Intellisense {
             return res.ToArray();
         }
 
-        internal async Task<ProjectReference[]> GetReferencesAsync() {
-            var res = await SendRequestAsync(new AP.GetReferencesRequest()).ConfigureAwait(false);
-
-            if (res != null) {
-                return res.references.Select(AP.ProjectReference.Convert).ToArray();
+        internal ProjectReference[] GetReferences() {
+            lock (_references) {
+                return _references.ToArray();
             }
-            return Array.Empty<ProjectReference>();
         }
 
         internal async Task<AP.AddReferenceResponse> AddReferenceAsync(ProjectReference reference, CancellationToken token = default(CancellationToken)) {
+            lock (_references) {
+                _references.Add(reference);
+            }
             return await SendRequestAsync(new AP.AddReferenceRequest() {
                 reference = AP.ProjectReference.Convert(reference)
             }).ConfigureAwait(false);
         }
 
         internal async Task<AP.RemoveReferenceResponse> RemoveReferenceAsync(ProjectReference reference) {
+            lock(_references) {
+                _references.Remove(reference);
+            }
             return await SendRequestAsync(
                 new AP.RemoveReferenceRequest() {
                     reference = AP.ProjectReference.Convert(reference)

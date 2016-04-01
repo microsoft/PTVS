@@ -161,7 +161,7 @@ namespace PythonToolsUITests {
                     dialog.FolderName = TestData.GetPath(@"TestData\Outlining");
                     dialog.SelectFolder();
                 }
-
+                System.Threading.Thread.Sleep(1000);
                 app.ExecuteCommand("File.SaveAll");
 
                 var text = File.ReadAllText(TestData.GetPath(@"TestData\AddSearchPaths\AddSearchPaths.pyproj"));

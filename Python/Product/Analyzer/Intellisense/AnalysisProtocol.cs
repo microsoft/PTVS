@@ -65,12 +65,6 @@ namespace Microsoft.PythonTools.Intellisense {
             public string error;
         }
 
-        public sealed class GetReferencesRequest : Request<GetReferencesResponse> {
-            public const string Command = "getReferences";
-
-            public override string command => Command;
-        }
-
         public sealed class GetReferencesResponse : Response {
             public ProjectReference[] references;
         }

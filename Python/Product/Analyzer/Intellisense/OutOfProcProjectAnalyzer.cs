@@ -179,7 +179,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.FindMethodsRequest.Command: response = FindMethods((AP.FindMethodsRequest)request); break;
                 case AP.AddReferenceRequest.Command: response = AddReference((AP.AddReferenceRequest)request); break;
                 case AP.RemoveReferenceRequest.Command: response = RemoveReference((AP.RemoveReferenceRequest)request); break;
-                case AP.GetReferencesRequest.Command: response = GetReferences((AP.GetReferencesRequest)request); break;
                 case AP.AddZipArchiveRequest.Command: response = AddZipArchive((AP.AddZipArchiveRequest)request); break;
                 case AP.AddDirectoryRequest.Command: response = AddDirectory((AP.AddDirectoryRequest)request); break;
                 case AP.ModuleImportsRequest.Command: response = GetModuleImports((AP.ModuleImportsRequest)request); break;
@@ -363,17 +362,6 @@ namespace Microsoft.PythonTools.Intellisense {
             );
 
             return new Response();
-        }
-
-        private Response GetReferences(AP.GetReferencesRequest request) {
-            var interp = Interpreter as IPythonInterpreterWithProjectReferences2;
-            AP.ProjectReference[] references = Array.Empty<AP.ProjectReference>();
-            if (interp != null) {
-                references = interp.GetReferences().Select(AP.ProjectReference.Convert).ToArray();
-            }
-            return new AP.GetReferencesResponse() {
-                references = references
-            };
         }
 
         private Response RemoveReference(AP.RemoveReferenceRequest request) {

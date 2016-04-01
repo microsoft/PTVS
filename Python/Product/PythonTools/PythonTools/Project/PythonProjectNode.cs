@@ -1160,7 +1160,7 @@ namespace Microsoft.PythonTools.Project {
 
         public VsProjectAnalyzer GetAnalyzer() {
             if (IsClosed) {
-                Debug.Fail("GetAnalyzer() called on closed project");
+                Debug.Fail("GetAnalyzer() called on closed project " + new StackTrace(true).ToString());
                 var service = (PythonToolsService)PythonToolsPackage.GetGlobalService(typeof(PythonToolsService));
                 if (service == null) {
                     throw new InvalidOperationException("Called GetAnalyzer() with no Python Tools service available");

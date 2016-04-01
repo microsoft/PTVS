@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools {
         }
 
         private void NewAnalysisEntry(AnalysisEntry entry) {
-            var analyzer = _buffer.GetAnalyzer(_provider._serviceProvider);
+            var analyzer = entry.Analyzer;
             var newVersion = _version;
             if (newVersion != _version) {
                 _tokenCache.Clear();
