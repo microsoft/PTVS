@@ -18,8 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace Microsoft.PythonTools.Profiling {
     /// <summary>
@@ -27,11 +27,10 @@ namespace Microsoft.PythonTools.Profiling {
     /// 
     /// The minimal implementation needs to implement GetProperty.
     /// </summary>
-    abstract class BaseHierarchyNode : IVsUIHierarchy, IDisposable {
-        private ServiceProvider _serviceProvider;
-        private Dictionary<uint, IVsHierarchyEvents> _events = new Dictionary<uint, IVsHierarchyEvents>();
+    abstract class BaseHierarchyNode : IVsUIHierarchy {
+        private IOleServiceProvider _site;
+        private readonly Dictionary<uint, IVsHierarchyEvents> _events = new Dictionary<uint, IVsHierarchyEvents>();
         private uint _eventCounter;
-        private bool _isDisposed = false;
 
         #region IVsUIHierarchy Members
 
@@ -67,8 +66,8 @@ namespace Microsoft.PythonTools.Profiling {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int GetSite(out VisualStudio.OLE.Interop.IServiceProvider ppSP) {
-            ppSP = _serviceProvider.GetService(typeof(VisualStudio.OLE.Interop.IServiceProvider)) as VisualStudio.OLE.Interop.IServiceProvider;
+        public virtual int GetSite(out IOleServiceProvider ppSP) {
+            ppSP = _site;
             return VSConstants.S_OK;
         }
 
@@ -94,8 +93,8 @@ namespace Microsoft.PythonTools.Profiling {
             return VSConstants.E_NOTIMPL;
         }
 
-        public virtual int SetSite(Microsoft.VisualStudio.OLE.Interop.IServiceProvider psp) {
-            _serviceProvider = new ServiceProvider(psp, true);
+        public virtual int SetSite(IOleServiceProvider psp) {
+            _site = psp;
             return VSConstants.S_OK;
         }
 
@@ -148,21 +147,6 @@ namespace Microsoft.PythonTools.Profiling {
             foreach (var ev in _events.Values) {
                 ev.OnPropertyChanged(itemid, propid, flags);
             }
-        }
-
-
-        protected virtual void Dispose(bool disposing) {
-            if (!_isDisposed) {
-                if (disposing) {
-                    _serviceProvider.Dispose();
-                }
-
-                _isDisposed = true;
-            }
-        }
-
-        public void Dispose() {
-            Dispose(true);
         }
     }
 }

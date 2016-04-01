@@ -49,13 +49,40 @@ namespace Microsoft.PythonTools.Django.Project {
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
         private static Guid PythonProjectGuid = new Guid(PythonConstants.ProjectFactoryGuid);
         private OleMenuCommandService _menuService;
-        private List<OleMenuCommand> _commands = new List<OleMenuCommand>();
+        private readonly List<OleMenuCommand> _commands = new List<OleMenuCommand>();
+        private bool _disposed;
 
 #if HAVE_ICONS
         private static ImageList _images;
 #endif
 
         public DjangoProject() {
+        }
+
+        public void Dispose() {
+            Dispose(true);
+        }
+
+        protected void Dispose(bool disposing) {
+            if (_disposed) {
+                return;
+            }
+            _disposed = true;
+
+            if (disposing) {
+                if (_menuService != null) {
+                    foreach (var command in _commands) {
+                        _menuService.RemoveCommand(command);
+                    }
+                }
+                _commands.Clear();
+
+                var analyzer = _analyzer;
+                _analyzer = null;
+                if (analyzer != null) {
+                    analyzer.Dispose();
+                }
+            }
         }
 
         public VsProjectAnalyzer Analyzer {
@@ -140,12 +167,7 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         protected override void Close() {
-            if (_menuService != null) {
-                foreach (var command in _commands) {
-                    _menuService.RemoveCommand(command);
-                }
-            }
-            _commands.Clear();
+            Dispose();
             base.Close();
         }
 
