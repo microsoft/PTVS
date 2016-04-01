@@ -76,12 +76,6 @@ namespace Microsoft.PythonTools.Django.Project {
                     }
                 }
                 _commands.Clear();
-
-                var analyzer = _analyzer;
-                _analyzer = null;
-                if (analyzer != null) {
-                    analyzer.Dispose();
-                }
             }
         }
 
