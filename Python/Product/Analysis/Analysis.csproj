@@ -36,6 +36,7 @@
     <AssemblyName>Microsoft.PythonTools.Analysis</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SuppressCommonAssemblyVersion>true</SuppressCommonAssemblyVersion>
     <!--<DefineConstants>$(DefineConstants);FULL_VALIDATION</DefineConstants>-->
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
