@@ -192,7 +192,7 @@
       <HintPath>$(DevEnvDir)\Microsoft.VisualStudio.WizardFramework.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>$(BuildRoot)BuildOutput\Newtonsoft.Json.6.0.5\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(BuildRoot)BuildOutput\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
     </Reference>
@@ -718,7 +718,7 @@
     <None Include="Theme\Microsoft.PythonTools.theme.v15.0.pkgdef" />
     <None Include="Theme\dark.vstheme" />
     <None Include="Theme\make_theme_pkgdef.py" />
-    <Content Include="$(BuildRoot)BuildOutput\Newtonsoft.Json.6.0.5\lib\net45\Newtonsoft.Json.dll">
+    <Content Include="$(BuildRoot)BuildOutput\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
