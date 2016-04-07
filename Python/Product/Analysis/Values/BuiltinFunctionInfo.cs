@@ -48,6 +48,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {
+            if (_function.IsClassMethod) {
+                instance = context;
+            }
+
             if (_function.IsStatic || instance.IsOfType(ProjectState.ClassInfos[BuiltinTypeId.NoneType])) {
                 return base.GetDescriptor(node, instance, context, unit);
             } else if (_method == null) {

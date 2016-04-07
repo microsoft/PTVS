@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private readonly IPythonType _declaringType;
         private readonly CPythonModule _declaringModule;
         private readonly List<IPythonFunctionOverload> _overloads;
-        private readonly bool _isBuiltin, _isStatic;
+        private readonly bool _isBuiltin, _isStatic, _isClassMethod;
         private static readonly List<IPythonFunctionOverload> EmptyOverloads = new List<IPythonFunctionOverload>();
 
         internal CPythonFunction(string name, string doc, bool isBuiltin, bool isStatic, IMemberContainer declaringType) {
@@ -60,7 +60,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             if (functionTable.TryGetValue("static", out value)) {
                 _isStatic = Convert.ToBoolean(value);
             } else {
-                _isStatic = true;
+                _isStatic = false;
+            }
+
+            if (functionTable.TryGetValue("classmethod", out value)) {
+                _isClassMethod = Convert.ToBoolean(value);
+            } else {
+                _isClassMethod = false;
             }
 
             _hasLocation = PythonTypeDatabase.TryGetLocation(functionTable, ref _line, ref _column);
@@ -117,6 +123,13 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 return _isStatic;
             }
         }
+
+        public bool IsClassMethod {
+            get {
+                return _isClassMethod;
+            }
+        }
+
 
         #endregion
 

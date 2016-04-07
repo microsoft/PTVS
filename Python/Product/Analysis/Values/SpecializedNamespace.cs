@@ -196,19 +196,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _original.GetMember(node, unit, name);
         }
 
-        public override IAnalysisSet GetStaticDescriptor(AnalysisUnit unit) {
-            if (_original == null) {
-                return this;
-            }
-
-            var res = _original.GetStaticDescriptor(unit);
-            if (res == _original) {
-                return this;
-            }
-            // TODO: We should support wrapping these up and producing another SpecializedNamespace
-            return res;
-        }
-
         internal override bool IsOfType(IAnalysisSet klass) {
             if (_original == null) {
                 return false;

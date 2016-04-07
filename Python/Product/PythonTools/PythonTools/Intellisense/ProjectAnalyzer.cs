@@ -1842,7 +1842,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         outliningTags.version
                     );
 
-                    res = ConvertOutliningTags(snapshot, translator, outliningTags.tags);
+                    res = ConvertOutliningTags(translator, outliningTags.tags);
                 } else {
                     return null;
                 }
@@ -1851,7 +1851,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(ITextSnapshot currentSnapshot, LocationTracker translator, AP.OutliningTag[] tags) {
+        private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(LocationTracker translator, AP.OutliningTag[] tags) {
             foreach (var tag in tags) {
                 // translate the span from the version we last parsed to the current version
                 var span = translator.TranslateForward(Span.FromBounds(tag.startIndex, tag.endIndex));
@@ -1862,7 +1862,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 yield return OutliningTaggerProvider.OutliningTagger.GetTagSpan(
-                    currentSnapshot,
+                    translator.TextBuffer.CurrentSnapshot,
                     span.Start,
                     span.End,
                     headerIndex

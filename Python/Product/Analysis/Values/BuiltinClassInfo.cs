@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _referencedMembers.AddReference(node, unit, name);
-                return res.GetStaticDescriptor(unit);
+                return res.GetDescriptor(node, unit.ProjectState._noneInst, this, unit);
             }
             return res;
         }
