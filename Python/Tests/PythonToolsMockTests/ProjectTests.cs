@@ -39,7 +39,7 @@ namespace PythonToolsMockTests {
             var sln = new ProjectDefinition(
                 "HelloWorld",
                 PythonProject,
-                Compile("server")
+                Compile("server", "")
             ).Generate();
 
             using (var vs = sln.ToMockVs()) {
@@ -102,22 +102,18 @@ namespace PythonToolsMockTests {
                 var project = vs.GetProject("HelloWorld").GetPythonProject();
                 project.ProjectAnalyzerChanged += (s, e) => analyzerChanged.Set();
 
-                var v27 = InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
-                    LanguageVersion = new Version(2, 7),
-                    PrefixPath = "C:\\Python27",
-                    InterpreterPath = "C:\\Python27\\python.exe"
-                });
-                var v34 = InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
-                    LanguageVersion = new Version(3, 4),
-                    PrefixPath = "C:\\Python34",
-                    InterpreterPath = "C:\\Python34\\python.exe"
-                });
-
                 var uiThread = (UIThreadBase)project.GetService(typeof(UIThreadBase));
+                var interpreters = ((IComponentModel)project.GetService(typeof(SComponentModel)))
+                    .GetService<IInterpreterRegistryService>()
+                    .Interpreters;
+                
+                var v27 = interpreters.Where(x => x.Configuration.Id == "Global|PythonCore|2.7|x86").First();
+                var v34 = interpreters.Where(x => x.Configuration.Id == "Global|PythonCore|3.4|x86").First();
+                var interpOptions = (UIThreadBase)project.GetService(typeof(IComponentModel));
 
                 uiThread.Invoke(() => {
-                    project.Interpreters.AddInterpreter(v27);
-                    project.Interpreters.AddInterpreter(v34);
+                    project.AddInterpreter(v27.Configuration.Id);
+                    project.AddInterpreter(v34.Configuration.Id);
                 });
 
                 project.SetInterpreterFactory(v27);

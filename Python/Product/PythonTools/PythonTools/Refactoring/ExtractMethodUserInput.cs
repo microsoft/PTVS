@@ -16,9 +16,6 @@
 
 using System;
 using System.Windows;
-using System.Windows.Interop;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Refactoring {
     class ExtractMethodUserInput : IExtractMethodInput {

@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Compares various types of completions.
     /// </summary>
-    public class CompletionComparer : IEqualityComparer<MemberResult>, IComparer<MemberResult>, IComparer<Completion>, IComparer<string> {
+    public class CompletionComparer : IEqualityComparer<CompletionResult>, IComparer<CompletionResult>, IComparer<Completion>, IComparer<string> {
         /// <summary>
         /// A CompletionComparer that sorts names beginning with underscores to
         /// the end of the list.
@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// A CompletionComparer that determines whether
         /// <see cref="MemberResult" /> structures are equal.
         /// </summary>
-        public static readonly IEqualityComparer<MemberResult> MemberEquality = UnderscoresLast;
+        public static readonly IEqualityComparer<CompletionResult> MemberEquality = UnderscoresLast;
         /// <summary>
         /// A CompletionComparer that sorts names beginning with underscores to
         /// the start of the list.
@@ -90,21 +90,21 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        public int Compare(MemberResult x, MemberResult y) {
+        public int Compare(CompletionResult x, CompletionResult y) {
             return Compare(x.Name, y.Name);
         }
 
         /// <summary>
         /// Compares two <see cref="MemberResult"/> structures for equality.
         /// </summary>
-        public bool Equals(MemberResult x, MemberResult y) {
+        public bool Equals(CompletionResult x, CompletionResult y) {
             return x.Name.Equals(y.Name);
         }
 
         /// <summary>
         /// Gets the hash code for a <see cref="MemberResult"/> structure.
         /// </summary>
-        public int GetHashCode(MemberResult obj) {
+        public int GetHashCode(CompletionResult obj) {
             return obj.Name.GetHashCode();
         }
     }

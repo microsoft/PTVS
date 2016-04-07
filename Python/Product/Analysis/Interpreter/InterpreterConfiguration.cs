@@ -21,7 +21,7 @@ using System.Reflection;
 
 namespace Microsoft.PythonTools.Interpreter {
     public sealed class InterpreterConfiguration {
-        readonly string _prefixPath;
+        readonly string _prefixPath, _id, _description;
         readonly string _interpreterPath;
         readonly string _windowsInterpreterPath;
         readonly string _libraryPath;
@@ -36,8 +36,10 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <see cref="IPythonInterpreterFactory"/> for when a known interpreter
         /// is unavailable.
         /// </summary>
-        public InterpreterConfiguration(Version version) {
+        public InterpreterConfiguration(string id, string description, Version version) {
+            _id = id;
             _version = version;
+            _description = description;
         }
 
         /// <summary>
@@ -51,15 +53,18 @@ namespace Microsoft.PythonTools.Interpreter {
         /// prefixPath plus "Lib".</para>
         /// </summary>
         public InterpreterConfiguration(
+            string id,
+            string description,
             string prefixPath,
             string path,
-            string winPath,
-            string libraryPath,
-            string pathVar,
-            ProcessorArchitecture arch,
-            Version version
-        ) : this(prefixPath, path, winPath, libraryPath, pathVar, arch, version, InterpreterUIMode.Normal) {
+            string winPath = "",
+            string libraryPath = "",
+            string pathVar = "",
+            ProcessorArchitecture arch= ProcessorArchitecture.None,
+            Version version = null
+        ) : this(id, description, prefixPath, path, winPath, libraryPath, pathVar, arch, version ?? new Version(2, 7), InterpreterUIMode.Normal) {
         }
+       
         /// <summary>
         /// <para>Constructs a new interpreter configuration based on the
         /// provided values.</para>
@@ -71,6 +76,8 @@ namespace Microsoft.PythonTools.Interpreter {
         /// prefixPath plus "Lib".</para>
         /// </summary>
         public InterpreterConfiguration(
+            string id,
+            string description,
             string prefixPath,
             string path,
             string winPath,
@@ -80,6 +87,8 @@ namespace Microsoft.PythonTools.Interpreter {
             Version version,
             InterpreterUIMode uiMode
         ) {
+            _id = id;
+            _description = description;
             _prefixPath = prefixPath;
             _interpreterPath = path;
             _windowsInterpreterPath = string.IsNullOrEmpty(winPath) ? path : winPath;
@@ -93,9 +102,34 @@ namespace Microsoft.PythonTools.Interpreter {
             _pathEnvironmentVariable = pathVar;
             _architecture = arch;
             _version = version;
-            Debug.Assert(string.IsNullOrEmpty(_interpreterPath) || !string.IsNullOrEmpty(_prefixPath),
-                "Anyone providing an interpreter should also specify the prefix path");
             _uiMode = uiMode;
+        }
+
+        /// <summary>
+        /// Gets a unique and stable identifier for this interpreter.
+        /// </summary>
+        public string Id => _id;
+
+        /// <summary>
+        /// Gets a friendly description of the interpreter
+        /// </summary>
+        public string Description => _description;
+
+        public string FullDescription {
+            get {
+                string res = _description;
+                var arch = _architecture;
+                if (arch == ProcessorArchitecture.Amd64) {
+                    res += " 64-bit";
+                } else if (arch == ProcessorArchitecture.X86) {
+                    res += " 32-bit";
+                }
+
+                if (_version != new Version()) {
+                    res += " " + _version.ToString();
+                }
+                return res;
+            }
         }
 
         /// <summary>
@@ -145,6 +179,19 @@ namespace Microsoft.PythonTools.Interpreter {
             get { return _architecture; }
         }
 
+        public string ArchitectureString {
+            get {
+                switch (Architecture) {
+                    case ProcessorArchitecture.Amd64:
+                        return "x64";
+                    case ProcessorArchitecture.X86:
+                        return "x86";
+                    default:
+                        return string.Empty;
+                }
+            }
+        }
+
         /// <summary>
         /// The language version of the interpreter (e.g. 2.7).
         /// </summary>
@@ -170,6 +217,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var cmp = StringComparer.OrdinalIgnoreCase;
             return cmp.Equals(PrefixPath, other.PrefixPath) &&
+                string.Equals(Id, other.Id) &&
                 cmp.Equals(InterpreterPath, other.InterpreterPath) &&
                 cmp.Equals(WindowsInterpreterPath, other.WindowsInterpreterPath) &&
                 cmp.Equals(LibraryPath, other.LibraryPath) &&
@@ -181,14 +229,19 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public override int GetHashCode() {
             var cmp = StringComparer.OrdinalIgnoreCase;
-            return cmp.GetHashCode(PrefixPath) ^
-                cmp.GetHashCode(InterpreterPath) ^
-                cmp.GetHashCode(WindowsInterpreterPath) ^
-                cmp.GetHashCode(LibraryPath) ^
-                cmp.GetHashCode(PathEnvironmentVariable) ^
+            return cmp.GetHashCode(PrefixPath ?? "") ^
+                Id.GetHashCode() ^
+                cmp.GetHashCode(InterpreterPath ?? "") ^
+                cmp.GetHashCode(WindowsInterpreterPath ?? "") ^
+                cmp.GetHashCode(LibraryPath ?? "") ^
+                cmp.GetHashCode(PathEnvironmentVariable ?? "") ^
                 Architecture.GetHashCode() ^
                 Version.GetHashCode() ^
                 UIMode.GetHashCode();
+        }
+
+        public override string ToString() {
+            return FullDescription;
         }
     }
 }

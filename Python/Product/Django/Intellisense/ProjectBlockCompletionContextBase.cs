@@ -17,21 +17,21 @@
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class ProjectBlockCompletionContextBase : IDjangoCompletionContext {
-        private readonly DjangoAnalyzer _analyzer;
+        private readonly VsProjectAnalyzer _analyzer;
         private readonly string _filename;
-        private readonly IModuleContext _module;
         private HashSet<string> _loopVars;
 
-        public ProjectBlockCompletionContextBase(DjangoAnalyzer analyzer, ITextBuffer buffer, string filename) {
+        public ProjectBlockCompletionContextBase(VsProjectAnalyzer analyzer, string filename) {
             _analyzer = analyzer;
-            _module = buffer.GetModuleContext(analyzer._serviceProvider);
             _filename = filename;
         }
 
@@ -42,21 +42,14 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             _loopVars.Add(name);
         }
 
-        public Dictionary<string, HashSet<AnalysisValue>> Variables {
+        public string[] Variables {
             get {
-                var res = _analyzer.GetVariablesForTemplateFile(_filename);
+                var res = _analyzer.GetVariableNames(_filename);
                 if (_loopVars != null) {
-                    if (res == null) {
-                        res = new Dictionary<string, HashSet<AnalysisValue>>();
-                    } else {
-                        res = new Dictionary<string, HashSet<AnalysisValue>>(res);
-                    }
+                    HashSet<string> tmp = new HashSet<string>(res);
 
-                    foreach (var loopVar in _loopVars) {
-                        if (!res.ContainsKey(loopVar)) {
-                            res[loopVar] = new HashSet<AnalysisValue>();
-                        }
-                    }
+                    tmp.UnionWith(_loopVars);
+                    return tmp.ToArray();
                 }
                 return res;
             }
@@ -64,14 +57,12 @@ namespace Microsoft.PythonTools.Django.Intellisense {
 
         public Dictionary<string, TagInfo> Filters {
             get {
-                return _analyzer._filters;
+                return _analyzer.GetFilters();
             }
         }
 
-        public IModuleContext ModuleContext {
-            get {
-                return _module;
-            }
+        public Dictionary<string, PythonMemberType> GetMembers(string name) {
+            return _analyzer.GetMembers(_filename, name);
         }
     }
 }

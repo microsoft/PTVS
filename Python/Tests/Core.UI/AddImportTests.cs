@@ -305,7 +305,7 @@ sub_package";
                         var action = actions.FirstOrDefault(a => a.DisplayText.Replace("__", "_") == expectedActions[invokeAction]);
                         Assert.IsNotNull(action, "No action named " + expectedActions[invokeAction]);
                         doc.Invoke(() => action.Invoke());
-                        Assert.AreEqual(expectedText, doc.Text);
+                        doc.WaitForText(expectedText);
                     }
                 }
             } else {

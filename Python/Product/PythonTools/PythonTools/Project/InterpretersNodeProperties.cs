@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Project {
         public string Id {
             get {
                 var fact = Factory;
-                return fact != null ? fact.Id.ToString("B") : "";
+                return fact != null ? fact.Configuration.Id : "";
             }
         }
 #endif
@@ -121,7 +121,7 @@ namespace Microsoft.PythonTools.Project {
             get {
                 var fact = Factory as DerivedInterpreterFactory;
                 return fact != null ? 
-                    fact.BaseInterpreter.Description :
+                    fact.BaseInterpreter.Configuration.FullDescription :
                     SR.GetString(SR.UnknownInParentheses);
             }
         }

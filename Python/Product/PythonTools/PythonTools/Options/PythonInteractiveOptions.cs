@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Options {
             StartupScript = _pyService.LoadString(_id + StartupScriptSetting, _category) ?? "";
         }
 
-        public void Save(IPythonInterpreterFactory interpreter) {
+        public void Save(string id) {
             base.Save();
             _pyService.SaveString(_id + InterpreterOptionsSetting, _category, InterpreterOptions ?? "");
             _pyService.SaveBool(_id + EnableAttachSetting, _category, EnableAttach);
@@ -76,7 +76,7 @@ namespace Microsoft.PythonTools.Options {
                 // propagate changed settings to existing REPL windows
                 foreach (var replWindow in replProvider.GetReplWindows()) {
                     PythonReplEvaluator pyEval = replWindow.Evaluator as PythonReplEvaluator;
-                    if (EvaluatorUsesThisInterpreter(pyEval, interpreter)) {
+                    if (EvaluatorUsesThisInterpreter(pyEval, id)) {
                         if (UseInterpreterPrompts) {
                             replWindow.UseInterpreterPrompts();
                         } else {
@@ -88,11 +88,10 @@ namespace Microsoft.PythonTools.Options {
             }
         }
 
-        private static bool EvaluatorUsesThisInterpreter(PythonReplEvaluator pyEval, IPythonInterpreterFactory interpreter) {
+        private static bool EvaluatorUsesThisInterpreter(PythonReplEvaluator pyEval, string id) {
             return pyEval != null &&
                 pyEval.Interpreter != null &&
-                pyEval.Interpreter.Id == interpreter.Id &&
-                pyEval.Interpreter.Configuration.Version == interpreter.Configuration.Version;
+                pyEval.Interpreter.Configuration.Id == id;
         }
 
         public new void Reset() {

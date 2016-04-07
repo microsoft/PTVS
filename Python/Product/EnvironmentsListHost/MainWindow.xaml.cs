@@ -24,14 +24,14 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window {
-        readonly IInterpreterOptionsService _service = new InterpreterOptionsService(null);
+        readonly IInterpreterOptionsService _service = new InterpreterOptionsService(null, null);
 
 
         public MainWindow() {
             InitializeComponent();
 
             EnvironmentsToolWindow.ViewCreated += EnvironmentsToolWindow_ViewCreated;
-            EnvironmentsToolWindow.Service = _service;
+            EnvironmentsToolWindow.Service = _service; // TODO: Should be sited.
         }
 
         void EnvironmentsToolWindow_ViewCreated(object sender, EnvironmentViewEventArgs e) {

@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             var res = ProjectState.GetAllMembers(_interpreterModule, moduleContext);
             if (_specializedValues != null) {
                 foreach (var value in _specializedValues) {

@@ -15,10 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
@@ -36,13 +32,13 @@ namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public sealed class PythonInterpreterOptionsPage : PythonDialogPage {
         private PythonInterpreterOptionsControl _window;
-        private IInterpreterOptionsService _service;
+        private IInterpreterRegistryService _service;
 
         public PythonInterpreterOptionsPage()
             : base("Interpreters") {
         }
 
-        internal static IPythonInterpreterFactory NextOptionsSelection { get; set; }
+        internal static InterpreterConfiguration NextOptionsSelection { get; set; }
 
         void InterpretersChanged(object sender, EventArgs e) {
             LoadSettingsFromStorage();
@@ -57,7 +53,7 @@ namespace Microsoft.PythonTools.Options {
 
         private PythonInterpreterOptionsControl GetWindow() {
             if (_window == null) {
-                _service = ComponentModel.GetService<IInterpreterOptionsService>();
+                _service = ComponentModel.GetService<IInterpreterRegistryService>();
                 _service.InterpretersChanged += InterpretersChanged;
                 _window = new PythonInterpreterOptionsControl(ComponentModel.GetService<SVsServiceProvider>());
             }
@@ -77,20 +73,7 @@ namespace Microsoft.PythonTools.Options {
         public override void SaveSettingsToStorage() {
             var defaultInterpreter = GetWindow().DefaultInterpreter;
 
-            if (defaultInterpreter != null) {
-                Version ver;
-                if (defaultInterpreter is InterpreterPlaceholder) {
-                    ver = Version.Parse(PyService.GetInterpreterOptions(defaultInterpreter).Version ?? "2.7");
-                } else {
-                    ver = defaultInterpreter.Configuration.Version;
-                }
-
-                PyService.GlobalInterpreterOptions.DefaultInterpreter = defaultInterpreter.Id;
-                PyService.GlobalInterpreterOptions.DefaultInterpreterVersion = ver;
-            } else {
-                PyService.GlobalInterpreterOptions.DefaultInterpreter = Guid.Empty;
-                PyService.GlobalInterpreterOptions.DefaultInterpreterVersion = new Version();
-            }
+            PyService.GlobalInterpreterOptions.DefaultInterpreter = defaultInterpreter?.Id ?? string.Empty;
 
             PyService.SaveInterpreterOptions();
             PyService.GlobalInterpreterOptions.Save();
@@ -110,41 +93,13 @@ namespace Microsoft.PythonTools.Options {
         /// the default interpreter.
         /// </remarks>
         [Obsolete("Use PythonToolsService.GlobalInterpreterOptions instead")]
-        public Guid DefaultInterpreter {
+        public string DefaultInterpreter {
             get {
                 return PyService.GlobalInterpreterOptions.DefaultInterpreter;
             }
             set {
                 if (PyService.GlobalInterpreterOptions.DefaultInterpreter != value) {
                     PyService.GlobalInterpreterOptions.DefaultInterpreter = value;
-                    PyService.GlobalInterpreterOptions.UpdateInterpreter();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the default interpreter version. This should be a
-        /// string in "major.minor" format, for example, "3.2".
-        /// </summary>
-        /// <remarks
-        /// The actual default will only be changed if an interpreter is
-        /// available that matches both <see cref="DefaultInterpreter"/> and
-        /// <see cref="DefaultInterpreterVersion"/>. These properties may be
-        /// invalid if an interpreter does not exist and settings have not been
-        /// saved or loaded recently.
-        /// 
-        /// Use <see cref="IInterpreterOptionsService"/> to accurately determine
-        /// the default interpreter.
-        /// </remarks>
-        [Obsolete("Use PythonToolsService.GlobalInterpreterOptions instead")]
-        public string DefaultInterpreterVersion {
-            get {
-                return PyService.GlobalInterpreterOptions.DefaultInterpreterVersion.ToString();
-            }
-            set {
-                var ver = Version.Parse(value);
-                if (PyService.GlobalInterpreterOptions.DefaultInterpreterVersion != ver) {
-                    PyService.GlobalInterpreterOptions.DefaultInterpreterVersion = ver;
                     PyService.GlobalInterpreterOptions.UpdateInterpreter();
                 }
             }

@@ -16,6 +16,12 @@
     </DirectoryRef>
     <?endforeach?>
 
+    <Component Id="InterpreterRegistration" Directory="Dir_VSInstallLocation" Guid="{CE7FD8F1-9B9F-43C0-AAB7-83637EE350DA}">
+      <RegistryKey Root='HKCU' Key='Software\Microsoft\PythonTools\3.0\InterpreterFactories\IronPython'>
+        <RegistryValue Type='string' Name='CodeBase' Value='[Dir_VSInstallLocation]Microsoft.PythonTools.IronPython.Interpreter.dll'/>
+      </RegistryKey>
+    </Component>
+    
     <Component Id="PerUserInstallRegistry" Directory="Dir_VSInstallLocation" Guid="{B2C46CB0-DF28-4540-BC7F-29B0EA636055}">
       <Condition>NOT ALLUSERS = 1</Condition>
       <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>

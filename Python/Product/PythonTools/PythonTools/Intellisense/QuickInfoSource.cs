@@ -15,21 +15,16 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
     internal class QuickInfoSource : IQuickInfoSource {
         private readonly ITextBuffer _textBuffer;
-        private readonly QuickInfoSourceProvider _provider;
         private IQuickInfoSession _curSession;
 
-        public QuickInfoSource(QuickInfoSourceProvider provider, ITextBuffer textBuffer) {
+        public QuickInfoSource(ITextBuffer textBuffer) {
             _textBuffer = textBuffer;
-            _provider = provider;
         }
 
         #region IQuickInfoSource Members
@@ -43,81 +38,38 @@ namespace Microsoft.PythonTools.Intellisense {
             _curSession = session;
             _curSession.Dismissed += CurSessionDismissed;
 
-            var vars = _textBuffer.CurrentSnapshot.AnalyzeExpression(
-                _provider._serviceProvider,
-                session.CreateTrackingSpan(_textBuffer),
-                false
-            );
+            var quickInfo = GetQuickInfo(_textBuffer);
+            AugmentQuickInfoWorker(quickInfoContent, quickInfo, out applicableToSpan);
+        }
 
-            AugmentQuickInfoWorker(vars, quickInfoContent, out applicableToSpan);
+        internal static void AugmentQuickInfoWorker(System.Collections.Generic.IList<object> quickInfoContent, QuickInfo quickInfo, out ITrackingSpan applicableToSpan) {
+            if (quickInfo != null) {
+                quickInfoContent.Add(quickInfo.Text);
+                applicableToSpan = quickInfo.Span;
+            } else {
+                applicableToSpan = null;
+            }
+        }
+
+        public static void AddQuickInfo(ITextBuffer buffer, QuickInfo info) {
+            buffer.Properties[typeof(QuickInfo)] = info;
+        }
+
+        private static QuickInfo GetQuickInfo(ITextBuffer buffer) {
+            QuickInfo quickInfo;
+            if (buffer.Properties.TryGetProperty(typeof(QuickInfo), out quickInfo)) {
+                return quickInfo;
+            }
+            return null;
         }
 
         private void CurSessionDismissed(object sender, EventArgs e) {
             _curSession = null;
-        }
-
-        internal static void AugmentQuickInfoWorker(ExpressionAnalysis vars, System.Collections.Generic.IList<object> quickInfoContent, out ITrackingSpan applicableToSpan) {
-            applicableToSpan = vars.Span;
-            if (applicableToSpan == null || String.IsNullOrWhiteSpace(vars.Expression)) {
-                return;
-            }
-
-            bool first = true;
-            var result = new StringBuilder();
-            int count = 0;
-            List<AnalysisValue> listVars = new List<AnalysisValue>(vars.Values);
-            HashSet<string> descriptions = new HashSet<string>();
-            bool multiline = false;
-            foreach (var v in listVars) {
-                string description = null;
-                if (listVars.Count == 1) {
-                    if (!String.IsNullOrWhiteSpace(v.Description)) {
-                        description = v.Description;
-                    }
-                } else {
-                    if (!String.IsNullOrWhiteSpace(v.ShortDescription)) {
-                        description = v.ShortDescription;
-                    }
-                }
-
-                description = description.LimitLines();
-
-                if (description != null && descriptions.Add(description)) {
-                    if (first) {
-                        first = false;
-                    } else {
-                        if (result.Length == 0 || result[result.Length - 1] != '\n') {
-                            result.Append(", ");
-                        } else {
-                            multiline = true;
-                        }
-                    }
-                    result.Append(description);
-                    count++;
-                }
-            }
-
-            string expr = vars.Expression;
-            if (expr.Length > 4096) {
-                expr = expr.Substring(0, 4093) + "...";
-            }
-            if (multiline) {
-                result.Insert(0, expr + ": " + Environment.NewLine);
-            } else if (result.Length > 0) {
-                result.Insert(0, expr + ": ");
-            } else {
-                result.Append(expr);
-                result.Append(": ");
-                result.Append("<unknown type>");
-            }
-
-            quickInfoContent.Add(result.ToString());
-        }
+        }        
 
         #endregion
 
         public void Dispose() {
         }
-
     }
 }

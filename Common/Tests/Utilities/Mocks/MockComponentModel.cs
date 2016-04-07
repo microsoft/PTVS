@@ -16,13 +16,16 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition.Hosting;
+using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
+using System.Linq;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Utilities;
 
 namespace TestUtilities.Mocks {
-    public class MockComponentModel : IComponentModel {
+    public class MockComponentModel : ExportProvider, IComponentModel {
         public readonly Dictionary<Type, List<Lazy<object>>> Extensions = new Dictionary<Type, List<Lazy<object>>>();
 
         public void AddExtension<T>(Func<T> creator) where T : class {
@@ -56,7 +59,7 @@ namespace TestUtilities.Mocks {
         }
 
         public System.ComponentModel.Composition.Hosting.ExportProvider DefaultExportProvider {
-            get { throw new NotImplementedException(); }
+            get { return this; }
         }
 
         public System.ComponentModel.Composition.Primitives.ComposablePartCatalog GetCatalog(string catalogName) {
@@ -64,7 +67,25 @@ namespace TestUtilities.Mocks {
         }
 
         public IEnumerable<T> GetExtensions<T>() where T : class {
-            yield break;
+            List<Lazy<object>> res;
+            if (Extensions.TryGetValue(typeof(T), out res)) {
+                foreach (var t in res) {
+                    yield return (T)t.Value;
+                }
+            }
+        }
+
+        protected override IEnumerable<Export> GetExportsCore(ImportDefinition definition, AtomicComposition atomicComposition) {
+            foreach (var keyValue in Extensions) {
+                if (keyValue.Key.FullName == definition.ContractName) {
+                    foreach (var value in keyValue.Value) {
+                        yield return new Export(
+                            new ExportDefinition(keyValue.Key.FullName, new Dictionary<string, object>()),
+                            () => value.Value
+                        );
+                    }
+                }
+            }
         }
     }
 }

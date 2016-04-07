@@ -142,17 +142,14 @@ namespace Microsoft.PythonTools.Project {
             await ContinueCreate(provider, factory, path, false, output);
         }
 
-        public static InterpreterFactoryCreationOptions FindInterpreterOptions(
+        public static InterpreterConfiguration FindInterpreterConfiguration(
+            string id,
             string prefixPath,
-            IInterpreterOptionsService service,
+            IInterpreterRegistryService service,
             IPythonInterpreterFactory baseInterpreter = null
         ) {
-            var result = new InterpreterFactoryCreationOptions();
 
             var libPath = DerivedInterpreterFactory.FindLibPath(prefixPath);
-
-            result.PrefixPath = prefixPath;
-            result.LibraryPath = libPath;
 
             if (baseInterpreter == null) {
                 baseInterpreter = DerivedInterpreterFactory.FindBaseInterpreterFromVirtualEnv(
@@ -160,45 +157,37 @@ namespace Microsoft.PythonTools.Project {
                     libPath,
                     service
                 );
+
+                if (baseInterpreter == null) {
+                    return null;
+                }
             }
 
-            string interpExe, winterpExe;
+            // The interpreter name should be the same as the base interpreter.
+            string interpExe = Path.GetFileName(baseInterpreter.Configuration.InterpreterPath);
+            string winterpExe = Path.GetFileName(baseInterpreter.Configuration.WindowsInterpreterPath);
+            var scripts = new[] { "Scripts", "bin" };
+            interpExe = PathUtils.FindFile(prefixPath, interpExe, firstCheck: scripts);
+            winterpExe = PathUtils.FindFile(prefixPath, winterpExe, firstCheck: scripts);
+            string pathVar = baseInterpreter.Configuration.PathEnvironmentVariable;
+            string description = string.Format(
+                "{0} ({1})",
+                PathUtils.GetFileOrDirectoryName(prefixPath),
+                baseInterpreter.Configuration.Description
+            );
 
-            if (baseInterpreter != null) {
-                // The interpreter name should be the same as the base interpreter.
-                interpExe = Path.GetFileName(baseInterpreter.Configuration.InterpreterPath);
-                winterpExe = Path.GetFileName(baseInterpreter.Configuration.WindowsInterpreterPath);
-                var scripts = new[] { "Scripts", "bin" };
-                result.InterpreterPath = PathUtils.FindFile(prefixPath, interpExe, firstCheck: scripts);
-                result.WindowInterpreterPath = PathUtils.FindFile(prefixPath, winterpExe, firstCheck: scripts);
-                result.PathEnvironmentVariableName = baseInterpreter.Configuration.PathEnvironmentVariable;
-            } else {
-                result.InterpreterPath = string.Empty;
-                result.WindowInterpreterPath = string.Empty;
-                result.PathEnvironmentVariableName = string.Empty;
-            }
-
-            if (baseInterpreter != null) {
-                result.Description = string.Format(
-                    "{0} ({1})",
-                    PathUtils.GetFileOrDirectoryName(prefixPath),
-                    baseInterpreter.Description
-                );
-
-                result.Id = baseInterpreter.Id;
-                result.LanguageVersion = baseInterpreter.Configuration.Version;
-                result.Architecture = baseInterpreter.Configuration.Architecture;
-                result.WatchLibraryForNewModules = true;
-            } else {
-                result.Description = PathUtils.GetFileOrDirectoryName(prefixPath);
-
-                result.Id = Guid.Empty;
-                result.LanguageVersion = new Version(0, 0);
-                result.Architecture = ProcessorArchitecture.None;
-                result.WatchLibraryForNewModules = false;
-            }
-
-            return result;
+            return new InterpreterConfiguration(
+                id ?? baseInterpreter.Configuration.Id,
+                description,
+                prefixPath,
+                interpExe,
+                winterpExe,
+                libPath,
+                pathVar,
+                baseInterpreter.Configuration.Architecture,
+                baseInterpreter.Configuration.Version,
+                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase
+            );
         }
 
         // This helper function is not yet needed, but may be useful at some point.

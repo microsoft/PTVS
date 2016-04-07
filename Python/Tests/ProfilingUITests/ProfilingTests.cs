@@ -101,18 +101,19 @@ namespace ProfilingUITests {
         public void DefaultInterpreterSelected() {
             using (var app = new PythonVisualStudioApp()) {
                 var service = app.InterpreterService;
-                var originalDefault = service.DefaultInterpreter;
+                var options = app.OptionsService;
+                var originalDefault = options.DefaultInterpreter;
 
                 try {
                     foreach (var interpreter in service.Interpreters) {
-                        service.DefaultInterpreter = interpreter;
+                        options.DefaultInterpreter = interpreter;
                         using (var dialog = app.LaunchPythonProfiling()) {
-                            Assert.AreEqual(interpreter.Description, dialog.SelectedInterpreter);
+                            Assert.AreEqual(interpreter.Configuration.Description, dialog.SelectedInterpreter);
                         }
                         app.WaitForDialogDismissed();
                     }
                 } finally {
-                    service.DefaultInterpreter = originalDefault;
+                    options.DefaultInterpreter = originalDefault;
                 }
             }
         }

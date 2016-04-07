@@ -21,6 +21,7 @@
 
     <!-- Core extension -->
     <File Include="!(bindpath.bin)\Microsoft.PythonTools.Django.dll" />
+    <File Include="!(bindpath.bin)\Microsoft.PythonTools.Django.Analysis.dll" />
 
     <!-- Resources -->
     <File Include="PythonProject.ico;

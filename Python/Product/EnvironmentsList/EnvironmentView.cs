@@ -70,10 +70,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             Redirector redirector
         ) {
             if (service == null) {
-                throw new ArgumentNullException("service");
+                throw new ArgumentNullException(nameof(service));
             }
             if (factory == null) {
-                throw new ArgumentNullException("factory");
+                throw new ArgumentNullException(nameof(factory));
             }
 
             _service = service;
@@ -85,18 +85,13 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 IsCheckingDatabase = _withDb.IsCheckingDatabase;
                 IsCurrent = _withDb.IsCurrent;
             }
+            
 
-            var configurableProvider = _service != null ?
-                _service.KnownProviders
-                    .OfType<ConfigurablePythonInterpreterFactoryProvider>()
-                    .FirstOrDefault() :
-                null;
-
-            if (configurableProvider != null && configurableProvider.IsConfigurable(factory)) {
+            if (_service.IsConfigurable(factory.Configuration.Id)) {
                 IsConfigurable = true;
             }
 
-            Description = Factory.Description;
+            Description = Factory.Configuration.FullDescription;
             IsDefault = (_service != null && _service.DefaultInterpreter == Factory);
 
             PrefixPath = Factory.Configuration.PrefixPath;
@@ -107,7 +102,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             Extensions = new ObservableCollection<object>();
             Extensions.Add(new EnvironmentPathsExtensionProvider());
             if (IsConfigurable) {
-                Extensions.Add(new ConfigurationExtensionProvider(configurableProvider));
+                Extensions.Add(new ConfigurationExtensionProvider(_service));
             }
 
             CanBeDefault = Factory.CanBeDefault();
@@ -116,7 +111,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public override string ToString() {
             return string.Format(
                 "{{{0}:{1}}}", GetType().FullName,
-                _withDb == null ? "(null)" : _withDb.Description
+                _withDb == null ? "(null)" : _withDb.Configuration.FullDescription
             );
         }
 

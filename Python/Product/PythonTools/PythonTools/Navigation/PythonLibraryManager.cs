@@ -18,6 +18,7 @@ using System;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
@@ -47,37 +48,35 @@ namespace Microsoft.PythonTools.Navigation {
             _package = package;
         }
 
-        protected override LibraryNode CreateLibraryNode(LibraryNode parent, IScopeNode subItem, string namePrefix, IVsHierarchy hierarchy, uint itemid) {
-            return new PythonLibraryNode(parent, subItem, namePrefix, hierarchy, itemid);            
-        }
-
-        public override LibraryNode CreateFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename, LibraryNodeType libraryNodeType) {
-            return new PythonFileLibraryNode(parent, hierarchy, hierarchy.Caption, filename, libraryNodeType);
+        public override LibraryNode CreateFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename) {
+            return new PythonFileLibraryNode(parent, hierarchy, hierarchy.Caption, filename);
         }
 
         protected override void OnNewFile(LibraryTask task) {
             if (IsNonMemberItem(task.ModuleID.Hierarchy, task.ModuleID.ItemID)) {
                 return;
             }
-            IPythonProjectEntry item;
-            if (task.TextBuffer == null || !task.TextBuffer.TryGetPythonProjectEntry(out item)) {
-                item = task.ModuleID.Hierarchy
+            AnalysisEntry item;
+            if (task.TextBuffer == null || !task.TextBuffer.TryGetAnalysisEntry(out item)) {
+                task.ModuleID.Hierarchy
                     .GetProject()
                     .GetPythonProject()
                     .GetAnalyzer()
-                    .AnalyzeFile(task.FileName) as IPythonProjectEntry;
-            }
+                    .AnalyzeFileAsync(task.FileName).ContinueWith(x => {
+                        item = x.Result;
 
-            if (item != null) {
-                // We subscribe to OnNewAnalysis here instead of OnNewParseTree so that 
-                // in the future we can use the analysis to include type information in the
-                // object browser (for example we could include base type information with
-                // links elsewhere in the object browser).
-                item.OnNewAnalysis += (sender, args) => {
-                    _package.GetUIThread().InvokeAsync(() => FileParsed(task, new AstScopeNode(item.Tree, item)))
-                        .HandleAllExceptions(_package, GetType())
-                        .DoNotWait();
-                };
+                        if (item != null) {
+                            // We subscribe to OnNewAnalysis here instead of OnNewParseTree so that 
+                            // in the future we can use the analysis to include type information in the
+                            // object browser (for example we could include base type information with
+                            // links elsewhere in the object browser).
+                            item.AnalysisComplete += (sender, args) => {
+                                _package.GetUIThread().InvokeAsync(() => FileParsed(task))
+                                    .HandleAllExceptions(_package, GetType())
+                                    .DoNotWait();
+                            };
+                        }
+                    });
             }
         }
     }

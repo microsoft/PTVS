@@ -1092,9 +1092,21 @@ async def g():
                 view.AdvancedOptions.HideAdvancedMembers = false;
 
                 var snapshot = view.CurrentSnapshot;
+                ITextVersion afterEditVersion = null;
+                ManualResetEvent mre = new ManualResetEvent(false);
+                view.View.TextView.TextBuffer.RegisterForNewAnalysis(entry => {
+                    if (afterEditVersion != null &&
+                    entry.BufferParser.GetAnalysisVersion(snapshot.TextBuffer).VersionNumber >= afterEditVersion.VersionNumber) {
+                        mre.Set();
+                    }
+                });
                 view.View.MoveCaret(new SnapshotPoint(snapshot, editInsert));
                 view.Type(editText);
+                afterEditVersion = view.CurrentSnapshot.Version;
 
+                if (!mre.WaitOne(10000)) {
+                    Assert.Fail("Failed to wait for new analysis");
+                }
                 var newSnapshot = view.CurrentSnapshot;
                 Assert.AreNotSame(snapshot, newSnapshot);
 
@@ -1106,17 +1118,13 @@ async def g():
             var snapshot = view.CurrentSnapshot;
 
             for (int i = start; i < end; i++) {
-                var analysis = snapshot.AnalyzeExpression(
-                    view.VS.ServiceProvider,
-                    snapshot.CreateTrackingSpan(i, i == snapshot.Length ? 0 : 1, SpanTrackingMode.EdgeInclusive),
-                    false
-                );
-
                 List<object> quickInfo = new List<object>();
                 ITrackingSpan span;
                 QuickInfoSource.AugmentQuickInfoWorker(
-                    analysis,
                     quickInfo,
+                    VsProjectAnalyzer.GetQuickInfoAsync(
+                        new SnapshotPoint(snapshot, start)
+                    ).Result,
                     out span
                 );
 

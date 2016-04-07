@@ -93,7 +93,7 @@ namespace Microsoft.PythonTools.Project {
             } else {
                 interpreter = project.GetInterpreterFactory();
                 var service = site.GetComponentModel().GetService<IInterpreterOptionsService>();
-                if (service == null || interpreter == service.NoInterpretersValue) {
+                if (service == null || interpreter == null) {
                     throw new NoInterpretersException();
                 }
             }
@@ -351,7 +351,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            var interp = project.GetProjectAnalyzer().Interpreter as IPythonInterpreterWithProjectReferences2;
+            var interp = project.GetProjectAnalyzer();
             if (interp != null) {
                 foreach (var r in interp.GetReferences()) {
                     if (r.Kind == ProjectReferenceKind.ExtensionModule) {

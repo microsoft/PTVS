@@ -36,36 +36,29 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     sealed class AddVirtualEnvironmentView : DependencyObject, INotifyPropertyChanged, IDisposable {
-        readonly IInterpreterOptionsService _interpreterService;
+        readonly IInterpreterRegistryService _interpreterService;
         private readonly PythonProjectNode _project;
         internal readonly string _projectHome;
         private readonly SemaphoreSlim _ready = new SemaphoreSlim(1);
         private InterpreterView _lastUserSelectedBaseInterpreter;
 
-        // These interpreter IDs are known to support virtualenv.
-        private static readonly IEnumerable<Guid> SupportsVirtualEnv = new[] {
-            CPythonInterpreterFactoryConstants.Guid32,
-            CPythonInterpreterFactoryConstants.Guid64
-        };
-
-
         public AddVirtualEnvironmentView(
             PythonProjectNode project,
-            IInterpreterOptionsService interpreterService,
+            IInterpreterRegistryService interpreterService,
             IPythonInterpreterFactory selectInterpreter
         ) {
             _interpreterService = interpreterService;
             _project = project;
             VirtualEnvBasePath = _projectHome = project.ProjectHome;
-            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(project.Site, interpreterService));
+            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(project.Site, project));
             var selection = Interpreters.FirstOrDefault(v => v.Interpreter == selectInterpreter);
             if (selection == null) {
-                selection = Interpreters.FirstOrDefault(v => v.Interpreter == interpreterService.DefaultInterpreter)
+                selection = Interpreters.FirstOrDefault(v => v.Interpreter == project.GetInterpreterFactory())
                     ?? Interpreters.LastOrDefault();
             }
             BaseInterpreter = selection;
 
-            _interpreterService.InterpretersChanged += OnInterpretersChanged;
+            _project.InterpreterFactoriesChanged += OnInterpretersChanged;
 
             var venvName = "env";
             for (int i = 1; Directory.Exists(Path.Combine(_projectHome, venvName)); ++i) {
@@ -86,13 +79,14 @@ namespace Microsoft.PythonTools.Project {
                 Dispatcher.BeginInvoke((Action)(() => OnInterpretersChanged(sender, e)));
                 return;
             }
+
             var existing = Interpreters.Where(iv => iv.Interpreter != null).ToDictionary(iv => iv.Interpreter);
-            var def = _interpreterService.DefaultInterpreter;
+            var def = _project.GetInterpreterFactory();
 
             int i = 0;
-            foreach (var interp in _interpreterService.Interpreters) {
+            foreach (var interp in InterpreterView.GetInterpreters(_project.Site, _project).Select(x => x.Interpreter)) {
                 if (!existing.Remove(interp)) {
-                    Interpreters.Insert(i, new InterpreterView(interp, interp.Description, interp == def));
+                    Interpreters.Insert(i, new InterpreterView(interp, interp.Configuration.FullDescription, interp == def));
                 }
                 i += 1;
             }
@@ -227,9 +221,9 @@ namespace Microsoft.PythonTools.Project {
             if (Directory.Exists(path) && Directory.EnumerateFileSystemEntries(path).Any()) {
                 WillCreateVirtualEnv = false;
 
-                var options = VirtualEnv.FindInterpreterOptions(path, _interpreterService);
-                if (options != null && File.Exists(options.InterpreterPath)) {
-                    var baseInterp = _interpreterService.FindInterpreter(options.Id, options.LanguageVersion);
+                var config = VirtualEnv.FindInterpreterConfiguration(null, path, _interpreterService);
+                if (config != null && File.Exists(config.InterpreterPath)) {
+                    var baseInterp = _interpreterService.FindInterpreter(config.Id);
                     InterpreterView baseInterpView;
                     if (baseInterp != null &&
                         (baseInterpView = Interpreters.FirstOrDefault(iv => iv.Interpreter == baseInterp)) != null) {
@@ -416,7 +410,7 @@ namespace Microsoft.PythonTools.Project {
                     return;
                 }
 
-                MayNotSupportVirtualEnv = !SupportsVirtualEnv.Contains(interp.Id);
+                //MayNotSupportVirtualEnv = !SupportsVirtualEnv.Contains(interp.Id);
                 RefreshCanCreateVirtualEnv(VirtualEnvPath);
 
                 var libPath = interp.Configuration.LibraryPath;

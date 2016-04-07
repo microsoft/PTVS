@@ -42,10 +42,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Infrastructure\CancellationTokens.cs" />
+    <Compile Include="Infrastructure\ICatalogLog.cs" />
+    <Compile Include="Infrastructure\InterpreterCatalog.cs" />
     <Compile Include="Infrastructure\ObservableCollectionExtensions.cs" />
     <Compile Include="Infrastructure\PathUtils.cs" />
     <Compile Include="Infrastructure\EnumerableExtensions.cs" />

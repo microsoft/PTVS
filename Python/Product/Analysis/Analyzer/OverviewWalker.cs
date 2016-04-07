@@ -544,7 +544,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     // single line input
                     offset = 0;
                 } else {
-                    offset = lineNo < _tree._lineLocations.Length ? _tree._lineLocations[lineNo] : _tree._lineLocations[_tree._lineLocations.Length - 1];
+                    offset = lineNo < _tree._lineLocations.Length ? _tree._lineLocations[lineNo].EndIndex : _tree._lineLocations[_tree._lineLocations.Length - 1].EndIndex;
                 }
                 var closingScope = new StatementScope(offset, _scope);
                 _scope.Children.Add(closingScope);

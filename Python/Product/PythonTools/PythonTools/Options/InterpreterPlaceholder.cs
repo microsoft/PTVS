@@ -20,10 +20,11 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Options {
     class InterpreterPlaceholder : IPythonInterpreterFactory {
-        public InterpreterPlaceholder(Guid id, string description) {
-            Id = id;
-            Description = description;
+        public const string PlaceholderId = "Placeholder";
+        public InterpreterPlaceholder(string id, string description) {
             Configuration = new InterpreterConfiguration(
+                PlaceholderId + ";" + id.ToString(),
+                description,
                 null,
                 null,
                 null,
@@ -35,16 +36,12 @@ namespace Microsoft.PythonTools.Options {
             );
         }
         
-        public string Description {
-            get;
-            private set;
-        }
-
         public InterpreterConfiguration Configuration { get; private set; }
 
         public Guid Id {
-            get;
-            private set;
+            get {
+                return Guid.Empty;
+            }
         }
 
         public IPythonInterpreter CreateInterpreter() {

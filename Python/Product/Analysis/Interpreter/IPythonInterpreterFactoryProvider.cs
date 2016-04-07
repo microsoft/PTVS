@@ -16,6 +16,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition.Hosting;
+using System.IO;
+using System.Linq;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -24,18 +27,38 @@ namespace Microsoft.PythonTools.Interpreter {
     /// </summary>
     public interface IPythonInterpreterFactoryProvider {
         /// <summary>
-        /// Returns the interpreter factories that this provider supports.  
-        /// 
-        /// The factories returned should be the same instances for subsequent calls.  If the number 
-        /// of available factories can change at runtime new factories can still be returned but the 
-        /// existing instances should not be re-created.
-        /// </summary>
-        IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories();
-
-        /// <summary>
-        /// Raised when the result of calling <see cref="GetInterpreterFactories"/> may have changed.
+        /// Raised when the result of calling <see cref="GetInterpreterConfigurations"/> may have changed.
         /// </summary>
         /// <remarks>New in 2.0.</remarks>
         event EventHandler InterpreterFactoriesChanged;
+
+
+        /// <summary>
+        /// Returns the interpreter configurations that this provider supports.  
+        /// 
+        /// The configurations returned should be the same instances for subsequent calls.  If the number 
+        /// of available configurations can change at runtime new factories can still be returned but the 
+        /// existing instances should not be re-created.
+        /// </summary>
+        IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations();
+
+        /// <summary>
+        /// Gets a specific configured interpreter
+        /// </summary>
+        IPythonInterpreterFactory GetInterpreterFactory(string id);
+    }
+
+    public static class PythonInterpreterExtensions {
+        public static bool IsAvailable(this InterpreterConfiguration configuration) {
+            // TODO: Differs from original by not checking for base interpreter
+            // configuration
+            return File.Exists(configuration.InterpreterPath) &&
+                File.Exists(configuration.WindowsInterpreterPath) &&
+                Directory.Exists(configuration.LibraryPath);
+        }
+
+        public static IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories(this IPythonInterpreterFactoryProvider self) {
+            return self.GetInterpreterConfigurations().Select(x => self.GetInterpreterFactory(x.Id));
+        }
     }
 }

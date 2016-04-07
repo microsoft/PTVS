@@ -104,7 +104,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public virtual IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
+        public virtual IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             return new Dictionary<string, IAnalysisSet>();
         }
 

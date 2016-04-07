@@ -143,7 +143,25 @@ namespace TestUtilities.UI
                         break;
                 }
             } catch (InvalidOperationException) {
-                Element.GetInvokePattern().Invoke();
+                Console.WriteLine("Can't expand/collapse");
+                foreach (var pattern in Element.GetSupportedPatterns()) {
+                    Console.WriteLine("{0} {1}", pattern.Id, pattern.ProgrammaticName);
+                }
+                try {
+                    Element.GetInvokePattern().Invoke();
+                } catch (InvalidOperationException) {
+                    Console.WriteLine("Can't even invoke, let's try double clicking...");
+                    // What an annoying control...
+                    var point = Element.GetClickablePoint();
+                    point.Offset(0.0, 50.0);
+                    Mouse.MoveTo(point);
+                    System.Threading.Thread.Sleep(100);
+                    point.Offset(0.0, -50.0);
+                    Mouse.MoveTo(point);
+                    System.Threading.Thread.Sleep(100);
+                    Mouse.DoubleClick(System.Windows.Input.MouseButton.Left);
+                    System.Threading.Thread.Sleep(100);
+                }
             }
         }
 

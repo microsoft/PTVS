@@ -891,6 +891,17 @@ namespace Microsoft.PythonTools.Analysis {
             get { return _modulesByFilename; }
         }
 
+        public bool TryGetProjectEntryByPath(string path, out IProjectEntry projEntry) {
+            ModuleInfo modInfo;
+            if (_modulesByFilename.TryGetValue(path, out modInfo)) {
+                projEntry = modInfo.ProjectEntry;
+                return true;
+            }
+
+            projEntry = null;
+            return false;
+        }
+
         internal IAnalysisSet GetConstant(IPythonConstant value) {
             object key = value ?? _nullKey;
             return GetCached(key, () => new ConstantInfo(value, this)) ?? _noneInst;

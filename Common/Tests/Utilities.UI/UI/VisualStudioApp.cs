@@ -159,6 +159,7 @@ namespace TestUtilities.UI {
         /// </summary>
         public void OpenObjectBrowser() {
             Dte.ExecuteCommand("View.ObjectBrowser");
+            Dte.ExecuteCommand("View.ObjectBrowserSortObjectsAlphabetically");
         }
 
         /// <summary>

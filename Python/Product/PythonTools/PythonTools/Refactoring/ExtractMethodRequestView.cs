@@ -21,11 +21,14 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Media;
-using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Refactoring {
+    using AP = AnalysisProtocol;
+
     /// <summary>
     /// Provides a view model for the ExtractMethodRequest class.
     /// </summary>
@@ -38,10 +41,10 @@ namespace Microsoft.PythonTools.Refactoring {
         private readonly FontFamily _previewFontFamily;
         private bool _isValid;
 
-        private readonly ReadOnlyCollection<ScopeStatement> _targetScopes;
-        private readonly ScopeStatement _defaultScope;
+        private readonly ReadOnlyCollection<ScopeWrapper> _targetScopes;
+        private readonly ScopeWrapper _defaultScope;
         private readonly IServiceProvider _serviceProvider;
-        private ScopeStatement _targetScope;
+        private ScopeWrapper _targetScope;
         private ReadOnlyCollection<ClosureVariable> _closureVariables;
 
         private string _previewText;
@@ -53,29 +56,31 @@ namespace Microsoft.PythonTools.Refactoring {
             _previewer = previewer;
             _serviceProvider = serviceProvider;
 
-            ScopeStatement lastClass = null;
-            for (int i = _previewer.Scopes.Length - 1; i >= 0; i--) {
-                if (_previewer.Scopes[i] is ClassDefinition) {
-                    lastClass = _previewer.Scopes[i];
+            var extraction = _previewer.LastExtraction;
+
+            AP.ScopeInfo lastClass = null;
+            for (int i = extraction.scopes.Length - 1; i >= 0; i--) {
+                if (extraction.scopes[i].type == "class") {
+                    lastClass = extraction.scopes[i];
                     break;
                 }
             }
-            _defaultScope = lastClass;
 
-            var targetScopes = new List<ScopeStatement>();
-            foreach (var scope in _previewer.Scopes) {
-                if (!(scope is ClassDefinition) || scope == lastClass) {
-                    targetScopes.Add(scope);
+            var targetScopes = new List<ScopeWrapper>();
+            foreach (var scope in extraction.scopes) {
+                if (!(scope.type == "class") || scope == lastClass) {
+                    var wrapper = new ScopeWrapper(scope);
+                    if (scope == lastClass) {
+                        _defaultScope = wrapper;
+                    }
+                    targetScopes.Add(wrapper);
                 }
             }
 
-            _targetScopes = new ReadOnlyCollection<ScopeStatement>(targetScopes);
+            _targetScopes = new ReadOnlyCollection<ScopeWrapper>(targetScopes);
             if (_defaultScope == null && _targetScopes.Any()) {
                 _defaultScope = _targetScopes[0];
             }
-
-            //_name = null;
-            //_targetScope = null;
 
             _previewFontFamily = new FontFamily(GetTextEditorFont());
 
@@ -162,7 +167,7 @@ namespace Microsoft.PythonTools.Refactoring {
         /// <summary>
         /// The target scope to extract the method to.
         /// </summary>
-        public ScopeStatement TargetScope {
+        public ScopeWrapper TargetScope {
             get {
                 return _targetScope;
             }
@@ -173,18 +178,10 @@ namespace Microsoft.PythonTools.Refactoring {
 
                     List<ClosureVariable> closureVariables = new List<ClosureVariable>();
                     if (_targetScope != null) {
-                        foreach (var variable in _previewer.Variables) {
-                            var variableScope = variable.Scope;
-                            
-                            var parentScope = _targetScope;
-                            // are these variables a child of the target scope so we can close over them?
-                            while (parentScope != null && parentScope != variableScope) {
-                                parentScope = parentScope.Parent;
-                            }
-
-                            if (parentScope != null) {
+                        foreach (var variable in _previewer.LastExtraction.variables) {
+                            if (_targetScope.Scope.variables.Contains(variable)) {
                                 // we can either close over or pass these in as parameters, add them to the list
-                                closureVariables.Add(new ClosureVariable(variable.Name));
+                                closureVariables.Add(new ClosureVariable(variable));
                             }
                         }
 
@@ -198,7 +195,7 @@ namespace Microsoft.PythonTools.Refactoring {
         /// <summary>
         /// The set of potential scopes to extract the method to.
         /// </summary>
-        public ReadOnlyCollection<ScopeStatement> TargetScopes {
+        public ReadOnlyCollection<ScopeWrapper> TargetScopes {
             get {
                 return _targetScopes;
             }
@@ -259,7 +256,9 @@ namespace Microsoft.PythonTools.Refactoring {
         private void UpdatePreview() {
             var info = GetRequest();
             if (info != null) {
-                PreviewText = _previewer.GetExtractionResult(info).Method;
+                _previewer.GetExtractionResult(info).ContinueWith(
+                    x => PreviewText = x?.WaitOrDefault(1000)?.methodBody ?? "<failed to get preview>"
+                ).DoNotWait();
             } else {
                 PreviewText = "The method name is not valid.";
             }
@@ -378,5 +377,19 @@ namespace Microsoft.PythonTools.Refactoring {
             }
         }
     }
+
+    class ScopeWrapper {
+        public readonly AP.ScopeInfo Scope;
+
+        public ScopeWrapper(AP.ScopeInfo scope) {
+            Scope = scope;
+        }
+
+        public string Name {
+            get {
+                return Scope.name;
+            }
+        }
+    }
 }
- 
+

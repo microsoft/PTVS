@@ -877,24 +877,24 @@ namespace Microsoft.PythonTools.Repl {
                 return null;
             }
 
-            public MemberResult[] GetMemberNames(string text) {
+            public CompletionResult[] GetMemberNames(string text) {
                 _completionResultEvent.Reset();
                 _memberResults = null;
 
                 using (new StreamLock(this, throwIfDisconnected: false)) {
                     if (_stream == null) {
-                        return new MemberResult[0];
+                        return new CompletionResult[0];
                     }
                     try {
                         _stream.Write(GetMembersCommandBytes);
                         SendString(text);
                     } catch (IOException) {
-                        return new MemberResult[0];
+                        return new CompletionResult[0];
                     }
                 }
 
                 if (_completionResultEvent.WaitOne(1000) && _memberResults != null) {
-                    MemberResult[] res = new MemberResult[_memberResults.TypeMembers.Count + _memberResults.InstanceMembers.Count];
+                    var res = new CompletionResult[_memberResults.TypeMembers.Count + _memberResults.InstanceMembers.Count];
                     int i = 0;
                     foreach (var member in _memberResults.TypeMembers) {
                         res[i++] = CreateMemberResult(member.Key, member.Value);
@@ -1439,7 +1439,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        public MemberResult[] GetMemberNames(string text) {
+        public CompletionResult[] GetMemberNames(string text) {
             EnsureConnected();
 
             return _curListener.GetMemberNames(text);
@@ -1459,27 +1459,27 @@ namespace Microsoft.PythonTools.Repl {
             return new KeyValuePair<string, bool>[0];
         }
 
-        private static MemberResult CreateMemberResult(string name, string typeName) {
+        private static CompletionResult CreateMemberResult(string name, string typeName) {
             switch (typeName) {
                 case "__builtin__.method-wrapper":
                 case "__builtin__.builtin_function_or_method":
                 case "__builtin__.method_descriptor":
                 case "__builtin__.wrapper_descriptor":
                 case "__builtin__.instancemethod":
-                    return new MemberResult(name, PythonMemberType.Method);
+                    return new CompletionResult(name, PythonMemberType.Method);
                 case "__builtin__.getset_descriptor":
-                    return new MemberResult(name, PythonMemberType.Property);
+                    return new CompletionResult(name, PythonMemberType.Property);
                 case "__builtin__.namespace#":
-                    return new MemberResult(name, PythonMemberType.Namespace);
+                    return new CompletionResult(name, PythonMemberType.Namespace);
                 case "__builtin__.type":
-                    return new MemberResult(name, PythonMemberType.Class);
+                    return new CompletionResult(name, PythonMemberType.Class);
                 case "__builtin__.function":
-                    return new MemberResult(name, PythonMemberType.Function);
+                    return new CompletionResult(name, PythonMemberType.Function);
                 case "__builtin__.module":
-                    return new MemberResult(name, PythonMemberType.Module);
+                    return new CompletionResult(name, PythonMemberType.Module);
             }
 
-            return new MemberResult(name, PythonMemberType.Field);
+            return new CompletionResult(name, PythonMemberType.Field);
         }
 
         #region IMultipleScopeEvaluator Members

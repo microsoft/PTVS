@@ -15,7 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Refactoring;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -27,19 +27,24 @@ namespace Microsoft.PythonTools.Commands {
     /// </summary>
     class RemoveImportsCommand : Command {
         private readonly System.IServiceProvider _serviceProvider;
+        private readonly bool _allScopes;
         
-        public RemoveImportsCommand(System.IServiceProvider serviceProvider) {
+        public RemoveImportsCommand(System.IServiceProvider serviceProvider, bool allScopes) {
             _serviceProvider = serviceProvider;
+            _allScopes = allScopes;
         }
 
-        public override void DoCommand(object sender, EventArgs args) {
-            new ImportRemover(_serviceProvider, CommonPackage.GetActiveTextView(_serviceProvider), true).RemoveImports();
+        public override async void DoCommand(object sender, EventArgs args) {
+            var view = CommonPackage.GetActiveTextView(_serviceProvider);
+            var analyzer = view.GetAnalyzer(_serviceProvider);
+
+            await analyzer.RemoveImportsAsync(view.TextBuffer, view.Caret.Position.BufferPosition, _allScopes);
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
             var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
             if (activeView != null && activeView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {                
-                cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);                
+                cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
             } else {
                 cmd.cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
             }
@@ -57,7 +62,9 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         public override int CommandId {
-            get { return (int)PkgCmdIDList.cmdidRemoveImports; }
+            get {
+                return _allScopes ? (int)PkgCmdIDList.cmdidRemoveImports : (int)PkgCmdIDList.cmdidRemoveImportsCurrentScope;
+            }
         }
     }
 }

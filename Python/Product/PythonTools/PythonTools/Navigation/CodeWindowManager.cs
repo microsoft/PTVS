@@ -87,12 +87,12 @@ namespace Microsoft.PythonTools.Navigation {
                 return VSConstants.E_FAIL;
             }
 
-            IPythonProjectEntry pythonProjectEntry;
-            if (!wpfTextView.TextBuffer.TryGetPythonProjectEntry(out pythonProjectEntry)) {
+            AnalysisEntry analysisEntry;
+            if (!wpfTextView.TextBuffer.TryGetAnalysisEntry(out analysisEntry)) {
                 return VSConstants.E_FAIL;
             }
 
-            _client = new DropDownBarClient(_serviceProvider, wpfTextView, pythonProjectEntry);
+            _client = new DropDownBarClient(_serviceProvider, wpfTextView, analysisEntry);
             return _client.Register((IVsDropdownBarManager)_window);
         }
 

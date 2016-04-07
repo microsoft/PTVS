@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             if (filename != null) {
                 var project = DjangoPackage.GetProject(_serviceProvider, filename);
                 if (project != null) {
-                    return new DjangoCompletionSource(_glyphService, project.Analyzer, textBuffer);
+                    return new DjangoCompletionSource(_glyphService, project.Analyzer, _serviceProvider, textBuffer);
                 }
             }
             return null;

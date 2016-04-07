@@ -116,11 +116,15 @@ namespace PythonToolsTests {
             var proj = new Project(TestData.GetPath(@"TestData\Targets\Commands4.pyproj"));
 
             foreach (var version in PythonPaths.Versions) {
+                if (version.IsIronPython) {
+                    // IronPython isn't registered on developer machines...
+                    continue;
+                }
+
                 var verStr = version.Version.ToVersion().ToString();
-                proj.SetProperty("InterpreterId", version.Id.ToString("B"));
-                proj.SetProperty("InterpreterVersion", verStr);
+                proj.SetProperty("InterpreterId", version.Id.ToString());
                 proj.RemoveItems(proj.ItemsIgnoringCondition.Where(i => i.ItemType == "InterpreterReference").ToArray());
-                proj.AddItem("InterpreterReference", string.Format("{0:B}\\{1}", version.Id, verStr));
+                proj.AddItem("InterpreterReference", version.Id);
                 proj.Save();
                 proj.ReevaluateIfNecessary();
 

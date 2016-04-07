@@ -18,6 +18,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
@@ -33,7 +34,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private static readonly string[] KnownExceptions = new[] { "GeneratorExit", "KeyboardInterrupt", 
             "StopIteration", "SystemExit" };
 
-        private static bool IsExceptionType(MemberResult member) {
+        private static bool IsExceptionType(CompletionResult member) {
             switch (member.MemberType) {
                 case Interpreter.PythonMemberType.Class:
                     // Classes need further checking
@@ -73,7 +74,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 analysis
             );
 
-            var completions = analysis.GetAllAvailableMembers(index, GetMemberOptions.None)
+            var completions = (analysis.Analyzer.GetAllAvailableMembersAsync(analysis, index, GetMemberOptions.None).WaitOrDefault(1000) ?? Enumerable.Empty<CompletionResult>())
                 .Where(IsExceptionType)
                 .Select(member => PythonCompletion(glyphService, member))
                 .OrderBy(completion => completion.DisplayText);

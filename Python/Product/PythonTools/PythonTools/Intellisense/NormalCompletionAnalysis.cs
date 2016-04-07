@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
@@ -81,8 +82,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var start1 = _stopwatch.ElapsedMilliseconds;
 
-            IEnumerable<MemberResult> members = null;
-            IEnumerable<MemberResult> replMembers = null;
+            IEnumerable<CompletionResult> members = null;
+            IEnumerable<CompletionResult> replMembers = null;
 
             IInteractiveEvaluator eval;
             IPythonReplIntellisense pyReplEval = null;
@@ -105,16 +106,16 @@ namespace Microsoft.PythonTools.Intellisense {
                             statementRange.Snapshot,
                             analysis
                         );
-                        var parameters = Enumerable.Empty<MemberResult>();
-                        var sigs = VsProjectAnalyzer.GetSignatures(_serviceProvider, _snapshot, Span);
-                        if (sigs.Signatures.Any()) {
+                        var parameters = Enumerable.Empty<CompletionResult>();
+                        var sigs = VsProjectAnalyzer.GetSignaturesAsync(_serviceProvider, _snapshot, Span).WaitOrDefault(1000);
+                        if (sigs != null && sigs.Signatures.Any()) {
                             parameters = sigs.Signatures
                                 .SelectMany(s => s.Parameters)
                                 .Select(p => p.Name)
                                 .Distinct()
-                                .Select(n => new MemberResult(n, PythonMemberType.Field));
+                                .Select(n => new CompletionResult(n, PythonMemberType.Field));
                         }
-                        members = analysis.GetAllAvailableMembers(location, _options.MemberOptions)
+                        members = (analysis.Analyzer.GetAllAvailableMembersAsync(analysis, location, _options.MemberOptions).WaitOrDefault(1000) ?? new CompletionResult[0])
                             .Union(parameters, CompletionComparer.MemberEquality);
                     }
                 }
@@ -131,7 +132,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             analysis
                         );
 
-                        members = analysis.GetMembers(text, location, _options.MemberOptions);
+                        members = analysis.Analyzer.GetMembersAsync(analysis, text, location, _options.MemberOptions).WaitOrDefault(1000);
                     }
                 }
 

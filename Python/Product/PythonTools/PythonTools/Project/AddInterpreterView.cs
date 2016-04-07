@@ -33,15 +33,16 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project {
     sealed class AddInterpreterView : DependencyObject, INotifyPropertyChanged, IDisposable {
-        readonly IInterpreterOptionsService _interpreterService;
+        private readonly PythonProjectNode _project;
+
         
         public AddInterpreterView(
+            PythonProjectNode project,
             IServiceProvider serviceProvider,
-            IInterpreterOptionsService interpreterService,
             IEnumerable<IPythonInterpreterFactory> selected
         ) {
-            _interpreterService = interpreterService;
-            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(serviceProvider, interpreterService));
+            _project = project;
+            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(serviceProvider, project));
             
             var map = new Dictionary<IPythonInterpreterFactory, InterpreterView>();
             foreach (var view in Interpreters) {
@@ -54,19 +55,17 @@ namespace Microsoft.PythonTools.Project {
                 if (map.TryGetValue(interp, out view)) {
                     view.IsSelected = true;
                 } else {
-                    view = new InterpreterView(interp, interp.Description, false);
+                    view = new InterpreterView(interp, interp.Configuration.FullDescription, false);
                     view.IsSelected = true;
                     Interpreters.Add(view);
                 }
             }
 
-            _interpreterService.InterpretersChanged += OnInterpretersChanged;
+            _project.InterpreterFactoriesChanged += OnInterpretersChanged;
         }
 
         public void Dispose() {
-            if (_interpreterService != null) {
-                _interpreterService.InterpretersChanged -= OnInterpretersChanged;
-            }
+            _project.InterpreterFactoriesChanged -= OnInterpretersChanged;
         }
 
         private void OnInterpretersChanged(object sender, EventArgs e) {
@@ -74,9 +73,9 @@ namespace Microsoft.PythonTools.Project {
                 Dispatcher.BeginInvoke((Action)(() => OnInterpretersChanged(sender, e)));
                 return;
             }
-            var def = _interpreterService.DefaultInterpreter;
+            var def = _project.ActiveInterpreter;
             Interpreters.Merge(
-                _interpreterService.Interpreters.Select(i => new InterpreterView(i, i.Description, i == def)),
+                _project.InterpreterFactories.Select(i => new InterpreterView(i, i.Configuration.FullDescription, i == def)),
                 InterpreterView.EqualityComparer,
                 InterpreterView.Comparer
             );

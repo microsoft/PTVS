@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Commands {
             if (factory == null) {
                 return false;
             }
-            var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
+            var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
             return interpreterService != null && interpreterService.NoInterpretersValue != factory;
         }
 

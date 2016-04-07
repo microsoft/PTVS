@@ -50,5 +50,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Interpreter has no user-modifiable settings.
         /// </summary>
         CannotBeConfigured = 0x08,
+
+        SupportsDatabase = 0x10,
     }
 }

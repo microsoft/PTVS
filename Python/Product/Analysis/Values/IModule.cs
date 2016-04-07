@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         void SpecializeFunction(string name, CallDelegate callable, bool mergeOriginalAnalysis);
 
-        IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext context);
+        IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext context, GetMemberOptions options = GetMemberOptions.None);
         IEnumerable<string> GetModuleMemberNames(IModuleContext context);
         IAnalysisSet GetModuleMember(Node node, AnalysisUnit unit, string name, bool addRef = true, InterpreterScope linkedScope = null, string linkedName = null);
         void Imported(AnalysisUnit unit);

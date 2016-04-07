@@ -42,8 +42,7 @@ namespace Microsoft.PythonTools.Project {
     /// </summary>
     [ComVisible(true)]
     internal class InterpretersNode : HierarchyNode {
-        private readonly MSBuildProjectInterpreterFactoryProvider _interpreters;
-        private readonly IInterpreterOptionsService _interpreterService;
+        private readonly IInterpreterRegistryService _interpreterService;
         internal readonly IPythonInterpreterFactory _factory;
         private readonly bool _isReference;
         private readonly bool _canDelete, _canRemove;
@@ -57,17 +56,15 @@ namespace Microsoft.PythonTools.Project {
 
         public InterpretersNode(
             PythonProjectNode project,
-            ProjectItem item,
             IPythonInterpreterFactory factory,
             bool isInterpreterReference,
             bool canDelete,
             bool isGlobalDefault = false
         )
-            : base(project, ChooseElement(project, item)) {
+            : base(project, MakeElement(project)) {
             ExcludeNodeFromScc = true;
 
-            _interpreters = project.Interpreters;
-            _interpreterService = project.Site.GetComponentModel().GetService<IInterpreterOptionsService>();
+            _interpreterService = project.Site.GetComponentModel().GetService<IInterpreterRegistryService>();
             _factory = factory;
             _isReference = isInterpreterReference;
             _canDelete = canDelete;
@@ -108,12 +105,8 @@ namespace Microsoft.PythonTools.Project {
             get { return GuidList.guidPythonToolsCmdSet; }
         }
 
-        private static ProjectElement ChooseElement(PythonProjectNode project, ProjectItem item) {
-            if (item != null) {
-                return new MsBuildProjectElement(project, item);
-            } else {
-                return new VirtualProjectElement(project);
-            }
+        private static ProjectElement MakeElement(PythonProjectNode project) {
+            return new VirtualProjectElement(project);
         }
 
         public override void Close() {
@@ -281,7 +274,7 @@ namespace Microsoft.PythonTools.Project {
                             return pyProj.OpenCommandPrompt(
                                 _factory.Configuration.PrefixPath,
                                 _factory,
-                                _factory.Description
+                                _factory.Configuration.FullDescription
                             );
                         }
                         break;
@@ -301,8 +294,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
-            var service = _interpreterService as IInterpreterOptionsService2;
-            if (service != null && service.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
+            if (_interpreterService.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
                 // Prevent the environment from being deleted while installing.
                 return false;
             }
@@ -330,8 +322,7 @@ namespace Microsoft.PythonTools.Project {
                 throw new NotSupportedException();
             }
 
-            var service = _interpreterService as IInterpreterOptionsService2;
-            if (service != null && service.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
+            if (_interpreterService.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
                 // Prevent the environment from being deleted while installing.
                 // This situation should not occur through the UI, but might be
                 // invocable through DTE.
@@ -371,13 +362,7 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public override string Caption {
             get {
-                return _factory.Description + _captionSuffix;
-            }
-        }
-
-        public new MsBuildProjectElement ItemNode {
-            get {
-                return (MsBuildProjectElement)base.ItemNode;
+                return _factory.Configuration.FullDescription + _captionSuffix;
             }
         }
 
@@ -404,10 +389,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override ImageMoniker GetIconMoniker(bool open) {
-            if (!_interpreters.IsAvailable(_factory)) {
+            if (!_factory.Configuration.IsAvailable()) {
                 // TODO: Find a better icon
                 return KnownMonikers.DocumentWarning;
-            } else if (_interpreters.ActiveInterpreter == _factory) {
+            } else if (ProjectMgr.ActiveInterpreter == _factory) {
                 return KnownMonikers.ActiveEnvironment;
             }
 
@@ -443,8 +428,8 @@ namespace Microsoft.PythonTools.Project {
                 switch (cmd) {
                     case PythonConstants.ActivateEnvironment:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_interpreters.IsAvailable(_factory) &&
-                            _interpreters.ActiveInterpreter != _factory &&
+                        if (_factory.Configuration.IsAvailable() &&
+                            ProjectMgr.ActiveInterpreter != _factory &&
                             Directory.Exists(_factory.Configuration.PrefixPath)
                         ) {
                             result |= QueryStatusResult.ENABLED;
@@ -452,7 +437,7 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                     case PythonConstants.InstallPythonPackage:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_interpreters.IsAvailable(_factory) &&
+                        if (_factory.Configuration.IsAvailable() &&
                             Directory.Exists(_factory.Configuration.PrefixPath)
                         ) {
                             result |= QueryStatusResult.ENABLED;
@@ -466,13 +451,13 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                     case PythonConstants.GenerateRequirementsTxt:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_interpreters.IsAvailable(_factory)) {
+                        if (_factory.Configuration.IsAvailable()) {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;
                     case PythonConstants.OpenInteractiveForEnvironment:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_interpreters.IsAvailable(_factory) &&
+                        if (_factory.Configuration.IsAvailable() &&
                             File.Exists(_factory.Configuration.InterpreterPath)
                         ) {
                             result |= QueryStatusResult.ENABLED;
@@ -485,7 +470,7 @@ namespace Microsoft.PythonTools.Project {
                 switch ((SharedCommands)cmd) {
                     case SharedCommands.OpenCommandPromptHere:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_interpreters.IsAvailable(_factory) &&
+                        if (_factory.Configuration.IsAvailable() &&
                             Directory.Exists(_factory.Configuration.PrefixPath) &&
                             File.Exists(_factory.Configuration.InterpreterPath)) {
                             result |= QueryStatusResult.ENABLED;
@@ -493,7 +478,7 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                     case SharedCommands.CopyFullPath:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_interpreters.IsAvailable(_factory) &&
+                        if (_factory.Configuration.IsAvailable() &&
                             Directory.Exists(_factory.Configuration.PrefixPath) &&
                             File.Exists(_factory.Configuration.InterpreterPath)) {
                             result |= QueryStatusResult.ENABLED;
@@ -508,7 +493,7 @@ namespace Microsoft.PythonTools.Project {
         public override string Url {
             get {
                 if (!PathUtils.IsValidPath(_factory.Configuration.PrefixPath)) {
-                    return string.Format("UnknownInterpreter\\{0}\\{1}", _factory.Id, _factory.Configuration.Version);
+                    return string.Format("UnknownInterpreter\\{0}", _factory.Configuration.Id);
                 }
 
                 return _factory.Configuration.PrefixPath;

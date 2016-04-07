@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -160,8 +161,8 @@ namespace DjangoTests {
 
             var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
             PythonAnalyzer analyzer = PythonAnalyzer.CreateAsync(testFact).WaitAndUnwrapExceptions();
-            DjangoAnalyzer djangoAnalyzer = new DjangoAnalyzer(serviceProvider);
-            djangoAnalyzer.OnNewAnalyzer(analyzer);
+            DjangoAnalyzer djangoAnalyzer = new DjangoAnalyzer();
+            djangoAnalyzer.Register(analyzer);
 
             analyzer.AddAnalysisDirectory(path);
 
