@@ -17,6 +17,7 @@
 using System;
 using Microsoft.VisualStudio.Text;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Intellisense {
     public static class PythonAnalysisExtensions {
@@ -25,7 +26,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// part of an identifier then the expression is extended to complete the identifier.
         /// </summary>
         public static ExpressionAnalysis AnalyzeExpression(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span, bool forCompletion = true) {
-            return VsProjectAnalyzer.AnalyzeExpressionAsync(span.GetStartPoint(snapshot)).Result;
+            return VsProjectAnalyzer.AnalyzeExpressionAsync(span.GetStartPoint(snapshot)).WaitOrDefault(1000);
         }
 
         /// <summary>
@@ -40,7 +41,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Gets a list of signatures available for the expression at the provided location in the snapshot.
         /// </summary>
         internal static SignatureAnalysis GetSignatures(this ITextSnapshot snapshot, IServiceProvider serviceProvider, ITrackingSpan span) {
-            return VsProjectAnalyzer.GetSignaturesAsync(serviceProvider, snapshot, span).Result;
+            return VsProjectAnalyzer.GetSignaturesAsync(serviceProvider, snapshot, span).WaitOrDefault(1000);
         }
 
         /// <summary>

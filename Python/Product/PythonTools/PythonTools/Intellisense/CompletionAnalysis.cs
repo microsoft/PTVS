@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.PythonTools.Repl;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -142,8 +143,8 @@ namespace Microsoft.PythonTools.Intellisense {
             var modules = Enumerable.Empty<CompletionResult>();
             if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                 modules = modules.Concat(package.Length > 0 ? 
-                    analysis.Analyzer.GetModuleMembersAsync(analysis, package, !modulesOnly).Result :
-                    analysis.Analyzer.GetModulesResult(true).Result.Distinct(CompletionComparer.MemberEquality)
+                    analysis.Analyzer.GetModuleMembersAsync(analysis, package, !modulesOnly).WaitOrDefault(1000) ?? modules:
+                    (analysis.Analyzer.GetModulesResult(true).WaitOrDefault(1000) ?? modules).Distinct(CompletionComparer.MemberEquality)
                 );
             }
             if (replScopes != null) {

@@ -18,6 +18,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
@@ -73,7 +74,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 analysis
             );
 
-            var completions = analysis.Analyzer.GetAllAvailableMembersAsync(analysis, index, GetMemberOptions.None).Result
+            var completions = (analysis.Analyzer.GetAllAvailableMembersAsync(analysis, index, GetMemberOptions.None).WaitOrDefault(1000) ?? Enumerable.Empty<CompletionResult>())
                 .Where(IsExceptionType)
                 .Select(member => PythonCompletion(glyphService, member))
                 .OrderBy(completion => completion.DisplayText);

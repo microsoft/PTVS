@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
@@ -106,15 +107,15 @@ namespace Microsoft.PythonTools.Intellisense {
                             analysis
                         );
                         var parameters = Enumerable.Empty<CompletionResult>();
-                        var sigs = VsProjectAnalyzer.GetSignaturesAsync(_serviceProvider, _snapshot, Span).Result;
-                        if (sigs.Signatures.Any()) {
+                        var sigs = VsProjectAnalyzer.GetSignaturesAsync(_serviceProvider, _snapshot, Span).WaitOrDefault(1000);
+                        if (sigs != null && sigs.Signatures.Any()) {
                             parameters = sigs.Signatures
                                 .SelectMany(s => s.Parameters)
                                 .Select(p => p.Name)
                                 .Distinct()
                                 .Select(n => new CompletionResult(n, PythonMemberType.Field));
                         }
-                        members = analysis.Analyzer.GetAllAvailableMembersAsync(analysis, location, _options.MemberOptions).Result
+                        members = (analysis.Analyzer.GetAllAvailableMembersAsync(analysis, location, _options.MemberOptions).WaitOrDefault(1000) ?? new CompletionResult[0])
                             .Union(parameters, CompletionComparer.MemberEquality);
                     }
                 }
@@ -131,7 +132,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             analysis
                         );
 
-                        members = analysis.Analyzer.GetMembersAsync(analysis, text, location, _options.MemberOptions).Result;
+                        members = analysis.Analyzer.GetMembersAsync(analysis, text, location, _options.MemberOptions).WaitOrDefault(1000);
                     }
                 }
 

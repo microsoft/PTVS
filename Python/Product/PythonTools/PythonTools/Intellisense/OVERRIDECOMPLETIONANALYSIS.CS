@@ -20,6 +20,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
@@ -62,7 +63,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 TextBuffer,
                 pos,
                 indentation
-            ).Result?.overrides;
+            ).WaitOrDefault(1000)?.overrides;
 
             CompletionSet res;
             if (completions != null && completions.Any()) {

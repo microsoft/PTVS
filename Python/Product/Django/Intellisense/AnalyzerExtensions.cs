@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Script.Serialization;
 using Microsoft.PythonTools.Django.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 
@@ -29,7 +30,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 DjangoAnalyzer.Name,
                 DjangoAnalyzer.Commands.GetTags,
                 String.Empty
-            ).Result;
+            ).WaitOrDefault(1000);
 
             if (tags != null) {
                 return new JavaScriptSerializer().Deserialize<string[]>(tags);
@@ -43,7 +44,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 DjangoAnalyzer.Name,
                 DjangoAnalyzer.Commands.GetFilters,
                 String.Empty
-            ).Result;
+            ).WaitOrDefault(1000);
 
 
             var res = new Dictionary<string, TagInfo>();
@@ -61,7 +62,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 DjangoAnalyzer.Name,
                 DjangoAnalyzer.Commands.GetVariables,
                 file
-            ).Result;
+            ).WaitOrDefault(1000);
 
             if (variables != null) {
                 return new JavaScriptSerializer().Deserialize<string[]>(variables);
@@ -77,7 +78,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 DjangoAnalyzer.Name,
                 DjangoAnalyzer.Commands.GetMembers,
                 serializer.Serialize(new[] { file, variable })
-            ).Result;
+            ).WaitOrDefault(1000);
 
             if (members != null) {
                 var res = serializer.Deserialize<Dictionary<string, string>>(members);

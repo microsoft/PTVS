@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Language;
@@ -189,7 +190,7 @@ namespace Microsoft.PythonTools.Navigation {
                             entry, 
                             Name, 
                             new SourceLocation(0, reference.line, reference.column)
-                        ).Result;
+                        ).WaitOrDefault(1000);
                         vars.AddRange(analysis.Variables);
                     }
                 }

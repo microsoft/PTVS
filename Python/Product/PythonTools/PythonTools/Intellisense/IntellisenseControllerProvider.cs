@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -71,7 +72,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     controller.PropagateAnalyzer(subjBuf);
                 }
 
-                var entry = analyzer.MonitorTextBufferAsync(buffer).Result;
+                var entry = analyzer.MonitorTextBufferAsync(buffer).WaitOrDefault(1000);
                 if (entry.AnalysisEntry != null) {
                     _hookedCloseEvents[textView] = Tuple.Create(entry.BufferParser, analyzer);
                     textView.Closed += TextView_Closed;

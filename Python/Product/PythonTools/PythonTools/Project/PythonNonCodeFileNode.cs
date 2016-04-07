@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Project {
                     _node.GetTextBuffer(),
                     className,
                     paramCount
-                ).Result;
+                ).WaitOrDefault(1000);
             }
 
             public InsertionPoint GetInsertionPoint(string className) {
@@ -66,12 +66,12 @@ namespace Microsoft.PythonTools.Project {
                     fileInfo,
                     _node.GetTextBuffer(),
                     className
-                ).Result;
+                ).WaitOrDefault(1000);
             }
 
             public MethodInformation GetMethodInfo(string className, string methodName) {
                 var fileInfo = _node.GetAnalysisEntry();
-                var info = fileInfo.Analyzer.GetMethodInfoAsync(fileInfo, _node.GetTextBuffer(), className, methodName).Result;
+                var info = fileInfo.Analyzer.GetMethodInfoAsync(fileInfo, _node.GetTextBuffer(), className, methodName).WaitOrDefault(1000);
                 if (info != null) {
                     return new MethodInformation(
                         info.start,

@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Parsing;
@@ -85,7 +86,7 @@ namespace Microsoft.PythonTools.Navigation {
                         analysis,
                         criteria.szName.Substring(criteria.szName.LastIndexOf(':') + 1),
                         new Parsing.SourceLocation(0, 1, 1)
-                    ).Result;
+                    ).WaitOrDefault(1000);
 
                     if (exprAnalysis != null) {
                         return EditFilter.GetFindRefLocations(analysis.Analyzer, _hierarchy.ProjectMgr.Site, expr, exprAnalysis.Variables);
@@ -208,7 +209,7 @@ namespace Microsoft.PythonTools.Navigation {
                 analysis,
                 new SourceLocation(0, 1, 1),
                 GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DetailedInformation
-            ).Result;
+            ).WaitOrDefault(1000);
             return members;
         }
 
@@ -232,7 +233,7 @@ namespace Microsoft.PythonTools.Navigation {
                 new SourceLocation(0, 1, 1),
                 GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DetailedInformation | GetMemberOptions.DeclaredOnly |
                 GetMemberOptions.NoMemberRecursion
-            ).Result;
+            ).WaitOrDefault(1000);
             return members;
         }
 

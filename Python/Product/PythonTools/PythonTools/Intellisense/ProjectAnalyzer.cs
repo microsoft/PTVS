@@ -667,7 +667,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 entry,
                 expr,
                 translatedLocation
-            ).Result;
+            ).WaitOrDefault(1000) ?? Array.Empty<string>();
         }
 
         internal static async Task<ExpressionAnalysis> AnalyzeExpressionAsync(AnalysisEntry file, string expr, SourceLocation location) {

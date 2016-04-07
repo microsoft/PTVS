@@ -20,6 +20,7 @@ using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -96,7 +97,7 @@ namespace Microsoft.PythonTools.Navigation {
 
             var projFile = buffer.GetAnalysisEntry();
             if (projFile != null) {
-                var location = projFile.Analyzer.GetNameOfLocationAsync(projFile, buffer, iLine, iCol).Result;
+                var location = projFile.Analyzer.GetNameOfLocationAsync(projFile, buffer, iLine, iCol).WaitOrDefault(1000);
                 if (location != null) {
                     pbstrName = location.name;
                     piLineOffset = location.lineOffset;
@@ -124,7 +125,7 @@ namespace Microsoft.PythonTools.Navigation {
 
 
             var projFile = buffer.GetAnalysisEntry();
-            var names = projFile.Analyzer.GetProximityExpressionsAsync(projFile, buffer, iLine, iCol, cLines).Result;
+            var names = projFile.Analyzer.GetProximityExpressionsAsync(projFile, buffer, iLine, iCol, cLines).WaitOrDefault(1000);
             ppEnum = new EnumBSTR(names);
             return VSConstants.S_OK;
         }
