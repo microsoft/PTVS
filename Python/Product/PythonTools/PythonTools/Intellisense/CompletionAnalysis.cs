@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.PythonTools.Repl;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -67,7 +68,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return token.ClassificationType.Classification == PredefinedClassificationTypeNames.Keyword && token.Span.GetText() == keyword;
         }
 
-        internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, MemberResult memberResult) {
+        internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, CompletionResult memberResult) {
             return new DynamicallyVisibleCompletion(memberResult.Name, 
                 memberResult.Completion, 
                 () => memberResult.Documentation, 
@@ -100,14 +101,14 @@ namespace Microsoft.PythonTools.Intellisense {
             return result;
         }
 
-        internal ModuleAnalysis GetAnalysisEntry() {
-            IPythonProjectEntry entry;
-            if (TextBuffer.TryGetPythonProjectEntry(out entry) && entry != null) {
-                Debug.Assert(
-                    entry.Analysis != null,
-                    string.Format("Failed to get analysis for buffer {0} with file {1}", TextBuffer, entry.FilePath)
-                );
-                return entry.Analysis;
+        internal AnalysisEntry GetAnalysisEntry() {
+            AnalysisEntry entry;
+            if (TextBuffer.TryGetAnalysisEntry(out entry) && entry != null) {
+                //Debug.Assert(
+                //    entry.Analysis != null,
+                //    string.Format("Failed to get analysis for buffer {0} with file {1}", TextBuffer, entry.FilePath)
+                //);
+                return entry;
             }
             Debug.Fail("Failed to get project entry for buffer " + TextBuffer.ToString());
             return null;
@@ -119,10 +120,10 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        protected IEnumerable<MemberResult> GetModules(string[] package, bool modulesOnly = true) {
+        protected IEnumerable<CompletionResult> GetModules(string[] package, bool modulesOnly = true) {
             var analysis = GetAnalysisEntry();
             if (analysis == null) {
-                return Enumerable.Empty<MemberResult>();
+                return Enumerable.Empty<CompletionResult>();
             }
 
             IPythonReplIntellisense pyReplEval = null;
@@ -139,11 +140,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 package = new string[0];
             }
 
-            var modules = Enumerable.Empty<MemberResult>();
+            var modules = Enumerable.Empty<CompletionResult>();
             if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                 modules = modules.Concat(package.Length > 0 ? 
-                    analysis.GetModuleMembers(package, !modulesOnly) :
-                    analysis.GetModules(true).Distinct(CompletionComparer.MemberEquality)
+                    analysis.Analyzer.GetModuleMembersAsync(analysis, package, !modulesOnly).WaitOrDefault(1000) ?? modules:
+                    (analysis.Analyzer.GetModulesResult(true).WaitOrDefault(1000) ?? modules).Distinct(CompletionComparer.MemberEquality)
                 );
             }
             if (replScopes != null) {
@@ -155,14 +156,14 @@ namespace Microsoft.PythonTools.Intellisense {
             return modules;
         }
 
-        private static IEnumerable<MemberResult> GetModulesFromReplScope(
+        private static IEnumerable<CompletionResult> GetModulesFromReplScope(
             IEnumerable<KeyValuePair<string, bool>> scopes,
             string[] package
         ) {
             if (package == null || package.Length == 0) {
                 foreach (var scope in scopes) {
                     if (scope.Key.IndexOf('.') < 0) {
-                        yield return new MemberResult(
+                        yield return new CompletionResult(
                             scope.Key,
                             scope.Value ? PythonMemberType.Module : PythonMemberType.Namespace
                         );
@@ -173,7 +174,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     var parts = scope.Key.Split('.');
                     if (parts.Length - 1 == package.Length &&
                         parts.Take(parts.Length - 1).SequenceEqual(package, StringComparer.Ordinal)) {
-                        yield return new MemberResult(
+                        yield return new CompletionResult(
                             parts[parts.Length - 1],
                             scope.Value ? PythonMemberType.Module : PythonMemberType.Namespace
                         );

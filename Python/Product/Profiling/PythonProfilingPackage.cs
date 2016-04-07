@@ -243,19 +243,19 @@ namespace Microsoft.PythonTools.Profiling {
 
         internal static void ProfileProject(SessionNode session, EnvDTE.Project projectToProfile, bool openReport) {
             var model = (IComponentModel)(session._serviceProvider.GetService(typeof(SComponentModel)));
-            var interpreterService = model.GetService<IInterpreterOptionsService>();
 
             var projectHome = PathUtils.GetAbsoluteDirectoryPath(
                 Path.GetDirectoryName(projectToProfile.FullName),
                 (string)projectToProfile.Properties.Item("ProjectHome").Value
             );
-            var interpreterProvider = (MSBuildProjectInterpreterFactoryProvider)projectToProfile.Properties.Item("InterpreterFactoryProvider").Value;
+
             var args = (string)projectToProfile.Properties.Item("CommandLineArguments").Value;
             var interpreterPath = (string)projectToProfile.Properties.Item("InterpreterPath").Value;
             var searchPath = (string)projectToProfile.Properties.Item("SearchPath").Value;
+            var project = projectToProfile.AsPythonProject();
 
-            var interpreter = interpreterProvider != null ? interpreterProvider.ActiveInterpreter : null;
-            if (interpreter == null || interpreter == interpreterService.NoInterpretersValue) {
+            var interpreter = project != null ? project.GetInterpreterFactory() : null;
+            if (interpreter == null /*|| interpreter == interpreterService.NoInterpretersValue*/) {
                 MessageBox.Show(String.Format("Could not find interpreter for project {0}", projectToProfile.Name), "Python Tools for Visual Studio");
                 return;
             }
@@ -312,15 +312,12 @@ namespace Microsoft.PythonTools.Profiling {
 
         private static void ProfileStandaloneTarget(SessionNode session, StandaloneTarget runTarget, bool openReport) {
             var model = (IComponentModel)(session._serviceProvider.GetService(typeof(SComponentModel)));
-            var interpreterService = model.GetService<IInterpreterOptionsService>();
+            var registry = model.DefaultExportProvider.GetExportedValue<IInterpreterRegistryService>();
 
             var interpreterPath = runTarget.InterpreterPath;
             var arch = ProcessorArchitecture.X86;
             if (runTarget.PythonInterpreter != null) {
-                var interpreter = interpreterService.FindInterpreter(
-                    runTarget.PythonInterpreter.Id,
-                    runTarget.PythonInterpreter.Version
-                );
+                var interpreter = registry.FindInterpreter(runTarget.PythonInterpreter.Id);
                 if (interpreter == null) {
                     return;
                 }

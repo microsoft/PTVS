@@ -99,17 +99,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(PythonTools.Interpreter.IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             Dictionary<string, IAnalysisSet> res = new Dictionary<string, IAnalysisSet>();
             foreach (var member in _members) {
-                foreach (var keyValue in member.GetAllMembers(moduleContext)) {
+                foreach (var keyValue in member.GetAllMembers(moduleContext, options)) {
                     IAnalysisSet existing;
                     if (res.TryGetValue(keyValue.Key, out existing)) {
                         MultipleMemberInfo existingMultiMember = existing as MultipleMemberInfo;
                         if (existingMultiMember != null) {
-                            res[keyValue.Key] = MultipleMemberInfo.Create(existingMultiMember._members, keyValue.Value);
+                            res[keyValue.Key] = Create(existingMultiMember._members, keyValue.Value);
                         } else {
-                            res[keyValue.Key] = MultipleMemberInfo.Create(existing, keyValue.Value);
+                            res[keyValue.Key] = Create(existing, keyValue.Value);
                         }
                     } else {
                         res[keyValue.Key] = keyValue.Value;

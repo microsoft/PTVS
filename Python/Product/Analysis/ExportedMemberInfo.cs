@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Analysis {
     public struct ExportedMemberInfo {
         private readonly string _fromName, _name;
         
-        internal ExportedMemberInfo(string fromName, string name) {
+        public ExportedMemberInfo(string fromName, string name) {
             _fromName = fromName;
             _name = name;
         }
@@ -41,15 +41,6 @@ namespace Microsoft.PythonTools.Analysis {
                     return _fromName + "." + _name;
                 }
             }
-        }
-
-        /// <summary>
-        /// True if this was defined in the module or false if this was defined in another module
-        /// but imported in the module that we're getting members from.
-        /// </summary>
-        [Obsolete("Only defined names are returned")]
-        public bool IsDefinedInModule {
-            get { return true; }
         }
 
         /// <summary>

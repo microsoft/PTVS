@@ -21,137 +21,75 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
+using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.Project {
-    [Guid(GuidList.guidLoadedProjectInterpreterFactoryProviderString)]
-    [Export(typeof(IPythonInterpreterFactoryProvider))]
+
+    [Export(typeof(IProjectContextProvider))]
+    [Export(typeof(VsProjectContextProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    sealed class LoadedProjectInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
-        private SolutionEventsListener _listener;
-        private readonly Dictionary<IPythonInterpreterFactoryProvider, IVsProject> _providers;
+    sealed class VsProjectContextProvider : IProjectContextProvider {
+        private readonly Dictionary<PythonProjectNode, MSBuild.Project> _projects = new Dictionary<PythonProjectNode, MSBuild.Project>();
+        private readonly Dictionary<string, object> _createdFactories = new Dictionary<string, object>();
 
-        public LoadedProjectInterpreterFactoryProvider() {
-            _providers = new Dictionary<IPythonInterpreterFactoryProvider, IVsProject>();
+        [ImportingConstructor]
+        public VsProjectContextProvider() {
         }
 
-        public void Dispose() {
-            if (_listener != null) {
-                _listener.Dispose();
+        public void UpdateProject(PythonProjectNode node, MSBuild.Project project) {
+            lock (_projects) {
+                if (project == null) {
+                    _projects.Remove(node);
+                } else if (!_projects.ContainsKey(node) || _projects[node] != project) {
+                    _projects[node] = project;
+                }
+            }
+
+            // Always raise the event, this also occurs when we're adding projects
+            // to the MSBuild.Project.
+            ProjectsChanaged?.Invoke(this, EventArgs.Empty);
+        }
+
+        public void InterpreterLoaded(object context, InterpreterConfiguration configuration) {
+            lock(_createdFactories) {
+                _createdFactories[configuration.Id] = context;
             }
         }
 
-        public void SetSolution(IVsSolution solution) {
-            if (_listener != null) {
-                throw new InvalidOperationException("Cannot set solution multiple times");
+        public void InterpreterUnloaded(object context, InterpreterConfiguration configuration) {
+            lock(_createdFactories) {
+                _createdFactories.Remove(configuration.Id);
             }
+        }
 
-            if (solution != null) {
-                _listener = new SolutionEventsListener(solution);
-                _listener.ProjectLoaded += Solution_ProjectLoaded;
-                _listener.ProjectClosing += Solution_ProjectUnloading;
-                _listener.ProjectUnloading += Solution_ProjectUnloading;
-                _listener.StartListeningForChanges();
+        public bool IsProjectSpecific(InterpreterConfiguration configuration) {
+            lock(_createdFactories) {
+                return _createdFactories.ContainsKey(configuration.Id);
+            }
+        }
 
-                lock (_providers) {
-                    foreach (var project in solution.EnumerateLoadedProjects()
-                        .Select(p => p.GetPythonProject())
-                        .Where(p => p != null)) {
-                        _providers[project.Interpreters] = project;
-                    }
+        public bool IsProjectSpecific(string id) {
+            lock (_createdFactories) {
+                return _createdFactories.ContainsKey(id);
+            }
+        }
+
+        public event EventHandler ProjectsChanaged;
+        public event EventHandler<ProjectChangedEventArgs> ProjectChanged;
+
+        public void OnProjectChanged(object project) {
+            ProjectChanged?.Invoke(this, new ProjectChangedEventArgs(project));
+        }
+
+        public IEnumerable<object> Projects {
+            get {
+                lock(_projects) {
+                    return _projects.Values.ToArray();
                 }
             }
         }
-
-        private void Solution_ProjectLoaded(object sender, ProjectEventArgs e) {
-            var project = e.Project.GetPythonProject();
-            if (project != null) {
-                ProjectLoaded(project.Interpreters, project);
-            }
-        }
-
-        private void Solution_ProjectUnloading(object sender, ProjectEventArgs e) {
-            var project = e.Project.GetPythonProject();
-            if (project != null) {
-                ProjectUnloaded(project.Interpreters);
-            }
-        }
-
-        internal void ProjectLoaded(IPythonInterpreterFactoryProvider provider, IVsProject project) {
-            if (provider == null) {
-                return;
-            }
-
-            lock (_providers) {
-                if (!_providers.ContainsKey(provider)) {
-                    _providers[provider] = project;
-                    provider.InterpreterFactoriesChanged += Interpreters_InterpreterFactoriesChanged;
-                }
-            }
-            OnInterpreterFactoriesChanged();
-        }
-
-        internal void ProjectUnloaded(IPythonInterpreterFactoryProvider provider) {
-            if (provider == null) {
-                return;
-            }
-
-            lock (_providers) {
-                if (_providers.Remove(provider)) {
-                    provider.InterpreterFactoriesChanged -= Interpreters_InterpreterFactoriesChanged;
-                }
-            }
-            OnInterpreterFactoriesChanged();
-        }
-
-        void Interpreters_InterpreterFactoriesChanged(object sender, EventArgs e) {
-            OnInterpreterFactoriesChanged();
-        }
-
-        public IVsProject GetProject(IPythonInterpreterFactory factory) {
-            lock (_providers) {
-                foreach (var kv in _providers) {
-                    var pif = kv.Key as MSBuildProjectInterpreterFactoryProvider;
-                    if (pif != null) {
-                        if (pif.Contains(factory)) {
-                            return kv.Value;
-                        }
-                    } else if (kv.Key.GetInterpreterFactories().Contains(factory)) {
-                        return kv.Value;
-                    }
-                }
-            }
-            return null;
-        }
-
-        public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
-            IPythonInterpreterFactoryProvider[] providers;
-            lock (_providers) {
-                providers = _providers.Keys.ToArray();
-            }
-
-            foreach (var pif in providers) {
-                var msb = pif as MSBuildProjectInterpreterFactoryProvider;
-                if (msb != null) {
-                    foreach (var f in msb.GetProjectSpecificInterpreterFactories()) {
-                        yield return f;
-                    }
-                } else {
-                    foreach (var f in pif.GetInterpreterFactories()) {
-                        yield return f;
-                    }
-                }
-            }
-        }
-
-        private void OnInterpreterFactoriesChanged() {
-            var evt = InterpreterFactoriesChanged;
-            if (evt != null) {
-                evt(this, EventArgs.Empty);
-            }
-        }
-
-        public event EventHandler InterpreterFactoriesChanged;
     }
 }

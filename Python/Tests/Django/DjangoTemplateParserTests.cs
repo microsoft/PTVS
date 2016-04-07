@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.PythonTools.Interpreter;
@@ -728,33 +729,32 @@ namespace DjangoTests {
     }
 
     class TestCompletionContext : IDjangoCompletionContext {
-        private readonly Dictionary<string, HashSet<AnalysisValue>> _variables;
+        private readonly string[] _variables;
         private readonly Dictionary<string, TagInfo> _filters;
         internal static TestCompletionContext Simple = new TestCompletionContext(new[] { "fob", "oar" }, new[] { "cut", "lower" });
 
         public TestCompletionContext(string[] variables, string[] filters) {
-            _variables = new Dictionary<string, HashSet<AnalysisValue>>();
+            _variables = variables;
             _filters = new Dictionary<string, TagInfo>();
-            foreach (var variable in variables) {
-                _variables[variable] = new HashSet<AnalysisValue>();
-            }
             foreach (var filter in filters) {
                 _filters[filter] = new TagInfo("", null);
             }
         }
 
-        #region IDjangoCompletionContext Members
-
-        public Dictionary<string, HashSet<AnalysisValue>> Variables {
-            get { return _variables; }
-        }
+        #region IDjangoCompletionContext Members       
 
         public Dictionary<string, TagInfo> Filters {
             get { return _filters; }
         }
 
-        public IModuleContext ModuleContext {
-            get { return null; }
+        public string[] Variables {
+            get {
+                return _variables;
+            }
+        }
+
+        public Dictionary<string, PythonMemberType> GetMembers(string name) {
+            return new Dictionary<string, PythonMemberType>();
         }
 
         #endregion

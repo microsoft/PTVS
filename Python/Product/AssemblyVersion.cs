@@ -41,6 +41,7 @@ class AssemblyVersionInfo {
     public const string VSVersion = VSMajorVersion + ".0";
 
     // These version strings are automatically updated at build.
+    public const string StableVersionPrefix = "1.0.0";
     public const string StableVersion = "1.0.0.0";
     public const string Version = "1.0.0.0";
 }

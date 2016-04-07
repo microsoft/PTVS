@@ -21,8 +21,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
@@ -38,8 +36,6 @@ namespace Microsoft.PythonTools.Interpreter {
         IPythonInterpreterFactoryWithDatabase2,
         IDisposable
     {
-        private readonly string _description;
-        private readonly Guid _id;
         private readonly InterpreterConfiguration _config;
         private PythonTypeDatabase _typeDb, _typeDbWithoutPackages;
         private bool _generating, _isValid, _isCheckingDatabase, _disposed;
@@ -62,13 +58,9 @@ namespace Microsoft.PythonTools.Interpreter {
         [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors",
             Justification = "breaking change")]
         public PythonInterpreterFactoryWithDatabase(
-            Guid id,
-            string description,
             InterpreterConfiguration config,
             bool watchLibraryForChanges
         ) {
-            _description = description;
-            _id = id;
             _config = config;
 
             if (_config == null) {
@@ -104,14 +96,6 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return _config;
             }
-        }
-
-        public virtual string Description {
-            get { return _description; }
-        }
-
-        public Guid Id {
-            get { return _id; }
         }
 
         /// <summary>
@@ -330,8 +314,7 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return Path.Combine(
                     PythonTypeDatabase.CompletionDatabasePath,
-                    Id.ToString(),
-                    Configuration.Version.ToString()
+                    Configuration.Id.Replace('|', '\\').ToString()
                 );
             }
         }

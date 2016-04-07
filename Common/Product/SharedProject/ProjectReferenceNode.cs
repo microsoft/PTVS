@@ -149,8 +149,14 @@ namespace Microsoft.VisualStudioTools.Project {
                 }
 
                 // Get the configuration manager from the project.
-                EnvDTE.ConfigurationManager confManager = this.ReferencedProjectObject.ConfigurationManager;
-                if (null == confManager) {
+
+                EnvDTE.ConfigurationManager confManager;
+                try {
+                    confManager = this.ReferencedProjectObject.ConfigurationManager;
+                    if (null == confManager) {
+                        return null;
+                    }
+                } catch (COMException) {
                     return null;
                 }
                 

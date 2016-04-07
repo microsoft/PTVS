@@ -20,12 +20,13 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Threading;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
 namespace Microsoft.VisualStudioTools.Navigation {
-
+    
     /// <summary>
     /// Single node inside the tree of the libraries in the object browser or class view.
     /// </summary>
@@ -34,21 +35,16 @@ namespace Microsoft.VisualStudioTools.Navigation {
         private readonly LibraryNode _parent;
         private LibraryNodeCapabilities _capabilities;
         private readonly LibraryNodeType _type;
-        private readonly CommandID _contextMenuID;
         private readonly string _tooltip;
         private readonly Dictionary<LibraryNodeType, LibraryNode> _filteredView;
         private readonly Dictionary<string, LibraryNode[]> _childrenByName;
         private bool _duplicatedByName;
 
-        public LibraryNode(LibraryNode parent, string name, string fullname, LibraryNodeType type)
-            : this(parent, name, fullname, type, LibraryNodeCapabilities.None, null) { }
-
-        public LibraryNode(LibraryNode parent, string name, string fullname, LibraryNodeType type, LibraryNodeCapabilities capabilities, CommandID contextMenuID) {
+        public LibraryNode(LibraryNode parent, string name, string fullname, LibraryNodeType type, LibraryNodeCapabilities capabilities = LibraryNodeCapabilities.None, IList<LibraryNode> children = null) : base(children) {
             Debug.Assert(name != null);
 
             _parent = parent;
             _capabilities = capabilities;
-            _contextMenuID = contextMenuID;
             _name = name;
             _fullname = fullname;
             _tooltip = name;
@@ -64,12 +60,13 @@ namespace Microsoft.VisualStudioTools.Navigation {
         protected LibraryNode(LibraryNode node, string newFullName) {
             _parent = node._parent;
             _capabilities = node._capabilities;
-            _contextMenuID = node._contextMenuID;
             _name = node._name;
             _tooltip = node._tooltip;
             _type = node._type;
             _fullname = newFullName;
-            Children.AddRange(node.Children);
+            foreach (var child in node.Children) {
+                Children.Add(child);
+            }
             _childrenByName = new Dictionary<string, LibraryNode[]>(node._childrenByName);
             _filteredView = new Dictionary<LibraryNodeType, LibraryNode>();
         }
@@ -254,6 +251,10 @@ namespace Microsoft.VisualStudioTools.Navigation {
             // Do nothing.
         }
 
+        public virtual IVsSimpleObjectList2 FindReferences() {
+            return null;
+        }
+
         public virtual string Name {
             get {
                 return _name;
@@ -296,7 +297,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         public CommandID ContextMenuID {
             get {
-                return _contextMenuID;
+                return null;
             }
         }
 
@@ -407,7 +408,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             }
 
             public int Reset() {
-                throw new NotImplementedException();
+                return VSConstants.E_NOTIMPL;
             }
 
             public int Skip(uint celt) {

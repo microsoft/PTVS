@@ -56,7 +56,8 @@ namespace Microsoft.PythonTools.Options {
             }
 
             var previousSelection = _showSettingsFor.SelectedItem;
-            object currentSelection = null;
+            InterpreterConfiguration currentSelection = null;
+            var options = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
 
             _showSettingsFor.BeginUpdate();
             try {
@@ -64,14 +65,14 @@ namespace Microsoft.PythonTools.Options {
 
                 var interpreters = _serviceProvider.GetPythonToolsService()
                     .InterpreterOptions
-                    .Select(x => x.Key)
-                    .Where(f => f.IsUIVisible() && f.CanBeConfigured())
-                    .OrderBy(f => f.Description);
+                    .Where(f => f.Value._config.IsUIVisible() && f.Value._config.CanBeConfigured())
+                    .OrderBy(f => f.Value._config.Description)
+                    .ThenBy(f => f.Value._config.Version);
 
                 foreach (var factory in interpreters) {
-                    _showSettingsFor.Items.Add(factory);
-                    if (factory == previousSelection) {
-                        currentSelection = factory;
+                    _showSettingsFor.Items.Add(factory.Value._config);
+                    if (factory.Value._config == (InterpreterConfiguration)previousSelection) {
+                        currentSelection = factory.Value._config;
                     }
                 }
 
@@ -99,7 +100,7 @@ namespace Microsoft.PythonTools.Options {
 
             if (Visible) {
                 var selectInterpreter = PythonInteractiveOptionsPage.NextOptionsSelection ??
-                    _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>().DefaultInterpreter;
+                    _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>().DefaultInterpreter?.Configuration;
                 PythonInteractiveOptionsPage.NextOptionsSelection = null;
 
                 _showSettingsFor.SelectedItem = selectInterpreter;
@@ -140,9 +141,9 @@ visualstudio_py_repl.BACKEND.attach()";
         }
 
         private void RefreshOptions() {
-            var factory = _showSettingsFor.SelectedItem as IPythonInterpreterFactory;
-            if (factory != null) {
-                CurrentOptions = _serviceProvider.GetPythonToolsService().GetInteractiveOptions(factory);
+            var config = _showSettingsFor.SelectedItem as InterpreterConfiguration;
+            if (config != null) {
+                CurrentOptions = _serviceProvider.GetPythonToolsService().GetInteractiveOptions(config);
             } else {
                 CurrentOptions = null;
             }
@@ -269,7 +270,7 @@ visualstudio_py_repl.BACKEND.attach()";
         private void Interpreter_Format(object sender, ListControlConvertEventArgs e) {
             var factory = e.ListItem as IPythonInterpreterFactory;
             if (factory != null) {
-                e.Value = factory.Description;
+                e.Value = factory.Configuration.FullDescription;
             } else {
                 e.Value = e.ListItem.ToString();
             }

@@ -178,7 +178,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override void Remove(bool removeFromStorage) {
-            ((PythonProjectNode)ProjectMgr).GetAnalyzer().UnloadFile(GetProjectEntry());
+            var analysis = GetAnalysisEntry();
+            if (analysis != null) {
+                ((PythonProjectNode)ProjectMgr).GetAnalyzer().UnloadFileAsync(analysis).DoNotWait();
+            }
 
             if (Url.EndsWith(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase) && removeFromStorage) {
                 TryDelete(Url + "c");
@@ -206,15 +209,15 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public IProjectEntry GetProjectEntry() {
+        public AnalysisEntry GetAnalysisEntry() {
             var textBuffer = GetTextBuffer(false);
 
-            IProjectEntry entry;
-            if (textBuffer != null && textBuffer.TryGetProjectEntry(out entry)) {
+            AnalysisEntry entry;
+            if (textBuffer != null && textBuffer.TryGetAnalysisEntry(out entry)) {
                 return entry;
             }
 
-            return ((PythonProjectNode)this.ProjectMgr).GetAnalyzer().GetEntryFromFile(Url);
+            return ((PythonProjectNode)this.ProjectMgr).GetAnalyzer().GetAnalysisEntryFromPath(Url);
         }
 
         private void TryRename(string oldFile, string newFile) {
@@ -245,9 +248,9 @@ namespace Microsoft.PythonTools.Project {
 
             if (res != null) {
                 var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
-                var analysis = GetProjectEntry();
+                var analysis = GetAnalysisEntry();
                 if (analysis != null) {
-                    analyzer.UnloadFile(analysis);
+                    analyzer.UnloadFileAsync(analysis).DoNotWait();
                 }
 
                 var textBuffer = GetTextBuffer(false);
@@ -263,16 +266,16 @@ namespace Microsoft.PythonTools.Project {
 
         internal override int IncludeInProject(bool includeChildren) {
             var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
-            analyzer.AnalyzeFile(Url);
+            analyzer.AnalyzeFileAsync(Url).DoNotWait();
 
             return base.IncludeInProject(includeChildren);
         }
 
         internal override int ExcludeFromProject() {
             var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
-            var analysis = GetProjectEntry();
+            var analysis = GetAnalysisEntry();
             if (analysis != null) {
-                analyzer.UnloadFile(analysis);
+                analyzer.UnloadFileAsync(analysis).DoNotWait();
             }
 
             return base.ExcludeFromProject();

@@ -676,4 +676,7 @@ You will need to restart Visual Studio after installation.</value>
 
 Your web browser will not be opened.</value>
   </data>
+  <data name="MissingEnvironmentUnknownVersion" xml:space="preserve">
+    <value>The environment "{0}" appears to be incorrectly configured or missing. You may need to install it or re-create a virtual environment.</value>
+  </data>
 </root>

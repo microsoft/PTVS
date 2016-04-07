@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -71,14 +72,16 @@ namespace Microsoft.PythonTools.Intellisense {
                     controller.PropagateAnalyzer(subjBuf);
                 }
 
-                var entry = analyzer.MonitorTextBuffer(textView, buffer);
-                _hookedCloseEvents[textView] = Tuple.Create(entry.BufferParser, analyzer);
-                textView.Closed += TextView_Closed;
+                var entry = analyzer.MonitorTextBufferAsync(buffer).WaitOrDefault(1000);
+                if (entry.AnalysisEntry != null) {
+                    _hookedCloseEvents[textView] = Tuple.Create(entry.BufferParser, analyzer);
+                    textView.Closed += TextView_Closed;
 
-                for (int i = 1; i < subjectBuffers.Count; i++) {
-                    entry.BufferParser.AddBuffer(subjectBuffers[i]);
+                    for (int i = 1; i < subjectBuffers.Count; i++) {
+                        entry.BufferParser.AddBuffer(subjectBuffers[i]);
+                    }
+                    controller.SetBufferParser(entry.BufferParser);
                 }
-                controller.SetBufferParser(entry.BufferParser);
             }
             return controller;
         }

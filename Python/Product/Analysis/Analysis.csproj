@@ -36,6 +36,7 @@
     <AssemblyName>Microsoft.PythonTools.Analysis</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SuppressCommonAssemblyVersion>true</SuppressCommonAssemblyVersion>
     <!--<DefineConstants>$(DefineConstants);FULL_VALIDATION</DefineConstants>-->
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
@@ -72,6 +73,12 @@
     <Compile Include="Interpreter\Default\AnalysisOnlyInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonSequenceType.cs" />
+    <Compile Include="Interpreter\IInterpreterLog.cs" />
+    <Compile Include="Interpreter\IInterpreterRegistryService.cs" />
+    <Compile Include="Interpreter\InMemoryProject.cs" />
+    <Compile Include="Interpreter\InterpreterFactoryIdAttribute.cs" />
+    <Compile Include="Interpreter\InterpreterRegistryConstants.cs" />
+    <Compile Include="Interpreter\InterpreterRegistryService.cs" />
     <Compile Include="Interpreter\InterpreterUIMode.cs" />
     <Compile Include="Interpreter\InterpreterFactoryCreator.cs" />
     <Compile Include="Interpreter\InterpreterFactoryCreationOptions.cs" />
@@ -80,6 +87,7 @@
     <Compile Include="Interpreter\NewDatabaseEventArgs.cs" />
     <Compile Include="Interpreter\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="Interpreter\PythonLibraryPath.cs" />
+    <Compile Include="Interpreter\IProjectContextProvider.cs" />
     <Compile Include="LockedEnumerable.cs" />
     <Compile Include="ModulePath.cs" />
     <Compile Include="Parsing\Ast\AwaitExpression.cs" />
@@ -127,7 +135,6 @@
     <Compile Include="Parsing\TokenizerOptions.cs" />
     <Compile Include="SetOfOne.cs" />
     <Compile Include="Deque.cs" />
-    <Compile Include="FileCookie.cs" />
     <Compile Include="Interpreter\Default\CPythonMultipleMembers.cs" />
     <Compile Include="Interpreter\IDotNetPythonInterpreter.cs" />
     <Compile Include="Interpreter\IPythonMultipleMembers.cs" />
@@ -332,6 +339,7 @@
     <Compile Include="Parsing\Ast\AndExpression.cs" />
     <Compile Include="Interpreter\BuiltinTypeId.cs" />
     <Compile Include="Interpreter\Default\CPythonFunction.cs" />
+    <Compile Include="VariablesResult.cs" />
     <Compile Include="VariableType.cs" />
     <Compile Include="XamlAnalysis.cs" />
     <Compile Include="XamlProjectEntry.cs" />

@@ -25,6 +25,7 @@ $AuthenticodeAndStrongNameFiles = @(
     "Microsoft.PythonTools.ProjectWizards.dll",
     "Microsoft.PythonTools.TestAdapter.dll",
     "Microsoft.PythonTools.Uwp.dll",
+    "Microsoft.PythonTools.Uwp.Interpreter.dll",
     "Microsoft.PythonTools.VsCommon.dll",
     "Microsoft.PythonTools.VSInterpreters.dll",
     "Microsoft.PythonTools.XamlDesignerSupport.dll",

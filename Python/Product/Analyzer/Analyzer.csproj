@@ -44,10 +44,17 @@
     <ApplicationIcon>..\Icons\Dev$(VSTarget)\PythonProject.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Build, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>$(BuildRoot)BuildOutput\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -57,6 +64,30 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Intellisense\AnalysisExtensionNameAttribute.cs" />
+    <Compile Include="Intellisense\AnalysisProtocol.cs" />
+    <Compile Include="Intellisense\AnalysisPriority.cs" />
+    <Compile Include="Intellisense\AnalysisQueue.cs" />
+    <Compile Include="Intellisense\AnalysisSynchronizationContext.cs" />
+    <Compile Include="Intellisense\AssignmentWalker.cs" />
+    <Compile Include="Intellisense\ClassifierWalker.cs" />
+    <Compile Include="Intellisense\CompletionOptions.cs" />
+    <Compile Include="Intellisense\EnclosingNodeWalker.cs" />
+    <Compile Include="Intellisense\ExtractedMethodCreator.cs" />
+    <Compile Include="Intellisense\ExtractMethodResult.cs" />
+    <Compile Include="Intellisense\FlowChecker.cs" />
+    <Compile Include="Intellisense\IAnalysisExtension.cs" />
+    <Compile Include="Intellisense\ImportRemover.cs" />
+    <Compile Include="Intellisense\LinePreservingCodeReplacer.cs" />
+    <Compile Include="Intellisense\OutliningWalker.cs" />
+    <Compile Include="Intellisense\OutOfProcProjectContextProvider.cs" />
+    <Compile Include="Intellisense\OutOfProcMethodExtractor.cs" />
+    <Compile Include="Intellisense\OutOfProcProjectAnalyzer.cs" />
+    <Compile Include="Intellisense\ProjectEntryExtensions.cs" />
+    <Compile Include="Intellisense\ProjectEntryMap.cs" />
+    <Compile Include="Intellisense\ProximityExpressionWalker.cs" />
+    <Compile Include="Intellisense\SelectionTarget.cs" />
+    <Compile Include="Intellisense\VersionCookie.cs" />
     <Compile Include="PyLibAnalyzer.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -67,6 +98,14 @@
     <ProjectReference Include="$(BuildRoot)Python\Product\Common\Common.csproj">
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
       <Name>Microsoft.PythonTools.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)Python\Product\Ipc.Json\Ipc.Json.csproj">
+      <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
+      <Name>Ipc.Json</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)Python\Product\VSInterpreters\VSInterpreters.csproj">
+      <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
+      <Name>VSInterpreters</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -99,6 +138,7 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

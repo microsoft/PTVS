@@ -23,36 +23,15 @@ namespace Microsoft.PythonTools.Profiling {
     /// </summary>
     public class PythonInterpreterView {
         readonly string _name;
-        readonly Guid _id;
-        readonly Version _version;
+        readonly string _id;
         readonly string _path;
         
         /// <summary>
-        /// Create a PythonInterpreterView with values from an IPythonInterpreterFactory.
-        /// </summary>
-        public PythonInterpreterView(IPythonInterpreterFactory factory) {
-            _name = factory.Description;
-            _id = factory.Id;
-            _version = factory.Configuration.Version;
-            _path = factory.Configuration.InterpreterPath;
-        }
-
-        /// <summary>
-        /// Create a PythonInterpreterView with values from a PythonInterpreter.
-        /// </summary>
-        public PythonInterpreterView(PythonInterpreter interpreter) {
-            _name = null;
-            _id = interpreter.Id;
-            _version = Version.Parse(interpreter.Version);
-            _path = null;
-        }
-        /// <summary>
         /// Create a PythonInterpreterView with values from parameters.
         /// </summary>
-        public PythonInterpreterView(string name, Guid id, Version version, string path) {
+        public PythonInterpreterView(string name, string id, string path) {
             _name = name;
             _id = id;
-            _version = version;
             _path = path;
         }
 
@@ -62,8 +41,7 @@ namespace Microsoft.PythonTools.Profiling {
         /// <returns></returns>
         public PythonInterpreter GetInterpreter() {
             return new PythonInterpreter {
-                Id = Id,
-                Version = Version.ToString()
+                Id = Id
             };
         }
 
@@ -79,18 +57,9 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// The Guid identifying the interpreter.
         /// </summary>
-        public Guid Id { 
+        public string Id { 
             get {
                 return _id;
-            }
-        }
-
-        /// <summary>
-        /// The version of the interpreter.
-        /// </summary>
-        public Version Version { 
-            get {
-                return _version;
             }
         }
 
@@ -112,7 +81,7 @@ namespace Microsoft.PythonTools.Profiling {
             if (other == null) {
                 return false;
             } else {
-                return Id.Equals(other.Id) && Version.Equals(other.Version);
+                return Id.Equals(other.Id);
             }
         }
 

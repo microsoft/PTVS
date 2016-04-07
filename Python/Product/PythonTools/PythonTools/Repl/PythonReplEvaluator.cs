@@ -38,15 +38,15 @@ namespace Microsoft.PythonTools.Repl {
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
     internal class PythonReplEvaluator : BasePythonReplEvaluator {
         private IPythonInterpreterFactory _interpreter;
-        private readonly IInterpreterOptionsService _interpreterService;
+        private readonly IInterpreterRegistryService _interpreterService;
         private VsProjectAnalyzer _replAnalyzer;
         private bool _ownsAnalyzer, _enableAttach, _supportsMultipleCompleteStatementInputs;
 
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, IInterpreterOptionsService interpreterService = null)
-            : this(interpreter, serviceProvider, new DefaultPythonReplEvaluatorOptions(serviceProvider, () => serviceProvider.GetPythonToolsService().GetInteractiveOptions(interpreter)), interpreterService) {
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, IInterpreterRegistryService interpreterService = null)
+            : this(interpreter, serviceProvider, new DefaultPythonReplEvaluatorOptions(serviceProvider, () => serviceProvider.GetPythonToolsService().GetInteractiveOptions(interpreter.Configuration)), interpreterService) {
         }
 
-        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService = null)
+        public PythonReplEvaluator(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, PythonReplEvaluatorOptions options, IInterpreterRegistryService interpreterService = null)
             : base(serviceProvider, serviceProvider.GetPythonToolsService(), options) {
             _interpreter = interpreter;
             _interpreterService = interpreterService;
@@ -56,26 +56,24 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private class UnavailableFactory : IPythonInterpreterFactory {
-            public UnavailableFactory(string id, string version) {
-                Id = Guid.Parse(id);
-                Configuration = new InterpreterConfiguration(Version.Parse(version));
+            public UnavailableFactory(string id) {
+                Configuration = new InterpreterConfiguration(id, "Unavailable", new Version(0, 0));
             }
-            public string Description { get { return Id.ToString(); } }
+            public string Description { get { return Configuration.Id.ToString(); } }
             public InterpreterConfiguration Configuration { get; private set; }
-            public Guid Id { get; private set; }
+            public Guid Id { get { return Guid.Empty; } }
             public IPythonInterpreter CreateInterpreter() { return null; }
         }
 
         public static IPythonReplEvaluator Create(
             IServiceProvider serviceProvider,
             string id,
-            string version,
-            IInterpreterOptionsService interpreterService
+            IInterpreterRegistryService interpreterService
         ) {
-            var factory = interpreterService != null ? interpreterService.FindInterpreter(id, version) : null;
+            var factory = interpreterService.FindInterpreter(id);
             if (factory == null) {
                 try {
-                    factory = new UnavailableFactory(id, version);
+                    factory = new UnavailableFactory(id);
                 } catch (FormatException) {
                     return null;
                 }
@@ -89,7 +87,7 @@ namespace Microsoft.PythonTools.Repl {
                 return;
             }
 
-            var interpreter = _interpreterService.FindInterpreter(current.Id, current.Configuration.Version);
+            var interpreter = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>().FindInterpreter(current.Configuration.Id);
             if (interpreter != null && interpreter != current) {
                 // the interpreter has been reconfigured, we want the new settings
                 _interpreter = interpreter;
@@ -124,7 +122,7 @@ namespace Microsoft.PythonTools.Repl {
         internal VsProjectAnalyzer ReplAnalyzer {
             get {
                 if (_replAnalyzer == null && Interpreter != null && _interpreterService != null) {
-                    _replAnalyzer = new VsProjectAnalyzer(_serviceProvider, Interpreter, _interpreterService.Interpreters.ToArray());
+                    _replAnalyzer = new VsProjectAnalyzer(_serviceProvider, Interpreter);
                     _ownsAnalyzer = true;
                 }
                 return _replAnalyzer;
@@ -133,8 +131,8 @@ namespace Microsoft.PythonTools.Repl {
 
         protected override PythonLanguageVersion AnalyzerProjectLanguageVersion {
             get {
-                if (_replAnalyzer != null && _replAnalyzer.Project != null) {
-                    return _replAnalyzer.Project.LanguageVersion;
+                if (_replAnalyzer != null ) {
+                    return _replAnalyzer.LanguageVersion;
                 }
                 return LanguageVersion;
             }
@@ -148,7 +146,7 @@ namespace Microsoft.PythonTools.Repl {
 
         internal override string DisplayName {
             get {
-                return Interpreter != null ? Interpreter.Description : string.Empty;
+                return Interpreter != null ? Interpreter.Configuration.FullDescription : string.Empty;
             }
         }
 
@@ -199,7 +197,7 @@ namespace Microsoft.PythonTools.Repl {
                 Window.WriteError(Strings.ReplEvaluatorInterpreterNotFound);
                 return;
             } else if (String.IsNullOrWhiteSpace(Interpreter.Configuration.InterpreterPath)) {
-                Window.WriteError(Strings.ReplEvaluatorInterpreterNotConfigured.FormatUI(Interpreter.Description));
+                Window.WriteError(Strings.ReplEvaluatorInterpreterNotConfigured.FormatUI(Interpreter.Configuration.FullDescription));
                 return;
             }
             var processInfo = new ProcessStartInfo(Interpreter.Configuration.InterpreterPath);
@@ -344,7 +342,7 @@ namespace Microsoft.PythonTools.Repl {
 
     [InteractiveWindowRole("DontPersist")]
     class PythonReplEvaluatorDontPersist : PythonReplEvaluator {
-        public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, PythonReplEvaluatorOptions options, IInterpreterOptionsService interpreterService) :
+        public PythonReplEvaluatorDontPersist(IPythonInterpreterFactory interpreter, IServiceProvider serviceProvider, PythonReplEvaluatorOptions options, IInterpreterRegistryService interpreterService) :
             base(interpreter, serviceProvider, options, interpreterService) {
         }
     }

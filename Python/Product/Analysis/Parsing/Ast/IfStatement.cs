@@ -21,6 +21,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
     public class IfStatement : Statement {
         private readonly IfStatementTest[] _tests;
         private readonly Statement _else;
+        private int _elseIndex;
 
         public IfStatement(IfStatementTest[] tests, Statement else_) {
             _tests = tests;
@@ -33,6 +34,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         public Statement ElseStatement {
             get { return _else; }
+        }
+
+        public int ElseIndex {
+            get {
+                return _elseIndex;
+            }
+            set {
+                _elseIndex = value;
+            }
         }
 
         public override void Walk(PythonWalker walker) {

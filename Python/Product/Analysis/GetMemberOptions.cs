@@ -50,6 +50,30 @@ namespace Microsoft.PythonTools.Analysis {
         /// level members via ModuleAnalysis.GetAllAvailableMembersByIndex.
         /// </summary>
         IncludeExpressionKeywords = 0x08,
+
+        /// <summary>
+        /// Exclude built-in members when getting all members
+        /// </summary>
+        ExcludeBuiltins = 0x10,
+
+        /// <summary>
+        /// Include detailed information including values of individual objects
+        /// </summary>
+        DetailedInformation = 0x20,
+
+        /// <summary>
+        /// Only include members which are directly declared
+        /// </summary>
+        DeclaredOnly = 0x40,
+
+        /// <summary>
+        /// Don't allow the evaluation of the members to recurse beyond a single level.
+        /// 
+        /// That is, "type.__class__.__class__" would return no results because type.__class__
+        /// returns type, and the 2nd member access will not continue to recurse through
+        /// the hierarchy.
+        /// </summary>
+        NoMemberRecursion = 0x80
     }
 
     internal static class GetMemberOptionsExtensions {

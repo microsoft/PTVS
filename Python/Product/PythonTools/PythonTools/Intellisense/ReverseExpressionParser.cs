@@ -31,7 +31,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ITextSnapshot _snapshot;
         private readonly ITextBuffer _buffer;
         private readonly ITrackingSpan _span;
-        private IList<ClassificationSpan> _tokens;
         private ITextSnapshotLine _curLine;
         private readonly PythonClassifier _classifier;
         private static readonly HashSet<string> _assignOperators = new HashSet<string> {
@@ -52,8 +51,6 @@ namespace Microsoft.PythonTools.Intellisense {
             if (!_buffer.Properties.TryGetProperty(typeof(PythonClassifier), out _classifier) || _classifier == null) {
                 throw new ArgumentException("Failed to get classifier from buffer");
             }
-
-            _tokens = Classifier.GetClassificationSpans(new SnapshotSpan(snapshot, targetSpan));
         }
 
         public SnapshotSpan? GetExpressionRange(bool forCompletion = true, int nesting = 0) {
@@ -443,19 +440,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public ITrackingSpan Span {
             get { return _span; }
-        }
-
-        /// <summary>
-        /// Tokens for the current line
-        /// </summary>
-        public IList<ClassificationSpan> Tokens {
-            get { return _tokens; }
-            set { _tokens = value; }
-        }
-
-        public ITextSnapshotLine CurrentLine {
-            get { return _curLine; }
-            set { _curLine = value; }
         }
 
         public IEnumerator<ClassificationSpan> GetEnumerator() {

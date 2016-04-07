@@ -83,8 +83,15 @@ namespace AnalysisTests {
         private static IEnumerable<IPythonInterpreterFactory> Factories {
             get {
                 foreach (var interp in PythonPaths.Versions.Where(p => File.Exists(p.InterpreterPath))) {
-                    yield return new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Interpreter",
-                        new InterpreterConfiguration(Path.GetDirectoryName(interp.InterpreterPath), interp.InterpreterPath, "", "", "",
+                    yield return new MockPythonInterpreterFactory(
+                        new InterpreterConfiguration(
+                            "Mock;" + Guid.NewGuid().ToString(),
+                            "Test Interpreter",
+                            Path.GetDirectoryName(interp.InterpreterPath), 
+                            interp.InterpreterPath, 
+                            "", 
+                            "", 
+                            "",
                             interp.Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
                             interp.Version.ToVersion()
                         )
@@ -97,7 +104,7 @@ namespace AnalysisTests {
         public void RunInterpreterOutput() {
             foreach (var fact in Factories) {
                 using (var output = fact.Run("-c", "import sys; print(sys.version)")) {
-                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Description + " exceeded timeout");
+                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.Description + " exceeded timeout");
 
                     foreach (var line in output.StandardOutputLines) {
                         Console.WriteLine(line);
@@ -121,7 +128,7 @@ namespace AnalysisTests {
             foreach(var fact in Factories) {
                 using (var output = fact.Run("-c", "assert False")) {
                     Console.WriteLine(output.Arguments);
-                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Description + " exceeded timeout");
+                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.Description + " exceeded timeout");
 
                     Assert.AreEqual(0, output.StandardOutputLines.Count(), "Expected no standard output");
                     var error = output.StandardErrorLines.ToList();

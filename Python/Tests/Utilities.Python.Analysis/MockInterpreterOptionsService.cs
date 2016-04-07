@@ -18,18 +18,19 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
-    public class MockInterpreterOptionsService : IInterpreterOptionsService {
+    public class MockInterpreterOptionsService : IInterpreterOptionsService, IInterpreterRegistryService {
         readonly List<IPythonInterpreterFactoryProvider> _providers;
         readonly IPythonInterpreterFactory _noInterpretersValue;
         IPythonInterpreterFactory _defaultInterpreter;
 
         public MockInterpreterOptionsService() {
             _providers = new List<IPythonInterpreterFactoryProvider>();
-            _noInterpretersValue = new MockPythonInterpreterFactory(Guid.NewGuid(), "No Interpreters", new InterpreterConfiguration(new Version(2, 7)));
+            _noInterpretersValue = new MockPythonInterpreterFactory(new InterpreterConfiguration("2.7", "No Interpreters", new Version(2, 7)));
         }
 
         public void AddProvider(IPythonInterpreterFactoryProvider provider) {
@@ -64,6 +65,10 @@ namespace TestUtilities.Python {
             get { return _providers.Where(p => p != null).SelectMany(p => p.GetInterpreterFactories()); }
         }
 
+        public IEnumerable<InterpreterConfiguration> Configurations {
+            get { return _providers.Where(p => p != null).SelectMany(p => p.GetInterpreterFactories()).Select(x => x.Configuration); }
+        }
+
         public IEnumerable<IPythonInterpreterFactory> InterpretersOrDefault {
             get {
                 if (Interpreters.Any()) {
@@ -75,22 +80,6 @@ namespace TestUtilities.Python {
 
         public IPythonInterpreterFactory NoInterpretersValue {
             get { return _noInterpretersValue; }
-        }
-
-        public IPythonInterpreterFactory FindInterpreter(Guid id, Version version) {
-            return InterpretersOrDefault.FirstOrDefault(f => f.Id == id && f.Configuration.Version == version);
-        }
-
-        public IPythonInterpreterFactory FindInterpreter(Guid id, string version) {
-            return FindInterpreter(id, Version.Parse(version));
-        }
-
-        public IPythonInterpreterFactory FindInterpreter(string id, string version) {
-            return FindInterpreter(Guid.Parse(id), Version.Parse(version));
-        }
-
-        public IEnumerable<IPythonInterpreterFactoryProvider> KnownProviders {
-            get { return _providers; }
         }
 
         public event EventHandler InterpretersChanged;
@@ -121,9 +110,59 @@ namespace TestUtilities.Python {
             }
         }
 
+        public string DefaultInterpreterId {
+            get {
+                return DefaultInterpreter?.Configuration?.Id;
+            }
+
+            set {
+                DefaultInterpreter = FindInterpreter(value);
+            }
+        }
+
         public event EventHandler DefaultInterpreterChanged;
 
         public bool IsInterpreterGeneratingDatabase(IPythonInterpreterFactory interpreter) {
+            throw new NotImplementedException();
+        }
+
+        public void RemoveConfigurableInterpreter(string id) {
+            throw new NotImplementedException();
+        }
+
+        public bool IsConfigurable(string id) {
+            return true;
+            //throw new NotImplementedException();
+        }
+
+        public IPythonInterpreterFactory FindInterpreter(string id) {
+            foreach (var interp in _providers) {
+                foreach (var config in interp.GetInterpreterConfigurations()) {
+                    if (config.Id == id) {
+                        return interp.GetInterpreterFactory(id);
+                    }
+                }
+            }
+            return null;
+        }
+
+        public Task<object> LockInterpreterAsync(IPythonInterpreterFactory factory, object moniker, TimeSpan timeout) {
+            throw new NotImplementedException();
+        }
+
+        public bool IsInterpreterLocked(IPythonInterpreterFactory factory, object moniker) {
+            throw new NotImplementedException();
+        }
+
+        public bool UnlockInterpreter(object cookie) {
+            throw new NotImplementedException();
+        }
+
+        public InterpreterConfiguration FindConfiguration(string id) {
+            throw new NotImplementedException();
+        }
+
+        public string AddConfigurableInterpreter(string name, InterpreterConfiguration config) {
             throw new NotImplementedException();
         }
     }

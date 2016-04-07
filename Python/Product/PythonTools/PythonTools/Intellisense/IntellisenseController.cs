@@ -92,16 +92,21 @@ namespace Microsoft.PythonTools.Intellisense {
             _bufferParser = bufferParser;
         }
 
-        private void TextViewMouseHover(object sender, MouseHoverEventArgs e) {
+        private async void TextViewMouseHover(object sender, MouseHoverEventArgs e) {
             if (_quickInfoSession != null && !_quickInfoSession.IsDismissed) {
                 _quickInfoSession.Dismiss();
             }
             var pt = e.TextPosition.GetPoint(EditorExtensions.IsPythonContent, PositionAffinity.Successor);
             if (pt != null) {
+                var quickInfo = await VsProjectAnalyzer.GetQuickInfoAsync(pt.Value);
+
+                QuickInfoSource.AddQuickInfo(_textView.TextBuffer, quickInfo);
+
                 _quickInfoSession = _provider._QuickInfoBroker.TriggerQuickInfo(
                     _textView,
                     pt.Value.Snapshot.CreateTrackingPoint(pt.Value.Position, PointTrackingMode.Positive),
-                    true);
+                    true
+                );
             }
         }
 
@@ -125,7 +130,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _bufferParser.AddBuffer(subjectBuffer);
             } else {
                 // already connected to a buffer parser, we should have the same project entry
-                Debug.Assert(_bufferParser._currentProjEntry == existingParser._currentProjEntry);
+                Debug.Assert(_bufferParser._analysis == existingParser._analysis);
             }
         }
 

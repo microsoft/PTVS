@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             if (_type == null) {
                 return new Dictionary<string, IAnalysisSet>();
             }

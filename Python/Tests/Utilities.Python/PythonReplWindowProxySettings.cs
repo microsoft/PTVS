@@ -51,7 +51,7 @@ namespace TestUtilities.UI.Python {
             string description = null;
             if (Version.IsCPython) {
                 description = string.Format("{0} {1}",
-                    Version.Isx64 ? CPythonInterpreterFactoryConstants.Description64 : CPythonInterpreterFactoryConstants.Description32,
+                    Version.Isx64 ? "Python 64-bit" : "Python 32-bit",
                     Version.Version.ToVersion()
                 );
             } else if (Version.IsIronPython) {
@@ -94,10 +94,7 @@ namespace TestUtilities.UI.Python {
                 Thread.Sleep(retries * 100);
             }
             Assert.IsTrue(success, "Unable to open " + description + " through DTE");
-            var interpreters = app.ComponentModel.GetService<IInterpreterOptionsService>();
-            var replId = PythonReplEvaluatorProvider.GetReplId(
-                interpreters.FindInterpreter(Version.Id, Version.Version.ToVersion())
-            );
+            var replId = PythonReplEvaluatorProvider.GetReplId(Version.Id);
 
             var provider = app.ComponentModel.GetService<InteractiveWindowProvider>();
             return (ToolWindowPane)provider.FindReplWindow(replId);

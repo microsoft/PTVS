@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _projectEntry.ProjectState.ModuleHasUnresolvedImports(this, false);
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             var res = new Dictionary<string, IAnalysisSet>();
             foreach (var kvp in _scope.AllVariables) {
                 kvp.Value.ClearOldValues();

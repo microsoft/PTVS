@@ -41,19 +41,20 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, VsProjectAnalyzer analyzer, PythonProjectNode project) {
-            return EnsureReplWindow(serviceProvider, analyzer.InterpreterFactory, project);
+            return EnsureReplWindow(serviceProvider, analyzer.InterpreterFactory.Configuration, project);
         }
 
-        internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, IPythonInterpreterFactory factory, PythonProjectNode project) {
+        internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider, InterpreterConfiguration config, PythonProjectNode project) {
             var compModel = serviceProvider.GetComponentModel();
             var provider = compModel.GetService<InteractiveWindowProvider>();
+            var vsProjectContext = compModel.GetService<VsProjectContextProvider>();
 
-            string replId = PythonReplEvaluatorProvider.GetReplId(factory, project);
+            string replId = PythonReplEvaluatorProvider.GetReplId(config.Id, project);
             var window = provider.FindReplWindow(replId);
             if (window == null) {
                 window = provider.CreateInteractiveWindow(
                     serviceProvider.GetPythonContentType(),
-                    factory.Description + " Interactive",
+                    config.FullDescription + " Interactive",
                     typeof(PythonLanguageInfo).GUID,
                     replId
                 );
@@ -66,10 +67,11 @@ namespace Microsoft.PythonTools.Commands {
 #endif
 
                 var pyService = serviceProvider.GetPythonToolsService();
-                window.InteractiveWindow.SetSmartUpDown(pyService.GetInteractiveOptions(factory).ReplSmartHistory);
+                window.InteractiveWindow.SetSmartUpDown(pyService.GetInteractiveOptions(config).ReplSmartHistory);
             }
 
-            if (project != null && project.Interpreters.IsProjectSpecific(factory)) {
+            
+            if (project != null && vsProjectContext.IsProjectSpecific(config)) {
                 project.AddActionOnClose(window, BasePythonReplEvaluator.CloseReplWindow);
             }
 

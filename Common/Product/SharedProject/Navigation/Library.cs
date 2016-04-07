@@ -89,7 +89,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 ppIVsSimpleObjectList2 = null;
                 return VSConstants.E_NOTIMPL;
             }
-
+            
             ICustomSearchListProvider listProvider;
             if (pobSrch != null &&
                 pobSrch.Length > 0) {
@@ -129,10 +129,19 @@ namespace Microsoft.VisualStudioTools.Navigation {
                         }
                         ppIVsSimpleObjectList2 = lib;
                         return VSConstants.S_OK;
-                    } else {
-                        ppIVsSimpleObjectList2 = null;
-                        return VSConstants.E_FAIL;
+                    } else if ((pobSrch[0].grfOptions & (uint)_VSOBSEARCHOPTIONS.VSOBSO_LOOKINREFS) != 0
+                        && ListType == (uint)_LIB_LISTTYPE.LLT_HIERARCHY) {
+                        LibraryNode node = pobSrch[0].pIVsNavInfo as LibraryNode;
+                        if (node != null) {
+                            var refs = node.FindReferences();
+                            if (refs != null) {
+                                ppIVsSimpleObjectList2 = refs;
+                                return VSConstants.S_OK;
+                            }
+                        }
                     }
+                    ppIVsSimpleObjectList2 = null;
+                    return VSConstants.E_FAIL;
                 }
             } else {
                 ppIVsSimpleObjectList2 = _root as IVsSimpleObjectList2;

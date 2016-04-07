@@ -18,8 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
@@ -27,14 +27,10 @@ using Microsoft.Windows.Design.Host;
 
 namespace Microsoft.PythonTools.XamlDesignerSupport {
     class WpfEventBindingProvider : EventBindingProvider {
-        private IProjectEntry _entry;
-        private Func<ITextView> _getView;
-        private Func<ITextBuffer> _getBuffer;
+        private readonly IXamlDesignerCallback _callback;
 
-        public WpfEventBindingProvider(IProjectEntry entry, Func<ITextView> getView, Func<ITextBuffer> getBuffer) {
-            _entry = entry;
-            _getView = getView;
-            _getBuffer = getBuffer;
+        public WpfEventBindingProvider(IXamlDesignerCallback callback) {
+            _callback = callback;
         }
 
         public override bool AddEventHandler(EventDescription eventDescription, string objectName, string methodName) {
@@ -56,66 +52,27 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
 
         public override bool CreateMethod(EventDescription eventDescription, string methodName, string initialStatements) {
             // build the new method handler
-            var view = _getView();
-            var textBuffer = _getBuffer();
-            PythonAst ast;
-            var classDef = GetClassForEvents(out ast);
-            if (classDef != null) {
-                int end = classDef.Body.EndIndex;
-                
-                // insert after the newline at the end of the last statement of the class def
-                if (textBuffer.CurrentSnapshot[end] == '\r') {
-                    if (end + 1 < textBuffer.CurrentSnapshot.Length &&
-                        textBuffer.CurrentSnapshot[end + 1] == '\n') {
-                        end += 2;
-                    } else {
-                        end++;
-                    }
-                } else if (textBuffer.CurrentSnapshot[end] == '\n') {
-                    end++;
-                }
+            var insertPoint = _callback.GetInsertionPoint(null);
 
+            if (insertPoint != null) {
+                var view = _callback.TextView;
+                var textBuffer = _callback.Buffer;
                 using (var edit = textBuffer.CreateEdit()) {
                     var text = BuildMethod(
                         eventDescription,
                         methodName,
-                        new string(' ', classDef.Body.GetStart(ast).Column - 1),
+                        new string(' ', insertPoint.Indentation),
                         view.Options.IsConvertTabsToSpacesEnabled() ?
                             view.Options.GetIndentSize() :
                             -1);
 
-                    edit.Insert(end, text);
+                    edit.Insert(insertPoint.Location, text);
                     edit.Apply();
                     return true;
                 }
             }
 
-
             return false;
-        }
-
-        private ClassDefinition GetClassForEvents() {
-            PythonAst ast;
-            return GetClassForEvents(out ast);
-        }
-
-        private ClassDefinition GetClassForEvents(out PythonAst ast) {
-            ast = null;
-            var analysis = _entry as IPythonProjectEntry;
-
-            if (analysis != null) {
-                // TODO: Wait for up to date analysis
-                ast = analysis.WaitForCurrentTree();
-                var suiteStmt = ast.Body as SuiteStatement;
-                foreach (var stmt in suiteStmt.Statements) {
-                    var classDef = stmt as ClassDefinition;
-                    // TODO: Make sure this is the right class
-                    if (classDef != null) {
-                        return classDef;
-                    }
-                }
-            }
-            return null;
         }
 
         private static string BuildMethod(EventDescription eventDescription, string methodName, string indentation, int tabSize) {
@@ -147,34 +104,20 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
         public override string CreateUniqueMethodName(string objectName, EventDescription eventDescription) {
             var name = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}_{1}", objectName, eventDescription.Name);
             int count = 0;
-            while (IsExistingMethodName(eventDescription, name)) {
+
+            var methods = _callback.FindMethods(
+               null,
+               null
+           );
+
+            while (methods.Contains(name)) {
                 name = string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0}_{1}{2}", objectName, eventDescription.Name, ++count);
             }
             return name;
         }
 
         public override IEnumerable<string> GetCompatibleMethods(EventDescription eventDescription) {
-            var classDef = GetClassForEvents();
-            SuiteStatement suite = classDef.Body as SuiteStatement;
-
-            if (suite != null) {
-                int requiredParamCount = eventDescription.Parameters.Count() + 1;
-                foreach (var methodCandidate in suite.Statements) {
-                    FunctionDefinition funcDef = methodCandidate as FunctionDefinition;
-                    if (funcDef != null) {
-                        // Given that event handlers can be given any arbitrary 
-                        // name, it is important to not rely on the default naming 
-                        // to detect compatible methods.  Instead we look at the 
-                        // event parameters. We don't have param types in Python, 
-                        // so really the only thing that can be done is look at 
-                        // the method parameter count, which should be one more than
-                        // the event parameter count (to account for the self param).
-                        if (funcDef.Parameters.Count == requiredParamCount) {
-                            yield return funcDef.Name;
-                        }
-                    }
-                }
-            }
+            return _callback.FindMethods(null, eventDescription.Parameters.Count() + 1);
         }
 
         public override IEnumerable<string> GetMethodHandlers(EventDescription eventDescription, string objectName) {
@@ -182,38 +125,24 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
         }
 
         public override bool IsExistingMethodName(EventDescription eventDescription, string methodName) {
-            return FindMethod(methodName) != null;
+            return _callback.FindMethods(null, null).Contains(methodName);
         }
 
-        private FunctionDefinition FindMethod(string methodName) {
-            var classDef = GetClassForEvents();
-            SuiteStatement suite = classDef.Body as SuiteStatement;
-
-            if (suite != null) {
-                foreach (var methodCandidate in suite.Statements) {
-                    FunctionDefinition funcDef = methodCandidate as FunctionDefinition;
-                    if (funcDef != null) {
-                        if (funcDef.Name == methodName) {
-                            return funcDef;
-                        }
-                    }
-                }
-            }
-
-            return null;
+        private MethodInformation FindMethod(string methodName) {
+            return _callback.GetMethodInfo(null, methodName);
         }
 
         public override bool RemoveEventHandler(EventDescription eventDescription, string objectName, string methodName) {
             var method = FindMethod(methodName);
-            if (method != null) {
-                var view = _getView();
-                var textBuffer = _getBuffer();
+            if (method != null && method.IsFound) {
+                var view = _callback.TextView;
+                var textBuffer = _callback.Buffer;
 
                 // appending a method adds 2 extra newlines, we want to remove those if those are still
                 // present so that adding a handler and then removing it leaves the buffer unchanged.
 
                 using (var edit = textBuffer.CreateEdit()) {
-                    int start = method.StartIndex - 1;
+                    int start = method.Start - 1;
 
                     // eat the newline we insert before the method
                     while (start >= 0) {
@@ -239,9 +168,9 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
                         start--;
                     }
 
-                    
+
                     // eat the newline we insert at the end of the method
-                    int end = method.EndIndex;                    
+                    int end = method.End;
                     while (end < edit.Snapshot.Length) {
                         if (edit.Snapshot[end] == '\n') {
                             end++;
@@ -284,9 +213,9 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
 
         public override bool ShowMethod(EventDescription eventDescription, string methodName) {
             var method = FindMethod(methodName);
-            if (method != null) {
-                var view = _getView();
-                view.Caret.MoveTo(new VisualStudio.Text.SnapshotPoint(view.TextSnapshot, method.StartIndex));
+            if (method != null && method.IsFound) {
+                var view = _callback.TextView;
+                view.Caret.MoveTo(new SnapshotPoint(view.TextSnapshot, method.Start));
                 view.Caret.EnsureVisible();
                 return true;
             }

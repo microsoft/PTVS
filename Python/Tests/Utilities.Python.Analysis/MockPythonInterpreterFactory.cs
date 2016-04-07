@@ -35,15 +35,8 @@ namespace TestUtilities.Python {
         public const string InvalidReason = "Database is invalid";
         public const string MissingModulesReason = "Database is missing modules";
 
-        public MockPythonInterpreterFactory(
-            Guid id,
-            string description,
-            InterpreterConfiguration config,
-            bool withStatusUpdater = false
-        ) {
+        public MockPythonInterpreterFactory(InterpreterConfiguration config, bool withStatusUpdater = false) {
             _config = config;
-            Id = id;
-            Description = description;
 
             _isCurrent = false;
             IsCurrentReason = NoDatabaseReason;
@@ -58,20 +51,10 @@ namespace TestUtilities.Python {
             }
         }
 
-        public string Description {
-            get;
-            private set;
-        }
-
         public InterpreterConfiguration Configuration {
             get {
                 return _config;
             }
-        }
-
-        public Guid Id {
-            get;
-            private set;
         }
 
         public IPythonInterpreter CreateInterpreter() {
@@ -85,7 +68,7 @@ namespace TestUtilities.Python {
                 if (_updater != null) {
                     _updater.Dispose();
                 }
-                _updater = new AnalyzerStatusUpdater(AnalyzerStatusUpdater.GetIdentifier(Id, _config.Version));
+                _updater = new AnalyzerStatusUpdater(_config.Id);
                 _updater.WaitForWorkerStarted();
                 _updater.ThrowPendingExceptions();
                 _updater.UpdateStatus(0, 0);

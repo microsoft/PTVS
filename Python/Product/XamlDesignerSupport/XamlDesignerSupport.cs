@@ -45,14 +45,9 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
             return context;
         }
 
-        public void InitializeEventBindingProvider(
-            object designerContext,
-            IProjectEntry entry,
-            Func<ITextView> getView,
-            Func<ITextBuffer> getBuffer
-        ) {
+        public void InitializeEventBindingProvider(object designerContext, IXamlDesignerCallback callback) {
             Debug.Assert(designerContext is DesignerContext);
-            ((DesignerContext)designerContext).EventBindingProvider = new WpfEventBindingProvider(entry, getView, getBuffer);
+            ((DesignerContext)designerContext).EventBindingProvider = new WpfEventBindingProvider(callback);
         }
     }
 }

@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Analysis {
             _vars = () => Empty;
         }
 
-        internal MemberResult(string name, string completion, IEnumerable<AnalysisValue> vars, PythonMemberType? type) {
+        public MemberResult(string name, string completion, IEnumerable<AnalysisValue> vars, PythonMemberType? type) {
             _name = name;
             _vars = () => vars ?? Empty;
             _completion = completion;
@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public MemberResult FilterCompletion(string completion) {
-            return new MemberResult(Name, completion, Namespaces, MemberType);
+            return new MemberResult(Name, completion, Values, MemberType);
         }
 
         private static AnalysisValue[] Empty = new AnalysisValue[0];
@@ -181,7 +181,7 @@ namespace Microsoft.PythonTools.Analysis {
             return result;
         }
 
-        internal IEnumerable<AnalysisValue> Namespaces {
+        internal IEnumerable<AnalysisValue> Values {
             get {
                 return _vars();
             }

@@ -16,39 +16,41 @@
 
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
-    internal class PythonSignature : ISignature, IOverloadResult {
+    using AP = AnalysisProtocol;
+
+    internal class PythonSignature : ISignature {
         private readonly ITrackingSpan _span;
         private readonly string _content, _ppContent;
         private readonly string _documentation;
         private readonly ReadOnlyCollection<IParameter> _parameters;
         private IParameter _currentParameter;
-        private readonly IOverloadResult _overload;
+        private readonly AP.Signature _overload;
 
-        public PythonSignature(ITrackingSpan span, IOverloadResult overload, int paramIndex, string lastKeywordArg = null) {
+        public PythonSignature(VsProjectAnalyzer analyzer, ITrackingSpan span, AP.Signature overload, int paramIndex, string lastKeywordArg = null) {
             _span = span;
             _overload = overload;
             if (lastKeywordArg != null) {
                 paramIndex = Int32.MaxValue;
             }
 
-            var content = new StringBuilder(overload.Name);
-            var ppContent = new StringBuilder(overload.Name);
+            var content = new StringBuilder(overload.name);
+            var ppContent = new StringBuilder(overload.name);
             content.Append('(');
             ppContent.AppendLine("(");
             int start = content.Length, ppStart = ppContent.Length;
-            var parameters = new IParameter[overload.Parameters.Length];
-            for (int i = 0; i < overload.Parameters.Length; i++) {
+            var parameters = new IParameter[overload.parameters.Length];
+            for (int i = 0; i < overload.parameters.Length; i++) {
                 ppContent.Append("    ");
                 ppStart = ppContent.Length;
                 
-                var param = overload.Parameters[i];
-                if (param.IsOptional) {
+                var param = overload.parameters[i];
+                if (param.optional) {
                     content.Append('[');
                     ppContent.Append('[');
                 }
@@ -57,44 +59,50 @@ namespace Microsoft.PythonTools.Intellisense {
                     start = content.Length;
                 }
 
-                content.Append(param.Name);
-                ppContent.Append(param.Name);
-                if (!string.IsNullOrEmpty(param.Type) && param.Type != "object") {
+                content.Append(param.name);
+                ppContent.Append(param.name);
+                if (!string.IsNullOrEmpty(param.type) && param.type != "object") {
                     content.Append(": ");
-                    content.Append(param.Type);
+                    content.Append(param.type);
                     ppContent.Append(": ");
-                    ppContent.Append(param.Type);
+                    ppContent.Append(param.type);
                 }
                 
-                if (!String.IsNullOrWhiteSpace(param.DefaultValue)) {
+                if (!String.IsNullOrWhiteSpace(param.defaultValue)) {
                     content.Append(" = ");
-                    content.Append(param.DefaultValue);
+                    content.Append(param.defaultValue);
                     ppContent.Append(" = ");
-                    ppContent.Append(param.DefaultValue);
+                    ppContent.Append(param.defaultValue);
                 }
 
                 var paramSpan = new Span(start, content.Length - start);
                 var ppParamSpan = new Span(ppStart, ppContent.Length - ppStart);
 
-                if (param.IsOptional) {
+                if (param.optional) {
                     content.Append(']');
                     ppContent.Append(']');
                 }
 
                 ppContent.AppendLine(",");
 
-                if (lastKeywordArg != null && param.Name == lastKeywordArg) {
+                if (lastKeywordArg != null && param.name == lastKeywordArg) {
                     paramIndex = i;
                 }
 
-                parameters[i] = new PythonParameter(this, param, paramSpan, ppParamSpan);
+                parameters[i] = new PythonParameter(
+                    this, 
+                    param, 
+                    paramSpan, 
+                    ppParamSpan,
+                    param.variables != null ? param.variables.Select(analyzer.ToAnalysisVariable).ToArray() : null
+                );
             }
             content.Append(')');
             ppContent.Append(')');
 
             _content = content.ToString();
             _ppContent = ppContent.ToString();
-            _documentation = overload.Documentation.LimitLines(15, stopAtFirstBlankLine: true);
+            _documentation = overload.doc.LimitLines(15, stopAtFirstBlankLine: true);
 
             _parameters = new ReadOnlyCollection<IParameter>(parameters);
             if (lastKeywordArg == null) {
@@ -155,17 +163,5 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #endregion
-
-        string IOverloadResult.Name {
-            get { return _overload.Name; }
-        }
-
-        string IOverloadResult.Documentation {
-            get { return _documentation; }
-        }
-
-        ParameterResult[] IOverloadResult.Parameters {
-            get { return _overload.Parameters; }
-        }
     }
 }

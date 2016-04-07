@@ -29,25 +29,25 @@ namespace Microsoft.PythonTools.Commands {
     /// </summary>
     class OpenReplCommand : Command {
         private readonly int _cmdId;
-        private readonly IPythonInterpreterFactory _factory;
+        private readonly InterpreterConfiguration _config;
         private readonly IServiceProvider _serviceProvider;
 
-        public OpenReplCommand(IServiceProvider serviceProvider, int cmdId, IPythonInterpreterFactory factory) {
+        public OpenReplCommand(IServiceProvider serviceProvider, int cmdId, InterpreterConfiguration config) {
             _serviceProvider = serviceProvider;
             _cmdId = cmdId;
-            _factory = factory;
+            _config = config;
         }
 
         public override void DoCommand(object sender, EventArgs e) {
             // _factory is never null, but if a specific factory or command line
             // is passed as an argument, use that instead.
-            var factory = _factory;
+            var config = _config;
             var oe = e as OleMenuCmdEventArgs;
             if (oe != null) {
                 IPythonInterpreterFactory asFactory;
                 string args;
                 if ((asFactory = oe.InValue as IPythonInterpreterFactory) != null) {
-                    factory = asFactory;
+                    config = asFactory.Configuration;
                 } else if (!string.IsNullOrEmpty(args = oe.InValue as string)) {
                     string description;
                     var parse = _serviceProvider.GetService(typeof(SVsParseCommandLine)) as IVsParseCommandLine;
@@ -56,20 +56,20 @@ namespace Microsoft.PythonTools.Commands {
                         ErrorHandler.Succeeded(parse.GetSwitchValue(0, out description)) &&
                         !string.IsNullOrEmpty(description)
                     ) {
-                        var service = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-                        asFactory = service.Interpreters.FirstOrDefault(
+                        var service = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                        var matchingConfig = service.Configurations.FirstOrDefault(
                             // Descriptions are localized strings, hence CCIC
-                            f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
+                            f => description.Equals(f.FullDescription, StringComparison.CurrentCultureIgnoreCase)
                         );
-                        if (asFactory != null) {
-                            factory = asFactory;
+                        if (matchingConfig != null) {
+                            config = matchingConfig;
                         }
                     }
                 }
             }
 
             // These commands are project-insensitive, so pass null for project.
-            ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, factory, null).Show(true);
+            ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, config, null).Show(true);
         }
 
         public override EventHandler BeforeQueryStatus {
@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Commands {
 
             oleMenu.ParametersDescription = "e,env,environment:";
 
-            if (_factory == null) {
+            if (_config == null) {
                 oleMenu.Visible = false;
                 oleMenu.Enabled = false;
                 oleMenu.Supported = false;
@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Commands {
 
         public string Description {
             get {
-                return _factory.Description + " Interactive";
+                return _config.FullDescription + " Interactive";
             }
         }
         

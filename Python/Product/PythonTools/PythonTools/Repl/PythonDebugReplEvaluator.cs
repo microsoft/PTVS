@@ -261,12 +261,12 @@ namespace Microsoft.PythonTools.Repl {
             return new KeyValuePair<string, bool>[0];
         }
 
-        public Analysis.MemberResult[] GetMemberNames(string text) {
+        public CompletionResult[] GetMemberNames(string text) {
             if (_activeEvaluator != null) {
                 return _activeEvaluator.GetMemberNames(text);
             }
 
-            return new Analysis.MemberResult[0];
+            return new CompletionResult[0];
         }
 
         public OverloadDoc[] GetSignatureDocumentation(string text) {

@@ -48,10 +48,14 @@ namespace Microsoft.PythonTools {
         }
 
         IPythonInteractiveOptions IPythonOptions.GetInteractiveOptions(string interpreterName) {
-            var interpreters = _pyService.ComponentModel.GetService<IInterpreterOptionsService>().Interpreters;
-            var factory = interpreters.FirstOrDefault(i => i.Description == interpreterName);
-
-            return factory == null ? null : new AutomationInterpreterOptions(_serviceProvider, factory);
+            var registry = _pyService.ComponentModel.GetService<IInterpreterRegistryService>();
+            var configs = registry.Configurations;
+            var config = configs.FirstOrDefault(i => i.FullDescription == interpreterName);
+            IPythonInterpreterFactory factory = null;
+            if (config != null) {
+                factory = registry.FindInterpreter(config.Id);
+            }
+            return config == null ? null : new AutomationInterpreterOptions(_serviceProvider, factory);
         }
 
         bool IPythonOptions.PromptBeforeRunningWithBuildErrorSetting {
@@ -210,12 +214,12 @@ namespace Microsoft.PythonTools {
 
         internal PythonInteractiveOptions CurrentOptions {
             get {
-                return _serviceProvider.GetPythonToolsService().GetInteractiveOptions(_interpreterFactory);
+                return _serviceProvider.GetPythonToolsService().GetInteractiveOptions(_interpreterFactory.Configuration);
             }
         }
 
         private void SaveSettingsToStorage() {
-            CurrentOptions.Save(_interpreterFactory);
+            CurrentOptions.Save(_interpreterFactory.Configuration.Id);
         }
 
         string IPythonInteractiveOptions.PrimaryPrompt {

@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -35,28 +36,33 @@ namespace Microsoft.PythonTools.Refactoring {
         private bool _checked = true;
         private static readonly char[] _whitespace = new[] { ' ', '\t', '\f' };
 
-        public LocationPreviewItem(FilePreviewItem parent, LocationInfo locationInfo, VariableType type) {
+        public LocationPreviewItem(VsProjectAnalyzer analyzer, FilePreviewItem parent, AnalysisLocation locationInfo, VariableType type) {
             _lineNo = locationInfo.Line;
             _columnNo = locationInfo.Column;            
             _parent = parent;
-            string text = locationInfo.ProjectEntry.GetLine(locationInfo.Line);
-            string trimmed = text.TrimStart(_whitespace);
-            _text = trimmed;
+            var analysis = analyzer.GetAnalysisEntryFromPath(locationInfo.FilePath);
             _type = type;
-            _span = new Span(_columnNo - (text.Length - trimmed.Length) - 1, parent.Engine.OriginalName.Length);
-            if (String.Compare(_text, _span.Start, parent.Engine.OriginalName, 0, parent.Engine.OriginalName.Length) != 0) {
-                // we are renaming a name mangled name (or we have a bug where the names aren't lining up).
-                Debug.Assert(_text.Substring(_span.Start, _span.Length + 1 + parent.Engine.PrivatePrefix.Length) == "_" + parent.Engine.PrivatePrefix + parent.Engine.OriginalName);
+            if (analysis != null) {
+                string text = analysis.GetLine(locationInfo.Line);
+                string trimmed = text.TrimStart(_whitespace);
+                _text = trimmed;
+                _span = new Span(_columnNo - (text.Length - trimmed.Length) - 1, parent.Engine.OriginalName.Length);
+                if (String.Compare(_text, _span.Start, parent.Engine.OriginalName, 0, parent.Engine.OriginalName.Length) != 0) {
+                    // we are renaming a name mangled name (or we have a bug where the names aren't lining up).
+                    Debug.Assert(_text.Substring(_span.Start, _span.Length + 1 + parent.Engine.PrivatePrefix.Length) == "_" + parent.Engine.PrivatePrefix + parent.Engine.OriginalName);
 
 
-                if (parent.Engine.Request.Name.StartsWith("__")) {
-                    // if we're renaming to a private prefix name then we just rename the non-prefixed portion
-                    _span = new Span(_span.Start + 1 + parent.Engine.PrivatePrefix.Length, _span.Length);
-                    _columnNo += 1 + parent.Engine.PrivatePrefix.Length;
-                } else {
-                    // otherwise we renmae the prefixed and non-prefixed portion
-                    _span = new Span(_span.Start, _span.Length + 1 + parent.Engine.PrivatePrefix.Length);
+                    if (parent.Engine.Request.Name.StartsWith("__")) {
+                        // if we're renaming to a private prefix name then we just rename the non-prefixed portion
+                        _span = new Span(_span.Start + 1 + parent.Engine.PrivatePrefix.Length, _span.Length);
+                        _columnNo += 1 + parent.Engine.PrivatePrefix.Length;
+                    } else {
+                        // otherwise we renmae the prefixed and non-prefixed portion
+                        _span = new Span(_span.Start, _span.Length + 1 + parent.Engine.PrivatePrefix.Length);
+                    }
                 }
+            } else {
+                _text = String.Empty;
             }
         }
 

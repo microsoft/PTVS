@@ -205,30 +205,39 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
     sealed class ConfigurationExtensionProvider : IEnvironmentViewExtension {
         private FrameworkElement _wpfObject;
-        private readonly ConfigurablePythonInterpreterFactoryProvider _factoryProvider;
+        private readonly IInterpreterOptionsService _interpreterOptions;
 
-        internal ConfigurationExtensionProvider(ConfigurablePythonInterpreterFactoryProvider factoryProvider) {
-            _factoryProvider = factoryProvider;
+        internal ConfigurationExtensionProvider(IInterpreterOptionsService interpreterOptions) {
+            _interpreterOptions = interpreterOptions;
         }
 
         public void ApplyConfiguration(ConfigurationEnvironmentView view) {
-            _factoryProvider.SetOptions(new InterpreterFactoryCreationOptions {
-                Id = view.EnvironmentView.Factory.Id,
-                Description = view.Description,
-                PrefixPath = view.PrefixPath,
-                InterpreterPath = view.InterpreterPath,
-                WindowInterpreterPath = view.WindowsInterpreterPath,
-                LibraryPath = view.LibraryPath,
-                PathEnvironmentVariableName = view.PathEnvironmentVariable,
-                Architecture = view.ArchitectureName == "64-bit" ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
-                LanguageVersionString = view.VersionName
-            });
+            var factory = view.EnvironmentView.Factory;
+            if (view.Description != factory.Configuration.Description) {
+                // We're renaming the interpreter, remove the old one...
+                _interpreterOptions.RemoveConfigurableInterpreter(factory.Configuration.Id);
+            }
+
+            var newInterp = _interpreterOptions.AddConfigurableInterpreter(
+                view.Description,
+                new InterpreterConfiguration(
+                    "",
+                    view.Description,
+                    view.PrefixPath,
+                    view.InterpreterPath,
+                    view.WindowsInterpreterPath,
+                    view.LibraryPath,
+                    view.PathEnvironmentVariable,
+                    view.ArchitectureName == "64-bit" ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
+                    Version.Parse(view.VersionName)
+                )
+            );
         }
 
         public bool IsConfigurationChanged(ConfigurationEnvironmentView view) {
             var factory = view.EnvironmentView.Factory;
             var arch = factory.Configuration.Architecture == ProcessorArchitecture.Amd64 ? "64-bit" : "32-bit";
-            return view.Description != factory.Description ||
+            return view.Description != factory.Configuration.Description ||
                 view.PrefixPath != factory.Configuration.PrefixPath ||
                 view.InterpreterPath != factory.Configuration.InterpreterPath ||
                 view.WindowsInterpreterPath != factory.Configuration.WindowsInterpreterPath ||
@@ -240,7 +249,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public void ResetConfiguration(ConfigurationEnvironmentView view) {
             var factory = view.EnvironmentView.Factory;
-            view.Description = factory.Description;
+            view.Description = factory.Configuration.Description;
             view.PrefixPath = factory.Configuration.PrefixPath;
             view.InterpreterPath = factory.Configuration.InterpreterPath;
             view.WindowsInterpreterPath = factory.Configuration.WindowsInterpreterPath;
@@ -252,7 +261,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public void RemoveConfiguration(ConfigurationEnvironmentView view) {
             var factory = view.EnvironmentView.Factory;
-            _factoryProvider.RemoveInterpreter(factory.Id);
+            _interpreterOptions.RemoveConfigurableInterpreter(factory.Configuration.Id);
         }
 
         public int SortPriority {

@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 // Generator lies about its name when it represents a coroutine
                 var sb = new StringBuilder("coroutine");
-                FunctionInfo.AddReturnTypeString(sb, Returns.TypesNoCopy.AsUnion);
+                FunctionInfo.AddReturnTypeString((text, type) => sb.Append(text), Returns.TypesNoCopy.AsUnion);
                 return sb.ToString();
             }
         }

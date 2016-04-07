@@ -75,30 +75,23 @@ namespace Microsoft.PythonTools.Project {
         [Browsable(false)]
         public string InterpreterId {
             get {
-                var interpreter = ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter;
-                return interpreter.IsRunnable() ? interpreter.Id.ToString() : null;
+                var interpreter = ((PythonProjectNode)this.Node).ActiveInterpreter;
+                return interpreter.IsRunnable() ? interpreter.Configuration.Id : null;
             }
         }
 
         [Browsable(false)]
         public string InterpreterDescription {
             get {
-                var interpreter = ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter;
-                return interpreter.IsRunnable() ? interpreter.Description : null;
-            }
-        }
-
-        [Browsable(false)]
-        public MSBuildProjectInterpreterFactoryProvider InterpreterFactoryProvider {
-            get {
-                return ((PythonProjectNode)this.Node).Interpreters;
+                var interpreter = ((PythonProjectNode)this.Node).ActiveInterpreter;
+                return interpreter.IsRunnable() ? interpreter.Configuration.FullDescription : null;
             }
         }
 
         [Browsable(false)]
         public string InterpreterVersion {
             get {
-                var interpreter = ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter;
+                var interpreter = ((PythonProjectNode)this.Node).ActiveInterpreter;
                 return interpreter.IsRunnable() ? interpreter.Configuration.Version.ToString() : null;
             }
         }

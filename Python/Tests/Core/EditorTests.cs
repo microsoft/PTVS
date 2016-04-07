@@ -16,6 +16,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.PythonTools;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -169,12 +172,12 @@ finally:
     print('finally2')";
 
             SnapshotOutlineTest(content,
-                new ExpectedTag(7, 43, "\r\n    print('try')\r\n    print('try')"),
+                new ExpectedTag(6, 43, " \r\n    print('try')\r\n    print('try')"),
                 new ExpectedTag(62, 110, "\r\n    print('TypeError')\r\n    print('TypeError')"),
                 new ExpectedTag(129, 177, "\r\n    print('NameError')\r\n    print('NameError')"),
                 new ExpectedTag(232, 276, "\r\n    print('finally')\r\n    print('finally')"),
                 new ExpectedTag(184, 222, "\r\n    print('else')\r\n    print('else')"),
-                new ExpectedTag(285, 323, "\r\n    print('try2')\r\n    print('try2')"),
+                new ExpectedTag(284, 323, " \r\n    print('try2')\r\n    print('try2')"),
                 new ExpectedTag(333, 379, "\r\n    print('finally2')\r\n    print('finally2')"));
         }
 
@@ -345,7 +348,18 @@ string'''";
         private void SnapshotOutlineTest(string fileContents, params ExpectedTag[] expected) {
             var snapshot = new TestUtilities.Mocks.MockTextSnapshot(new TestUtilities.Mocks.MockTextBuffer(fileContents), fileContents);
             var ast = Parser.CreateParser(new TextSnapshotToTextReader(snapshot), PythonLanguageVersion.V34).ParseFile();
-            var tags = Microsoft.PythonTools.OutliningTaggerProvider.OutliningTagger.ProcessOutliningTags(ast, snapshot);
+            var walker = new OutliningWalker(ast);
+            ast.Walk(walker);
+            var protoTags = walker.GetTags();
+
+            var tags = protoTags.Select(x =>
+                OutliningTaggerProvider.OutliningTagger.GetTagSpan(
+                    snapshot,
+                    x.startIndex,
+                    x.endIndex,
+                    x.headerIndex
+                )
+            );
             VerifyTags(snapshot, tags, expected);
         }
 

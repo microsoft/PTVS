@@ -23,12 +23,13 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Repl {
     interface IPythonReplIntellisense {
         bool LiveCompletionsOnly { get; }
         IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind();
-        MemberResult[] GetMemberNames(string text);
+        CompletionResult[] GetMemberNames(string text);
         OverloadDoc[] GetSignatureDocumentation(string text);
     }
 }

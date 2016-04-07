@@ -103,7 +103,16 @@ namespace PythonToolsTests {
                 var window = new MockReplWindow(evaluator);
                 await evaluator._Initialize(window);
 
-                await evaluator.ExecuteText("globals()['my_new_value'] = 123");
+                // Run the ExecuteText on another thread so that we don't continue
+                // onto the REPL evaluation thread, which leads to GetMemberNames being
+                // blocked as it's hogging the event loop.
+                AutoResetEvent are = new AutoResetEvent(false);
+                ThreadPool.QueueUserWorkItem(async (x) => {
+                        await evaluator.ExecuteText("globals()['my_new_value'] = 123");
+                        are.Set();
+                    }
+                );
+                are.WaitOne();
                 var names = evaluator.GetMemberNames("");
                 Assert.IsNotNull(names);
                 AssertUtil.ContainsAtLeast(names.Select(m => m.Name), "my_new_value");
@@ -198,6 +207,7 @@ g()",
 
             public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
                 yield return InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
+                    Id = "Test Interpreter",
                     LanguageVersion = new Version(2, 6),
                     Description = "Python",
                     InterpreterPath = _pythonExe,
@@ -207,6 +217,16 @@ g()",
                     Architecture = ProcessorArchitecture.X86,
                     WatchLibraryForNewModules = false
                 });
+            }
+
+            public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
+                return GetInterpreterFactories().Select(x => x.Configuration);
+            }
+
+            public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+                return GetInterpreterFactories()
+                    .Where(x => x.Configuration.Id == id)
+                    .FirstOrDefault();
             }
 
             public event EventHandler InterpreterFactoriesChanged { add { } remove { } }
@@ -279,6 +299,7 @@ g()",
 
             var emptyFact = InterpreterFactoryCreator.CreateInterpreterFactory(
                 new InterpreterFactoryCreationOptions() {
+                    Id = "Test Interpreter",
                     Description = "Test Interpreter"
                 }
             );
@@ -298,10 +319,18 @@ g()",
             // http://pytools.codeplex.com/workitem/662
 
             var emptyFact = InterpreterFactoryCreator.CreateInterpreterFactory(
-                new InterpreterFactoryCreationOptions() {
-                    Description = "Test Interpreter",
-                    InterpreterPath = "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe"
-                }
+                new InterpreterConfiguration(
+                    "Test Interpreter",
+                    "Test Interpreter",
+                    null,
+                    "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe",
+                    null,
+                    null,
+                    null,
+                    ProcessorArchitecture.None,
+                    new Version(2, 7)
+                ),
+                new InterpreterFactoryCreationOptions()
             );
             var replEval = new PythonReplEvaluator(emptyFact, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
             var replWindow = new MockReplWindow(replEval);

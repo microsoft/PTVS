@@ -256,18 +256,14 @@ namespace Microsoft.PythonTools.Analysis {
             // publish the analysis now that it's complete/running
             _currentAnalysis = new ModuleAnalysis(
                 _unit, 
-                ((ModuleScope)_unit.Scope).CloneForPublish(),
-                cookie);
+                ((ModuleScope)_unit.Scope).CloneForPublish()
+            );
         }
 
         public IGroupableAnalysisProject AnalysisGroup {
             get {
                 return _projectState;
             }
-        }
-
-        public string GetLine(int lineNo) {
-            return _cookie.GetLine(lineNo);
         }
 
         public ModuleAnalysis Analysis {
@@ -355,11 +351,6 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns the project entries file path.
         /// </summary>
         string FilePath { get; }
-
-        /// <summary>
-        /// Gets the specified line of text from the project entry.
-        /// </summary>
-        string GetLine(int lineNo);
 
         /// <summary>
         /// Provides storage of arbitrary properties associated with the project entry.

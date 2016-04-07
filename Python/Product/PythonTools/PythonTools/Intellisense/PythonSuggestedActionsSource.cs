@@ -43,12 +43,14 @@ namespace Microsoft.PythonTools.Intellisense {
             _provider = provider;
             _view = textView;
             _textBuffer = textBuffer;
+            _textBuffer.RegisterForNewAnalysis(OnNewAnalysisEntry);
         }
 
-        public event EventHandler<EventArgs> SuggestedActionsChanged {
-            add { }
-            remove { }
+        private void OnNewAnalysisEntry(AnalysisEntry obj) {
+            SuggestedActionsChanged?.Invoke(this, EventArgs.Empty);
         }
+
+        public event EventHandler<EventArgs> SuggestedActionsChanged;
 
         public void Dispose() { }
 
@@ -79,9 +81,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 SpanTrackingMode.EdgePositive,
                 TrackingFidelityMode.Forward
             );
-            var imports = await _provider
-                .GetUIThread()
-                .InvokeAsync(() => textBuffer.CurrentSnapshot.GetMissingImports(_provider, span));
+            var imports = await VsProjectAnalyzer.GetMissingImportsAsync(_provider, textBuffer.CurrentSnapshot, span);
 
             if (imports == MissingImportAnalysis.Empty) {
                 return false;
