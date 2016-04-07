@@ -96,6 +96,16 @@ namespace Microsoft.PythonTools.InterpreterList {
                 UnhandledException_Executed,
                 UnhandledException_CanExecute
             ));
+            list.CommandBindings.Add(new CommandBinding(
+                EnvironmentView.OpenInPowerShell,
+                OpenInPowerShell_Executed,
+                OpenInPowerShell_CanExecute
+            ));
+            list.CommandBindings.Add(new CommandBinding(
+                EnvironmentView.OpenInCommandPrompt,
+                OpenInCommandPrompt_Executed,
+                OpenInCommandPrompt_CanExecute
+            ));
 
             list.Service = _service;
 
@@ -294,6 +304,47 @@ namespace Microsoft.PythonTools.InterpreterList {
         private void OnlineHelp_Executed(object sender, ExecutedRoutedEventArgs e) {
             VisualStudioTools.CommonPackage.OpenVsWebBrowser(_site, PythonToolsPackage.InterpreterHelpUrl);
             e.Handled = true;
+        }
+
+        private void OpenInCommandPrompt_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var view = e.Parameter as EnvironmentView;
+            e.CanExecute = Directory.Exists(view?.PrefixPath);
+            e.Handled = true;
+        }
+
+        private void OpenInCommandPrompt_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var view = (EnvironmentView)e.Parameter;
+
+            var psi = new ProcessStartInfo("cmd.exe");
+            psi.Arguments = string.Join(" ", new[] {
+                "/S",
+                "/K",
+                string.Format("set PATH={0};%PATH% & title {1} environment", view.PrefixPath, view.Description)
+            }.Select(ProcessOutput.QuoteSingleArgument));
+            psi.WorkingDirectory = view.PrefixPath;
+
+            Process.Start(psi);
+        }
+
+        private void OpenInPowerShell_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var view = e.Parameter as EnvironmentView;
+            e.CanExecute = Directory.Exists(view?.PrefixPath);
+            e.Handled = true;
+        }
+
+        private void OpenInPowerShell_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var view = (EnvironmentView)e.Parameter;
+
+            var psi = new ProcessStartInfo("powershell.exe");
+            psi.Arguments = string.Join(" ", new[] {
+                "-NoLogo",
+                "-NoExit",
+                "-Command",
+                string.Format("$env:PATH='{0};' + $env:PATH; (Get-Host).UI.RawUI.WindowTitle = '{1} environment'", view.PrefixPath, view.Description)
+            }.Select(ProcessOutput.QuoteSingleArgument));
+            psi.WorkingDirectory = view.PrefixPath;
+
+            Process.Start(psi);
         }
     }
 }

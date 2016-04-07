@@ -67,5 +67,12 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
             MessageBox.Show("Opening interactive options for " + ((EnvironmentView)e.Parameter).Description);
         }
 
+        private void OpenConsole_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = e.Parameter is EnvironmentView;
+        }
+
+        private void OpenConsole_Executed(object sender, ExecutedRoutedEventArgs e) {
+            MessageBox.Show("Opening console for " + ((EnvironmentView)e.Parameter).InterpreterPath);
+        }
     }
 }
