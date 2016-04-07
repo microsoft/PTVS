@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Commands {
                         var service = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
                         var matchingConfig = service.Configurations.FirstOrDefault(
                             // Descriptions are localized strings, hence CCIC
-                            f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
+                            f => description.Equals(f.FullDescription, StringComparison.CurrentCultureIgnoreCase)
                         );
                         if (matchingConfig != null) {
                             config = matchingConfig;
@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Commands {
 
         public string Description {
             get {
-                return _config.Description + " Interactive";
+                return _config.FullDescription + " Interactive";
             }
         }
         

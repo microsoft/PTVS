@@ -1934,10 +1934,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 case "value": type = VariableType.Value; break;
             }
 
-            AnalysisEntry entry;
-            _projectFiles.TryGetValue(arg.file, out entry);
             var location = new AnalysisLocation(
-                entry,
+                arg.file,
                 arg.line,
                 arg.column
             );

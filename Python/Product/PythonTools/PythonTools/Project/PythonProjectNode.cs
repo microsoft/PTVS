@@ -1683,7 +1683,7 @@ namespace Microsoft.PythonTools.Project {
 
                 config = InterpreterConfigurations.FirstOrDefault(
                     // Description is a localized string, hence CCIC
-                    c => description.Equals(c.Description, StringComparison.CurrentCultureIgnoreCase)
+                    c => description.Equals(c.FullDescription, StringComparison.CurrentCultureIgnoreCase)
                 );
                 if (config != null) {
                     factory = service.FindInterpreter(config.Id);
@@ -1691,7 +1691,7 @@ namespace Microsoft.PythonTools.Project {
 
                 if (factory == null) {
                     config = service.Configurations.FirstOrDefault(
-                        c => description.Equals(c.Description, StringComparison.CurrentCultureIgnoreCase)
+                        c => description.Equals(c.FullDescription, StringComparison.CurrentCultureIgnoreCase)
                     );
                     if (config != null) {
                         factory = service.FindInterpreter(config.Id);
@@ -1973,7 +1973,7 @@ namespace Microsoft.PythonTools.Project {
             var name = "-r " + ProcessOutput.QuoteSingleArgument(txt);
             if (args != null && !args.ContainsKey("y")) {
                 if (!ShouldInstallRequirementsTxt(
-                    selectedInterpreterFactory.Configuration.Description,
+                    selectedInterpreterFactory.Configuration.FullDescription,
                     txt,
                     elevated
                 )) {
@@ -2220,7 +2220,7 @@ namespace Microsoft.PythonTools.Project {
                 var dlg = TaskDialog.ForException(
                     Site,
                     ex,
-                    Strings.MissingEnvironment.FormatUI(factory.Configuration.Description, factory.Configuration.Version),
+                    Strings.MissingEnvironment.FormatUI(factory.Configuration.FullDescription, factory.Configuration.Version),
                     IssueTrackerUrl
                 );
                 dlg.Title = Strings.ProductTitle;

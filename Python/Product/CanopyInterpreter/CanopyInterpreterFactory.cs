@@ -154,15 +154,14 @@ namespace CanopyInterpreter {
                 InterpreterUIMode.SupportsDatabase
             );
 
-            return new CanopyInterpreterFactory(description, baseFactory, config);
+            return new CanopyInterpreterFactory(baseFactory, config);
         }
 
         private CanopyInterpreterFactory(
-            string description,
             PythonInterpreterFactoryWithDatabase baseFactory,
             InterpreterConfiguration config
         )
-            : base(description, config, true) {
+            : base(config, true) {
             if (baseFactory == null) {
                 throw new ArgumentNullException("baseFactory");
             }
@@ -308,7 +307,7 @@ namespace CanopyInterpreter {
             } else if (!_base.IsCurrent) {
                 return string.Format(culture,
                     "{0} is out of date:{1}{2}",
-                    _base.Configuration.Description,
+                    _base.Configuration.FullDescription,
                     Environment.NewLine,
                     _base.GetIsCurrentReason(culture));
             }

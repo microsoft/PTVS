@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Refactoring {
                         }
 
                         if (!curLocations.Contains(variable.Location)) {
-                            fileItem.Items.Add(new LocationPreviewItem(fileItem, variable.Location, variable.Type));
+                            fileItem.Items.Add(new LocationPreviewItem(_analyzer, fileItem, variable.Location, variable.Type));
                             curLocations.Add(variable.Location);
                         }
                         break;

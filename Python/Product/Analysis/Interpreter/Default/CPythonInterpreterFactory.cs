@@ -20,7 +20,7 @@ using System.Reflection;
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase {
         public CPythonInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options) :
-            base(configuration.Description, configuration, options.WatchLibraryForNewModules) {            
+            base(configuration, options.WatchLibraryForNewModules) {            
         }
 
         public CPythonInterpreterFactory(
@@ -35,7 +35,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             ProcessorArchitecture arch,
             bool watchForNewModules)
             : base(
-                description,
                 new InterpreterConfiguration(
                     newId,
                     description,

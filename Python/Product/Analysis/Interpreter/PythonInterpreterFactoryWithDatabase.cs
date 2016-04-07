@@ -58,7 +58,6 @@ namespace Microsoft.PythonTools.Interpreter {
         [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors",
             Justification = "breaking change")]
         public PythonInterpreterFactoryWithDatabase(
-            string description,
             InterpreterConfiguration config,
             bool watchLibraryForChanges
         ) {

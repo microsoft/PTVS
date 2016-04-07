@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools {
         IPythonInteractiveOptions IPythonOptions.GetInteractiveOptions(string interpreterName) {
             var registry = _pyService.ComponentModel.GetService<IInterpreterRegistryService>();
             var configs = registry.Configurations;
-            var config = configs.FirstOrDefault(i => i.Description == interpreterName);
+            var config = configs.FirstOrDefault(i => i.FullDescription == interpreterName);
             IPythonInterpreterFactory factory = null;
             if (config != null) {
                 factory = registry.FindInterpreter(config.Id);

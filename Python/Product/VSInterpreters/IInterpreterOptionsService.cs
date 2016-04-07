@@ -35,7 +35,13 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         event EventHandler DefaultInterpreterChanged;
 
-        string AddConfigurableInterpreter(InterpreterFactoryCreationOptions options);
+        /// <summary>
+        /// Adds a new user configured interpreter factory to the registry stored
+        /// under the provided name.  The id in the configuration is ignored and 
+        /// the newly registered id is returned.
+        /// </summary>
+        string AddConfigurableInterpreter(string name, InterpreterConfiguration config);
+
         void RemoveConfigurableInterpreter(string id);
         bool IsConfigurable(string id);
     }

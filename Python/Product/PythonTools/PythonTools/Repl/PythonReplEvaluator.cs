@@ -146,7 +146,7 @@ namespace Microsoft.PythonTools.Repl {
 
         internal override string DisplayName {
             get {
-                return Interpreter != null ? Interpreter.Configuration.Description : string.Empty;
+                return Interpreter != null ? Interpreter.Configuration.FullDescription : string.Empty;
             }
         }
 
@@ -197,7 +197,7 @@ namespace Microsoft.PythonTools.Repl {
                 Window.WriteError(Strings.ReplEvaluatorInterpreterNotFound);
                 return;
             } else if (String.IsNullOrWhiteSpace(Interpreter.Configuration.InterpreterPath)) {
-                Window.WriteError(Strings.ReplEvaluatorInterpreterNotConfigured.FormatUI(Interpreter.Configuration.Description));
+                Window.WriteError(Strings.ReplEvaluatorInterpreterNotConfigured.FormatUI(Interpreter.Configuration.FullDescription));
                 return;
             }
             var processInfo = new ProcessStartInfo(Interpreter.Configuration.InterpreterPath);

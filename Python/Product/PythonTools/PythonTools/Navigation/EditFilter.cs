@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Language {
                     return;
                 }
                 Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
-                GetDefsRefsAndValues(_serviceProvider, defs.Expression, defs.Variables, out definitions, out references, out values);
+                GetDefsRefsAndValues(_textView.GetAnalyzer(_serviceProvider), _serviceProvider, defs.Expression, defs.Variables, out definitions, out references, out values);
 
                 if ((values.Count + definitions.Count) == 1) {
                     if (values.Count != 0) {
@@ -188,15 +188,15 @@ namespace Microsoft.PythonTools.Language {
                     return;
                 }
 
-                var locations = GetFindRefLocations(_serviceProvider, references.Expression, references.Variables);
+                var locations = GetFindRefLocations(_textView.GetAnalyzer(_serviceProvider), _serviceProvider, references.Expression, references.Variables);
 
                 ShowFindSymbolsDialog(references.Expression, locations);
             }
         }
 
-        internal static LocationCategory GetFindRefLocations(IServiceProvider serviceProvider, string expr, AnalysisVariable[] analysis) {
+        internal static LocationCategory GetFindRefLocations(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, AnalysisVariable[] analysis) {
             Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
-            GetDefsRefsAndValues(serviceProvider, expr, analysis, out definitions, out references, out values);
+            GetDefsRefsAndValues(analyzer, serviceProvider, expr, analysis, out definitions, out references, out values);
 
             var locations = new LocationCategory("Find All References",
                     new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values),
@@ -206,7 +206,7 @@ namespace Microsoft.PythonTools.Language {
             return locations;
         }
 
-        private static void GetDefsRefsAndValues(IServiceProvider serviceProvider, string expr, AnalysisVariable[] variables, out Dictionary<AnalysisLocation, SimpleLocationInfo> definitions, out Dictionary<AnalysisLocation, SimpleLocationInfo> references, out Dictionary<AnalysisLocation, SimpleLocationInfo> values) {
+        private static void GetDefsRefsAndValues(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, AnalysisVariable[] variables, out Dictionary<AnalysisLocation, SimpleLocationInfo> definitions, out Dictionary<AnalysisLocation, SimpleLocationInfo> references, out Dictionary<AnalysisLocation, SimpleLocationInfo> values) {
             references = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
             definitions = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
             values = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
@@ -220,14 +220,14 @@ namespace Microsoft.PythonTools.Language {
                 switch (v.Type) {
                     case VariableType.Definition:
                         values.Remove(v.Location);
-                        definitions[v.Location] = new SimpleLocationInfo(serviceProvider, expr, v.Location, StandardGlyphGroup.GlyphGroupField);
+                        definitions[v.Location] = new SimpleLocationInfo(analyzer, serviceProvider, expr, v.Location, StandardGlyphGroup.GlyphGroupField);
                         break;
                     case VariableType.Reference:
-                        references[v.Location] = new SimpleLocationInfo(serviceProvider, expr, v.Location, StandardGlyphGroup.GlyphGroupField);
+                        references[v.Location] = new SimpleLocationInfo(analyzer, serviceProvider, expr, v.Location, StandardGlyphGroup.GlyphGroupField);
                         break;
                     case VariableType.Value:
                         if (!definitions.ContainsKey(v.Location)) {
-                            values[v.Location] = new SimpleLocationInfo(serviceProvider, expr, v.Location, StandardGlyphGroup.GlyphGroupField);
+                            values[v.Location] = new SimpleLocationInfo(analyzer, serviceProvider, expr, v.Location, StandardGlyphGroup.GlyphGroupField);
                         }
                         break;
                 }
@@ -317,12 +317,17 @@ namespace Microsoft.PythonTools.Language {
             private readonly string _pathText, _lineText;
             private readonly IServiceProvider _serviceProvider;
 
-            public SimpleLocationInfo(IServiceProvider serviceProvider, string searchText, AnalysisLocation locInfo, StandardGlyphGroup glyphType) {
+            public SimpleLocationInfo(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string searchText, AnalysisLocation locInfo, StandardGlyphGroup glyphType) {
                 _serviceProvider = serviceProvider;
                 _locationInfo = locInfo;
                 _glyphType = glyphType;
                 _pathText = GetSearchDisplayText();
-                _lineText = _locationInfo.Analysis.GetLine(_locationInfo.Line);
+                AnalysisEntry entry = analyzer.GetAnalysisEntryFromPath(_locationInfo.FilePath);
+                if (entry != null) {
+                    _lineText = entry.GetLine(_locationInfo.Line);
+                } else {
+                    _lineText = "";
+                }
             }
 
             public override string Name {

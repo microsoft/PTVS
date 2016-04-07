@@ -150,7 +150,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                     if (factory == null) {
                         _log.LogError(
                             "The environment '{0}' is not available. Check your project configuration and try again.",
-                            factory.Configuration.Description
+                            factory.Configuration.FullDescription
                         );
                         return false;
                     } else {

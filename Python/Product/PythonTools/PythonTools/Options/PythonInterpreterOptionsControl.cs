@@ -67,6 +67,7 @@ namespace Microsoft.PythonTools.Options {
                     .InterpreterOptions
                     .Where(f => f.Value._config.IsUIVisible() && f.Value._config.CanBeConfigured())
                     .OrderBy(f => f.Value._config.Description)
+                    .ThenBy(f => f.Value._config.Version)
                     .ToArray();
 
                 foreach (var interpreter in interpreters) {
@@ -358,7 +359,7 @@ namespace Microsoft.PythonTools.Options {
         private void Interpreter_Format(object sender, ListControlConvertEventArgs e) {
             var factory = e.ListItem as IPythonInterpreterFactory;
             if (factory != null) {
-                e.Value = factory.Configuration.Description;
+                e.Value = factory.Configuration.FullDescription;
             } else {
                 e.Value = e.ListItem.ToString();
             }

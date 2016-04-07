@@ -57,19 +57,19 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
                                         // Ordering of the directories means that the last directory specified will 
                                         // win the battle of conflicting factory names
                                         factoryMap[factoryName] = new PythonUwpInterpreterFactory(
-                                                new InterpreterConfiguration(
-                                                    pythonUwpVersion.ToString(),
-                                                    factoryName,
-                                                    dirInfo.FullName,
-                                                    targetsFile.FullName,
-                                                    null,
-                                                    null,
-                                                    null,
-                                                    ProcessorArchitecture.None,
-                                                    pythonUwpVersion,
-                                                    InterpreterUIMode.CannotBeDefault | InterpreterUIMode.SupportsDatabase
-                                                    ),
-                                                factoryName);
+                                            new InterpreterConfiguration(
+                                                pythonUwpVersion.ToString(),
+                                                factoryName,
+                                                dirInfo.FullName,
+                                                targetsFile.FullName,
+                                                null,
+                                                null,
+                                                null,
+                                                ProcessorArchitecture.None,
+                                                pythonUwpVersion,
+                                                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.SupportsDatabase
+                                            )
+                                        );
                                     }
                                 }
                             }

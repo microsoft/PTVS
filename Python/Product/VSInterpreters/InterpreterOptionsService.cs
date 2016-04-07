@@ -20,6 +20,7 @@ using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
@@ -172,11 +173,13 @@ namespace Microsoft.PythonTools.Interpreter {
                 return _defaultInterpreterId;
             }
             set {
-                _defaultInterpreterId = value;
-                _defaultInterpreter = null; // cleared so we'll re-initialize if anyone cares about it.
-                SaveDefaultInterpreter(value);
+                if (_defaultInterpreterId != value) {
+                    _defaultInterpreterId = value;
+                    _defaultInterpreter = null; // cleared so we'll re-initialize if anyone cares about it.
+                    SaveDefaultInterpreter(value);
 
-                _defaultInterpreterChanged?.Invoke(this, EventArgs.Empty);
+                    _defaultInterpreterChanged?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
@@ -198,6 +201,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
                 if (newDefault != _defaultInterpreter) {
                     _defaultInterpreter = newDefault;
+                    _defaultInterpreterId = _defaultInterpreter?.Configuration?.Id;
                     SaveDefaultInterpreter(_defaultInterpreter?.Configuration?.Id);
 
                     _defaultInterpreterChanged?.Invoke(this, EventArgs.Empty);
@@ -217,21 +221,21 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public string AddConfigurableInterpreter(InterpreterFactoryCreationOptions options) {
-            var collection = PythonInterpreterKey + "\\" + options.Id;
+        public string AddConfigurableInterpreter(string name, InterpreterConfiguration config) {
+            var collection = PythonInterpreterKey + "\\" + name;
             using (var key = Registry.CurrentUser.CreateSubKey(collection, true)) {
-                key.SetValue(LibraryPathKey, options.LibraryPath ?? string.Empty);
-                key.SetValue(ArchitectureKey, options.ArchitectureString);
-                key.SetValue(VersionKey, options.LanguageVersionString);
-                key.SetValue(PathEnvVarKey, options.PathEnvironmentVariableName ?? string.Empty);
-                key.SetValue(DescriptionKey, options.Description ?? string.Empty);
+                key.SetValue(LibraryPathKey, config.LibraryPath ?? string.Empty);
+                key.SetValue(ArchitectureKey, config.ArchitectureString);
+                key.SetValue(VersionKey, config.Version.ToString());
+                key.SetValue(PathEnvVarKey, config.PathEnvironmentVariable ?? string.Empty);
+                key.SetValue(DescriptionKey, config.Description ?? string.Empty);
                 using (var installPath = key.CreateSubKey("InstallPath")) {
-                    string exePath = options.InterpreterPath ?? options.WindowInterpreterPath ?? "";
+                    string exePath = config.InterpreterPath ?? config.WindowsInterpreterPath ?? "";
                     if (!String.IsNullOrWhiteSpace(exePath)) {
                         installPath.SetValue("", Path.GetDirectoryName(exePath));
                     }
-                    installPath.SetValue(WindowsPathKey, options.WindowInterpreterPath ?? string.Empty);
-                    installPath.SetValue(PathKey, options.InterpreterPath ?? string.Empty);
+                    installPath.SetValue(WindowsPathKey, config.WindowsInterpreterPath ?? string.Empty);
+                    installPath.SetValue(PathKey, config.InterpreterPath ?? string.Empty);
                 }
             }
 
@@ -240,9 +244,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
             return CPythonInterpreterFactoryConstants.GetIntepreterId(
                 "VisualStudio",
-                options.Architecture,
-                options.Id
+                config.Architecture,
+                name
             );
+
         }
 
         public void RemoveConfigurableInterpreter(string id) {

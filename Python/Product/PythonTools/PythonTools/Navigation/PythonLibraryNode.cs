@@ -196,6 +196,7 @@ namespace Microsoft.PythonTools.Navigation {
             }
 
             return EditFilter.GetFindRefLocations(
+                analyzer,
                 Site,
                 Name,
                 vars.ToArray()

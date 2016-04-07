@@ -429,13 +429,15 @@ namespace PythonToolsUITests {
                 ));
 
                 var id = Guid.NewGuid().ToString();
-                var fact = list.Service.AddConfigurableInterpreter(new InterpreterFactoryCreationOptions {
-                    Id = id,
-                    LanguageVersionString = "2.7",
-                    // The actual file doesn't matter, except to test that it
-                    // is added
-                    InterpreterPath = TestData.GetPath("HelloWorld\\HelloWorld.pyproj")
-                });
+                var fact = list.Service.AddConfigurableInterpreter(
+                    id,
+                    new InterpreterConfiguration(
+                        "", 
+                        "Blah",
+                        "",
+                        TestData.GetPath("HelloWorld\\HelloWorld.pyproj")
+                    )
+                );
 
                 try {
                     var afterAdd = wpf.Invoke(() => new HashSet<string>(
@@ -449,11 +451,15 @@ namespace PythonToolsUITests {
                         TestData.GetPath("HelloWorld\\HelloWorld.pyproj")
                     );
 
-                    list.Service.AddConfigurableInterpreter(new InterpreterFactoryCreationOptions {
-                        Id = id,
-                        LanguageVersionString = "2.7",
-                        InterpreterPath = TestData.GetPath("HelloWorld2\\HelloWorld.pyproj")
-                    });
+                    list.Service.AddConfigurableInterpreter(
+                        id,
+                        new InterpreterConfiguration(
+                            "", 
+                            "test", 
+                            "",
+                            TestData.GetPath("HelloWorld2\\HelloWorld.pyproj")
+                        )
+                    );
 
                     var afterUpdate = wpf.Invoke(() => new HashSet<string>(
                         list.Environments.Select(ev => (string)ev.InterpreterPath),

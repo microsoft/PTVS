@@ -54,7 +54,7 @@ namespace Microsoft.PythonTools.Commands {
             if (window == null) {
                 window = provider.CreateInteractiveWindow(
                     serviceProvider.GetPythonContentType(),
-                    config.Description + " Interactive",
+                    config.FullDescription + " Interactive",
                     typeof(PythonLanguageInfo).GUID,
                     replId
                 );

@@ -441,30 +441,23 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 return;
             }
 
-            const string fmt = "New Environment {0}";
-            HashSet<string> names;
-            lock (_environmentsLock) {
-                names = new HashSet<string>(_environments
-                    .Where(view => view.Factory != null)
-                    .Select(view => view.Factory.Configuration.Description)
-                );
-            }
-            var name = string.Format(fmt, 1);
-            for (int i = 2; names.Contains(name) && i < int.MaxValue; ++i) {
-                name = string.Format(fmt, i);
+            const string baseName = "New Environment";
+            string name = baseName;
+            int count = 2;
+            while (_interpreters.FindConfiguration(CPythonInterpreterFactoryConstants.GetIntepreterId("VisualStudio", ProcessorArchitecture.X86, name)) != null) {
+                name = baseName + " " + count++;
             }
 
-            string id = name;
-            int count = 1;
-            while (_interpreters.FindConfiguration(CPythonInterpreterFactoryConstants.GetIntepreterId("VisualStudio", ProcessorArchitecture.X86, id)) != null) {
-                id = name + count++;
-            }
-
-            var factory = _service.AddConfigurableInterpreter(new InterpreterFactoryCreationOptions {
-                Id = id,
-                Description = name,
-                InterpreterPath = "python\\python.exe"
-            });
+            var factory = _service.AddConfigurableInterpreter(
+                name,
+                new InterpreterConfiguration(
+                    "",
+                    name,
+                    "",
+                    "python\\python.exe",
+                    arch : ProcessorArchitecture.X86
+                )
+            );
 
             UpdateEnvironments(factory);
 

@@ -44,7 +44,7 @@ namespace PythonToolsTests {
                     Assert.IsTrue(factory.Configuration.Version.Major == 2 || factory.Configuration.Version.Major == 3, "unknown 32-bit version");
                     Assert.IsNotNull(factory.CreateInterpreter(), "32-bit failed to create interpreter");
                     if (factory.Configuration.Architecture == System.Reflection.ProcessorArchitecture.Amd64) {
-                        Assert.IsTrue(factory.Configuration.Description.StartsWith("Python 64-bit"), "non 'Python 64-bit' interpreter");
+                        Assert.IsTrue(factory.Configuration.FullDescription.StartsWith("Python 64-bit"), "non 'Python 64-bit' interpreter");
                     }
                 } else {
                     Assert.Fail("Expected Global interpreter ID");

@@ -126,10 +126,6 @@ namespace TestUtilities.Python {
             throw new NotImplementedException();
         }
 
-        public string AddConfigurableInterpreter(InterpreterFactoryCreationOptions options) {
-            throw new NotImplementedException();
-        }
-
         public void RemoveConfigurableInterpreter(string id) {
             throw new NotImplementedException();
         }
@@ -163,6 +159,10 @@ namespace TestUtilities.Python {
         }
 
         public InterpreterConfiguration FindConfiguration(string id) {
+            throw new NotImplementedException();
+        }
+
+        public string AddConfigurableInterpreter(string name, InterpreterConfiguration config) {
             throw new NotImplementedException();
         }
     }

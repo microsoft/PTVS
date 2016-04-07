@@ -274,7 +274,7 @@ namespace Microsoft.PythonTools.Project {
                             return pyProj.OpenCommandPrompt(
                                 _factory.Configuration.PrefixPath,
                                 _factory,
-                                _factory.Configuration.Description
+                                _factory.Configuration.FullDescription
                             );
                         }
                         break;
@@ -362,7 +362,7 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public override string Caption {
             get {
-                return _factory.Configuration.Description + _captionSuffix;
+                return _factory.Configuration.FullDescription + _captionSuffix;
             }
         }
 

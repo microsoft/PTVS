@@ -68,10 +68,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             Redirector redirector
         ) {
             if (service == null) {
-                throw new ArgumentNullException("service");
+                throw new ArgumentNullException(nameof(service));
             }
             if (factory == null) {
-                throw new ArgumentNullException("factory");
+                throw new ArgumentNullException(nameof(factory));
             }
 
             _service = service;
@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 IsConfigurable = true;
             }
 
-            Description = Factory.Configuration.Description;
+            Description = Factory.Configuration.FullDescription;
             IsDefault = (_service != null && _service.DefaultInterpreter == Factory);
 
             PrefixPath = Factory.Configuration.PrefixPath;
@@ -109,7 +109,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public override string ToString() {
             return string.Format(
                 "{{{0}:{1}}}", GetType().FullName,
-                _withDb == null ? "(null)" : _withDb.Configuration.Description
+                _withDb == null ? "(null)" : _withDb.Configuration.FullDescription
             );
         }
 

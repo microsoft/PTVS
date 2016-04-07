@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Project {
             int i = 0;
             foreach (var interp in InterpreterView.GetInterpreters(_project.Site, _project).Select(x => x.Interpreter)) {
                 if (!existing.Remove(interp)) {
-                    Interpreters.Insert(i, new InterpreterView(interp, interp.Configuration.Description, interp == def));
+                    Interpreters.Insert(i, new InterpreterView(interp, interp.Configuration.FullDescription, interp == def));
                 }
                 i += 1;
             }

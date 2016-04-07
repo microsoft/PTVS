@@ -30,6 +30,7 @@ namespace Microsoft.PythonTools.Options {
         internal readonly InterpreterConfiguration _config;
 
         public string Display;
+        public string Description;
         public string Id;
         public string InterpreterPath;
         public string WindowsInterpreterPath;
@@ -52,7 +53,8 @@ namespace Microsoft.PythonTools.Options {
             var configurable = _pyService._interpreterOptionsService;
             Debug.Assert(configurable != null);
 
-            Display = _config.Description;
+            Display = _config.FullDescription;
+            Description = _config.Description;
             Id = _config.Id;
             InterpreterPath = _config.InterpreterPath;
             WindowsInterpreterPath = _config.WindowsInterpreterPath;

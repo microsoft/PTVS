@@ -57,12 +57,12 @@ namespace Microsoft.PythonTools.Interpreter {
             string description,
             string prefixPath,
             string path,
-            string winPath,
-            string libraryPath,
-            string pathVar,
-            ProcessorArchitecture arch,
-            Version version
-        ) : this(id, description, prefixPath, path, winPath, libraryPath, pathVar, arch, version, InterpreterUIMode.Normal) {
+            string winPath = "",
+            string libraryPath = "",
+            string pathVar = "",
+            ProcessorArchitecture arch= ProcessorArchitecture.None,
+            Version version = null
+        ) : this(id, description, prefixPath, path, winPath, libraryPath, pathVar, arch, version ?? new Version(2, 7), InterpreterUIMode.Normal) {
         }
        
         /// <summary>
@@ -102,8 +102,6 @@ namespace Microsoft.PythonTools.Interpreter {
             _pathEnvironmentVariable = pathVar;
             _architecture = arch;
             _version = version;
-            Debug.Assert(string.IsNullOrEmpty(_interpreterPath) || !string.IsNullOrEmpty(_prefixPath),
-                "Anyone providing an interpreter should also specify the prefix path");
             _uiMode = uiMode;
         }
 
@@ -116,6 +114,23 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Gets a friendly description of the interpreter
         /// </summary>
         public string Description => _description;
+
+        public string FullDescription {
+            get {
+                string res = _description;
+                var arch = _architecture;
+                if (arch == ProcessorArchitecture.Amd64) {
+                    res += " 64-bit";
+                } else if (arch == ProcessorArchitecture.X86) {
+                    res += " 32-bit";
+                }
+
+                if (_version != new Version()) {
+                    res += " " + _version.ToString();
+                }
+                return res;
+            }
+        }
 
         /// <summary>
         /// Returns the prefix path of the Python installation. All files
@@ -162,6 +177,19 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         public ProcessorArchitecture Architecture {
             get { return _architecture; }
+        }
+
+        public string ArchitectureString {
+            get {
+                switch (Architecture) {
+                    case ProcessorArchitecture.Amd64:
+                        return "x64";
+                    case ProcessorArchitecture.X86:
+                        return "x86";
+                    default:
+                        return string.Empty;
+                }
+            }
         }
 
         /// <summary>
@@ -213,7 +241,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public override string ToString() {
-            return Description;
+            return FullDescription;
         }
     }
 }

@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Navigation {
                     ).Result;
 
                     if (exprAnalysis != null) {
-                        return EditFilter.GetFindRefLocations(_hierarchy.ProjectMgr.Site, expr, exprAnalysis.Variables);
+                        return EditFilter.GetFindRefLocations(analysis.Analyzer, _hierarchy.ProjectMgr.Site, expr, exprAnalysis.Variables);
                     }
                 }
             }

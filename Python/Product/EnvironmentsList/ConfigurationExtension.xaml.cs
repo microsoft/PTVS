@@ -212,17 +212,26 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         public void ApplyConfiguration(ConfigurationEnvironmentView view) {
-            _interpreterOptions.AddConfigurableInterpreter(new InterpreterFactoryCreationOptions {
-                Id = view.EnvironmentView.Factory.Configuration.Id,
-                Description = view.Description,
-                PrefixPath = view.PrefixPath,
-                InterpreterPath = view.InterpreterPath,
-                WindowInterpreterPath = view.WindowsInterpreterPath,
-                LibraryPath = view.LibraryPath,
-                PathEnvironmentVariableName = view.PathEnvironmentVariable,
-                Architecture = view.ArchitectureName == "64-bit" ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
-                LanguageVersionString = view.VersionName
-            });
+            var factory = view.EnvironmentView.Factory;
+            if (view.Description != factory.Configuration.Description) {
+                // We're renaming the interpreter, remove the old one...
+                _interpreterOptions.RemoveConfigurableInterpreter(factory.Configuration.Id);
+            }
+
+            var newInterp = _interpreterOptions.AddConfigurableInterpreter(
+                view.Description,
+                new InterpreterConfiguration(
+                    "",
+                    view.Description,
+                    view.PrefixPath,
+                    view.InterpreterPath,
+                    view.WindowsInterpreterPath,
+                    view.LibraryPath,
+                    view.PathEnvironmentVariable,
+                    view.ArchitectureName == "64-bit" ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
+                    Version.Parse(view.VersionName)
+                )
+            );
         }
 
         public bool IsConfigurationChanged(ConfigurationEnvironmentView view) {

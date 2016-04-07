@@ -43,9 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 return false;
             }
 
-            return x.Configuration.Id == y.Configuration.Id && 
-                x.Configuration.Description == y.Configuration.Description &&
-                x.Configuration.Equals(y.Configuration);
+            return x.Configuration.Equals(y.Configuration);
         }
 
         /// <summary>

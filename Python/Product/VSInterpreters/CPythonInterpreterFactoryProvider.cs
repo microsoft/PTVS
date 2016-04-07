@@ -137,18 +137,18 @@ namespace Microsoft.PythonTools.Interpreter {
             return true;
         }
 
-        private bool RegisterInterpreters(HashSet<string> registeredPaths, HashSet<string> registeredIds, RegistryKey pythonKey, ProcessorArchitecture? arch) {
+        private bool RegisterInterpreters(HashSet<string> registeredPaths, HashSet<string> registeredIds, bool ignoreRegisteredPaths, RegistryKey pythonKey, ProcessorArchitecture? arch) {
             bool anyAdded = false;
             foreach (var subKeyName in pythonKey.GetSubKeyNames()) {
                 using (var python = pythonKey.OpenSubKey(subKeyName)) {
-                    anyAdded |= RegisterVendor(registeredPaths, registeredIds, python, arch);
+                    anyAdded |= RegisterVendor(registeredPaths, registeredIds, ignoreRegisteredPaths, python, arch);
                 }
             }
 
             return anyAdded;
         }
 
-        private bool RegisterVendor(HashSet<string> registeredPaths, HashSet<string> registeredIds, RegistryKey vendorKey, ProcessorArchitecture? arch) {
+        private bool RegisterVendor(HashSet<string> registeredPaths, HashSet<string> registeredIds, bool ignoreRegisteredPaths, RegistryKey vendorKey, ProcessorArchitecture? arch) {
             bool anyAdded = false;
             string[] subKeyNames = null;
             for (int retries = 5; subKeyNames == null && retries > 0; --retries) {
@@ -167,13 +167,13 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             foreach (var key in subKeyNames) {
-                anyAdded |= TryRegisterInterpreter(registeredPaths, registeredIds, vendorKey, key, arch);
+                anyAdded |= TryRegisterInterpreter(registeredPaths, registeredIds, ignoreRegisteredPaths, vendorKey, key, arch);
 
             }
             return anyAdded;
         }
 
-        private bool TryRegisterInterpreter(HashSet<string> registeredPaths, HashSet<string> registeredIds, RegistryKey vendorKey, string key, ProcessorArchitecture? arch) {
+        private bool TryRegisterInterpreter(HashSet<string> registeredPaths, HashSet<string> registeredIds, bool ignoreRegisteredPaths, RegistryKey vendorKey, string key, ProcessorArchitecture? arch) {
             Version version = null;
             ProcessorArchitecture? arch2 = null;
 
@@ -213,8 +213,9 @@ namespace Microsoft.PythonTools.Interpreter {
                         // Invalid path in registry
                         return false;
                     }
-                    if (!registeredPaths.Add(basePath)) {
-                        // registered in both HCKU and HKLM
+                    if (!registeredPaths.Add(basePath) && !ignoreRegisteredPaths) {
+                        // registered in both HCKU and HKLM (we allow duplicate paths in HKCU 
+                        // which is why we have ignoreRegisteredPaths)
                         return false;
                     }
 
@@ -225,10 +226,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
                     string description = interpKey.GetValue("Description") as string;
                     if (description == null) {
-                        description = CPythonInterpreterFactoryConstants.Description32;
-                        if (actualArch == ProcessorArchitecture.Amd64) {
-                            description = CPythonInterpreterFactoryConstants.Description64;
-                        }
+                        description = "Python";
                     }
 
                     string newId = CPythonInterpreterFactoryConstants.GetIntepreterId(GetVendorName(vendorKey), actualArch, id);
@@ -245,7 +243,7 @@ namespace Microsoft.PythonTools.Interpreter {
                             registeredIds.Add(newId);
                             var newConfig = new InterpreterConfiguration(
                                 newId,
-                                string.Format("{0} {1}", description, version),
+                                description,
                                 prefixPath,
                                 interpPath,
                                 windowsPath,
@@ -281,7 +279,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default)) {
                     using (var python = baseKey.OpenSubKey(PythonPath)) {
                         if (python != null) {
-                            anyChanged |= RegisterInterpreters(registeredPaths, registeredIds, python, arch);
+                            anyChanged |= RegisterInterpreters(registeredPaths, registeredIds, true, python, arch);
                         }
                     }
                 }
@@ -289,7 +287,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32))
                 using (var python = baseKey.OpenSubKey(PythonPath)) {
                     if (python != null) {
-                        anyChanged |= RegisterInterpreters(registeredPaths, registeredIds, python, ProcessorArchitecture.X86);
+                        anyChanged |= RegisterInterpreters(registeredPaths, registeredIds, false, python, ProcessorArchitecture.X86);
                     }
                 }
 
@@ -297,7 +295,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64))
                     using (var python64 = baseKey.OpenSubKey(PythonPath)) {
                         if (python64 != null) {
-                            anyChanged |= RegisterInterpreters(registeredPaths, registeredIds, python64, ProcessorArchitecture.Amd64);
+                            anyChanged |= RegisterInterpreters(registeredPaths, registeredIds, false, python64, ProcessorArchitecture.Amd64);
                         }
                     }
                 }

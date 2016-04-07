@@ -84,7 +84,7 @@ namespace Microsoft.PythonTools.Project {
         public string InterpreterDescription {
             get {
                 var interpreter = ((PythonProjectNode)this.Node).ActiveInterpreter;
-                return interpreter.IsRunnable() ? interpreter.Configuration.Description : null;
+                return interpreter.IsRunnable() ? interpreter.Configuration.FullDescription : null;
             }
         }
 

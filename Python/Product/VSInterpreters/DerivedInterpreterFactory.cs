@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Interpreter {
             PythonInterpreterFactoryWithDatabase baseFactory,
             InterpreterConfiguration config,
             InterpreterFactoryCreationOptions options
-        ) : base(config.Description, config, options.WatchLibraryForNewModules) {
+        ) : base(config, options.WatchLibraryForNewModules) {
             _base = baseFactory;
             _base.IsCurrentChanged += Base_IsCurrentChanged;
             _base.NewDatabaseAvailable += Base_NewDatabaseAvailable;

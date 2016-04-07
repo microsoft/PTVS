@@ -20,6 +20,7 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -402,6 +403,7 @@ namespace Microsoft.PythonTools {
         internal void SaveInterpreterOptions() {
             _interpreterRegistry.BeginSuppressInterpretersChangedEvent();
             try {
+                _interpreterOptionsService.DefaultInterpreterId = GlobalInterpreterOptions.DefaultInterpreter;
                 // Remove any items
                 foreach (var option in InterpreterOptions.Select(kv => kv.Value).Where(o => o.Removed).ToList()) {
                     _interpreterOptionsService.RemoveConfigurableInterpreter(option._config.Id);
@@ -419,18 +421,26 @@ namespace Microsoft.PythonTools {
                     }
 
                     if (option.IsConfigurable) {
+                        ProcessorArchitecture arch = ProcessorArchitecture.X86;
+                        switch (option.Architecture) {
+                            case "x86": arch = ProcessorArchitecture.X86; break;
+                            case "x64": arch = ProcessorArchitecture.Amd64; break;
+                        }
+                        
                         // save configurable interpreter options
                         var actualFactory = _interpreterOptionsService.AddConfigurableInterpreter(
-                            new InterpreterFactoryCreationOptions {
-                                Id = option.Id,
-                                InterpreterPath = option.InterpreterPath ?? "",
-                                WindowInterpreterPath = option.WindowsInterpreterPath ?? "",
-                                LibraryPath = option.LibraryPath ?? "",
-                                PathEnvironmentVariableName = option.PathEnvironmentVariable ?? "",
-                                ArchitectureString = option.Architecture ?? "x86",
-                                LanguageVersionString = option.Version ?? "2.7",
-                                Description = option.Display,
-                            }
+                            option.Description,
+                            new InterpreterConfiguration(
+                                option.Id,
+                                option.Description,
+                                !String.IsNullOrWhiteSpace(option.LibraryPath) ? Path.GetDirectoryName(option.LibraryPath) : "",
+                                option.InterpreterPath ?? "",
+                                option.WindowsInterpreterPath ?? "",
+                                option.LibraryPath ?? "",
+                                option.PathEnvironmentVariable ?? "",
+                                arch,
+                                Version.Parse(option.Version) ?? new Version(2, 7)
+                            )
                         );
                         if (option.InteractiveOptions != null) {
                             option.InteractiveOptions._id = actualFactory;

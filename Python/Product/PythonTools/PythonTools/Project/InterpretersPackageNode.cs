@@ -95,13 +95,13 @@ namespace Microsoft.PythonTools.Project {
                 if (nodes.Count == 1) {
                     message = Strings.UninstallPackage.FormatUI(
                         Caption,
-                        Parent._factory.Configuration.Description,
+                        Parent._factory.Configuration.FullDescription,
                         Parent._factory.Configuration.PrefixPath
                     );
                 } else {
                     message = Strings.UninstallPackages.FormatUI(
                         string.Join(Environment.NewLine, nodes.Select(n => n.Caption)),
-                        Parent._factory.Configuration.Description,
+                        Parent._factory.Configuration.FullDescription,
                         Parent._factory.Configuration.PrefixPath
                     );
                 }
