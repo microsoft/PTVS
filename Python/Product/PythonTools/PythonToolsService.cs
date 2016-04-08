@@ -20,6 +20,7 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -38,6 +39,7 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
+using Microsoft.Win32;
 
 namespace Microsoft.PythonTools {
 
@@ -48,6 +50,7 @@ namespace Microsoft.PythonTools {
         private readonly IServiceContainer _container;
         private LanguagePreferences _langPrefs;
         private IPythonToolsOptionsService _optionsService;
+        internal readonly IInterpreterRegistryService _interpreterRegistry;
         internal readonly IInterpreterOptionsService _interpreterOptionsService;
         private VsProjectAnalyzer _analyzer;
         private readonly PythonToolsLogger _logger;
@@ -73,9 +76,14 @@ namespace Microsoft.PythonTools {
 
         private static readonly Dictionary<string, OptionInfo> _allFormattingOptions = new Dictionary<string, OptionInfo>();
 
+        private const string DefaultInterpreterOptionsCollection = @"SOFTWARE\\Microsoft\\PythonTools\\Interpreters";
+
+        private const string DefaultInterpreterSetting = "DefaultInterpreterId";
+        private readonly IEnumerable<Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>> _factoryProviders;
+
         internal PythonToolsService(IServiceContainer container) {
             _container = container;
-            
+
             var langService = new PythonLanguageInfo(container);
             _container.AddService(langService.GetType(), langService, true);
 
@@ -94,9 +102,13 @@ namespace Microsoft.PythonTools {
 
             _optionsService = (IPythonToolsOptionsService)container.GetService(typeof(IPythonToolsOptionsService));
             var compModel = (IComponentModel)container.GetService(typeof(SComponentModel));
+            _interpreterRegistry = compModel.GetService<IInterpreterRegistryService>();
+            if (_interpreterRegistry != null) {
+                _interpreterRegistry.InterpretersChanged += InterpretersChanged;
+            }
+
             _interpreterOptionsService = compModel.GetService<IInterpreterOptionsService>();
             if (_interpreterOptionsService != null) {   // not available in some test cases...
-                _interpreterOptionsService.InterpretersChanged += InterpretersChanged;
                 _interpreterOptionsService.DefaultInterpreterChanged += UpdateDefaultAnalyzer;
                 LoadInterpreterOptions();
             }
@@ -107,13 +119,13 @@ namespace Microsoft.PythonTools {
             _generalOptions = new GeneralOptions(this);
             _surveyNews = new SurveyNewsService(container);
             _suppressDialogOptions = new SuppressDialogOptions(this);
-            _globalInterpreterOptions = new GlobalInterpreterOptions(this, _interpreterOptionsService);
+            _globalInterpreterOptions = new GlobalInterpreterOptions(this, _interpreterOptionsService, _interpreterRegistry);
             _globalInterpreterOptions.Load();
             _interactiveOptions = new PythonInteractiveOptions(this, "Interactive");
             _interactiveOptions.Load();
             _debugInteractiveOptions = new PythonInteractiveOptions(this, "Debug Interactive Window");
             _debuggerOptions.Load();
-
+            _factoryProviders = ComponentModel.DefaultExportProvider.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>();
             _logger = new PythonToolsLogger(ComponentModel.GetExtensions<IPythonToolsLogger>().ToArray());
             InitializeLogging();
         }
@@ -134,9 +146,12 @@ namespace Microsoft.PythonTools {
                     connectionPoint.Unadvise(_langPrefsTextManagerCookie);
                 }
             }
-            
+
+            if (_interpreterRegistry != null) {
+                _interpreterRegistry.InterpretersChanged -= InterpretersChanged;
+            }
+
             if (_interpreterOptionsService != null) {
-                _interpreterOptionsService.InterpretersChanged -= InterpretersChanged;
                 _interpreterOptionsService.DefaultInterpreterChanged -= UpdateDefaultAnalyzer;
             }
 
@@ -154,17 +169,20 @@ namespace Microsoft.PythonTools {
 
         private void InitializeLogging() {
             if (_interpreterOptionsService != null) { // not available in some test cases...
-                // log interesting stats on startup
-                var installed = _interpreterOptionsService.KnownProviders
-                    .Where(x => !(x is ConfigurablePythonInterpreterFactoryProvider) &&
-                                !(x is LoadedProjectInterpreterFactoryProvider))
-                    .SelectMany(x => x.GetInterpreterFactories())
+                                                      // log interesting stats on startup
+                var knownProviders = ComponentModel.GetExtensions<IPythonInterpreterFactoryProvider>();
+
+                var installed = knownProviders
+                    //.Where(x => !(x is ConfigurablePythonInterpreterFactoryProvider) &&
+                    //            !(x is LoadedProjectInterpreterFactoryProvider))
+                    .SelectMany(x => x.GetInterpreterConfigurations())
                     .Count();
 
-                var configured = _interpreterOptionsService.KnownProviders.
-                    Where(x => x is ConfigurablePythonInterpreterFactoryProvider).
-                    SelectMany(x => x.GetInterpreterFactories())
-                    .Count();
+                var configured = knownProviders.
+                    SelectMany(x => x.GetInterpreterConfigurations()).
+                    Select(x => x.Id).
+                    Where(x => _interpreterOptionsService.IsConfigurable(x)).
+                    Count();
 
                 _logger.LogEvent(PythonLogEvent.InstalledInterpreters, installed);
                 _logger.LogEvent(PythonLogEvent.ConfiguredInterpreters, configured);
@@ -209,9 +227,7 @@ namespace Microsoft.PythonTools {
             EnsureCompletionDb(defaultFactory);
             return new VsProjectAnalyzer(
                 _container,
-                defaultFactory.CreateInterpreter(),
-                defaultFactory,
-                _interpreterOptionsService.Interpreters.ToArray()
+                defaultFactory
             );
         }
 
@@ -226,7 +242,6 @@ namespace Microsoft.PythonTools {
                 return _surveyNews;
             }
         }
-
 
         #region Public API
 
@@ -382,10 +397,10 @@ namespace Microsoft.PythonTools {
         internal void LoadInterpreterOptions() {
             BeginSuppressRaiseEnvironmentsChanged();
             try {
-                var placeholders = InterpreterOptions.Where(kv => kv.Key is InterpreterPlaceholder).ToArray();
+                var placeholders = InterpreterOptions.Where(kv => kv.Key.StartsWith("Placeholder;")).ToArray();
                 ClearInterpreterOptions();
-                foreach (var interpreter in _interpreterOptionsService.Interpreters) {
-                    GetInterpreterOptions(interpreter);
+                foreach (var interpreter in _interpreterRegistry.Configurations) {
+                    GetInterpreterOptions(interpreter.Id);
                 }
 
                 foreach (var kv in placeholders) {
@@ -397,50 +412,56 @@ namespace Microsoft.PythonTools {
         }
 
         internal void SaveInterpreterOptions() {
-            _interpreterOptionsService.BeginSuppressInterpretersChangedEvent();
+            _interpreterRegistry.BeginSuppressInterpretersChangedEvent();
             try {
-                var configurable = _interpreterOptionsService.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().FirstOrDefault();
-                Debug.Assert(configurable != null);
+                _interpreterOptionsService.DefaultInterpreterId = GlobalInterpreterOptions.DefaultInterpreter;
+                // Remove any items
+                foreach (var option in InterpreterOptions.Select(kv => kv.Value).Where(o => o.Removed).ToList()) {
+                    _interpreterOptionsService.RemoveConfigurableInterpreter(option._config.Id);
+                    RemoveInteractiveOptions(option._config.Id);
+                    RemoveInterpreterOptions(option._config.Id);
+                }
 
-                if (configurable != null) {
-                    // Remove any items
-                    foreach (var option in InterpreterOptions.Select(kv => kv.Value).Where(o => o.Removed).ToList()) {
-                        configurable.RemoveInterpreter(option.Id);
-                        RemoveInterpreterOptions(option.Factory);
+                // Add or update any items that weren't removed
+                foreach (var option in InterpreterOptions.Select(x => x.Value)) {
+                    if (option.Added) {
+                        if (String.IsNullOrWhiteSpace(option.Id)) {
+                            option.Id = Guid.NewGuid().ToString();
+                        }
+                        option.Added = false;
                     }
 
-                    // Add or update any items that weren't removed
-                    foreach (var option in InterpreterOptions.Select(x => x.Value)) {
-                        if (option.Added) {
-                            if (option.Id == Guid.Empty) {
-                                option.Id = Guid.NewGuid();
-                            }
-                            option.Added = false;
+                    if (option.IsConfigurable) {
+                        ProcessorArchitecture arch = ProcessorArchitecture.X86;
+                        switch (option.Architecture) {
+                            case "x86": arch = ProcessorArchitecture.X86; break;
+                            case "x64": arch = ProcessorArchitecture.Amd64; break;
                         }
-
-                        if (option.IsConfigurable) {
-                            // save configurable interpreter options
-                            var actualFactory = configurable.SetOptions(
-                                new InterpreterFactoryCreationOptions {
-                                    Id = option.Id,
-                                    InterpreterPath = option.InterpreterPath ?? "",
-                                    WindowInterpreterPath = option.WindowsInterpreterPath ?? "",
-                                    LibraryPath = option.LibraryPath ?? "",
-                                    PathEnvironmentVariableName = option.PathEnvironmentVariable ?? "",
-                                    ArchitectureString = option.Architecture ?? "x86",
-                                    LanguageVersionString = option.Version ?? "2.7",
-                                    Description = option.Display,
-                                }
-                            );
+                        
+                        // save configurable interpreter options
+                        var actualFactory = _interpreterOptionsService.AddConfigurableInterpreter(
+                            option.Description,
+                            new InterpreterConfiguration(
+                                option.Id,
+                                option.Description,
+                                !String.IsNullOrWhiteSpace(option.LibraryPath) ? Path.GetDirectoryName(option.LibraryPath) : "",
+                                option.InterpreterPath ?? "",
+                                option.WindowsInterpreterPath ?? "",
+                                option.LibraryPath ?? "",
+                                option.PathEnvironmentVariable ?? "",
+                                arch,
+                                Version.Parse(option.Version) ?? new Version(2, 7)
+                            )
                         }
                     }
                 }
 
-                foreach (var factory in InterpreterOptions.Select(x => x.Key).OfType<InterpreterPlaceholder>().ToArray()) {
-                    RemoveInterpreterOptions(factory);
+
+                foreach (var factory in InterpreterOptions.Where(x => x.Value.Id.StartsWith("Placeholder;")).ToArray()) {
+                    RemoveInterpreterOptions(factory.Value.Id);
                 }
             } finally {
-                _interpreterOptionsService.EndSuppressInterpretersChangedEvent();
+                _interpreterRegistry.EndSuppressInterpretersChangedEvent();
             }
         }
 
@@ -449,19 +470,18 @@ namespace Microsoft.PythonTools {
             LoadInterpreterOptions();
         }
 
-        internal InterpreterOptions GetInterpreterOptions(IPythonInterpreterFactory interpreterFactory) {
+        internal InterpreterOptions GetInterpreterOptions(string id) {
             InterpreterOptions options;
-            if (!_interpreterOptions.TryGetValue(interpreterFactory, out options)) {
-                var path = GetOptionsPath(interpreterFactory);
-                _interpreterOptions[interpreterFactory] = options = new InterpreterOptions(this, interpreterFactory);
+            if (!_interpreterOptions.TryGetValue(id, out options)) {
+                _interpreterOptions[id] = options = new InterpreterOptions(this, _interpreterRegistry.FindConfiguration(id));
                 options.Load();
                 RaiseEnvironmentsChanged();
             }
             return options;
         }
 
-        internal bool TryGetInterpreterOptions(IPythonInterpreterFactory factory, out InterpreterOptions options) {
-            return _interpreterOptions.TryGetValue(factory, out options);
+        internal bool TryGetInterpreterOptions(string id, out InterpreterOptions options) {
+            return _interpreterOptions.TryGetValue(id, out options);
         }
 
         private void ClearInterpreterOptions() {
@@ -474,14 +494,14 @@ namespace Microsoft.PythonTools {
             RaiseEnvironmentsChanged();
         }
 
-        internal IEnumerable<KeyValuePair<IPythonInterpreterFactory, InterpreterOptions>> InterpreterOptions {
+        internal IEnumerable<KeyValuePair<string, InterpreterOptions>> InterpreterOptions {
             get {
                 return _interpreterOptions;
             }
         }
 
-        internal void RemoveInterpreterOptions(IPythonInterpreterFactory interpreterFactory) {
-            _interpreterOptions.Remove(interpreterFactory);
+        internal void RemoveInterpreterOptions(string id) {
+            _interpreterOptions.Remove(id);
             RaiseEnvironmentsChanged();
         }
 
@@ -537,8 +557,8 @@ namespace Microsoft.PythonTools {
         /// <summary>
         /// Gets a path which is unique for this interpreter (based upon the Id and version).
         /// </summary>
-        internal static string GetOptionsPath(IPythonInterpreterFactory interpreterFactory) {
-            return interpreterFactory.Id.ToString("B") + "\\" + interpreterFactory.Configuration.Version + "\\";
+        internal static string GetInteractivePath(InterpreterConfiguration config) {
+            return config.Id;
         }
 
         #endregion

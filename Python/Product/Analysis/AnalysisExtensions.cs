@@ -19,26 +19,8 @@ using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter {
     public static class AnalysisExtensions {
-        public static IPythonInterpreterFactory GetInterpreterFactory(this IPythonInterpreterFactory[] factories, string id, string versionStr) {
-            Guid guid;
-            Version version;
-            if (Guid.TryParse(id, out guid) && Version.TryParse(versionStr, out version)) {
-                return GetInterpreterFactory(factories, guid, version);
-            }
-            return null;
-        }
-
         public static PythonLanguageVersion GetLanguageVersion(this IPythonInterpreterFactory factory) {
             return factory.Configuration.Version.ToLanguageVersion();
-        }
-
-        public static IPythonInterpreterFactory GetInterpreterFactory(this IPythonInterpreterFactory[] factories, Guid id, Version version) {
-            foreach (var factory in factories) {
-                if (factory.Id == id && factory.Configuration.Version == version) {
-                    return factory;
-                }
-            }
-            return null;
         }
 
         /// <summary>

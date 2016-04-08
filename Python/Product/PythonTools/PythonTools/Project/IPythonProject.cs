@@ -120,7 +120,6 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         event EventHandler ProjectAnalyzerChanged;
     }
-
     /// <summary>
     /// Extends <see cref="IPythonProject"/>
     /// 

@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 string projectPath;
                 if (project.TryGetProjectPath(out projectPath)) {
                     var proj = buildEngine.LoadProject(projectPath);
-
+#if FALSE
                     var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj);
                     try {
                         provider.DiscoverInterpreters();
@@ -83,6 +83,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                             walker.FunctionName
                         );
                     }
+#endif
                 }
             }
             return null;
@@ -142,6 +143,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             return hierarchy as IVsProject;
         }
 
-        #endregion
+#endregion
     }
 }

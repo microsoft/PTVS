@@ -13,8 +13,7 @@
     <Name>LibraryOar</Name>
     <RootNamespace>LibraryOar</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>9a7a9026-48c1-4688-9d5d-e5699d47d074</InterpreterId>
-    <InterpreterVersion>3.3</InterpreterVersion>
+    <InterpreterId>Global|PythonCore|3.3|x64</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>

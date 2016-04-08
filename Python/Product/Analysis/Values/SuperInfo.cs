@@ -61,13 +61,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             var mro = ClassInfo._mro;
             if (!mro.IsValid) {
                 return new Dictionary<string, IAnalysisSet>();
             }
+
+            if (options.HasFlag(GetMemberOptions.DeclaredOnly)) {
+                return Values.Mro.GetAllMembersOfMro(mro.Skip(1).Take(1), moduleContext, options);
+            }
+
             // First item in MRO list is always the class itself.
-            return Values.Mro.GetAllMembersOfMro(mro.Skip(1), moduleContext);
+            return Values.Mro.GetAllMembersOfMro(mro.Skip(1), moduleContext, options);
         }
 
         private AnalysisValue GetObjectMember(IModuleContext moduleContext, string name) {

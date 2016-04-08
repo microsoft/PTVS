@@ -30,6 +30,7 @@ namespace Microsoft.PythonTools.Commands {
     class OpenReplCommand : Command {
         private readonly IServiceProvider _serviceProvider;
         private readonly int _cmdId;
+        private readonly InterpreterConfiguration _config;
 
         public OpenReplCommand(IServiceProvider serviceProvider, int cmdId) {
             _serviceProvider = serviceProvider;
@@ -42,9 +43,9 @@ namespace Microsoft.PythonTools.Commands {
             var oe = e as OleMenuCmdEventArgs;
             if (oe != null) {
                 string args;
-                if ((factory = oe.InValue as IPythonInterpreterFactory) == null &&
-                    !string.IsNullOrEmpty(args = oe.InValue as string)
-                ) {
+                if ((asFactory = oe.InValue as IPythonInterpreterFactory) != null) {
+                    config = asFactory.Configuration;
+                } else if (!string.IsNullOrEmpty(args = oe.InValue as string)) {
                     string description;
                     var parse = _serviceProvider.GetService(typeof(SVsParseCommandLine)) as IVsParseCommandLine;
                     if (ErrorHandler.Succeeded(parse.ParseCommandTail(args, -1)) &&
@@ -52,11 +53,14 @@ namespace Microsoft.PythonTools.Commands {
                         ErrorHandler.Succeeded(parse.GetSwitchValue(0, out description)) &&
                         !string.IsNullOrEmpty(description)
                     ) {
-                        var service = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-                        factory = service.Interpreters.FirstOrDefault(
+                        var service = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                        var matchingConfig = service.Configurations.FirstOrDefault(
                             // Descriptions are localized strings, hence CCIC
-                            f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
+                            f => description.Equals(f.FullDescription, StringComparison.CurrentCultureIgnoreCase)
                         );
+                        if (matchingConfig != null) {
+                            config = matchingConfig;
+                        }
                     }
                 }
             }

@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Interpreter;
 
@@ -27,7 +28,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
     /// and not need to do a fully analysis of the Django library.
     /// </summary>
     interface IDjangoCompletionContext {
-        Dictionary<string, HashSet<AnalysisValue>> Variables {
+        string[] Variables {
             get;
         }
 
@@ -35,8 +36,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             get;
         }
 
-        IModuleContext ModuleContext {
-            get;
-        }
+        Dictionary<string, PythonMemberType> GetMembers(string name);
     }
 }

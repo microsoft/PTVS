@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -209,21 +210,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     string varName = Expression.Value.Substring(0, Expression.Value.IndexOf('.'));
 
                     // get the members of this variable
-                    HashSet<AnalysisValue> values;
-                    if (context.Variables != null && context.Variables.TryGetValue(varName, out values)) {
-                        var newTags = new Dictionary<string, PythonMemberType>();
-                        foreach (var member in values.SelectMany(item => item.GetAllMembers(context.ModuleContext))) {
-                            string name = member.Key;
-                            PythonMemberType type, newType = GetMemberType(member.Value);
-
-                            if (!newTags.TryGetValue(name, out type)) {
-                                newTags[name] = newType;
-                            } else if (type != newType && type != PythonMemberType.Unknown && newType != PythonMemberType.Unknown) {
-                                newTags[name] = PythonMemberType.Multiple;
-                            }
-                        }
-                        return CompletionInfo.ToCompletionInfo(newTags);
-                    }
+                    return CompletionInfo.ToCompletionInfo(context.GetMembers(varName));
                 } else {
                     return CompletionInfo.ToCompletionInfo(context.Variables, StandardGlyphGroup.GlyphGroupField);
                 }
@@ -251,20 +238,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             return Enumerable.Empty<CompletionInfo>();
         }
 
-        private static PythonMemberType GetMemberType(IAnalysisSet values) {
-            PythonMemberType newType = PythonMemberType.Unknown;
-            foreach (var value in values) {
-                if (value.MemberType == newType) {
-                    continue;
-                } else if (newType == PythonMemberType.Unknown) {
-                    newType = value.MemberType;
-                } else {
-                    newType = PythonMemberType.Multiple;
-                    break;
-                }
-            }
-            return newType;
-        }
 
         public IEnumerable<BlockClassification> GetSpans() {
             if (Expression != null) {
@@ -306,7 +279,12 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             if (dictionary == null) {
                 return Enumerable.Empty<CompletionInfo>();
             }
-            return dictionary.Select(key => new CompletionInfo(key.Key, glyph, key.Key, key.Value.Documentation));
+            return dictionary.Select(key => new CompletionInfo(
+                key.Key, 
+                glyph, 
+                key.Key, 
+                key.Value.Documentation
+            ));
         }
 
         internal static IEnumerable<CompletionInfo> ToCompletionInfo<T>(Dictionary<string, T> dictionary, StandardGlyphGroup glyph) {

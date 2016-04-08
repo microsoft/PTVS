@@ -22,7 +22,9 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -39,8 +41,7 @@ namespace Microsoft.PythonTools.Django.Project {
         IVsProjectFlavorCfgProvider,
         IVsProject,
         IDjangoProject,
-        IVsFilterAddProjectItemDlg,
-        IDisposable
+        IVsFilterAddProjectItemDlg
     {
         internal DjangoPackage _package;
         internal IVsProject _innerProject;
@@ -48,8 +49,8 @@ namespace Microsoft.PythonTools.Django.Project {
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
         private static Guid PythonProjectGuid = new Guid(PythonConstants.ProjectFactoryGuid);
         private OleMenuCommandService _menuService;
-        private List<OleMenuCommand> _commands = new List<OleMenuCommand>();
-        private DjangoAnalyzer _analyzer;
+        private readonly List<OleMenuCommand> _commands = new List<OleMenuCommand>();
+        private bool _disposed;
 
 #if HAVE_ICONS
         private static ImageList _images;
@@ -63,21 +64,24 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         protected void Dispose(bool disposing) {
+            if (_disposed) {
+                return;
+            }
+            _disposed = true;
+
             if (disposing) {
-                var analyzer = _analyzer;
-                _analyzer = null;
-                if (analyzer != null) {
-                    analyzer.Dispose();
+                if (_menuService != null) {
+                    foreach (var command in _commands) {
+                        _menuService.RemoveCommand(command);
+                    }
                 }
+                _commands.Clear();
             }
         }
 
-        public DjangoAnalyzer Analyzer {
+        public VsProjectAnalyzer Analyzer {
             get {
-                if (_analyzer == null) {
-                    _analyzer = new DjangoAnalyzer(this);
-                }
-                return _analyzer;
+                return _innerVsHierarchy.GetProject().GetPythonProject().GetProjectAnalyzer();
             }
         }
 
@@ -112,7 +116,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
             var pyProj = _innerVsHierarchy.GetProject().GetPythonProject();
             if (pyProj != null) {
-                Analyzer.OnNewAnalyzer(pyProj.GetProjectAnalyzer().Project);
+                RegisterExtension(pyProj.GetProjectAnalyzer());
                 pyProj.ProjectAnalyzerChanging += OnProjectAnalyzerChanging;
             }
 
@@ -143,10 +147,13 @@ namespace Microsoft.PythonTools.Django.Project {
         private void OnProjectAnalyzerChanging(object sender, AnalyzerChangingEventArgs e) {
             var pyProj = sender as IPythonProject;
             if (pyProj != null) {
-                _analyzer.OnNewAnalyzer(e.New);
+                RegisterExtension(e.New);
             }
         }
 
+        private static void RegisterExtension(PythonTools.Intellisense.VsProjectAnalyzer newAnalyzer) {
+            newAnalyzer.RegisterExtension(typeof(DjangoAnalyzer).Assembly.CodeBase);
+        }
 
         private void AddCommand(OleMenuCommand menuItem) {
             _menuService.AddCommand(menuItem);
@@ -154,13 +161,7 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         protected override void Close() {
-            if (_menuService != null) {
-                foreach (var command in _commands) {
-                    _menuService.RemoveCommand(command);
-                }
-            }
-            _commands.Clear();
-            _analyzer.Dispose();
+            Dispose();
             base.Close();
         }
 
@@ -957,16 +958,6 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         #endregion
-    }
-
-    class TagInfo {
-        public readonly string Documentation;
-        public readonly IPythonProjectEntry Entry;
-        public TagInfo(string doc, IPythonProjectEntry entry) {
-            Documentation = doc;
-            Entry = entry;
-        }
-
     }
 
 }

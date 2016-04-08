@@ -52,7 +52,7 @@ namespace TestUtilities.UI.Python {
             string description = null;
             if (Version.IsCPython) {
                 description = string.Format("{0} {1}",
-                    Version.Isx64 ? CPythonInterpreterFactoryConstants.Description64 : CPythonInterpreterFactoryConstants.Description32,
+                    Version.Isx64 ? "Python 64-bit" : "Python 32-bit",
                     Version.Version.ToVersion()
                 );
             } else if (Version.IsIronPython) {

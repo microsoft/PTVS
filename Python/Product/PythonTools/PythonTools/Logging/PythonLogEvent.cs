@@ -46,7 +46,20 @@ namespace Microsoft.PythonTools.Logging {
         /// <summary>
         /// Logs package installs
         /// </summary>
-        PackageInstalled
+        PackageInstalled,
+        /// <summary>
+        /// The analysis process exited abnormally for some reason...
+        /// </summary>
+        AnalysisExitedAbnormally,
+        /// <summary>
+        /// Communication with the analysis process was cancelled.  This coudl be user
+        /// invoked but is more likely due to the analysis process having exited abnormally.
+        /// </summary>
+        AnalysisOperationCancelled,
+        /// <summary>
+        /// A call to the analysis process failed and raised an exception.
+        /// </summary>
+        AnalysisOpertionFailed
 
     }
 }

@@ -26,13 +26,15 @@ namespace Microsoft.PythonTools.Options {
     public sealed class GlobalInterpreterOptions {
         private readonly PythonToolsService _pyService;
         private readonly IInterpreterOptionsService _interpreterOptions;
+        private readonly IInterpreterRegistryService _interpreters;
 
-        internal GlobalInterpreterOptions(PythonToolsService pyService, IInterpreterOptionsService interpreterOptions) {
+        internal GlobalInterpreterOptions(PythonToolsService pyService, IInterpreterOptionsService interpreterOptions, IInterpreterRegistryService interpreters) {
             _pyService = pyService;
+            _interpreters = interpreters;
             _interpreterOptions = interpreterOptions;
         }
 
-        internal Guid DefaultInterpreter {
+        internal string DefaultInterpreter {
             get;
             set;
         }
@@ -44,26 +46,25 @@ namespace Microsoft.PythonTools.Options {
 
         public void Load() {
             if (_interpreterOptions != null) {
-                DefaultInterpreter = _interpreterOptions.DefaultInterpreter.Id;
+                DefaultInterpreter = _interpreterOptions.DefaultInterpreter.Configuration.Id;
                 DefaultInterpreterVersion = _interpreterOptions.DefaultInterpreter.Configuration.Version;
             }
         }
 
         public void Save() {
             _interpreterOptions.DefaultInterpreter =
-                _interpreterOptions.FindInterpreter(DefaultInterpreter, DefaultInterpreterVersion) ??
-                _interpreterOptions.Interpreters.LastOrDefault();
-            DefaultInterpreter = _interpreterOptions.DefaultInterpreter.Id;
+                _interpreters.FindInterpreter(DefaultInterpreter);
+                _interpreters.Interpreters.LastOrDefault();
+            DefaultInterpreter = _interpreterOptions.DefaultInterpreter.Configuration.Id;
             DefaultInterpreterVersion = _interpreterOptions.DefaultInterpreter.Configuration.Version;
         }        
 
         public void Reset() {
-            DefaultInterpreter = Guid.Empty;
-            DefaultInterpreterVersion = new Version();
+            DefaultInterpreter = string.Empty;
         }
 
         internal void UpdateInterpreter() {
-            var interpreter = _interpreterOptions.FindInterpreter(DefaultInterpreter, DefaultInterpreterVersion);
+            var interpreter = _interpreters.FindInterpreter(DefaultInterpreter);
             if (interpreter != null) {
                 _interpreterOptions.DefaultInterpreter = interpreter;
             }

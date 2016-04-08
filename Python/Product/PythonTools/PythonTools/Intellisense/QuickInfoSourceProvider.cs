@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public IQuickInfoSource TryCreateQuickInfoSource(ITextBuffer textBuffer) {
-            return new QuickInfoSource(this, textBuffer);
+            return new QuickInfoSource(textBuffer);
         }
     }
 }

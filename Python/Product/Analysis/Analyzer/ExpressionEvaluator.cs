@@ -56,6 +56,34 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return res;
         }
 
+        /// <summary>
+        /// Returns possible variable refs associated with the expr in the expression evaluators scope.
+        /// </summary>
+        internal IAnalysisSet EvaluateNoMemberRecursion(Expression node, HashSet<AnalysisValue> seenValues = null) {
+            if (seenValues == null) {
+                seenValues = new HashSet<AnalysisValue>();
+            }
+
+            MemberExpression member = node as MemberExpression;
+            if (member != null) {
+                var target = EvaluateNoMemberRecursion(member.Target, seenValues);
+                IAnalysisSet unseenValues = AnalysisSet.Empty;
+                foreach (var value in target) {
+                    if (!seenValues.Add(value)) {
+                        unseenValues = unseenValues.Add(value, true);
+                    }
+                }
+                if (unseenValues.Count > 0) {
+                    return unseenValues.GetMember(member, _unit, member.Name);
+                }
+                return AnalysisSet.Empty;
+            }
+
+            var res = EvaluateWorker(node);
+            Debug.Assert(res != null);
+            return res;
+        }
+
         public IAnalysisSet EvaluateMaybeNull(Expression node) {
             if (node == null) {
                 return null;

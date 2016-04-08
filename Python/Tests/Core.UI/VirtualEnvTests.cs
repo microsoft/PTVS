@@ -17,11 +17,13 @@
 extern alias analysis;
 extern alias util;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using analysis::Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools;
@@ -221,19 +223,19 @@ namespace PythonToolsUITests {
 
                 Assert.AreNotEqual(null, project.ProjectItems.Item(Path.GetFileNameWithoutExtension(app.Dte.Solution.FullName) + ".py"));
 
-                var id0 = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
+                var id0 = (string)project.Properties.Item("InterpreterId").Value;
 
                 string envName1, envName2;
                 var env1 = app.CreateVirtualEnvironment(project, out envName1);
                 var env2 = app.CreateVirtualEnvironment(project, out envName2);
 
-                var id1 = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
+                var id1 = (string)project.Properties.Item("InterpreterId").Value;
                 Assert.AreNotEqual(id0, id1);
 
                 env2.Select();
                 app.Dte.ExecuteCommand("Python.ActivateEnvironment");
 
-                var id2 = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
+                var id2 = (string)project.Properties.Item("InterpreterId").Value;
                 Assert.AreNotEqual(id0, id2);
                 Assert.AreNotEqual(id1, id2);
 
@@ -241,7 +243,7 @@ namespace PythonToolsUITests {
                 app.SolutionExplorerTreeView.SelectProject(project);
                 app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"" + envName1 + "\"");
 
-                var id1b = Guid.Parse((string)project.Properties.Item("InterpreterId").Value);
+                var id1b = (string)project.Properties.Item("InterpreterId").Value;
                 Assert.AreEqual(id1, id1b);
             }
         }
@@ -288,12 +290,7 @@ namespace PythonToolsUITests {
                 var project = CreateTemporaryProject(app);
 
                 string envName, envPath;
-                TreeNode env;
-                using (var ps = new ProcessScope("Microsoft.PythonTools.Analyzer")) {
-                    env = app.CreateVirtualEnvironment(project, out envName, out envPath);
-
-                    Assert.IsFalse(ps.WaitForNewProcess(TimeSpan.FromSeconds(10)).Any(), "Unexpected analyzer processes");
-                }
+                TreeNode env = app.CreateVirtualEnvironment(project, out envName, out envPath);
 
                 // Need to wait some more for the database to be loaded.
                 app.WaitForNoDialog(TimeSpan.FromSeconds(10.0));
@@ -376,9 +373,15 @@ namespace PythonToolsUITests {
                 Thread.Sleep(5000);
 
                 // Ensure virtualenv_support is NOT available in the virtual environment.
-                var interp = project.GetPythonProject().GetInterpreter();
+                var interp = project.GetPythonProject().GetAnalyzer();
+                var module = interp
+                    .GetModulesResult(true)
+                    .Result
+                    .Select(x => x.Name)
+                    .Where(x => x == "virtualenv_support")
+                    .FirstOrDefault();
 
-                Assert.IsNull(interp.ImportModule("virtualenv_support"));
+                Assert.IsNull(module);
             }
         }
 
@@ -443,7 +446,51 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 var project = app.OpenProject(@"TestData\Environments\Unknown.sln");
 
                 app.ExecuteCommand("Debug.Start");
-                PythonVisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Unknown Python 2.7", "incorrectly configured");
+                PythonVisualStudioApp.CheckMessageBox(MessageBoxButton.Ok, "Global|PythonCore|2.8|x86", "incorrectly configured");
+            }
+        }
+
+        class MockProjectContextProvider : IProjectContextProvider {
+            private readonly object[] _contexts;
+
+            public MockProjectContextProvider(params object[] contexts) {
+                _contexts = contexts;
+
+            }
+
+            public IEnumerable<object> Projects {
+                get {
+                    return _contexts;
+                }
+            }
+
+            public event EventHandler ProjectsChanaged {
+                add {
+                }
+                remove {
+                }
+            }
+
+            public void InterpreterLoaded(object context, InterpreterConfiguration factory) {
+            }
+
+            public void InterpreterUnloaded(object context, InterpreterConfiguration factory) {
+            }
+
+            public event EventHandler<ProjectChangedEventArgs> ProjectChanged {
+                add {
+
+                }
+                remove {
+                }
+            }
+        }
+
+        class MockLogger : IInterpreterLog {
+            public readonly StringBuilder Errors = new StringBuilder();
+
+            public void Log(string msg) {
+                Errors.AppendLine(msg);
             }
         }
 
@@ -453,49 +500,51 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             try {
                 var service = new MockInterpreterOptionsService();
                 var proj = collection.LoadProject(TestData.GetPath(@"TestData\Environments\Unavailable.pyproj"));
+                var contextProvider = new MockProjectContextProvider(proj);
 
-                using (var provider = new MSBuildProjectInterpreterFactoryProvider(service, proj)) {
-                    try {
-                        provider.DiscoverInterpreters();
-                        Assert.Fail("Expected InvalidDataException in DiscoverInterpreters");
-                    } catch (InvalidDataException ex) {
-                        AssertUtil.AreEqual(ex.Message
-                            .Replace(TestData.GetPath("TestData\\Environments\\"), "$")
-                            .Split('\r', '\n')
-                            .Where(s => !string.IsNullOrEmpty(s))
-                            .Select(s => s.Trim()),
-                            "Some project interpreters failed to load:",
-                            @"Interpreter $env\ has invalid value for 'Id': INVALID ID",
-                            @"Interpreter $env\ has invalid value for 'Version': INVALID VERSION",
-                            @"Interpreter $env\ has invalid value for 'BaseInterpreter': INVALID BASE",
-                            @"Interpreter $env\ has invalid value for 'InterpreterPath': INVALID<>PATH",
-                            @"Interpreter $env\ has invalid value for 'WindowsInterpreterPath': INVALID<>PATH",
-                            @"Interpreter $env\ has invalid value for 'LibraryPath': INVALID<>PATH",
-                            @"Interpreter $env\ has invalid value for 'BaseInterpreter': {98512745-4ac7-4abb-9f33-120af32edc77}"
-                        );
-                    }
+                var logger = new MockLogger();
+
+                using (var provider = new MSBuildProjectInterpreterFactoryProvider(
+                    new[] { new Lazy<IProjectContextProvider>(() => contextProvider) },
+                    null,
+                    new[] { new Lazy<IInterpreterLog>(() => logger) })) {
+                    var configs = provider.GetInterpreterConfigurations().ToArray();
+                    // force the load...
+                    AssertUtil.AreEqual(
+                        logger.Errors.ToString()
+                        .Replace(TestData.GetPath("TestData\\Environments\\"), "$")
+                        .Split('\r', '\n')
+                        .Where(s => !string.IsNullOrEmpty(s))
+                        .Select(s => s.Trim()),
+                        @"Interpreter $env\ has invalid value for 'Id':",
+                        @"Interpreter $env\ has invalid value for 'Version': INVALID VERSION",
+                        @"Interpreter $env\ has invalid value for 'BaseInterpreter': INVALID BASE",
+                        @"Interpreter $env\ has invalid value for 'InterpreterPath': INVALID<>PATH",
+                        @"Interpreter $env\ has invalid value for 'WindowsInterpreterPath': INVALID<>PATH",
+                        @"Interpreter $env\ has invalid value for 'LibraryPath': INVALID<>PATH",
+                        @"Interpreter $env\ has invalid value for 'BaseInterpreter': {98512745-4ac7-4abb-9f33-120af32edc77}"
+                    );
 
                     var factories = provider.GetInterpreterFactories().ToList();
                     foreach (var fact in factories) {
-                        Console.WriteLine("{0}: {1}", fact.GetType().FullName, fact.Description);
+                        Console.WriteLine("{0}: {1}", fact.GetType().FullName, fact.Configuration.Description);
                     }
 
                     foreach (var fact in factories) {
                         Assert.IsInstanceOfType(
                             fact,
                             typeof(MSBuildProjectInterpreterFactoryProvider.NotFoundInterpreterFactory),
-                            string.Format("{0} was not correct type", fact.Description)
+                            string.Format("{0} was not correct type", fact.Configuration.Description)
                         );
-                        Assert.IsFalse(provider.IsAvailable(fact), string.Format("{0} was not unavailable", fact.Description));
+                        Assert.IsFalse(fact.Configuration.IsAvailable(), string.Format("{0} was not unavailable", fact.Configuration.Description));
                     }
 
-                    AssertUtil.AreEqual(factories.Select(f => f.Description),
+                    AssertUtil.AreEqual(factories.Select(f => f.Configuration.Description),
                         "Invalid BaseInterpreter (unavailable)",
                         "Invalid InterpreterPath (unavailable)",
                         "Invalid WindowsInterpreterPath (unavailable)",
                         "Invalid LibraryPath (unavailable)",
-                        "Absent BaseInterpreter (unavailable)",
-                        "Unknown Python 2.7"
+                        "Absent BaseInterpreter (unavailable)"
                     );
                 }
             } finally {
@@ -548,10 +597,10 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
                 app.ServiceProvider.GetUIThread().Invoke(() => {
                     var pp = project.GetPythonProject();
-                    pp.Interpreters.AddInterpreter(dis.CurrentDefault);
+                    pp.AddInterpreter(dis.CurrentDefault.Configuration.Id);
                 });
 
-                var envName = dis.CurrentDefault.Description;
+                var envName = dis.CurrentDefault.Configuration.Description;
                 var sln = app.OpenSolutionExplorer();
                 var env = sln.FindChildOfProject(project, Strings.Environments, envName);
 

@@ -43,9 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 return false;
             }
 
-            return x.Id == y.Id && 
-                x.Description == y.Description &&
-                x.Configuration.Equals(y.Configuration);
+            return x.Configuration.Equals(y.Configuration);
         }
 
         /// <summary>
@@ -112,6 +110,15 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
+        /// Returns <c>true</c> if the factory should appear in the UI.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public static bool IsUIVisible(this InterpreterConfiguration config) {
+            return config != null &&
+                !config.UIMode.HasFlag(InterpreterUIMode.Hidden);
+        }
+
+        /// <summary>
         /// Returns <c>true</c> if the factory can ever be the default
         /// interpreter.
         /// </summary>
@@ -135,6 +142,27 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
+        /// Returns <c>true</c> if the factory can be automatically selected as
+        /// the default interpreter.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public static bool CanBeAutoDefault(this InterpreterConfiguration config) {
+            return config != null &&
+                !config.UIMode.HasFlag(InterpreterUIMode.CannotBeDefault) &&
+                !config.UIMode.HasFlag(InterpreterUIMode.CannotBeAutoDefault);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the factory can be configured.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public static bool CanBeConfigured(this InterpreterConfiguration config) { 
+            return config != null &&
+                !config.UIMode.HasFlag(InterpreterUIMode.CannotBeConfigured);
+        }
+
+
+        /// <summary>
         /// Returns <c>true</c> if the factory can be configured.
         /// </summary>
         /// <remarks>New in 2.2</remarks>
@@ -143,6 +171,5 @@ namespace Microsoft.PythonTools.Interpreter {
                 factory.Configuration != null &&
                 !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.CannotBeConfigured);
         }
-
     }
 }

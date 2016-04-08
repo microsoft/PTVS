@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,100 +14,58 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Analysis.Values;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
-    /// Provides the results of analyzing a simple expression.  Returned from Analysis.AnalyzeExpression.
+    /// Represents information about an analyzed expression.  This is returned from 
+    /// AnalyzeExpression which is defined as an extension method in <see cref="Microsoft.PythonTools.Intellisense.PythonAnalysisExtensions"/>
     /// </summary>
-    public class ExpressionAnalysis {
+    public sealed class ExpressionAnalysis {
         private readonly string _expr;
-        private readonly ModuleAnalysis _analysis;
         private readonly ITrackingSpan _span;
-        private readonly int _index;
-        private readonly VsProjectAnalyzer _analyzer;
-        private readonly ITextSnapshot _snapshot;
-        public static readonly ExpressionAnalysis Empty = new ExpressionAnalysis(null, "", null, 0, null, null);
+        private readonly AnalysisVariable[] _variables;
+        private readonly string _privatePrefix;
+        private readonly string _memberName;
 
-        internal ExpressionAnalysis(VsProjectAnalyzer analyzer, string expression, ModuleAnalysis analysis, int index, ITrackingSpan span, ITextSnapshot snapshot) {
-            _expr = expression;
-            _analysis = analysis;
-            _index = index;
+        internal ExpressionAnalysis(string text, ITrackingSpan span, AnalysisVariable[] variables, string privatePrefix, string memberName) {
             _span = span;
-            _analyzer = analyzer;
-            _snapshot = snapshot;
+            _expr = text;
+            _variables = variables;
+            _privatePrefix = privatePrefix;
+            _memberName = memberName;
         }
 
         /// <summary>
-        /// The expression which this is providing information about.
-        /// </summary>
-        public string Expression {
-            get {
-                return _expr;
-            }
-        }
-
-        /// <summary>
-        /// The span of the expression being analyzed.
-        /// </summary>
-        public ITrackingSpan Span {
-            get {
-                return _span;
-            }
-        }
-
-        /// <summary>
-        /// Gets all of the variables (storage locations) associated with the expression.
-        /// </summary>
-        public IEnumerable<IAnalysisVariable> Variables {
-            get {
-                if (_analysis != null) {
-                    lock (_analyzer) {
-                        return _analysis.GetVariables(_expr, TranslatedLocation);
-                    }
-                }
-                return new IAnalysisVariable[0];
-            }
-        }
-
-        /// <summary>
-        /// The possible values of the expression (types, constants, functions, modules, etc...)
-        /// </summary>
-        public IEnumerable<AnalysisValue> Values {
-            get {
-                if (_analysis != null) {
-                    lock (_analyzer) {
-                        return _analysis.GetValues(_expr, TranslatedLocation);
-                    }
-                }
-                return new AnalysisValue[0];
-            }
-        }
-
-        public Expression GetEvaluatedExpression() {
-            return Statement.GetExpression(_analysis.GetAstFromText(_expr, TranslatedLocation).Body);
-        }
-
-        /// <summary>
-        /// Returns the complete PythonAst for the evaluated expression.  Calling Statement.GetExpression on the Body
-        /// of the AST will return the same expression as GetEvaluatedExpression.
+        /// Gets the expression which was evaluated to create this expression analyze.
         /// 
-        /// New in 1.1.
+        /// An expression analysis is usually created from a point in a buffer and this
+        /// is the complete expression that the point mapped to.
         /// </summary>
-        /// <returns></returns>
-        public PythonAst GetEvaluatedAst() {
-            return _analysis.GetAstFromText(_expr, TranslatedLocation);
-        }
+        public string Expression => _expr;
+        
+        /// <summary>
+        /// Gets the span associated with the expression.
+        /// </summary>
+        public ITrackingSpan Span => _span;
+        
+        /// <summary>
+        /// Gets the list of variables which the expression refers to.  This can include
+        /// references and definitions for variables, fields, etc... as well as actual
+        /// values stored in those fields.
+        /// </summary>
+        public AnalysisVariable[] Variables => _variables;
 
-        private SourceLocation TranslatedLocation {
-            get {
-                return VsProjectAnalyzer.TranslateIndex(_index, _snapshot, _analysis);
-            }
-        }
+        /// <summary>
+        /// Gets the private prefix for this expression analysis.  This will be set
+        /// when inside of a class where names could be mangled.
+        /// </summary>
+        public string PrivatePrefix => _privatePrefix;
+
+        /// <summary>
+        /// If the expression is a member name (e.g. hello.world, or hello.good.world)
+        /// this gets the name of the member such as "hello".
+        /// </summary>
+        public string MemberName => _memberName;
     }
 }

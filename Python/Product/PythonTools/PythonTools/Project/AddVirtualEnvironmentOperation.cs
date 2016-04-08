@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Project {
         }
         
         public async Task Run() {
-            var service = _project.Site.GetComponentModel().GetService<IInterpreterOptionsService>();
+            var service = _project.Site.GetComponentModel().GetService<IInterpreterRegistryService>();
 
             var factory = await _project.CreateOrAddVirtualEnvironment(
                 service,

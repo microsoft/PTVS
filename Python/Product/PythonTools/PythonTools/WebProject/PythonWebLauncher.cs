@@ -230,7 +230,7 @@ namespace Microsoft.PythonTools.Project.Web {
                 }
 
                 var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-                if (interpreterService == null || factory == interpreterService.NoInterpretersValue) {
+                if (interpreterService == null || factory == null) {
                     throw new NoInterpretersException();
                 }
             }

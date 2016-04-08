@@ -20,13 +20,11 @@ using Microsoft.VisualStudio.Text.Editor;
 namespace Microsoft.PythonTools.Intellisense {
     struct MonitoredBufferResult {
         public readonly BufferParser BufferParser;
-        public readonly ITextView TextView;
-        public readonly IProjectEntry ProjectEntry;
+        public readonly AnalysisEntry AnalysisEntry;
 
-        public MonitoredBufferResult(BufferParser bufferParser, ITextView textView, IProjectEntry projectEntry) {
+        public MonitoredBufferResult(BufferParser bufferParser, AnalysisEntry projectEntry) {
             BufferParser = bufferParser;
-            TextView = textView;
-            ProjectEntry = projectEntry;
+            AnalysisEntry = projectEntry;
         }
     }
 }

@@ -178,7 +178,7 @@ namespace ReplWindowUITests {
                 Assert.IsTrue(interactive.Settings.EnableAttach, "EnableAttach was not set");
 
                 using (var dis = new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
-                    Assert.AreEqual(dis.CurrentDefault.Description, project.GetPythonProject().GetInterpreterFactory().Description);
+                    Assert.AreEqual(dis.CurrentDefault.Configuration.Description, project.GetPythonProject().GetInterpreterFactory().Configuration.Description);
 
                     interactive.Reset();
                     interactive.ClearScreen();

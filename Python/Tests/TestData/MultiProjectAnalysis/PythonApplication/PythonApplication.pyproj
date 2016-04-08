@@ -13,8 +13,7 @@
     <Name>PythonApplication3</Name>
     <RootNamespace>PythonApplication3</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>80659ab7-4d53-4e0c-8588-a766116cbd46</InterpreterId>
-    <InterpreterVersion>2.7</InterpreterVersion>
+    <InterpreterId>IronPython|2.7 32-bit</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments />
     <InterpreterPath />

@@ -118,18 +118,14 @@ namespace PythonToolsUITests {
                 Assert.IsNotNull(props);
 
                 var oldDefaultInterp = props.Item("DefaultInterpreter").Value;
-                var oldDefaultVersion = props.Item("DefaultInterpreterVersion").Value;
 
                 app.OnDispose(() => {
                     props.Item("DefaultInterpreter").Value = oldDefaultInterp;
-                    props.Item("DefaultInterpreterVersion").Value = oldDefaultVersion;
                 });
 
-                props.Item("DefaultInterpreter").Value = Guid.Empty;
-                props.Item("DefaultInterpreterVersion").Value = "2.7";
+                props.Item("DefaultInterpreter").Value = "";
 
-                Assert.AreEqual(Guid.Empty, props.Item("DefaultInterpreter").Value);
-                Assert.AreEqual("2.7", props.Item("DefaultInterpreterVersion").Value);
+                Assert.AreEqual("", props.Item("DefaultInterpreter").Value);
             }
         }
 
@@ -572,9 +568,10 @@ namespace PythonToolsUITests {
         public void ChangeDefaultInterpreterProjectClosed() {
             using (var app = new PythonVisualStudioApp()) {
                 
-                var service = app.InterpreterService;
+                var service = app.OptionsService;
                 var original = service.DefaultInterpreter;
-                using (var dis = new DefaultInterpreterSetter(service.Interpreters.FirstOrDefault(i => i != original))) {
+                var interpreters = app.InterpreterService;
+                using (var dis = new DefaultInterpreterSetter(interpreters.Interpreters.FirstOrDefault(i => i != original))) {
                     var project = app.OpenProject(@"TestData\HelloWorld.sln");
                     app.Dte.Solution.Close();
 
@@ -799,14 +796,11 @@ namespace PythonToolsUITests {
 
                 var doc = app.GetDocument(program.Document.FullName);
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "str");
+                WaitForDescription(snapshot, "a", "str");
 
                 CompileFile("ClassLibraryBool.cs", dllPath);
 
-                Thread.Sleep(2000); // allow time to reload the new DLL
-                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
-
-                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "bool");
+                WaitForDescription(snapshot, "a", "bool");
             }
         }
 
@@ -857,8 +851,21 @@ namespace PythonToolsUITests {
                 // rebuild
                 app.Dte.Solution.SolutionBuild.Build(WaitForBuildToFinish: true);
 
-                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "bool");
+                WaitForDescription(snapshot, "a", "bool");
             }
+        }
+
+        private static void WaitForDescription(ITextSnapshot snapshot, string variable, params string[] expected) {
+            IEnumerable<string> descriptions = new string[0];
+            for (int i = 0; i < 100; i++) {
+                descriptions = GetVariableDescriptions(variable, snapshot);
+                if (descriptions.ToSet().ContainsExactly(expected)) {
+                    break;
+                }
+
+                Thread.Sleep(100);
+            }
+            AssertUtil.ContainsExactly(descriptions, expected);
         }
 
         /// <summary>
@@ -886,10 +893,7 @@ namespace PythonToolsUITests {
 
                 CompileFile("ClassLibraryBool.cs", "ClassLibrary.dll");
 
-                Thread.Sleep(2000); // allow time to reload the new DLL
-                project.GetPythonProject().GetAnalyzer().WaitForCompleteAnalysis(_ => true);
-
-                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "bool");
+                WaitForDescription(snapshot, "a", "bool");
             }
         }
 
@@ -973,7 +977,12 @@ namespace PythonToolsUITests {
         }
 
         private static IEnumerable<string> GetVariableDescriptions(string variable, ITextSnapshot snapshot) {
-            return GetVariableAnalysis(variable, snapshot).Values.Select(v => v.Description);
+            var index = snapshot.GetText().IndexOf(variable + " =");
+            return VsProjectAnalyzer.GetValueDescriptionsAsync(
+                snapshot.TextBuffer.GetAnalysisEntry(),
+                variable,
+                new SnapshotPoint(snapshot, index)
+            ).Result;
         }
 
         private static SignatureAnalysis GetSignatures(VisualStudioApp app, string text, ITextSnapshot snapshot) {
@@ -1027,10 +1036,8 @@ namespace PythonToolsUITests {
 
                 var doc = app.GetDocument(program.Document.FullName);
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-                var index = snapshot.GetText().IndexOf("a =");
-                var span = snapshot.CreateTrackingSpan(new Span(index, 1), SpanTrackingMode.EdgeInclusive);
-                var analysis = snapshot.AnalyzeExpression(app.ServiceProvider, span);
-                Assert.AreEqual(analysis.Values.First().Description, "int");
+                
+                Assert.AreEqual(GetVariableDescriptions("a", snapshot).First(), "int");
             }
         }
 
@@ -1070,22 +1077,21 @@ namespace PythonToolsUITests {
                     searchPaths = (project.GetPythonProject() as IPythonProject).GetSearchPaths().ToArray();
                 });
                 AssertUtil.ContainsExactly(searchPaths, TestData.GetPath(@"TestData\ProjectReference\Debug\"));
-                
+
                 var pyproj = project.GetPythonProject();
-                var interp = pyproj.GetInterpreter();
-                Assert.IsNotNull(interp.ImportModule("native_module"), "module was not loaded");
+                var analyzer = pyproj.GetAnalyzer();
+                Assert.IsNotNull(analyzer.GetModulesResult(true).Result.Where(x => x.Name == "native_module").FirstOrDefault(), "module was not loaded");
 
                 using (var evt = new AutoResetEvent(false)) {
                     pyproj.ProjectAnalyzerChanged += (s, e) => { try { evt.Set(); } catch { } };
-                    dis.SetDefault(app.InterpreterService.FindInterpreter(testPython.Id, testPython.Version.ToVersion()));
+                    dis.SetDefault(app.InterpreterService.FindInterpreter(testPython.Id));
                     Assert.IsTrue(evt.WaitOne(10000), "Timed out waiting for analyzer change");
                 }
-
-                interp = pyproj.GetInterpreter();
-                for (int retries = 10; retries > 0 && interp.ImportModule("native_module") == null; --retries) {
+                analyzer = pyproj.GetAnalyzer();
+                for (int retries = 10; retries > 0 && analyzer.GetModulesResult(true).Result.Where(x => x.Name == "native_module").FirstOrDefault() == null; --retries) {
                     Thread.Sleep(500);
                 }
-                Assert.IsNotNull(interp.ImportModule("native_module"), "module was not reloadod");
+                Assert.IsNotNull(analyzer.GetModulesResult(true).Result.Where(x => x.Name == "native_module").FirstOrDefault(), "module was not reloadod");
             }
         }
 
@@ -1227,7 +1233,6 @@ namespace PythonToolsUITests {
                 string fullPath = TestData.GetPath(@"TestData\AddExistingFolder.sln");
 
                 Assert.AreEqual(5, project.ProjectItems.Count);
-                Assert.AreEqual(8, app.OpenSolutionExplorer().ExpandAll());
 
                 var item = project.ProjectItems.AddFromFile(TestData.GetPath(@"TestData\AddExistingFolder\TestFolder\TestFile.txt"));
 
@@ -1237,7 +1242,6 @@ namespace PythonToolsUITests {
 
                 Assert.AreEqual(6, project.ProjectItems.Count);
                 // Two more items, because we've added the file and its folder
-                Assert.AreEqual(10, app.OpenSolutionExplorer().ExpandAll());
 
                 var folder = project.ProjectItems.Item("TestFolder");
                 Assert.IsNotNull(folder);
@@ -1257,7 +1261,6 @@ namespace PythonToolsUITests {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
                 // "Python Environments", "References", "Search Paths", "Program.py"
                 Assert.AreEqual(4, project.ProjectItems.Count);
-                Assert.AreEqual(7, app.OpenSolutionExplorer().ExpandAll());
 
                 try {
                     File.Delete(TestData.GetPath(@"TestData\HelloWorld\LocalsTest.py"));
@@ -1267,7 +1270,6 @@ namespace PythonToolsUITests {
 
                 Assert.IsNotNull(item);
                 Assert.AreEqual(5, project.ProjectItems.Count);
-                Assert.AreEqual(8, app.OpenSolutionExplorer().ExpandAll());
 
                 Assert.AreEqual("LocalsTest.py", item.Properties.Item("FileName").Value);
 
@@ -1336,7 +1338,7 @@ namespace PythonToolsUITests {
 
             using (var app = new PythonVisualStudioApp())
             using (var dis = app.SelectDefaultInterpreter(python)) {
-                var interpreterName = dis.CurrentDefault.Description;
+                var interpreterName = dis.CurrentDefault.Configuration.Description;
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
                 var solutionExplorer = app.OpenSolutionExplorer();

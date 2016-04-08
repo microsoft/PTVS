@@ -35,7 +35,7 @@
     <AssemblyName>Microsoft.PythonTools.Django</AssemblyName>
     <UseVSSDK>true</UseVSSDK>
     <CreateVsixContainer>true</CreateVsixContainer>
-    <NoWarn>1762</NoWarn>
+    <NoWarn>1762;0436</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -112,6 +112,7 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml" />
@@ -165,19 +166,17 @@
     <Compile Include="Debugger\DjangoLauncherProvider.cs" />
     <Compile Include="DialogWindowVersioningWorkaround.cs" />
     <Compile Include="Formatting\TemplateHtmlCommandFactory.cs" />
+    <Compile Include="Intellisense\AnalyzerExtensions.cs" />
     <Compile Include="Intellisense\DjangoCompletionSource.cs" />
     <Compile Include="Intellisense\ProjectBlockCompletionContext.cs" />
     <Compile Include="Intellisense\ProjectBlockCompletionContextBase.cs" />
     <Compile Include="Formatting\TemplateFormatDocumentCommandHandler.cs" />
     <Compile Include="Formatting\TemplateFormatSelectionCommandHandler.cs" />
     <Compile Include="Intellisense\TextBufferExtensions.cs" />
-    <Compile Include="Project\DjangoAnalyzer.cs" />
-    <Compile Include="Project\DjangoAnalyzer.TagsAndFilters.cs" />
     <Compile Include="Project\DjangoProjectConfig.cs" />
     <Compile Include="Project\DjangoPropertyPage.cs" />
     <Compile Include="Project\IDjangoProject.cs" />
     <Compile Include="Project\ProjectSmuggler.cs" />
-    <Compile Include="Project\TemplateVariables.cs" />
     <Compile Include="ProvideLanguageTemplatesAttribute.cs" />
     <Compile Include="Project\DjangoPropertyPageControl.cs">
       <SubType>UserControl</SubType>
@@ -312,6 +311,11 @@
     <ProjectReference Include="$(BuildRoot)Python\Product\VSCommon\VSCommon.csproj">
       <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
       <Name>Microsoft.PythonTools.VSCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="$(BuildRoot)Python\Product\Django.Analysis\Django.Analysis.csproj">
+      <Project>{74d0775f-2d1e-4685-9bd4-0658f496f8dc}</Project>
+      <Name>Django.Analysis</Name>
+      <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

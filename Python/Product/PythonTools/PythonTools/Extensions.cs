@@ -240,27 +240,14 @@ namespace Microsoft.PythonTools {
                 .Where(p => p != null);
         }
 
-        public static IModuleContext GetModuleContext(this ITextBuffer buffer, IServiceProvider serviceProvider) {
-            if (buffer == null) {
-                return null;
-            }
-
-            var analyzer = buffer.GetAnalyzer(serviceProvider);
-            if (analyzer == null) {
-                return null;
-            }
-
-            var path = buffer.GetFilePath();
-            if (string.IsNullOrEmpty(path)) {
-                return null;
-            }
-
-            var entry = analyzer.GetEntryFromFile(path);
-            if (entry == null) {
-                return null;
-            }
-            return entry.AnalysisContext;
+        public static IPythonProject AsPythonProject(this IVsProject project) {
+            return ((IVsHierarchy)project).GetProject().GetCommonProject() as PythonProjectNode;
         }
+
+        public static IPythonProject AsPythonProject(this EnvDTE.Project project) {
+            return project.GetCommonProject() as PythonProjectNode;
+        }
+
 
         internal static PythonProjectNode GetPythonProject(this IVsProject project) {
             return ((IVsHierarchy)project).GetProject().GetCommonProject() as PythonProjectNode;
@@ -270,40 +257,22 @@ namespace Microsoft.PythonTools {
             return project.GetCommonProject() as PythonProjectNode;
         }
         
-        internal static void GotoSource(this LocationInfo location, IServiceProvider serviceProvider) {
-            string zipFileName = VsProjectAnalyzer.GetZipFileName(location.ProjectEntry);
-            if (zipFileName == null) {
-                PythonToolsPackage.NavigateTo(
-                    serviceProvider,
-                    location.FilePath,
-                    Guid.Empty,
-                    location.Line - 1,
-                    location.Column - 1);
-            }
+        internal static bool TryGetAnalysisEntry(this ITextBuffer buffer, out AnalysisEntry entry) {
+            return buffer.Properties.TryGetProperty(typeof(AnalysisEntry), out entry);
         }
 
-        internal static bool TryGetProjectEntry(this ITextBuffer buffer, out IProjectEntry entry) {
-            return buffer.Properties.TryGetProperty<IProjectEntry>(typeof(IProjectEntry), out entry);
-        }
-
-        internal static bool TryGetPythonProjectEntry(this ITextBuffer buffer, out IPythonProjectEntry entry) {
-            IProjectEntry e;
-            if (buffer.TryGetProjectEntry(out e) && (entry = e as IPythonProjectEntry) != null) {
+        internal static bool TryGetPythonProjectEntry(this ITextBuffer buffer, out AnalysisEntry entry) {
+            AnalysisEntry e;
+            if (buffer.TryGetAnalysisEntry(out e) && (entry = e as AnalysisEntry) != null) {
                 return true;
             }
             entry = null;
             return false;
         }
 
-        internal static IProjectEntry GetProjectEntry(this ITextBuffer buffer) {
-            IProjectEntry res;
-            buffer.TryGetProjectEntry(out res);
-            return res;
-        }
-
-        internal static IPythonProjectEntry GetPythonProjectEntry(this ITextBuffer buffer) {
-            IPythonProjectEntry res;
-            buffer.TryGetPythonProjectEntry(out res);
+        internal static AnalysisEntry GetAnalysisEntry(this ITextBuffer buffer) {
+            AnalysisEntry res;
+            buffer.TryGetAnalysisEntry(out res);
             return res;
         }
 
@@ -351,10 +320,12 @@ namespace Microsoft.PythonTools {
             );
         }
 
+#if FALSE
         internal static ExpressionAnalysis GetExpressionAnalysis(this ITextView view, IServiceProvider serviceProvider) {
             ITrackingSpan span = GetCaretSpan(view);
             return span.TextBuffer.CurrentSnapshot.AnalyzeExpression(serviceProvider, span, false);
         }
+#endif
 
         internal static ITrackingSpan GetCaretSpan(this ITextView view) {
             var caretPoint = view.GetCaretPosition();

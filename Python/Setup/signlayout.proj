@@ -40,6 +40,7 @@
         " Condition="$(IncludeIronPython)" />
     <ManagedFiles Include="Microsoft.PythonTools.ML.dll" Condition="$(IncludeML)" />
     <ManagedFiles Include="Microsoft.PythonTools.Uwp.dll" Condition="$(IncludeUwp)" />
+    <ManagedFiles Include="Microsoft.PythonTools.Uwp.Interpreter.dll" Condition="$(IncludeUwp)" />
 
     <UnmanagedFiles Include="
         Microsoft.PythonTools.Debugger.Helper.x64.dll;

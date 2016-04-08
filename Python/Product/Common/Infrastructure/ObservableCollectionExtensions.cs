@@ -43,7 +43,6 @@ namespace Microsoft.PythonTools.Infrastructure {
             foreach (var r in right.OrderBy(k => k, compareSortKey)) {
                 if (toRemove.TryGetValue(r, out index)) {
                     toRemove.Remove(r);
-                    left[index] = r;
                 } else {
                     toAdd[r] = r;
                 }

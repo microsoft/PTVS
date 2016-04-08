@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools {
     [ProvideLanguageService(typeof(PythonLanguageInfo), PythonConstants.LanguageName, 106, RequestStockColors = true, ShowSmartIndent = true, ShowCompletion = true, DefaultToInsertSpaces = true, HideAdvancedMembersByDefault = true, EnableAdvancedMembersOption = true, ShowDropDownOptions = true)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.FileExtension)]
     [ProvideLanguageExtension(typeof(PythonLanguageInfo), PythonConstants.WindowsFileExtension)]
-    [ProvideDebugEngine(AD7Engine.DebugEngineName, typeof(AD7ProgramProvider), typeof(AD7Engine), AD7Engine.DebugEngineId,  hitCountBp: true)]
+    [ProvideDebugEngine(AD7Engine.DebugEngineName, typeof(AD7ProgramProvider), typeof(AD7Engine), AD7Engine.DebugEngineId, hitCountBp: true)]
     [ProvideDebugLanguage("Python", "{DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF}", PythonExpressionEvaluatorGuid, AD7Engine.DebugEngineId)]
     [ProvideDebugPortSupplier("Python remote (ptvsd)", typeof(PythonRemoteDebugPortSupplier), PythonRemoteDebugPortSupplier.PortSupplierId, typeof(PythonRemoteDebugPortPicker))]
     [ProvideDebugPortPicker(typeof(PythonRemoteDebugPortPicker))]
@@ -174,10 +174,6 @@ namespace Microsoft.PythonTools {
     #endregion
     [ProvideComponentPickerPropertyPage(typeof(PythonToolsPackage), typeof(WebPiComponentPickerControl), "WebPi", DefaultPageNameValue = "#4000")]
     [ProvideToolWindow(typeof(InterpreterListToolWindow), Style = VsDockStyle.Linked, Window = ToolWindowGuids80.SolutionExplorer)]
-    [ProvidePythonInterpreterFactoryProvider(CPythonInterpreterFactoryConstants.Id32, typeof(CPythonInterpreterFactoryConstants))]
-    [ProvidePythonInterpreterFactoryProvider(CPythonInterpreterFactoryConstants.Id64, typeof(CPythonInterpreterFactoryConstants))]
-    [ProvidePythonInterpreterFactoryProvider("ConfigurablePythonInterpreterFactoryProvider", typeof(ConfigurablePythonInterpreterFactoryProvider))]
-    [ProvidePythonInterpreterFactoryProvider(GuidList.guidLoadedProjectInterpreterFactoryProviderString, typeof(LoadedProjectInterpreterFactoryProvider))]
     [ProvideDiffSupportedContentType(".py;.pyw", ";")]
     [ProvideCodeExpansions(GuidList.guidPythonLanguageService, false, 106, "Python", @"Snippets\%LCID%\SnippetsIndex.xml", @"Snippets\%LCID%\Python\")]
     [ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
@@ -495,6 +491,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 },
                 promote: true);
 
+
             var solutionEventListener = new SolutionEventsListener(this);
             solutionEventListener.StartListeningForChanges();
 
@@ -522,8 +519,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 new StartDebuggingCommand(this), 
                 new FillParagraphCommand(this), 
                 new DiagnosticsCommand(this),
-                new RemoveImportsCommand(this),
-                new RemoveImportsCurrentScopeCommand(this),
+                new RemoveImportsCommand(this, true),
+                new RemoveImportsCommand(this, false),
                 new OpenInterpreterListCommand(this),
                 new ImportWizardCommand(this),
                 new SurveyNewsCommand(this),
@@ -548,16 +545,19 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             // Enable the Python debugger UI context
             UIContext.FromUIContextGuid(AD7Engine.DebugEngineGuid).IsActive = true;
 
+            var interpreters = ComponentModel.GetService<IInterpreterRegistryService>();
+            interpreters.InterpretersChanged += RefreshReplCommands;
+
             var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
-            var loadedProjectProvider = interpreterService.KnownProviders
-                .OfType<LoadedProjectInterpreterFactoryProvider>()
-                .FirstOrDefault();
-            // Ensure the provider is available - if not, you probably need to
-            // rebuild or clean your experimental hive.
-            Debug.Assert(loadedProjectProvider != null, "Expected LoadedProjectInterpreterFactoryProvider");
-            if (loadedProjectProvider != null) {
-                loadedProjectProvider.SetSolution((IVsSolution)GetService(typeof(SVsSolution)));
-            }
+            //var loadedProjectProvider = interpreterService.KnownProviders
+            //    .OfType<LoadedProjectInterpreterFactoryProvider>()
+            //    .FirstOrDefault();
+            //// Ensure the provider is available - if not, you probably need to
+            //// rebuild or clean your experimental hive.
+            //Debug.Assert(loadedProjectProvider != null, "Expected LoadedProjectInterpreterFactoryProvider");
+            //if (loadedProjectProvider != null) {
+            //    loadedProjectProvider.SetSolution((IVsSolution)GetService(typeof(SVsSolution)));
+            //}
 
             // The variable is inherited by child processes backing Test Explorer, and is used in PTVS
             // test discoverer and test executor to connect back to VS.

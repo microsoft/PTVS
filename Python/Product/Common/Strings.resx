@@ -740,4 +740,7 @@ but your command history will be preserved.</value>
   <data name="ReplSwitchEvaluator" xml:space="preserve">
     <value>Switching interactive environment...</value>
   </data>
+  <data name="MissingEnvironmentUnknownVersion" xml:space="preserve">
+    <value>The environment "{0}" appears to be incorrectly configured or missing. You may need to install it or re-create a virtual environment.</value>
+  </data>
 </root>

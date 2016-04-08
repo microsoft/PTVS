@@ -11,6 +11,12 @@
     </DirectoryRef>
     <?endforeach?>
 
+    <Component Id="InterpreterRegistration" Directory="Dir_VSInstallLocation" Guid="{03676467-1137-4F09-91CA-46078779B760}">
+      <RegistryKey Root='HKCU' Key='Software\Microsoft\PythonTools\3.0\InterpreterFactories\Uwp'>
+        <RegistryValue Type='string' Name='CodeBase' Value='[Dir_VSInstallLocation]Microsoft.PythonTools.Uwp.Interpreter.dll'/>
+      </RegistryKey>
+    </Component>    
+
     <Component Id="PerUserInstallRegistry" Directory="Dir_VSInstallLocation" Guid="{D6DEC397-028C-473B-8449-B7AB415B21BB}">
       <Condition>NOT ALLUSERS = 1</Condition>
       <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>

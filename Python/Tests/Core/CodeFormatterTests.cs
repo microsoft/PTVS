@@ -93,8 +93,8 @@ class Oar(object):
 ";
 
             var options = new CodeFormattingOptions() {
-                SpaceBeforeClassDeclarationParen = true,
-                SpaceWithinFunctionDeclarationParens = true
+                SpaceBeforeClassDeclarationParen = false,
+                SpaceWithinFunctionDeclarationParens = false
             };
 
             CodeFormattingTest(input, new Span(input.Length, 0), input, null, options);
@@ -174,20 +174,23 @@ class Oar(object):
         private static void CodeFormattingTest(string input, object selection, string expected, object expectedSelection, CodeFormattingOptions options, bool selectResult = true) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
             var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
-            using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact })) {
+            using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact)) {
                 var buffer = new MockTextBuffer(input, PythonCoreConstants.ContentType, "C:\\fob.py");
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var view = new MockTextView(buffer);
+                analyzer.MonitorTextBufferAsync(buffer).Wait();
                 var selectionSpan = new SnapshotSpan(
                     buffer.CurrentSnapshot,
                     ExtractMethodTests.GetSelectionSpan(input, selection)
                 );
                 view.Selection.Select(selectionSpan, false);
 
-                new CodeFormatter(serviceProvider, view, options).FormatCode(
+                analyzer.FormatCodeAsync(
                     selectionSpan,
+                    view,
+                    options,
                     selectResult
-                );
+                ).Wait();
 
                 Assert.AreEqual(expected, view.TextBuffer.CurrentSnapshot.GetText());
                 if (expectedSelection != null) {

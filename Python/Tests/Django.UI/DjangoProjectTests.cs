@@ -86,7 +86,7 @@ namespace DjangoUITests {
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DjangoCollectStaticFilesCommand() {
             using (var app = new PythonVisualStudioApp()) {
-                var service = app.GetService<IComponentModel>(typeof(SComponentModel)).GetService<IInterpreterOptionsService>();
+                var service = app.GetService<IComponentModel>(typeof(SComponentModel)).GetService<IInterpreterRegistryService>();
 
                 var envWithDjango = service.Interpreters.LastOrDefault(env => env.FindModulesAsync("django").WaitAndUnwrapExceptions().Contains("django"));
                 if (envWithDjango == null) {

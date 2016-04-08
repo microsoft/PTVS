@@ -286,15 +286,6 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
         }
 
-        public string GetLine(int lineNo) {
-            lineNo--; // line is 1 based
-            string[] lines = File.ReadAllLines(FilePath);
-            if (lineNo < lines.Length) {
-                return lines[lineNo];
-            }
-            return null;
-        }
-
         public Dictionary<object, object> Properties {
             get {
                 if (_properties == null) {

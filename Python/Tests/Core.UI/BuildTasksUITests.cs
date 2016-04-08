@@ -63,9 +63,9 @@ namespace PythonToolsUITests {
 
             dteProject = app.OpenProject("TestData\\Targets\\" + slnName);
             projectNode = dteProject.GetPythonProject();
-            var fact = projectNode.Interpreters.FindInterpreter(PythonVersion.Id, PythonVersion.Configuration.Version);
+            var fact = projectNode.InterpreterFactories.Where(x => x.Configuration.Id == PythonVersion.Id).FirstOrDefault();
             Assert.IsNotNull(fact, "Project does not contain expected interpreter");
-            projectNode.Interpreters.ActiveInterpreter = fact;
+            projectNode.ActiveInterpreter = fact;
             dteProject.Save();
         }
 

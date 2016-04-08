@@ -76,7 +76,6 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatDocument() {
-            // Fails due to https://pytools.codeplex.com/workitem/1952
             FormattingTest("document.py", null, @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
 # over the slow lazy dog
 def f():
@@ -84,14 +83,13 @@ def f():
 
 # short comment
 def g():
-    pass", new[] { new Span(0, 104) });
+    pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) });
         }
 
 
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatSelection() {
-            // Fails due to https://pytools.codeplex.com/workitem/1952
             FormattingTest("selection.py", new Span(0, 121), @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
 # over the slow lazy dog
 def f():
@@ -99,7 +97,7 @@ def f():
 
 # short comment
 def g():
-    pass", new[] { new Span(0, 104) });
+    pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) });
         }
 
         [TestMethod, Priority(1)]
@@ -118,7 +116,7 @@ z=3", new Span[0]);
             var pyService = VSTestContext.ServiceProvider.GetPythonToolsService();
             pyService.SetFormattingOption("SpacesAroundBinaryOperators", true);
 
-            FormattingTest("linereduction.py", null, "(a + b + c + d + e + f)\r\n", new[] { new Span(0, 41) });
+            FormattingTest("linereduction.py", null, "(a + b + c + d + e + f)\r\n", new[] { new Span(0, 23), Span.FromBounds(25, 50) });
         }
 
         /// <summary>

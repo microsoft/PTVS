@@ -56,8 +56,16 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public string DisplayText {
             get {
-                return MissingImportAnalysis.MakeImportCode(_fromModule, _name)
+                return MakeImportCode(_fromModule, _name)
                     .Replace("_", "__");
+            }
+        }
+
+        private static string MakeImportCode(string fromModule, string name) {
+            if (string.IsNullOrEmpty(fromModule)) {
+                return string.Format("import {0}", name);
+            } else {
+                return string.Format("from {0} import {1}", fromModule, name);
             }
         }
 
@@ -100,15 +108,15 @@ namespace Microsoft.PythonTools.Intellisense {
             get { return false; }
         }
 
-        public void Invoke(CancellationToken cancellationToken) {
+        public async void Invoke(CancellationToken cancellationToken) {
             Debug.Assert(!string.IsNullOrEmpty(_name));
 
-            MissingImportAnalysis.AddImport(
-                _source._provider,
-                _buffer,
-                _source._view,
+            await VsProjectAnalyzer.AddImportAsync(
+                _buffer.GetAnalysisEntry(),
                 _fromModule,
-                _name
+                _name,
+                _source._view,
+                _buffer
             );
         }
 

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition.Hosting;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
@@ -39,7 +40,7 @@ namespace Microsoft.PythonTools.Analysis {
         private const string AnalysisLimitsKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion + 
             @"\Analysis\StandardLibrary";
 
-        private readonly Guid _id;
+        private readonly string _id;
         private readonly Version _version;
         private readonly string _interpreter;
         private readonly List<PythonLibraryPath> _library;
@@ -47,10 +48,11 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly List<string> _baseDb;
         private readonly string _logPrivate, _logGlobal, _logDiagnostic;
         private readonly bool _dryRun;
-        private readonly string _waitForAnalysis;
+        private readonly string _waitForAnalysis, _projectFile;
         private readonly int _repeatCount;
 
-        private bool _all;
+        private bool _all, _interactive;
+
         private FileStream _pidMarkerFile;
 
         private readonly AnalyzerStatusUpdater _updater;
@@ -59,6 +61,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal readonly List<List<ModulePath>> _scrapeFileGroups, _analyzeFileGroups;
         private readonly HashSet<string> _treatPathsAsStandardLibrary;
         private IEnumerable<string> _readModulePath;
+        
 
         private int _progressOffset;
         private int _progressTotal;
@@ -77,6 +80,8 @@ namespace Microsoft.PythonTools.Analysis {
             Console.WriteLine();
             Console.WriteLine(" /id         [GUID]             - specify GUID of the interpreter being used");
             Console.WriteLine(" /v[ersion]  [version]          - specify language version to be used (x.y format)");
+            Console.WriteLine(" /interactive                   - start interactive analyzer");
+
             Console.WriteLine(" /py[thon]   [filename]         - full path to the Python interpreter to use");
             Console.WriteLine(" /lib[rary]  [directory]        - full path to the Python library to analyze");
             Console.WriteLine(" /outdir     [output dir]       - specify output directory for analysis (default " +
@@ -171,28 +176,37 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private async Task RunWorker() {
-            WaitForOtherRun();
+            if (_interactive) {
+                var analyzer = new OutOfProcProjectAnalyzer(
+                    Console.OpenStandardOutput(),
+                    Console.OpenStandardInput()
+                );
 
-            while (true) {
-                try {
-                    await StartTraceListener();
-                    break;
-                } catch (IOException) {
+                await analyzer.ProcessMessages();
+            } else {
+                WaitForOtherRun();
+
+                while (true) {
+                    try {
+                        await StartTraceListener();
+                        break;
+                    } catch (IOException) {
+                    }
+                    await Task.Delay(20000);
                 }
-                await Task.Delay(20000);
-            }
 
-            LogToGlobal("START_STDLIB");
+                LogToGlobal("START_STDLIB");
 
-            for (int i = 0; i < _repeatCount && await Prepare(i == 0); ++i) {
-                await Scrape();
-                await Analyze();
+                for (int i = 0; i < _repeatCount && await Prepare(i == 0); ++i) {
+                    await Scrape();
+                    await Analyze();
+                }
+                await Epilogue();
             }
-            await Epilogue();
         }
 
         public PyLibAnalyzer(
-            Guid id,
+            string id,
             Version langVersion,
             string interpreter,
             IEnumerable<PythonLibraryPath> library,
@@ -204,7 +218,9 @@ namespace Microsoft.PythonTools.Analysis {
             bool rescanAll,
             bool dryRun,
             string waitForAnalysis,
-            int repeatCount
+            int repeatCount,
+            string projectFile = null,
+            bool interactive = false
         ) {
             _id = id;
             _version = langVersion;
@@ -218,15 +234,16 @@ namespace Microsoft.PythonTools.Analysis {
             _dryRun = dryRun;
             _waitForAnalysis = waitForAnalysis;
             _repeatCount = repeatCount;
+            _interactive = interactive;
+            _projectFile = projectFile;
 
             _scrapeFileGroups = new List<List<ModulePath>>();
             _analyzeFileGroups = new List<List<ModulePath>>();
             _treatPathsAsStandardLibrary = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _library = library != null ? library.ToList() : new List<PythonLibraryPath>();
 
-            if (_id != Guid.Empty) {
-                var identifier = AnalyzerStatusUpdater.GetIdentifier(_id, _version);
-                _updater = new AnalyzerStatusUpdater(identifier);
+            if (!String.IsNullOrWhiteSpace(_id) && !interactive) {
+                _updater = new AnalyzerStatusUpdater(_id);
                 // We worry about initialization exceptions here, specifically
                 // that our identifier may already be in use.
                 _updater.WaitForWorkerStarted();
@@ -294,27 +311,35 @@ namespace Microsoft.PythonTools.Analysis {
 
             string value;
 
-            Guid id;
-            Version version;
+            string id = string.Empty;
+            Version version = default(Version);
             string interpreter, outDir;
             var library = new List<PythonLibraryPath>();
             List<string> baseDb;
-            string logPrivate, logGlobal, logDiagnostic;
-            bool rescanAll, dryRun;
+            string logPrivate, logGlobal, logDiagnostic, projectFile = null;
+            bool rescanAll, dryRun, interactive = false;
             int repeatCount;
 
             var cwd = Environment.CurrentDirectory;
 
-            if (!options.TryGetValue("id", out value)) {
-                id = Guid.Empty;
-            } else if (!Guid.TryParse(value, out id)) {
-                throw new ArgumentException(value, "id");
+            if (options.ContainsKey("interactive")) {
+                interactive = true;
+            }
+            if (options.TryGetValue("proj", out value)) {
+                projectFile = value;
             }
 
-            if (!options.TryGetValue("version", out value) && !options.TryGetValue("v", out value)) {
-                throw new ArgumentNullException("version");
-            } else if (!Version.TryParse(value, out version)) {
-                throw new ArgumentException(value, "version");
+
+            if (!interactive) {
+                if (options.TryGetValue("id", out value)) {
+                    id = value;
+                }
+
+                if (!options.TryGetValue("version", out value) && !options.TryGetValue("v", out value)) {
+                    throw new ArgumentNullException("version");
+                } else if (!Version.TryParse(value, out version)) {
+                    throw new ArgumentException(value, "version");
+                }
             }
 
             if (!options.TryGetValue("python", out value) && !options.TryGetValue("py", out value)) {
@@ -424,7 +449,9 @@ namespace Microsoft.PythonTools.Analysis {
                 rescanAll,
                 dryRun,
                 waitForAnalysis, 
-                repeatCount
+                repeatCount,
+                projectFile,
+                interactive
             );
         }
 

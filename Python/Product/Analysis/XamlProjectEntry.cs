@@ -26,7 +26,6 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly string _filename;
         private int _version;
         private string _content;
-        private IAnalysisCookie _cookie;
         private Dictionary<object, object> _properties;
         private readonly HashSet<IProjectEntry> _dependencies = new HashSet<IProjectEntry>();
 
@@ -36,7 +35,6 @@ namespace Microsoft.PythonTools.Analysis {
 
         public void ParseContent(TextReader content, IAnalysisCookie fileCookie) {
             _content = content.ReadToEnd();
-            _cookie = fileCookie;
         }
 
         public void AddDependency(IProjectEntry projectEntry) {
@@ -59,7 +57,6 @@ namespace Microsoft.PythonTools.Analysis {
             lock (this) {
                 if (_analysis == null) {
                     _analysis = new XamlAnalysis(_filename);
-                    _cookie = new FileCookie(_filename);
                 }
                 _analysis = new XamlAnalysis(new StringReader(_content));
 
@@ -93,10 +90,6 @@ namespace Microsoft.PythonTools.Analysis {
             get {
                 return _version;
             }
-        }
-
-        public string GetLine(int lineNo) {
-            return _cookie.GetLine(lineNo);
         }
 
         public Dictionary<object, object> Properties {

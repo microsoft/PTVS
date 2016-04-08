@@ -27,6 +27,13 @@ namespace Microsoft.PythonTools.Infrastructure {
         public static async void DoNotWait(this Task task) {
             await task;
         }
+
+        public static T WaitOrDefault<T>(this Task<T> task, int milliseconds) {
+            if (task.Wait(milliseconds)) {
+                return task.Result;
+            }
+            return default(T);
+        }
         
         /// <summary>
         /// Waits for a task to complete. If an exception occurs, the exception

@@ -64,7 +64,7 @@ namespace PythonToolsMockTests {
                 }
                 if (analyzer == null) {
                     _disposeAnalyzer = true;
-                    analyzer = new VsProjectAnalyzer(vs.ServiceProvider, factory, new[] { factory });
+                    analyzer = new VsProjectAnalyzer(vs.ServiceProvider, factory);
                     var task = analyzer.ReloadTask;
                     if (task != null) {
                         task.WaitAndUnwrapExceptions();
@@ -123,22 +123,32 @@ namespace PythonToolsMockTests {
             set {
                 using (var mre = new ManualResetEventSlim()) {
                     EventHandler evt = (s, e) => mre.Set();
-                    Analyzer.AnalysisStarted += evt;
                     using (var edit = View.TextView.TextBuffer.CreateEdit()) {
                         edit.Delete(0, edit.Snapshot.Length);
                         edit.Apply();
                     }
                     mre.Reset();
+
+                    var buffer = View.TextView.TextBuffer;
+                    var oldVersion = buffer.CurrentSnapshot;
+                    buffer.GetPythonAnalysisClassifier().ClassificationChanged += (s, e) => {
+                        var entry = buffer.GetAnalysisEntry();
+                        if (entry.BufferParser.GetAnalysisVersion(buffer).VersionNumber > oldVersion.Version.VersionNumber) {
+                            mre.Set();
+                        }
+                    };
+                    
                     using (var edit = View.TextView.TextBuffer.CreateEdit()) {
                         edit.Insert(0, value);
                         edit.Apply();
                     }
 
+                    var analysis = buffer.GetAnalysisEntry();
+                    analysis.BufferParser.Requeue();    // force the reparse to happen quickly...
+
                     if (!mre.Wait(10000)) {
-                        Analyzer.AnalysisStarted -= evt;
                         throw new TimeoutException("Failed to see buffer start analyzing");
                     }
-                    Analyzer.AnalysisStarted -= evt;
                     Analyzer.WaitForCompleteAnalysis(_ => true);
                 }
             }

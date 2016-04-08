@@ -36,6 +36,7 @@ namespace CanopyInterpreter {
     /// return one to the user. The CanopyInterpreterFactory object represents
     /// the User directory, and contains a default factory representing App.
     /// </summary>
+    [InterpreterFactoryId("Canopy")]
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class CanopyInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
@@ -137,7 +138,7 @@ namespace CanopyInterpreter {
                 var baseFactory = CanopyInterpreterFactory.CreateBase(basePath, canopyVersion, version);
                 var factory = CanopyInterpreterFactory.Create(baseFactory, userPath, canopyVersion);
 
-                if (!_interpreters.Any(f => f.Id == factory.Id)) {
+                if (!_interpreters.Any(f => f.Configuration.Id == factory.Configuration.Id)) {
                     _interpreters.Add(factory);
                     return true;
                 }
@@ -217,6 +218,16 @@ namespace CanopyInterpreter {
 
         public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
             return _interpreters;
+        }
+
+        public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
+            return GetInterpreterFactories().Select(x => x.Configuration);
+        }
+
+        public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+            return GetInterpreterFactories()
+                .Where(x => x.Configuration.Id == id)
+                .FirstOrDefault();
         }
 
         public event EventHandler InterpreterFactoriesChanged;

@@ -27,11 +27,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
     public sealed class PythonAst : ScopeStatement, ILocationResolver {
         private readonly PythonLanguageVersion _langVersion;
         private readonly Statement _body;
-        internal readonly int[] _lineLocations;
+        internal readonly NewLineLocation[] _lineLocations;
         private readonly Dictionary<Node, Dictionary<object, object>> _attributes = new Dictionary<Node, Dictionary<object, object>>();
         private string _privatePrefix;
 
-        public PythonAst(Statement body, int[] lineLocations, PythonLanguageVersion langVersion) {
+        public PythonAst(Statement body, NewLineLocation[] lineLocations, PythonLanguageVersion langVersion) {
             if (body == null) {
                 throw new ArgumentNullException("body");
             }
@@ -110,23 +110,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal SourceLocation IndexToLocation(int index) {
-            if (index == -1) {
-                return SourceLocation.Invalid;
-            }
+            return NewLineLocation.IndexToLocation(_lineLocations, index);
+        }
 
-            var locs = GlobalParent._lineLocations;
-            int match = Array.BinarySearch(locs, index);
-            if (match < 0) {
-                // If our index = -1, it means we're on the first line.
-                if (match == -1) {
-                    return new SourceLocation(index, 1, index + 1);
-                }
-
-                // If we couldn't find an exact match for this line number, get the nearest
-                // matching line number less than this one
-                match = ~match - 1;
+        internal int GetLineEndFromPosition(int index) {
+            var loc = IndexToLocation(index);
+            var res = _lineLocations[loc.Line - 1];
+            switch (res.Kind) {
+                case NewLineKind.LineFeed:
+                case NewLineKind.CarriageReturn: return res.EndIndex - 1;
+                case NewLineKind.CarriageReturnLineFeed: return res.EndIndex - 2;
+                default:
+                    throw new InvalidOperationException("Bad line ending info");
             }
-            return new SourceLocation(index, match + 2, index - locs[match] + 1);
         }
 
         #region Name Binding Support

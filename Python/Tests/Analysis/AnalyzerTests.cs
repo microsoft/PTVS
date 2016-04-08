@@ -46,7 +46,7 @@ namespace AnalysisTests {
 
             try {
                 using (var analyzer = new PyLibAnalyzer(
-                    Guid.Empty,
+                    "",
                     new Version(),
                     null,
                     null,
@@ -490,7 +490,7 @@ namespace AnalysisTests {
 
             public PyLibAnalyzer Analyzer {
                 get {
-                    return new PyLibAnalyzer(Guid.Empty,
+                    return new PyLibAnalyzer("",
                         new Version(2, 7),
                         null,
                         new [] {

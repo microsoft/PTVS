@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Repl {
     interface IPythonInteractiveIntellisense {
         bool LiveCompletionsOnly { get; }
         IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind();
-        MemberResult[] GetMemberNames(string text);
+        CompletionResult[] GetMemberNames(string text);
         OverloadDoc[] GetSignatureDocumentation(string text);
         VsProjectAnalyzer Analyzer { get; }
     }

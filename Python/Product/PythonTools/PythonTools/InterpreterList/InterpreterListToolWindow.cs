@@ -37,7 +37,6 @@ namespace Microsoft.PythonTools.InterpreterList {
     sealed class InterpreterListToolWindow : ToolWindowPane {
         private IServiceProvider _site;
         private PythonToolsService _pyService;
-        private IInterpreterOptionsService _service;
         private Redirector _outputWindow;
         private IVsStatusbar _statusBar;
 
@@ -54,8 +53,6 @@ namespace Microsoft.PythonTools.InterpreterList {
             BitmapImageMoniker = KnownMonikers.DockPanel;
             Caption = Strings.Environments;
 
-            _service = _site.GetComponentModel().GetService<IInterpreterOptionsService>();
-            
             _outputWindow = OutputWindowRedirector.GetGeneral(_site);
             Debug.Assert(_outputWindow != null);
             _statusBar = _site.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
@@ -89,8 +86,6 @@ namespace Microsoft.PythonTools.InterpreterList {
                 UnhandledException_Executed,
                 UnhandledException_CanExecute
             ));
-
-            list.Service = _service;
 
             Content = list;
         }
@@ -215,6 +210,13 @@ namespace Microsoft.PythonTools.InterpreterList {
             var compModel = _site.GetComponentModel();
             var service = compModel.GetService<InteractiveWindowProvider>();
             IVsInteractiveWindow window;
+
+            // TODO: Figure out another way to get the project
+            //var provider = _service.KnownProviders.OfType<LoadedProjectInterpreterFactoryProvider>().FirstOrDefault();
+            //var vsProject = provider == null ?
+            //    null :
+            //    provider.GetProject(factory);
+            PythonProjectNode project = null;// vsProject == null ? null : vsProject.GetPythonProject();
             try {
                 window = service.OpenOrCreate(replId);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
@@ -245,11 +247,12 @@ namespace Microsoft.PythonTools.InterpreterList {
                 factory.Configuration.WindowsInterpreterPath;
             psi.WorkingDirectory = factory.Configuration.PrefixPath;
 
-            var provider = _service.KnownProviders.OfType<LoadedProjectInterpreterFactoryProvider>().FirstOrDefault();
-            var vsProject = provider == null ?
-                null :
-                provider.GetProject(factory);
-            var project = vsProject == null ? null : vsProject.GetPythonProject();
+            // TODO: Figure out some other wa to get the project
+            //var provider = _service.KnownProviders.OfType<LoadedProjectInterpreterFactoryProvider>().FirstOrDefault();
+            //var vsProject = provider == null ?
+            //    null :
+            //    provider.GetProject(factory);
+            IPythonProject project = null;// vsProject == null ? null : vsProject.GetPythonProject();
             if (project != null) {
                 psi.EnvironmentVariables[factory.Configuration.PathEnvironmentVariable] = 
                     string.Join(";", project.GetSearchPaths());

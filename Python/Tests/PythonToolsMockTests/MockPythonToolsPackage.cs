@@ -33,6 +33,8 @@ using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities.Python;
 
 namespace PythonToolsMockTests {
+    using TaskProvider = Microsoft.PythonTools.Intellisense.TaskProvider;
+
     [Export(typeof(IMockPackage))]
     sealed class MockPythonToolsPackage : IMockPackage {
         private readonly IServiceContainer _serviceContainer;
@@ -44,12 +46,9 @@ namespace PythonToolsMockTests {
         }
 
         public void Initialize() {
-            // Specifiy PythonTools\NoInterpreterFactories to suppress loading
-            // all providers in tests.
             var settings = (IVsSettingsManager)_serviceContainer.GetService(typeof(SVsSettingsManager));
             IVsWritableSettingsStore store;
             ErrorHandler.ThrowOnFailure(settings.GetWritableSettingsStore((uint)SettingsScope.Configuration, out store));
-            ErrorHandler.ThrowOnFailure(store.CreateCollection(@"PythonTools\NoInterpreterFactories"));
             
             
             _serviceContainer.AddService(typeof(IPythonToolsOptionsService), new MockPythonToolsOptionsService());

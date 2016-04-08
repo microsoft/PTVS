@@ -20,7 +20,7 @@ using System.Text;
 namespace Microsoft.PythonTools.Parsing.Ast {
 
     public class TryStatement : Statement {
-        private int _headerIndex;
+        private int _headerIndex, _finallyIndex, _elseIndex;
         /// <summary>
         /// The statements under the try-block.
         /// </summary>
@@ -49,7 +49,18 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         public int HeaderIndex {
+            get { return _headerIndex; }
             set { _headerIndex = value; }
+        }
+
+        public int ElseIndex {
+            get { return _elseIndex; }
+            set { _elseIndex = value; }
+        }
+
+        public int FinallyIndex {
+            get { return _finallyIndex; }
+            set { _finallyIndex = value; }
         }
 
         public Statement Body {

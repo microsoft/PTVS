@@ -49,9 +49,7 @@ namespace IronPythonTests {
                     Assert.Inconclusive("Interpreter missing for " + GetType().Name);
                 }
                 var provider = new IronPythonInterpreterFactoryProvider();
-                return provider.GetInterpreterFactories()
-                    .First(f => f.Id == PythonVersion.Id &&
-                                f.Configuration.Version == PythonVersion.Version.ToVersion());
+                return provider.GetInterpreterFactories().FirstOrDefault();
             }
         }
 
@@ -155,10 +153,10 @@ namespace IronPythonTests {
             execute.Wait();
             Assert.IsTrue(execute.Result.IsSuccessful);
 
-            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), fact, new[] { fact })) {
+            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), fact)) {
                 replWindow.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
 
-                MemberResult[] names = null;
+                CompletionResult[] names = null;
                 for (int retries = 0; retries < 5 && names == null; retries += 1) {
                     names = replEval.GetMemberNames("t");
                 }

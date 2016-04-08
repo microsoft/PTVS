@@ -82,8 +82,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     result.Append(" objects ");
                 }
 
-                FunctionInfo.AddReturnTypeString(result, _function.GetReturnValue);
-                FunctionInfo.AddDocumentationString(result, _function.Documentation);
+                FunctionInfo.AddReturnTypeString((text, type) => result.Append(text), _function.GetReturnValue);
+                FunctionInfo.AddDocumentationString((text, type) => result.Append(text), _function.Documentation);
 
                 return result.ToString();
             }

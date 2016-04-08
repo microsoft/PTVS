@@ -16,6 +16,7 @@
 
 using System;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -23,19 +24,19 @@ namespace Microsoft.PythonTools.Project {
     /// specifying the previous and new analyzer.
     /// </summary>
     public sealed class AnalyzerChangingEventArgs : EventArgs {
-        private readonly PythonAnalyzer _old, _new;
+        private readonly VsProjectAnalyzer _old, _new;
 
         /// <summary>
         /// The previous analyzer, if any.
         /// </summary>
-        public PythonAnalyzer Old { get { return _old; } }
+        public VsProjectAnalyzer Old { get { return _old; } }
 
         /// <summary>
         /// The new analyzer, if any.
         /// </summary>
-        public PythonAnalyzer New { get { return _new; } }
+        public VsProjectAnalyzer New { get { return _new; } }
 
-        public AnalyzerChangingEventArgs(PythonAnalyzer oldAnalyzer, PythonAnalyzer newAnalyzer) {
+        public AnalyzerChangingEventArgs(VsProjectAnalyzer oldAnalyzer, VsProjectAnalyzer newAnalyzer) {
             _old = oldAnalyzer;
             _new = newAnalyzer;
         }

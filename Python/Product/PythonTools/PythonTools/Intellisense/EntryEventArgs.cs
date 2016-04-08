@@ -19,9 +19,9 @@ using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Intellisense {
     class EntryEventArgs : EventArgs {
-        public readonly IProjectEntry Entry;
+        public readonly AnalysisEntry Entry;
 
-        public EntryEventArgs(IProjectEntry entry) {
+        public EntryEventArgs(AnalysisEntry entry) {
             Entry = entry;
         }
     }
