@@ -33,6 +33,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Infrastructure;
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.InterpreterList {
     [Guid(PythonConstants.InterpreterListToolWindowGuid)]
@@ -303,6 +304,18 @@ namespace Microsoft.PythonTools.InterpreterList {
             e.Handled = true;
         }
 
+        private static readonly string[] PathSuffixes = new[] { "", "Scripts" };
+
+        private static string GetPathEntries(EnvironmentView view) {
+            if (!Directory.Exists(view?.PrefixPath)) {
+                return null;
+            }
+
+            return string.Join(";", PathSuffixes
+                .Select(s => PathUtils.GetAbsoluteDirectoryPath(view.PrefixPath, s))
+                .Where(Directory.Exists));
+        }
+
         private void OpenInCommandPrompt_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as EnvironmentView;
             e.CanExecute = Directory.Exists(view?.PrefixPath);
@@ -312,11 +325,13 @@ namespace Microsoft.PythonTools.InterpreterList {
         private void OpenInCommandPrompt_Executed(object sender, ExecutedRoutedEventArgs e) {
             var view = (EnvironmentView)e.Parameter;
 
+            var paths = GetPathEntries(view);
+            var pathCmd = string.IsNullOrEmpty(paths) ? "" : string.Format("set PATH={0};%PATH% & ", paths);
             var psi = new ProcessStartInfo("cmd.exe");
             psi.Arguments = string.Join(" ", new[] {
                 "/S",
                 "/K",
-                string.Format("set PATH={0};%PATH% & title {1} environment", view.PrefixPath, view.Description)
+                pathCmd + string.Format("title {0} environment", view.Description)
             }.Select(ProcessOutput.QuoteSingleArgument));
             psi.WorkingDirectory = view.PrefixPath;
 
@@ -332,12 +347,14 @@ namespace Microsoft.PythonTools.InterpreterList {
         private void OpenInPowerShell_Executed(object sender, ExecutedRoutedEventArgs e) {
             var view = (EnvironmentView)e.Parameter;
 
+            var paths = GetPathEntries(view);
+            var pathCmd = string.IsNullOrEmpty(paths) ? "" : string.Format("$env:PATH='{0};' + $env:PATH; ", paths);
             var psi = new ProcessStartInfo("powershell.exe");
             psi.Arguments = string.Join(" ", new[] {
                 "-NoLogo",
                 "-NoExit",
                 "-Command",
-                string.Format("$env:PATH='{0};' + $env:PATH; (Get-Host).UI.RawUI.WindowTitle = '{1} environment'", view.PrefixPath, view.Description)
+                pathCmd + string.Format("(Get-Host).UI.RawUI.WindowTitle = '{0} environment'", view.Description)
             }.Select(ProcessOutput.QuoteSingleArgument));
             psi.WorkingDirectory = view.PrefixPath;
 
