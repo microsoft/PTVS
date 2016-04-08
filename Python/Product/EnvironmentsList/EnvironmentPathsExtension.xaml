@@ -18,7 +18,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/EnvironmentView.xaml" />
-                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/PathTextBlock.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/FileNameLabel.xaml" />
 
                 <ResourceDictionary>
 
