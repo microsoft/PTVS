@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools {
         private readonly PythonInteractiveOptions _debugInteractiveOptions;
         private readonly GlobalInterpreterOptions _globalInterpreterOptions;
         private readonly PythonInteractiveOptions _interactiveOptions;
-        internal readonly Dictionary<IPythonInterpreterFactory, InterpreterOptions> _interpreterOptions = new Dictionary<IPythonInterpreterFactory, InterpreterOptions>();
+        internal readonly Dictionary<string, InterpreterOptions> _interpreterOptions = new Dictionary<string, InterpreterOptions>();
         private readonly SuppressDialogOptions _suppressDialogOptions;
         private readonly SurveyNewsService _surveyNews;
         private readonly IdleManager _idleManager;
@@ -418,7 +418,6 @@ namespace Microsoft.PythonTools {
                 // Remove any items
                 foreach (var option in InterpreterOptions.Select(kv => kv.Value).Where(o => o.Removed).ToList()) {
                     _interpreterOptionsService.RemoveConfigurableInterpreter(option._config.Id);
-                    RemoveInteractiveOptions(option._config.Id);
                     RemoveInterpreterOptions(option._config.Id);
                 }
 
@@ -437,7 +436,7 @@ namespace Microsoft.PythonTools {
                             case "x86": arch = ProcessorArchitecture.X86; break;
                             case "x64": arch = ProcessorArchitecture.Amd64; break;
                         }
-                        
+
                         // save configurable interpreter options
                         var actualFactory = _interpreterOptionsService.AddConfigurableInterpreter(
                             option.Description,
@@ -452,7 +451,7 @@ namespace Microsoft.PythonTools {
                                 arch,
                                 Version.Parse(option.Version) ?? new Version(2, 7)
                             )
-                        }
+                        );
                     }
                 }
 
@@ -489,8 +488,8 @@ namespace Microsoft.PythonTools {
             RaiseEnvironmentsChanged();
         }
 
-        internal void AddInterpreterOptions(IPythonInterpreterFactory interpreterFactory, InterpreterOptions options) {
-            _interpreterOptions[interpreterFactory] = options;
+        internal void AddInterpreterOptions(string id, InterpreterOptions options) {
+            _interpreterOptions[id] = options;
             RaiseEnvironmentsChanged();
         }
 

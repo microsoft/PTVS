@@ -30,7 +30,6 @@ namespace Microsoft.PythonTools.Commands {
     class OpenReplCommand : Command {
         private readonly IServiceProvider _serviceProvider;
         private readonly int _cmdId;
-        private readonly InterpreterConfiguration _config;
 
         public OpenReplCommand(IServiceProvider serviceProvider, int cmdId) {
             _serviceProvider = serviceProvider;
@@ -40,11 +39,13 @@ namespace Microsoft.PythonTools.Commands {
         public override void DoCommand(object sender, EventArgs e) {
             // Use the factory or command line passed as an argument.
             IPythonInterpreterFactory factory = null;
+            InterpreterConfiguration config = null;
             var oe = e as OleMenuCmdEventArgs;
             if (oe != null) {
                 string args;
-                if ((asFactory = oe.InValue as IPythonInterpreterFactory) != null) {
-                    config = asFactory.Configuration;
+                if ((factory = oe.InValue as IPythonInterpreterFactory) != null) {
+                    config = factory.Configuration;
+                } else if ((config = oe.InValue as InterpreterConfiguration) != null) {
                 } else if (!string.IsNullOrEmpty(args = oe.InValue as string)) {
                     string description;
                     var parse = _serviceProvider.GetService(typeof(SVsParseCommandLine)) as IVsParseCommandLine;
@@ -54,27 +55,24 @@ namespace Microsoft.PythonTools.Commands {
                         !string.IsNullOrEmpty(description)
                     ) {
                         var service = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-                        var matchingConfig = service.Configurations.FirstOrDefault(
+                        config = service.Configurations.FirstOrDefault(
                             // Descriptions are localized strings, hence CCIC
                             f => description.Equals(f.FullDescription, StringComparison.CurrentCultureIgnoreCase)
                         );
-                        if (matchingConfig != null) {
-                            config = matchingConfig;
-                        }
                     }
                 }
             }
 
-            if (factory == null) {
+            if (config == null) {
                 var service = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-                factory = service.DefaultInterpreter;
+                config = service.DefaultInterpreter.Configuration;
             }
 
             // This command is project-insensitive
             var provider = _serviceProvider.GetComponentModel()?.GetService<Repl.InteractiveWindowProvider>();
             try {
                 provider?.OpenOrCreate(
-                    factory != null ? Repl.PythonReplEvaluatorProvider.GetEvaluatorId(factory) : null
+                    factory != null ? Repl.PythonReplEvaluatorProvider.GetEvaluatorId(config) : null
                 );
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 throw new InvalidOperationException(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex));

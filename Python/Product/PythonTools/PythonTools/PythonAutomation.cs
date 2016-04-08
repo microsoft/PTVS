@@ -181,9 +181,9 @@ namespace Microsoft.PythonTools {
             }
 
             var provider = compModel.GetService<Repl.InteractiveWindowProvider>();
-            var interpreters = compModel.GetService<IInterpreterOptionsService>();
+            var interpreters = compModel.GetService<IInterpreterRegistryService>();
 
-            var factory = interpreters.Interpreters.FirstOrDefault(
+            var factory = interpreters.Configurations.FirstOrDefault(
                 f => f.Description.Equals(description, StringComparison.CurrentCultureIgnoreCase)
             );
             if (factory == null) {

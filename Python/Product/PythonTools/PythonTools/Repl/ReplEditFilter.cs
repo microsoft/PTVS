@@ -571,7 +571,22 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal static IEnumerable<string> SplitCode(string code) {
-            return code.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            var lines = code.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
+            if (lines.Length == 0) {
+                return lines;
+            }
+
+            var leadingIndent = lines[0].Substring(0, lines[0].TakeWhile(char.IsWhiteSpace).Count());
+            if (!lines.All(line => line.StartsWith(leadingIndent) || string.IsNullOrEmpty(line))) {
+                return lines;
+            }
+
+            return lines.Select(line => {
+                if (string.IsNullOrEmpty(line)) {
+                    return line;
+                }
+                return line.Substring(leadingIndent.Length);
+            });
         }
 
         private static string FixEndingNewLine(string prevText) {

@@ -39,7 +39,8 @@ namespace Microsoft.PythonTools.Repl {
         IPythonInteractiveEvaluator,
         IMultipleScopeEvaluator,
         IPythonInteractiveIntellisense,
-        IDisposable {
+        IDisposable
+    {
         private readonly IReadOnlyList<IInteractiveEvaluatorProvider> _providers;
 
         private IInteractiveEvaluator _evaluator;
@@ -132,7 +133,7 @@ namespace Microsoft.PythonTools.Repl {
                 if (oldEval.CurrentWindow.CurrentLanguageBuffer == buffer) {
                     continue;
                 }
-                buffer.Properties[ParseQueue.DoNotParse] = ParseQueue.DoNotParse;
+                buffer.Properties[BufferParser.DoNotParse] = BufferParser.DoNotParse;
             }
         }
 
@@ -293,9 +294,9 @@ namespace Microsoft.PythonTools.Repl {
                 ?? Enumerable.Empty<KeyValuePair<string, bool>>();
         }
 
-        public MemberResult[] GetMemberNames(string text) {
+        public CompletionResult[] GetMemberNames(string text) {
             return (_evaluator as IPythonInteractiveIntellisense)?.GetMemberNames(text)
-                ?? new MemberResult[0];
+                ?? new CompletionResult[0];
         }
 
         public OverloadDoc[] GetSignatureDocumentation(string text) {

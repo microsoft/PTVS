@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public const string LibrarySubPath = "lib";
         public const string PathEnvironmentVariableName = "PYTHONPATH";
 
-        public static string GetIntepreterId(string vendor, ProcessorArchitecture? arch, string key) {
+        public static string GetInterpreterId(string vendor, ProcessorArchitecture? arch, string key) {
             string archStr;
             switch (arch) {
                 case ProcessorArchitecture.Amd64: archStr = "x64"; break;

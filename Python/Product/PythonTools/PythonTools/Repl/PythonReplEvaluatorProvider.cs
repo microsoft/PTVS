@@ -32,7 +32,7 @@ using Microsoft.VisualStudioTools;
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IInteractiveEvaluatorProvider))]
     sealed class PythonReplEvaluatorProvider : IInteractiveEvaluatorProvider, IDisposable {
-        private readonly IInterpreterOptionsService _interpreterService;
+        private readonly IInterpreterRegistryService _interpreterService;
         private readonly IServiceProvider _serviceProvider;
         private readonly IVsSolution _solution;
         private readonly SolutionEventsListener _solutionEvents;
@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Repl {
 
         [ImportingConstructor]
         public PythonReplEvaluatorProvider(
-            [Import] IInterpreterOptionsService interpreterService,
+            [Import] IInterpreterRegistryService interpreterService,
             [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider
         ) {
             Debug.Assert(interpreterService != null);
@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Repl {
         public event EventHandler EvaluatorsChanged;
 
         public IEnumerable<KeyValuePair<string, string>> GetEvaluators() {
-            foreach (var interpreter in _interpreterService.Interpreters) {
+            foreach (var interpreter in _interpreterService.Configurations) {
                 yield return new KeyValuePair<string, string>(
                     interpreter.Description,
                     GetEvaluatorId(interpreter)
@@ -93,12 +93,13 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        internal static string GetEvaluatorId(IPythonInterpreterFactory factory) {
-            return string.Format("{0};env;{1};{2};{3}",
+        internal static string GetEvaluatorId(InterpreterConfiguration config) {
+            return string.Format("{0};env;{1};{2};{3};{4}",
                 _prefix,
-                factory.Description,
-                factory.Configuration.InterpreterPath,
-                factory.Configuration.Version
+                config.Id,
+                config.Description,
+                config.InterpreterPath,
+                config.Version
             );
         }
 
@@ -110,8 +111,8 @@ namespace Microsoft.PythonTools.Repl {
             );
         }
 
-        internal static string GetTemporaryId(string key, IPythonInterpreterFactory factory) {
-            return GetEvaluatorId(factory) + ";" + key;
+        internal static string GetTemporaryId(string key, InterpreterConfiguration config) {
+            return GetEvaluatorId(config) + ";" + key;
         }
 
 
@@ -149,10 +150,11 @@ namespace Microsoft.PythonTools.Repl {
 
         private IInteractiveEvaluator GetEnvironmentEvaluator(IReadOnlyList<string> args) {
             var eval = new PythonInteractiveEvaluator(_serviceProvider) {
-                DisplayName = args.ElementAtOrDefault(0),
-                InterpreterPath = args.ElementAtOrDefault(1),
-                LanguageVersion = GetVersion(args.ElementAtOrDefault(2)),
-                WorkingDirectory = args.ElementAtOrDefault(3)
+                InterpreterId = args.ElementAtOrDefault(0),
+                DisplayName = args.ElementAtOrDefault(1),
+                InterpreterPath = args.ElementAtOrDefault(2),
+                LanguageVersion = GetVersion(args.ElementAtOrDefault(3)),
+                WorkingDirectory = args.ElementAtOrDefault(4)
             };
 
             return eval;

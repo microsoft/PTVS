@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Commands {
 
             string replId = project != null ?
                 PythonReplEvaluatorProvider.GetEvaluatorId(project) :
-                PythonReplEvaluatorProvider.GetEvaluatorId(factory);
+                PythonReplEvaluatorProvider.GetEvaluatorId(config);
             var window = provider.OpenOrCreate(replId);
             project?.AddActionOnClose(window, InteractiveWindowProvider.Close);
             //if (project != null && project.Interpreters.IsProjectSpecific(factory)) {

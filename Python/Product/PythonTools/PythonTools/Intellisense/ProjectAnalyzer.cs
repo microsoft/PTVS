@@ -449,14 +449,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     oldParser.UninitBuffer(buffer);
                 }
 
-                foreach (var buffer in buffers) {
-                    // A buffer may have multiple DropDownBarClients, given one may open multiple CodeWindows
-                    // over a single buffer using Window/New Window
-                    List<DropDownBarClient> clients;
-                    if (buffer.Properties.TryGetProperty(typeof(DropDownBarClient), out clients)) {
-                        foreach (var client in clients) {
-                            client.UpdateProjectEntry(projEntry);
-                        }
                 var monitoredResult = await MonitorTextBufferAsync(buffers[0]);
                 if (monitoredResult.AnalysisEntry != null) {
                     for (int i = 1; i < buffers.Length; i++) {
@@ -559,7 +551,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            var interactive = buffer.GetInteractiveWindow();
+            string path;
+            var interactive = textBuffer.GetInteractiveWindow();
             if (interactive != null) {
                 path = Guid.NewGuid().ToString() + ".py";
             } else {

@@ -546,9 +546,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             UIContext.FromUIContextGuid(AD7Engine.DebugEngineGuid).IsActive = true;
 
             var interpreters = ComponentModel.GetService<IInterpreterRegistryService>();
-            interpreters.InterpretersChanged += RefreshReplCommands;
-
             var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
+
             //var loadedProjectProvider = interpreterService.KnownProviders
             //    .OfType<LoadedProjectInterpreterFactoryProvider>()
             //    .FirstOrDefault();

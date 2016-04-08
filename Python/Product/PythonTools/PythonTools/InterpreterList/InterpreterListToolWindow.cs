@@ -203,9 +203,9 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void OpenInteractiveWindow_Executed(object sender, ExecutedRoutedEventArgs e) {
             var view = (EnvironmentView)e.Parameter;
-            var factory = view.Factory;
+            var config = view.Factory.Configuration;
 
-            var replId = PythonReplEvaluatorProvider.GetEvaluatorId(factory);
+            var replId = PythonReplEvaluatorProvider.GetEvaluatorId(config);
 
             var compModel = _site.GetComponentModel();
             var service = compModel.GetService<InteractiveWindowProvider>();
@@ -216,7 +216,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             //var vsProject = provider == null ?
             //    null :
             //    provider.GetProject(factory);
-            PythonProjectNode project = null;// vsProject == null ? null : vsProject.GetPythonProject();
+            //PythonProjectNode project = vsProject == null ? null : vsProject.GetPythonProject();
             try {
                 window = service.OpenOrCreate(replId);
             } catch (Exception ex) when (!ex.IsCriticalException()) {

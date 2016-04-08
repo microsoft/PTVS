@@ -90,8 +90,10 @@ namespace PythonToolsTests {
                 Assert.IsTrue(evaluator.CanExecuteCode("for i in xrange(2):  print i\r\n\r\n"));
                 Assert.IsTrue(evaluator.CanExecuteCode("raise Exception()\n"));
 
-                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    \r\n    "));
-                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    \r\n    "));
+                Assert.IsFalse(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    "));
+                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    \r\n"));
+                Assert.IsFalse(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    "));
+                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    \r\n"));
                 Assert.IsFalse(evaluator.CanExecuteCode("x = \\"));
                 Assert.IsTrue(evaluator.CanExecuteCode("x = \\\r\n42\r\n\r\n"));
             }
@@ -179,7 +181,9 @@ g()",
             };
 
             using (var evaluator = MakeEvaluator()) {
+                int counter = 0;
                 foreach (var testCase in testCases) {
+                    Console.WriteLine("Test case {0}", ++counter);
                     AssertUtil.AreEqual(ReplEditFilter.JoinCodeLines(ReplEditFilter.SplitCode(testCase.Code), Microsoft.PythonTools.Parsing.PythonLanguageVersion.V35), testCase.Expected);
                 }
             }
@@ -190,7 +194,8 @@ g()",
             python.AssertInstalled();
             var provider = new SimpleFactoryProvider(python.InterpreterPath, python.InterpreterPath);
             var eval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
-                InterpreterPath = python.InterpreterPath
+                InterpreterPath = python.InterpreterPath,
+                LanguageVersion = python.Version
             };
             Assert.IsTrue(eval._Initialize(new MockReplWindow(eval)).Result.IsSuccessful);
             return eval;
@@ -299,13 +304,9 @@ g()",
         public void NoInterpreterPath() {
             // http://pytools.codeplex.com/workitem/662
 
-            var emptyFact = InterpreterFactoryCreator.CreateInterpreterFactory(
-                new InterpreterFactoryCreationOptions() {
-                    Id = "Test Interpreter",
-                    Description = "Test Interpreter"
-                }
-            );
-            var replEval = new PythonReplEvaluator(emptyFact, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
+            var replEval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
+                DisplayName = "Test Interpreter"
+            };
             var replWindow = new MockReplWindow(replEval);
             replEval._Initialize(replWindow);
             var execute = replEval.ExecuteText("42");
@@ -320,29 +321,15 @@ g()",
         public void BadInterpreterPath() {
             // http://pytools.codeplex.com/workitem/662
 
-            var emptyFact = InterpreterFactoryCreator.CreateInterpreterFactory(
-                new InterpreterConfiguration(
-                    "Test Interpreter",
-                    "Test Interpreter",
-                    null,
-                    "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe",
-                    null,
-                    null,
-                    null,
-                    ProcessorArchitecture.None,
-                    new Version(2, 7)
-                ),
-                new InterpreterFactoryCreationOptions()
-            );
-            var replEval = new PythonReplEvaluator(emptyFact, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
+            var replEval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
+                DisplayName = "Test Interpreter",
+                InterpreterPath = "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe"
+            };
             var replWindow = new MockReplWindow(replEval);
             replEval._Initialize(replWindow);
             var execute = replEval.ExecuteText("42");
             var errorText = replWindow.Error;
-            const string expected = 
-                "The interactive window could not be started because the associated Python environment could not be found.\r\n" +
-                "If this version of Python has recently been uninstalled, you can close this window.\r\n" +
-                "Current interactive window is disconnected.";
+            const string expected = "the associated Python environment could not be found.";
 
             if (!errorText.Contains(expected)) {
                 Assert.Fail(string.Format(

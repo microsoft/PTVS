@@ -27,10 +27,11 @@ namespace Microsoft.PythonTools.Options {
     /// </summary>
     class InterpreterOptions {
         private readonly PythonToolsService _pyService;
-        private readonly IPythonInterpreterFactory _interpreter;
+        internal readonly InterpreterConfiguration _config;
 
         public string Display;
-        public Guid Id;
+        public string Description;
+        public string Id;
         public string InterpreterPath;
         public string WindowsInterpreterPath;
         public string LibraryPath;
@@ -41,28 +42,27 @@ namespace Microsoft.PythonTools.Options {
         public bool Added;
         public bool IsConfigurable;
         public bool SupportsCompletionDb;
-        public IPythonInterpreterFactory Factory;
 
-        public InterpreterOptions(PythonToolsService pyService, IPythonInterpreterFactory interpreter) {
+        public InterpreterOptions(PythonToolsService pyService, InterpreterConfiguration config) {
             _pyService = pyService;
-            _interpreter = interpreter;
+            _config = config;
         }
 
         public void Load() {
-            var configurable = _pyService._interpreterOptionsService.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().FirstOrDefault();
+            var configurable = _pyService._interpreterOptionsService;
             Debug.Assert(configurable != null);
 
-            Display = _interpreter.Description;
-            Id = _interpreter.Id;
-            InterpreterPath = _interpreter.Configuration.InterpreterPath;
-            WindowsInterpreterPath = _interpreter.Configuration.WindowsInterpreterPath;
-            LibraryPath = _interpreter.Configuration.LibraryPath;
-            Version = _interpreter.Configuration.Version.ToString();
-            Architecture = FormatArchitecture(_interpreter.Configuration.Architecture);
-            PathEnvironmentVariable = _interpreter.Configuration.PathEnvironmentVariable;
-            IsConfigurable = configurable != null && configurable.IsConfigurable(_interpreter);
-            SupportsCompletionDb = _interpreter is IPythonInterpreterFactoryWithDatabase;
-            Factory = _interpreter;
+            Display = _config.FullDescription;
+            Description = _config.Description;
+            Id = _config.Id;
+            InterpreterPath = _config.InterpreterPath;
+            WindowsInterpreterPath = _config.WindowsInterpreterPath;
+            LibraryPath = _config.LibraryPath;
+            Version = _config.Version.ToString();
+            Architecture = FormatArchitecture(_config.Architecture);
+            PathEnvironmentVariable = _config.PathEnvironmentVariable;
+            IsConfigurable = configurable != null && configurable.IsConfigurable(_config.Id);
+            SupportsCompletionDb = _config.UIMode.HasFlag(InterpreterUIMode.SupportsDatabase);
         }
 
         private static string FormatArchitecture(ProcessorArchitecture arch) {

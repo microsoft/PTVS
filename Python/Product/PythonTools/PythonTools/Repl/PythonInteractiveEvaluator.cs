@@ -103,6 +103,7 @@ namespace Microsoft.PythonTools.Repl {
 
         public string DisplayName { get; set; }
         public string ProjectMoniker { get; set; }
+        public string InterpreterId { get; set; }
         public string InterpreterPath { get; set; }
         public PythonLanguageVersion LanguageVersion { get; set; }
         public string InterpreterArguments {get; set; }
@@ -123,14 +124,20 @@ namespace Microsoft.PythonTools.Repl {
                     return _analyzer;
                 }
 
-                // HACK: We use the interpreter path as the id for the factory
-                // Eventually, we will remove factories completely and always
-                // use the path as the ID, but right now this is a hack.
-                var interpreters = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-                var factory = interpreters.Interpreters.FirstOrDefault(
-                    f => CommonUtils.IsSamePath(f.Configuration.InterpreterPath, InterpreterPath)
-                );
-                _analyzer = new VsProjectAnalyzer(_serviceProvider, factory, interpreters.Interpreters.ToArray());
+                var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+
+                var id = InterpreterId;
+                if (string.IsNullOrEmpty(id)) {
+                    id = interpreterService.Configurations
+                        .FirstOrDefault(c => CommonUtils.IsSamePath(c.InterpreterPath, InterpreterPath))
+                        ?.Id;
+                }
+
+                if (string.IsNullOrEmpty(id)) {
+                    _analyzer = _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
+                } else {
+                    _analyzer = new VsProjectAnalyzer(_serviceProvider, interpreterService.FindInterpreter(id));
+                }
                 return _analyzer;
             }
         }
@@ -239,8 +246,8 @@ namespace Microsoft.PythonTools.Repl {
             return Enumerable.Empty<KeyValuePair<string, bool>>();
         }
 
-        public MemberResult[] GetMemberNames(string text) {
-            return _thread?.GetMemberNames(text) ?? new MemberResult[0];
+        public CompletionResult[] GetMemberNames(string text) {
+            return _thread?.GetMemberNames(text) ?? new CompletionResult[0];
         }
 
         public OverloadDoc[] GetSignatureDocumentation(string text) {
@@ -532,7 +539,7 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             foreach (var buffer in CurrentWindow.TextView.BufferGraph.GetTextBuffers(b => b.ContentType.IsOfType(PythonCoreConstants.ContentType))) {
-                buffer.Properties[ParseQueue.DoNotParse] = ParseQueue.DoNotParse;
+                buffer.Properties[BufferParser.DoNotParse] = BufferParser.DoNotParse;
             }
 
             if (!quiet) {

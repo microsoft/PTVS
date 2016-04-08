@@ -583,7 +583,7 @@ namespace Microsoft.PythonTools.Project {
 
             var replWindowId = PythonReplEvaluatorProvider.GetTemporaryId(
                 ReplId + executeIn.Substring(4),
-                _project.GetInterpreterFactory()
+                _project.GetInterpreterFactory().Configuration
             );
             
             var model = _project.Site.GetComponentModel();
