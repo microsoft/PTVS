@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Windows.Data;
 
@@ -22,21 +23,48 @@ namespace Microsoft.PythonTools.EnvironmentsList {
     [ValueConversion(typeof(string), typeof(string))]
     sealed class FileNameEllipsisConverter : IValueConverter {
         public bool IncludeHead { get; set; }
+        public bool IncludeBody { get; set; }
         public bool IncludeTail { get; set; }
 
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-            var path = (string)value;
-            if (IncludeHead && IncludeTail) {
+            var path = value as string;
+            if (string.IsNullOrEmpty(path) || IncludeHead && IncludeBody && IncludeTail) {
                 return path;
             }
-            if (!IncludeHead && !IncludeTail) {
-                return string.Empty;
+
+            var headSplit = path.IndexOf('\\') + 1;
+            var headSplit2 = path.IndexOf('/') + 1;
+            if (headSplit > 0 && headSplit2 > 0 && headSplit2 < headSplit) {
+                headSplit = headSplit2;
             }
-            var split = Math.Max(path.LastIndexOf('\\'), path.LastIndexOf('/'));
-            if (split < 0) {
-                return IncludeHead ? string.Empty : path;
+            var tailSplit = Math.Max(path.LastIndexOf('\\'), path.LastIndexOf('/'));
+
+            var head = (headSplit > 0) ? path.Remove(headSplit) : string.Empty;
+            var tail = (tailSplit > 0) ? path.Substring(tailSplit) : string.Empty;
+
+            var body = string.Empty;
+            if (tailSplit > headSplit) {
+                if (headSplit > 0) {
+                    body = path.Substring(headSplit, tailSplit - headSplit);
+                } else {
+                    body = path.Remove(tailSplit);
+                }
+            } else if (tailSplit < headSplit) {
+                Debug.Assert(headSplit > 0);
+                body = path.Substring(Math.Max(headSplit, 0));
             }
-            return IncludeHead ? path.Remove(split) : path.Substring(split);
+
+            var result = string.Empty;
+            if (IncludeHead) {
+                result += head;
+            }
+            if (IncludeBody) {
+                result += body;
+            }
+            if (IncludeTail) {
+                result += tail;
+            }
+            return result;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {

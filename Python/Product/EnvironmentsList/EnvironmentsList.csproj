@@ -96,6 +96,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="FileNameLabel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="PipExtension.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

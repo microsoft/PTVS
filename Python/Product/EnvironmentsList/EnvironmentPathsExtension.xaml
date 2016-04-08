@@ -18,10 +18,9 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/EnvironmentView.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/PathTextBlock.xaml" />
 
                 <ResourceDictionary>
-                    <l:FileNameEllipsisConverter IncludeHead="True" x:Key="FileNameEllipsisHead" />
-                    <l:FileNameEllipsisConverter IncludeTail="True" x:Key="FileNameEllipsisTail" />
 
                     <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="EnvironmentIsDefault">
                         <Grid Margin="6">
@@ -109,7 +108,6 @@
 
                             <Button Command="{x:Static l:EnvironmentView.OpenInPowerShell}"
                                     CommandParameter="{Binding Mode=OneWay}"
-                                    ToolTip="{Binding PrefixPath,Mode=OneWay}"
                                     Style="{StaticResource NavigationButton}"
                                     Margin="6"
                                     HorizontalAlignment="Left"
@@ -122,7 +120,7 @@
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
                                                     Style="{StaticResource ConsoleImage}" />
-                                    <TextBlock Grid.Column="1" TextTrimming="CharacterEllipsis">
+                                    <TextBlock Grid.Column="1">
                                         Open in PowerShell
                                     </TextBlock>
                                 </Grid>
@@ -173,16 +171,13 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
-                                        <ColumnDefinition Width="auto" />
                                     </Grid.ColumnDefinitions>
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
                                                     Style="{StaticResource FolderClosedImage}" />
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding PrefixPath,Mode=OneWay,Converter={StaticResource FileNameEllipsisHead}}"
-                                               TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Column="2"
-                                               Text="{Binding PrefixPath,Mode=OneWay,Converter={StaticResource FileNameEllipsisTail}}" />
+                                    <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
+                                           Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
+                                           Content="{Binding PrefixPath,Mode=OneWay}" />
                                 </Grid>
                                 <Button.ContextMenu>
                                     <ContextMenu>
@@ -209,16 +204,13 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
-                                        <ColumnDefinition Width="auto" />
                                     </Grid.ColumnDefinitions>
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
                                                     Style="{StaticResource PythonConsoleApplicationImage}" />
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding InterpreterPath,Mode=OneWay,Converter={StaticResource FileNameEllipsisHead}}"
-                                               TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Column="2"
-                                               Text="{Binding InterpreterPath,Mode=OneWay,Converter={StaticResource FileNameEllipsisTail}}" />
+                                    <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
+                                           Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
+                                           Content="{Binding InterpreterPath,Mode=OneWay}" />
                                 </Grid>
                                 <Button.ContextMenu>
                                     <ContextMenu>
@@ -245,16 +237,13 @@
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
-                                        <ColumnDefinition Width="auto" />
                                     </Grid.ColumnDefinitions>
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
                                                     Style="{StaticResource PythonApplicationImage}" />
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding WindowsInterpreterPath,Mode=OneWay,Converter={StaticResource FileNameEllipsisHead}}"
-                                               TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding WindowsInterpreterPath,Mode=OneWay,Converter={StaticResource FileNameEllipsisTail}}" />
+                                    <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
+                                           Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
+                                           Content="{Binding WindowsInterpreterPath,Mode=OneWay}" />
                                 </Grid>
                                 <Button.ContextMenu>
                                     <ContextMenu>
