@@ -1060,16 +1060,17 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Removes items from the hierarchy. 
         /// </summary>
         /// <devdoc>Project overwrites this.</devdoc>
-        public override void Remove(bool removeFromStorage) {
+        public override bool Remove(bool removeFromStorage) {
             // the project will not be deleted from disk, just removed      
             if (removeFromStorage) {
-                return;
+                return false;
             }
 
             // Remove the entire project from the solution
             IVsSolution solution = this.Site.GetService(typeof(SVsSolution)) as IVsSolution;
             uint iOption = 1; // SLNSAVEOPT_PromptSave
             ErrorHandler.ThrowOnFailure(solution.CloseSolutionElement(iOption, this.GetOuterInterface<IVsHierarchy>(), 0));
+            return true;
         }
 
         /// <summary>

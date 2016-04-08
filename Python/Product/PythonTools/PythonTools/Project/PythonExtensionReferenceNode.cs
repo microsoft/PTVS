@@ -223,9 +223,9 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Overridden method. The method updates the build dependency list before removing the node from the hierarchy.
         /// </summary>
-        public override void Remove(bool removeFromStorage) {
+        public override bool Remove(bool removeFromStorage) {
             if (ProjectMgr == null) {
-                return;
+                return false;
             }
 
             var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
@@ -233,7 +233,7 @@ namespace Microsoft.PythonTools.Project {
                 interp.RemoveReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
             }
             ItemNode.RemoveFromProjectFile();
-            base.Remove(removeFromStorage);
+            return base.Remove(removeFromStorage);
         }
 
         #endregion

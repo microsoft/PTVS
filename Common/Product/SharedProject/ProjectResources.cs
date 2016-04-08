@@ -90,6 +90,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string FileCopyError = "FileCopyError";
         internal const string FileName = "FileName";
         internal const string FileNameDescription = "FileNameDescription";
+        internal const string FileOpenDoesNotExist = "FileOpenDoesNotExist";
         internal const string FileOrFolderAlreadyExists = "FileOrFolderAlreadyExists";
         internal const string FileOrFolderCannotBeFound = "FileOrFolderCannotBeFound";
         internal const string FileProperties = "FileProperties";
@@ -156,6 +157,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string StartupFileDescription = "StartupFileDescription";
         internal const string StartWebBrowser = "StartWebBrowser";
         internal const string StartWebBrowserDescription = "StartWebBrowserDescription";
+        internal const string UnableToRemoveFile = "UnableToRemoveFile";
         internal const string UnknownInParentheses = "UnknownInParentheses";
         internal const string URL = "URL";
         internal const string UseOfDeletedItemError = "UseOfDeletedItemError";
