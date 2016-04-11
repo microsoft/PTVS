@@ -2275,9 +2275,7 @@ namespace Microsoft.PythonTools.Parsing {
             // In this case, the lambda is a generator and will yield it's final result instead of just return it.
             Statement body;
             if (func.IsGenerator) {
-                YieldExpression y = new YieldExpression(expr);
-                y.SetLoc(expr.IndexSpan);
-                body = new ExpressionStatement(y);
+                body = new ExpressionStatement(expr);
             } else {
                 body = new ReturnStatement(expr);
             }
@@ -3854,9 +3852,8 @@ namespace Microsoft.PythonTools.Parsing {
                     ReportSyntaxError("'yield' inside async function");
                 }
                 Eat(TokenKind.KeywordYield);
-                ret = ParseYieldExpression();
-                Eat(TokenKind.RightParenthesis);                
-                hasRightParenthesis = true;
+                ret = new ParenthesisExpression(ParseYieldExpression());
+                hasRightParenthesis = Eat(TokenKind.RightParenthesis);                
             } else {
                 bool prevAllow = _allowIncomplete;
                 try {
@@ -3973,7 +3970,7 @@ namespace Microsoft.PythonTools.Parsing {
             bool prevAllow = _allowIncomplete;
             bool reportedError = false;
             bool ateTerminator = false;
-            bool ateMultiply = false, atePower = false;
+            bool hasSequenceUnpack = false, hasDictUnpack = false;
             try {
                 _allowIncomplete = true;
                 while (true) {
@@ -3983,16 +3980,19 @@ namespace Microsoft.PythonTools.Parsing {
                         break;
                     }
 
+                    bool isUnpack = false;
                     if (MaybeEat(TokenKind.Multiply)) {
-                        if (atePower || _langVersion < PythonLanguageVersion.V35) {
+                        if (hasDictUnpack || _langVersion < PythonLanguageVersion.V35) {
                             ReportSyntaxError("invalid syntax");
                         }
-                        ateMultiply = true;
+                        isUnpack = true;
+                        hasSequenceUnpack = true;
                     } else if (MaybeEat(TokenKind.Power)) {
-                        if (ateMultiply || _langVersion < PythonLanguageVersion.V35) {
+                        if (hasSequenceUnpack || _langVersion < PythonLanguageVersion.V35) {
                             ReportSyntaxError("invalid syntax");
                         }
-                        atePower = true;
+                        isUnpack = true;
+                        hasDictUnpack = true;
                     }
 
                     bool first = false;
@@ -4005,7 +4005,7 @@ namespace Microsoft.PythonTools.Parsing {
                         }
                         Expression e2 = ParseExpression();
 
-                        if (setMembers != null) {
+                        if (setMembers != null || hasSequenceUnpack || isUnpack) {
                             if (!reportedError) {
                                 ReportSyntaxError(e1.StartIndex, e2.EndIndex, "invalid syntax");
                             }
@@ -4040,45 +4040,64 @@ namespace Microsoft.PythonTools.Parsing {
                         } else {
                             setMembers.Add(se);
                         }
-                    } else { // set literal
+                    } else { // set literal or dict unpack
                         if (_langVersion < PythonLanguageVersion.V27 && !reportedError) {
                             ReportSyntaxError(e1.StartIndex, e1.EndIndex, "invalid syntax, set literals require Python 2.7 or later.");
                             reportedError = true;
                         }
-                        if (dictMembers != null) {
-                            if (!reportedError) {
+
+                        if (isUnpack && hasDictUnpack) {
+                            // **{}, we don't have a colon and a value...
+                            if (setMembers != null && !reportedError) {
                                 ReportSyntaxError(e1.StartIndex, e1.EndIndex, "invalid syntax");
+                                reportedError = true;
                             }
-                        } else if (setMembers == null) {
-                            setMembers = new List<Expression>();
-                            first = true;
-                        }
 
-                        if (PeekToken(Tokens.KeywordForToken)) {
-                            if (!first) {
-                                ReportSyntaxError("invalid syntax");
+                            if (dictMembers == null) {
+                                dictMembers = new List<SliceExpression>();
                             }
-                            var setComp = FinishSetComp(e1, out ateTerminator);
-                            if (_verbatim) {
-                                AddPreceedingWhiteSpace(setComp, startWhiteSpace);
-                                AddSecondPreceedingWhiteSpace(setComp, _tokenWhiteSpace);
-                                if (!ateTerminator) {
-                                    AddErrorMissingCloseGrouping(setComp);
-                                }
-                            }
-                            setComp.SetLoc(oStart, GetEnd());
-                            return setComp;
-                        }
-
-                        // error recovery
-                        if (setMembers != null) {
-                            setMembers.Add(e1);
+                            dictMembers.Add(new SliceExpression(null, e1, null, false));
                         } else {
-                            var slice = new SliceExpression(e1, null, null, false);
-                            if (_verbatim) {
-                                AddErrorIsIncompleteNode(slice);
+                            if (dictMembers != null) {
+                                if (!reportedError) {
+                                    ReportSyntaxError(e1.StartIndex, e1.EndIndex, "invalid syntax");
+                                    reportedError = true;
+                                }
+                            } else if (setMembers == null) {
+                                setMembers = new List<Expression>();
+                                first = true;
                             }
-                            dictMembers.Add(slice);
+
+                            if (PeekToken(Tokens.KeywordForToken)) {
+                                if (!first) {
+                                    ReportSyntaxError("invalid syntax");
+                                }
+                                var setComp = FinishSetComp(e1, out ateTerminator);
+                                if (_verbatim) {
+                                    AddPreceedingWhiteSpace(setComp, startWhiteSpace);
+                                    AddSecondPreceedingWhiteSpace(setComp, _tokenWhiteSpace);
+                                    if (!ateTerminator) {
+                                        AddErrorMissingCloseGrouping(setComp);
+                                    }
+                                }
+                                setComp.SetLoc(oStart, GetEnd());
+                                return setComp;
+                            }
+
+                            // error recovery
+                            if (setMembers != null) {
+                                if (isUnpack) {
+                                    e1 = new StarredExpression(e1);
+                                }
+
+                                setMembers.Add(e1);
+                            } else {
+                                var slice = new SliceExpression(e1, null, null, false);
+                                if (_verbatim) {
+                                    AddErrorIsIncompleteNode(slice);
+                                }
+                                dictMembers.Add(slice);
+                            }
                         }
                     }
 
@@ -4470,7 +4489,13 @@ namespace Microsoft.PythonTools.Parsing {
 
             foreach (Arg arg in args) {
                 if (arg.Name == null) {
-                    if (hasArgsTuple || hasKeywordDict || keywordCount > 0) {
+                    if (_langVersion >= PythonLanguageVersion.V35) {
+                        if (hasKeywordDict) {
+                            ReportSyntaxError(arg.StartIndex, arg.EndIndex, "positional argument follows keyword argument unpacking");
+                        } else if (keywordCount > 0) {
+                            ReportSyntaxError(arg.StartIndex, arg.EndIndex, "positional argument follows keyword argument");
+                        }
+                    } else if (hasArgsTuple || hasKeywordDict || keywordCount > 0) {
                         ReportSyntaxError(arg.StartIndex, arg.EndIndex, "non-keyword arg after keyword arg");
                     }
                 } else if (arg.Name == "*") {
@@ -4490,7 +4515,7 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                     hasKeywordDict = true; extraArgs++;
                 } else {
-                    if (hasKeywordDict) {
+                    if (hasKeywordDict && _langVersion < PythonLanguageVersion.V35) {
                         ReportSyntaxError(arg.StartIndex, arg.EndIndex, "keywords must come before ** args");
                     }
                     keywordCount++;
