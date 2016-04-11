@@ -358,7 +358,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             }.Select(ProcessOutput.QuoteSingleArgument));
             psi.WorkingDirectory = view.PrefixPath;
 
-            Process.Start(psi);
+            Process.Start(psi).Dispose();
         }
     }
 }
