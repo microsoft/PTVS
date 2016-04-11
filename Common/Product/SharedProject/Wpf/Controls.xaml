@@ -269,6 +269,9 @@
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
+                            <Style TargetType="{x:Type Label}">
+                                <Setter Property="Foreground" Value="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}" />
+                            </Style>
                         </ContentPresenter.Resources>
                     </ContentPresenter>
                 </ControlTemplate>

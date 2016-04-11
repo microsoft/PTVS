@@ -18,8 +18,10 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/EnvironmentView.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/FileNameLabel.xaml" />
 
                 <ResourceDictionary>
+
                     <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="EnvironmentIsDefault">
                         <Grid Margin="6">
                             <Button x:Name="MakeDefaultButton"
@@ -104,6 +106,38 @@
                                 </Grid>
                             </Button>
 
+                            <Button Command="{x:Static l:EnvironmentView.OpenInPowerShell}"
+                                    CommandParameter="{Binding Mode=OneWay}"
+                                    Style="{StaticResource NavigationButton}"
+                                    Margin="6"
+                                    HorizontalAlignment="Left"
+                                    x:Name="Button">
+                                <Grid Background="Transparent">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <ContentControl Grid.Column="0"
+                                                    Margin="3 0"
+                                                    Style="{StaticResource ConsoleImage}" />
+                                    <TextBlock Grid.Column="1">
+                                        Open in PowerShell
+                                    </TextBlock>
+                                </Grid>
+                                <Button.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem InputGestureText=""
+                                                  Command="{x:Static l:EnvironmentView.OpenInCommandPrompt}"
+                                                  CommandParameter="{Binding Mode=OneWay}"
+                                                  CommandTarget="{Binding PlacementTarget,RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
+                                            <MenuItem.Header>
+                                                Open in _Command Prompt
+                                            </MenuItem.Header>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                            </Button>
+
                             <Button Command="{x:Static l:EnvironmentView.OpenInteractiveOptions}"
                                     CommandParameter="{Binding}"
                                     Style="{StaticResource NavigationButton}"
@@ -141,9 +175,9 @@
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
                                                     Style="{StaticResource FolderClosedImage}" />
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding PrefixPath,Mode=OneWay}"
-                                               TextTrimming="CharacterEllipsis" />
+                                    <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
+                                           Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
+                                           Content="{Binding PrefixPath,Mode=OneWay}" />
                                 </Grid>
                                 <Button.ContextMenu>
                                     <ContextMenu>
@@ -174,9 +208,9 @@
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
                                                     Style="{StaticResource PythonConsoleApplicationImage}" />
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding InterpreterPath,Mode=OneWay}"
-                                               TextTrimming="CharacterEllipsis" />
+                                    <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
+                                           Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
+                                           Content="{Binding InterpreterPath,Mode=OneWay}" />
                                 </Grid>
                                 <Button.ContextMenu>
                                     <ContextMenu>
@@ -207,9 +241,9 @@
                                     <ContentControl Grid.Column="0"
                                                     Margin="3 0"
                                                     Style="{StaticResource PythonApplicationImage}" />
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding WindowsInterpreterPath,Mode=OneWay}"
-                                               TextTrimming="CharacterEllipsis" />
+                                    <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
+                                           Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
+                                           Content="{Binding WindowsInterpreterPath,Mode=OneWay}" />
                                 </Grid>
                                 <Button.ContextMenu>
                                     <ContextMenu>
@@ -227,7 +261,6 @@
                             </Button>
                         </StackPanel>
                     </DataTemplate>
-
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

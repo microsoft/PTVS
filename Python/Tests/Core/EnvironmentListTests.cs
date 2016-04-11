@@ -651,6 +651,26 @@ namespace PythonToolsUITests {
             }
         }
 
+        [TestMethod, Priority(1)]
+        public void FileNameEllipsis() {
+            TestFileNameEllipsis("C:\\Python\\python.exe", "C:\\", "Python", "\\python.exe");
+            TestFileNameEllipsis("C:\\Python\\lib\\", "C:\\", "Python", "\\lib\\");
+            TestFileNameEllipsis("C:\\python.exe", "C:", "", "\\python.exe");
+            TestFileNameEllipsis("\\python.exe", "", "", "\\python.exe");
+            TestFileNameEllipsis("python.exe", "", "", "python.exe");
+            TestFileNameEllipsis("\\lib\\", "", "", "\\lib\\");
+            TestFileNameEllipsis("lib\\", "", "", "lib\\");
+            TestFileNameEllipsis("", "", "", "");
+        }
+
+        private static void TestFileNameEllipsis(string path, string head, string body, string tail) {
+            var h = (string)new FileNameEllipsisConverter { IncludeHead = true }.Convert(path, typeof(string), null, null);
+            var b = (string)new FileNameEllipsisConverter { IncludeBody = true }.Convert(path, typeof(string), null, null);
+            var t = (string)new FileNameEllipsisConverter { IncludeTail = true }.Convert(path, typeof(string), null, null);
+
+            Assert.AreEqual(head + "|" + body + "|" + tail, h + "|" + body + "|" + tail);
+        }
+
         #region Test Helpers
 
         private static bool LogException(Task task) {
