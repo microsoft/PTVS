@@ -291,7 +291,7 @@ namespace Microsoft.PythonTools.InterpreterList {
                 psi.EnvironmentVariables[factory.Configuration.PathEnvironmentVariable] = string.Empty;
             }
 
-            Process.Start(psi);
+            Process.Start(psi).Dispose();
         }
 
         private void OnlineHelp_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -335,7 +335,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             }.Select(ProcessOutput.QuoteSingleArgument));
             psi.WorkingDirectory = view.PrefixPath;
 
-            Process.Start(psi);
+            Process.Start(psi).Dispose();
         }
 
         private void OpenInPowerShell_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
