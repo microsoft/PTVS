@@ -1612,7 +1612,7 @@ namespace Microsoft.PythonTools.Parsing {
                 isParenFree = true;
                 args = new Arg[0];
             }
-            var mid = GetEnd();
+            var mid = _lookahead.Span.Start;
 
             // Save private prefix
             string savedPrefix = SetPrivatePrefix(name.VerbatimName);
@@ -1852,7 +1852,7 @@ namespace Microsoft.PythonTools.Parsing {
             }
 
             var rStart = GetStart();
-            var rEnd = GetEnd();
+            var mid = _lookahead.Span.Start;
 
             ret = new FunctionDefinition(nameExpr, parameters);
             AddVerbatimName(name, ret);
@@ -1868,7 +1868,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             ret.SetBody(body);
             ret.ReturnAnnotation = returnAnnotation;
-            ret.HeaderIndex = rEnd;
+            ret.HeaderIndex = mid;
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, preWhitespace);
                 if (afterAsyncWhitespace != null) {
