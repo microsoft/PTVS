@@ -33,6 +33,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Infrastructure;
+using System.Collections.Generic;
 
 namespace Microsoft.PythonTools.InterpreterList {
     [Guid(PythonConstants.InterpreterListToolWindowGuid)]
@@ -92,6 +93,16 @@ namespace Microsoft.PythonTools.InterpreterList {
                 ToolWindow.UnhandledException,
                 UnhandledException_Executed,
                 UnhandledException_CanExecute
+            ));
+            list.CommandBindings.Add(new CommandBinding(
+                EnvironmentView.OpenInPowerShell,
+                OpenInPowerShell_Executed,
+                OpenInPowerShell_CanExecute
+            ));
+            list.CommandBindings.Add(new CommandBinding(
+                EnvironmentView.OpenInCommandPrompt,
+                OpenInCommandPrompt_Executed,
+                OpenInCommandPrompt_CanExecute
             ));
 
             Content = list;
@@ -280,7 +291,7 @@ namespace Microsoft.PythonTools.InterpreterList {
                 psi.EnvironmentVariables[factory.Configuration.PathEnvironmentVariable] = string.Empty;
             }
 
-            Process.Start(psi);
+            Process.Start(psi).Dispose();
         }
 
         private void OnlineHelp_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -291,6 +302,63 @@ namespace Microsoft.PythonTools.InterpreterList {
         private void OnlineHelp_Executed(object sender, ExecutedRoutedEventArgs e) {
             VisualStudioTools.CommonPackage.OpenVsWebBrowser(_site, PythonToolsPackage.InterpreterHelpUrl);
             e.Handled = true;
+        }
+
+        private static readonly string[] PathSuffixes = new[] { "", "Scripts" };
+
+        private static string GetPathEntries(EnvironmentView view) {
+            if (!Directory.Exists(view?.PrefixPath)) {
+                return null;
+            }
+
+            return string.Join(";", PathSuffixes
+                .Select(s => PathUtils.GetAbsoluteDirectoryPath(view.PrefixPath, s))
+                .Where(Directory.Exists));
+        }
+
+        private void OpenInCommandPrompt_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var view = e.Parameter as EnvironmentView;
+            e.CanExecute = Directory.Exists(view?.PrefixPath);
+            e.Handled = true;
+        }
+
+        private void OpenInCommandPrompt_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var view = (EnvironmentView)e.Parameter;
+
+            var paths = GetPathEntries(view);
+            var pathCmd = string.IsNullOrEmpty(paths) ? "" : string.Format("set PATH={0};%PATH% & ", paths);
+            var psi = new ProcessStartInfo("cmd.exe");
+            psi.Arguments = string.Join(" ", new[] {
+                "/S",
+                "/K",
+                pathCmd + string.Format("title {0} environment", view.Description)
+            }.Select(ProcessOutput.QuoteSingleArgument));
+            psi.WorkingDirectory = view.PrefixPath;
+
+            Process.Start(psi).Dispose();
+        }
+
+        private void OpenInPowerShell_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var view = e.Parameter as EnvironmentView;
+            e.CanExecute = Directory.Exists(view?.PrefixPath);
+            e.Handled = true;
+        }
+
+        private void OpenInPowerShell_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var view = (EnvironmentView)e.Parameter;
+
+            var paths = GetPathEntries(view);
+            var pathCmd = string.IsNullOrEmpty(paths) ? "" : string.Format("$env:PATH='{0};' + $env:PATH; ", paths);
+            var psi = new ProcessStartInfo("powershell.exe");
+            psi.Arguments = string.Join(" ", new[] {
+                "-NoLogo",
+                "-NoExit",
+                "-Command",
+                pathCmd + string.Format("(Get-Host).UI.RawUI.WindowTitle = '{0} environment'", view.Description)
+            }.Select(ProcessOutput.QuoteSingleArgument));
+            psi.WorkingDirectory = view.PrefixPath;
+
+            Process.Start(psi).Dispose();
         }
     }
 }

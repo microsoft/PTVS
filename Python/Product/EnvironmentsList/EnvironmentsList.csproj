@@ -96,6 +96,10 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
+    <Page Include="FileNameLabel.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="PipExtension.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -154,6 +158,7 @@
     <Compile Include="DBExtension.xaml.cs">
       <DependentUpon>DBExtension.xaml</DependentUpon>
     </Compile>
+    <Compile Include="FileNameEllipsisConverter.cs" />
     <Compile Include="IEnvironmentViewExtensionProvider.cs" />
     <Compile Include="Pep440Version.cs" />
     <Compile Include="PipExtension.xaml.cs">
