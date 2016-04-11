@@ -594,7 +594,7 @@ namespace Microsoft.PythonTools.Interpreter {
         sealed class ErrorFactoryInfo : FactoryInfo {
             private string _dir;
 
-            public ErrorFactoryInfo(string id, Version ver, string description, string dir) : base(new InterpreterConfiguration(id, description, ver)) {
+            public ErrorFactoryInfo(string id, Version ver, string description, string dir) : base(new InterpreterConfiguration(id, description, version: ver)) {
                 _dir = dir;
             }
 

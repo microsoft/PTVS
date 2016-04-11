@@ -26,44 +26,10 @@ namespace Microsoft.PythonTools.Interpreter {
         readonly string _windowsInterpreterPath;
         readonly string _libraryPath;
         readonly string _pathEnvironmentVariable;
+        readonly string _source;
         readonly ProcessorArchitecture _architecture;
         readonly Version _version;
         readonly InterpreterUIMode _uiMode;
-
-        /// <summary>
-        /// Creates a blank configuration with the specified language version.
-        /// This is intended for use in placeholder implementations of
-        /// <see cref="IPythonInterpreterFactory"/> for when a known interpreter
-        /// is unavailable.
-        /// </summary>
-        public InterpreterConfiguration(string id, string description, Version version) {
-            _id = id;
-            _version = version;
-            _description = description;
-        }
-
-        /// <summary>
-        /// <para>Constructs a new interpreter configuration based on the
-        /// provided values.</para>
-        /// <para>No validation is performed on the parameters.</para>
-        /// <para>If winPath is null or empty,
-        /// <see cref="WindowsInterpreterPath"/> will be set to path.</para>
-        /// <para>If libraryPath is null or empty and prefixPath is a valid
-        /// file system path, <see cref="LibraryPath"/> will be set to
-        /// prefixPath plus "Lib".</para>
-        /// </summary>
-        public InterpreterConfiguration(
-            string id,
-            string description,
-            string prefixPath,
-            string path,
-            string winPath = "",
-            string libraryPath = "",
-            string pathVar = "",
-            ProcessorArchitecture arch= ProcessorArchitecture.None,
-            Version version = null
-        ) : this(id, description, prefixPath, path, winPath, libraryPath, pathVar, arch, version ?? new Version(2, 7), InterpreterUIMode.Normal) {
-        }
        
         /// <summary>
         /// <para>Constructs a new interpreter configuration based on the
@@ -78,14 +44,15 @@ namespace Microsoft.PythonTools.Interpreter {
         public InterpreterConfiguration(
             string id,
             string description,
-            string prefixPath,
-            string path,
-            string winPath,
-            string libraryPath,
-            string pathVar,
-            ProcessorArchitecture arch,
-            Version version,
-            InterpreterUIMode uiMode
+            string prefixPath = null,
+            string path = null,
+            string winPath = "",
+            string libraryPath = "",
+            string pathVar = "",
+            ProcessorArchitecture arch = ProcessorArchitecture.None,
+            Version version = null,
+            InterpreterUIMode uiMode = InterpreterUIMode.Normal,
+            string source = ""
         ) {
             _id = id;
             _description = description;
@@ -103,6 +70,7 @@ namespace Microsoft.PythonTools.Interpreter {
             _architecture = arch;
             _version = version;
             _uiMode = uiMode;
+            _source = source;
         }
 
         /// <summary>
@@ -128,7 +96,17 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (_version != new Version()) {
                     res += " " + _version.ToString();
                 }
+
                 return res;
+            }
+        }
+
+        /// <summary>
+        /// Gets extra information about how this interpreter was discovered.
+        /// </summary>
+        public string Source {
+            get {
+                return _source;
             }
         }
 

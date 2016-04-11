@@ -121,7 +121,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _commentTaskProvider.TokensChanged += CommentTaskTokensChanged;
 
-            _conn = StartConnection(out _analysisProcess);
+            _conn = StartConnection(
+                projectFile?.FullPath ?? (implicitProject ? "Global Analysis" : "Misc. Non Project Analysis"), 
+                out _analysisProcess
+            );
             _userCount = 1;
 
             Task.Run(() => _conn.ProcessMessages());
@@ -290,9 +293,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #endregion
 
-        private Connection StartConnection(out Process proc) {
+        private Connection StartConnection(string comment, out Process proc) {
             var libAnalyzer = typeof(AP.FileChangedResponse).Assembly.Location;
-            var psi = new ProcessStartInfo(libAnalyzer, "/interactive");
+            var psi = new ProcessStartInfo(libAnalyzer, "/interactive /comment \"" + comment + "\"");
             psi.RedirectStandardInput = true;
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;

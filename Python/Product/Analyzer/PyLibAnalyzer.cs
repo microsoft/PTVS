@@ -96,6 +96,7 @@ namespace Microsoft.PythonTools.Analysis {
                               "would have been analyzed.");
             Console.WriteLine(" /wait       [identifier]       - wait for the specified analysis to complete.");
             Console.WriteLine(" /repeat     [count]            - repeat up to count times if needed (default 3).");
+            Console.WriteLine(" /comment    [comment]          - provide descriptive text about why this analyzed was created");
         }
 
         private static IEnumerable<KeyValuePair<string, string>> ParseArguments(IEnumerable<string> args) {

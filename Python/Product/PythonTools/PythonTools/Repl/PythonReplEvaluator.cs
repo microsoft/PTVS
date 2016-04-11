@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Repl {
 
         private class UnavailableFactory : IPythonInterpreterFactory {
             public UnavailableFactory(string id) {
-                Configuration = new InterpreterConfiguration(id, "Unavailable", new Version(0, 0));
+                Configuration = new InterpreterConfiguration(id, "Unavailable", version: new Version(0, 0));
             }
             public string Description { get { return Configuration.Id.ToString(); } }
             public InterpreterConfiguration Configuration { get; private set; }
