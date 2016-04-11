@@ -4,9 +4,8 @@
     <IncludeML Condition="'$(IncludeML)' == ''">true</IncludeML>
     <IncludeML Condition="'$(VSTarget)' == '15.0'">false</IncludeML>
     
-    <!-- Include IronPython by default, and force to false for VS "15" -->
+    <!-- Include IronPython by default -->
     <IncludeIronPython Condition="'$(IncludeIronPython)' == ''">true</IncludeIronPython>
-    <IncludeIronPython Condition="'$(VSTarget)' == '15.0'">false</IncludeIronPython>
     
     <!-- Include UWP by default -->
     <IncludeUwp Condition="'$(IncludeUwp)' == ''">true</IncludeUwp>
