@@ -59,6 +59,18 @@ namespace PythonToolsMockTests {
         }
 
         [TestMethod, Priority(1)]
+        public void SigHelpInClass() {
+            using (var view = new PythonEditor()) {
+                view.Type("class C(): pass");
+                view.View.MoveCaret(1, 9);
+
+                view.View.ParamInfo();
+
+                view.View.AssertNoIntellisenseSession();
+            }
+        }
+
+        [TestMethod, Priority(1)]
         public void BuiltinFunctionCompletions() {
             using (var view = new PythonEditor()) {
                 view.Type("min.");
