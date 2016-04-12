@@ -26,7 +26,6 @@ namespace Microsoft.PythonTools.Interpreter {
         readonly string _windowsInterpreterPath;
         readonly string _libraryPath;
         readonly string _pathEnvironmentVariable;
-        readonly string _source;
         readonly ProcessorArchitecture _architecture;
         readonly Version _version;
         readonly InterpreterUIMode _uiMode;
@@ -51,8 +50,7 @@ namespace Microsoft.PythonTools.Interpreter {
             string pathVar = "",
             ProcessorArchitecture arch = ProcessorArchitecture.None,
             Version version = null,
-            InterpreterUIMode uiMode = InterpreterUIMode.Normal,
-            string source = ""
+            InterpreterUIMode uiMode = InterpreterUIMode.Normal
         ) {
             _id = id;
             _description = description;
@@ -70,7 +68,6 @@ namespace Microsoft.PythonTools.Interpreter {
             _architecture = arch;
             _version = version;
             _uiMode = uiMode;
-            _source = source;
         }
 
         /// <summary>
@@ -98,15 +95,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 return res;
-            }
-        }
-
-        /// <summary>
-        /// Gets extra information about how this interpreter was discovered.
-        /// </summary>
-        public string Source {
-            get {
-                return _source;
             }
         }
 

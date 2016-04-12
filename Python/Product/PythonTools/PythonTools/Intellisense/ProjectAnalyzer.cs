@@ -1855,6 +1855,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(LocationTracker translator, AP.OutliningTag[] tags) {
+            var snapshot = translator.TextBuffer.CurrentSnapshot;
             foreach (var tag in tags) {
                 // translate the span from the version we last parsed to the current version
                 var span = translator.TranslateForward(Span.FromBounds(tag.startIndex, tag.endIndex));
@@ -1865,7 +1866,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 yield return OutliningTaggerProvider.OutliningTagger.GetTagSpan(
-                    translator.TextBuffer.CurrentSnapshot,
+                    snapshot,
                     span.Start,
                     span.End,
                     headerIndex

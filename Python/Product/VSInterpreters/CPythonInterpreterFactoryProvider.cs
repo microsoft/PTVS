@@ -284,9 +284,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
             // Then update our cached state with the lock held.
             lock (this) {
-                var uniqueIds = userFactories.Select(x => x.Key)
-                       .Concat(machineFactories.Select(x => x.Key))
-                       .Distinct();
+                var uniqueIds = new HashSet<string>(
+                    userFactories.Keys
+                       .Concat(machineFactories.Keys)
+                );
 
                 foreach (var id in uniqueIds) {
                     InterpreterInformation newInfo;
