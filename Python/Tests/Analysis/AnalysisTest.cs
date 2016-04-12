@@ -2561,9 +2561,6 @@ def f(abc):
                 new VariableLocation(19, 21, VariableType.Definition),
                 new VariableLocation(20, 28, VariableType.Definition),
 
-                new VariableLocation(19, 21, VariableType.Reference),
-                new VariableLocation(20, 28, VariableType.Reference),
-
                 new VariableLocation(22, 8, VariableType.Reference),
                 new VariableLocation(23, 10, VariableType.Reference),
                 new VariableLocation(24, 11, VariableType.Reference),
