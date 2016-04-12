@@ -16,18 +16,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
 
