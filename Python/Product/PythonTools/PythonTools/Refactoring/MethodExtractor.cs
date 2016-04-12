@@ -31,6 +31,20 @@ namespace Microsoft.PythonTools.Refactoring {
             _serviceProvider = serviceProvider;
         }
 
+        public static bool? CanExtract(ITextView view) {
+            if (view.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+                if (view.Selection.IsEmpty ||
+                    view.Selection.Mode == TextSelectionMode.Box ||
+                    String.IsNullOrWhiteSpace(view.Selection.StreamSelectionSpan.GetText())) {
+                    return false;
+                } else {
+                    return true;
+                }
+            } else {
+                return null;
+            }
+        }
+
         public async Task<bool> ExtractMethod(IExtractMethodInput input) {
             var analyzer = _view.GetAnalyzer(_serviceProvider);
             var projectFile = _view.TextBuffer.GetAnalysisEntry();

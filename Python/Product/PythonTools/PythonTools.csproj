@@ -255,8 +255,11 @@
     <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisLocation.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisVariable.cs" />
+    <Compile Include="PythonTools\Intellisense\PreviewChangesService.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionResult.cs" />
     <Compile Include="PythonTools\Intellisense\ExpressionAnalysis.cs" />
+    <Compile Include="PythonTools\Intellisense\ExtractMethodSuggestedActionSource.cs" />
+    <Compile Include="PythonTools\Intellisense\ExtractMethodSuggestedActionSourceProvider.cs" />
     <Compile Include="PythonTools\Intellisense\InterpreterLog.cs" />
     <Compile Include="PythonTools\Intellisense\LocationTracker.cs" />
     <Compile Include="PythonTools\Intellisense\NavigationInfo.cs" />
@@ -719,7 +722,7 @@
     <None Include="Theme\dark.vstheme" />
     <None Include="Theme\make_theme_pkgdef.py" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>

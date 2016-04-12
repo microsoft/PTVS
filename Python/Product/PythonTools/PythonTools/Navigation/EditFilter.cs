@@ -1040,18 +1040,16 @@ namespace Microsoft.PythonTools.Language {
         }
 
         private void QueryStatusExtractMethod(OLECMD[] prgCmds, int i) {
-            var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
-
-            if (_textView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                if (_textView.Selection.IsEmpty || 
-                    _textView.Selection.Mode == TextSelectionMode.Box ||
-                    String.IsNullOrWhiteSpace(_textView.Selection.StreamSelectionSpan.GetText())) {
-                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
-                } else {
+            switch (MethodExtractor.CanExtract(_textView)) {
+                case true:
                     prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                }
-            } else {
-                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
+                    break;
+                case false:
+                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
+                    break;
+                case null:
+                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
+                    break;
             }
         }
 

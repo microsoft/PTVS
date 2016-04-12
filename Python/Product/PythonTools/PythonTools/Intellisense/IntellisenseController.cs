@@ -71,9 +71,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     _expansionClient = new ExpansionClient(textView, provider._adaptersFactory, provider._ServiceProvider);
                     var textMgr = (IVsTextManager2)_serviceProvider.GetService(typeof(SVsTextManager));
                     textMgr.GetExpansionManager(out _expansionMgr);
-                } catch (ArgumentException ex) {
+                } catch (ArgumentException) {
                     // No expansion client for this buffer, but we can continue without it
-                    Debug.Fail(ex.ToString());
                 }
             }
 
