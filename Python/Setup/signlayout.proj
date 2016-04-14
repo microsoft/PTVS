@@ -5,7 +5,6 @@
   
   <Import Project="SetupProjectBefore.settings" />
   <Import Project="$(TargetsPath)\Common.Shim.targets" />
-  <Import Project="$(TargetsPath)\MicroBuild.props" />
   
   <PropertyGroup>
     <OutputPath>$(BinariesOutputPath)</OutputPath>
@@ -37,7 +36,7 @@
         Microsoft.PythonTools.XamlDesignerSupport.dll;
         "/>
     
-    <ManagedFiled Include="
+    <ManagedFiles Include="
         Microsoft.IronPythonTools.Resolver.dll;
         Microsoft.PythonTools.IronPython.dll;
         Microsoft.PythonTools.IronPython.Interpreter.dll;
@@ -84,7 +83,7 @@
   <Target Name="_GetBinariesInLayout">
     <ItemGroup>
       <_BinariesInLayout Include="$(LayoutOutputPath)**\*.exe;$(LayoutOutputPath)**\*.dll" />
-      <_BinariesWithSignedSource Include="$(BinariesOutputPath)%(_BinariesInLayout.RecursiveDir)%(_BinariesInLayout.Filename)%(_BinariesInLayout.Extension)">
+      <_BinariesWithSignedSource Include="$(BinariesOutputPath)%(_BinariesInLayout.Filename)%(_BinariesInLayout.Extension)">
         <TargetPath>%(_BinariesInLayout.FullPath)</TargetPath>
       </_BinariesWithSignedSource>
       <_BinariesToCopy Include="@(_BinariesWithSignedSource)" Condition="Exists(%(FullPath))" />
