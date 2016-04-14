@@ -90,8 +90,7 @@ namespace Microsoft.PythonTools {
 #else
     [ProvideMenuResource(1000, 1)]
 #endif
-    [ProvideUIContextRule(AutoLoadContextGuidString, "PTVS AutoLoad", "ShellInitialized", new[] { "ShellInitialized" }, new[] { VSConstants.UICONTEXT.ShellInitialized_string })]
-    [ProvideAutoLoad(AutoLoadContextGuidString)]
+    [ProvideAutoLoad(VSConstants.UICONTEXT.ShellInitialized_string)]
     [Description("Python Tools Package")]
     [ProvideAutomationObject("VsPython")]
     [ProvideLanguageEditorOptionPage(typeof(PythonAdvancedEditorOptionsPage), PythonConstants.LanguageName, "", "Advanced", "113")]
@@ -214,8 +213,6 @@ namespace Microsoft.PythonTools {
         private PackageContainer _packageContainer;
         internal const string PythonExpressionEvaluatorGuid = "{D67D5DB8-3D44-4105-B4B8-47AB1BA66180}";
         internal PythonToolsService _pyService;
-
-        private const string AutoLoadContextGuidString = "{C9970999-7979-4CF1-944C-8DA89F4CBA64}";
 
         /// <summary>
         /// Default constructor of the package.
