@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.ComponentModel.Composition.Hosting;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.PythonTools.Interpreter;
@@ -24,14 +25,20 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window {
-        readonly IInterpreterOptionsService _service = new InterpreterOptionsService(null, null);
-
+        private readonly CompositionContainer _container;
 
         public MainWindow() {
             InitializeComponent();
 
             EnvironmentsToolWindow.ViewCreated += EnvironmentsToolWindow_ViewCreated;
-            EnvironmentsToolWindow.Service = _service; // TODO: Should be sited.
+
+            _container = new CompositionContainer(new AggregateCatalog(
+                new AssemblyCatalog(typeof(IInterpreterRegistryService).Assembly),
+                new AssemblyCatalog(typeof(IInterpreterOptionsService).Assembly)
+            ));
+
+            EnvironmentsToolWindow.Interpreters = _container.GetExport<IInterpreterRegistryService>().Value;
+            EnvironmentsToolWindow.Service = _container.GetExport<IInterpreterOptionsService>().Value;
         }
 
         void EnvironmentsToolWindow_ViewCreated(object sender, EnvironmentViewEventArgs e) {
@@ -67,5 +74,12 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
             MessageBox.Show("Opening interactive options for " + ((EnvironmentView)e.Parameter).Description);
         }
 
+        private void OpenConsole_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = e.Parameter is EnvironmentView;
+        }
+
+        private void OpenConsole_Executed(object sender, ExecutedRoutedEventArgs e) {
+            MessageBox.Show("Opening console for " + ((EnvironmentView)e.Parameter).InterpreterPath);
+        }
     }
 }
