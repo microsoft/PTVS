@@ -1155,7 +1155,7 @@ namespace Microsoft.PythonTools.Analysis {
             return false;
         }
 
-        private IEnumerable<string> GetDatabasePaths(string outDir, IList<string> completedOutDirs) {
+        private IEnumerable<string> GetDatabasePaths(string outDir) {
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             if (seen.Add(_outDir)) {
@@ -1166,7 +1166,7 @@ namespace Microsoft.PythonTools.Analysis {
                 yield return outDir;
             }
 
-            foreach (var d in completedOutDirs) {
+            foreach (var d in PathUtils.EnumerateDirectories(_outDir, recurse: false)) {
                 if (seen.Add(d)) {
                     yield return d;
                 }
@@ -1195,7 +1195,6 @@ namespace Microsoft.PythonTools.Analysis {
 
             var callDepthOverrides = GetCallDepthOverrides();
             var skipModules = new HashSet<string>(GetSkipModules(), StringComparer.Ordinal);
-            var completedDbPaths = new List<string>();
 
             foreach (var files in _analyzeFileGroups) {
                 if (_cancel.IsCancellationRequested) {
@@ -1239,7 +1238,7 @@ namespace Microsoft.PythonTools.Analysis {
                 using (var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
                     _version,
                     null,
-                    GetDatabasePaths(outDir, completedDbPaths).ToArray()
+                    GetDatabasePaths(outDir).ToArray()
                 ))
                 using (var projectState = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions()) {
                     int? mostItemsInQueue = null;
@@ -1366,7 +1365,6 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                     Directory.CreateDirectory(outDir);
                     new SaveAnalysis().Save(projectState, outDir);
-                    completedDbPaths.Add(outDir);
                     TraceInformation("End of group \"{0}\"", files[0].LibraryPath);
                     AnalysisLog.EndFileGroup();
 

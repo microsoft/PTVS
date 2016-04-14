@@ -586,5 +586,122 @@ namespace Microsoft.PythonTools.Infrastructure {
             string final = newPath + extension;
             return final;
         }
+
+        /// <summary>
+        /// Safely enumerates all subdirectories under a given root. If a
+        /// subdirectory is inaccessible, it will not be returned (compare and
+        /// contrast with Directory.GetDirectories, which will crash without
+        /// returning any subdirectories at all).
+        /// </summary>
+        /// <param name="root">
+        /// Directory to enumerate under. This is not returned from this
+        /// function.
+        /// </param>
+        /// <param name="recurse">
+        /// <c>true</c> to return subdirectories of subdirectories.
+        /// </param>
+        /// <param name="fullPaths">
+        /// <c>true</c> to return full paths for all subdirectories. Otherwise,
+        /// the relative path from <paramref name="root"/> is returned.
+        /// </param>
+        public static IEnumerable<string> EnumerateDirectories(
+            string root,
+            bool recurse = true,
+            bool fullPaths = true
+        ) {
+            var queue = new Queue<string>();
+            if (!root.EndsWith("\\")) {
+                root += "\\";
+            }
+            queue.Enqueue(root);
+
+            while (queue.Any()) {
+                var path = queue.Dequeue();
+                if (!path.EndsWith("\\")) {
+                    path += "\\";
+                }
+
+                IEnumerable<string> dirs = null;
+                try {
+                    dirs = Directory.GetDirectories(path);
+                } catch (UnauthorizedAccessException) {
+                } catch (IOException) {
+                }
+                if (dirs == null) {
+                    continue;
+                }
+
+                foreach (var d in dirs) {
+                    if (!fullPaths && !d.StartsWith(root, StringComparison.OrdinalIgnoreCase)) {
+                        continue;
+                    }
+                    if (recurse) {
+                        queue.Enqueue(d);
+                    }
+                    yield return fullPaths ? d : d.Substring(root.Length);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Safely enumerates all files under a given root. If a subdirectory is
+        /// inaccessible, its files will not be returned (compare and contrast
+        /// with Directory.GetFiles, which will crash without returning any
+        /// files at all).
+        /// </summary>
+        /// <param name="root">
+        /// Directory to enumerate.
+        /// </param>
+        /// <param name="pattern">
+        /// File pattern to return. You may use wildcards * and ?.
+        /// </param>
+        /// <param name="recurse">
+        /// <c>true</c> to return files within subdirectories.
+        /// </param>
+        /// <param name="fullPaths">
+        /// <c>true</c> to return full paths for all subdirectories. Otherwise,
+        /// the relative path from <paramref name="root"/> is returned.
+        /// </param>
+        public static IEnumerable<string> EnumerateFiles(
+            string root,
+            string pattern = "*",
+            bool recurse = true,
+            bool fullPaths = true
+        ) {
+            if (!root.EndsWith("\\")) {
+                root += "\\";
+            }
+
+            var dirs = Enumerable.Repeat(root, 1);
+            if (recurse) {
+                dirs = dirs.Concat(EnumerateDirectories(root, true, false));
+            }
+
+            foreach (var dir in dirs) {
+                var fullDir = Path.IsPathRooted(dir) ? dir : (root + dir);
+                var dirPrefix = Path.IsPathRooted(dir) ? "" : EnsureEndSeparator(dir);
+
+                IEnumerable<string> files = null;
+                try {
+                    files = Directory.GetFiles(fullDir, pattern);
+                } catch (UnauthorizedAccessException) {
+                } catch (IOException) {
+                }
+                if (files == null) {
+                    continue;
+                }
+
+                foreach (var f in files) {
+                    if (fullPaths) {
+                        yield return f;
+                    } else {
+                        var relPath = dirPrefix + GetFileOrDirectoryName(f);
+                        if (File.Exists(root + relPath)) {
+                            yield return relPath;
+                        }
+                    }
+                }
+            }
+        }
     }
 }

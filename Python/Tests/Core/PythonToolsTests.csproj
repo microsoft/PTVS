@@ -110,7 +110,7 @@
     <Compile Include="EditorTests.cs" />
     <Compile Include="CodeFormatterTests.cs" />
     <Compile Include="CommentBlockTests.cs" />
-    <Compile Include="CommonUtilsTests.cs" />
+    <Compile Include="PathUtilsTests.cs" />
     <Compile Include="CPythonInterpreterTests.cs" />
     <Compile Include="DebugReplEvaluatorTests.cs" />
     <Compile Include="EnvironmentListTests.cs" />
