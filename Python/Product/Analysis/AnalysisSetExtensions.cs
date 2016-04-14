@@ -191,19 +191,6 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
-        /// Performs a __get__ on the object when accessed from a class instead
-        /// of an instance.
-        /// </summary>
-        public static IAnalysisSet GetStaticDescriptor(this IAnalysisSet self, AnalysisUnit unit) {
-            var res = AnalysisSet.Empty;
-            foreach (var ns in self) {
-                res = res.Union(ns.GetStaticDescriptor(unit));
-            }
-
-            return res;
-        }
-
-        /// <summary>
         /// Performs the specified operation on the value and the rhs value.
         /// </summary>
         public static IAnalysisSet BinaryOperation(this IAnalysisSet self, Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {

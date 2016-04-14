@@ -639,7 +639,7 @@ namespace VisualStudioToolsUITests {
                     Assert.IsNull(projectNode);
 
                     var renamedLinkFile = solution.FindItem("LinkedFiles", "Fob", "RenamedLinkFile" + projectType.CodeExtension);
-                    Assert.IsNotNull(renamedLinkFile, "renamedLinkFile");
+                    Assert.IsNull(renamedLinkFile, "renamedLinkFile");
                 }
             }
         }

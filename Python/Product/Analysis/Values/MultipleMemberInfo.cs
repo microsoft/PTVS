@@ -160,14 +160,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return base.GetConstantValue();
         }
 
-        public override IAnalysisSet GetStaticDescriptor(AnalysisUnit unit) {
-            var res = AnalysisSet.Empty;
-            foreach (var member in _members) {
-                res = res.Union(member.GetStaticDescriptor(unit));
-            }
-            return res;
-        }
-
         public override int? GetLength() {
             foreach (var member in _members) {
                 var res = member.GetLength();

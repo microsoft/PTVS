@@ -290,9 +290,32 @@ namespace Microsoft.VisualStudioTools.Project {
             for (HierarchyNode n = this.Parent.FirstChild; n != null; n = n.NextSibling) {
                 // TODO: Distinguish between real Urls and fake ones (eg. "References")
                 if (n != this && String.Equals(n.Caption, label, StringComparison.OrdinalIgnoreCase)) {
-                    //A file or folder with the name '{0}' already exists on disk at this location. Please choose another name.
-                    //If this file or folder does not appear in the Solution Explorer, then it is not currently part of your project. To view files which exist on disk, but are not in the project, select Show All Files from the Project menu.
-                    throw new InvalidOperationException(SR.GetString(SR.FileOrFolderAlreadyExists, label));
+                    if (File.Exists(n.Url)) {
+                        //A file or folder with the name '{0}' already exists on disk at this location. Please choose another name.
+                        //If this file or folder does not appear in the Solution Explorer, then it is not currently part of your project. To view files which exist on disk, but are not in the project, select Show All Files from the Project menu.
+                        throw new InvalidOperationException(SR.GetString(SR.FileOrFolderAlreadyExists, label));
+                    } else {
+                        // Check if the file is open in the editor, if so, we need to close it, and if it's dirty
+                        // let the user save it.
+                        DocumentManager manager = n.GetDocumentManager();
+                        if (manager != null) {
+                            int close = manager.Close(__FRAMECLOSE.FRAMECLOSE_PromptSave);
+                            if (close == VSConstants.E_ABORT || close == VSConstants.S_FALSE) {
+                                // User cancelled operation in message box.
+                                throw new InvalidOperationException(SR.GetString(SR.FileOpenDoesNotExist, label));
+                            }
+                        }
+
+                        if (File.Exists(n.Url)) {
+                            // The file was dirty and the user saved it.
+                            throw new InvalidOperationException(SR.GetString(SR.FileOrFolderAlreadyExists, label));
+                        }
+
+                        // The file is no longer open in the editor and isn't on disk.  We can try removing it now.
+                        if (!n.Remove(false)) {
+                            throw new InvalidOperationException(SR.GetString(SR.UnableToRemoveFile, label));
+                        }
+                    }
                 }
             }
 

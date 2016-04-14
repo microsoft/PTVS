@@ -216,6 +216,18 @@ class F:
             }
         }
 
+        [TestMethod, Priority(1)]
+        public void ReturnAnnotationClassifications() {
+            var code = @"
+def f() -> int:
+    pass
+";
+
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V35)) {
+                helper.CheckAnalysisClassifierSpans("f<f>c<int>");
+            }
+        }
+
         #region ClassifierHelper class
 
         private class ClassifierHelper : IDisposable {

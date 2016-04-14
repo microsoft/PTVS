@@ -63,7 +63,7 @@ namespace PythonToolsUITests {
         }
 
         private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version) {
-            return new InterpreterConfiguration(Guid.NewGuid().ToString(), description, version);
+            return new InterpreterConfiguration(Guid.NewGuid().ToString(), description, version: version);
         }
 
         private static InterpreterConfiguration MockInterpreterConfiguration(string path) {

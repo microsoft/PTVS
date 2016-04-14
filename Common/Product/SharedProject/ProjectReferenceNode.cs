@@ -337,14 +337,12 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Overridden method. The method updates the build dependency list before removing the node from the hierarchy.
         /// </summary>
-        public override void Remove(bool removeFromStorage) {
+        public override bool Remove(bool removeFromStorage) {
             if (this.ProjectMgr == null || !this.CanRemoveReference) {
-                return;
+                return false;
             }
             this.ProjectMgr.RemoveBuildDependency(this.buildDependency);
-            base.Remove(removeFromStorage);
-
-            return;
+            return base.Remove(removeFromStorage);
         }
 
         /// <summary>

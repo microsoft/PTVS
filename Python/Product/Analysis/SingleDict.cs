@@ -179,11 +179,11 @@ namespace Microsoft.PythonTools.Analysis {
 
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public ICollection<TValue> DictValues {
+        public IEnumerable<TValue> DictValues {
             get {
                 Debug.Assert(_data is AnalysisDictionary<TKey, TValue>);
 
-                return ((AnalysisDictionary<TKey, TValue>)_data).Values;
+                return ((AnalysisDictionary<TKey, TValue>)_data).EnumerateValues;
             }
         }
 

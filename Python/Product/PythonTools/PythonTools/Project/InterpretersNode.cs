@@ -310,12 +310,12 @@ namespace Microsoft.PythonTools.Project {
             return false;
         }
 
-        public override void Remove(bool removeFromStorage) {
+        public override bool Remove(bool removeFromStorage) {
             // If _canDelete, a prompt has already been shown by VS.
-            Remove(removeFromStorage, !_canDelete);
+            return Remove(removeFromStorage, !_canDelete);
         }
 
-        private void Remove(bool removeFromStorage, bool showPrompt) {
+        private bool Remove(bool removeFromStorage, bool showPrompt) {
             if (!_canRemove || (removeFromStorage && !_canDelete)) {
                 // Prevent the environment from being deleted or removed if not
                 // supported.
@@ -326,7 +326,7 @@ namespace Microsoft.PythonTools.Project {
                 // Prevent the environment from being deleted while installing.
                 // This situation should not occur through the UI, but might be
                 // invocable through DTE.
-                return;
+                return false;
             }
 
             if (showPrompt && !Utilities.IsInAutomationFunction(ProjectMgr.Site)) {
@@ -345,7 +345,7 @@ namespace Microsoft.PythonTools.Project {
                     OLEMSGBUTTON.OLEMSGBUTTON_OKCANCEL,
                     OLEMSGDEFBUTTON.OLEMSGDEFBUTTON_FIRST);
                 if (res != 1) {
-                    return;
+                    return false;
                 }
             }
 
@@ -355,6 +355,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             ProjectMgr.RemoveInterpreter(_factory, !_isReference && removeFromStorage && _canDelete);
+            return true;
         }
 
         /// <summary>

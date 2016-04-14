@@ -177,7 +177,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public override void Remove(bool removeFromStorage) {
+        public override bool Remove(bool removeFromStorage) {
             var analysis = GetAnalysisEntry();
             if (analysis != null) {
                 ((PythonProjectNode)ProjectMgr).GetAnalyzer().UnloadFileAsync(analysis).DoNotWait();
@@ -188,7 +188,7 @@ namespace Microsoft.PythonTools.Project {
                 TryDelete(Url + "o");
             }
 
-            base.Remove(removeFromStorage);
+            return base.Remove(removeFromStorage);
         }
 
         public override string GetEditLabel() {

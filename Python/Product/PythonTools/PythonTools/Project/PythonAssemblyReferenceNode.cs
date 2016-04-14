@@ -72,13 +72,17 @@ namespace Microsoft.PythonTools.Project {
             return base.CanShowDefaultIcon();
         }
 
-        public override void Remove(bool removeFromStorage) {
-            base.Remove(removeFromStorage);
-            var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
-            if (interp != null) {
-                interp.RemoveReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url)).Wait();
+        public override bool Remove(bool removeFromStorage) {
+            if (base.Remove(removeFromStorage)) {
+                var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
+                if (interp != null) {
+                    interp.RemoveReferenceAsync(new ProjectAssemblyReference(AssemblyName, Url)).Wait();
+                }
+                return true;
             }
+            return false;
         }
+
 
         class TaskFailureHandler {
             private readonly TaskScheduler _uiScheduler;

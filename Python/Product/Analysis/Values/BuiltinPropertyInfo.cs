@@ -34,18 +34,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {
             if (instance == ProjectState._noneInst) {
+                if (_value.IsStatic) {
+                    return ProjectState.GetAnalysisValueFromObjects(_value.Type).GetInstanceType();
+                }
+
                 return base.GetDescriptor(node, instance, context, unit);
             }
 
             return ProjectState.GetAnalysisValueFromObjects(_value.Type).GetInstanceType();
-        }
-
-        public override IAnalysisSet GetStaticDescriptor(AnalysisUnit unit) {
-            if (_value.IsStatic) {
-                return ProjectState.GetAnalysisValueFromObjects(_value.Type).GetInstanceType();
-            }
-
-            return base.GetStaticDescriptor(unit);
         }
 
         public override string Description {

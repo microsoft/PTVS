@@ -33,6 +33,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             _engine = engine;
             _lineNo = (uint)lineno;
             _filename = filename;
+            _frame = frame;
 
             var pos = new TEXT_POSITION { dwLine = lineno, dwColumn = 0 };
             _documentContext = new AD7DocumentContext(filename, pos, pos, this, frame != null ? frame.Kind : FrameKind.None);

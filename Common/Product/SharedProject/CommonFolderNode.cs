@@ -233,11 +233,14 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        public override void Remove(bool removeFromStorage) {
-            base.Remove(removeFromStorage);
+        public override  bool Remove(bool removeFromStorage) {
+            if (base.Remove(removeFromStorage)) {
 
-            // if we were a symlink folder, we need to stop watching now.
-            ProjectMgr.TryDeactivateSymLinkWatcher(this);
+                // if we were a symlink folder, we need to stop watching now.
+                ProjectMgr.TryDeactivateSymLinkWatcher(this);
+                return true;
+            }
+            return false;
         }
 
         public override void Close() {

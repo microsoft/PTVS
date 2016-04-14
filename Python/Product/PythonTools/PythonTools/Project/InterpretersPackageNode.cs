@@ -120,8 +120,9 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public override void Remove(bool removeFromStorage) {
+        public override bool Remove(bool removeFromStorage) {
             PythonProjectNode.BeginUninstallPackage(Parent._factory, ProjectMgr.Site, Url, Parent);
+            return true;
         }
 
         public new InterpretersNode Parent {
