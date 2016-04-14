@@ -154,5 +154,15 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             writer.WriteLine("{0}{1}={2}", currentIndent, Name, Value);
             exportChildren = SortedChildren;
         }
+
+        public void ExportToDiffable(
+            TextWriter writer,
+            string currentIndent,
+            string indent,
+            Stack<IAnalysisItemView> exportStack,
+            out IEnumerable<IAnalysisItemView> exportChildren
+        ) {
+            exportChildren = null;
+        }
     }
 }

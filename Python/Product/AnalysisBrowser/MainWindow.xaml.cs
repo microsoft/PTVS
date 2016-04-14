@@ -56,12 +56,44 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 "Python Tools"
             );
 
-            var path = Environment.GetCommandLineArgs().LastOrDefault();
+            if (Directory.Exists(App.InitialPath)) {
+                Hide();
+                ProcessArguments().DoNotWait();
+            }
+        }
+
+        private async Task ProcessArguments() {
             try {
-                if (Directory.Exists(path)) {
-                    Load(path);
+                Version version;
+                if (Version.TryParse(App.InitialVersion, out version)) {
+                    Version = version;
                 }
-            } catch {
+
+                if (!(App.ExportTree || App.ExportDiffable)) {
+                    Show();
+                }
+
+                await Load(App.InitialPath);
+
+                if ((App.ExportTree || App.ExportDiffable) && !string.IsNullOrEmpty(App.ExportPath)) {
+                    if (!App.ExportPerPackage) {
+                        await (App.ExportDiffable ?
+                            Analysis.ExportDiffable(App.ExportPath, App.ExportFilter) :
+                            Analysis.ExportTree(App.ExportPath, App.ExportFilter));
+                    } else {
+                        Directory.CreateDirectory(App.ExportPath);
+                        foreach (var package in Analysis.Modules.OfType<ModuleView>().Select(m => m.Name).Where(n => !n.Contains("."))) {
+                            var path = Path.Combine(App.ExportPath, package + ".txt");
+                            var filter = "^" + package + ".*";
+                            await (App.ExportDiffable ?
+                                Analysis.ExportDiffable(path, filter) :
+                                Analysis.ExportTree(path, filter));
+                        }
+                    }
+                    Close();
+                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                MessageBox.Show(string.Format("Error occurred:{0}{0}{1}", Environment.NewLine, ex));
             }
         }
 
@@ -157,10 +189,10 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 }
             }
 
-            Load(path);
+            Load(path).DoNotWait();
         }
 
-        private void Load(string path) {
+        private async Task Load(string path) {
             HasAnalysis = false;
             Loading = true;
             Analysis = null;
@@ -201,7 +233,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 return new AnalysisView(path, version, withContention, withRecursion);
             }, TaskContinuationOptions.LongRunning);
 
-            loadTask.ContinueWith(
+            await loadTask.ContinueWith(
                 t => {
                     Tag = null;
 
@@ -221,10 +253,6 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
         private void Export_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = HasAnalysis && !string.IsNullOrEmpty(ExportFilename.Text);
-            if (e.Command == AnalysisView.ExportDiffableCommand) {
-                // Not implemented yet
-                e.CanExecute = false;
-            }
         }
 
         private void Export_Executed(object sender, ExecutedRoutedEventArgs e) {
@@ -383,11 +411,18 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 return;
             }
 
+            int bestIndex = -1;
+            Version bestVersion = null;
             foreach (var ver in SupportedVersions.Reverse()) {
-                if (dir.Contains("\\" + ver.ToString())) {
-                    Version = ver;
-                    break;
+                int index = dir.IndexOf("\\" + ver.ToString());
+                if (index > bestIndex) {
+                    bestVersion = ver;
+                    bestIndex = index;
                 }
+            }
+
+            if (bestIndex >= 0) {
+                Version = bestVersion;
             }
         }
 

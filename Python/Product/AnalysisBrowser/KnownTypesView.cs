@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.Browser {
@@ -86,7 +87,22 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             get { yield break; }
         }
 
-        public void ExportToTree(System.IO.TextWriter writer, string currentIndent, string indent, out IEnumerable<IAnalysisItemView> exportChildren) {
+        public void ExportToTree(
+            TextWriter writer,
+            string currentIndent,
+            string indent,
+            out IEnumerable<IAnalysisItemView> exportChildren
+        ) {
+            exportChildren = null;
+        }
+
+        public void ExportToDiffable(
+            TextWriter writer,
+            string currentIndent,
+            string indent,
+            Stack<IAnalysisItemView> exportStack,
+            out IEnumerable<IAnalysisItemView> exportChildren
+        ) {
             exportChildren = null;
         }
     }
