@@ -83,23 +83,11 @@
   <Target Name="_GetBinariesInLayout">
     <ItemGroup>
       <_BinariesInLayout Include="$(LayoutOutputPath)**\*.exe;$(LayoutOutputPath)**\*.dll" />
-      <_BinariesWithSignedSource Include="$(BinariesOutputPath)%(_BinariesInLayout.RecursiveDir)%(_BinariesInLayout.Filename)%(_BinariesInLayout.Extension)">
+      <_BinariesWithSignedSource Include="$(BinariesOutputPath)%(_BinariesInLayout.Filename)%(_BinariesInLayout.Extension)">
         <TargetPath>%(_BinariesInLayout.FullPath)</TargetPath>
       </_BinariesWithSignedSource>
       <_BinariesToCopy Include="@(_BinariesWithSignedSource)" Condition="Exists(%(FullPath))" />
     </ItemGroup>
-    <Message Text="Binaries in layout:
-  @(_BinariesInLayout,'
-  ')
-" />
-    <Message Text="Binaries with signed source:
-  @(_BinariesWithSignedSource->'%(Identity) --> %(TargetPath)','
-  ')
-" />
-    <Message Text="Binaries to copy:
-  @(_BinariesToCopy->'%(Identity) --> %(TargetPath)','
-  ')
-" />
   </Target>
 
   <Target Name="_UpdateLayoutWithSignedBinaries"
