@@ -10,6 +10,12 @@
         <CommandBinding Command="{x:Static el:ToolWindow.UnhandledException}"
                         CanExecute="UnhandledException_CanExecute"
                         Executed="UnhandledException_Executed" />
+        <CommandBinding Command="{x:Static el:EnvironmentView.OpenInPowerShell}"
+                        CanExecute="OpenConsole_CanExecute"
+                        Executed="OpenConsole_Executed" />
+        <CommandBinding Command="{x:Static el:EnvironmentView.OpenInCommandPrompt}"
+                        CanExecute="OpenConsole_CanExecute"
+                        Executed="OpenConsole_Executed" />
     </Window.CommandBindings>
     <Grid>
         <el:ToolWindow x:Name="EnvironmentsToolWindow" />
