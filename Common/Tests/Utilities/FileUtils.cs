@@ -25,6 +25,23 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities {
     public static class FileUtils {
+        /// <summary>
+        /// Safely enumerates all subdirectories under a given root. If a
+        /// subdirectory is inaccessible, it will not be returned (compare and
+        /// contrast with Directory.GetDirectories, which will crash without
+        /// returning any subdirectories at all).
+        /// </summary>
+        /// <param name="root">
+        /// Directory to enumerate under. This is not returned from this
+        /// function.
+        /// </param>
+        /// <param name="recurse">
+        /// <c>true</c> to return subdirectories of subdirectories.
+        /// </param>
+        /// <param name="fullPaths">
+        /// <c>true</c> to return full paths for all subdirectories. Otherwise,
+        /// the relative path from <paramref name="root"/> is returned.
+        /// </param>
         public static IEnumerable<string> EnumerateDirectories(
             string root,
             bool recurse = true,
@@ -64,6 +81,25 @@ namespace TestUtilities {
             }
         }
 
+        /// <summary>
+        /// Safely enumerates all files under a given root. If a subdirectory is
+        /// inaccessible, its files will not be returned (compare and contrast
+        /// with Directory.GetFiles, which will crash without returning any
+        /// files at all).
+        /// </summary>
+        /// <param name="root">
+        /// Directory to enumerate.
+        /// </param>
+        /// <param name="pattern">
+        /// File pattern to return. You may use wildcards * and ?.
+        /// </param>
+        /// <param name="recurse">
+        /// <c>true</c> to return files within subdirectories.
+        /// </param>
+        /// <param name="fullPaths">
+        /// <c>true</c> to return full paths for all subdirectories. Otherwise,
+        /// the relative path from <paramref name="root"/> is returned.
+        /// </param>
         public static IEnumerable<string> EnumerateFiles(
             string root,
             string pattern = "*",
@@ -74,8 +110,14 @@ namespace TestUtilities {
                 root += "\\";
             }
 
-            foreach (var dir in Enumerable.Repeat(root, 1).Concat(EnumerateDirectories(root, recurse, fullPaths))) {
-                var fullDir = (fullPaths || Path.IsPathRooted(dir)) ? dir : (root + dir);
+            var dirs = Enumerable.Repeat(root, 1);
+            if (recurse) {
+                dirs = dirs.Concat(EnumerateDirectories(root, true, false));
+            }
+
+            foreach (var dir in dirs) {
+                var fullDir = Path.IsPathRooted(dir) ? dir : (root + dir);
+                var dirPrefix = Path.IsPathRooted(dir) ? "" : (dir.EndsWith("\\") ? dir : (dir + "\\"));
 
                 IEnumerable<string> files = null;
                 try {
@@ -88,10 +130,14 @@ namespace TestUtilities {
                 }
 
                 foreach (var f in files) {
-                    if (!fullPaths && !f.StartsWith(root, StringComparison.OrdinalIgnoreCase)) {
-                        continue;
+                    if (fullPaths) {
+                        yield return f;
+                    } else {
+                        var relPath = dirPrefix + Path.GetFileName(f);
+                        if (File.Exists(root + relPath)) {
+                            yield return relPath;
+                        }
                     }
-                    yield return fullPaths ? f : f.Substring(root.Length);
                 }
             }
         }

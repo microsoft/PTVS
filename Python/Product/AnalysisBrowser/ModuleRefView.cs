@@ -43,5 +43,15 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             exportChildren = null;
         }
 
+        public override void ExportToDiffable(
+            TextWriter writer,
+            string currentIndent,
+            string indent,
+            Stack<IAnalysisItemView> exportStack,
+            out IEnumerable<IAnalysisItemView> exportChildren
+        ) {
+            writer.WriteLine("{0}{2} ({1})", currentIndent, DisplayType, Name);
+            exportChildren = null;
+        }
     }
 }

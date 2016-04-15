@@ -14,89 +14,87 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-extern alias pythontools;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools;
-using CommonUtils = pythontools::Microsoft.VisualStudioTools.CommonUtils;
+using TestUtilities;
 
 namespace PythonToolsTests {
     [TestClass]
-    public class CommonUtilsTests {
+    public class PathUtilsTests {
         [TestMethod, Priority(1)]
         public void TestMakeUri() {
-            Assert.AreEqual(@"C:\a\b\c\", CommonUtils.MakeUri(@"C:\a\b\c", true, UriKind.Absolute).LocalPath);
-            Assert.AreEqual(@"C:\a\b\c", CommonUtils.MakeUri(@"C:\a\b\c", false, UriKind.Absolute).LocalPath);
-            Assert.AreEqual(@"\\a\b\c\", CommonUtils.MakeUri(@"\\a\b\c", true, UriKind.Absolute).LocalPath);
-            Assert.AreEqual(@"\\a\b\c", CommonUtils.MakeUri(@"\\a\b\c", false, UriKind.Absolute).LocalPath);
-            Assert.AreEqual(@"ftp://me@a.net:123/b/c/", CommonUtils.MakeUri(@"ftp://me@a.net:123/b/c", true, UriKind.Absolute).AbsoluteUri);
-            Assert.AreEqual(@"ftp://me@a.net:123/b/c", CommonUtils.MakeUri(@"ftp://me@a.net:123/b/c", false, UriKind.Absolute).AbsoluteUri);
-            Assert.AreEqual(@"C:\a b c\d e f\g\", CommonUtils.MakeUri(@"C:\a b c\d e f\g", true, UriKind.Absolute).LocalPath);
-            Assert.AreEqual(@"C:\a b c\d e f\g", CommonUtils.MakeUri(@"C:\a b c\d e f\g", false, UriKind.Absolute).LocalPath);
+            Assert.AreEqual(@"C:\a\b\c\", PathUtils.MakeUri(@"C:\a\b\c", true, UriKind.Absolute).LocalPath);
+            Assert.AreEqual(@"C:\a\b\c", PathUtils.MakeUri(@"C:\a\b\c", false, UriKind.Absolute).LocalPath);
+            Assert.AreEqual(@"\\a\b\c\", PathUtils.MakeUri(@"\\a\b\c", true, UriKind.Absolute).LocalPath);
+            Assert.AreEqual(@"\\a\b\c", PathUtils.MakeUri(@"\\a\b\c", false, UriKind.Absolute).LocalPath);
+            Assert.AreEqual(@"ftp://me@a.net:123/b/c/", PathUtils.MakeUri(@"ftp://me@a.net:123/b/c", true, UriKind.Absolute).AbsoluteUri);
+            Assert.AreEqual(@"ftp://me@a.net:123/b/c", PathUtils.MakeUri(@"ftp://me@a.net:123/b/c", false, UriKind.Absolute).AbsoluteUri);
+            Assert.AreEqual(@"C:\a b c\d e f\g\", PathUtils.MakeUri(@"C:\a b c\d e f\g", true, UriKind.Absolute).LocalPath);
+            Assert.AreEqual(@"C:\a b c\d e f\g", PathUtils.MakeUri(@"C:\a b c\d e f\g", false, UriKind.Absolute).LocalPath);
 
-            Assert.AreEqual(@"C:\a\b\c\", CommonUtils.MakeUri(@"C:\a\b\c\d\..", true, UriKind.Absolute).LocalPath);
-            Assert.AreEqual(@"C:\a\b\c\e", CommonUtils.MakeUri(@"C:\a\b\c\d\..\e", false, UriKind.Absolute).LocalPath);
-            Assert.AreEqual(@"\\a\b\c\", CommonUtils.MakeUri(@"\\a\b\c\d\..", true, UriKind.Absolute).LocalPath);
-            Assert.AreEqual(@"\\a\b\c\e", CommonUtils.MakeUri(@"\\a\b\c\d\..\e", false, UriKind.Absolute).LocalPath);
-            Assert.AreEqual(@"ftp://me@a.net:123/b/c/", CommonUtils.MakeUri(@"ftp://me@a.net:123/b/c/d/..", true, UriKind.Absolute).AbsoluteUri);
-            Assert.AreEqual(@"ftp://me@a.net:123/b/c/e", CommonUtils.MakeUri(@"ftp://me@a.net:123/b/c/d/../e", false, UriKind.Absolute).AbsoluteUri);
+            Assert.AreEqual(@"C:\a\b\c\", PathUtils.MakeUri(@"C:\a\b\c\d\..", true, UriKind.Absolute).LocalPath);
+            Assert.AreEqual(@"C:\a\b\c\e", PathUtils.MakeUri(@"C:\a\b\c\d\..\e", false, UriKind.Absolute).LocalPath);
+            Assert.AreEqual(@"\\a\b\c\", PathUtils.MakeUri(@"\\a\b\c\d\..", true, UriKind.Absolute).LocalPath);
+            Assert.AreEqual(@"\\a\b\c\e", PathUtils.MakeUri(@"\\a\b\c\d\..\e", false, UriKind.Absolute).LocalPath);
+            Assert.AreEqual(@"ftp://me@a.net:123/b/c/", PathUtils.MakeUri(@"ftp://me@a.net:123/b/c/d/..", true, UriKind.Absolute).AbsoluteUri);
+            Assert.AreEqual(@"ftp://me@a.net:123/b/c/e", PathUtils.MakeUri(@"ftp://me@a.net:123/b/c/d/../e", false, UriKind.Absolute).AbsoluteUri);
 
-            Assert.IsTrue(CommonUtils.MakeUri(@"C:\a\b", false, UriKind.RelativeOrAbsolute).IsAbsoluteUri);
-            Assert.IsTrue(CommonUtils.MakeUri(@"\\a\b", false, UriKind.RelativeOrAbsolute).IsAbsoluteUri);
-            Assert.IsTrue(CommonUtils.MakeUri(@"ftp://me@a.net:123/b/c", false, UriKind.RelativeOrAbsolute).IsAbsoluteUri);
+            Assert.IsTrue(PathUtils.MakeUri(@"C:\a\b", false, UriKind.RelativeOrAbsolute).IsAbsoluteUri);
+            Assert.IsTrue(PathUtils.MakeUri(@"\\a\b", false, UriKind.RelativeOrAbsolute).IsAbsoluteUri);
+            Assert.IsTrue(PathUtils.MakeUri(@"ftp://me@a.net:123/b/c", false, UriKind.RelativeOrAbsolute).IsAbsoluteUri);
 
-            Assert.IsFalse(CommonUtils.MakeUri(@"a\b", false, UriKind.RelativeOrAbsolute).IsAbsoluteUri);
-            Assert.IsFalse(CommonUtils.MakeUri(@"\a\b", false, UriKind.RelativeOrAbsolute).IsAbsoluteUri);
-            Assert.IsFalse(CommonUtils.MakeUri(@".\a\b", false, UriKind.RelativeOrAbsolute).IsAbsoluteUri);
-            Assert.IsFalse(CommonUtils.MakeUri(@"..\a\b", false, UriKind.RelativeOrAbsolute).IsAbsoluteUri);
+            Assert.IsFalse(PathUtils.MakeUri(@"a\b", false, UriKind.RelativeOrAbsolute).IsAbsoluteUri);
+            Assert.IsFalse(PathUtils.MakeUri(@"\a\b", false, UriKind.RelativeOrAbsolute).IsAbsoluteUri);
+            Assert.IsFalse(PathUtils.MakeUri(@".\a\b", false, UriKind.RelativeOrAbsolute).IsAbsoluteUri);
+            Assert.IsFalse(PathUtils.MakeUri(@"..\a\b", false, UriKind.RelativeOrAbsolute).IsAbsoluteUri);
 
-            Assert.IsTrue(CommonUtils.MakeUri(@"C:\a\b", false, UriKind.RelativeOrAbsolute).IsFile);
-            Assert.IsTrue(CommonUtils.MakeUri(@"C:\a\b", true, UriKind.RelativeOrAbsolute).IsFile);
-            Assert.IsTrue(CommonUtils.MakeUri(@"\\a\b", false, UriKind.RelativeOrAbsolute).IsFile);
-            Assert.IsTrue(CommonUtils.MakeUri(@"\\a\b", true, UriKind.RelativeOrAbsolute).IsFile);
-            Assert.IsFalse(CommonUtils.MakeUri(@"ftp://me@a.net:123/b/c", false, UriKind.RelativeOrAbsolute).IsFile);
-            Assert.IsFalse(CommonUtils.MakeUri(@"ftp://me@a.net:123/b/c", true, UriKind.RelativeOrAbsolute).IsFile);
+            Assert.IsTrue(PathUtils.MakeUri(@"C:\a\b", false, UriKind.RelativeOrAbsolute).IsFile);
+            Assert.IsTrue(PathUtils.MakeUri(@"C:\a\b", true, UriKind.RelativeOrAbsolute).IsFile);
+            Assert.IsTrue(PathUtils.MakeUri(@"\\a\b", false, UriKind.RelativeOrAbsolute).IsFile);
+            Assert.IsTrue(PathUtils.MakeUri(@"\\a\b", true, UriKind.RelativeOrAbsolute).IsFile);
+            Assert.IsFalse(PathUtils.MakeUri(@"ftp://me@a.net:123/b/c", false, UriKind.RelativeOrAbsolute).IsFile);
+            Assert.IsFalse(PathUtils.MakeUri(@"ftp://me@a.net:123/b/c", true, UriKind.RelativeOrAbsolute).IsFile);
 
-            Assert.AreEqual(@"..\a\b\c\", CommonUtils.MakeUri(@"..\a\b\c", true, UriKind.Relative).ToString());
-            Assert.AreEqual(@"..\a\b\c", CommonUtils.MakeUri(@"..\a\b\c", false, UriKind.Relative).ToString());
-            Assert.AreEqual(@"..\a b c\", CommonUtils.MakeUri(@"..\a b c", true, UriKind.Relative).ToString());
-            Assert.AreEqual(@"..\a b c", CommonUtils.MakeUri(@"..\a b c", false, UriKind.Relative).ToString());
-            Assert.AreEqual(@"../a/b/c\", CommonUtils.MakeUri(@"../a/b/c", true, UriKind.Relative).ToString());
-            Assert.AreEqual(@"../a/b/c", CommonUtils.MakeUri(@"../a/b/c", false, UriKind.Relative).ToString());
-            Assert.AreEqual(@"../a b c\", CommonUtils.MakeUri(@"../a b c", true, UriKind.Relative).ToString());
-            Assert.AreEqual(@"../a b c", CommonUtils.MakeUri(@"../a b c", false, UriKind.Relative).ToString());
+            Assert.AreEqual(@"..\a\b\c\", PathUtils.MakeUri(@"..\a\b\c", true, UriKind.Relative).ToString());
+            Assert.AreEqual(@"..\a\b\c", PathUtils.MakeUri(@"..\a\b\c", false, UriKind.Relative).ToString());
+            Assert.AreEqual(@"..\a b c\", PathUtils.MakeUri(@"..\a b c", true, UriKind.Relative).ToString());
+            Assert.AreEqual(@"..\a b c", PathUtils.MakeUri(@"..\a b c", false, UriKind.Relative).ToString());
+            Assert.AreEqual(@"../a/b/c\", PathUtils.MakeUri(@"../a/b/c", true, UriKind.Relative).ToString());
+            Assert.AreEqual(@"../a/b/c", PathUtils.MakeUri(@"../a/b/c", false, UriKind.Relative).ToString());
+            Assert.AreEqual(@"../a b c\", PathUtils.MakeUri(@"../a b c", true, UriKind.Relative).ToString());
+            Assert.AreEqual(@"../a b c", PathUtils.MakeUri(@"../a b c", false, UriKind.Relative).ToString());
         }
 
         private static void AssertIsNotSameDirectory(string first, string second) {
-            Assert.IsFalse(CommonUtils.IsSameDirectory(first, second), string.Format("First: {0} Second: {1}", first, second));
+            Assert.IsFalse(PathUtils.IsSameDirectory(first, second), string.Format("First: {0} Second: {1}", first, second));
             first = first.Replace("\\", "/");
             second = second.Replace("\\", "/");
-            Assert.IsFalse(CommonUtils.IsSameDirectory(first, second), string.Format("First: {0} Second: {1}", first, second));
+            Assert.IsFalse(PathUtils.IsSameDirectory(first, second), string.Format("First: {0} Second: {1}", first, second));
         }
 
         private static void AssertIsSameDirectory(string first, string second) {
-            Assert.IsTrue(CommonUtils.IsSameDirectory(first, second), string.Format("First: {0} Second: {1}", first, second));
+            Assert.IsTrue(PathUtils.IsSameDirectory(first, second), string.Format("First: {0} Second: {1}", first, second));
             first = first.Replace("\\", "/");
             second = second.Replace("\\", "/");
-            Assert.IsTrue(CommonUtils.IsSameDirectory(first, second), string.Format("First: {0} Second: {1}", first, second));
+            Assert.IsTrue(PathUtils.IsSameDirectory(first, second), string.Format("First: {0} Second: {1}", first, second));
         }
 
         private static void AssertIsNotSamePath(string first, string second) {
-            Assert.IsFalse(CommonUtils.IsSamePath(first, second), string.Format("First: {0} Second: {1}", first, second));
+            Assert.IsFalse(PathUtils.IsSamePath(first, second), string.Format("First: {0} Second: {1}", first, second));
             first = first.Replace("\\", "/");
             second = second.Replace("\\", "/");
-            Assert.IsFalse(CommonUtils.IsSamePath(first, second), string.Format("First: {0} Second: {1}", first, second));
+            Assert.IsFalse(PathUtils.IsSamePath(first, second), string.Format("First: {0} Second: {1}", first, second));
         }
 
         private static void AssertIsSamePath(string first, string second) {
-            Assert.IsTrue(CommonUtils.IsSamePath(first, second), string.Format("First: {0} Second: {1}", first, second));
+            Assert.IsTrue(PathUtils.IsSamePath(first, second), string.Format("First: {0} Second: {1}", first, second));
             first = first.Replace("\\", "/");
             second = second.Replace("\\", "/");
-            Assert.IsTrue(CommonUtils.IsSamePath(first, second), string.Format("First: {0} Second: {1}", first, second));
+            Assert.IsTrue(PathUtils.IsSamePath(first, second), string.Format("First: {0} Second: {1}", first, second));
         }
 
         [TestMethod, Priority(1)]
@@ -195,7 +193,7 @@ namespace PythonToolsTests {
                 @"ftp://me@example.com/a/b", @"ftp://me@another.example.com/a/b", @"ftp://me@another.example.com/a/b"
                 )) {
                 var expected = testCase.Item3;
-                var actual = CommonUtils.CreateFriendlyDirectoryPath(testCase.Item1, testCase.Item2);
+                var actual = PathUtils.CreateFriendlyDirectoryPath(testCase.Item1, testCase.Item2);
 
                 Assert.AreEqual(expected, actual);
             }
@@ -223,7 +221,7 @@ namespace PythonToolsTests {
                 @"ftp://me@example.com/a/b", @"ftp://me@another.example.com/a/b/file.exe", @"ftp://me@another.example.com/a/b/file.exe"
                 )) {
                 var expected = testCase.Item3;
-                var actual = CommonUtils.CreateFriendlyFilePath(testCase.Item1, testCase.Item2);
+                var actual = PathUtils.CreateFriendlyFilePath(testCase.Item1, testCase.Item2);
 
                 Assert.AreEqual(expected, actual);
             }
@@ -263,7 +261,7 @@ namespace PythonToolsTests {
                 @"C:\a\b", "C:\\a\\b\\", @""
             )) {
                 var expected = testCase.Item3;
-                var actual = CommonUtils.GetRelativeDirectoryPath(testCase.Item1, testCase.Item2);
+                var actual = PathUtils.GetRelativeDirectoryPath(testCase.Item1, testCase.Item2);
 
                 Assert.AreEqual(expected, actual, string.Format("From {0} to {1}", testCase.Item1, testCase.Item2));
             }
@@ -311,7 +309,7 @@ namespace PythonToolsTests {
                 "C:\\a", "C:\\a\\b\\", "b\\"
                 )) {
                 var expected = testCase.Item3;
-                var actual = CommonUtils.GetRelativeFilePath(testCase.Item1, testCase.Item2);
+                var actual = PathUtils.GetRelativeFilePath(testCase.Item1, testCase.Item2);
 
                 Assert.AreEqual(expected, actual, string.Format("From {0} to {1}", testCase.Item1, testCase.Item2));
             }
@@ -338,7 +336,7 @@ namespace PythonToolsTests {
                 @"ftp://me@example.com/path", @"../otherpath/", @"ftp://me@example.com/otherpath/"
             )) {
                 var expected = testCase.Item3;
-                var actual = CommonUtils.GetAbsoluteDirectoryPath(testCase.Item1, testCase.Item2);
+                var actual = PathUtils.GetAbsoluteDirectoryPath(testCase.Item1, testCase.Item2);
 
                 Assert.AreEqual(expected, actual);
             }
@@ -366,7 +364,7 @@ namespace PythonToolsTests {
                 @"ftp://me@example.com/path", @"../otherpath/file.exe", @"ftp://me@example.com/otherpath/file.exe"
             )) {
                 var expected = testCase.Item3;
-                var actual = CommonUtils.GetAbsoluteFilePath(testCase.Item1, testCase.Item2);
+                var actual = PathUtils.GetAbsoluteFilePath(testCase.Item1, testCase.Item2);
 
                 Assert.AreEqual(expected, actual);
             }
@@ -381,7 +379,7 @@ namespace PythonToolsTests {
                 )) {
                 foreach (var root in new[] { "", @".\", @"..\", @"\" }) {
                     var expected = root + testCase.Item2;
-                    var actual = CommonUtils.NormalizeDirectoryPath(root + testCase.Item1);
+                    var actual = PathUtils.NormalizeDirectoryPath(root + testCase.Item1);
 
                     Assert.AreEqual(expected, actual);
                 }
@@ -394,14 +392,14 @@ namespace PythonToolsTests {
                 )) {
                 foreach (var root in new[] { @"C:\", @"\\pc\share\", @"ftp://me@example.com/" }) {
                     var expected = root + testCase.Item2;
-                    var actual = CommonUtils.NormalizeDirectoryPath(root + testCase.Item1);
+                    var actual = PathUtils.NormalizeDirectoryPath(root + testCase.Item1);
                     if (root.StartsWith("ftp", StringComparison.OrdinalIgnoreCase)) {
                         expected = expected.Replace('\\', '/');
                     }
 
                     Assert.AreEqual(expected, actual);
 
-                    actual = CommonUtils.NormalizeDirectoryPath(root + testCase.Item1 + @"\");
+                    actual = PathUtils.NormalizeDirectoryPath(root + testCase.Item1 + @"\");
 
                     Assert.AreEqual(expected, actual);
                 }
@@ -417,12 +415,12 @@ namespace PythonToolsTests {
                 )) {
                 foreach (var root in new[] { "", @".\", @"..\", @"\" }) {
                     var expected = root + testCase.Item2;
-                    var actual = CommonUtils.NormalizePath(root + testCase.Item1);
+                    var actual = PathUtils.NormalizePath(root + testCase.Item1);
 
                     Assert.AreEqual(expected, actual);
 
                     expected += @"\";
-                    actual = CommonUtils.NormalizePath(root + testCase.Item1 + @"\");
+                    actual = PathUtils.NormalizePath(root + testCase.Item1 + @"\");
 
                     Assert.AreEqual(expected, actual);
                 }
@@ -435,7 +433,7 @@ namespace PythonToolsTests {
                 )) {
                 foreach (var root in new[] { @"C:\", @"\\pc\share\", @"ftp://me@example.com/" }) {
                     var expected = root + testCase.Item2;
-                    var actual = CommonUtils.NormalizePath(root + testCase.Item1);
+                    var actual = PathUtils.NormalizePath(root + testCase.Item1);
                     if (root.StartsWith("ftp", StringComparison.OrdinalIgnoreCase)) {
                         expected = expected.Replace('\\', '/');
                     }
@@ -443,7 +441,7 @@ namespace PythonToolsTests {
                     Assert.AreEqual(expected, actual);
 
                     expected += @"\";
-                    actual = CommonUtils.NormalizePath(root + testCase.Item1 + @"\");
+                    actual = PathUtils.NormalizePath(root + testCase.Item1 + @"\");
                     if (root.StartsWith("ftp", StringComparison.OrdinalIgnoreCase)) {
                         expected = expected.Replace('\\', '/');
                     }
@@ -476,7 +474,7 @@ namespace PythonToolsTests {
                 @"ftp://", @"ftp://"
             )) {
                 var expected = testCase.Item2;
-                var actual = CommonUtils.TrimEndSeparator(testCase.Item1);
+                var actual = PathUtils.TrimEndSeparator(testCase.Item1);
 
                 Assert.AreEqual(expected, actual);
             }
@@ -494,7 +492,7 @@ namespace PythonToolsTests {
                 @"C:", @"C:\a\b\",
                 @"C:\a\b", @"C:\A\X\..\B\C"
                 )) {
-                Assert.IsTrue(CommonUtils.IsSubpathOf(testCase.Item1, testCase.Item2), string.Format("{0} should be subpath of {1}", testCase.Item2, testCase.Item1));
+                Assert.IsTrue(PathUtils.IsSubpathOf(testCase.Item1, testCase.Item2), string.Format("{0} should be subpath of {1}", testCase.Item2, testCase.Item1));
             }
 
             // Negative tests
@@ -506,7 +504,7 @@ namespace PythonToolsTests {
                 @"C:\a\b\c", @"C:\B\A\C\D",
                 @"C:\a\b\", @"C:\a\b\..\x\c" // Quick path should not be taken
                 )) {
-                Assert.IsFalse(CommonUtils.IsSubpathOf(testCase.Item1, testCase.Item2), string.Format("{0} should not be subpath of {1}", testCase.Item2, testCase.Item1));
+                Assert.IsFalse(PathUtils.IsSubpathOf(testCase.Item1, testCase.Item2), string.Format("{0} should not be subpath of {1}", testCase.Item2, testCase.Item1));
             }
         }
 
@@ -522,7 +520,7 @@ namespace PythonToolsTests {
                 foreach (var scheme in new[] { "", "C:\\", "\\", ".\\", "\\\\share\\root\\", "ftp://" }) {
                     var path = scheme + testCase.Item1;
 
-                    Assert.AreEqual(testCase.Item2, CommonUtils.GetLastDirectoryName(path), "Path: " + path);
+                    Assert.AreEqual(testCase.Item2, PathUtils.GetLastDirectoryName(path), "Path: " + path);
 
                     if (path.IndexOf('.') >= 0) {
                         // Path.GetFileName will always fail on these, so don't
@@ -532,13 +530,13 @@ namespace PythonToolsTests {
 
                     string ioPathResult;
                     try {
-                        ioPathResult = Path.GetFileName(CommonUtils.TrimEndSeparator(Path.GetDirectoryName(path)));
+                        ioPathResult = Path.GetFileName(PathUtils.TrimEndSeparator(Path.GetDirectoryName(path)));
                     } catch (ArgumentException) {
                         continue;
                     }
 
                     Assert.AreEqual(
-                        CommonUtils.GetLastDirectoryName(path),
+                        PathUtils.GetLastDirectoryName(path),
                         ioPathResult ?? string.Empty,
                         "Did not match Path.GetFileName(...) result for " + path
                     );
@@ -557,7 +555,7 @@ namespace PythonToolsTests {
                     var path = scheme + testCase.Item1;
                     var expected = scheme + testCase.Item2;
 
-                    Assert.AreEqual(expected, CommonUtils.GetParent(path), "Path: " + path);
+                    Assert.AreEqual(expected, PathUtils.GetParent(path), "Path: " + path);
 
                     if (scheme.Contains("://")) {
                         // Path.GetFileName will always fail on these, so don't
@@ -567,13 +565,13 @@ namespace PythonToolsTests {
 
                     string ioPathResult;
                     try {
-                        ioPathResult = Path.GetDirectoryName(CommonUtils.TrimEndSeparator(path)) + Path.DirectorySeparatorChar;
+                        ioPathResult = Path.GetDirectoryName(PathUtils.TrimEndSeparator(path)) + Path.DirectorySeparatorChar;
                     } catch (ArgumentException) {
                         continue;
                     }
 
                     Assert.AreEqual(
-                        CommonUtils.GetParent(path),
+                        PathUtils.GetParent(path),
                         ioPathResult ?? string.Empty,
                         "Did not match Path.GetDirectoryName(...) result for " + path
                     );
@@ -594,7 +592,7 @@ namespace PythonToolsTests {
                     var path = scheme + testCase.Item1;
                     var expected = testCase.Item2;
 
-                    Assert.AreEqual(expected, CommonUtils.GetFileOrDirectoryName(path), "Path: " + path);
+                    Assert.AreEqual(expected, PathUtils.GetFileOrDirectoryName(path), "Path: " + path);
 
                     if (scheme.Contains("://")) {
                         // Path.GetFileName will always fail on these, so don't
@@ -604,18 +602,76 @@ namespace PythonToolsTests {
 
                     string ioPathResult;
                     try {
-                        ioPathResult = CommonUtils.GetFileOrDirectoryName(path);
+                        ioPathResult = PathUtils.GetFileOrDirectoryName(path);
                     } catch (ArgumentException) {
                         continue;
                     }
 
                     Assert.AreEqual(
-                        CommonUtils.GetFileOrDirectoryName(path),
+                        PathUtils.GetFileOrDirectoryName(path),
                         ioPathResult ?? string.Empty,
                         "Did not match Path.GetDirectoryName(...) result for " + path
                     );
                 }
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestEnumerateDirectories() {
+            // Use "Windows", as we won't be able to enumerate everything in
+            // here, but we should still not crash.
+            var windows = Environment.GetEnvironmentVariable("SYSTEMROOT");
+            var dirs = PathUtils.EnumerateDirectories(windows).ToList();
+            Assert.AreNotEqual(0, dirs.Count);
+
+            // Expect all paths to be rooted
+            AssertUtil.ContainsExactly(dirs.Where(d => !Path.IsPathRooted(d)));
+            // Expect all paths to be within Windows
+            AssertUtil.ContainsExactly(dirs.Where(d => !PathUtils.IsSubpathOf(windows, d)));
+
+            dirs = PathUtils.EnumerateDirectories(windows, recurse: false, fullPaths: false).ToList();
+            Assert.AreNotEqual(0, dirs.Count);
+
+            // Expect all paths to be relative
+            AssertUtil.ContainsExactly(dirs.Where(d => Path.IsPathRooted(d)));
+            // Expect all paths to be within Windows
+            AssertUtil.ContainsExactly(dirs.Where(d => !Directory.Exists(Path.Combine(windows, d))));
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestEnumerateFiles() {
+            // Use "Windows", as we won't be able to enumerate everything in
+            // here, but we should still not crash.
+            var windows = Environment.GetEnvironmentVariable("SYSTEMROOT");
+            var files = PathUtils.EnumerateFiles(windows).ToList();
+            Assert.AreNotEqual(0, files.Count);
+
+            // Expect all paths to be rooted
+            AssertUtil.ContainsExactly(files.Where(f => !Path.IsPathRooted(f)));
+            // Expect all paths to be within Windows
+            AssertUtil.ContainsExactly(files.Where(f => !PathUtils.IsSubpathOf(windows, f)));
+            // Expect multiple extensions
+            Assert.AreNotEqual(1, files.Select(f => Path.GetExtension(f)).ToSet().Count);
+
+            files = PathUtils.EnumerateFiles(windows, recurse: false, fullPaths: false).ToList();
+            Assert.AreNotEqual(0, files.Count);
+
+            // Expect all paths to be relative
+            AssertUtil.ContainsExactly(files.Where(f => Path.IsPathRooted(f)));
+            // Expect all paths to be only filenames
+            AssertUtil.ContainsExactly(files.Where(f => f.IndexOfAny(new[] { '\\', '/' }) >= 0));
+            // Expect all paths to be within Windows
+            AssertUtil.ContainsExactly(files.Where(f => !File.Exists(Path.Combine(windows, f))));
+
+            files = PathUtils.EnumerateFiles(windows, "*.exe", recurse: false, fullPaths: false).ToList();
+            Assert.AreNotEqual(0, files.Count);
+
+            // Expect all paths to be relative
+            AssertUtil.ContainsExactly(files.Where(f => Path.IsPathRooted(f)));
+            // Expect all paths to be within Windows
+            AssertUtil.ContainsExactly(files.Where(f => !File.Exists(Path.Combine(windows, f))));
+            // Expect only one extension
+            AssertUtil.ContainsExactly(files.Select(f => Path.GetExtension(f).ToLowerInvariant()).ToSet(), ".exe");
         }
 
         private IEnumerable<Tuple<string, string>> Pairs(params string[] items) {

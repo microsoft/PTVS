@@ -127,15 +127,22 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 using (var writer = new StreamWriter(filename, false, Encoding.UTF8)) {
                     foreach (var mod in _modules) {
                         if (regex.IsMatch(mod.Name)) {
-                            PrettyPrint(writer, mod, "", "  ");
+                            PrettyPrint(writer, mod, "", "  ", true);
                         }
                     }
                 }
             });
         }
 
-        static void PrettyPrint(TextWriter writer, IAnalysisItemView item, string currentIndent, string indent) {
+        static void PrettyPrint(
+            TextWriter writer,
+            IAnalysisItemView item,
+            string currentIndent,
+            string indent,
+            bool tree
+        ) {
             var stack = new Stack<IAnalysisItemView>();
+            var exportStack = new Stack<IAnalysisItemView>();
             var seen = new HashSet<IAnalysisItemView>();
             stack.Push(item);
 
@@ -143,16 +150,22 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 var i = stack.Pop();
                 if (i == null) {
                     currentIndent = currentIndent.Remove(0, indent.Length);
+                    exportStack.Pop();
                     continue;
                 }
-                
+
                 IEnumerable<IAnalysisItemView> exportChildren;
-                i.ExportToTree(writer, currentIndent, indent, out exportChildren);
+                if (tree) {
+                    i.ExportToTree(writer, currentIndent, indent, out exportChildren);
+                } else {
+                    i.ExportToDiffable(writer, currentIndent, indent, exportStack, out exportChildren);
+                }
                 if (exportChildren != null && seen.Add(i)) {
                     stack.Push(null);
                     foreach (var child in exportChildren.Reverse()) {
                         stack.Push(child);
                     }
+                    exportStack.Push(i);
                     currentIndent += indent;
                 }
             }
@@ -160,6 +173,14 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
         public Task ExportDiffable(string filename, string filter) {
             return Task.Factory.StartNew(() => {
+                var regex = new Regex(filter);
+                using (var writer = new StreamWriter(filename, false, Encoding.UTF8)) {
+                    foreach (var mod in _modules) {
+                        if (regex.IsMatch(mod.Name)) {
+                            PrettyPrint(writer, mod, "", "  ", false);
+                        }
+                    }
+                }
             });
         }
     }

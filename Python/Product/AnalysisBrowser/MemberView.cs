@@ -66,9 +66,20 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             writer.WriteLine("{0}Unknown: {1}", currentIndent, Name);
             exportChildren = null;
         }
+
+        public void ExportToDiffable(
+            TextWriter writer,
+            string currentIndent,
+            string indent,
+            Stack<IAnalysisItemView> exportStack,
+            out IEnumerable<IAnalysisItemView> exportChildren
+        ) {
+            writer.WriteLine("{0}{1} (Unknown)", currentIndent, Name);
+            exportChildren = null;
+        }
     }
 
-    
+
     abstract class MemberView : IAnalysisItemView {
         protected readonly IModuleContext _context;
         readonly IMember _member;
@@ -147,6 +158,17 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             out IEnumerable<IAnalysisItemView> exportChildren
         ) {
             writer.WriteLine("{0}{1}: {2}", currentIndent, DisplayType, Name);
+            exportChildren = SortedChildren;
+        }
+
+        public virtual void ExportToDiffable(
+            TextWriter writer,
+            string currentIndent,
+            string indent,
+            Stack<IAnalysisItemView> exportStack,
+            out IEnumerable<IAnalysisItemView> exportChildren
+        ) {
+            writer.WriteLine("{0}{2} ({1})", currentIndent, DisplayType, Name);
             exportChildren = SortedChildren;
         }
 
