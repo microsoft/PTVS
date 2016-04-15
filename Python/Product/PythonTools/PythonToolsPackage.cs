@@ -90,8 +90,7 @@ namespace Microsoft.PythonTools {
 #else
     [ProvideMenuResource(1000, 1)]
 #endif
-    [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.NoSolution)]
-    [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.SolutionExists)]
+    [ProvideAutoLoad(VSConstants.UICONTEXT.ShellInitialized_string)]
     [Description("Python Tools Package")]
     [ProvideAutomationObject("VsPython")]
     [ProvideLanguageEditorOptionPage(typeof(PythonAdvancedEditorOptionsPage), PythonConstants.LanguageName, "", "Advanced", "113")]
