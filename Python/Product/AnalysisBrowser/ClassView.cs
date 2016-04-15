@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.Browser {
@@ -65,6 +66,30 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         ) {
             writer.WriteLine("{0}class {1}", currentIndent, Name);
             exportChildren = SortedChildren;
+        }
+
+        private static string NameFromStack(Stack<IAnalysisItemView> stack) {
+            return string.Join(".", stack.Select(av => av.Name));
+        }
+
+        public override void ExportToDiffable(
+            TextWriter writer,
+            string currentIndent,
+            string indent,
+            Stack<IAnalysisItemView> exportStack,
+            out IEnumerable<IAnalysisItemView> exportChildren
+        ) {
+            writer.WriteLine("{0}{2} ({1})", currentIndent, DisplayType, Name);
+            exportChildren = null;
+
+            // Exclude members from test classes
+            if (_type.Mro?.Any(t => t?.Name?.EndsWith(".TestCase") ?? false) ?? false) {
+                return;
+            }
+
+            if (exportStack.Count == 0 || NameFromStack(exportStack) == _type.DeclaringModule.Name) {
+                exportChildren = Children.OrderBy(c => c.Name);
+            }
         }
     }
 }

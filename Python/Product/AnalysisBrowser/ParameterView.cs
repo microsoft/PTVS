@@ -98,7 +98,22 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             }
         }
 
-        public void ExportToTree(TextWriter writer, string currentIndent, string indent, out IEnumerable<IAnalysisItemView> exportChildren) {
+        public void ExportToTree(
+            TextWriter writer,
+            string currentIndent,
+            string indent,
+            out IEnumerable<IAnalysisItemView> exportChildren
+        ) {
+            exportChildren = null;
+        }
+
+        public void ExportToDiffable(
+            TextWriter writer,
+            string currentIndent,
+            string indent,
+            Stack<IAnalysisItemView> exportStack,
+            out IEnumerable<IAnalysisItemView> exportChildren
+        ) {
             exportChildren = null;
         }
     }

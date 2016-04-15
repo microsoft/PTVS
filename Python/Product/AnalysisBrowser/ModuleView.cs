@@ -94,6 +94,16 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             exportChildren = SortedChildren;
         }
 
+        public void ExportToDiffable(
+            TextWriter writer,
+            string currentIndent,
+            string indent,
+            Stack<IAnalysisItemView> exportStack,
+            out IEnumerable<IAnalysisItemView> exportChildren
+        ) {
+            writer.WriteLine("{0}{2} ({1})", currentIndent, DisplayType, Name);
+            exportChildren = Children.OrderBy(c => c.Name);
+        }
 
         public string SourceLocation {
             get {
