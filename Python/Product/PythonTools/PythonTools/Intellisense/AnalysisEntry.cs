@@ -38,13 +38,15 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Raised when a new analysis is available for this AnalyisEntry
         /// </summary>
         public event EventHandler AnalysisComplete;
-        
+        public readonly bool IsTemporaryFile;
+
         private static readonly object _searchPathEntryKey = new { Name = "SearchPathEntry" };
 
-        public AnalysisEntry(VsProjectAnalyzer analyzer, string path, int fileId) {
+        public AnalysisEntry(VsProjectAnalyzer analyzer, string path, int fileId, bool isTemporaryFile = false) {
             _analyzer = analyzer;
             _path = path;
             _fileId = fileId;
+            IsTemporaryFile = isTemporaryFile;
         }
 
         internal void OnAnalysisComplete() {

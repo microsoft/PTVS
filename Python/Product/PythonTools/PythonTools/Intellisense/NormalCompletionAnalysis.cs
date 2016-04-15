@@ -26,6 +26,7 @@ using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     internal class NormalCompletionAnalysis : CompletionAnalysis {
@@ -33,8 +34,8 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly VsProjectAnalyzer _analyzer;
         private readonly IServiceProvider _serviceProvider;
 
-        internal NormalCompletionAnalysis(VsProjectAnalyzer analyzer, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options, IServiceProvider serviceProvider)
-            : base(span, textBuffer, options) {
+        internal NormalCompletionAnalysis(VsProjectAnalyzer analyzer, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options, IServiceProvider serviceProvider)
+            : base(analyzer._serviceProvider, view, span, textBuffer, options) {
             _snapshot = snapshot;
             _analyzer = analyzer;
             _serviceProvider = serviceProvider;
@@ -107,7 +108,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             analysis
                         );
                         var parameters = Enumerable.Empty<CompletionResult>();
-                        var sigs = VsProjectAnalyzer.GetSignaturesAsync(_serviceProvider, _snapshot, Span).WaitOrDefault(1000);
+                        var sigs = VsProjectAnalyzer.GetSignaturesAsync(_serviceProvider, View, _snapshot, Span).WaitOrDefault(1000);
                         if (sigs != null && sigs.Signatures.Any()) {
                             parameters = sigs.Signatures
                                 .SelectMany(s => s.Parameters)
@@ -136,7 +137,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                if (pyReplEval != null && _snapshot.TextBuffer.GetAnalyzer(_serviceProvider).ShouldEvaluateForCompletion(text)) {
+                if (pyReplEval != null && pyReplEval.ReplAnalyzer.ShouldEvaluateForCompletion(text)) {
                     replMembers = pyReplEval.GetMemberNames(text);
                 }
             }

@@ -32,6 +32,8 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
+using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Repl;
 #if DEV14_OR_LATER
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
@@ -129,6 +131,12 @@ namespace TestUtilities.UI {
                 _onDispose = new List<Action>();
             }
             _onDispose.Add(action);
+        }
+
+        public VsProjectAnalyzer Analyzer {
+            get {
+                return ((IPythonReplIntellisense)Window.Evaluator).ReplAnalyzer;
+            }
         }
 
         public void Show() {

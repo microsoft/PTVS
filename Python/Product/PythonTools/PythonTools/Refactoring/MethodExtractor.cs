@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         public static bool? CanExtract(ITextView view) {
-            if (view.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+            if (view.GetPythonBufferAtCaret() != null) {
                 if (view.Selection.IsEmpty ||
                     view.Selection.Mode == TextSelectionMode.Box ||
                     String.IsNullOrWhiteSpace(view.Selection.StreamSelectionSpan.GetText())) {
@@ -46,13 +46,15 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         public async Task<bool> ExtractMethod(IExtractMethodInput input) {
-            var analyzer = _view.GetAnalyzer(_serviceProvider);
-            var projectFile = _view.TextBuffer.GetAnalysisEntry();
+            var analyzer = _view.GetAnalyzerAtCaret(_serviceProvider);
+            var buffer = _view.GetPythonBufferAtCaret();
+            var snapshot = buffer.CurrentSnapshot;
+            var projectFile = _view.GetAnalysisAtCaret(_serviceProvider);
             
             // extract once to validate the selection
             var extractInfo = await analyzer.ExtractMethodAsync(
                 projectFile,
-                _view.TextBuffer,
+                buffer,
                 _view,
                 "method_name",
                 null,
@@ -73,16 +75,22 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             if (extract.startIndex != null && extract.endIndex != null) {
-                _view.Selection.Select(
+                var selectionSpan = _view.BufferGraph.MapUpToBuffer(
                     new SnapshotSpan(
-                        _view.TextBuffer.CurrentSnapshot,
+                        snapshot,
                         Span.FromBounds(extract.startIndex.Value, extract.endIndex.Value)
                     ),
-                    false
+                    SpanTrackingMode.EdgeInclusive,
+                    _view.TextBuffer
                 );
+
+                foreach (var span in selectionSpan) {
+                    _view.Selection.Select(span, false);
+                    break;
+                }
             }
 
-            var info = input.GetExtractionInfo(new ExtractedMethodCreator(analyzer, projectFile, _view, extract));
+            var info = input.GetExtractionInfo(new ExtractedMethodCreator(analyzer, projectFile, _view, buffer, extract));
             if (info == null) {
                 // user cancelled extract method
                 return false;
@@ -91,7 +99,7 @@ namespace Microsoft.PythonTools.Refactoring {
             // extract again to get the final result...
             extractInfo = await analyzer.ExtractMethodAsync(
                 projectFile,
-                _view.TextBuffer,
+                buffer,
                 _view,
                 info.Name,
                 info.Parameters,
@@ -104,7 +112,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
             VsProjectAnalyzer.ApplyChanges(
                 extractInfo.Data.changes,
-                _view.TextBuffer,
+                buffer,
                 extractInfo.GetTracker(extractInfo.Data.version)
             );
 
@@ -116,12 +124,14 @@ namespace Microsoft.PythonTools.Refactoring {
         private readonly VsProjectAnalyzer _analyzer;
         private readonly AnalysisEntry _analysisEntry;
         private readonly ITextView _view;
+        private readonly ITextBuffer _buffer;
         public AP.ExtractMethodResponse LastExtraction;
 
-        public ExtractedMethodCreator(VsProjectAnalyzer analyzer, AnalysisEntry file, ITextView view, AP.ExtractMethodResponse initialExtraction) {
+        public ExtractedMethodCreator(VsProjectAnalyzer analyzer, AnalysisEntry file, ITextView view, ITextBuffer buffer, AP.ExtractMethodResponse initialExtraction) {
             _analyzer = analyzer;
             _analysisEntry = file;
             _view = view;
+            _buffer = buffer;
             LastExtraction = initialExtraction;
         }
         
@@ -129,7 +139,7 @@ namespace Microsoft.PythonTools.Refactoring {
         internal async Task<AP.ExtractMethodResponse> GetExtractionResult(ExtractMethodRequest info) {
             return LastExtraction = (await _analyzer.ExtractMethodAsync(
                 _analysisEntry,
-                _view.TextBuffer,
+                _buffer,
                 _view,
                 info.Name,
                 info.Parameters,

@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        internal VsProjectAnalyzer ReplAnalyzer {
+        public override VsProjectAnalyzer ReplAnalyzer {
             get {
                 if (_replAnalyzer == null && Interpreter != null && _interpreterService != null) {
                     _replAnalyzer = new VsProjectAnalyzer(_serviceProvider, Interpreter);

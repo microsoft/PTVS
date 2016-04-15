@@ -1680,7 +1680,7 @@ $cls
 
         static void WaitForAnalysis(ReplWindowProxy interactive) {
             var stopAt = DateTime.Now.Add(TimeSpan.FromSeconds(60));
-            interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).WaitForCompleteAnalysis(_ => DateTime.Now < stopAt);
+            interactive.Analyzer.WaitForCompleteAnalysis(_ => DateTime.Now < stopAt);
             if (DateTime.Now >= stopAt) {
                 Assert.Fail("Timeout waiting for complete analysis");
             }
@@ -1702,5 +1702,5 @@ $cls
                 };
             }
         }
-    }
+    }    
 }

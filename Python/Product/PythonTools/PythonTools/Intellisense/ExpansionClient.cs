@@ -217,7 +217,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private async Task AddMissingImports(List<string> importList, SnapshotPoint point) {
             if (importList.Count > 0) {
-                var projEntry = _textView.TextBuffer.GetAnalysisEntry();
+                var projEntry = _textView.GetAnalysisEntry(_textView.TextBuffer, _serviceProvider);
                 if (projEntry != null) {
                     foreach (var import in importList) {
                         var isMissing = await projEntry.Analyzer.IsMissingImportAsync(

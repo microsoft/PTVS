@@ -210,14 +210,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public AnalysisEntry GetAnalysisEntry() {
-            var textBuffer = GetTextBuffer(false);
-
-            AnalysisEntry entry;
-            if (textBuffer != null && textBuffer.TryGetAnalysisEntry(out entry)) {
-                return entry;
-            }
-
-            return ((PythonProjectNode)this.ProjectMgr).GetAnalyzer().GetAnalysisEntryFromPath(Url);
+            return ((PythonProjectNode)ProjectMgr).GetAnalyzer().GetAnalysisEntryFromPath(Url);
         }
 
         private void TryRename(string oldFile, string newFile) {
@@ -255,8 +248,8 @@ namespace Microsoft.PythonTools.Project {
 
                 var textBuffer = GetTextBuffer(false);
 
-                BufferParser parser;
-                if (textBuffer != null && textBuffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out parser)) {
+                BufferParser parser = analysis.BufferParser;
+                if (parser != null) {
                     analyzer.ReAnalyzeTextBuffers(parser);
                 }
 

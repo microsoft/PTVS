@@ -179,7 +179,7 @@ namespace Microsoft.PythonTools {
     #endregion
     [ProvideComponentPickerPropertyPage(typeof(PythonToolsPackage), typeof(WebPiComponentPickerControl), "WebPi", DefaultPageNameValue = "#4000")]
     [ProvideToolWindow(typeof(InterpreterListToolWindow), Style = VsDockStyle.Linked, Window = ToolWindowGuids80.SolutionExplorer)]
-    [ProvideDiffSupportedContentType(".py;.pyw", ";")]
+    [ProvideDiffSupportedContentType(".py;.pyw", "")]
     [ProvideCodeExpansions(GuidList.guidPythonLanguageService, false, 106, "Python", @"Snippets\%LCID%\SnippetsIndex.xml", @"Snippets\%LCID%\Python\")]
     [ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
 #if DEV14
@@ -700,7 +700,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                     return false;
                 }
                 filename = textView.GetFilePath();
-                analyzer = textView.GetAnalyzer(serviceProvider);
+                analyzer = textView.GetAnalyzerAtCaret(serviceProvider);
                 dir = Path.GetDirectoryName(filename);
             }
             return true;

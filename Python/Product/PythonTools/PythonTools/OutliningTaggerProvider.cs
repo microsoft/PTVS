@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools {
 
             private async void OnNewParseTree(AnalysisEntry entry) {
                 var snapshot = _buffer.CurrentSnapshot;
-
+                
                 var tags = await entry.Analyzer.GetOutliningTagsAsync(snapshot);
                 if (tags != null) {
                     _tags = tags.Concat(ProcessRegionTags(_buffer.CurrentSnapshot)).ToArray();

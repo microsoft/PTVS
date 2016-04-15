@@ -16,6 +16,7 @@
 
 using System;
 using System.ComponentModel.Composition;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text.Editor;
@@ -47,10 +48,15 @@ namespace Microsoft.PythonTools.Intellisense {
             ITextView textView = AdapterService.GetWpfTextView(textViewAdapter);
             
             if (textView != null) {
-                var analyzer = textView.GetAnalyzer(_serviceProvider);
+                var analyzer = _serviceProvider.GetProjectFromFile(textView.GetFilePath())?.GetAnalyzer();
                 if (analyzer != null) {
-                    var monitorResult = analyzer.MonitorTextBufferAsync(textView.TextBuffer);
-                    textView.Closed += TextView_Closed;
+                    var monitorResult = analyzer.MonitorTextBufferAsync(textView.TextBuffer)
+                        .ContinueWith(
+                            task => {
+                                textView.Closed += TextView_Closed;
+                                task.Result.AttachedViews++;
+                            }
+                        );
                 }
             }
         }
@@ -58,11 +64,11 @@ namespace Microsoft.PythonTools.Intellisense {
         private void TextView_Closed(object sender, EventArgs e) {
             var textView = (ITextView)sender;
 
-            BufferParser bufferParser;
-            if (textView.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out bufferParser)) {
-                textView.GetAnalyzer(_serviceProvider).StopMonitoringTextBuffer(bufferParser, textView);
+            var analysis = textView.GetAnalysisEntry(textView.TextBuffer, _serviceProvider);
+            if (analysis != null) {
+                analysis.Analyzer.BufferDetached(analysis, textView.TextBuffer);
             }
-
+            
             textView.Closed -= TextView_Closed;
         }
     }

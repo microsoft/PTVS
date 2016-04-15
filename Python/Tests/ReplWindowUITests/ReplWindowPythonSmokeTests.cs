@@ -74,7 +74,7 @@ namespace ReplWindowUITests {
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplSysArgv() {
             using (var interactive = Prepare())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
+            using (new DefaultInterpreterSetter(interactive.Analyzer.InterpreterFactory)) {
                 var project = interactive.App.OpenProject(@"TestData\SysArgvRepl.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
@@ -86,7 +86,7 @@ namespace ReplWindowUITests {
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplSysArgvScriptArgs() {
             using (var interactive = Prepare())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
+            using (new DefaultInterpreterSetter(interactive.Analyzer.InterpreterFactory)) {
                 var project = interactive.App.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
@@ -98,7 +98,7 @@ namespace ReplWindowUITests {
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplUnicodeFilename() {
             using (var interactive = Prepare())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
+            using (new DefaultInterpreterSetter(interactive.Analyzer.InterpreterFactory)) {
                 var project = interactive.App.OpenProject(@"TestData\UnicodePathä.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
@@ -176,7 +176,7 @@ namespace ReplWindowUITests {
                 Assert.IsNotNull(PythonToolsPackage.GetStartupProject(app.ServiceProvider), "Startup project was not set");
                 Assert.IsTrue(interactive.Settings.EnableAttach, "EnableAttach was not set");
 
-                using (var dis = new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
+                using (var dis = new DefaultInterpreterSetter(interactive.Analyzer.InterpreterFactory)) {
                     Assert.AreEqual(dis.CurrentDefault.Configuration.Description, project.GetPythonProject().GetInterpreterFactory().Configuration.Description);
 
                     interactive.Reset();

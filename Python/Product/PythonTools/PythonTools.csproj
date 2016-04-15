@@ -258,7 +258,6 @@
     <Compile Include="PythonTools\Intellisense\PreviewChangesService.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionResult.cs" />
     <Compile Include="PythonTools\Intellisense\ExpressionAnalysis.cs" />
-    <Compile Include="PythonTools\Intellisense\ExtractMethodSuggestedActionSource.cs" />
     <Compile Include="PythonTools\Intellisense\ExtractMethodSuggestedActionSourceProvider.cs" />
     <Compile Include="PythonTools\Intellisense\InterpreterLog.cs" />
     <Compile Include="PythonTools\Intellisense\LocationTracker.cs" />
@@ -615,7 +614,6 @@
     <Compile Include="PythonTools\Intellisense\FromImportCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\ImportCompletionAnalysis.cs" />
     <Compile Include="PythonTools\Intellisense\NormalCompletionAnalysis.cs" />
-    <Compile Include="PythonTools\Intellisense\PythonAnalysisExtensions.cs" />
     <Compile Include="PythonTools\Intellisense\ProjectAnalyzer.cs" />
     <Compile Include="PythonTools\Intellisense\PythonParameter.cs" />
     <Compile Include="PythonTools\Intellisense\PythonSignature.cs" />

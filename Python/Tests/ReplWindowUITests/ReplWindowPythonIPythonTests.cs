@@ -143,7 +143,7 @@ plot(x, x)");
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void IPythonStartInInteractive() {
             using (var interactive = PrepareIPython())
-            using (new DefaultInterpreterSetter(interactive.Window.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
+            using (new DefaultInterpreterSetter(interactive.Analyzer.InterpreterFactory)) {
                 var project = interactive.App.OpenProject(@"TestData\InteractiveFile.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
@@ -155,7 +155,7 @@ plot(x, x)");
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInIPythonReplSysArgv() {
             using (var interactive = PrepareIPython())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
+            using (new DefaultInterpreterSetter(interactive.Analyzer.InterpreterFactory)) {
                 var project = interactive.App.OpenProject(@"TestData\SysArgvRepl.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
@@ -167,7 +167,7 @@ plot(x, x)");
         [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInIPythonReplSysArgvScriptArgs() {
             using (var interactive = PrepareIPython())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
+            using (new DefaultInterpreterSetter(interactive.Analyzer.InterpreterFactory)) {
                 var project = interactive.App.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");

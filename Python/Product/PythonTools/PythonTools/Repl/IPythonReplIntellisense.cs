@@ -31,5 +31,8 @@ namespace Microsoft.PythonTools.Repl {
         IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind();
         CompletionResult[] GetMemberNames(string text);
         OverloadDoc[] GetSignatureDocumentation(string text);
+        VsProjectAnalyzer ReplAnalyzer {
+            get;
+        }
     }
 }

@@ -43,8 +43,8 @@ namespace Microsoft.PythonTools.Refactoring {
                 return;
             }
 
-            var caret = _view.GetCaretPosition();
-            var analysis = await VsProjectAnalyzer.AnalyzeExpressionAsync(caret.Value);
+            var caret = _view.GetPythonCaret();
+            var analysis = await VsProjectAnalyzer.AnalyzeExpressionAsync(_serviceProvider, _view, caret.Value);
             if (analysis == null) {
                 input.CannotRename("Unable to get analysis for current text view.");
                 return;
@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             PythonLanguageVersion languageVersion = PythonLanguageVersion.None;
-            var analyzer = _view.GetAnalyzer(_serviceProvider);
+            var analyzer = _view.GetAnalyzerAtCaret(_serviceProvider);
             var factory = analyzer != null ? analyzer.InterpreterFactory : null;
             if (factory != null) {
                 languageVersion = factory.Configuration.Version.ToLanguageVersion();
@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
             var info = input.GetRenameInfo(originalName, languageVersion);
             if (info != null) {
-                var engine = new PreviewChangesEngine(_serviceProvider, input, analysis.Expression, info, originalName, privatePrefix, _view.GetAnalyzer(_serviceProvider), variables);
+                var engine = new PreviewChangesEngine(_serviceProvider, input, analysis.Expression, info, originalName, privatePrefix, _view.GetAnalyzerAtCaret(_serviceProvider), variables);
                 if (info.Preview) {
                     previewChanges.PreviewChanges(engine);
                 } else {
@@ -119,7 +119,7 @@ namespace Microsoft.PythonTools.Refactoring {
             if (expr.IndexOf('.')  == -1) {
                 // let's check if we'r re-naming a keyword argument...
                 ITrackingSpan span = _view.GetCaretSpan();
-                var sigs = await _view.TextBuffer.CurrentSnapshot.GetSignaturesAsync(_serviceProvider, span)
+                var sigs = await _serviceProvider.GetPythonToolsService().GetSignaturesAsync(_view, _view.TextBuffer.CurrentSnapshot, span)
                     .ConfigureAwait(false);
 
                 foreach (var sig in sigs.Signatures) {

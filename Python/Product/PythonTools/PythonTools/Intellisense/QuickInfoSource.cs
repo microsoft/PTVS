@@ -17,6 +17,7 @@
 using System;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     internal class QuickInfoSource : IQuickInfoSource {
@@ -38,7 +39,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _curSession = session;
             _curSession.Dismissed += CurSessionDismissed;
 
-            var quickInfo = GetQuickInfo(_textBuffer);
+            var quickInfo = GetQuickInfo(session.TextView);
             AugmentQuickInfoWorker(quickInfoContent, quickInfo, out applicableToSpan);
         }
 
@@ -51,13 +52,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public static void AddQuickInfo(ITextBuffer buffer, QuickInfo info) {
-            buffer.Properties[typeof(QuickInfo)] = info;
+        public static void AddQuickInfo(ITextView view, QuickInfo info) {
+            view.Properties[typeof(QuickInfo)] = info;
         }
 
-        private static QuickInfo GetQuickInfo(ITextBuffer buffer) {
+        private static QuickInfo GetQuickInfo(ITextView view) {
             QuickInfo quickInfo;
-            if (buffer.Properties.TryGetProperty(typeof(QuickInfo), out quickInfo)) {
+            if (view.Properties.TryGetProperty(typeof(QuickInfo), out quickInfo)) {
                 return quickInfo;
             }
             return null;
