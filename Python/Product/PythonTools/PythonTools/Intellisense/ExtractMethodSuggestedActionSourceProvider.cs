@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Intellisense {
             private readonly ITextView _view;
             private readonly ExtractMethodSuggestedActionSourceProvider _parent;
             private bool? _canExtract;
-            private static Guid _telemetryId = new Guid("{0D887D91-1E11-4DC3-92F5-79A5182004C3}");
+            private static readonly Guid _telemetryId = new Guid("{0D887D91-1E11-4DC3-92F5-79A5182004C3}");
 
             public ExtractMethodSuggestedActionSource(ExtractMethodSuggestedActionSourceProvider parent, ITextView view) {
                 _view = view;
@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 };
                 }
 
-                return Array.Empty<SuggestedActionSet>();
+                return Enumerable.Empty<SuggestedActionSet>();
             }
 
             public Task<bool> HasSuggestedActionsAsync(ISuggestedActionCategorySet requestedActionCategories, SnapshotSpan range, CancellationToken cancellationToken) {

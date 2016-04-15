@@ -456,7 +456,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     for (int i = 1; i < buffers.Length; i++) {
                         monitoredResult.AddBuffer(buffers[i]);
                     }
-                    monitoredResult.AnalysisEntry.BufferParser.AttachedViews = oldParser.AttachedViews;
+                    lock (oldParser) {
+                        monitoredResult.AnalysisEntry.BufferParser.AttachedViews = oldParser.AttachedViews;
+                    }
                 }
 
                 oldParser.AnalysisEntry.OnNewAnalysisEntry();
@@ -521,7 +523,11 @@ namespace Microsoft.PythonTools.Intellisense {
             var bufferParser = entry.BufferParser;
             if (bufferParser != null) {
                 bufferParser.RemoveBuffer(buffer);
-                if (--bufferParser.AttachedViews == 0) {
+                int attachedViews;
+                lock (bufferParser) {
+                    attachedViews = --bufferParser.AttachedViews;
+                }
+                if (attachedViews == 0) {
                     bufferParser.StopMonitoring();
 
                     _errorProvider.ClearErrorSource(entry, ParserTaskMoniker);

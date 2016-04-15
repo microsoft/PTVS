@@ -90,6 +90,7 @@ namespace Microsoft.PythonTools.Repl {
         const string ExecuteFileEx_Process = "process";
 
         private readonly string _analysisFilename;
+
         protected BasePythonReplEvaluator(IServiceProvider serviceProvider, PythonToolsService pyService, PythonReplEvaluatorOptions options) {
             _pyService = pyService;
             _options = options;

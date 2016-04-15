@@ -26,6 +26,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text;
@@ -97,7 +98,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var pt = e.TextPosition.GetPoint(EditorExtensions.IsPythonContent, PositionAffinity.Successor);
             if (pt != null) {
-                if (_textView.Properties.ContainsProperty(typeof(VisualStudio.InteractiveWindow.IInteractiveEvaluator)) &&
+                if (_textView.TextBuffer.GetInteractiveWindow() != null &&
                     pt.Value.Snapshot.Length > 1 &&
                     pt.Value.Snapshot[0] == '$') {
                     // don't provide quick info on help, the content type doesn't switch until we have
@@ -154,7 +155,11 @@ namespace Microsoft.PythonTools.Intellisense {
             if (analyzer != null) {
                 analyzer.MonitorTextBufferAsync(subjectBuffer, isTemporaryFile).ContinueWith(task => {
                     var newParser = task.Result;
-                    newParser.AttachedViews++;
+                    lock(newParser) {
+                        lock(newParser) {
+                            newParser.AttachedViews++;
+                        }
+                    }
                 });
             }
         }

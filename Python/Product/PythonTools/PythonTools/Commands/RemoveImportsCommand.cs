@@ -37,9 +37,9 @@ namespace Microsoft.PythonTools.Commands {
         public override async void DoCommand(object sender, EventArgs args) {
             var view = CommonPackage.GetActiveTextView(_serviceProvider);
             var analyzer = view.GetAnalyzerAtCaret(_serviceProvider);
-            var pythonCaret = view.GetPythonCaret();
+            var pythonCaret = view.GetPythonCaret().Value; // QueryStatus guarantees we have a valid caret
 
-            await analyzer.RemoveImportsAsync(view, pythonCaret.Value.Snapshot.TextBuffer, pythonCaret.Value.Position, _allScopes);
+            await analyzer.RemoveImportsAsync(view, pythonCaret.Snapshot.TextBuffer, pythonCaret.Position, _allScopes);
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {

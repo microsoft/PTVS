@@ -307,10 +307,8 @@ namespace Microsoft.PythonTools {
                     analyzer = view.GetBestAnalyzer(provider);
                 }
 
-                if (analyzer != null) {
-                    entry = analyzer.GetAnalysisEntryFromPath(path);
-                    return entry != null;
-                }
+                entry = analyzer?.GetAnalysisEntryFromPath(path);
+                return entry != null;
             }
 
             entry = null;
