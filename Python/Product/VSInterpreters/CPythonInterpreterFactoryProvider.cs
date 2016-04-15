@@ -220,7 +220,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         description = "Python";
                     }
 
-                    string newId = CPythonInterpreterFactoryConstants.GetIntepreterId(GetVendorName(vendorKey), actualArch, id);
+                    string newId = CPythonInterpreterFactoryConstants.GetInterpreterId(GetVendorName(vendorKey), actualArch, id);
 
                     try {
                         var interpPath = installPath.GetValue("ExecutablePath") as string ?? Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
