@@ -93,6 +93,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
+        public bool IsClassMethod {
+            get {
+                return false;
+            }
+        }
+
         public IPythonModule DeclaringModule {
             get {
                 if (_declaringModule == null) {

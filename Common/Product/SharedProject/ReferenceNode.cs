@@ -128,12 +128,15 @@ namespace Microsoft.VisualStudioTools.Project {
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }
 
-        public override void Remove(bool removeFromStorage) {
+        public override bool Remove(bool removeFromStorage) {
             ReferenceContainerNode parent = Parent as ReferenceContainerNode;
-            base.Remove(removeFromStorage);
-            if (parent != null) {
-                parent.FireChildRemoved(this);
+            if (base.Remove(removeFromStorage)) {
+                if (parent != null) {
+                    parent.FireChildRemoved(this);
+                }
+                return true;
             }
+            return false;
         }
 
         /// <summary>

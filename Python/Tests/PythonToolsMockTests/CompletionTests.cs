@@ -177,6 +177,21 @@ yield_expression = 42
         }
 
         [TestMethod, Priority(1)]
+        public void LambdaCompletions() {
+            // https://github.com/Microsoft/PTVS/issues/1000
+            string code = @"
+l = (lambda b:b)
+l(42)
+
+";
+            using (var view = new PythonEditor(code)) {
+                var completionList = view.GetCompletionsAfter(":");
+
+                AssertUtil.Contains(completionList, "b");
+            }
+        }
+
+        [TestMethod, Priority(1)]
         public void TrueFalseNoneCompletions() {
             // http://pytools.codeplex.com/workitem/1905
             foreach (var version in new[] { PythonLanguageVersion.V27, PythonLanguageVersion.V33 }) {

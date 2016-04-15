@@ -891,7 +891,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Removes items from the hierarchy. Project overwrites this
         /// </summary>
         /// <param name="removeFromStorage"></param>
-        public virtual void Remove(bool removeFromStorage) {
+        public virtual bool Remove(bool removeFromStorage) {
             string documentToRemove = this.GetMkDocument();
 
             // Ask Document tracker listeners if we can remove the item.
@@ -899,16 +899,17 @@ namespace Microsoft.VisualStudioTools.Project {
             if (!String.IsNullOrWhiteSpace(documentToRemove)) {
                 VSQUERYREMOVEFILEFLAGS[] queryRemoveFlags = this.GetQueryRemoveFileFlags(filesToBeDeleted);
                 if (!this.ProjectMgr.Tracker.CanRemoveItems(filesToBeDeleted, queryRemoveFlags)) {
-                    return;
+                    return false;
                 }
             }
 
             // Close the document if it has a manager.
             DocumentManager manager = this.GetDocumentManager();
             if (manager != null) {
-                if (manager.Close(!removeFromStorage ? __FRAMECLOSE.FRAMECLOSE_PromptSave : __FRAMECLOSE.FRAMECLOSE_NoSave) == VSConstants.E_ABORT) {
+                int res = manager.Close(!removeFromStorage ? __FRAMECLOSE.FRAMECLOSE_PromptSave : __FRAMECLOSE.FRAMECLOSE_NoSave);
+                if (res == VSConstants.E_ABORT || res == VSConstants.S_FALSE) {
                     // User cancelled operation in message box.
-                    return;
+                    return false;
                 }
             }
 
@@ -929,6 +930,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
             // Dispose the node now that is deleted.
             this.Dispose(true);
+            return true;
         }
 
         /// <summary>

@@ -1683,6 +1683,39 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
+        // https://github.com/Microsoft/PTVS/issues/206
+        // Copy and paste cross project into a folder should include the item in the folder
+        [TestMethod, Priority(2)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void CopyFileToFolderCrossProject() {
+            foreach (var projectType in ProjectTypes) {
+                var projectDefs = new[] {
+                    new ProjectDefinition("CopyToFolderCrossProjectDest",
+                        projectType,
+                        ItemGroup(
+                            Folder("Folder")
+                        )
+                    ),
+                    new ProjectDefinition("CopyToFolderCrossProjectSource",
+                        projectType,
+                        ItemGroup(
+                            Content("File.txt", "File copied to folder")
+                        )
+                    )
+                };
+
+                using (var solution = SolutionFile.Generate("CopyFileToFolderCrossProject", projectDefs).ToVs()) {
+                    CopyByKeyboard(
+                        solution,
+                        solution.FindItem("CopyToFolderCrossProjectDest", "Folder"),
+                        solution.FindItem("CopyToFolderCrossProjectSource", "File.txt"));
+
+                    // Verify the files were copied
+                    solution.AssertFileExists("CopyToFolderCrossProjectDest", "Folder", "File.txt");
+                }
+            }
+        }
+
         internal delegate void MoveDelegate(IVisualStudioInstance vs, ITreeNode destination, params ITreeNode[] source);
 
         /// <summary>

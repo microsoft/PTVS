@@ -675,13 +675,19 @@ namespace Microsoft.PythonTools.Analysis {
 
         private Dictionary<string, object> GenerateFunction(FunctionInfo fi) {
             // TODO: Include inner classes/functions
-            return new Dictionary<string, object>() {
+            var res = new Dictionary<string, object>() {
                 { "doc", fi.Documentation },
                 { "builtin", false },
-                { "static", fi.IsStatic },
                 { "location", GenerateLocation(fi.Locations) },
                 { "overloads", GenerateOverloads(fi) }
             };
+            if (fi.IsStatic) {
+                res["static"] = fi.IsStatic;
+            }
+            if (fi.IsClassMethod) {
+                res["classmethod"] = true;
+            }
+            return res;
         }
 
         private Dictionary<string, object> GenerateMethod(BoundMethodInfo bmi) {

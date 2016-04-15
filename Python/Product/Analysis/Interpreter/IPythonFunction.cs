@@ -40,6 +40,10 @@ namespace Microsoft.PythonTools.Interpreter {
             get;
         }
 
+        bool IsClassMethod {
+            get;
+        }
+
         IList<IPythonFunctionOverload> Overloads {
             get;
         }

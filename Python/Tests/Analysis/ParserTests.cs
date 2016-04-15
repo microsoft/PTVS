@@ -86,9 +86,83 @@ namespace AnalysisTests {
                 new ErrorInfo("invalid syntax", 39, 3, 12, 40, 3, 13),
                 new ErrorInfo("can't use starred expression here", 48, 4, 5, 49, 4, 6),
                 new ErrorInfo("invalid syntax", 59, 5, 9, 60, 5, 10),
+                new ErrorInfo("invalid syntax", 59, 5, 9, 61, 5, 11),
                 new ErrorInfo("invalid syntax", 72, 6, 9, 73, 6, 10),
-                new ErrorInfo("iterable argument unpacking follows keyword argument unpacking", 85, 7, 9, 88, 7, 12)
+                new ErrorInfo("iterable argument unpacking follows keyword argument unpacking", 85, 7, 9, 88, 7, 12),
+                new ErrorInfo("invalid syntax", 98, 8, 8, 100, 8, 10),
+                new ErrorInfo("invalid syntax", 110, 9, 8, 112, 9, 10),
+                new ErrorInfo("invalid syntax", 119, 10, 5, 122, 10, 8)
             );
+        }
+
+        [TestMethod, Priority(0)]
+        public void GeneralizedUnpacking() {
+            foreach (var version in V35AndUp) {
+                CheckAst(
+                    ParseFile("GenUnpack.py", ErrorSink.Null, version),
+                    CheckSuite(
+                        CheckCallStmt(Fob, 
+                            CheckNamedArg("*", CheckListExpr(One)),
+                            CheckNamedArg("*", CheckListExpr(Two)),
+                            PositionalArg(Three)
+                        ),
+                        CheckCallStmt(Fob,
+                            CheckNamedArg("**", CheckDictionaryExpr(CheckSlice(CheckConstant("x"), One))),
+                            CheckNamedArg("y", Two),
+                            CheckNamedArg("**", CheckDictionaryExpr(CheckSlice(CheckConstant("z"), Three)))
+                        ),
+                        CheckTupleStmt(
+                            CheckStarExpr(
+                                CheckCallExpression(Fob, PositionalArg(Four))
+                            ),
+                            Four
+                        ),
+                        CheckExprStmt(
+                            CheckListExpr(
+                                CheckStarExpr(
+                                    CheckCallExpression(Fob, PositionalArg(Four))
+                                ),
+                                Four
+                            )
+                        ),
+                        CheckExprStmt(
+                            CheckSetLiteral(
+                                CheckStarExpr(CheckCallExpression(Fob, PositionalArg(Four))),
+                                Four
+                            )
+                        ),
+                        CheckDictionaryStmt(
+                            CheckSlice(
+                                CheckConstant("x"),
+                                One
+                            ),
+                            CheckSlice(
+                                null,
+                                CheckDictionaryExpr(
+                                    CheckSlice(CheckConstant("y"), Two)
+                                )
+                            )
+                        ),
+                        CheckDictionaryStmt(
+                            CheckSlice(
+                                null,
+                                CheckDictionaryExpr(
+                                    CheckSlice(CheckConstant("x"), Two)
+                                )
+                            ),
+                            CheckSlice(
+                                CheckConstant("x"),
+                                One
+                            )
+                        ),
+                        CheckExprStmt(
+                            CheckSetLiteral(
+                                CheckStarExpr(CheckListExpr())
+                            )
+                        )
+                    )
+                );
+            }
         }
 
         [TestMethod, Priority(0)]
@@ -500,8 +574,7 @@ namespace AnalysisTests {
                     new ErrorInfo("not a chance", 26, 2, 1, 55, 2, 30),
                     new ErrorInfo("future feature is not defined: unknown", 57, 3, 1, 87, 3, 31),
                     new ErrorInfo("default value must be specified here", 106, 5, 16, 107, 5, 17),
-                    new ErrorInfo("non-keyword arg after keyword arg", 134, 8, 12, 135, 8, 13),
-                    new ErrorInfo("keywords must come before ** args", 180, 11, 13, 186, 11, 19),
+                    new ErrorInfo("positional argument follows keyword argument", 134, 8, 12, 135, 8, 13),
                     new ErrorInfo("unexpected token 'pass'", 197, 14, 1, 201, 14, 5),
                     new ErrorInfo("unexpected token '42'", 217, 17, 11, 219, 17, 13),
                     new ErrorInfo("sublist parameters are not supported in 3.x", 216, 17, 10, 222, 17, 16),
@@ -1263,7 +1336,7 @@ namespace AnalysisTests {
                             CheckAssignment(Fob, CheckYieldExpr(None))
                         )),
                         CheckFuncDef("f", NoParameters, CheckSuite(
-                            CheckAssignment(Baz, CheckListComp(CheckYieldExpr(Oar), CompFor(Oar, Fob)))
+                            CheckAssignment(Baz, CheckListComp(CheckParenExpr(CheckYieldExpr(Oar)), CompFor(Oar, Fob)))
                         ))
                     )
                 );
@@ -1322,7 +1395,7 @@ namespace AnalysisTests {
                             CheckSuite(
                                 CheckYieldFromStmt(Fob),
                                 CheckAssignment(Oar, CheckYieldFromExpr(Fob)),
-                                CheckAssignment(Baz, CheckListComp(CheckYieldFromExpr(Oar), CompFor(Oar, Fob)))
+                                CheckAssignment(Baz, CheckListComp(CheckParenExpr(CheckYieldFromExpr(Oar)), CompFor(Oar, Fob)))
                             )
                         )
                     )
@@ -2326,7 +2399,7 @@ namespace AnalysisTests {
                         CheckAssignment(CheckTupleExpr(Fob, Oar), PythonOperator.Add, One),
                         CheckFuncDef("f", NoParameters,
                             CheckSuite(
-                                CheckAssignment(CheckYieldExpr(Fob), One)
+                                CheckAssignment(CheckParenExpr(CheckYieldExpr(Fob)), One)
                             )
                         )
                     )

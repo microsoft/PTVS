@@ -40,9 +40,9 @@ namespace Microsoft.PythonTools.Intellisense {
             _serviceProvider = serviceProvider;
         }
 
-        internal bool GetPrecedingExpression(out string text, out SnapshotSpan statementExtent) {
+        internal bool GetPrecedingExpression(out string text, out SnapshotSpan expressionExtent) {
             text = string.Empty;
-            statementExtent = default(SnapshotSpan);
+            expressionExtent = default(SnapshotSpan);
 
             var startSpan = _snapshot.CreateTrackingSpan(Span.GetSpan(_snapshot).Start.Position, 0, SpanTrackingMode.EdgeInclusive);
             var parser = new ReverseExpressionParser(_snapshot, _snapshot.TextBuffer, startSpan);
@@ -74,7 +74,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
 
-            statementExtent = parser.GetStatementRange() ?? new SnapshotSpan(Span.GetStartPoint(_snapshot), 0);
+            expressionExtent = sourceSpan ?? new SnapshotSpan(Span.GetStartPoint(_snapshot), 0);
 
             return true;
         }

@@ -1333,10 +1333,16 @@ namespace Microsoft.VisualStudioTools.Project {
                                 var targetFolder = Project.CreateFolderNodes(TargetFolder);
 
                                 //If a race occurrs simply treat the source as a non-included item
-                                bool wasMemberItem = false;
-                                var sourceItem = Project.FindNodeByFullPath(SourceMoniker);
-                                if (sourceItem != null) {
-                                    wasMemberItem = !sourceItem.IsNonMemberItem;
+                                IVsHierarchy source = SourceHierarchy as IVsHierarchy;
+                                bool wasMemberItem = true;
+                                if (source != null) {
+                                    uint itemId;
+                                    if (ErrorHandler.Succeeded(source.ParseCanonicalName(SourceMoniker, out itemId))) {
+                                        object nonMember;
+                                        if (ErrorHandler.Succeeded(source.GetProperty(itemId, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, out nonMember))) {
+                                            wasMemberItem = !(nonMember as bool? ?? false);
+                                        }
+                                    }
                                 }
 
                                 if (wasMemberItem && targetFolder.IsNonMemberItem) {

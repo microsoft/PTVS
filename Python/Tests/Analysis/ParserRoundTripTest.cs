@@ -625,6 +625,8 @@ def f ( ):
             TestOneString(PythonLanguageVersion.V27, "lambda  **   x    :     x");
             TestOneString(PythonLanguageVersion.V27, "lambda  *   x    ,     **      y       :        x");
             TestOneString(PythonLanguageVersion.V27, "lambda  :   42");
+            TestOneString(PythonLanguageVersion.V27, "lambda  :   (yield)");
+            TestOneString(PythonLanguageVersion.V27, "lambda  :   (yield");
             TestOneString(PythonLanguageVersion.V30, "lambda  *   ,    x     :      x");
 
             // List Comprehensions

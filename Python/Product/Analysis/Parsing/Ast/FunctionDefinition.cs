@@ -244,6 +244,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 if (_body != null) {
                     _body.Walk(walker);
                 }
+                if (_returnAnnotation != null) {
+                    _returnAnnotation.Walk(walker);
+                }
             }
             walker.PostWalk(this);
         }

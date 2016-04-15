@@ -1512,6 +1512,214 @@ namespace Microsoft.VisualStudioTools.SharedProjectTests {
             }
         }
 
+        /// <summary>
+        /// Rename a file while one exists in the solution, but isn't on disk.
+        /// 
+        /// The existing item should be removed.
+        /// </summary>
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void RenameFileExistsInHierarchy() {
+            foreach (var projectType in ProjectTypes) {
+                var proj = new ProjectDefinition(
+                    "HelloWorld",
+                    projectType,
+                    Compile("server"),
+                    Compile("server2", isMissing: true)
+                );
+                using (var solution = proj.Generate().ToVs()) {
+                    Console.WriteLine(projectType.ProjectExtension);
+
+                    var project = (IVsHierarchy)((dynamic)solution.GetProject("HelloWorld")).Project;
+
+                    var trackDocs = (IVsTrackProjectDocuments2)VSTestContext.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
+                    var docTracker = new DocumentTracker();
+                    uint cookie = VSConstants.VSCOOKIE_NIL;
+
+                    trackDocs.AdviseTrackProjectDocumentsEvents(docTracker, out cookie);
+                    try {
+                        var file = solution.FindItem("HelloWorld", projectType.Code("server"));
+                        AutomationWrapper.Select(file);
+
+                        Keyboard.Type(System.Windows.Input.Key.F2);
+                        Keyboard.Type("server2\r");
+
+                        Assert.IsNull(solution.WaitForItemRemoved("HelloWorld", projectType.Code("server")));
+                            
+                        Assert.IsTrue(docTracker.Renamed, "didn't get rename event");
+                    } finally {
+                        if (cookie != VSConstants.VSCOOKIE_NIL) {
+                            trackDocs.UnadviseTrackProjectDocumentsEvents(cookie);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Rename a file while one exists in the solution, but isn't on disk, while the file is opened
+        /// in the editor and we cancel the save.
+        /// 
+        /// The rename should be cancelled.
+        /// </summary>
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void RenameFileExistsInHierarchy_FileOpen_Cancel() {
+            foreach (var projectType in ProjectTypes) {
+                var proj = new ProjectDefinition(
+                    "HelloWorld",
+                    projectType,
+                    Compile("server"),
+                    Compile("server2")
+                );
+                using (var solution = proj.Generate().ToVs()) {
+                    Console.WriteLine(projectType.ProjectExtension);
+
+                    var project = (IVsHierarchy)((dynamic)solution.GetProject("HelloWorld")).Project;
+
+                    var trackDocs = (IVsTrackProjectDocuments2)VSTestContext.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
+                    var docTracker = new DocumentTracker();
+                    uint cookie = VSConstants.VSCOOKIE_NIL;
+
+                    trackDocs.AdviseTrackProjectDocumentsEvents(docTracker, out cookie);
+                    try {
+                        var editor = solution.OpenItem("HelloWorld", projectType.Code("server2"));
+                        editor.Invoke(() => {
+                            editor.TextView.TextBuffer.Delete(
+                                new VisualStudio.Text.Span(0, editor.TextView.TextBuffer.CurrentSnapshot.Length)
+                            );
+                        });
+                        File.Delete(Path.Combine(solution.SolutionDirectory, "HelloWorld", projectType.Code("server2")));
+                        
+                        var file = solution.FindItem("HelloWorld", projectType.Code("server"));
+                        AutomationWrapper.Select(file);
+
+                        Keyboard.Type(System.Windows.Input.Key.F2);
+                        Keyboard.Type("server2\r");
+                        solution.WaitForDialog();
+                        Keyboard.Type(System.Windows.Input.Key.Escape);
+                        solution.WaitForDialogDismissed();
+                        Assert.IsNotNull(solution.FindItem("HelloWorld", projectType.Code("server")));
+                        Assert.IsNotNull(solution.FindItem("HelloWorld", projectType.Code("server2")));
+                    } finally {
+                        if (cookie != VSConstants.VSCOOKIE_NIL) {
+                            trackDocs.UnadviseTrackProjectDocumentsEvents(cookie);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Rename a file while one exists in the solution, but isn't on disk, while the file is opened
+        /// in the editor and we cancel the save.
+        /// 
+        /// The rename should be cancelled.
+        /// </summary>
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void RenameFileExistsInHierarchy_FileOpen_Save() {
+            foreach (var projectType in ProjectTypes) {
+                var proj = new ProjectDefinition(
+                    "HelloWorld",
+                    projectType,
+                    Compile("server"),
+                    Compile("server2")
+                );
+                using (var solution = proj.Generate().ToVs()) {
+                    Console.WriteLine(projectType.ProjectExtension);
+
+                    var project = (IVsHierarchy)((dynamic)solution.GetProject("HelloWorld")).Project;
+
+                    var trackDocs = (IVsTrackProjectDocuments2)VSTestContext.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
+                    var docTracker = new DocumentTracker();
+                    uint cookie = VSConstants.VSCOOKIE_NIL;
+
+                    trackDocs.AdviseTrackProjectDocumentsEvents(docTracker, out cookie);
+                    try {
+                        var editor = solution.OpenItem("HelloWorld", projectType.Code("server2"));
+                        editor.Invoke(() => {
+                            editor.TextView.TextBuffer.Delete(
+                                new VisualStudio.Text.Span(0, editor.TextView.TextBuffer.CurrentSnapshot.Length)
+                            );
+                        });
+                        File.Delete(Path.Combine(solution.SolutionDirectory, "HelloWorld", projectType.Code("server2")));
+
+                        var file = solution.FindItem("HelloWorld", projectType.Code("server"));
+                        AutomationWrapper.Select(file);
+
+                        Keyboard.Type(System.Windows.Input.Key.F2);
+                        Keyboard.Type("server2\r");
+                        solution.WaitForDialog();
+                        Keyboard.Type("Y");
+                        System.Threading.Thread.Sleep(500);
+                        solution.WaitForDialog();
+                        Keyboard.Type(System.Windows.Input.Key.Escape);
+                        Assert.IsNotNull(solution.FindItem("HelloWorld", projectType.Code("server")));
+                        Assert.IsNotNull(solution.FindItem("HelloWorld", projectType.Code("server2")));
+                    } finally {
+                        if (cookie != VSConstants.VSCOOKIE_NIL) {
+                            trackDocs.UnadviseTrackProjectDocumentsEvents(cookie);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Rename a file while one exists in the solution, but isn't on disk, while the file is opened
+        /// in the editor and we cancel the save.
+        /// 
+        /// The rename should be cancelled.
+        /// </summary>
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void RenameFileExistsInHierarchy_FileOpen_DontSave() {
+            foreach (var projectType in ProjectTypes) {
+                var proj = new ProjectDefinition(
+                    "HelloWorld",
+                    projectType,
+                    Compile("server"),
+                    Compile("server2")
+                );
+                using (var solution = proj.Generate().ToVs()) {
+                    Console.WriteLine(projectType.ProjectExtension);
+
+                    var project = (IVsHierarchy)((dynamic)solution.GetProject("HelloWorld")).Project;
+
+                    var trackDocs = (IVsTrackProjectDocuments2)VSTestContext.ServiceProvider.GetService(typeof(SVsTrackProjectDocuments));
+                    var docTracker = new DocumentTracker();
+                    uint cookie = VSConstants.VSCOOKIE_NIL;
+
+                    trackDocs.AdviseTrackProjectDocumentsEvents(docTracker, out cookie);
+                    try {
+                        var editor = solution.OpenItem("HelloWorld", projectType.Code("server2"));
+                        editor.Invoke(() => {
+                            editor.TextView.TextBuffer.Delete(
+                                new VisualStudio.Text.Span(0, editor.TextView.TextBuffer.CurrentSnapshot.Length)
+                            );
+                        });
+                        File.Delete(Path.Combine(solution.SolutionDirectory, "HelloWorld", projectType.Code("server2")));
+
+                        var file = solution.FindItem("HelloWorld", projectType.Code("server"));
+                        AutomationWrapper.Select(file);
+
+                        Keyboard.Type(System.Windows.Input.Key.F2);
+                        Keyboard.Type("server2\r");
+                        solution.WaitForDialog();
+                        Keyboard.Type("N");
+                        solution.WaitForDialogDismissed();
+                        Assert.IsNull(solution.FindItem("HelloWorld", projectType.Code("server")));
+                        Assert.IsNotNull(solution.FindItem("HelloWorld", projectType.Code("server2")));
+                    } finally {
+                        if (cookie != VSConstants.VSCOOKIE_NIL) {
+                            trackDocs.UnadviseTrackProjectDocumentsEvents(cookie);
+                        }
+                    }
+                }
+            }
+        }
+
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void IsDocumentInProject() {

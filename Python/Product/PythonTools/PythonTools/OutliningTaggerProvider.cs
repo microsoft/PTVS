@@ -103,7 +103,7 @@ namespace Microsoft.PythonTools {
 
                 var tags = await entry.Analyzer.GetOutliningTagsAsync(snapshot);
                 if (tags != null) {
-                    _tags = tags.Concat(ProcessRegionTags(snapshot)).ToArray();
+                    _tags = tags.Concat(ProcessRegionTags(_buffer.CurrentSnapshot)).ToArray();
 
                     TagsChanged?.Invoke(
                         this,

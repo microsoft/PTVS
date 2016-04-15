@@ -391,9 +391,9 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Overridden method. The method updates the build dependency list before removing the node from the hierarchy.
         /// </summary>
-        public override void Remove(bool removeFromStorage) {
+        public override bool Remove(bool removeFromStorage) {
             if (this.ProjectMgr == null) {
-                return;
+                return false;
             }
             base.RemoveNonDocument(removeFromStorage);
             this.ItemNode.RemoveFromProjectFile();
@@ -403,6 +403,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
             // Dispose the node now that is deleted.
             Dispose(true);
+            return true;
         }
 
 

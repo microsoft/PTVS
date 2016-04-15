@@ -290,10 +290,6 @@ namespace Microsoft.PythonTools.Analysis {
             return SelfSet;
         }
 
-        public virtual IAnalysisSet GetStaticDescriptor(AnalysisUnit unit) {
-            return SelfSet;
-        }
-
         public virtual IAnalysisSet GetDescriptor(PythonAnalyzer projectState, AnalysisValue instance, AnalysisValue context) {
             return SelfSet;
         }

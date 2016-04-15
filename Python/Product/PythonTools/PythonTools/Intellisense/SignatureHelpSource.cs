@@ -36,19 +36,20 @@ namespace Microsoft.PythonTools.Intellisense {
             var span = session.GetApplicableSpan(_textBuffer);
 
             var sigs = _textBuffer.CurrentSnapshot.GetSignatures(_provider._serviceProvider, span);
+            if (sigs != null) {
+                ISignature curSig = sigs.Signatures
+                     .OrderBy(s => s.Parameters.Count)
+                     .FirstOrDefault(s => sigs.ParameterIndex < s.Parameters.Count);
 
-            ISignature curSig = sigs.Signatures
-                .OrderBy(s => s.Parameters.Count)
-                .FirstOrDefault(s => sigs.ParameterIndex < s.Parameters.Count);
-            
-            foreach (var sig in sigs.Signatures) {
-                signatures.Add(sig);
-            }
+                foreach (var sig in sigs.Signatures) {
+                    signatures.Add(sig);
+                }
 
-            if (curSig != null) {
-                // save the current sig so we don't need to recalculate it (we can't set it until
-                // the signatures are added by our caller).
-                session.Properties.AddProperty(typeof(PythonSignature), curSig);
+                if (curSig != null) {
+                    // save the current sig so we don't need to recalculate it (we can't set it until
+                    // the signatures are added by our caller).
+                    session.Properties.AddProperty(typeof(PythonSignature), curSig);
+                }
             }
         }
 

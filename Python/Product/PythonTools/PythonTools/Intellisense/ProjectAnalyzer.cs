@@ -122,7 +122,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _commentTaskProvider.TokensChanged += CommentTaskTokensChanged;
 
-            _conn = StartConnection(out _analysisProcess);
+            _conn = StartConnection(
+                projectFile?.FullPath ?? (implicitProject ? "Global Analysis" : "Misc. Non Project Analysis"), 
+                out _analysisProcess
+            );
             _userCount = 1;
 
             Task.Run(() => _conn.ProcessMessages());
@@ -291,9 +294,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #endregion
 
-        private Connection StartConnection(out Process proc) {
+        private Connection StartConnection(string comment, out Process proc) {
             var libAnalyzer = typeof(AP.FileChangedResponse).Assembly.Location;
-            var psi = new ProcessStartInfo(libAnalyzer, "/interactive");
+            var psi = new ProcessStartInfo(libAnalyzer, "/interactive /comment \"" + comment + "\"");
             psi.RedirectStandardInput = true;
             psi.RedirectStandardOutput = true;
             psi.RedirectStandardError = true;
@@ -1846,7 +1849,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         outliningTags.version
                     );
 
-                    res = ConvertOutliningTags(snapshot, translator, outliningTags.tags);
+                    res = ConvertOutliningTags(translator, outliningTags.tags);
                 } else {
                     return null;
                 }
@@ -1855,7 +1858,8 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(ITextSnapshot currentSnapshot, LocationTracker translator, AP.OutliningTag[] tags) {
+        private static IEnumerable<OutliningTaggerProvider.TagSpan> ConvertOutliningTags(LocationTracker translator, AP.OutliningTag[] tags) {
+            var snapshot = translator.TextBuffer.CurrentSnapshot;
             foreach (var tag in tags) {
                 // translate the span from the version we last parsed to the current version
                 var span = translator.TranslateForward(Span.FromBounds(tag.startIndex, tag.endIndex));
@@ -1866,7 +1870,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 yield return OutliningTaggerProvider.OutliningTagger.GetTagSpan(
-                    currentSnapshot,
+                    snapshot,
                     span.Start,
                     span.End,
                     headerIndex

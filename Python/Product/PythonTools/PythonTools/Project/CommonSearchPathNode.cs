@@ -60,12 +60,15 @@ namespace Microsoft.PythonTools.Project {
             return deleteOperation == __VSDELETEITEMOPERATION.DELITEMOP_RemoveFromProject;
         }
 
-        public override void Remove(bool removeFromStorage) {
+        public override bool Remove(bool removeFromStorage) {
             //Save this search path, because the node can be deleted after call to base Remove()
             string path = this.Url;
-            base.Remove(removeFromStorage);
-            //Remove entry from project's Search Path
-            _project.RemoveSearchPathEntry(path);
+            if (base.Remove(removeFromStorage)) {
+                //Remove entry from project's Search Path
+                _project.RemoveSearchPathEntry(path);
+                return true;
+            }
+            return false;
         }
 
         public void Remove() {
