@@ -276,6 +276,14 @@ namespace Microsoft.IronPythonTools.Interpreter {
             return _remoteInterpreter.GetBuiltinFunctionOverloads(value);
         }
 
+        internal ObjectIdentityHandle[] GetConstructorFunctionTargets(ObjectIdentityHandle function) {
+            return _remoteInterpreter.GetConstructorFunctionTargets(function);
+        }
+
+        internal ObjectIdentityHandle GetConstructorFunctionDeclaringType(ObjectIdentityHandle function) {
+            return _remoteInterpreter.GetConstructorFunctionDeclaringType(function);
+        }
+
         internal ObjectIdentityHandle GetBuiltinFunctionDeclaringPythonType(ObjectIdentityHandle value) {
             return _remoteInterpreter.GetBuiltinFunctionDeclaringPythonType(value);
         }

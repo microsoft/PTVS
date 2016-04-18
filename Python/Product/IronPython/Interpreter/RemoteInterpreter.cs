@@ -502,6 +502,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 return ObjectKind.Module;
             } else if (obj is PythonType) {
                 return ObjectKind.Type;
+            } else if (obj is ConstructorFunction) {
+                return ObjectKind.ConstructorFunction;
             } else if (obj is BuiltinFunction) {
                 return ObjectKind.BuiltinFunction;
             } else if (obj is BuiltinMethodDescriptor) {
@@ -873,6 +875,26 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
                 return result.ToArray();
             }, () => new ObjectIdentityHandle[0]);
+        }
+
+        internal ObjectIdentityHandle[] GetConstructorFunctionTargets(ObjectIdentityHandle function) {
+            return CallAndHandle(() => {
+                return ((ConstructorFunction)Unwrap(function)).Overloads.Targets
+                .Select(x => MakeHandle(x))
+                .ToArray();
+            }, () => Array.Empty<ObjectIdentityHandle>());
+        }
+
+        internal ObjectIdentityHandle GetConstructorFunctionDeclaringType(ObjectIdentityHandle function) {
+            return CallAndHandle(() => 
+                MakeHandle(
+                    GetTypeFromType(
+                        ((ConstructorFunction)Unwrap(function)).Overloads.Targets
+                        .First()
+                        .DeclaringType
+                    )
+                )
+            );
         }
 
         #endregion
@@ -1470,7 +1492,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         PythonTypeSlot,
         TypeGroup,
         Constant,
-        Unknown
+        ConstructorFunction,
+        Unknown,
     }
 
     enum SetAnalysisDirectoriesResult {
