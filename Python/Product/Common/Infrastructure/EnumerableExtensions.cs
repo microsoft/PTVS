@@ -55,5 +55,13 @@ namespace Microsoft.PythonTools.Infrastructure {
         public static IEnumerable<TKey> Keys<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> source) {
             return source.Select(GetKey);
         }
+
+        public static IEnumerable<KeyValuePair<TKey, TValue>> AsEnumerable<TKey, TValue>(
+            this System.Collections.IDictionary source
+        ) {
+            foreach (System.Collections.DictionaryEntry entry in source) {
+                yield return new KeyValuePair<TKey, TValue>((TKey)entry.Key, (TValue)entry.Value);
+            }
+        }
     }
 }

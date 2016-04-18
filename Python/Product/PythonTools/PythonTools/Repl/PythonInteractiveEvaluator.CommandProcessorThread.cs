@@ -51,15 +51,16 @@ namespace Microsoft.PythonTools.Repl {
         protected virtual CommandProcessorThread Connect() {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThreadOrThrow();
 
-            if (string.IsNullOrWhiteSpace(InterpreterPath)) {
+            var interpreterPath = Configuration.GetInterpreterPath();
+            if (string.IsNullOrWhiteSpace(interpreterPath)) {
                 WriteError(Strings.ReplEvaluatorInterpreterNotConfigured.FormatUI(DisplayName));
                 return null;
-            } else if (!File.Exists(InterpreterPath)) {
+            } else if (!File.Exists(interpreterPath)) {
                 WriteError(Strings.ReplEvaluatorInterpreterNotFound);
                 return null;
             }
 
-            var processInfo = new ProcessStartInfo(InterpreterPath);
+            var processInfo = new ProcessStartInfo(interpreterPath);
 
 #if DEBUG
             bool debugMode = Environment.GetEnvironmentVariable("_PTVS_DEBUG_REPL") != null;
@@ -81,8 +82,9 @@ namespace Microsoft.PythonTools.Repl {
             conn.Listen(0);
             var portNum = ((IPEndPoint)conn.LocalEndPoint).Port;
 
-            if (!string.IsNullOrEmpty(WorkingDirectory)) {
-                processInfo.WorkingDirectory = WorkingDirectory;
+            var workingDirectory = Configuration.WorkingDirectory;
+            if (!string.IsNullOrEmpty(workingDirectory)) {
+                processInfo.WorkingDirectory = workingDirectory;
             } else {
                 processInfo.WorkingDirectory = CommonUtils.GetParent(processInfo.FileName);
             }
@@ -91,26 +93,25 @@ namespace Microsoft.PythonTools.Repl {
             if (!debugMode) {
 #endif
 
-                var existingEnv = processInfo.Environment;
-
-                foreach (var kv in EnvironmentVariables) {
-                    var key = kv.Key.Trim(';');
-                    if (kv.Key.EndsWith(";")) {
+                var env = processInfo.Environment;
+                foreach (var kv in Configuration.Environment.MaybeEnumerate()) {
+                    var key = kv.Key.Trim('+');
+                    if (kv.Key.EndsWith("+")) {
                         string other;
-                        if (existingEnv.TryGetValue(key, out other)) {
-                            processInfo.Environment[key] = kv.Value + ";" + other;
+                        if (env.TryGetValue(key, out other)) {
+                            env[key] = kv.Value + ";" + other;
                         } else {
-                            processInfo.Environment[key] = kv.Value;
+                            env[key] = kv.Value;
                         }
-                    } else if (kv.Key.StartsWith(";")) {
+                    } else if (kv.Key.StartsWith("+")) {
                         string other;
-                        if (existingEnv.TryGetValue(key, out other)) {
-                            processInfo.Environment[key] = other + ";" + kv.Value;
+                        if (env.TryGetValue(key, out other)) {
+                            env[key] = other + ";" + kv.Value;
                         } else {
-                            processInfo.Environment[key] = kv.Value;
+                            env[key] = kv.Value;
                         }
                     } else {
-                        processInfo.Environment[key] = kv.Value;
+                        env[key] = kv.Value;
                     }
                 }
 #if DEBUG
@@ -118,8 +119,9 @@ namespace Microsoft.PythonTools.Repl {
 #endif
 
             var args = new List<string>();
-            if (!string.IsNullOrWhiteSpace(InterpreterArguments)) {
-                args.Add(InterpreterArguments);
+            var interpreterArguments = Configuration.InterpreterArguments;
+            if (!string.IsNullOrWhiteSpace(interpreterArguments)) {
+                args.Add(interpreterArguments);
             }
 
             args.Add(ProcessOutput.QuoteSingleArgument(PythonToolsInstallPath.GetFile("visualstudio_py_repl.py")));

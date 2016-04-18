@@ -62,7 +62,21 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
         public IProjectLauncher CreateLauncher(IPythonProject project) {
-            return new PythonWebLauncher(_serviceProvider, _pyService, project);
+            var config = project.GetLaunchConfigurationOrThrow();
+            
+            // Check project type GUID and enable the Django-specific features
+            // of the debugger if required.
+            var projectGuids = project.GetUnevaluatedProperty("ProjectTypeGuids") ?? "";
+            // HACK: Literal GUID string to avoid introducing Django-specific public API
+            // We don't want to expose a constant from PythonTools.dll.
+            // TODO: Add generic breakpoint extension point
+            // to avoid having to pass this property for Django and any future
+            // extensions.
+            if (projectGuids.IndexOf("5F0BE9CA-D677-4A4D-8806-6076C0FAAD37", StringComparison.OrdinalIgnoreCase) >= 0) {
+                config.LaunchOptions["DjangoDebug"] = "true";
+            }
+
+            return new PythonWebLauncher(_serviceProvider, config, config, config);
         }
     }
 }

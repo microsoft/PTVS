@@ -20,6 +20,7 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
@@ -94,17 +95,15 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal static string GetEvaluatorId(InterpreterConfiguration config) {
-            return string.Format("{0};env;{1};{2};{3};{4}",
+            return "{0};env;{1};{2}".FormatInvariant(
                 _prefix,
-                config.Id,
                 config.Description,
-                config.InterpreterPath,
-                config.Version
+                config.Id
             );
         }
 
         internal static string GetEvaluatorId(PythonProjectNode project) {
-            return string.Format("{0};project;{1};{2}",
+            return "{0};project;{1};{2}".FormatInvariant(
                 _prefix,
                 project.Caption,
                 project.GetMkDocument()
@@ -139,22 +138,12 @@ namespace Microsoft.PythonTools.Repl {
             return null;
         }
 
-        private static PythonLanguageVersion GetVersion(string versionStr) {
-            Version version;
-            if (string.IsNullOrEmpty(versionStr)) {
-                return PythonLanguageVersion.None;
-            }
-
-            return (Version.TryParse(versionStr, out version) ? version : new Version()).ToLanguageVersion();
-        }
-
         private IInteractiveEvaluator GetEnvironmentEvaluator(IReadOnlyList<string> args) {
+            var config = _interpreterService.FindConfiguration(args.ElementAtOrDefault(1));
+
             var eval = new PythonInteractiveEvaluator(_serviceProvider) {
-                InterpreterId = args.ElementAtOrDefault(0),
-                DisplayName = args.ElementAtOrDefault(1),
-                InterpreterPath = args.ElementAtOrDefault(2),
-                LanguageVersion = GetVersion(args.ElementAtOrDefault(3)),
-                WorkingDirectory = args.ElementAtOrDefault(4)
+                DisplayName = args.ElementAtOrDefault(0),
+                Configuration = new LaunchConfiguration(config)
             };
 
             return eval;

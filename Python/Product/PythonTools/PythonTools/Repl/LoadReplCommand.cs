@@ -41,11 +41,9 @@ namespace Microsoft.PythonTools.Repl {
 
             var eval = window.GetPythonEvaluator();
             if (eval != null) {
-                finder.Search(eval.WorkingDirectory);
-                string searchPaths;
-                // HACK: Should not assume variable name is PYTHONPATH
-                if (eval.EnvironmentVariables.TryGetValue("PYTHONPATH", out searchPaths)) {
-                    finder.SearchAll(searchPaths, ';');
+                finder.Search(eval.Configuration.WorkingDirectory);
+                foreach (var p in eval.Configuration.SearchPaths) {
+                    finder.Search(p);
                 }
             }
 

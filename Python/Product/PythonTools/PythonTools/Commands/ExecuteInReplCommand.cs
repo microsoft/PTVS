@@ -54,9 +54,6 @@ namespace Microsoft.PythonTools.Commands {
                 PythonReplEvaluatorProvider.GetEvaluatorId(config);
             var window = provider.OpenOrCreate(replId);
             project?.AddActionOnClose(window, InteractiveWindowProvider.Close);
-            //if (project != null && project.Interpreters.IsProjectSpecific(factory)) {
-            //    project.AddActionOnClose(window, BasePythonReplEvaluator.CloseReplWindow);
-            //}
 
             return window;
         }

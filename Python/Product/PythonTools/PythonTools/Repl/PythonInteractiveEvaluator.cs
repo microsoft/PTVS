@@ -72,7 +72,6 @@ namespace Microsoft.PythonTools.Repl {
         public PythonInteractiveEvaluator(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             _deferredOutput = new StringBuilder();
-            EnvironmentVariables = new Dictionary<string, string>();
             _enableMultipleScopes = true;
         }
 
@@ -103,13 +102,14 @@ namespace Microsoft.PythonTools.Repl {
 
         public string DisplayName { get; set; }
         public string ProjectMoniker { get; set; }
-        public string InterpreterId { get; set; }
-        public string InterpreterPath { get; set; }
-        public PythonLanguageVersion LanguageVersion { get; set; }
-        public string InterpreterArguments {get; set; }
-        public string WorkingDirectory { get; set; }
-        public IDictionary<string, string> EnvironmentVariables { get; set; }
+        public LaunchConfiguration Configuration { get; set; }
         public string ScriptsPath { get; set; }
+
+        public PythonLanguageVersion LanguageVersion {
+            get {
+                return Configuration?.Interpreter?.Version.ToLanguageVersion() ?? PythonLanguageVersion.None;
+            }
+        }
 
         public bool UseSmartHistoryKeys { get; set; }
         public bool LiveCompletionsOnly { get; set; }
@@ -125,18 +125,12 @@ namespace Microsoft.PythonTools.Repl {
                 }
 
                 var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                var config = Configuration;
 
-                var id = InterpreterId;
-                if (string.IsNullOrEmpty(id)) {
-                    id = interpreterService.Configurations
-                        .FirstOrDefault(c => CommonUtils.IsSamePath(c.InterpreterPath, InterpreterPath))
-                        ?.Id;
-                }
-
-                if (string.IsNullOrEmpty(id)) {
+                if (config == null) {
                     _analyzer = _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
                 } else {
-                    _analyzer = new VsProjectAnalyzer(_serviceProvider, interpreterService.FindInterpreter(id));
+                    _analyzer = new VsProjectAnalyzer(_serviceProvider, interpreterService.FindInterpreter(config.Interpreter.Id));
                 }
                 return _analyzer;
             }
@@ -263,6 +257,7 @@ namespace Microsoft.PythonTools.Repl {
                 return true;
             }
 
+            var config = Configuration;
             using (var parser = Parser.CreateParser(new StringReader(text), LanguageVersion)) {
                 ParseResult pr;
                 parser.ParseInteractiveCode(out pr);
@@ -281,7 +276,21 @@ namespace Microsoft.PythonTools.Repl {
 
             return await _serviceProvider.GetUIThread().InvokeTask(async () => {
                 if (!string.IsNullOrEmpty(ProjectMoniker)) {
-                    UpdatePropertiesFromProjectMoniker();
+                    try {
+                        UpdatePropertiesFromProjectMoniker();
+                    } catch (NoInterpretersException ex) {
+                        WriteError(ex.ToString());
+                        return;
+                    } catch (MissingInterpreterException ex) {
+                        WriteError(ex.ToString());
+                        return;
+                    } catch (DirectoryNotFoundException ex) {
+                        WriteError(ex.ToString());
+                        return;
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        WriteError(ex.ToUnhandledExceptionMessage(GetType()));
+                        return;
+                    }
                 }
 
                 thread = Connect();
@@ -295,7 +304,7 @@ namespace Microsoft.PythonTools.Repl {
                 var scriptsPath = ScriptsPath;
                 if (string.IsNullOrEmpty(scriptsPath)) {
                     scriptsPath = GetScriptsPath(null, DisplayName) ??
-                        GetScriptsPath(null, LanguageVersion.ToVersion().ToString());
+                        GetScriptsPath(null, Configuration.Interpreter.Version.ToString());
                 }
 
                 if (File.Exists(scriptsPath)) {
@@ -331,17 +340,7 @@ namespace Microsoft.PythonTools.Repl {
                 return;
             }
 
-            var props = PythonProjectLaunchProperties.Create(pyProj);
-            if (props == null) {
-                return;
-            }
-
-            InterpreterPath = props.GetInterpreterPath();
-            InterpreterArguments = props.GetInterpreterArguments();
-            var version = (pyProj.GetInterpreterFactory()?.Configuration.Version ?? new Version()).ToLanguageVersion();
-            LanguageVersion = version;
-            WorkingDirectory = props.GetWorkingDirectory();
-            EnvironmentVariables = props.GetEnvironment(true);
+            Configuration = pyProj.GetLaunchConfigurationOrThrow();
             ScriptsPath = GetScriptsPath(pyProj.ProjectHome, "Scripts");
         }
 

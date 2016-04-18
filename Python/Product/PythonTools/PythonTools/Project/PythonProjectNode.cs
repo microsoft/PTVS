@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
     internal class PythonProjectNode :
         CommonProjectNode,
-        IPythonProject3,
+        IPythonProject,
         IAzureRoleProject,
         IProjectInterpreterDbChanged,
         IPythonProjectLaunchProperties {
@@ -140,11 +140,11 @@ namespace Microsoft.PythonTools.Project {
             _customCommandsDisplayLabel = CustomCommand.GetCommandsDisplayLabel(project, this);
         }
 
-        IAsyncCommand IPythonProject2.FindCommand(string canonicalName) {
+        public IAsyncCommand FindCommand(string canonicalName) {
             return _customCommands.FirstOrDefault(cc => cc.Target == canonicalName);
         }
 
-        ProjectInstance IPythonProject2.GetMSBuildProjectInstance() {
+        public ProjectInstance GetMSBuildProjectInstance() {
             if (CurrentConfig == null) {
                 SetCurrentConfiguration();
                 if (CurrentConfig == null) {
@@ -1273,6 +1273,18 @@ namespace Microsoft.PythonTools.Project {
             return fact;
         }
 
+        /// <summary>
+        /// Returns the active interpreter factory or throws an appropriate
+        /// exception. These exceptions have localized strings that may be
+        /// shown to the user.
+        /// </summary>
+        /// <returns>The active interpreter factory.</returns>
+        /// <exception cref="NoInterpretersException">
+        /// No interpreters are available at all.
+        /// </exception>
+        /// <exception cref="MissingInterpreterException">
+        /// The specified interpreter is not suitable for use.
+        /// </exception>
         public IPythonInterpreterFactory GetInterpreterFactoryOrThrow() {
             var fact = ActiveInterpreter;
             if (fact == null) {
@@ -1295,6 +1307,54 @@ namespace Microsoft.PythonTools.Project {
             Site.GetPythonToolsService().EnsureCompletionDb(fact);
 
             return fact;
+        }
+
+        /// <summary>
+        /// Returns the current launch configuration or throws an appropriate
+        /// exception. These exceptions have localized strings that may be
+        /// shown to the user.
+        /// </summary>
+        /// <returns>The active interpreter factory.</returns>
+        /// <exception cref="NoInterpretersException">
+        /// No interpreters are available at all.
+        /// </exception>
+        /// <exception cref="MissingInterpreterException">
+        /// The specified interpreter is not suitable for use.
+        /// </exception>
+        /// <exception cref="DirectoryNotFoundException">
+        /// The working directory specified by the project does not exist.
+        /// </exception>
+        public LaunchConfiguration GetLaunchConfigurationOrThrow() {
+            var fact = GetInterpreterFactoryOrThrow();
+
+            var config = new LaunchConfiguration(fact.Configuration) {
+                InterpreterPath = GetProjectProperty(PythonConstants.InterpreterPathSetting, resetCache: false),
+                InterpreterArguments = GetProjectProperty(PythonConstants.InterpreterArgumentsSetting, resetCache: false),
+                ScriptName = GetStartupFile(),
+                ScriptArguments = GetProjectProperty(PythonConstants.CommandLineArgumentsSetting, resetCache: false),
+                WorkingDirectory = GetWorkingDirectory(),
+                SearchPaths = ParseSearchPath().ToList()
+            };
+
+            var str = GetProjectProperty(PythonConstants.IsWindowsApplicationSetting);
+            bool preferWindowed;
+            config.PreferWindowedInterpreter = bool.TryParse(str, out preferWindowed) && preferWindowed;
+
+            config.Environment = PathUtils.ParseEnvironment(GetProjectProperty(PythonConstants.EnvironmentSetting) ?? "");
+
+            if (!File.Exists(config.GetInterpreterPath())) {
+                throw new MissingInterpreterException(
+                    Strings.DebugLaunchInterpreterMissing_Path.FormatUI(config.GetInterpreterPath())
+                );
+            }
+
+            if (!Directory.Exists(config.WorkingDirectory)) {
+                throw new DirectoryNotFoundException(
+                    Strings.DebugLaunchWorkingDirectoryMissing.FormatUI(config.WorkingDirectory)
+                );
+            }
+
+            return config;
         }
 
         /// <summary>
@@ -1448,42 +1508,41 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        internal int OpenCommandPrompt(string path, IPythonInterpreterFactory factory = null, string subtitle = null) {
+        internal int OpenCommandPrompt(string path, InterpreterConfiguration interpreterConfig = null, string subtitle = null) {
             var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe"));
             psi.UseShellExecute = false;
             psi.WorkingDirectory = path;
 
-            factory = factory ?? GetInterpreterFactory();
-            var config = factory == null ? null : factory.Configuration;
-            if (config != null) {
-                psi.Arguments = string.Format("/K \"title {0} Command Prompt\"",
-                    string.IsNullOrEmpty(subtitle) ? Caption : subtitle
-                );
+            var config = GetLaunchConfigurationOrThrow();
+            if (interpreterConfig != null) {
+                config = config.Clone(interpreterConfig);
+            }
 
-                var props = PythonProjectLaunchProperties.Create(this);
-                var env = new Dictionary<string, string>(props.GetEnvironment(true), StringComparer.OrdinalIgnoreCase);
+            psi.Arguments = string.Format("/K \"title {0} Command Prompt\"",
+                string.IsNullOrEmpty(subtitle) ? Caption : subtitle
+            );
 
-                var paths = new List<string>();
-                var prefix = config.PrefixPath;
-                if (factory == null) {
-                    paths.Add(PathUtils.GetParent(props.GetInterpreterPath()));
-                }
-                paths.Add(PathUtils.GetParent(config.InterpreterPath));
-                if (!string.IsNullOrEmpty(config.PrefixPath)) {
-                    paths.Add(PathUtils.GetAbsoluteDirectoryPath(config.PrefixPath, "Scripts"));
-                }
-                if (psi.EnvironmentVariables.ContainsKey("PATH")) {
-                    paths.AddRange(psi.EnvironmentVariables["PATH"].Split(Path.PathSeparator));
-                }
-                paths.AddRange(Environment.GetEnvironmentVariable("PATH").Split(Path.PathSeparator));
 
-                PythonProjectLaunchProperties.MergeEnvironmentBelow(env, new[]{ new KeyValuePair<string, string>(
-                    "PATH", string.Join(new string(Path.PathSeparator, 1), paths.Where(Directory.Exists).Distinct())
-                )}, true);
+            var paths = config.Interpreter.PrefixPath;
+            if (!Directory.Exists(paths)) {
+                paths = PathUtils.GetParent(config.GetInterpreterPath());
+            }
+            string scripts;
+            if (Directory.Exists(paths) &&
+                Directory.Exists(scripts = PathUtils.GetAbsoluteDirectoryPath(paths, "Scripts"))) {
+                paths += Path.PathSeparator + scripts;
+            }
 
-                foreach (var kv in env) {
-                    psi.EnvironmentVariables[kv.Key] = kv.Value;
-                }
+            var env = PathUtils.MergeEnvironments(
+                config.GetEnvironmentVariables(),
+                new KeyValuePair<string, string>[] {
+                    new KeyValuePair<string, string>("PATH", paths),
+                },
+                "PATH", config.Interpreter.PathEnvironmentVariable
+            );
+
+            foreach (var kv in env) {
+                psi.EnvironmentVariables[kv.Key] = kv.Value;
             }
 
             Process.Start(psi);

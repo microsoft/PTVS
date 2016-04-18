@@ -273,7 +273,7 @@ namespace Microsoft.PythonTools.Project {
                         if (pyProj != null && _factory != null && _factory.Configuration != null) {
                             return pyProj.OpenCommandPrompt(
                                 _factory.Configuration.PrefixPath,
-                                _factory,
+                                _factory.Configuration,
                                 _factory.Configuration.FullDescription
                             );
                         }

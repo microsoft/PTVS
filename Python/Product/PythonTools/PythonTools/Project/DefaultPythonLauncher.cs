@@ -25,6 +25,7 @@ using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Shell;
@@ -35,70 +36,65 @@ namespace Microsoft.PythonTools.Project {
     /// <summary>
     /// Implements functionality of starting a project or a file with or without debugging.
     /// </summary>
-    sealed class DefaultPythonLauncher : IProjectLauncher2 {
-        private readonly IPythonProject/*!*/ _project;
+    sealed class DefaultPythonLauncher : IProjectLauncher {
         private readonly PythonToolsService _pyService;
         private readonly IServiceProvider _serviceProvider;
+        private readonly LaunchConfiguration _config;
 
-        public DefaultPythonLauncher(IServiceProvider serviceProvider, PythonToolsService pyService, IPythonProject/*!*/ project) {
-            Utilities.ArgumentNotNull("project", project);
-
+        public DefaultPythonLauncher(IServiceProvider serviceProvider, LaunchConfiguration config) {
             _serviceProvider = serviceProvider;
-            _pyService = pyService;
-            _project = project;
+            _pyService = _serviceProvider.GetPythonToolsService();
+            _config = config;
         }
 
-        #region IPythonLauncher Members
-
         public int LaunchProject(bool debug) {
-            string startupFile = ResolveStartupFile();
-            return LaunchFile(startupFile, debug);
+            return Launch(_config, debug);
         }
 
         public int LaunchFile(string/*!*/ file, bool debug) {
-            return LaunchFile(file, debug, null);
+            var config = _config.Clone();
+            config.ScriptName = file;
+            return Launch(_config, debug);
         }
 
-        public int LaunchFile(string file, bool debug, IProjectLaunchProperties props) {
+        private int Launch(LaunchConfiguration config, bool debug) {
             if (debug) {
-                StartWithDebugger(file, PythonProjectLaunchProperties.Create(_project, _serviceProvider, props));
+                StartWithDebugger(config);
             } else {
-                StartWithoutDebugger(file, PythonProjectLaunchProperties.Create(_project, _serviceProvider, props));
+                StartWithoutDebugger(config);
             }
 
             return VSConstants.S_OK;
         }
 
-        #endregion
-
         /// <summary>
         /// Creates language specific command line for starting the project without debigging.
         /// </summary>
-        public string CreateCommandLineNoDebug(string startupFile, IPythonProjectLaunchProperties props) {
+        public string CreateCommandLineNoDebug(LaunchConfiguration config) {
             return string.Join(" ", new[] {
-                props.GetInterpreterArguments(),
-                ProcessOutput.QuoteSingleArgument(startupFile),
-                props.GetArguments()
+                config.InterpreterArguments,
+                ProcessOutput.QuoteSingleArgument(config.ScriptName),
+                config.ScriptArguments
             }.Where(s => !string.IsNullOrEmpty(s)));
         }
 
         /// <summary>
         /// Creates language specific command line for starting the project with debigging.
         /// </summary>
-        public string CreateCommandLineDebug(string startupFile, IPythonProjectLaunchProperties props) {
+        public string CreateCommandLineDebug(LaunchConfiguration config) {
             return string.Join(" ", new[] {
-                (props.GetIsNativeDebuggingEnabled() ?? false) ? props.GetInterpreterArguments() : null,
-                ProcessOutput.QuoteSingleArgument(startupFile),
-                props.GetArguments()
+                config.GetLaunchOption(PythonConstants.EnableNativeCodeDebugging).IsTrue() ? config.InterpreterArguments : null,
+                ProcessOutput.QuoteSingleArgument(config.ScriptName),
+                config.ScriptArguments
             }.Where(s => !string.IsNullOrEmpty(s)));
         }
 
         /// <summary>
         /// Default implementation of the "Start without Debugging" command.
         /// </summary>
-        private Process StartWithoutDebugger(string startupFile, IPythonProjectLaunchProperties props) {
+        private Process StartWithoutDebugger(LaunchConfiguration config) {
             _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
-            var psi = CreateProcessStartInfoNoDebug(startupFile, props);
+            var psi = CreateProcessStartInfoNoDebug(config);
             if (psi == null) {
                 MessageBox.Show(
                     "The project cannot be started because its active Python environment does not have the interpreter executable specified.",
@@ -111,12 +107,12 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Default implementation of the "Start Debugging" command.
         /// </summary>
-        private void StartWithDebugger(string startupFile, IPythonProjectLaunchProperties props) {
+        private void StartWithDebugger(LaunchConfiguration config) {
             _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 1);
             VsDebugTargetInfo dbgInfo = new VsDebugTargetInfo();
             try {
                 dbgInfo.cbSize = (uint)Marshal.SizeOf(dbgInfo);
-                SetupDebugInfo(ref dbgInfo, startupFile, props);
+                SetupDebugInfo(ref dbgInfo, config);
 
                 if (string.IsNullOrEmpty(dbgInfo.bstrExe)) {
                     MessageBox.Show(Strings.DebugLaunchInterpreterMissing, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -151,17 +147,13 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Sets up debugger information.
         /// </summary>
-        private unsafe void SetupDebugInfo(
-            ref VsDebugTargetInfo dbgInfo,
-            string startupFile,
-            IPythonProjectLaunchProperties props
-        ) {
+        private unsafe void SetupDebugInfo(ref VsDebugTargetInfo dbgInfo, LaunchConfiguration config) {
             bool enableNativeCodeDebugging = false;
 
             dbgInfo.dlo = DEBUG_LAUNCH_OPERATION.DLO_CreateProcess;
-            dbgInfo.bstrExe = props.GetInterpreterPath();
-            dbgInfo.bstrCurDir = props.GetWorkingDirectory();
-            dbgInfo.bstrArg = CreateCommandLineDebug(startupFile, props);
+            dbgInfo.bstrExe = config.GetInterpreterPath();
+            dbgInfo.bstrCurDir = config.WorkingDirectory;
+            dbgInfo.bstrArg = CreateCommandLineDebug(config);
             dbgInfo.bstrRemoteMachine = null;
             dbgInfo.fSendStdoutToOutputWindow = 0;
 
@@ -170,39 +162,34 @@ namespace Microsoft.PythonTools.Project {
                 // to the engine by CustomDebuggerEventHandler via IDebugEngine2.SetMetric in response to
                 // the VsPackageMessage.SetDebugOptions custom debug event.
 
-                string interpArgs = _project.GetProperty(PythonConstants.InterpreterArgumentsSetting);
-                dbgInfo.bstrOptions = AD7Engine.VersionSetting + "=" + _project.GetInterpreterFactory().GetLanguageVersion().ToString();
+                dbgInfo.bstrOptions = AD7Engine.VersionSetting + "=" + config.Interpreter.Version.ToLanguageVersion().ToString();
 
-                if (props.GetIsWindowsApplication() ?? false) {
+                if (config.PreferWindowedInterpreter) {
                     dbgInfo.bstrOptions += ";" + AD7Engine.IsWindowsApplication + "=True";
                 }
 
-                if (!String.IsNullOrWhiteSpace(interpArgs)) {
-                    dbgInfo.bstrOptions += ";" + AD7Engine.InterpreterOptions + "=" + interpArgs.Replace(";", ";;");
+                if (!String.IsNullOrWhiteSpace(config.InterpreterArguments)) {
+                    dbgInfo.bstrOptions += ";" + AD7Engine.InterpreterOptions + "=" + config.InterpreterArguments.Replace(";", ";;");
                 }
 
-                var djangoDebugging = _project.GetProperty("DjangoDebugging");
-                bool enableDjango;
-                if (!String.IsNullOrWhiteSpace(djangoDebugging) && Boolean.TryParse(djangoDebugging, out enableDjango)) {
+                if (config.GetLaunchOption("DjangoDebugging").IsTrue()) {
                     dbgInfo.bstrOptions += ";" + AD7Engine.EnableDjangoDebugging + "=True";
                 }
             }
 
-            var env = new Dictionary<string, string>(props.GetEnvironment(true), StringComparer.OrdinalIgnoreCase);
-            PythonProjectLaunchProperties.MergeEnvironmentBelow(env, null, true);
-            if (env.Any()) {
-                //Environment variables should be passed as a
-                //null-terminated block of null-terminated strings. 
-                //Each string is in the following form:name=value\0
-                var buf = new StringBuilder();
-                foreach (var kv in env) {
-                    buf.AppendFormat("{0}={1}\0", kv.Key, kv.Value);
-                }
+            // Environment variables should be passed as a
+            // null-terminated block of null-terminated strings. 
+            // Each string is in the following form:name=value\0
+            var buf = new StringBuilder();
+            foreach (var kv in config.GetEnvironmentVariables()) {
+                buf.AppendFormat("{0}={1}\0", kv.Key, kv.Value);
+            }
+            if (buf.Length > 0) {
                 buf.Append("\0");
                 dbgInfo.bstrEnv = buf.ToString();
             }
 
-            if (props.GetIsNativeDebuggingEnabled() ?? false) {
+            if (config.GetLaunchOption(PythonConstants.EnableNativeCodeDebugging).IsTrue()) {
                 dbgInfo.dwClsidCount = 2;
                 dbgInfo.pClsidList = Marshal.AllocCoTaskMem(sizeof(Guid) * 2);
                 var engineGuids = (Guid*)dbgInfo.pClsidList;
@@ -218,13 +205,13 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Creates process info used to start the project with no debugging.
         /// </summary>
-        private ProcessStartInfo CreateProcessStartInfoNoDebug(string startupFile, IPythonProjectLaunchProperties props) {
-            string command = CreateCommandLineNoDebug(startupFile, props);
+        private ProcessStartInfo CreateProcessStartInfoNoDebug(LaunchConfiguration config) {
+            string command = CreateCommandLineNoDebug(config);
 
             ProcessStartInfo startInfo;
-            if (!(props.GetIsWindowsApplication() ?? false) &&
+            if (!config.PreferWindowedInterpreter &&
                 (_pyService.DebuggerOptions.WaitOnAbnormalExit || _pyService.DebuggerOptions.WaitOnNormalExit)) {
-                command = "/c \"\"" + props.GetInterpreterPath() + "\" " + command;
+                command = "/c \"\"" + config.GetInterpreterPath() + "\" " + command;
 
                 if (_pyService.DebuggerOptions.WaitOnNormalExit &&
                     _pyService.DebuggerOptions.WaitOnAbnormalExit) {
@@ -238,29 +225,18 @@ namespace Microsoft.PythonTools.Project {
                 command += "\"";
                 startInfo = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe"), command);
             } else {
-                startInfo = new ProcessStartInfo(props.GetInterpreterPath(), command);
+                startInfo = new ProcessStartInfo(config.GetInterpreterPath(), command);
             }
 
-            startInfo.WorkingDirectory = props.GetWorkingDirectory();
+            startInfo.WorkingDirectory = config.WorkingDirectory;
 
             //In order to update environment variables we have to set UseShellExecute to false
             startInfo.UseShellExecute = false;
 
-            var env = new Dictionary<string, string>(props.GetEnvironment(true), StringComparer.OrdinalIgnoreCase);
-            PythonProjectLaunchProperties.MergeEnvironmentBelow(env, null, true);
-            foreach (var kv in env) {
+            foreach (var kv in config.GetEnvironmentVariables()) {
                 startInfo.EnvironmentVariables[kv.Key] = kv.Value;
             }
             return startInfo;
-        }
-
-        private string ResolveStartupFile() {
-            string startupFile = _project.GetStartupFile();
-            if (string.IsNullOrEmpty(startupFile)) {
-                //TODO: need to start active file then
-                throw new InvalidOperationException(Strings.NoStartupFileAvailable);
-            }
-            return startupFile;
         }
     }
 }

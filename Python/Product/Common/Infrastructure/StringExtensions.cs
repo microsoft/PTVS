@@ -70,5 +70,14 @@ namespace Microsoft.PythonTools.Infrastructure {
             ValidateFormatString(str, args.Length);
             return string.Format(CultureInfo.InvariantCulture, str, args);
         }
+
+        public static bool IsTrue(this string str) {
+            bool asBool;
+            return !string.IsNullOrWhiteSpace(str) && (
+                str.Equals("1") ||
+                str.Equals("yes", StringComparison.InvariantCultureIgnoreCase) ||
+                (bool.TryParse(str, out asBool) && asBool)
+            );
+        }
     }
 }

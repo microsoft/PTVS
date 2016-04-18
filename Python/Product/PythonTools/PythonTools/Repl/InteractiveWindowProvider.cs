@@ -194,7 +194,6 @@ namespace Microsoft.PythonTools.Repl {
 
             var replWindow = _windowFactory.Create(GuidList.guidPythonInteractiveWindowGuid, id, title, evaluator, creationFlags);
             ((ToolWindowPane)replWindow).BitmapImageMoniker = KnownMonikers.PYInteractiveWindow;
-            replWindow.InteractiveWindow.Properties[typeof(IVsInteractiveWindow)] = replWindow;
             replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, contentType);
             replWindow.InteractiveWindow.InitializeAsync();
 

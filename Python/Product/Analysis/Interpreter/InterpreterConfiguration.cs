@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Interpreter {
         readonly ProcessorArchitecture _architecture;
         readonly Version _version;
         readonly InterpreterUIMode _uiMode;
-       
+
         /// <summary>
         /// <para>Constructs a new interpreter configuration based on the
         /// provided values.</para>
