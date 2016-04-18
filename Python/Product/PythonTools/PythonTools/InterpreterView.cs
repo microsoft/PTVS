@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools {
                 .Where(PythonInterpreterFactoryExtensions.IsUIVisible)
                 .OrderBy(fact => fact.Configuration.Description)
                 .ThenBy(fact => fact.Configuration.Version)
-                .Select(i => new InterpreterView(i, i.Configuration.Description, i == project.ActiveInterpreter));
+                .Select(i => new InterpreterView(i, i.Configuration.FullDescription, i == project.ActiveInterpreter));
         }
 
         public InterpreterView(IPythonInterpreterFactory interpreter, string name, PythonProjectNode project)
