@@ -35,10 +35,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             // makes debug builds unusable because it happens so often.
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var res = base.GetMember(node, unit, name);
-            
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
+            var res = AnalysisSet.Empty;
+
             IAnalysisSet specializedRes;
             if (_specializedValues != null && _specializedValues.TryGetValue(name, out specializedRes)) {
                 return specializedRes;

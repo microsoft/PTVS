@@ -185,10 +185,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _original.GetLength();
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var ignored = base.GetMember(node, unit, name);
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
+            if (_original == null) {
+                return AnalysisSet.Empty;
+            }
 
+            return _original.GetTypeMember(node, unit, name);
+        }
+
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             if (_original == null) {
                 return AnalysisSet.Empty;
             }

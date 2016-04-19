@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -44,6 +45,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (args.Length == 1) {
                 var res = unit.Scope.GetOrMakeNodeValue(
                     node,
+                    NodeValueKind.Sequence,
                     (node_) => MakeFromIndexes(node_, unit.ProjectEntry)
                 ) as SequenceInfo;
 

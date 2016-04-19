@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private VariableDef _metaclass;
         private ReferenceDict _references;
         private VariableDef _subclasses;
-        private AnalysisValue _baseUserType;    // base most user defined type, used for unioning types during type explosion
+        private IAnalysisSet _baseSpecialization;
         private readonly PythonAnalyzer _projectState;
 
         internal ClassInfo(ClassDefinition klass, AnalysisUnit outerUnit) {
@@ -62,12 +62,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return AddCall(node, keywordArgNames, unit, args);
             }
 
+            
             return _instanceInfo.SelfSet;
         }
 
-        private IAnalysisSet AddCall(Node node, NameExpression[] keywordArgNames, AnalysisUnit unit, IAnalysisSet[] argumentVars) {
+        private IAnalysisSet AddCall(Node node, NameExpression[] keywordArgNames, AnalysisUnit unit, IAnalysisSet[] args) {
             var init = GetMemberNoReferences(node, unit, "__init__", false);
-            var initArgs = Utils.Concat(_instanceInfo.SelfSet, argumentVars);
+            var initArgs = Utils.Concat(_instanceInfo.SelfSet, args);
 
             foreach (var initFunc in init) {
                 initFunc.Call(node, unit, initArgs, keywordArgNames);
@@ -75,7 +76,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             // TODO: If we checked for metaclass, we could pass it in as the cls arg here
             var n = GetMemberNoReferences(node, unit, "__new__", false);
-            var newArgs = Utils.Concat(SelfSet, argumentVars);
+            var newArgs = Utils.Concat(SelfSet, args);
             var newResult = AnalysisSet.Empty;
             bool anyCustom = false;
             foreach (var newFunc in n) {
@@ -89,7 +90,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return newResult;
             }
 
+            
+
             if (newResult.Count == 0 || newResult.All(ns => ns.IsOfType(unit.ProjectState.ClassInfos[BuiltinTypeId.Object]))) {
+                if (_baseSpecialization != null && _baseSpecialization.Count != 0) {
+                    var specializedInstances = _baseSpecialization.Call(
+                        node, unit, args, keywordArgNames
+                    );
+
+                    var res = (SpecializedInstanceInfo)unit.Scope.GetOrMakeNodeValue(
+                        node,
+                        NodeValueKind.SpecializedInstance,
+                        (node_) => new SpecializedInstanceInfo(this, specializedInstances)
+                    );
+
+                    res._instances = specializedInstances;
+                    return res;
+                }
+
                 return _instanceInfo.SelfSet;
             }
             return newResult;
@@ -277,17 +295,28 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public void ClearBases() {
-            _bases.Clear();
-            _baseUserType = null;
-            _mro.Recompute();
-        }
-
         public void SetBases(IEnumerable<IAnalysisSet> bases) {
             _bases.Clear();
             _bases.AddRange(bases);
-            _baseUserType = null;
             _mro.Recompute();
+
+            RecomputeBaseSpecialization();
+        }
+
+        private void RecomputeBaseSpecialization() {
+            IAnalysisSet builtinClassSet = AnalysisSet.Empty;
+            foreach (var classInfo in _mro) {
+                BuiltinClassInfo builtin = classInfo as BuiltinClassInfo;
+                if (builtin != null && builtin.TypeId != BuiltinTypeId.Object) {
+                    var builtinType = _projectState.GetBuiltinType(builtin.PythonType);
+
+                    if (builtinType.GetType() != typeof(BuiltinClassInfo)) {
+                        // we have a specialized built-in class, we want its behavior too...
+                        builtinClassSet = builtinClassSet.Union(builtinType.SelfSet, true);
+                    }
+                }
+            }
+            _baseSpecialization = builtinClassSet;
         }
 
         public void SetBase(int index, IAnalysisSet baseSet) {
@@ -295,8 +324,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _bases.Add(AnalysisSet.Empty);
             }
             _bases[index] = baseSet;
-            _baseUserType = null;
             _mro.Recompute();
+            RecomputeBaseSpecialization();
         }
 
         public InstanceInfo Instance {
@@ -371,10 +400,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var ignored = base.GetMember(node, unit, name);
-
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
             return GetMemberNoReferences(node, unit, name).GetDescriptor(node, unit.ProjectState._noneInst, this, unit);
         }
 
@@ -457,29 +483,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 // Scope should only be set once
                 Debug.Assert(_scope == null);
                 _scope = value;
-            }
-        }
-
-        private void EnsureBaseUserType() {
-            if (_baseUserType == null) {
-                foreach (var typeList in Bases) {
-                    foreach (var type in typeList) {
-                        ClassInfo ci = type as ClassInfo;
-
-                        if (ci != null && ci.Push()) {
-                            try {
-                                ci.EnsureBaseUserType();
-                                if (ci._baseUserType != null) {
-                                    _baseUserType = ci._baseUserType;
-                                } else {
-                                    _baseUserType = ci;
-                                }
-                            } finally {
-                                ci.Pop();
-                            }
-                        }
-                    }
-                }
             }
         }
 
@@ -637,12 +640,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// </remarks>
     internal class Mro : DependentData, IEnumerable<IAnalysisSet> {
         private readonly ClassInfo _classInfo;
-        private List<IAnalysisSet> _mroList;
+        private List<AnalysisValue> _mroList;
         private bool _isValid = true;
 
         public Mro(ClassInfo classInfo) {
             _classInfo = classInfo;
-            _mroList = new List<IAnalysisSet> { classInfo };
+            _mroList = new List<AnalysisValue> { classInfo };
         }
 
         public bool IsValid {
@@ -658,7 +661,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public void Recompute() {
-            var mroList = new List<IAnalysisSet> { _classInfo.SelfSet };
+            var mroList = new List<AnalysisValue> { _classInfo };
             var isValid = true;
 
             var bases = _classInfo.Bases;
@@ -732,7 +735,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             // will show all members defined in it, but nothing else.
             if (!isValid) {
                 mroList.Clear();
-                mroList.Add(_classInfo.SelfSet);
+                mroList.Add(_classInfo);
             }
 
             if (_isValid != isValid || !_mroList.SequenceEqual(mroList)) {

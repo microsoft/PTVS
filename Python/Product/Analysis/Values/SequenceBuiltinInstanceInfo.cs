@@ -48,9 +48,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _indexTypes;
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var res = base.GetMember(node, unit, name);
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
+            var res = base.GetTypeMember(node, unit, name);
 
             if (name == "__iter__") {
                 return _iterMethod = _iterMethod ?? new SpecializedCallable(
@@ -62,7 +61,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             return res;
         }
-
         private IAnalysisSet SequenceIter(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (_iterator == null) {
                 var types = new [] { new VariableDef() };

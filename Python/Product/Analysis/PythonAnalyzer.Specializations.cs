@@ -230,7 +230,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         IAnalysisSet RangeConstructor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            return unit.Scope.GetOrMakeNodeValue(node, (nn) => new RangeInfo(unit.ProjectState.Types[BuiltinTypeId.List], unit.ProjectState));
+            return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.Range, (nn) => new RangeInfo(unit.ProjectState.Types[BuiltinTypeId.List], unit.ProjectState));
         }
 
         IAnalysisSet CopyFunction(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
@@ -249,7 +249,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         IAnalysisSet ReturnsListOfString(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            return unit.Scope.GetOrMakeNodeValue(node, n => {
+            return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.ListOfString, n => {
                 var vars = new VariableDef();
                 vars.AddTypes(unit, unit.ProjectState.ClassInfos[BuiltinTypeId.Str].Instance);
                 return new ListInfo(
@@ -262,7 +262,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         IAnalysisSet ReturnsStringToObjectDict(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            return unit.Scope.GetOrMakeNodeValue(node, n => {
+            return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.StrDict, n => {
                 var dict = new DictionaryInfo(unit.ProjectEntry, node);
                 dict.AddTypes(
                     node,
@@ -322,7 +322,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (args.Length == 1) {
                 return args[0].GetIterator(node, unit);
             } else if (args.Length == 2) {
-                var iterator = unit.Scope.GetOrMakeNodeValue(node, n => {
+                var iterator = unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.Iterator, n => {
                     var iterTypes = new[] { new VariableDef() };
                     return new IteratorInfo(iterTypes, unit.ProjectState.ClassInfos[BuiltinTypeId.CallableIterator], node);
                 });
@@ -382,7 +382,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return AnalysisSet.Empty;
             }
 
-            return unit.Scope.GetOrMakeNodeValue(node, _ => {
+            return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.Super, _ => {
                 var res = AnalysisSet.Empty;
                 foreach (var classInfo in classes.OfType<ClassInfo>()) {
                     res = res.Add(new SuperInfo(classInfo, instances));
@@ -393,7 +393,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         IAnalysisSet PartialFunction(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length >= 1) {
-                return unit.Scope.GetOrMakeNodeValue(node, n => {
+                return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.PartialFunction, n => {
                     return new PartialFunctionInfo(args[0], args.Skip(1).ToArray(), keywordArgNames);
                 });
             }
@@ -457,7 +457,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return AnalysisSet.Empty;
             }
 
-            return unit.Scope.GetOrMakeNodeValue(node, n => {
+            return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.Wraps, n => {
                 ModuleReference modRef;
                 if (!Modules.TryImport("functools", out modRef)) {
                     return AnalysisSet.Empty;

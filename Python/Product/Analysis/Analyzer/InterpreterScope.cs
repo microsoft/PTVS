@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         private readonly AnalysisValue _av;
         private readonly Node _node;
         private readonly AnalysisDictionary<Node, InterpreterScope> _nodeScopes;
-        private readonly AnalysisDictionary<Node, IAnalysisSet> _nodeValues;
+        private readonly AnalysisDictionary<Node, NodeValue> _nodeValues;
         private readonly AnalysisDictionary<string, VariableDef> _variables;
         private readonly AnalysisDictionary<string, HashSet<VariableDef>> _linkedVariables;
 
@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             OuterScope = outerScope;
 
             _nodeScopes = new AnalysisDictionary<Node, InterpreterScope>();
-            _nodeValues = new AnalysisDictionary<Node, IAnalysisSet>();
+            _nodeValues = new AnalysisDictionary<Node, NodeValue>();
             _variables = new AnalysisDictionary<string, VariableDef>();
             _linkedVariables = new AnalysisDictionary<string, HashSet<VariableDef>>();
         }
@@ -290,8 +290,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _nodeScopes.Clear();
         }
 
-        public virtual IAnalysisSet AddNodeValue(Node node, IAnalysisSet variable) {
-            return _nodeValues[node] = variable;
+        public virtual IAnalysisSet AddNodeValue(Node node, NodeValueKind kind, IAnalysisSet variable) {
+            NodeValue next;
+            _nodeValues.TryGetValue(node, out next);
+            _nodeValues[node] = new NodeValue(kind, variable, next);
+            return variable;
         }
 
         internal virtual bool RemoveNodeValue(Node node) {
@@ -344,10 +347,17 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
-        internal bool TryGetNodeValue(Node node, out IAnalysisSet variable) {
+        internal bool TryGetNodeValue(Node node, NodeValueKind kind, out IAnalysisSet variable) {
             foreach (var s in EnumerateTowardsGlobal) {
-                if (s._nodeValues.TryGetValue(node, out variable)) {
-                    return true;
+                NodeValue value;
+                if (s._nodeValues.TryGetValue(node, out value)) {
+                    while (value != null) {
+                        if (value.Kind == kind) {
+                            variable = value.Variable;
+                            return true;
+                        }
+                        value = value.Next;
+                    }
                 }
             }
             variable = null;
@@ -368,13 +378,44 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// Cached node variables so that we don't continually create new entries for basic nodes such
         /// as sequences, lambdas, etc...
         /// </summary>
-        public IAnalysisSet GetOrMakeNodeValue(Node node, Func<Node, IAnalysisSet> maker) {
+        public IAnalysisSet GetOrMakeNodeValue(Node node, NodeValueKind kind, Func<Node, IAnalysisSet> maker) {
             IAnalysisSet result;
-            if (!TryGetNodeValue(node, out result)) {
+            if (!TryGetNodeValue(node, kind, out result)) {
                 result = maker(node);
-                AddNodeValue(node, result);
+                AddNodeValue(node, kind, result);
             }
             return result;
         }
     }
+
+    class NodeValue {
+        public readonly IAnalysisSet Variable;
+        public readonly NodeValueKind Kind;
+        public NodeValue Next;
+
+        public NodeValue(NodeValueKind kind, IAnalysisSet variable, NodeValue value) {
+            Kind = kind;
+            Variable = variable;
+            Next = value;
+        }
+    }
+
+    enum NodeValueKind {
+        None,
+        Set,
+        DictLiteral,
+        ListComprehension,
+        LambdaFunction,
+        Sequence,
+        Range,
+        ListOfString,
+        StrDict,
+        Iterator,
+        Super,
+        PartialFunction,
+        Wraps,
+        SpecializedInstance,
+        Dictionary,
+    }
+
 }

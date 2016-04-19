@@ -249,7 +249,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         private static IAnalysisSet EvaluateSet(ExpressionEvaluator ee, Node node) {
             var n = (SetExpression)node;
 
-            var setInfo = (SetInfo)ee.Scope.GetOrMakeNodeValue(node, x => new SetInfo(
+            var setInfo = (SetInfo)ee.Scope.GetOrMakeNodeValue(node, NodeValueKind.Set, x => new SetInfo(
                 ee.ProjectState,
                 x,
                 ee._unit.ProjectEntry
@@ -263,7 +263,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         private static IAnalysisSet EvaluateDictionary(ExpressionEvaluator ee, Node node) {
             var n = (DictionaryExpression)node;
-            IAnalysisSet result = ee.Scope.GetOrMakeNodeValue(node, _ => {
+            IAnalysisSet result = ee.Scope.GetOrMakeNodeValue(node, NodeValueKind.DictLiteral, _ => {
                 var dictInfo = new DictionaryInfo(ee._unit.ProjectEntry, node);
                 result = dictInfo.SelfSet;
 
@@ -400,6 +400,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
                 var listInfo = (ListInfo)ee.Scope.GetOrMakeNodeValue(
                     node,
+                    NodeValueKind.ListComprehension,
                     (x) => new ListInfo(
                         VariableDef.EmptyArray,
                         ee._unit.ProjectState.ClassInfos[BuiltinTypeId.List],
@@ -487,7 +488,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         private static IAnalysisSet EvaluateLambda(ExpressionEvaluator ee, Node node) {
             var lambda = (LambdaExpression)node;
 
-            return ee.Scope.GetOrMakeNodeValue(node, n => MakeLambdaFunction(lambda, ee));
+            return ee.Scope.GetOrMakeNodeValue(node, NodeValueKind.LambdaFunction, n => MakeLambdaFunction(lambda, ee));
         }
 
         private static IAnalysisSet MakeLambdaFunction(LambdaExpression node, ExpressionEvaluator ee) {
@@ -514,7 +515,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         private IAnalysisSet MakeSequence(ExpressionEvaluator ee, Node node) {
-            var sequence = (SequenceInfo)ee.Scope.GetOrMakeNodeValue(node, x => {
+            var sequence = (SequenceInfo)ee.Scope.GetOrMakeNodeValue(node, NodeValueKind.Sequence, x => {
                 if (node is ListExpression) {
                     return new ListInfo(
                         VariableDef.EmptyArray,

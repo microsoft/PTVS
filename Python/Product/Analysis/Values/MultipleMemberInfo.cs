@@ -60,10 +60,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var ignored = base.GetMember(node, unit, name);
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
+            var res = AnalysisSet.Empty;
+            foreach (var member in _members) {
+                res = res.Union(member.GetTypeMember(node, unit, name));
+            }
+            return res;
+        }
 
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             var res = AnalysisSet.Empty;
             foreach (var member in _members) {
                 res = res.Union(member.GetMember(node, unit, name));
