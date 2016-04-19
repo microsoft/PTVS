@@ -3863,6 +3863,40 @@ pass
             Assert.IsTrue(items.Count() == 0);
         }
 
+        /// <summary>
+        /// We shouldn't use instance members when invoking special methods
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void IterNoInstance() {
+            var text = @"
+class me(object):
+    pass
+
+
+a = me()
+a.__getitem__ = lambda x: 42
+
+for v in a: pass
+";
+            var entry = ProcessText(text);
+            var items = entry.GetTypesByIndex("v", text.IndexOf("pass"));
+            Assert.IsTrue(items.Count() == 0);
+
+            text = @"
+class me(object):
+    pass
+
+
+a = me()
+a.__iter__ = lambda: (yield 42)
+
+for v in a: pass
+";
+            entry = ProcessText(text);
+            items = entry.GetTypesByIndex("v", text.IndexOf("pass"));
+            Assert.IsTrue(items.Count() == 0);
+        }
+
         [TestMethod, Priority(0)]
         public void SimpleMethodCall() {
             var text = @"
