@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Commands {
         public override void DoCommand(object sender, EventArgs args) {
             var activeView = PythonToolsPackage.GetActiveTextView(_serviceProvider);
             var pyProj = activeView.TextBuffer.GetProject(_serviceProvider);
-            var analyzer = activeView.GetAnalyzer(_serviceProvider);
+            var analyzer = activeView.GetAnalyzerAtCaret(_serviceProvider);
             var window = ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, analyzer, pyProj);
             var eval = window.InteractiveWindow.Evaluator as PythonReplEvaluator;
 

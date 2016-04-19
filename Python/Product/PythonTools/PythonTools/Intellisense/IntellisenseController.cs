@@ -26,14 +26,15 @@ using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Differencing;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.VisualStudioTools.Project;
 using IServiceProvider = System.IServiceProvider;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
@@ -46,12 +47,12 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ExpansionClient _expansionClient;
         private readonly IServiceProvider _serviceProvider;
         private readonly IVsExpansionManager _expansionMgr;
-        private BufferParser _bufferParser;
         private ICompletionSession _activeSession;
         private ISignatureHelpSession _sigHelpSession;
         private IQuickInfoSession _quickInfoSession;
         internal IOleCommandTarget _oldTarget;
         private IEditorOperations _editOps;
+        private readonly HashSet<ITextBuffer> _subjectBuffers = new HashSet<ITextBuffer>();
         private static string[] _allStandardSnippetTypes = { ExpansionClient.Expansion, ExpansionClient.SurroundsWith };
         private static string[] _surroundsWithSnippetTypes = { ExpansionClient.SurroundsWith, ExpansionClient.SurroundsWithStatement };
 
@@ -71,9 +72,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     _expansionClient = new ExpansionClient(textView, provider._adaptersFactory, provider._ServiceProvider);
                     var textMgr = (IVsTextManager2)_serviceProvider.GetService(typeof(SVsTextManager));
                     textMgr.GetExpansionManager(out _expansionMgr);
-                } catch (ArgumentException ex) {
+                } catch (ArgumentException) {
                     // No expansion client for this buffer, but we can continue without it
-                    Debug.Fail(ex.ToString());
                 }
             }
 
@@ -85,28 +85,49 @@ namespace Microsoft.PythonTools.Intellisense {
             _textView.MouseHover -= TextViewMouseHover;
             _textView.Closed -= TextView_Closed;
             _textView.Properties.RemoveProperty(typeof(IntellisenseController));
-        }
 
-        internal void SetBufferParser(BufferParser bufferParser) {
-            Utilities.CheckNotNull(bufferParser, "Cannot set buffer parser multiple times");
-            _bufferParser = bufferParser;
+            foreach (var buffer in _subjectBuffers.ToArray()) {
+                DisconnectSubjectBuffer(buffer);
+            }
         }
 
         private async void TextViewMouseHover(object sender, MouseHoverEventArgs e) {
             if (_quickInfoSession != null && !_quickInfoSession.IsDismissed) {
                 _quickInfoSession.Dismiss();
             }
+
             var pt = e.TextPosition.GetPoint(EditorExtensions.IsPythonContent, PositionAffinity.Successor);
             if (pt != null) {
-                var quickInfo = await VsProjectAnalyzer.GetQuickInfoAsync(pt.Value);
+                if (_textView.TextBuffer.GetInteractiveWindow() != null &&
+                    pt.Value.Snapshot.Length > 1 &&
+                    pt.Value.Snapshot[0] == '$') {
+                    // don't provide quick info on help, the content type doesn't switch until we have
+                    // a complete command otherwise we shouldn't need to do this.
+                    return;
+                }
 
-                QuickInfoSource.AddQuickInfo(_textView.TextBuffer, quickInfo);
-
-                _quickInfoSession = _provider._QuickInfoBroker.TriggerQuickInfo(
+                var quickInfo = await VsProjectAnalyzer.GetQuickInfoAsync(
+                    _serviceProvider,
                     _textView,
-                    pt.Value.Snapshot.CreateTrackingPoint(pt.Value.Position, PointTrackingMode.Positive),
-                    true
+                    pt.Value
                 );
+
+                QuickInfoSource.AddQuickInfo(_textView, quickInfo);
+
+                var viewPoint = _textView.BufferGraph.MapUpToBuffer(
+                    pt.Value,
+                    PointTrackingMode.Positive,
+                    PositionAffinity.Successor,
+                    _textView.TextBuffer
+                );
+
+                if (viewPoint != null) {
+                    _quickInfoSession = _provider._QuickInfoBroker.TriggerQuickInfo(
+                        _textView,
+                        viewPoint.Value.Snapshot.CreateTrackingPoint(viewPoint.Value, PointTrackingMode.Positive),
+                        true
+                    );
+                }
             }
         }
 
@@ -118,36 +139,37 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
-            PropagateAnalyzer(subjectBuffer);
+            _subjectBuffers.Add(subjectBuffer);
 
-            Debug.Assert(_bufferParser != null, "SetBufferParser has not been called");
-            if (_bufferParser == null) {
-                return;
+            var analyzer = _textView.GetAnalysisEntry(subjectBuffer, _serviceProvider)?.Analyzer;
+            bool isTemporaryFile = false;
+            if (analyzer == null) {
+                // there's no analyzer for this file, but we can analyze it against either
+                // the default analyzer or some other analyzer (e.g. if it's a diff view, we want
+                // to analyze against the project we're diffing from).  But in either case this
+                // is just a temporary file which should be closed when the view is closed.
+                analyzer = _textView.GetBestAnalyzer(_serviceProvider);
+                isTemporaryFile = true;
             }
 
-            BufferParser existingParser;
-            if (!subjectBuffer.Properties.TryGetProperty(typeof(BufferParser), out existingParser)) {
-                _bufferParser.AddBuffer(subjectBuffer);
-            } else {
-                // already connected to a buffer parser, we should have the same project entry
-                Debug.Assert(_bufferParser._analysis == existingParser._analysis);
+            if (analyzer != null) {
+                analyzer.MonitorTextBufferAsync(subjectBuffer, isTemporaryFile).ContinueWith(task => {
+                    var newParser = task.Result;
+                    lock(newParser) {
+                        lock(newParser) {
+                            newParser.AttachedViews++;
+                        }
+                    }
+                });
             }
         }
-
-        public void PropagateAnalyzer(ITextBuffer subjectBuffer) {
-            PythonReplEvaluator replEvaluator;
-            if (_textView.Properties.TryGetProperty<PythonReplEvaluator>(typeof(PythonReplEvaluator), out replEvaluator)) {
-                subjectBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), replEvaluator.ReplAnalyzer);
-            }
-        }
-
+        
         public void DisconnectSubjectBuffer(ITextBuffer subjectBuffer) {
-            // only disconnect if we own the buffer parser
-            Debug.Assert(_bufferParser != null, "SetBufferParser has not been called");
-            BufferParser existingParser;
-            if (subjectBuffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out existingParser) &&
-                --existingParser.AttachedViews == 0) {
-                _bufferParser.RemoveBuffer(subjectBuffer);
+            if (_subjectBuffers.Remove(subjectBuffer)) {
+                var analysis = _textView.GetAnalysisEntry(subjectBuffer, _serviceProvider);
+                if (analysis != null) {
+                    analysis.Analyzer.BufferDetached(analysis, subjectBuffer);
+                }
             }
         }
 
@@ -167,8 +189,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _textView.Properties.RemoveProperty(typeof(IntellisenseController));
 
             DetachKeyboardFilter();
-
-            _bufferParser = null;
         }
 
         /// <summary>
@@ -261,8 +281,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private bool ShouldTriggerIdentifierCompletionSession(out bool commitByDefault) {
             commitByDefault = true;
 
-            if (_bufferParser == null ||
-                !_provider.PythonService.AdvancedOptions.AutoListIdentifiers ||
+            if (!_provider.PythonService.AdvancedOptions.AutoListIdentifiers ||
                 !_provider.PythonService.AdvancedOptions.AutoListMembers) {
                 return false;
             }
@@ -293,7 +312,12 @@ namespace Microsoft.PythonTools.Intellisense {
                 return false;
             }
 
-            var languageVersion = _bufferParser._parser.InterpreterFactory.Configuration.Version.ToLanguageVersion();
+            var analysis = _textView.GetAnalysisEntry(snapshot.TextBuffer, _serviceProvider);
+            if (analysis == null) {
+                return false;
+            }
+
+            var languageVersion = analysis.Analyzer.InterpreterFactory.Configuration.Version.ToLanguageVersion();
             PythonAst ast;
             using (var parser = Parser.CreateParser(new StringReader(text), languageVersion, new ParserOptions())) {
                 ast = parser.ParseSingleStatement();
@@ -651,7 +675,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
                 var span = targetPt.Value.Snapshot.CreateTrackingSpan(targetPt.Value.Position, 0, SpanTrackingMode.EdgeInclusive);
 
-                var sigs = targetPt.Value.Snapshot.GetSignatures(_serviceProvider, span);
+
+                var sigs = _provider.PythonService.GetSignatures(_textView, targetPt.Value.Snapshot, span);
                 bool retrigger = false;
                 if (sigs.Signatures.Count == _sigHelpSession.Signatures.Count) {
                     for (int i = 0; i < sigs.Signatures.Count && !retrigger; i++) {
@@ -869,7 +894,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 int res = _oldTarget != null ? _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut) : VSConstants.S_OK;
-                
+
                 HandleChar((char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn));
 
                 if (_activeSession != null && !_activeSession.IsDismissed) {

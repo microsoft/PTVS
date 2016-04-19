@@ -543,6 +543,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Extract Method.
+        /// </summary>
+        public static string ExtractMethod {
+            get {
+                return ResourceManager.GetString("ExtractMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to collect files to publish..
         /// </summary>
         public static string FailedToCollectFilesForPublish {

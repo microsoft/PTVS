@@ -132,7 +132,7 @@ namespace PythonToolsMockTests {
                     var buffer = View.TextView.TextBuffer;
                     var oldVersion = buffer.CurrentSnapshot;
                     buffer.GetPythonAnalysisClassifier().ClassificationChanged += (s, e) => {
-                        var entry = buffer.GetAnalysisEntry();
+                        var entry = View.TextView.GetAnalysisEntry(buffer, VS.ServiceProvider);
                         if (entry.BufferParser.GetAnalysisVersion(buffer).VersionNumber > oldVersion.Version.VersionNumber) {
                             mre.Set();
                         }
@@ -143,7 +143,7 @@ namespace PythonToolsMockTests {
                         edit.Apply();
                     }
 
-                    var analysis = buffer.GetAnalysisEntry();
+                    var analysis = View.TextView.GetAnalysisEntry(buffer, VS.ServiceProvider);
                     analysis.BufferParser.Requeue();    // force the reparse to happen quickly...
 
                     if (!mre.Wait(10000)) {

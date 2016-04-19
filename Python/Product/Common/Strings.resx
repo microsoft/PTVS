@@ -679,4 +679,7 @@ Your web browser will not be opened.</value>
   <data name="MissingEnvironmentUnknownVersion" xml:space="preserve">
     <value>The environment "{0}" appears to be incorrectly configured or missing. You may need to install it or re-create a virtual environment.</value>
   </data>
+  <data name="ExtractMethod" xml:space="preserve">
+    <value>Extract Method</value>
+  </data>
 </root>

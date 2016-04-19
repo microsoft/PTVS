@@ -153,6 +153,19 @@ namespace Microsoft.VisualStudioTools {
                 return null;
             }
 
+            if (docView is IVsDifferenceCodeWindow) {
+                var diffWindow = (IVsDifferenceCodeWindow)docView;
+                switch (diffWindow.DifferenceViewer.ActiveViewType) {
+                    case VisualStudio.Text.Differencing.DifferenceViewType.InlineView:
+                        return diffWindow.DifferenceViewer.InlineView;
+                    case VisualStudio.Text.Differencing.DifferenceViewType.LeftView:
+                        return diffWindow.DifferenceViewer.LeftView;
+                    case VisualStudio.Text.Differencing.DifferenceViewType.RightView:
+                        return diffWindow.DifferenceViewer.RightView;
+                }
+                return null;
+            }
+
             if (docView is IVsCodeWindow) {
                 IVsTextView textView;
                 if (ErrorHandler.Failed(((IVsCodeWindow)docView).GetPrimaryView(out textView))) {

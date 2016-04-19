@@ -316,7 +316,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                                 // hovering directly over a keyword, don't provide a tooltip
                                 return null;
-                            } else if ((nestingChanged || forCompletion) && token.ClassificationType == Classifier.Provider.Keyword && text == "def") {
+                            } else if ((nestingChanged || forCompletion) && token.ClassificationType == Classifier.Provider.Keyword && (text == "def" || text == "class")) {
                                 return null;
                             }
                             if (text == "*" || text == "**") {

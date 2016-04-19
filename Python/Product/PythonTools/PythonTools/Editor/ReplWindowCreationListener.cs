@@ -53,6 +53,7 @@ namespace Microsoft.PythonTools.Editor {
                 if (window != null && window.Evaluator is PythonReplEvaluator) {
                     textView.Properties.AddProperty(typeof(PythonReplEvaluator), (PythonReplEvaluator)window.Evaluator);
                 }
+
                 var intellisenseController = IntellisenseControllerProvider.GetOrCreateController(
                     _serviceProvider,
                     (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel)),

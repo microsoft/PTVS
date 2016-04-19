@@ -61,7 +61,13 @@ namespace Microsoft.PythonTools.Intellisense {
             var span = session.GetApplicableSpan(textBuffer);
             var triggerPoint = session.GetTriggerPoint(textBuffer);
             var options = session.GetOptions(_provider._serviceProvider);
-            var provider = textBuffer.CurrentSnapshot.GetCompletions(_provider._serviceProvider, span, triggerPoint, options);
+            var provider = _provider._pyService.GetCompletions(
+                session.TextView,
+                textBuffer.CurrentSnapshot,
+                span,
+                triggerPoint,
+                options
+            );
 
             var completions = provider.GetCompletions(_provider._glyphService);
            

@@ -89,11 +89,16 @@ namespace Microsoft.PythonTools.Repl {
         const string ExecuteFileEx_Module = "module";
         const string ExecuteFileEx_Process = "process";
 
+        private readonly string _analysisFilename;
+
         protected BasePythonReplEvaluator(IServiceProvider serviceProvider, PythonToolsService pyService, PythonReplEvaluatorOptions options) {
             _pyService = pyService;
             _options = options;
             _serviceProvider = serviceProvider;
+            _analysisFilename = Guid.NewGuid().ToString() + ".py";
         }
+
+        public string AnalysisFilename => _analysisFilename;
 
         protected abstract PythonLanguageVersion AnalyzerProjectLanguageVersion { get; }
 
@@ -139,15 +144,6 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public void ActiveLanguageBufferChanged(ITextBuffer currentBuffer, ITextBuffer previousBuffer) {
-        }
-
-        private void BufferGraphGraphBuffersChanged(object sender, GraphBuffersChangedEventArgs e) {
-            foreach (var removed in e.RemovedBuffers) {
-                BufferParser parser;
-                if (removed.Properties.TryGetProperty(typeof(BufferParser), out parser)) {
-                    parser.RemoveBuffer(removed);
-                }
-            }
         }
 
         protected abstract void Connect();
@@ -1340,7 +1336,6 @@ namespace Microsoft.PythonTools.Repl {
             Close();
             await _serviceProvider.GetUIThread().InvokeAsync(Connect).ConfigureAwait(false);
 
-            BufferParser parser = null;
 
             var buffersBeforeReset = _window.TextView.BufferGraph.GetTextBuffers(TruePredicate);
             for (int i = 0; i < buffersBeforeReset.Count - 1; i++) {
@@ -1349,13 +1344,6 @@ namespace Microsoft.PythonTools.Repl {
                 if (!buffer.Properties.ContainsProperty(InputBeforeReset)) {
                     buffer.Properties.AddProperty(InputBeforeReset, InputBeforeReset);
                 }
-
-                if (parser == null) {
-                    buffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out parser);
-                }
-            }
-            if (parser != null) {
-                parser.Requeue();
             }
 
             return ExecutionResult.Success;
@@ -1416,9 +1404,6 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public virtual void Dispose() {
-            if (_window != null) {
-                _window.TextView.BufferGraph.GraphBuffersChanged -= BufferGraphGraphBuffersChanged;
-            }
             try {
                 Close();
             } catch {
@@ -1717,9 +1702,12 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
+        public abstract VsProjectAnalyzer ReplAnalyzer {
+            get;
+        }
+
         public Task<ExecutionResult> InitializeAsync() {
             WriteInitializationMessage();
-            _window.TextView.BufferGraph.GraphBuffersChanged += BufferGraphGraphBuffersChanged;
 
             _window.SetSmartUpDown(CurrentOptions.ReplSmartHistory);
 

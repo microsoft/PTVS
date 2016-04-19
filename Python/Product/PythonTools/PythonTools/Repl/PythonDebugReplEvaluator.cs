@@ -104,7 +104,6 @@ namespace Microsoft.PythonTools.Repl {
             _window.SetSmartUpDown(CurrentOptions.ReplSmartHistory);
             _window.WriteLine("Python debug interactive window.  Type $help for a list of commands.");
 
-            _window.TextView.BufferGraph.GraphBuffersChanged += BufferGraphGraphBuffersChanged;
             _window.ReadyForInput += new Action(OnReadyForInput);
             return ExecutionResult.Succeeded;
         }
@@ -129,15 +128,6 @@ namespace Microsoft.PythonTools.Repl {
                 if (activeThreadId != null) {
                     AttachProcess(engine.Process, engine);
                     ChangeActiveThread(activeThreadId.Value, false);
-                }
-            }
-        }
-
-        private void BufferGraphGraphBuffersChanged(object sender, GraphBuffersChangedEventArgs e) {
-            foreach (var removed in e.RemovedBuffers) {
-                BufferParser parser;
-                if (removed.Properties.TryGetProperty(typeof(BufferParser), out parser)) {
-                    parser.RemoveBuffer(removed);
                 }
             }
         }
@@ -250,6 +240,12 @@ namespace Microsoft.PythonTools.Repl {
             }
             set {
                 _window = value;
+            }
+        }
+
+        public VsProjectAnalyzer ReplAnalyzer {
+            get {
+                return _activeEvaluator?.ReplAnalyzer ?? _pyService.DefaultAnalyzer;
             }
         }
 
@@ -590,6 +586,12 @@ namespace Microsoft.PythonTools.Repl {
         protected override PythonLanguageVersion LanguageVersion {
             get {
                 return _languageVersion;
+            }
+        }
+
+        public override VsProjectAnalyzer ReplAnalyzer {
+            get {
+                return CurrentOptions.ProjectAnalyzer;
             }
         }
 

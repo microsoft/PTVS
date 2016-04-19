@@ -36,14 +36,15 @@ namespace Microsoft.PythonTools.Commands {
 
         public override async void DoCommand(object sender, EventArgs args) {
             var view = CommonPackage.GetActiveTextView(_serviceProvider);
-            var analyzer = view.GetAnalyzer(_serviceProvider);
+            var analyzer = view.GetAnalyzerAtCaret(_serviceProvider);
+            var pythonCaret = view.GetPythonCaret().Value; // QueryStatus guarantees we have a valid caret
 
-            await analyzer.RemoveImportsAsync(view.TextBuffer, view.Caret.Position.BufferPosition, _allScopes);
+            await analyzer.RemoveImportsAsync(view, pythonCaret.Snapshot.TextBuffer, pythonCaret.Position, _allScopes);
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
             var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
-            if (activeView != null && activeView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {                
+            if (activeView != null && activeView.GetPythonBufferAtCaret() != null) {                
                 cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
             } else {
                 cmd.cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);

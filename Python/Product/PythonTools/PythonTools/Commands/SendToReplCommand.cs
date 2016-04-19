@@ -42,8 +42,8 @@ namespace Microsoft.PythonTools.Commands {
 
         public override void DoCommand(object sender, EventArgs args) {
             var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
-            var project = activeView.TextBuffer.GetProject(_serviceProvider);
-            var analyzer = activeView.GetAnalyzer(_serviceProvider);
+            var project = activeView.GetProjectAtCaret(_serviceProvider);
+            var analyzer = activeView.GetAnalyzerAtCaret(_serviceProvider);
 
             var repl = ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, analyzer, project);
             repl.Show(true);
@@ -70,9 +70,10 @@ namespace Microsoft.PythonTools.Commands {
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
             var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
-            if (activeView != null && activeView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                var analyzer = activeView.GetAnalyzer(_serviceProvider);
-
+            var empty = activeView.Selection.IsEmpty;
+            Intellisense.VsProjectAnalyzer analyzer;
+            if (activeView != null && (analyzer = activeView.GetAnalyzerAtCaret(_serviceProvider)) != null) {
+                
                 if (activeView.Selection.IsEmpty ||
                     activeView.Selection.Mode == TextSelectionMode.Box ||
                     analyzer == null ||

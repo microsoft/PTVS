@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Intellisense {
         Justification = "ownership is unclear")]
     sealed class BufferParser : IDisposable {
         private readonly Timer _timer;
-        internal readonly AnalysisEntry _analysis;
+        internal readonly AnalysisEntry AnalysisEntry;
 
         internal VsProjectAnalyzer _parser;
         private IList<ITextBuffer> _buffers;
@@ -56,11 +56,12 @@ namespace Microsoft.PythonTools.Intellisense {
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
 
         public BufferParser(AnalysisEntry analysis, VsProjectAnalyzer parser, ITextBuffer buffer) {
+            Debug.Assert(analysis != null);
+
             _parser = parser;
             _timer = new Timer(ReparseTimer, null, Timeout.Infinite, Timeout.Infinite);
             _buffers = new[] { buffer };
-            _analysis = analysis;
-            AttachedViews = 1;
+            AnalysisEntry = analysis;
 
             analysis.BufferParser = this;
 
@@ -177,7 +178,6 @@ namespace Microsoft.PythonTools.Intellisense {
         public void StopMonitoring() {
             foreach (var buffer in _buffers) {
                 buffer.ChangedLowPriority -= BufferChangedLowPriority;
-                buffer.Properties.RemoveProperty(typeof(BufferParser));
                 if (_document != null) {
                     _document.EncodingChanged -= EncodingChanged;
                     _document = null;
@@ -202,7 +202,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 InitBuffer(textBuffer, _buffers.Count - 1);
 
-                _parser.ConnectErrorList(_analysis, textBuffer);
+                _parser.ConnectErrorList(AnalysisEntry, textBuffer);
             }
         }
 
@@ -214,7 +214,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 _buffers.Remove(subjectBuffer);
 
-                _parser.DisconnectErrorList(_analysis, subjectBuffer);
+                _parser.DisconnectErrorList(AnalysisEntry, subjectBuffer);
             }
         }
 
@@ -223,15 +223,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 _document.EncodingChanged -= EncodingChanged;
                 _document = null;
             }
-            subjectBuffer.Properties.RemoveProperty(typeof(AnalysisEntry));
-            subjectBuffer.Properties.RemoveProperty(typeof(BufferParser));
             subjectBuffer.ChangedLowPriority -= BufferChangedLowPriority;
         }
 
         private void InitBuffer(ITextBuffer buffer, int id = 0) {
-            buffer.Properties.AddProperty(typeof(BufferParser), this);
             buffer.ChangedLowPriority += BufferChangedLowPriority;
-            buffer.Properties.AddProperty(typeof(AnalysisEntry), _analysis);
 
             lock (this) {
                 var bufferInfo = new BufferInfo(buffer, id);
@@ -299,7 +295,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private async Task ParseBuffers(ITextSnapshot[] snapshots, BufferInfo[] bufferInfos) {
             var indentationSeverity = _parser.PyService.GeneralOptions.IndentationInconsistencySeverity;
-            AnalysisEntry entry = _analysis;
+            AnalysisEntry entry = AnalysisEntry;
 
             List<AP.FileUpdate> updates = new List<AP.FileUpdate>();
             lock (this) {
@@ -577,7 +573,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private static IEnumerable<Action<AnalysisEntry>> GetRegistrations(this ITextBuffer buffer, object key) {
             HashSet<Action<AnalysisEntry>> actions;
             if (buffer.Properties.TryGetProperty(key, out actions)) {
-                return actions;
+                return actions.ToArray();
             }
             return Array.Empty<Action<AnalysisEntry>>();
         }

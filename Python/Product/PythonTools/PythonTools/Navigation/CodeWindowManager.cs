@@ -88,7 +88,7 @@ namespace Microsoft.PythonTools.Navigation {
             }
 
             AnalysisEntry analysisEntry;
-            if (!wpfTextView.TextBuffer.TryGetAnalysisEntry(out analysisEntry)) {
+            if (!wpfTextView.TryGetAnalysisEntry(wpfTextView.TextBuffer, _serviceProvider, out analysisEntry)) {
                 return VSConstants.E_FAIL;
             }
 
