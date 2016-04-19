@@ -3761,6 +3761,107 @@ class oar(int):
             AssertUtil.DoesntContain(fobItems, "bit_length");
         }
 
+        /// <summary>
+        /// https://github.com/Microsoft/PTVS/issues/995
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void DictCtor() {
+            var text = @"
+d1 = dict({2:3})
+x1 = d1[2]
+
+d2 = dict(x = 2)
+x2 = d2['x']
+
+d3 = dict(**{2:3})
+x3 = d3[2]
+
+pass
+";
+            var entry = ProcessText(text);
+            var items = entry.GetMemberNamesByIndex("x1", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "bit_length");
+
+            entry = ProcessText(text);
+            items = entry.GetMemberNamesByIndex("x2", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "bit_length");
+
+            entry = ProcessText(text);
+            items = entry.GetMemberNamesByIndex("x3", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "bit_length");
+        }
+
+        /// <summary>
+        /// https://github.com/Microsoft/PTVS/issues/995
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void SpecializedOverride() {
+            var text = @"
+class simpledict(dict): pass
+
+class getdict(dict):
+    def __getitem__(self, index):
+        return 'abc'
+
+
+d1 = simpledict({2:3})
+x1 = d1[2]
+
+d2 = simpledict(x = 2)
+x2 = d2['x']
+
+d3 = simpledict(**{2:3})
+x3 = d3[2]
+
+d4 = getdict({2:3})
+x4 = d4[2]
+
+d5 = simpledict(**{2:'blah'})
+x5 = d5[2]
+
+pass
+";
+            var entry = ProcessText(text);
+            var items = entry.GetMemberNamesByIndex("x1", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "bit_length");
+
+            entry = ProcessText(text);
+            items = entry.GetMemberNamesByIndex("x2", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "bit_length");
+
+            entry = ProcessText(text);
+            items = entry.GetMemberNamesByIndex("x3", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "bit_length");
+
+            entry = ProcessText(text);
+            items = entry.GetMemberNamesByIndex("x4", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "upper");
+
+            entry = ProcessText(text);
+            items = entry.GetMemberNamesByIndex("x5", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "upper");
+        }
+
+        /// <summary>
+        /// https://github.com/Microsoft/PTVS/issues/995
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void SpecializedOverride2() {
+            var text = @"
+class setdict(dict):
+    def __setitem__(self, index):
+        pass
+
+a = setdict()
+a[42] = 100
+b = a[42]
+
+pass
+";
+            var entry = ProcessText(text);
+            var items = entry.GetTypesByIndex("b", text.IndexOf("pass"));
+            Assert.IsTrue(items.Count() == 0);
+        }
 
         [TestMethod, Priority(0)]
         public void SimpleMethodCall() {
