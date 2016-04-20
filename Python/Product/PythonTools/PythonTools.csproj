@@ -253,6 +253,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
     <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisLocation.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisVariable.cs" />
@@ -297,8 +298,6 @@
     <Compile Include="PythonTools\Intellisense\PythonSuggestedActionsSource.cs" />
     <Compile Include="PythonTools\Intellisense\PythonSuggestedActionsSourceProvider.cs" />
     <Compile Include="PythonTools\Intellisense\PythonSuggestedImportAction.cs" />
-    <Compile Include="PythonTools\Project\IPythonProjectLaunchProperties.cs" />
-    <Compile Include="PythonTools\Project\PythonProjectLaunchProperties.cs" />
     <Compile Include="PythonTools\Repl\ResizingAdorner.cs" />
     <Compile Include="PythonTools\Repl\SelectableReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\ZoomableInlineAdornment.cs" />

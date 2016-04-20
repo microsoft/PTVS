@@ -280,16 +280,16 @@ namespace Microsoft.PythonTools.Repl {
                         UpdatePropertiesFromProjectMoniker();
                     } catch (NoInterpretersException ex) {
                         WriteError(ex.ToString());
-                        return;
+                        return null;
                     } catch (MissingInterpreterException ex) {
                         WriteError(ex.ToString());
-                        return;
+                        return null;
                     } catch (DirectoryNotFoundException ex) {
                         WriteError(ex.ToString());
-                        return;
+                        return null;
                     } catch (Exception ex) when (!ex.IsCriticalException()) {
                         WriteError(ex.ToUnhandledExceptionMessage(GetType()));
-                        return;
+                        return null;
                     }
                 }
 

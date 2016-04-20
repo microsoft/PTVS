@@ -194,13 +194,4 @@ namespace Microsoft.PythonTools.Project {
         /// </exception>
         LaunchConfiguration GetLaunchConfigurationOrThrow();
     }
-
-    public static class IPythonProjectExtensions {
-        /// <summary>
-        /// Returns a sequence of absolute search paths for the provided project.
-        /// </summary>
-        public static IEnumerable<string> GetSearchPaths(this IPythonProject project) {
-            return PythonProjectLaunchProperties.EnumerateSearchPaths(project);
-        }
-    }
 }

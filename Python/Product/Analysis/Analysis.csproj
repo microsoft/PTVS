@@ -84,6 +84,7 @@
     <Compile Include="Interpreter\InterpreterFactoryCreationOptions.cs" />
     <Compile Include="Interpreter\IPythonInterpreterWithProjectReferences.cs" />
     <Compile Include="Interpreter\IPythonSequenceType.cs" />
+    <Compile Include="Interpreter\LaunchConfiguration.cs" />
     <Compile Include="Interpreter\NewDatabaseEventArgs.cs" />
     <Compile Include="Interpreter\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="Interpreter\PythonLibraryPath.cs" />
