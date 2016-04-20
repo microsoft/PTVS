@@ -194,8 +194,7 @@ g()",
             python.AssertInstalled();
             var provider = new SimpleFactoryProvider(python.InterpreterPath, python.InterpreterPath);
             var eval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
-                InterpreterPath = python.InterpreterPath,
-                LanguageVersion = python.Version
+                Configuration = new LaunchConfiguration(python.Configuration)
             };
             Assert.IsTrue(eval._Initialize(new MockReplWindow(eval)).Result.IsSuccessful);
             return eval;
@@ -323,7 +322,7 @@ g()",
 
             var replEval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
                 DisplayName = "Test Interpreter",
-                InterpreterPath = "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe"
+                Configuration = new LaunchConfiguration(new InterpreterConfiguration("InvalidInterpreter", "Test Interpreter", path: "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe"))
             };
             var replWindow = new MockReplWindow(replEval);
             replEval._Initialize(replWindow);

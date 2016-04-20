@@ -36,8 +36,8 @@ namespace Microsoft.PythonTools.Uwp {
             return Convert.ToBoolean(appxProp) && Convert.ToBoolean(containerProp);
         }
 
-        internal static IPythonProject2 GetPythonProject(this EnvDTE.Project project) {
-            return project.GetCommonProject() as IPythonProject2;
+        internal static IPythonProject GetPythonProject(this EnvDTE.Project project) {
+            return project.GetCommonProject() as IPythonProject;
         }
 
         internal static EnvDTE.Project GetProject(this IVsHierarchy hierarchy) {

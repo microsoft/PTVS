@@ -405,7 +405,7 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   <data name="DebugLaunchInterpreterMissing" xml:space="preserve">
     <value>The project cannot be launched because no Python interpreter is specified. Please check the Python Environments window and ensure the version of Python is installed and has all settings specified.</value>
   </data>
-  <data name="DebugLaunchWorkingDirectoryMissing" xml:space="preserve">
+  <data name="DebugLaunchWorkingDirectoryMissing_Path" xml:space="preserve">
     <value>The project cannot be launched because the specified working directory "{0}" does not exist. Please check the Project Properties window and correct any configuration errors.</value>
   </data>
   <data name="ErrorOpeningInteractiveWindow" xml:space="preserve">
@@ -742,5 +742,8 @@ but your command history will be preserved.</value>
   </data>
   <data name="MissingEnvironmentUnknownVersion" xml:space="preserve">
     <value>The environment "{0}" appears to be incorrectly configured or missing. You may need to install it or re-create a virtual environment.</value>
+  </data>
+  <data name="DebugLaunchWorkingDirectoryMissing" xml:space="preserve">
+    <value>The project cannot be launched because the no working directory was provided. Please check the Project Properties window and correct any configuration errors.</value>
   </data>
 </root>

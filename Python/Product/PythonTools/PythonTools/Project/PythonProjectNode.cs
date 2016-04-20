@@ -59,8 +59,7 @@ namespace Microsoft.PythonTools.Project {
         CommonProjectNode,
         IPythonProject,
         IAzureRoleProject,
-        IProjectInterpreterDbChanged,
-        IPythonProjectLaunchProperties {
+        IProjectInterpreterDbChanged {
         // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
         // about the directory from the search path that referenced them in IProjectEntry.Properties[_searchPathEntryKey], so that
         // they can be located and removed when that directory is removed from the path.
@@ -739,7 +738,7 @@ namespace Microsoft.PythonTools.Project {
 
                 string projHome = ProjectHome;
                 string workDir = GetWorkingDirectory();
-                IList<string> searchPath = ParseSearchPath();
+                IList<string> searchPath = GetSearchPaths();
 
                 //Refresh regular search path nodes
 
@@ -882,19 +881,19 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Parses SearchPath property into a list of distinct absolute paths, preserving the order.
         /// </summary>
-        protected IList<string> ParseSearchPath() {
+        public IList<string> GetSearchPaths() {
             var searchPath = GetProjectProperty(PythonConstants.SearchPathSetting, true);
-            return ParseSearchPath(searchPath);
+            return GetSearchPaths(searchPath, true);
         }
 
         /// <summary>
         /// Parses SearchPath string into a list of distinct absolute paths, preserving the order.
         /// </summary>
-        protected IList<string> ParseSearchPath(string searchPath) {
+        protected IList<string> GetSearchPaths(string searchPath, bool includeReferences) {
             var result = new List<string>();
+            var seen = new HashSet<string>();
 
             if (!string.IsNullOrEmpty(searchPath)) {
-                var seen = new HashSet<string>();
                 foreach (var path in searchPath.Split(';')) {
                     if (string.IsNullOrEmpty(path)) {
                         continue;
@@ -907,8 +906,27 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
+            if (includeReferences) {
+                foreach (var r in GetReferenceContainer().EnumReferences()) {
+                    string absPath;
+                    try {
+                        absPath = PathUtils.GetAbsoluteFilePath(ProjectHome, r.Url);
+                    } catch (InvalidOperationException) {
+                        continue;
+                    }
+
+                    if (!string.IsNullOrEmpty(absPath)) {
+                        var parentPath = PathUtils.GetParent(absPath);
+                        if (!string.IsNullOrEmpty(parentPath) && seen.Add(parentPath)) {
+                            result.Add(parentPath);
+                        }
+                    }
+                }
+            }
+
             return result;
         }
+
 
         /// <summary>
         /// Saves list of paths back as SearchPath project property.
@@ -930,7 +948,7 @@ namespace Microsoft.PythonTools.Project {
         internal void AddSearchPathEntry(string newpath) {
             Utilities.ArgumentNotNull("newpath", newpath);
 
-            var searchPath = ParseSearchPath();
+            var searchPath = GetSearchPaths();
             var absPath = PathUtils.GetAbsoluteFilePath(ProjectHome, newpath);
             // Ignore the end separator when determining whether the path has
             // already been added. Having both "C:\Fob" and "C:\Fob\" is not
@@ -949,7 +967,7 @@ namespace Microsoft.PythonTools.Project {
         internal void RemoveSearchPathEntry(string path) {
             var absPath = PathUtils.TrimEndSeparator(PathUtils.GetAbsoluteFilePath(ProjectHome, path));
             var absPathWithEndSeparator = PathUtils.EnsureEndSeparator(absPath);
-            var searchPath = ParseSearchPath();
+            var searchPath = GetSearchPaths();
 
             var newSearchPath = searchPath
                 // Ignore the end separator when determining paths to remove.
@@ -999,8 +1017,8 @@ namespace Microsoft.PythonTools.Project {
                     RefreshSearchPaths();
 
                     // we need to remove old files from the analyzer and add the new files
-                    HashSet<string> oldDirs = new HashSet<string>(ParseSearchPath(e.OldValue), StringComparer.OrdinalIgnoreCase);
-                    HashSet<string> newDirs = new HashSet<string>(ParseSearchPath(e.NewValue), StringComparer.OrdinalIgnoreCase);
+                    HashSet<string> oldDirs = new HashSet<string>(GetSearchPaths(e.OldValue, true), StringComparer.OrdinalIgnoreCase);
+                    HashSet<string> newDirs = new HashSet<string>(GetSearchPaths(e.NewValue, true), StringComparer.OrdinalIgnoreCase);
 
                     // figure out all the possible directory names we could be removing...
                     foreach (var fileProject in _analyzer.LoadedFiles) {
@@ -1168,7 +1186,7 @@ namespace Microsoft.PythonTools.Project {
                 return service.DefaultAnalyzer;
             } else if (_analyzer == null) {
                 _analyzer = CreateAnalyzer();
-                AnalyzeSearchPaths(ParseSearchPath());
+                AnalyzeSearchPaths(GetSearchPaths());
             }
             return _analyzer;
         }
@@ -1333,7 +1351,7 @@ namespace Microsoft.PythonTools.Project {
                 ScriptName = GetStartupFile(),
                 ScriptArguments = GetProjectProperty(PythonConstants.CommandLineArgumentsSetting, resetCache: false),
                 WorkingDirectory = GetWorkingDirectory(),
-                SearchPaths = ParseSearchPath().ToList()
+                SearchPaths = GetSearchPaths().ToList()
             };
 
             var str = GetProjectProperty(PythonConstants.IsWindowsApplicationSetting);
@@ -1414,7 +1432,7 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
-                var searchPath = ParseSearchPath();
+                var searchPath = GetSearchPaths();
                 if (searchPath != null && analyzer != null) {
                     AnalyzeSearchPaths(searchPath);
                 }
@@ -2911,57 +2929,6 @@ namespace Microsoft.PythonTools.Project {
             nav.AppendChildElement(null, "RoleInstanceValue", null, null);
             nav = nav.SelectSingleNode("sd:RoleInstanceValue", ns);
             nav.CreateAttribute(null, "xpath", null, "/RoleEnvironment/Deployment/@emulated");
-        }
-
-        string IProjectLaunchProperties.GetArguments() {
-            return GetProjectProperty(CommonConstants.CommandLineArguments);
-        }
-
-        string IProjectLaunchProperties.GetWorkingDirectory() {
-            return GetWorkingDirectory();
-        }
-
-        IDictionary<string, string> IProjectLaunchProperties.GetEnvironment(bool includeSearchPaths) {
-            var res = PythonProjectLaunchProperties.ParseEnvironment(GetProjectProperty(PythonConstants.EnvironmentSetting));
-
-            if (includeSearchPaths) {
-                PythonProjectLaunchProperties.AddSearchPaths(res, this, Site);
-            }
-
-            return res;
-        }
-
-        string IPythonProjectLaunchProperties.GetInterpreterPath() {
-            var str = GetProjectProperty(PythonConstants.InterpreterPathSetting);
-            if (!string.IsNullOrEmpty(str)) {
-                str = PathUtils.GetAbsoluteFilePath(ProjectHome, str);
-                if (!File.Exists(str)) {
-                    throw new MissingInterpreterException(Strings.DebugLaunchInterpreterMissing_Path.FormatUI(str));
-                }
-                return str;
-            }
-
-            var factory = GetInterpreterFactoryOrThrow();
-            if (((IPythonProjectLaunchProperties)this).GetIsWindowsApplication() ?? false) {
-                return factory.Configuration.WindowsInterpreterPath;
-            }
-            return factory.Configuration.InterpreterPath;
-        }
-
-        string IPythonProjectLaunchProperties.GetInterpreterArguments() {
-            return GetProjectProperty(PythonConstants.InterpreterArgumentsSetting);
-        }
-
-        bool? IPythonProjectLaunchProperties.GetIsWindowsApplication() {
-            var str = GetProjectProperty(PythonConstants.IsWindowsApplicationSetting);
-            bool isWindowsApp;
-            return bool.TryParse(str, out isWindowsApp) ? (bool?)isWindowsApp : null;
-        }
-
-        bool? IPythonProjectLaunchProperties.GetIsNativeDebuggingEnabled() {
-            var str = GetProjectProperty(PythonConstants.EnableNativeCodeDebugging);
-            bool isNativeDebug;
-            return bool.TryParse(str, out isNativeDebug) ? (bool?)isNativeDebug : null;
         }
     }
 }

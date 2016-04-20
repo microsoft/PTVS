@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -22,6 +23,7 @@ using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Windows.Input;
+using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -247,30 +249,21 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void StartInterpreter_Executed(object sender, ExecutedRoutedEventArgs e) {
             var view = (EnvironmentView)e.Parameter;
-            var factory = view.Factory;
 
-            var psi = new ProcessStartInfo();
-            psi.UseShellExecute = false;
+            var config = new LaunchConfiguration(view.Factory.Configuration) {
+                PreferWindowedInterpreter = (e.Command == EnvironmentPathsExtension.StartWindowsInterpreter),
+                WorkingDirectory = view.Factory.Configuration.PrefixPath,
+                SearchPaths = new List<string>()
+            };
 
-            psi.FileName = e.Command == EnvironmentPathsExtension.StartInterpreter ?
-                factory.Configuration.InterpreterPath :
-                factory.Configuration.WindowsInterpreterPath;
-            psi.WorkingDirectory = factory.Configuration.PrefixPath;
-
-            // TODO: Figure out some other wa to get the project
-            //var provider = _service.KnownProviders.OfType<LoadedProjectInterpreterFactoryProvider>().FirstOrDefault();
-            //var vsProject = provider == null ?
-            //    null :
-            //    provider.GetProject(factory);
-            IPythonProject project = null;// vsProject == null ? null : vsProject.GetPythonProject();
-            if (project != null) {
-                psi.EnvironmentVariables[factory.Configuration.PathEnvironmentVariable] = 
-                    string.Join(";", project.GetSearchPaths());
-            } else {
-                psi.EnvironmentVariables[factory.Configuration.PathEnvironmentVariable] = string.Empty;
+            var sln = (IVsSolution)_site.GetService(typeof(SVsSolution));
+            foreach (var pyProj in sln.EnumerateLoadedPythonProjects()) {
+                if (pyProj.InterpreterConfigurations.Contains(config.Interpreter)) {
+                    config.SearchPaths.AddRange(pyProj.GetSearchPaths());
+                }
             }
 
-            Process.Start(psi);
+            Process.Start(DebugLaunchHelper.CreateProcessStartInfo(_site, config)).Dispose();
         }
 
         private void OnlineHelp_CanExecute(object sender, CanExecuteRoutedEventArgs e) {

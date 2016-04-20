@@ -104,32 +104,20 @@ namespace Microsoft.PythonTools.Commands {
             var pyProj = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
             var textView = CommonPackage.GetActiveTextView(_serviceProvider);
 
-            VsProjectAnalyzer analyzer;
-            string filename, dir = null, args = null;
-
-            if (pyProj != null) {
-                analyzer = pyProj.GetAnalyzer();
-                filename = pyProj.GetStartupFile();
-                dir = pyProj.GetWorkingDirectory();
-                args = ((IPythonProjectLaunchProperties)pyProj).GetArguments();
-            } else if (textView != null) {
+            var config = pyProj?.GetLaunchConfigurationOrThrow();
+            if (config == null && textView != null) {
                 var pyService = _serviceProvider.GetPythonToolsService();
-                analyzer = pyService.DefaultAnalyzer;
-                filename = textView.GetFilePath();
-            } else {
+                config = new LaunchConfiguration(pyService.DefaultInterpreterConfiguration) {
+                    ScriptName = textView.GetFilePath(),
+                    WorkingDirectory = PathUtils.GetParent(textView.GetFilePath())
+                };
+            }
+            if (config == null) {
                 Debug.Fail("Should not be executing command when it is invisible");
                 return;
             }
-            if (string.IsNullOrEmpty(filename)) {
-                // TODO: Error reporting
-                return;
-            }
-            if (string.IsNullOrEmpty(dir)) {
-                dir = PathUtils.GetParent(filename);
-            }
 
-            var window = EnsureReplWindow(_serviceProvider, analyzer, pyProj);
-
+            var window = EnsureReplWindow(_serviceProvider, config.Interpreter, pyProj);
             window.Show(true);
 
             var eval = (IPythonInteractiveEvaluator)window.InteractiveWindow.Evaluator;
@@ -138,9 +126,9 @@ namespace Microsoft.PythonTools.Commands {
             await ThreadHelper.JoinableTaskFactory.RunAsync(async () => {
                 await eval.ResetAsync();
 
-                window.InteractiveWindow.WriteLine(string.Format("Running {0}", filename));
+                window.InteractiveWindow.WriteLine(string.Format("Running {0}", config.ScriptName));
 
-                await eval.ExecuteFileAsync(filename, args);
+                await eval.ExecuteFileAsync(config.ScriptName, config.ScriptArguments);
             });
         }
 

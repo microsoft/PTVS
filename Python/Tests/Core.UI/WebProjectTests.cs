@@ -72,7 +72,7 @@ namespace PythonToolsUITests {
                 extender.StartWebServerOnDebug = false;
 
                 var proj = project.GetCommonProject();
-                var ccp = proj as IPythonProject2;
+                var ccp = proj as IPythonProject;
                 Assert.IsNotNull(ccp);
                 Assert.IsNotNull(ccp.FindCommand("PythonRunWebServerCommand"), "No PythonRunWebServerCommand");
                 Assert.IsNotNull(ccp.FindCommand("PythonDebugWebServerCommand"), "No PythonDebugWebServerCommand");
@@ -83,7 +83,7 @@ namespace PythonToolsUITests {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\CheckCommandLineArgs.sln");
 
-                var proj = project.GetCommonProject() as IPythonProject2;
+                var proj = project.GetCommonProject() as IPythonProject;
                 Assert.IsNotNull(proj);
 
                 var outFile = Path.Combine(Path.GetDirectoryName(project.FullName), "output.txt");
@@ -127,7 +127,7 @@ namespace PythonToolsUITests {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\CheckEnvironment.sln");
 
-                var proj = project.GetCommonProject() as IPythonProject2;
+                var proj = project.GetCommonProject() as IPythonProject;
                 Assert.IsNotNull(proj);
 
                 var outFile = Path.Combine(Path.GetDirectoryName(project.FullName), "output.txt");

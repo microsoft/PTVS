@@ -245,6 +245,12 @@ namespace Microsoft.PythonTools {
 
         #region Public API
 
+        public InterpreterConfiguration DefaultInterpreterConfiguration {
+            get {
+                return _interpreterOptionsService.DefaultInterpreter.Configuration;
+            }
+        }
+
         public VsProjectAnalyzer DefaultAnalyzer {
             get {
                 if (_analyzer == null) {

@@ -17,6 +17,11 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Linq;
+using Microsoft.Build.Execution;
+using Microsoft.PythonTools.BuildTasks;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools.Project;
@@ -61,9 +66,66 @@ namespace Microsoft.PythonTools.Project.Web {
             }
         }
 
+        private static LaunchConfiguration GetMSBuildCommandConfig(
+            LaunchConfiguration original,
+            IPythonProject project,
+            string targetProperty,
+            string targetTypeProperty,
+            string argumentsProperty,
+            string environmentProperty
+        ) {
+            // TODO: Handle {StartupModule} in properties
+
+            var target = project.GetProperty(targetProperty);
+            if (string.IsNullOrEmpty(target)) {
+                return original;
+            }
+
+            var targetType = project.GetProperty(targetTypeProperty);
+            if (string.IsNullOrEmpty(targetType)) {
+                return original;
+            }
+
+            var config = original.Clone();
+            if (PythonCommandTask.TargetTypeModule.Equals(targetType, StringComparison.OrdinalIgnoreCase)) {
+                config.InterpreterArguments = (config.InterpreterArguments ?? "") + " -m " + target;
+            } else if (PythonCommandTask.TargetTypeExecutable.Equals(targetType, StringComparison.OrdinalIgnoreCase)) {
+                config.InterpreterPath = target;
+            } else if (PythonCommandTask.TargetTypeScript.Equals(targetType, StringComparison.OrdinalIgnoreCase)) {
+                config.ScriptName = target;
+            }
+
+            var args = project.GetProperty(argumentsProperty);
+            if (!string.IsNullOrEmpty(args)) {
+                config.ScriptArguments = (config.ScriptArguments ?? "") + " " + args;
+            }
+
+            var env = project.GetProperty(environmentProperty);
+            config.Environment = PathUtils.MergeEnvironments(config.Environment, PathUtils.ParseEnvironment(env));
+
+            return config;
+        }
+
         public IProjectLauncher CreateLauncher(IPythonProject project) {
-            var config = project.GetLaunchConfigurationOrThrow();
-            
+            var defaultConfig = project.GetLaunchConfigurationOrThrow();
+
+            var runConfig = GetMSBuildCommandConfig(
+                defaultConfig,
+                project,
+                PythonWebLauncher.RunWebServerTargetProperty,
+                PythonWebLauncher.RunWebServerTargetTypeProperty,
+                PythonWebLauncher.RunWebServerArgumentsProperty,
+                PythonWebLauncher.RunWebServerEnvironmentProperty
+            );
+            var debugConfig = GetMSBuildCommandConfig(
+                defaultConfig,
+                project,
+                PythonWebLauncher.DebugWebServerTargetProperty,
+                PythonWebLauncher.DebugWebServerTargetTypeProperty,
+                PythonWebLauncher.DebugWebServerArgumentsProperty,
+                PythonWebLauncher.DebugWebServerEnvironmentProperty
+            );
+
             // Check project type GUID and enable the Django-specific features
             // of the debugger if required.
             var projectGuids = project.GetUnevaluatedProperty("ProjectTypeGuids") ?? "";
@@ -73,10 +135,11 @@ namespace Microsoft.PythonTools.Project.Web {
             // to avoid having to pass this property for Django and any future
             // extensions.
             if (projectGuids.IndexOf("5F0BE9CA-D677-4A4D-8806-6076C0FAAD37", StringComparison.OrdinalIgnoreCase) >= 0) {
-                config.LaunchOptions["DjangoDebug"] = "true";
+                debugConfig.LaunchOptions["DjangoDebug"] = "true";
+                defaultConfig.LaunchOptions["DjangoDebug"] = "true";
             }
 
-            return new PythonWebLauncher(_serviceProvider, config, config, config);
+            return new PythonWebLauncher(_serviceProvider, runConfig, debugConfig, defaultConfig);
         }
     }
 }

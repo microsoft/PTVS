@@ -473,7 +473,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private static IDictionary<string, TargetResult> BuildTarget(IPythonProject project, string target) {
+        internal static IDictionary<string, TargetResult> BuildTarget(IPythonProject project, string target) {
             var config = project.GetMSBuildProjectInstance();
             if (config == null) {
                 throw new ArgumentException("Project does not support MSBuild", "project");
@@ -523,7 +523,7 @@ namespace Microsoft.PythonTools.Project {
                 Filename = item.ItemSpec,
                 Arguments = item.GetMetadata(CreatePythonCommandItem.ArgumentsKey),
                 WorkingDirectory = item.GetMetadata(CreatePythonCommandItem.WorkingDirectoryKey),
-                EnvironmentVariables = PythonProjectLaunchProperties.ParseEnvironment(item.GetMetadata(BuildTasks.CreatePythonCommandItem.EnvironmentKey)),
+                EnvironmentVariables = PathUtils.ParseEnvironment(item.GetMetadata(CreatePythonCommandItem.EnvironmentKey)),
                 TargetType = item.GetMetadata(CreatePythonCommandItem.TargetTypeKey),
                 ExecuteIn = item.GetMetadata(CreatePythonCommandItem.ExecuteInKey),
                 RequiredPackages = item.GetMetadata(CreatePythonCommandItem.RequiredPackagesKey).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)

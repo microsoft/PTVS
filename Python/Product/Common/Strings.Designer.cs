@@ -271,11 +271,20 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The project cannot be launched because the specified working directory &quot;{0}&quot; does not exist. Please check the Project Properties window and correct any configuration errors..
+        ///   Looks up a localized string similar to The project cannot be launched because the no working directory was provided. Please check the Project Properties window and correct any configuration errors..
         /// </summary>
         public static string DebugLaunchWorkingDirectoryMissing {
             get {
                 return ResourceManager.GetString("DebugLaunchWorkingDirectoryMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The project cannot be launched because the specified working directory &quot;{0}&quot; does not exist. Please check the Project Properties window and correct any configuration errors..
+        /// </summary>
+        public static string DebugLaunchWorkingDirectoryMissing_Path {
+            get {
+                return ResourceManager.GetString("DebugLaunchWorkingDirectoryMissing_Path", resourceCulture);
             }
         }
         

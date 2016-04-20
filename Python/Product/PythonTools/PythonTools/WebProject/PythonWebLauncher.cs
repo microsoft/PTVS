@@ -27,6 +27,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Web;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -47,6 +48,8 @@ namespace Microsoft.PythonTools.Project.Web {
     /// </summary>
     class PythonWebLauncher : IProjectLauncher {
         private int? _testServerPort;
+
+        public const string OpenBrowser = "OpenBrowser";
 
         public const string RunWebServerCommand = "PythonRunWebServerCommand";
         public const string DebugWebServerCommand = "PythonDebugWebServerCommand";
@@ -80,90 +83,44 @@ namespace Microsoft.PythonTools.Project.Web {
 
         #region IPythonLauncher Members
 
-        private CommandStartInfo GetStartInfo(bool debug, bool runUnknownCommands = true) {
-            var cmd = debug ? _debugServerCommand : _runServerCommand;
-            var customCmd = cmd as CustomCommand;
-            if (customCmd == null && cmd != null) {
-                // We have a command we don't understand, so we'll execute it
-                // but won't start debugging. The (presumably) flavored project
-                // that provided the command is responsible for handling the
-                // attach.
-                if (runUnknownCommands) {
-                    cmd.Execute(null);
-                }
-                return null;
-            }
-
-            CommandStartInfo startInfo = null;
-            var project2 = _project as IPythonProject2;
-            if (customCmd != null && project2 != null) {
-                // We have one of our own commands, so let's use the actual
-                // start info.
-                try {
-                    startInfo = customCmd.GetStartInfo(project2);
-                } catch (InvalidOperationException ex) {
-                    var target = _project.GetProperty(debug ?
-                        DebugWebServerTargetProperty :
-                        RunWebServerTargetProperty
-                    );
-                    if (string.IsNullOrEmpty(target) && !File.Exists(_project.GetStartupFile())) {
-                        // The exception was raised because no startup file
-                        // is set.
-                        throw new InvalidOperationException(Strings.NoStartupFileAvailable, ex);
-                    } else {
-                        throw;
-                    }
-                }
-            }
-
-            if (startInfo == null) {
-                if (!File.Exists(_project.GetStartupFile())) {
-                    throw new InvalidOperationException(Strings.NoStartupFileAvailable);
-                }
-
-                // No command, so set up a startInfo that looks like the default
-                // launcher.
-                startInfo = new CommandStartInfo {
-                    Filename = _project.GetStartupFile(),
-                    Arguments = _project.GetProperty(CommonConstants.CommandLineArguments) ?? string.Empty,
-                    WorkingDirectory = _project.GetWorkingDirectory(),
-                    EnvironmentVariables = null,
-                    TargetType = "script",
-                    ExecuteIn = "console"
-                };
-            }
-
-            return startInfo;
+        private static bool IsDebugging(IVsDebugger debugger) {
+            var mode = new[] { DBGMODE.DBGMODE_Design };
+            return ErrorHandler.Succeeded(debugger.GetMode(mode)) && mode[0] != DBGMODE.DBGMODE_Design;
         }
 
         public int LaunchProject(bool debug) {
             var config = debug ? _debugConfig : _runConfig;
 
-            config.LaunchOptions[PythonConstants.WebBrowserUrlSetting] = GetFullUrl();
+            var url = GetFullUrl(config);
 
             var env = PathUtils.MergeEnvironments(
                 new Dictionary<string, string> {
-                    { "SERVER_HOST", "localhost" },
-                    { "SERVER_PORT", TestServerPortString }
+                    { "SERVER_HOST", url?.Host ?? "localhost" },
+                    { "SERVER_PORT", url?.Port.ToString() ?? "" }
                 },
-                config.Environment,
-                "PATH"
+                config.Environment
             );
 
             if (debug) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 1);
 
-                using (var dsi = CreateDebugTargetInfo(config)) {
-                    dsi.Launch(_serviceProvider);
+                using (var dsi = DebugLaunchHelper.CreateDebugTargetInfo(_serviceProvider, config)) {
+                    dsi.Launch();
+                }
+
+                var debugger = (IVsDebugger)_serviceProvider.GetService(typeof(SVsShellDebugger));
+                if (url != null && debugger != null) {
+                    StartBrowser(url.AbsoluteUri, () => IsDebugging(debugger));
                 }
             } else {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
 
-                var psi = CreateProcessStartInfo(config);
+                var psi = DebugLaunchHelper.CreateProcessStartInfo(_serviceProvider, config);
 
-                var process = Process.Start(psi);
-                if (process != null) {
-                    StartBrowser(GetFullUrl(), () => process.HasExited);
+                using (var process = Process.Start(psi)) {
+                    if (url != null && process != null) {
+                        StartBrowser(url.AbsoluteUri, () => process.HasExited);
+                    }
                 }
             }
 
@@ -203,8 +160,11 @@ namespace Microsoft.PythonTools.Project.Web {
 
         #endregion
 
-        private string GetFullUrl() {
-            var host = _project.GetProperty(PythonConstants.WebBrowserUrlSetting);
+        private Uri GetFullUrl(LaunchConfiguration config) {
+            var host = config.GetLaunchOption(PythonConstants.WebBrowserUrlSetting);
+            if (string.IsNullOrEmpty(host)) {
+                return null;
+            }
 
             try {
                 return GetFullUrl(host, TestServerPort);
@@ -212,11 +172,11 @@ namespace Microsoft.PythonTools.Project.Web {
                 var output = OutputWindowRedirector.GetGeneral(_serviceProvider);
                 output.WriteErrorLine(Strings.ErrorInvalidLaunchUrl.FormatUI(host));
                 output.ShowAndActivate();
-                return string.Empty;
+                return null;
             }
         }
 
-        internal static string GetFullUrl(string host, int port) {
+        internal static Uri GetFullUrl(string host, int port) {
             UriBuilder builder;
             Uri uri;
             if (Uri.TryCreate(host, UriKind.Absolute, out uri)) {
@@ -230,7 +190,7 @@ namespace Microsoft.PythonTools.Project.Web {
 
             builder.Port = port;
 
-            return builder.ToString();
+            return builder.Uri;
         }
 
         private string TestServerPortString {
