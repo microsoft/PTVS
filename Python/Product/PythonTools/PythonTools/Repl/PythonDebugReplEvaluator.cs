@@ -111,15 +111,6 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        private void BufferGraphGraphBuffersChanged(object sender, GraphBuffersChangedEventArgs e) {
-            foreach (var removed in e.RemovedBuffers) {
-                BufferParser parser;
-                if (removed.Properties.TryGetProperty(typeof(BufferParser), out parser)) {
-                    parser.RemoveBuffer(removed);
-                }
-            }
-        }
-
         public void ActiveLanguageBufferChanged(ITextBuffer currentBuffer, ITextBuffer previousBuffer) {
         }
 

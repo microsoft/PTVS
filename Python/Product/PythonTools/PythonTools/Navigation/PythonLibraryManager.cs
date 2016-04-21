@@ -19,6 +19,7 @@ using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
@@ -56,27 +57,29 @@ namespace Microsoft.PythonTools.Navigation {
             if (IsNonMemberItem(task.ModuleID.Hierarchy, task.ModuleID.ItemID)) {
                 return;
             }
-            AnalysisEntry item;
-            if (task.TextBuffer == null || !task.TextBuffer.TryGetAnalysisEntry(out item)) {
-                task.ModuleID.Hierarchy
+
+            var analyzer = task.ModuleID.Hierarchy
                     .GetProject()
                     .GetPythonProject()
-                    .GetAnalyzer()
-                    .AnalyzeFileAsync(task.FileName).ContinueWith(x => {
-                        item = x.Result;
+                    .GetAnalyzer();
 
-                        if (item != null) {
-                            // We subscribe to OnNewAnalysis here instead of OnNewParseTree so that 
-                            // in the future we can use the analysis to include type information in the
-                            // object browser (for example we could include base type information with
-                            // links elsewhere in the object browser).
-                            item.AnalysisComplete += (sender, args) => {
-                                _package.GetUIThread().InvokeAsync(() => FileParsed(task))
-                                    .HandleAllExceptions(_package, GetType())
-                                    .DoNotWait();
-                            };
-                        }
-                    });
+            AnalysisEntry item;
+            if (analyzer.GetAnalysisEntryFromPath(task.FileName) == null) {
+                analyzer.AnalyzeFileAsync(task.FileName).ContinueWith(x => {
+                    item = x.Result;
+
+                    if (item != null) {
+                        // We subscribe to OnNewAnalysis here instead of OnNewParseTree so that 
+                        // in the future we can use the analysis to include type information in the
+                        // object browser (for example we could include base type information with
+                        // links elsewhere in the object browser).
+                        item.AnalysisComplete += (sender, args) => {
+                            _package.GetUIThread().InvokeAsync(() => FileParsed(task))
+                                .HandleAllExceptions(_package, GetType())
+                                .DoNotWait();
+                        };
+                    }
+                });
             }
         }
     }

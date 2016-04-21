@@ -23,11 +23,12 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     internal class AsKeywordCompletionAnalysis : CompletionAnalysis {
-        public AsKeywordCompletionAnalysis(ITrackingSpan span, ITextBuffer buffer, CompletionOptions options)
-            : base(span, buffer, options) { }
+        public AsKeywordCompletionAnalysis(IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer buffer, CompletionOptions options)
+            : base(serviceProvider, view, span, buffer, options) { }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var completion = new[] { PythonCompletion(glyphService, "as", null, StandardGlyphGroup.GlyphKeyword) };
@@ -42,12 +43,12 @@ namespace Microsoft.PythonTools.Intellisense {
         private static readonly Regex _validNameRegex = new Regex("^[a-zA-Z_][a-zA-Z0-9_]*$");
         private readonly string[] _namespace;
 
-        private ImportCompletionAnalysis(string[] ns, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(span, textBuffer, options) {
+        private ImportCompletionAnalysis(string[] ns, IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(serviceProvider, view, span, textBuffer, options) {
             _namespace = ns;
         }
 
-        public static CompletionAnalysis Make(IList<ClassificationSpan> tokens, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
+        public static CompletionAnalysis Make(IList<ClassificationSpan> tokens, IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
             Debug.Assert(tokens[0].Span.GetText() == "import" || tokens[0].Span.GetText() == "from");
 
             if (tokens.Count >= 2) {
@@ -83,12 +84,12 @@ namespace Microsoft.PythonTools.Intellisense {
                     return EmptyCompletionContext;
                 }
                 if (expectDot) {
-                    return new AsKeywordCompletionAnalysis(span, textBuffer, options);
+                    return new AsKeywordCompletionAnalysis(serviceProvider, view, span, textBuffer, options);
                 }
-                return new ImportCompletionAnalysis(ns.ToArray(), span, textBuffer, options);
+                return new ImportCompletionAnalysis(ns.ToArray(), serviceProvider, view, span, textBuffer, options);
             }
 
-            return new ImportCompletionAnalysis(new string[0], span, textBuffer, options);
+            return new ImportCompletionAnalysis(new string[0], serviceProvider, view, span, textBuffer, options);
         }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {

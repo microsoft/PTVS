@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -36,6 +37,7 @@ using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
@@ -685,7 +687,7 @@ namespace Microsoft.PythonTools {
 
         internal void SetLanguagePreferences(LANGPREFERENCES2 langPrefs) {
             var txtMgr = (IVsTextManager2)_container.GetService(typeof(SVsTextManager));
-            ErrorHandler.ThrowOnFailure(txtMgr.SetUserPreferences2(null, null, new [] { langPrefs }, null));
+            ErrorHandler.ThrowOnFailure(txtMgr.SetUserPreferences2(null, null, new[] { langPrefs }, null));
         }
 
         internal IEnumerable<CodeWindowManager> CodeWindowManagers {
@@ -698,11 +700,32 @@ namespace Microsoft.PythonTools {
             CodeWindowManager value;
             if (!_codeWindowManagers.TryGetValue(window, out value)) {
                 _codeWindowManagers[window] = value = new CodeWindowManager(_container, window);
-                
+
             }
             return value;
         }
 
         #endregion
+
+        #region Intellisense
+
+        public CompletionAnalysis GetCompletions(ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
+            return VsProjectAnalyzer.GetCompletions(_container, view, snapshot, span, point, options);
+        }
+
+        public SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
+            return VsProjectAnalyzer.GetSignaturesAsync(_container, view, snapshot, span).WaitOrDefault(1000);
+        }
+
+        public Task<SignatureAnalysis> GetSignaturesAsync(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {
+            return VsProjectAnalyzer.GetSignaturesAsync(_container, view, snapshot, span);
+        }
+
+        public ExpressionAnalysis AnalyzeExpression(ITextView view, ITextSnapshot snapshot, ITrackingSpan span, bool forCompletion = true) {
+            return VsProjectAnalyzer.AnalyzeExpressionAsync(_container, view, span.GetStartPoint(snapshot)).WaitOrDefault(1000);
+        }
+
+        #endregion
+
     }
 }

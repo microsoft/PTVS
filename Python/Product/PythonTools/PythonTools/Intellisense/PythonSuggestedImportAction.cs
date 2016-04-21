@@ -112,7 +112,7 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.Assert(!string.IsNullOrEmpty(_name));
 
             await VsProjectAnalyzer.AddImportAsync(
-                _buffer.GetAnalysisEntry(),
+                _source._view.GetAnalysisEntry(_buffer, _source._provider),
                 _fromModule,
                 _name,
                 _source._view,

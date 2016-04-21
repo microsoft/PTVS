@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -36,6 +37,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case PythonOperator.BitwiseOr:
                     var seq = (SetInfo)unit.Scope.GetOrMakeNodeValue(
                         node,
+                        NodeValueKind.Set,
                         _ => new SetInfo(ProjectState, node, unit.ProjectEntry)
                     );
                     seq.AddTypes(unit, GetEnumeratorTypes(node, unit));

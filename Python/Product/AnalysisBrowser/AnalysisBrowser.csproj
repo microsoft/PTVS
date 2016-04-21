@@ -60,10 +60,10 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
-    <ApplicationDefinition Include="App.xaml">
+    <Page Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
-    </ApplicationDefinition>
+    </Page>
     <Compile Include="..\..\..\Common\Product\SharedProject\Wpf\LambdaConverter\ILambdaConverterProvider.cs">
       <Link>ILambdaConverterProvider.cs</Link>
     </Compile>

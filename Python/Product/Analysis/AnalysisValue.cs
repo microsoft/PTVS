@@ -193,6 +193,14 @@ namespace Microsoft.PythonTools.Analysis {
         /// implementation, even if the return value is ignored.
         /// </remarks>
         public virtual IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            return GetTypeMember(node, unit, name);
+        }
+
+        /// <summary>
+        /// Gets an attribute that's only declared in the classes dictionary, not in an instance
+        /// dictionary
+        /// </summary>
+        public virtual IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
             return AnalysisSet.Empty;
         }
 
@@ -260,17 +268,17 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public virtual IAnalysisSet GetIterator(Node node, AnalysisUnit unit) {
-            return GetMember(node, unit, "__iter__").Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames);
+            return GetTypeMember(node, unit, "__iter__").Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames);
         }
 
         public virtual IAnalysisSet GetAsyncIterator(Node node, AnalysisUnit unit) {
-            return GetMember(node, unit, "__aiter__")
+            return GetTypeMember(node, unit, "__aiter__")
                 .Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames)
                 .Await(node, unit);
         }
 
         public virtual IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
-            return GetMember(node, unit, "__getitem__").Call(node, unit, new[] { index }, ExpressionEvaluator.EmptyNames);
+            return GetTypeMember(node, unit, "__getitem__").Call(node, unit, new[] { index }, ExpressionEvaluator.EmptyNames);
         }
 
         /// <summary>

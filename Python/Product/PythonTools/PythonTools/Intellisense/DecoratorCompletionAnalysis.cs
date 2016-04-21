@@ -20,11 +20,12 @@ using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     class DecoratorCompletionAnalysis : CompletionAnalysis {
-        internal DecoratorCompletionAnalysis(ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(span, textBuffer, options) {
+        internal DecoratorCompletionAnalysis(IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(serviceProvider, view, span, textBuffer, options) {
         }
 
         private static bool IsDecoratorType(CompletionResult member) {

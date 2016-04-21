@@ -226,7 +226,7 @@ namespace Microsoft.PythonTools.Interpreter {
             using (var key = Registry.CurrentUser.CreateSubKey(collection, true)) {
                 key.SetValue(LibraryPathKey, config.LibraryPath ?? string.Empty);
                 key.SetValue(ArchitectureKey, config.ArchitectureString);
-                key.SetValue(VersionKey, config.Version.ToString());
+                key.SetValue(VersionKey, config.Version?.ToString() ?? "2.7");
                 key.SetValue(PathEnvVarKey, config.PathEnvironmentVariable ?? string.Empty);
                 key.SetValue(DescriptionKey, config.Description ?? string.Empty);
                 using (var installPath = key.CreateSubKey("InstallPath")) {

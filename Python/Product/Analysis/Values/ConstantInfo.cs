@@ -123,11 +123,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _builtinInfo.GetDescriptor(node, instance, context, unit);
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var res = base.GetMember(node, unit, name);
-
-            return _builtinInfo.GetMember(node, unit, name) ?? res;
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
+            return _builtinInfo.GetTypeMember(node, unit, name);
         }
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {

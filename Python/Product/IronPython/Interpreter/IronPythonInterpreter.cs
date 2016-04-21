@@ -126,6 +126,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
 #if DEBUG
+        [Serializable]
         class AssertListenerInitializer {
             private readonly TraceListener _listener;
 
@@ -497,6 +498,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 switch (_remote.GetObjectKind(obj)) {
                     case ObjectKind.Module: res = new IronPythonModule(this, obj); break;
                     case ObjectKind.Type: res = new IronPythonType(this, obj); break;
+                    case ObjectKind.ConstructorFunction: res = new IronPythonConstructorFunction(this, _remote.GetConstructorFunctionTargets(obj), GetTypeFromType(_remote.GetConstructorFunctionDeclaringType(obj))); break;
                     case ObjectKind.BuiltinFunction: res = new IronPythonBuiltinFunction(this, obj); break;
                     case ObjectKind.BuiltinMethodDesc: res = new IronPythonBuiltinMethodDescriptor(this, obj); break;
                     case ObjectKind.ReflectedEvent: res = new IronPythonEvent(this, obj); break;

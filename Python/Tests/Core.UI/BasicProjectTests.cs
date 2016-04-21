@@ -37,6 +37,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project.Automation;
 using Microsoft.VisualStudioTools.VSTestHost;
@@ -796,11 +797,11 @@ namespace PythonToolsUITests {
 
                 var doc = app.GetDocument(program.Document.FullName);
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-                WaitForDescription(snapshot, "a", "str");
+                WaitForDescription(app.ServiceProvider, doc.TextView, snapshot, "a", "str");
 
                 CompileFile("ClassLibraryBool.cs", dllPath);
 
-                WaitForDescription(snapshot, "a", "bool");
+                WaitForDescription(app.ServiceProvider, doc.TextView, snapshot, "a", "bool");
             }
         }
 
@@ -819,9 +820,9 @@ namespace PythonToolsUITests {
                 var window = program.Open();
                 window.Activate();
 
-                var doc = app.GetDocument(program.Document.FullName);
+                var doc = app.GetDocument(program.Document.FullName);                
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "str");
+                AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "a", snapshot), "str");
 
                 var lib = app.GetProject("ClassLibrary");
                 var classFile = lib.ProjectItems.Item("Class1.cs");
@@ -851,14 +852,14 @@ namespace PythonToolsUITests {
                 // rebuild
                 app.Dte.Solution.SolutionBuild.Build(WaitForBuildToFinish: true);
 
-                WaitForDescription(snapshot, "a", "bool");
+                WaitForDescription(app.ServiceProvider, doc.TextView, snapshot, "a", "bool");
             }
         }
 
-        private static void WaitForDescription(ITextSnapshot snapshot, string variable, params string[] expected) {
+        private static void WaitForDescription(IServiceProvider serviceProvider, ITextView view, ITextSnapshot snapshot, string variable, params string[] expected) {
             IEnumerable<string> descriptions = new string[0];
             for (int i = 0; i < 100; i++) {
-                descriptions = GetVariableDescriptions(variable, snapshot);
+                descriptions = GetVariableDescriptions(serviceProvider, view, variable, snapshot);
                 if (descriptions.ToSet().ContainsExactly(expected)) {
                     break;
                 }
@@ -889,11 +890,11 @@ namespace PythonToolsUITests {
 
                 var doc = app.GetDocument(program.Document.FullName);
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "str");
+                AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "a", snapshot), "str");
 
                 CompileFile("ClassLibraryBool.cs", "ClassLibrary.dll");
 
-                WaitForDescription(snapshot, "a", "bool");
+                WaitForDescription(app.ServiceProvider, doc.TextView, snapshot, "a", "bool");
             }
         }
 
@@ -934,15 +935,15 @@ namespace PythonToolsUITests {
 
                 var doc = app.GetDocument(program.Document.FullName);
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
-                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "str");
-                AssertUtil.ContainsExactly(GetVariableDescriptions("b", snapshot), "int");
+                AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "a", snapshot), "str");
+                AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "b", snapshot), "int");
 
                 // verify getting signature help doesn't crash...  This used to crash because IronPython
                 // used the empty path for an assembly and throws an exception.  We now handle the exception
                 // in RemoteInterpreter.GetBuiltinFunctionDocumentation and RemoteInterpreter.GetPythonTypeDocumentation
                 List<string> docs = null;
                 for (int retries = 10; retries > 0; --retries) {
-                    docs = GetSignatures(app, "Class1.Fob(", snapshot).Signatures.Select(s => s.Documentation).ToList();
+                    docs = GetSignatures(app, doc.TextView, "Class1.Fob(", snapshot).Signatures.Select(s => s.Documentation).ToList();
                     if (!docs.Any(d => d.Contains("still being calcualted"))) {
                         break;
                     }
@@ -956,8 +957,8 @@ namespace PythonToolsUITests {
                 Thread.Sleep(2000); // allow time to reload the new DLL
                 analyzer.WaitForCompleteAnalysis(_ => true);
                 
-                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "bool");
-                AssertUtil.ContainsExactly(GetVariableDescriptions("b", snapshot), "int");
+                AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "a", snapshot), "bool");
+                AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "b", snapshot), "int");
 
                 // recompile the 2nd file, we should then have updated types for both DLLs
                 CompileFile("ClassLibrary2Char.cs", "ClassLibrary2.dll");
@@ -965,30 +966,28 @@ namespace PythonToolsUITests {
                 Thread.Sleep(2000); // allow time to reload the new DLL
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
-                AssertUtil.ContainsExactly(GetVariableDescriptions("a", snapshot), "bool");
-                AssertUtil.ContainsExactly(GetVariableDescriptions("b", snapshot), "Char");
+                AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "a", snapshot), "bool");
+                AssertUtil.ContainsExactly(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "b", snapshot), "Char");
             }
         }
 
-        private static ExpressionAnalysis GetVariableAnalysis(string variable, ITextSnapshot snapshot) {
-            var index = snapshot.GetText().IndexOf(variable + " =");
-            var span = snapshot.CreateTrackingSpan(new Span(index, 1), SpanTrackingMode.EdgeInclusive);
-            return snapshot.AnalyzeExpression(VSTestContext.ServiceProvider, span);
-        }
-
-        private static IEnumerable<string> GetVariableDescriptions(string variable, ITextSnapshot snapshot) {
+        private static IEnumerable<string> GetVariableDescriptions(IServiceProvider serviceProvider, ITextView view, string variable, ITextSnapshot snapshot) {
             var index = snapshot.GetText().IndexOf(variable + " =");
             return VsProjectAnalyzer.GetValueDescriptionsAsync(
-                snapshot.TextBuffer.GetAnalysisEntry(),
+                view.GetAnalysisEntry(snapshot.TextBuffer, serviceProvider),
                 variable,
                 new SnapshotPoint(snapshot, index)
             ).Result;
         }
 
-        private static SignatureAnalysis GetSignatures(VisualStudioApp app, string text, ITextSnapshot snapshot) {
+        private static SignatureAnalysis GetSignatures(VisualStudioApp app, ITextView textView, string text, ITextSnapshot snapshot) {
             var index = snapshot.GetText().IndexOf(text);
             var span = snapshot.CreateTrackingSpan(new Span(index, text.Length), SpanTrackingMode.EdgeInclusive);
-            return snapshot.GetSignatures(app.ServiceProvider, span);
+            return app.GetService<PythonToolsService>().GetSignatures(
+                textView,
+                snapshot,
+                span
+            );
         }
 
         private static void CompileFile(string file, string outname) {
@@ -1037,7 +1036,7 @@ namespace PythonToolsUITests {
                 var doc = app.GetDocument(program.Document.FullName);
                 var snapshot = doc.TextView.TextBuffer.CurrentSnapshot;
                 
-                Assert.AreEqual(GetVariableDescriptions("a", snapshot).First(), "int");
+                Assert.AreEqual(GetVariableDescriptions(app.ServiceProvider, doc.TextView, "a", snapshot).First(), "int");
             }
         }
 

@@ -70,9 +70,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var res = base.GetMember(node, unit, name);
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
+            var res = base.GetTypeMember(node, unit, name);
             if (res.Count > 0) {
                 _klass.AddMemberReference(node, unit, name);
                 return res.GetDescriptor(node, this, _klass, unit);
@@ -139,7 +138,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
-            var getItem = GetMember(node, unit, "__getitem__");
+            var getItem = GetTypeMember(node, unit, "__getitem__");
             if (getItem.Count > 0) {
                 var res = getItem.Call(node, unit, new[] { index }, ExpressionEvaluator.EmptyNames);
                 if (res.IsObjectOrUnknown() && index.Contains(SliceInfo.Instance)) {
@@ -173,7 +172,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             if (Push()) {
                 try {
-                    var callRes = GetMember(node, unit, "__call__");
+                    var callRes = GetTypeMember(node, unit, "__call__");
                     if (callRes.Any()) {
                         res = res.Union(callRes.Call(node, unit, args, keywordArgNames));
                     }

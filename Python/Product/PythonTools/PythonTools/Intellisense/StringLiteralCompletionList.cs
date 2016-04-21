@@ -14,16 +14,18 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Provides file path completion
     /// </summary>
     internal class StringLiteralCompletionList : CompletionAnalysis {
-        internal StringLiteralCompletionList(ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(span, textBuffer, options) {
+        internal StringLiteralCompletionList(IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(serviceProvider, view, span, textBuffer, options) {
         }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {

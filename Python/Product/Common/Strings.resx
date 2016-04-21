@@ -746,4 +746,7 @@ but your command history will be preserved.</value>
   <data name="DebugLaunchWorkingDirectoryMissing" xml:space="preserve">
     <value>The project cannot be launched because the no working directory was provided. Please check the Project Properties window and correct any configuration errors.</value>
   </data>
+  <data name="ExtractMethod" xml:space="preserve">
+    <value>Extract Method</value>
+  </data>
 </root>

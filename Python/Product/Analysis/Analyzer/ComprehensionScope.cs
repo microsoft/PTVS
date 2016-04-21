@@ -38,8 +38,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             OuterScope.ClearNodeScopes();
         }
 
-        public override IAnalysisSet AddNodeValue(Node node, IAnalysisSet variable) {
-            return OuterScope.AddNodeValue(node, variable);
+        public override IAnalysisSet AddNodeValue(Node node, NodeValueKind kind, IAnalysisSet variable) {
+            return OuterScope.AddNodeValue(node, kind, variable);
         }
 
         internal override bool RemoveNodeValue(Node node) {

@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Navigation {
             var service = model.GetService<IVsEditorAdaptersFactoryService>();
             var buffer = service.GetDataBuffer(pBuffer);
 
-            var projFile = buffer.GetAnalysisEntry();
+            var projFile = buffer.GetAnalysisEntry(_serviceProvider);
             if (projFile != null) {
                 var location = projFile.Analyzer.GetNameOfLocationAsync(projFile, buffer, iLine, iCol).WaitOrDefault(1000);
                 if (location != null) {
@@ -124,7 +124,7 @@ namespace Microsoft.PythonTools.Navigation {
             var buffer = service.GetDataBuffer(pBuffer);
 
 
-            var projFile = buffer.GetAnalysisEntry();
+            var projFile = buffer.GetAnalysisEntry(_serviceProvider);
             var names = projFile.Analyzer.GetProximityExpressionsAsync(projFile, buffer, iLine, iCol, cLines).WaitOrDefault(1000);
             ppEnum = new EnumBSTR(names);
             return VSConstants.S_OK;

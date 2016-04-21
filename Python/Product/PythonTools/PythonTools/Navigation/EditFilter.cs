@@ -139,15 +139,15 @@ namespace Microsoft.PythonTools.Language {
         private async void GotoDefinition() {
             UpdateStatusForIncompleteAnalysis();
 
-            var caret = _textView.GetCaretPosition();
+            var caret = _textView.GetPythonCaret();
             if (caret != null) {
 
-                var defs = await VsProjectAnalyzer.AnalyzeExpressionAsync(caret.Value);
+                var defs = await VsProjectAnalyzer.AnalyzeExpressionAsync(_serviceProvider, _textView, caret.Value);
                 if (defs == null) {
                     return;
                 }
                 Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
-                GetDefsRefsAndValues(_textView.GetAnalyzer(_serviceProvider), _serviceProvider, defs.Expression, defs.Variables, out definitions, out references, out values);
+                GetDefsRefsAndValues(_textView.GetAnalyzerAtCaret(_serviceProvider), _serviceProvider, defs.Expression, defs.Variables, out definitions, out references, out values);
 
                 if ((values.Count + definitions.Count) == 1) {
                     if (values.Count != 0) {
@@ -211,14 +211,14 @@ namespace Microsoft.PythonTools.Language {
         private async void FindAllReferences() {
             UpdateStatusForIncompleteAnalysis();
 
-            var caret = _textView.GetCaretPosition();
+            var caret = _textView.GetPythonCaret();
             if (caret != null) {
-                var references = await VsProjectAnalyzer.AnalyzeExpressionAsync(caret.Value);
+                var references = await VsProjectAnalyzer.AnalyzeExpressionAsync(_serviceProvider, _textView, caret.Value);
                 if (references == null) {
                     return;
                 }
 
-                var locations = GetFindRefLocations(_textView.GetAnalyzer(_serviceProvider), _serviceProvider, references.Expression, references.Variables);
+                var locations = GetFindRefLocations(_textView.GetAnalyzerAtCaret(_serviceProvider), _serviceProvider, references.Expression, references.Variables);
 
                 ShowFindSymbolsDialog(references.Expression, locations);
             }
@@ -617,7 +617,7 @@ namespace Microsoft.PythonTools.Language {
 
         private void UpdateStatusForIncompleteAnalysis() {
             var statusBar = (IVsStatusbar)_serviceProvider.GetService(typeof(SVsStatusbar));
-            var analyzer = _textView.GetAnalyzer(_serviceProvider);
+            var analyzer = _textView.GetAnalyzerAtCaret(_serviceProvider);
             if (analyzer != null && analyzer.IsAnalyzing) {
                 statusBar.SetText("Python source analysis is not up to date");
             }
@@ -646,10 +646,25 @@ namespace Microsoft.PythonTools.Language {
                 OutliningTaggerProvider.OutliningTagger tagger;
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                     case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
-                        FormatCode(new SnapshotSpan(_textView.TextBuffer.CurrentSnapshot, 0, _textView.TextBuffer.CurrentSnapshot.Length), false);
+                        var pyPoint = _textView.BufferGraph.MapDownToFirstMatch(
+                            _textView.Caret.Position.BufferPosition,
+                            PointTrackingMode.Positive,
+                            EditorExtensions.IsPythonContent,
+                            PositionAffinity.Successor
+                        );
+
+                        if (pyPoint != null) {
+                            FormatCode(new SnapshotSpan(pyPoint.Value.Snapshot, 0, pyPoint.Value.Snapshot.Length), false);
+                        }
                         return VSConstants.S_OK;
                     case VSConstants.VSStd2KCmdID.FORMATSELECTION:
-                        FormatCode(_textView.Selection.StreamSelectionSpan.SnapshotSpan, true);
+                        foreach (var span in _textView.BufferGraph.MapDownToFirstMatch(
+                            _textView.Selection.StreamSelectionSpan.SnapshotSpan,
+                            SpanTrackingMode.EdgeInclusive,
+                            EditorExtensions.IsPythonContent
+                        )) {
+                            FormatCode(span, true);
+                        }
                         return VSConstants.S_OK;
                     case VSConstants.VSStd2KCmdID.SHOWMEMBERLIST:
                     case VSConstants.VSStd2KCmdID.COMPLETEWORD:
@@ -739,16 +754,17 @@ namespace Microsoft.PythonTools.Language {
         }
 
         private async void FormatCode(SnapshotSpan span, bool selectResult) {
-            var analyzer = _textView.GetAnalyzer(_serviceProvider);
+            var analysis = _textView.GetAnalysisEntry(span.Snapshot.TextBuffer, _serviceProvider);
+            if (analysis != null) {
+                var options = _pyService.GetCodeFormattingOptions();
+                options.NewLineFormat = _textView.Options.GetNewLineCharacter();
 
-            var options = _pyService.GetCodeFormattingOptions();
-            options.NewLineFormat = _textView.Options.GetNewLineCharacter();
-
-            await analyzer.FormatCodeAsync(span, _textView, options, selectResult);
+                await analysis.Analyzer.FormatCodeAsync(span, _textView, options, selectResult);
+            }
         }
 
         internal void RefactorRename() {
-            var analyzer = _textView.GetAnalyzer(_serviceProvider);
+            var analyzer = _textView.GetAnalyzerAtCaret(_serviceProvider);
             if (analyzer.IsAnalyzing) {
                 var dialog = new WaitForCompleteAnalysisDialog(analyzer);
 
@@ -864,24 +880,22 @@ namespace Microsoft.PythonTools.Language {
         }
 
         private void QueryStatusExtractMethod(OLECMD[] prgCmds, int i) {
-            var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
-
-            if (_textView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                if (_textView.Selection.IsEmpty || 
-                    _textView.Selection.Mode == TextSelectionMode.Box ||
-                    String.IsNullOrWhiteSpace(_textView.Selection.StreamSelectionSpan.GetText())) {
-                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
-                } else {
+            switch (MethodExtractor.CanExtract(_textView)) {
+                case true:
                     prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                }
-            } else {
-                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
+                    break;
+                case false:
+                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
+                    break;
+                case null:
+                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
+                    break;
             }
         }
 
         private void QueryStatusRename(OLECMD[] prgCmds, int i) {
             IWpfTextView activeView = CommonPackage.GetActiveTextView(_serviceProvider);
-            if (_textView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+            if (activeView != null && activeView.GetPythonBufferAtCaret() != null) {
                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
             } else {
                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);

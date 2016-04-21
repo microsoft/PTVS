@@ -18,15 +18,15 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Repl;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.PythonTools.Repl;
-using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -34,16 +34,20 @@ namespace Microsoft.PythonTools.Intellisense {
     /// processed. The completion services are specific to the current context
     /// </summary>
     public class CompletionAnalysis {
+        private readonly ITextView _view;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ITrackingSpan _span;
         private readonly ITextBuffer _textBuffer;
         internal readonly CompletionOptions _options;
         internal const Int64 TooMuchTime = 50;
         protected static Stopwatch _stopwatch = MakeStopWatch();
 
-        internal static CompletionAnalysis EmptyCompletionContext = new CompletionAnalysis(null, null, null);
+        internal static CompletionAnalysis EmptyCompletionContext = new CompletionAnalysis(null, null, null, null, null);
 
-        internal CompletionAnalysis(ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
+        internal CompletionAnalysis(IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
+            _view = view;
             _span = span;
+            _serviceProvider = serviceProvider;
             _textBuffer = textBuffer;
             _options = (options == null) ? new CompletionOptions() : options.Clone();
         }
@@ -57,6 +61,12 @@ namespace Microsoft.PythonTools.Intellisense {
         public ITrackingSpan Span {
             get {
                 return _span;
+            }
+        }
+
+        public ITextView View {
+            get {
+                return _view;
             }
         }
 
@@ -103,7 +113,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal AnalysisEntry GetAnalysisEntry() {
             AnalysisEntry entry;
-            if (TextBuffer.TryGetAnalysisEntry(out entry) && entry != null) {
+            if (_view.TryGetAnalysisEntry(TextBuffer, _serviceProvider, out entry) && entry != null) {
                 //Debug.Assert(
                 //    entry.Analysis != null,
                 //    string.Format("Failed to get analysis for buffer {0} with file {1}", TextBuffer, entry.FilePath)

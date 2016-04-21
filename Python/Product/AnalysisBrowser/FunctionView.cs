@@ -18,13 +18,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Analysis.Browser {
     class FunctionView : MemberView {
         readonly IPythonFunction _function;
         readonly bool _isMethod;
-        string _summary;
+        string _overloadSummary, _returnTypesSummary;
         readonly Lazy<IEnumerable<IAnalysisItemView>> _returnTypes;
         List<FunctionOverloadView> _overloads;
 
@@ -37,29 +38,45 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
         public string OverloadSummary {
             get {
+                if (_overloadSummary != null) {
+                    return _overloadSummary;
+                }
+
                 var args = new List<HashSet<string>>();
+                var types = new List<HashSet<string>>();
 
-                if (_summary == null) {
-                    foreach (var overload in _function.Overloads) {
-                        var parameters = overload.GetParameters();
-                        for (int i = 0; i < parameters.Length; ++i) {
-                            while (args.Count <= i) {
-                                args.Add(new HashSet<string>());
-                            }
+                foreach (var overload in _function.Overloads) {
+                    var parameters = overload.GetParameters();
+                    for (int i = 0; i < parameters.Length; ++i) {
+                        while (args.Count <= i) {
+                            args.Add(new HashSet<string>());
+                            types.Add(new HashSet<string>());
+                        }
 
-                            args[i].Add(parameters[i].Name);
+                        args[i].Add(parameters[i].Name);
+                        if (parameters[i].ParameterTypes != null) {
+                            types[i].UnionWith(parameters[i].ParameterTypes
+                                .Select(p => p?.Name)
+                                .Where(n => !string.IsNullOrEmpty(n))
+                            );
                         }
                     }
-
-                    _summary = string.Join(", ", args.Select(a => {
-                        if (a.Count > 1) {
-                            return "{" + string.Join(", ", a) + "}";
-                        } else {
-                            return a.FirstOrDefault() ?? "(null)";
-                        }
-                    }));
                 }
-                return _summary;
+
+                _overloadSummary = string.Join(", ", args.Zip(types, (a, t) => {
+                    string ts = string.Empty;
+                    if (t.Count > 1) {
+                        ts = " : {" + string.Join(", ", t.Ordered()) + "}";
+                    } else if (t.Count == 1) {
+                        ts = " : " + t.FirstOrDefault();
+                    }
+                    if (a.Count > 1) {
+                        return "{" + string.Join(", ", a.Ordered()) + ts + "}";
+                    } else {
+                        return (a.FirstOrDefault() ?? "(null)") + ts;
+                    }
+                }));
+                return _overloadSummary;
             }
         }
 
@@ -80,6 +97,24 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         public IEnumerable<IAnalysisItemView> ReturnTypes {
             get {
                 return _returnTypes.Value;
+            }
+        }
+
+        public string ReturnTypesSummary {
+            get {
+                if (_returnTypesSummary != null) {
+                    return _returnTypesSummary;
+                }
+
+                var types = new HashSet<string>(ReturnTypes.Select(t => t?.Name ?? "(null)")).Ordered().ToList();
+                if (types.Count > 1) {
+                    _returnTypesSummary = "{" + string.Join(", ", types) + "}";
+                } else if (types.Count == 1) {
+                    _returnTypesSummary = types[0];
+                } else {
+                    _returnTypesSummary = "{}";
+                }
+                return _returnTypesSummary;
             }
         }
 
@@ -125,6 +160,24 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         ) {
             writer.WriteLine("{0}def {2}({3}):", currentIndent, DisplayType, Name, OverloadSummary);
             exportChildren = SortedChildren;
+        }
+
+        public override void ExportToDiffable(
+            TextWriter writer,
+            string currentIndent,
+            string indent,
+            Stack<IAnalysisItemView> exportStack,
+            out IEnumerable<IAnalysisItemView> exportChildren
+        ) {
+            writer.WriteLine(
+                "{0}{2}({3}) -> {4}",
+                currentIndent,
+                DisplayType,
+                Name,
+                OverloadSummary,
+                ReturnTypesSummary
+            );
+            exportChildren = null;
         }
     }
 }

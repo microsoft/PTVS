@@ -131,7 +131,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        internal IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
             var result = AnalysisSet.Empty;
             var classMem = _classInfo.GetMemberNoReferences(node, unit, name);
             if (classMem.Count > 0) {
@@ -149,9 +149,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var ignored = base.GetMember(node, unit, name);
-
             // __getattribute__ takes precedence over everything.
             IAnalysisSet getattrRes = AnalysisSet.Empty;
             var getAttribute = _classInfo.GetMemberNoReferences(node, unit.CopyForEval(), "__getattribute__");

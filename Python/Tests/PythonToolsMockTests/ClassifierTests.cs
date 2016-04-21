@@ -249,7 +249,7 @@ def f() -> int:
                 AstClassifier.ClassificationChanged += (s, e) => SafeSetEvent(_classificationsReady1);
                 var startVersion = _view.CurrentSnapshot.Version;
                 AnalysisClassifier.ClassificationChanged += (s, e) => {
-                    var analysis = _view.CurrentSnapshot.TextBuffer.GetAnalysisEntry();
+                    var analysis = _view.View.TextView.GetAnalysisEntry(_view.CurrentSnapshot.TextBuffer, _view.VS.ServiceProvider);
                     // make sure we have classifications from the version we analyzed after
                     // setting the text below.
                     if (analysis.GetAnalysisVersion(_view.CurrentSnapshot.TextBuffer).VersionNumber > startVersion.VersionNumber) {

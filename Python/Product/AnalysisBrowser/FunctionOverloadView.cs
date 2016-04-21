@@ -153,5 +153,14 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             exportChildren = null;
         }
 
+        public void ExportToDiffable(
+            TextWriter writer,
+            string currentIndent,
+            string indent,
+            Stack<IAnalysisItemView> exportStack,
+            out IEnumerable<IAnalysisItemView> exportChildren
+        ) {
+            exportChildren = null;
+        }
     }
 }

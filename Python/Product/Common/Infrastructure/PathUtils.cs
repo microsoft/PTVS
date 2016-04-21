@@ -588,61 +588,120 @@ namespace Microsoft.PythonTools.Infrastructure {
         }
 
         /// <summary>
-        /// Creates a dictionary containing values from the two environments.
+        /// Safely enumerates all subdirectories under a given root. If a
+        /// subdirectory is inaccessible, it will not be returned (compare and
+        /// contrast with Directory.GetDirectories, which will crash without
+        /// returning any subdirectories at all).
         /// </summary>
-        /// <param name="baseEnvironment">The base environment.</param>
-        /// <param name="subEnvironment">
-        /// The sub environment. Values in this sequence override the base
-        /// environment, unless they are merged.
+        /// <param name="root">
+        /// Directory to enumerate under. This is not returned from this
+        /// function.
         /// </param>
-        /// <param name="keysToMerge">
-        /// List of key names that should be merged. Keys are merged by
-        /// appending the base environment's value after the sub environment,
-        /// and separating with <see cref="Path.PathSeparator"/>.
+        /// <param name="recurse">
+        /// <c>true</c> to return subdirectories of subdirectories.
         /// </param>
-        public static Dictionary<string, string> MergeEnvironments(
-            IEnumerable<KeyValuePair<string, string>> baseEnvironment,
-            IEnumerable<KeyValuePair<string, string>> subEnvironment,
-            params string[] keysToMerge
+        /// <param name="fullPaths">
+        /// <c>true</c> to return full paths for all subdirectories. Otherwise,
+        /// the relative path from <paramref name="root"/> is returned.
+        /// </param>
+        public static IEnumerable<string> EnumerateDirectories(
+            string root,
+            bool recurse = true,
+            bool fullPaths = true
         ) {
-            var env = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var kv in baseEnvironment) {
-                env[kv.Key] = kv.Value;
+            var queue = new Queue<string>();
+            if (!root.EndsWith("\\")) {
+                root += "\\";
             }
+            queue.Enqueue(root);
 
-            var merge = new HashSet<string>(keysToMerge, StringComparer.OrdinalIgnoreCase);
-            foreach (var kv in subEnvironment) {
-                string existing;
-                if (env.TryGetValue(kv.Key, out existing) && !string.IsNullOrWhiteSpace(existing)) {
-                    if (merge.Contains(kv.Key)) {
-                        env[kv.Key] = kv.Value + Path.PathSeparator + existing;
-                    } else {
-                        env[kv.Key] = kv.Value;
+            while (queue.Any()) {
+                var path = queue.Dequeue();
+                if (!path.EndsWith("\\")) {
+                    path += "\\";
+                }
+
+                IEnumerable<string> dirs = null;
+                try {
+                    dirs = Directory.GetDirectories(path);
+                } catch (UnauthorizedAccessException) {
+                } catch (IOException) {
+                }
+                if (dirs == null) {
+                    continue;
+                }
+
+                foreach (var d in dirs) {
+                    if (!fullPaths && !d.StartsWith(root, StringComparison.OrdinalIgnoreCase)) {
+                        continue;
                     }
-                } else {
-                    env[kv.Key] = kv.Value;
+                    if (recurse) {
+                        queue.Enqueue(d);
+                    }
+                    yield return fullPaths ? d : d.Substring(root.Length);
                 }
             }
-
-            return env;
         }
 
         /// <summary>
-        /// Creates a dictionary containing the environment specified in a
-        /// multi-line string.
+        /// Safely enumerates all files under a given root. If a subdirectory is
+        /// inaccessible, its files will not be returned (compare and contrast
+        /// with Directory.GetFiles, which will crash without returning any
+        /// files at all).
         /// </summary>
-        public static Dictionary<string, string> ParseEnvironment(string environment) {
-            var env = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            if (!string.IsNullOrEmpty(environment)) {
-                foreach (var envVar in environment.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
-                    var nameValue = envVar.Split(new[] { '=' }, 2);
-                    if (nameValue.Length == 2) {
-                        env[nameValue[0]] = nameValue[1];
+        /// <param name="root">
+        /// Directory to enumerate.
+        /// </param>
+        /// <param name="pattern">
+        /// File pattern to return. You may use wildcards * and ?.
+        /// </param>
+        /// <param name="recurse">
+        /// <c>true</c> to return files within subdirectories.
+        /// </param>
+        /// <param name="fullPaths">
+        /// <c>true</c> to return full paths for all subdirectories. Otherwise,
+        /// the relative path from <paramref name="root"/> is returned.
+        /// </param>
+        public static IEnumerable<string> EnumerateFiles(
+            string root,
+            string pattern = "*",
+            bool recurse = true,
+            bool fullPaths = true
+        ) {
+            if (!root.EndsWith("\\")) {
+                root += "\\";
+            }
+
+            var dirs = Enumerable.Repeat(root, 1);
+            if (recurse) {
+                dirs = dirs.Concat(EnumerateDirectories(root, true, false));
+            }
+
+            foreach (var dir in dirs) {
+                var fullDir = Path.IsPathRooted(dir) ? dir : (root + dir);
+                var dirPrefix = Path.IsPathRooted(dir) ? "" : EnsureEndSeparator(dir);
+
+                IEnumerable<string> files = null;
+                try {
+                    files = Directory.GetFiles(fullDir, pattern);
+                } catch (UnauthorizedAccessException) {
+                } catch (IOException) {
+                }
+                if (files == null) {
+                    continue;
+                }
+
+                foreach (var f in files) {
+                    if (fullPaths) {
+                        yield return f;
+                    } else {
+                        var relPath = dirPrefix + GetFileOrDirectoryName(f);
+                        if (File.Exists(root + relPath)) {
+                            yield return relPath;
+                        }
                     }
                 }
             }
-
-            return env;
         }
     }
 }

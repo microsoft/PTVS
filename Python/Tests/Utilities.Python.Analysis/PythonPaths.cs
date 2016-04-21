@@ -69,7 +69,7 @@ namespace TestUtilities {
                                     return new PythonVersion(
                                         Path.Combine(res, exeName),
                                         PythonLanguageVersion.V27,
-                                        x64 ? "IronPython|2.7 64-bit" : "IronPython|2.7 32-bit",
+                                        x64 ? "IronPython|2.7-64" : "IronPython|2.7-32",
                                         x64,
                                         true,
                                         false
@@ -84,7 +84,7 @@ namespace TestUtilities {
             var ver = new PythonVersion(
                 "C:\\Program Files (x86)\\IronPython 2.7\\" + exeName, 
                 PythonLanguageVersion.V27,
-                "IronPython|2.7 32-bit",
+                "IronPython|2.7-32",
                 false,
                 true,
                 false

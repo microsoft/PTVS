@@ -24,6 +24,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -1680,7 +1682,7 @@ $cls
 
         static void WaitForAnalysis(ReplWindowProxy interactive) {
             var stopAt = DateTime.Now.Add(TimeSpan.FromSeconds(60));
-            interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).WaitForCompleteAnalysis(_ => DateTime.Now < stopAt);
+            interactive.GetAnalyzer().WaitForCompleteAnalysis(_ => DateTime.Now < stopAt);
             if (DateTime.Now >= stopAt) {
                 Assert.Fail("Timeout waiting for complete analysis");
             }
@@ -1701,6 +1703,12 @@ $cls
                     InlinePrompts = true
                 };
             }
+        }
+    }
+
+    static class ReplWindowProxyExtensions {
+        public static VsProjectAnalyzer GetAnalyzer(this ReplWindowProxy proxy) {
+            return ((IPythonReplIntellisense)proxy.Window.Evaluator).ReplAnalyzer;
         }
     }
 }

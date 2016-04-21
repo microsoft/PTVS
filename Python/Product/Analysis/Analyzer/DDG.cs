@@ -226,7 +226,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             bool addRef = node.Name != "*";
 
-            var variable = Scope.CreateVariable(node, _unit, saveName, addRef);
+            var variable = Scope.CreateVariable(node, _unit, saveName, false);
             bool added = false;
             if (userMod != null) {
                 added = variable.AddTypes(_unit, userMod.GetModuleMember(node, _unit, impName, addRef, Scope, saveName));

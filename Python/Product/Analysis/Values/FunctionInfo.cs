@@ -499,10 +499,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             varRef.AddTypes(unit, value);
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var ignored = base.GetMember(node, unit, name);
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
+            return ProjectState.ClassInfos[BuiltinTypeId.Function].GetMember(node, unit, name);
+        }
 
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             VariableDef tmp;
             if (_functionAttrs != null && _functionAttrs.TryGetValue(name, out tmp)) {
                 tmp.AddDependency(unit);
@@ -510,12 +511,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 return tmp.Types;
             }
+
             // TODO: Create one and add a dependency
             if (name == "__name__") {
                 return unit.ProjectState.GetConstant(FunctionDefinition.Name);
             }
 
-            return ProjectState.ClassInfos[BuiltinTypeId.Function].GetMember(node, unit, name);
+            return GetTypeMember(node, unit, name);
         }
 
         public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {

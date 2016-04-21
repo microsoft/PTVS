@@ -391,10 +391,12 @@ except (sys."}) {
                         view.Text = test;
                         var snapshot = view.CurrentSnapshot;
 
-                        var res = snapshot.GetSignatures(
-                            view.VS.ServiceProvider,
+                        var res = view.VS.GetPyService().GetSignatures(
+                            view.View.TextView,
+                            snapshot,
                             snapshot.CreateTrackingSpan(snapshot.Length, 0, SpanTrackingMode.EdgeInclusive)
                         );
+
                         Assert.AreEqual(sig.Function, res.Text, test);
                         Assert.AreEqual(sig.Param, res.ParameterIndex, test);
                     }
@@ -1138,6 +1140,8 @@ async def g():
                 QuickInfoSource.AugmentQuickInfoWorker(
                     quickInfo,
                     VsProjectAnalyzer.GetQuickInfoAsync(
+                        view.VS.ServiceProvider,
+                        view.View.TextView,
                         new SnapshotPoint(snapshot, start)
                     ).Result,
                     out span
@@ -1157,8 +1161,9 @@ async def g():
 
             using (var view = new PythonEditor(code, version, vs)) {
                 var snapshot = view.CurrentSnapshot;
-                return snapshot.AnalyzeExpression(
-                    vs.ServiceProvider,
+                return vs.GetPyService().AnalyzeExpression(
+                    view.View.TextView,
+                    snapshot,
                     snapshot.CreateTrackingSpan(location, location < snapshot.Length ? 1 : 0, SpanTrackingMode.EdgeInclusive),
                     false
                 );
@@ -1171,8 +1176,9 @@ async def g():
                 index += snapshot.Length + 1;
             }
 
-            var context = snapshot.GetCompletions(
-                view.VS.ServiceProvider,
+            var context = view.VS.GetPyService().GetCompletions(
+                view.View.TextView,
+                snapshot,
                 snapshot.GetApplicableSpan(index) ?? snapshot.CreateTrackingSpan(index, 0, SpanTrackingMode.EdgeInclusive),
                 snapshot.CreateTrackingPoint(index, PointTrackingMode.Negative),
                 new CompletionOptions()
@@ -1190,8 +1196,9 @@ async def g():
         private static SignatureAnalysis GetSignatureAnalysis(PythonEditor view, int index) {
             var snapshot = view.CurrentSnapshot;
 
-            return snapshot.GetSignatures(
-                view.VS.ServiceProvider,
+            return view.VS.GetPyService().GetSignatures(
+                view.View.TextView,
+                snapshot,
                 snapshot.CreateTrackingSpan(index, 1, SpanTrackingMode.EdgeInclusive)
             );
         }

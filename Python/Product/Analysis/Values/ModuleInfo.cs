@@ -221,10 +221,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var ignored = base.GetMember(node, unit, name);
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
+            return AnalysisSet.Empty;
+        }
 
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             if (unit.ForEval) {
                 VariableDef value;
                 return Scope.TryGetVariable(name, out value) ? value.Types : AnalysisSet.Empty;

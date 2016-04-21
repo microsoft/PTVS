@@ -67,6 +67,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             ErrorHandler.ThrowOnFailure(target.Exec(ref guid, (int)VSConstants.VSStd2KCmdID.SHOWMEMBERLIST, 0, IntPtr.Zero, IntPtr.Zero));
         }
 
+        public static void ParamInfo(this IOleCommandTarget target) {
+            var guid = VSConstants.VSStd2K;
+            ErrorHandler.ThrowOnFailure(target.Exec(ref guid, (int)VSConstants.VSStd2KCmdID.PARAMINFO, 0, IntPtr.Zero, IntPtr.Zero));
+        }
+
         [StructLayout(LayoutKind.Explicit, Size = 16)]
         struct VARIANT {
             [FieldOffset(0)]

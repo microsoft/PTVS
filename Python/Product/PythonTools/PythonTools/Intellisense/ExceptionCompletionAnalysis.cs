@@ -21,14 +21,15 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Provides the completion context for when the user is doing an import
     /// </summary>
     internal class ExceptionCompletionAnalysis : CompletionAnalysis {
-        internal ExceptionCompletionAnalysis(ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(span, textBuffer, options) {
+        internal ExceptionCompletionAnalysis(IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(serviceProvider, view, span, textBuffer, options) {
         }
 
         private static readonly string[] KnownExceptions = new[] { "GeneratorExit", "KeyboardInterrupt", 

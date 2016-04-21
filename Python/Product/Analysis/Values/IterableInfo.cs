@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -60,9 +61,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _unionType;
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var res = base.GetMember(node, unit, name);
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
+            var res = base.GetTypeMember(node, unit, name);
 
             if (name == "__iter__") {
                 return _iterMethod = _iterMethod ?? new SpecializedCallable(
@@ -75,10 +75,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            return GetTypeMember(node, unit, name);
+        }
+
         private IAnalysisSet IterableIter(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 0) {
                 return unit.Scope.GetOrMakeNodeValue(
                     node,
+                    NodeValueKind.Iterator,
                     n => new IteratorInfo(
                         _indexTypes,
                         IteratorInfo.GetIteratorTypeFromType(ClassInfo, unit),

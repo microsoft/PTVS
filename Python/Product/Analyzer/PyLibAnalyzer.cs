@@ -483,6 +483,11 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        private static bool IsTestPackage(ModulePath path) {
+            var fn = "." + path.FullName;
+            return fn.Contains(".test.") || fn.Contains(".tests.");
+        }
+
         internal void WaitForOtherRun() {
             if (string.IsNullOrEmpty(_waitForAnalysis)) {
                 return;
@@ -583,6 +588,28 @@ namespace Microsoft.PythonTools.Analysis {
                 }
                 // May be a transient error, so try again shortly.
                 await Task.Delay(500);
+            }
+
+            // Collect all test package files into their own groups. This
+            // reduces completion information, generally for the better, and
+            // significantly reduces time and memory usage while generating it.
+            var testPackageGroups = new List<Tuple<List<ModulePath>, List<ModulePath>>>();
+            foreach (var g in fileGroups) {
+                var tg = g.Where(IsTestPackage).ToList();
+                if (tg.Any()) {
+                    g.RemoveAll(IsTestPackage);
+                    testPackageGroups.Add(Tuple.Create(g, tg));
+                }
+            }
+
+            // Insert test groups after the one they were obtained from
+            foreach (var t in testPackageGroups) {
+                int i = fileGroups.IndexOf(t.Item1);
+                if (i >= 0 && i < fileGroups.Count) {
+                    fileGroups.Insert(i + 1, t.Item2);
+                } else {
+                    fileGroups.Add(t.Item2);
+                }
             }
 
             // HACK: Top-level modules in site-packages folders
@@ -711,7 +738,7 @@ namespace Microsoft.PythonTools.Analysis {
             _progressOffset = 0;
 
             _scrapeFileGroups.Clear();
-            _analyzeFileGroups.Clear();
+            var analyzeFileGroups = new List<List<ModulePath>>();
             var candidateScrapeFileGroups = new List<List<ModulePath>>();
             var candidateAnalyzeFileGroups = new List<List<ModulePath>>();
 
@@ -726,7 +753,7 @@ namespace Microsoft.PythonTools.Analysis {
                         TraceVerbose("Adding /all because the above module is builtin or stdlib");
                         // Include all the file groups we've already seen.
                         _scrapeFileGroups.InsertRange(0, candidateScrapeFileGroups);
-                        _analyzeFileGroups.InsertRange(0, candidateAnalyzeFileGroups);
+                        analyzeFileGroups.InsertRange(0, candidateAnalyzeFileGroups);
                         _progressTotal += candidateScrapeFileGroups.Concat(candidateAnalyzeFileGroups).Sum(fg => fg.Count);
                         candidateScrapeFileGroups = null;
                         candidateAnalyzeFileGroups = null;
@@ -738,7 +765,7 @@ namespace Microsoft.PythonTools.Analysis {
                         _scrapeFileGroups.Add(toScrape);
                     }
                     if (toAnalyze.Any()) {
-                        _analyzeFileGroups.Add(toAnalyze);
+                        analyzeFileGroups.Add(toAnalyze);
                     }
                 } else {
                     filesToKeep.UnionWith(fileGroup
@@ -757,6 +784,23 @@ namespace Microsoft.PythonTools.Analysis {
             if (!_all) {
                 filesInDatabase.ExceptWith(filesToKeep);
             }
+
+            // Reorder analyzeFileGroups to improve quality of results for
+            // later packages.
+            var firstPackages = analyzeFileGroups
+                .Where(g => _treatPathsAsStandardLibrary.Contains(g[0].LibraryPath))
+                .ToList();
+            analyzeFileGroups.RemoveAll(g => _treatPathsAsStandardLibrary.Contains(g[0].LibraryPath));
+            foreach (var package in GetPackageOrder()) {
+                var matching = analyzeFileGroups
+                    .Where(g => g[0].ModuleName.StartsWith(package + ".") || g[0].ModuleName == package)
+                    .ToList();
+                firstPackages.AddRange(matching);
+                analyzeFileGroups.RemoveAll(g => matching.Contains(g));
+            }
+            _analyzeFileGroups.Clear();
+            _analyzeFileGroups.AddRange(firstPackages);
+            _analyzeFileGroups.AddRange(analyzeFileGroups);
 
             // Scale file removal by 10 because it's much quicker than analysis.
             _progressTotal += filesInDatabase.Count / 10;
@@ -957,6 +1001,18 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        private IEnumerable<string> GetPackageOrder() {
+            var values = ConfigurationManager.AppSettings.Get("PackageOrder");
+            if (string.IsNullOrEmpty(values)) {
+                return Enumerable.Empty<string>();
+            }
+
+            return values.Split(',', ';')
+                .Select(n => n?.Trim())
+                .Where(n => !string.IsNullOrEmpty(n));
+        }
+
+
 
         private IEnumerable<string> IncludeModulesFromModulePath {
             get {
@@ -966,7 +1022,10 @@ namespace Microsoft.PythonTools.Analysis {
                         _readModulePath = Enumerable.Empty<string>();
                     } else {
                         TraceInformation("IncludeModulesFromModulePath = {0}", values);
-                        _readModulePath = values.Split(',', ';').Where(n => !string.IsNullOrWhiteSpace(n)).ToArray();
+                        _readModulePath = values.Split(',', ';')
+                            .Select(n => n?.Trim())
+                            .Where(n => !string.IsNullOrEmpty(n))
+                            .ToArray();
                     }
                 }
                 return _readModulePath;
@@ -1097,6 +1156,30 @@ namespace Microsoft.PythonTools.Analysis {
             return false;
         }
 
+        private IEnumerable<string> GetDatabasePaths(string outDir) {
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            if (seen.Add(_outDir)) {
+                yield return _outDir;
+            }
+
+            if (seen.Add(outDir)) {
+                yield return outDir;
+            }
+
+            foreach (var d in PathUtils.EnumerateDirectories(_outDir, recurse: false)) {
+                if (seen.Add(d)) {
+                    yield return d;
+                }
+            }
+
+            foreach (var d in _baseDb.Skip(1)) {
+                if (seen.Add(d)) {
+                    yield return d;
+                }
+            }
+        }
+
         internal Task Analyze() {
             if (_updater != null) {
                 _updater.UpdateStatus(_progressOffset, _progressTotal, "Starting analysis");
@@ -1156,7 +1239,7 @@ namespace Microsoft.PythonTools.Analysis {
                 using (var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
                     _version,
                     null,
-                    new[] { _outDir, outDir }.Concat(_baseDb.Skip(1)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray()
+                    GetDatabasePaths(outDir).ToArray()
                 ))
                 using (var projectState = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions()) {
                     int? mostItemsInQueue = null;
