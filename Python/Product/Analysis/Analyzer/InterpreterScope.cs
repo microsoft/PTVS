@@ -294,9 +294,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             NodeValue next;
             _nodeValues.TryGetValue(node, out next);
 #if DEBUG
-            while (next != null) {
-                Debug.Assert(next.Kind != kind);
-                next = next.Next;
+            var tmp = next;
+            while (tmp != null) {
+                Debug.Assert(tmp.Kind != kind);
+                tmp = tmp.Next;
             }
 #endif
             _nodeValues[node] = new NodeValue(kind, variable, next);
