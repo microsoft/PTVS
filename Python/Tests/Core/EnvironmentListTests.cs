@@ -537,7 +537,7 @@ namespace PythonToolsUITests {
                         var environment = list.Environments.FirstOrDefault(ev =>
                             ev.Factory == interpreter
                         );
-                        Assert.IsNotNull(environment, string.Format("Did not find {0}", interpreter.Configuration.Description));
+                        Assert.IsNotNull(environment, string.Format("Did not find {0}", interpreter.Configuration.FullDescription));
 
                         list.Execute(EnvironmentView.MakeGlobalDefault, environment);
                         Assert.IsTrue(defaultChanged.WaitOne(TimeSpan.FromSeconds(10.0)), "Setting default took too long");
@@ -545,8 +545,8 @@ namespace PythonToolsUITests {
                         Assert.AreEqual(interpreter, service.DefaultInterpreter,
                             string.Format(
                                 "Failed to change default from {0} to {1}",
-                                service.DefaultInterpreter.Configuration.Description,
-                                interpreter.Configuration.Description
+                                service.DefaultInterpreter.Configuration.FullDescription,
+                                interpreter.Configuration.FullDescription
                         ));
                     }
                 } finally {

@@ -109,16 +109,16 @@ namespace TestUtilities.UI.Python {
             }
         }
 
-        public const string PythonApplicationTemplate = "ConsoleAppProject.zip";
-        public const string EmptyWebProjectTemplate = "EmptyWebProject.zip";
-        public const string BottleWebProjectTemplate = "WebProjectBottle.zip";
-        public const string FlaskWebProjectTemplate = "WebProjectFlask.zip";
-        public const string DjangoWebProjectTemplate = "DjangoProject.zip";
-        public const string WorkerRoleProjectTemplate = "WorkerRoleProject.zip";
+        public const string PythonApplicationTemplate = "ConsoleAppProject";
+        public const string EmptyWebProjectTemplate = "WebProjectEmpty";
+        public const string BottleWebProjectTemplate = "WebProjectBottle";
+        public const string FlaskWebProjectTemplate = "WebProjectFlask";
+        public const string DjangoWebProjectTemplate = "DjangoProject";
+        public const string WorkerRoleProjectTemplate = "WorkerRoleProject";
         
-        public const string EmptyFileTemplate = "EmptyPyFile.zip";
-        public const string WebRoleSupportTemplate = "AzureCSWebRole.zip";
-        public const string WorkerRoleSupportTemplate = "AzureCSWorkerRole.zip";
+        public const string EmptyFileTemplate = "EmptyPyFile";
+        public const string WebRoleSupportTemplate = "AzureCSWebRole";
+        public const string WorkerRoleSupportTemplate = "AzureCSWorkerRole";
 
         /// <summary>
         /// Opens and activates the solution explorer window.

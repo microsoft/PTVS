@@ -285,10 +285,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 // later.
                 bool hasError = false;
 
-                bool hasDescription = true;
                 var description = GetValue(item, MSBuildConstants.DescriptionKey);
                 if (string.IsNullOrEmpty(description)) {
-                    hasDescription = false;
                     description = PathUtils.CreateFriendlyDirectoryPath(projectHome, dir);
                 }
 
@@ -368,10 +366,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 } else {
                     Debug.Assert(baseInterp != null, "we reported an error if we didn't have a base interpreter");
 
-                    if (!hasDescription) {
-                        description = string.Format("{0} ({1})", description, baseInterp.Description);
-                    }
-
                     info = new ConfiguredFactoryInfo(
                         this,
                         baseInterp,
@@ -385,7 +379,8 @@ namespace Microsoft.PythonTools.Interpreter {
                             pathVar,
                             baseInterp.Architecture,
                             baseInterp.Version,
-                            InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase
+                            InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase,
+                            baseInterp != null ? string.Format("({0})", baseInterp.FullDescription) : null
                         )
                     );
                 }
@@ -486,18 +481,22 @@ namespace Microsoft.PythonTools.Interpreter {
                 string id,
                 Version version,
                 string description = null,
-                string prefixPath = null
+                string prefixPath = null,
+                ProcessorArchitecture architecture = ProcessorArchitecture.None,
+                string descriptionSuffix = null
             ) {
                 Configuration = new InterpreterConfiguration(
                     id,
-                    string.IsNullOrEmpty(description) ? string.Format("Unknown Python {0}", version) : description,
+                    string.IsNullOrEmpty(description) ? "Unknown Python" : description,
                     prefixPath,
                     null,
                     null,
                     null,
                     null,
-                    ProcessorArchitecture.None,
-                    version
+                    architecture,
+                    version,
+                    InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured,
+                    "(unavailable)"
                 );
             }
 
@@ -602,7 +601,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 _factory = new NotFoundInterpreterFactory(
                     Config.Id,
                     Config.Version,
-                    string.Format("{0} (unavailable)", Config.Description),
+                    Config.Description,
                     Directory.Exists(_dir) ? _dir : null
                 );
             }

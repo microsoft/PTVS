@@ -527,14 +527,14 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
                     var factories = provider.GetInterpreterFactories().ToList();
                     foreach (var fact in factories) {
-                        Console.WriteLine("{0}: {1}", fact.GetType().FullName, fact.Configuration.Description);
+                        Console.WriteLine("{0}: {1}", fact.GetType().FullName, fact.Configuration.FullDescription);
                     }
 
                     foreach (var fact in factories) {
                         Assert.IsInstanceOfType(
                             fact,
                             typeof(MSBuildProjectInterpreterFactoryProvider.NotFoundInterpreterFactory),
-                            string.Format("{0} was not correct type", fact.Configuration.Description)
+                            string.Format("{0} was not correct type", fact.Configuration.FullDescription)
                         );
                         Assert.IsFalse(fact.Configuration.IsAvailable(), string.Format("{0} was not unavailable", fact.Configuration.Description));
                     }

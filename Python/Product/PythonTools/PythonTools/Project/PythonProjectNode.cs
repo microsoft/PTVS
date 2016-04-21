@@ -907,7 +907,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (includeReferences) {
-                foreach (var r in GetReferenceContainer().EnumReferences()) {
+                foreach (var r in (GetReferenceContainer()?.EnumReferences()).MaybeEnumerate()) {
                     string absPath;
                     try {
                         absPath = PathUtils.GetAbsoluteFilePath(ProjectHome, r.Url);
@@ -1016,29 +1016,33 @@ namespace Microsoft.PythonTools.Project {
                 case PythonConstants.SearchPathSetting:
                     RefreshSearchPaths();
 
-                    // we need to remove old files from the analyzer and add the new files
-                    HashSet<string> oldDirs = new HashSet<string>(GetSearchPaths(e.OldValue, true), StringComparer.OrdinalIgnoreCase);
-                    HashSet<string> newDirs = new HashSet<string>(GetSearchPaths(e.NewValue, true), StringComparer.OrdinalIgnoreCase);
+                    var analyzer = _analyzer;
+                    if (analyzer != null) {
+                        // we need to remove old files from the analyzer and add the new files
+                        HashSet<string> oldDirs = new HashSet<string>(GetSearchPaths(e.OldValue, true), StringComparer.OrdinalIgnoreCase);
+                        HashSet<string> newDirs = new HashSet<string>(GetSearchPaths(e.NewValue, true), StringComparer.OrdinalIgnoreCase);
 
-                    // figure out all the possible directory names we could be removing...
-                    foreach (var fileProject in _analyzer.LoadedFiles) {
-                        string file = fileProject.Key;
-                        var projectEntry = fileProject.Value;
-                        string searchPathEntry = fileProject.Value.SearchPathEntry;
-                        if (projectEntry != null &&
-                            searchPathEntry != null &&
-                            !newDirs.Contains(searchPathEntry)) {
-                            _analyzer.UnloadFileAsync(projectEntry).DoNotWait();
+                        // figure out all the possible directory names we could be removing...
+                        foreach (var fileProject in analyzer.LoadedFiles) {
+                            string file = fileProject.Key;
+                            var projectEntry = fileProject.Value;
+                            string searchPathEntry = fileProject.Value.SearchPathEntry;
+                            if (projectEntry != null &&
+                                searchPathEntry != null &&
+                                !newDirs.Contains(searchPathEntry)) {
+                                analyzer.UnloadFileAsync(projectEntry).DoNotWait();
+                            }
                         }
+
+                        // find the values only in the old list, and let the analyzer know it shouldn't be watching those dirs
+                        oldDirs.ExceptWith(newDirs);
+                        foreach (var dir in oldDirs) {
+                            await analyzer.StopAnalyzingDirectoryAsync(dir);
+                        }
+
+                        AnalyzeSearchPaths(newDirs);
                     }
 
-                    // find the values only in the old list, and let the analyzer know it shouldn't be watching those dirs
-                    oldDirs.ExceptWith(newDirs);
-                    foreach (var dir in oldDirs) {
-                        await _analyzer.StopAnalyzingDirectoryAsync(dir);
-                    }
-
-                    AnalyzeSearchPaths(newDirs);
                     break;
             }
 
@@ -1311,7 +1315,7 @@ namespace Microsoft.PythonTools.Project {
 
             if (!fact.Configuration.IsAvailable()) {
                 throw new MissingInterpreterException(
-                    Strings.MissingEnvironment.FormatUI(fact.Configuration.Description, fact.Configuration.Version)
+                    Strings.MissingEnvironment.FormatUI(fact.Configuration.FullDescription, fact.Configuration.Version)
                 );
             } else if (IsActiveInterpreterGlobalDefault && 
                 !String.IsNullOrWhiteSpace(BuildProject.GetPropertyValue(MSBuildConstants.InterpreterIdProperty))) {

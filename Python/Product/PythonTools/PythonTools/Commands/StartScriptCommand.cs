@@ -90,21 +90,7 @@ namespace Microsoft.PythonTools.Commands {
 
             var launcher = PythonToolsPackage.GetLauncher(_serviceProvider, pythonProject);
             try {
-                var launcher2 = launcher as IProjectLauncher2;
-                if (launcher2 != null) {
-                    launcher2.LaunchFile(
-                        file,
-                        CommandId == CommonConstants.StartDebuggingCmdId,
-                        new LaunchFileProperties(
-                            null,
-                            PathUtils.GetParent(file),
-                            pythonProject.GetInterpreterFactory().Configuration.PathEnvironmentVariable,
-                            pythonProject.GetWorkingDirectory()
-                        )
-                    );
-                } else {
-                    launcher.LaunchFile(file, CommandId == CommonConstants.StartDebuggingCmdId);
-                }
+                launcher.LaunchFile(file, CommandId == CommonConstants.StartDebuggingCmdId);
             } catch (MissingInterpreterException ex) {
                 MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
             } catch (NoInterpretersException ex) {

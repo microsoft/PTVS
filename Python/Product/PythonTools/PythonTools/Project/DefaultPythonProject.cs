@@ -28,7 +28,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly IServiceProvider _serviceProvider;
         private readonly string _filePath;
 
-        public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
+        public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging { add { } remove { } }
 
         public DefaultPythonProject(IServiceProvider serviceProvider, string filePath) {
             Utilities.ArgumentNotNullOrEmpty("filePath", filePath);

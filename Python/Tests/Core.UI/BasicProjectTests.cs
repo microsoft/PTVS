@@ -1335,7 +1335,7 @@ namespace PythonToolsUITests {
 
             using (var app = new PythonVisualStudioApp())
             using (var dis = app.SelectDefaultInterpreter(python)) {
-                var interpreterName = dis.CurrentDefault.Configuration.Description;
+                var interpreterName = dis.CurrentDefault.Configuration.FullDescription;
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
 
                 var solutionExplorer = app.OpenSolutionExplorer();

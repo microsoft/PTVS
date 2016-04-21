@@ -18,7 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.Build.Execution;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.BuildTasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -31,6 +33,8 @@ namespace Microsoft.PythonTools.Project.Web {
     class PythonWebLauncherProvider : IPythonLauncherProvider2 {
         private readonly PythonToolsService _pyService;
         private readonly IServiceProvider _serviceProvider;
+
+        private static readonly Regex SubstitutionPattern = new Regex(@"\{([\w_]+)\}");
 
         [ImportingConstructor]
         public PythonWebLauncherProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
@@ -66,6 +70,35 @@ namespace Microsoft.PythonTools.Project.Web {
             }
         }
 
+        internal static string DoSubstitutions(IPythonProject project, string str) {
+            if (string.IsNullOrEmpty(str)) {
+                return str;
+            }
+
+            return SubstitutionPattern.Replace(
+                str,
+                m => {
+                    switch (m.Groups[1].Value.ToLowerInvariant()) {
+                        case "startupfile":
+                            return project.GetProperty(PythonConstants.StartupFileSetting);
+                        case "startupmodule":
+                            try {
+                                return ModulePath.FromFullPath(
+                                    PathUtils.GetAbsoluteFilePath(
+                                        project.ProjectHome,
+                                        project.GetProperty(PythonConstants.StartupFileSetting)
+                                    ),
+                                    project.ProjectHome
+                                ).ModuleName;
+                            } catch (ArgumentException) {
+                            }
+                            break;
+                    }
+                    return m.Value;
+                }
+            );
+        }
+
         private static LaunchConfiguration GetMSBuildCommandConfig(
             LaunchConfiguration original,
             IPythonProject project,
@@ -74,9 +107,7 @@ namespace Microsoft.PythonTools.Project.Web {
             string argumentsProperty,
             string environmentProperty
         ) {
-            // TODO: Handle {StartupModule} in properties
-
-            var target = project.GetProperty(targetProperty);
+            var target = DoSubstitutions(project, project.GetProperty(targetProperty));
             if (string.IsNullOrEmpty(target)) {
                 return original;
             }
@@ -95,12 +126,12 @@ namespace Microsoft.PythonTools.Project.Web {
                 config.ScriptName = target;
             }
 
-            var args = project.GetProperty(argumentsProperty);
+            var args = DoSubstitutions(project, project.GetProperty(argumentsProperty));
             if (!string.IsNullOrEmpty(args)) {
                 config.ScriptArguments = (config.ScriptArguments ?? "") + " " + args;
             }
 
-            var env = project.GetProperty(environmentProperty);
+            var env = DoSubstitutions(project, project.GetProperty(environmentProperty));
             config.Environment = PathUtils.MergeEnvironments(config.Environment, PathUtils.ParseEnvironment(env));
 
             return config;

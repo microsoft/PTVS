@@ -247,8 +247,9 @@ namespace PythonToolsUITests {
                     "WebProjectBuildWarnings"
                 );
 
-                var proj = project.GetCommonProject();
+                var proj = project.GetPythonProject();
                 Assert.IsNotNull(proj);
+                Assert.AreEqual(new Version(3, 3), app.ServiceProvider.GetUIThread().Invoke(() => proj.GetLaunchConfigurationOrThrow().Interpreter.Version));
 
                 for (int iteration = 0; iteration <= 2; ++iteration) {
                     var warnings = app.ServiceProvider.GetUIThread().Invoke(() => {
@@ -259,6 +260,7 @@ namespace PythonToolsUITests {
                         project.DTE.Solution.SolutionBuild.Build(true);
 
                         var text = app.GetOutputWindowText("Build");
+                        Console.WriteLine(text);
                         return text.Split('\r', '\n')
                             .Select(s => Regex.Match(s, @"warning\s*:\s*(?<msg>.+)"))
                             .Where(m => m.Success)
@@ -390,9 +392,7 @@ namespace PythonToolsUITests {
                 
                 var project = t.WaitAndUnwrapExceptions();
 
-                var provider = project.Properties.Item("InterpreterFactoryProvider").Value as MSBuildProjectInterpreterFactoryProvider;
-
-                var contextProvider = app.GetService<VsProjectContextProvider>();
+                var contextProvider = app.ComponentModel.GetService<VsProjectContextProvider>();
                 for (int retries = 20; retries > 0; --retries) {
                     if (contextProvider.IsProjectSpecific(project.GetPythonProject().ActiveInterpreter.Configuration)) {
                         break;
@@ -432,8 +432,6 @@ namespace PythonToolsUITests {
                 }
 
                 var project = t.WaitAndUnwrapExceptions();
-
-                var provider = project.Properties.Item("InterpreterFactoryProvider").Value as MSBuildProjectInterpreterFactoryProvider;
 
                 Assert.AreSame(app.OptionsService.DefaultInterpreter, project.GetPythonProject().ActiveInterpreter);
 

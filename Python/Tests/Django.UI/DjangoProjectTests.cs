@@ -296,7 +296,7 @@ namespace DjangoUITests {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject("TestData\\DjangoProjectWithSubDirectory.sln");
 
-                var pyProj = (IPythonProject2)project.GetPythonProject();
+                var pyProj = project.GetPythonProject();
                 var dsm = pyProj.Site.GetUIThread().Invoke(() => pyProj.GetProperty("DjangoSettingsModule"));
                 Assert.AreEqual("config.settings", dsm);
                 var workDir = pyProj.Site.GetUIThread().Invoke(() => pyProj.GetWorkingDirectory()).TrimEnd('\\');

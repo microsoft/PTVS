@@ -218,7 +218,7 @@ namespace Microsoft.PythonTools.Interpreter {
             } else if (!_base.IsCurrent) {
                 return string.Format(culture,
                     "Base interpreter {0} is out of date{1}{1}{2}",
-                    _base.Configuration.Description,
+                    _base.Configuration.FullDescription,
                     Environment.NewLine,
                     _base.GetFriendlyIsCurrentReason(culture));
             }
@@ -231,7 +231,7 @@ namespace Microsoft.PythonTools.Interpreter {
             } else if (!_base.IsCurrent) {
                 return string.Format(culture,
                     "Base interpreter {0} is out of date{1}{1}{2}",
-                    _base.Configuration.Description,
+                    _base.Configuration.FullDescription,
                     Environment.NewLine,
                     _base.GetIsCurrentReason(culture));
             }
