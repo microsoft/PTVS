@@ -799,6 +799,7 @@ namespace Microsoft.PythonTools.Analysis {
                 case BuiltinTypeId.List: return new ListBuiltinClassInfo(type, this);
                 case BuiltinTypeId.Tuple: return new TupleBuiltinClassInfo(type, this);
                 case BuiltinTypeId.Object: return new ObjectBuiltinClassInfo(type, this);
+                case BuiltinTypeId.Dict: return new DictBuiltinClassInfo(type, this);
                 default: return new BuiltinClassInfo(type, this);
             }
         }

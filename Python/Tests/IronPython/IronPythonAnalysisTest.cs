@@ -108,6 +108,29 @@ zzz = y.ReturnsGenericParam()
             AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("zzz", 1), "GetEnumerator", "__doc__", "__iter__", "__repr__");
         }
 
+        [TestMethod, Priority(1)]
+        public void Constructors() {
+            var text = @"
+from System import AccessViolationException
+n = AccessViolationException.__new__
+";
+            var entry = ProcessText(text, analysisDirs: new[] { Environment.CurrentDirectory });
+            AssertUtil.ContainsExactly(
+                entry.GetSignaturesByIndex("n", 1)
+                .Select(x => FormatSignature(x)), 
+                "__new__(cls: AccessViolationException)",
+                "__new__(cls: AccessViolationException, message: str)",
+                "__new__(cls: AccessViolationException, message: str, innerException: Exception)",
+                "__new__(cls: AccessViolationException, info: SerializationInfo, context: StreamingContext)"
+            );
+        }
+
+        private static string FormatSignature(IOverloadResult sig) {
+            return sig.Name + 
+                "(" +
+                String.Join(", ", sig.Parameters.Select(param => param.Name + ": " + param.Type)) +
+                ")";
+        }
 
         [TestMethod, Priority(1)]
         public void ImportClr() {

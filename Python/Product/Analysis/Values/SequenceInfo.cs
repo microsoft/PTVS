@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -62,8 +63,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     
                     foreach (var type in rhs.Where(t => t.IsOfType(ClassInfo))) {
                         if (seq == null) {
-                            seq = (SequenceInfo)unit.Scope.GetOrMakeNodeValue(node, _ =>
-                                new SequenceInfo(new[] { new VariableDef() }, ClassInfo, node, unit.ProjectEntry)
+                            seq = (SequenceInfo)unit.Scope.GetOrMakeNodeValue(node,
+                                NodeValueKind.Sequence,
+                                _ => new SequenceInfo(new[] { new VariableDef() }, ClassInfo, node, unit.ProjectEntry)
                             );
                             idx = seq.IndexTypes[0];
                             idx.AddTypes(unit, GetEnumeratorTypes(node, unit));

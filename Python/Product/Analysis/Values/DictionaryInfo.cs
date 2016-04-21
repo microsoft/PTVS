@@ -117,9 +117,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return false;
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
             // Must unconditionally call the base implementation of GetMember
-            var res = base.GetMember(node, unit, name);
+            var res = base.GetTypeMember(node, unit, name);
 
             switch (name) {
                 case "get":
