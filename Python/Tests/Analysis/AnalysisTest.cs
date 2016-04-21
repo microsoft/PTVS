@@ -3860,7 +3860,7 @@ pass
 ";
             var entry = ProcessText(text);
             var items = entry.GetTypesByIndex("b", text.IndexOf("pass"));
-            Assert.IsTrue(items.Count() == 0);
+            AssertUtil.ContainsExactly(items);
         }
 
         /// <summary>

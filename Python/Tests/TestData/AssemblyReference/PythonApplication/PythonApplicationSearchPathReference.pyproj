@@ -12,7 +12,7 @@
     <Name>PythonApplication3</Name>
     <RootNamespace>PythonApplication3</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>IronPython|2.7 32-bit</InterpreterId>
+    <InterpreterId>IronPython|2.7-32</InterpreterId>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <CommandLineArguments />
     <InterpreterPath />
@@ -30,7 +30,7 @@
     <Compile Include="Program3.py" />
   </ItemGroup>
   <ItemGroup>
-    <InterpreterReference Include="IronPython|2.7 32-bit" />
+    <InterpreterReference Include="IronPython|2.7-32" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
