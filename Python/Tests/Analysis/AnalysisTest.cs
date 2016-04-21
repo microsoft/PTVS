@@ -3880,7 +3880,7 @@ for v in a: pass
 ";
             var entry = ProcessText(text);
             var items = entry.GetTypesByIndex("v", text.IndexOf("pass"));
-            Assert.IsTrue(items.Count() == 0);
+            AssertUtil.ContainsExactly(items);
 
             text = @"
 class me(object):
@@ -3894,7 +3894,7 @@ for v in a: pass
 ";
             entry = ProcessText(text);
             items = entry.GetTypesByIndex("v", text.IndexOf("pass"));
-            Assert.IsTrue(items.Count() == 0);
+            AssertUtil.ContainsExactly(items);
         }
 
         [TestMethod, Priority(0)]
