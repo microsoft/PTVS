@@ -293,6 +293,12 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public virtual IAnalysisSet AddNodeValue(Node node, NodeValueKind kind, IAnalysisSet variable) {
             NodeValue next;
             _nodeValues.TryGetValue(node, out next);
+#if DEBUG
+            while (next != null) {
+                Debug.Assert(next.Kind != kind);
+                next = next.Next;
+            }
+#endif
             _nodeValues[node] = new NodeValue(kind, variable, next);
             return variable;
         }
