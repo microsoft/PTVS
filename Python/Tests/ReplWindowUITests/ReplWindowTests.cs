@@ -1708,7 +1708,7 @@ $cls
 
     static class ReplWindowProxyExtensions {
         public static VsProjectAnalyzer GetAnalyzer(this ReplWindowProxy proxy) {
-            return ((IPythonReplIntellisense)proxy.Window.Evaluator).ReplAnalyzer;
+            return ((IPythonInteractiveIntellisense)proxy.Window.Evaluator).Analyzer;
         }
     }
 }

@@ -32,5 +32,6 @@ namespace Microsoft.PythonTools.Repl {
         CompletionResult[] GetMemberNames(string text);
         OverloadDoc[] GetSignatureDocumentation(string text);
         VsProjectAnalyzer Analyzer { get; }
+        string AnalysisFilename { get; }
     }
 }

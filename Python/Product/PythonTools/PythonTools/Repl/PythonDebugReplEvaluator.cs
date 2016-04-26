@@ -214,6 +214,7 @@ namespace Microsoft.PythonTools.Repl {
         public IInteractiveWindow CurrentWindow { get; set; }
 
         public VsProjectAnalyzer Analyzer => _activeEvaluator?.Analyzer;
+        public string AnalysisFilename => _activeEvaluator?.AnalysisFilename;
 
         public bool IsDisconnected => _activeEvaluator?.IsDisconnected ?? true;
 
@@ -469,7 +470,6 @@ namespace Microsoft.PythonTools.Repl {
             CurrentWindow.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, CurrentOptions.UseSmartHistory);
             CurrentWindow.WriteLine("Python debug interactive window. Type $help for a list of commands.");
 
-            CurrentWindow.TextView.BufferGraph.GraphBuffersChanged += BufferGraphGraphBuffersChanged;
             CurrentWindow.ReadyForInput += OnReadyForInput;
             return ExecutionResult.Succeeded;
         }

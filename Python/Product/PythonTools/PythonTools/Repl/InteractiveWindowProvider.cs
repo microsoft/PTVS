@@ -45,6 +45,8 @@ namespace Microsoft.PythonTools.Repl {
         private readonly IVsInteractiveWindowFactory _windowFactory;
         private readonly IContentType _pythonContentType;
 
+        internal static readonly object VsInteractiveWindowKey = new object();
+
         [ImportingConstructor]
         public InteractiveWindowProvider(
             [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
@@ -93,7 +95,7 @@ namespace Microsoft.PythonTools.Repl {
             int curId = GetNextId();
 
             var window = CreateInteractiveWindowInternal(
-                new SelectableReplEvaluator(_evaluators, replId),
+                new SelectableReplEvaluator(_serviceProvider, _evaluators, replId),
                 _pythonContentType,
                 false,
                 curId,
@@ -179,11 +181,6 @@ namespace Microsoft.PythonTools.Repl {
             Guid languageServiceGuid,
             string replId
         ) {
-            var service = (IVsUIShell)_serviceProvider.GetService(typeof(SVsUIShell));
-            var model = (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
-
-            //SaveInteractiveInfo(id, evaluator, contentType, roles, title, languageServiceGuid, replId);
-
             var creationFlags =
                 __VSCREATETOOLWIN.CTW_fMultiInstance |
                 __VSCREATETOOLWIN.CTW_fActivateWithProject;
@@ -193,7 +190,11 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             var replWindow = _windowFactory.Create(GuidList.guidPythonInteractiveWindowGuid, id, title, evaluator, creationFlags);
-            ((ToolWindowPane)replWindow).BitmapImageMoniker = KnownMonikers.PYInteractiveWindow;
+            replWindow.InteractiveWindow.Properties[VsInteractiveWindowKey] = replWindow;
+            var toolWindow = replWindow as ToolWindowPane;
+            if (toolWindow != null) {
+                toolWindow.BitmapImageMoniker = KnownMonikers.PYInteractiveWindow;
+            }
             replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, contentType);
             replWindow.InteractiveWindow.InitializeAsync();
 

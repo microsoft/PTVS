@@ -134,7 +134,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 if (pyReplEval != null && _analyzer.ShouldEvaluateForCompletion(text)) {
-                    Debug.Assert(pyReplEval.ReplAnalyzer == _analyzer);
+                    Debug.Assert(pyReplEval.Analyzer == _analyzer);
                     replMembers = pyReplEval.GetMemberNames(text);
                 }
             }

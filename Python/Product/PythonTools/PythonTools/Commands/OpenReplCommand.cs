@@ -65,14 +65,15 @@ namespace Microsoft.PythonTools.Commands {
 
             if (config == null) {
                 var service = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-                config = service.DefaultInterpreter.Configuration;
+                var registry = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                config = service.DefaultInterpreter?.Configuration ?? registry.Configurations.FirstOrDefault();
             }
 
             // This command is project-insensitive
             var provider = _serviceProvider.GetComponentModel()?.GetService<Repl.InteractiveWindowProvider>();
             try {
                 provider?.OpenOrCreate(
-                    factory != null ? Repl.PythonReplEvaluatorProvider.GetEvaluatorId(config) : null
+                    config != null ? Repl.PythonReplEvaluatorProvider.GetEvaluatorId(config) : null
                 );
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 throw new InvalidOperationException(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex));

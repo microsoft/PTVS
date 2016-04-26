@@ -62,7 +62,9 @@ namespace Microsoft.PythonTools.Repl {
         private IInteractiveWindowCommands _commands;
         private IInteractiveWindow _window;
         private PythonInteractiveOptions _options;
+
         private VsProjectAnalyzer _analyzer;
+        private readonly string _analysisFilename;
 
         private bool _enableMultipleScopes;
         private IReadOnlyList<string> _availableScopes;
@@ -73,6 +75,7 @@ namespace Microsoft.PythonTools.Repl {
             _serviceProvider = serviceProvider;
             _deferredOutput = new StringBuilder();
             _enableMultipleScopes = true;
+            _analysisFilename = Guid.NewGuid().ToString("N") + ".py";
         }
 
         protected void Dispose(bool disposing) {
@@ -135,6 +138,8 @@ namespace Microsoft.PythonTools.Repl {
                 return _analyzer;
             }
         }
+
+        public string AnalysisFilename => _analysisFilename;
 
         internal void WriteOutput(string text, bool addNewline = true) {
             var wnd = CurrentWindow;
@@ -502,21 +507,10 @@ namespace Microsoft.PythonTools.Repl {
 
             WriteOutput(msg, addNewline: true);
 
-            _window.TextView.BufferGraph.GraphBuffersChanged += BufferGraphGraphBuffersChanged;
-
             _window.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, UseSmartHistoryKeys);
             _commands = GetInteractiveCommands(_serviceProvider, _window, this);
 
             return ExecutionResult.Success;
-        }
-
-        private void BufferGraphGraphBuffersChanged(object sender, GraphBuffersChangedEventArgs e) {
-            foreach (var removed in e.RemovedBuffers) {
-                BufferParser parser;
-                if (removed.Properties.TryGetProperty(typeof(BufferParser), out parser)) {
-                    parser.RemoveBuffer(removed);
-                }
-            }
         }
 
         public Task<ExecutionResult> ResetAsync(bool initialize = true) {
