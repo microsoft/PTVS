@@ -96,6 +96,9 @@ namespace Microsoft.PythonTools.Debugger {
                 dti.Info.dlo = DEBUG_LAUNCH_OPERATION.DLO_CreateProcess;
                 dti.Info.bstrExe = config.GetInterpreterPath();
                 dti.Info.bstrCurDir = config.WorkingDirectory;
+                if (string.IsNullOrEmpty(dti.Info.bstrCurDir)) {
+                    dti.Info.bstrCurDir = PathUtils.GetParent(config.ScriptName);
+                }
 
                 dti.Info.bstrRemoteMachine = null;
                 dti.Info.fSendStdoutToOutputWindow = 0;
@@ -173,6 +176,9 @@ namespace Microsoft.PythonTools.Debugger {
             }
             if (!File.Exists(psi.FileName)) {
                 throw new FileNotFoundException(Strings.DebugLaunchInterpreterMissing_Path.FormatUI(psi.FileName));
+            }
+            if (string.IsNullOrEmpty(psi.WorkingDirectory)) {
+                psi.WorkingDirectory = PathUtils.GetParent(config.ScriptName);
             }
             if (string.IsNullOrEmpty(psi.WorkingDirectory)) {
                 throw new DirectoryNotFoundException(Strings.DebugLaunchWorkingDirectoryMissing);

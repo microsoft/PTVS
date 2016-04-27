@@ -40,31 +40,6 @@ namespace Microsoft.PythonTools.Commands {
             _serviceProvider = serviceProvider;
         }
 
-        internal class LaunchFileProperties : IProjectLaunchProperties {
-            private readonly string _arguments, _workingDir;
-            private readonly Dictionary<string, string> _environment;
-
-            public LaunchFileProperties(string arguments, string workingDir, string searchPathVar, string searchPath) {
-                _arguments = arguments;
-                _workingDir = workingDir;
-                _environment = new Dictionary<string, string> {
-                    { searchPathVar, searchPath }
-                };
-            }
-
-            public string GetArguments() {
-                return _arguments;
-            }
-
-            public string GetWorkingDirectory() {
-                return _workingDir;
-            }
-
-            public IDictionary<string, string> GetEnvironment(bool includeSearchPaths) {
-                return includeSearchPaths ? _environment : new Dictionary<string, string>();
-            }
-        }
-
         public override void DoCommand(object sender, EventArgs args) {
             if (!Utilities.SaveDirtyFiles()) {
                 // Abort

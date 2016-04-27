@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Project {
         public int LaunchFile(string/*!*/ file, bool debug) {
             var config = _config.Clone();
             config.ScriptName = file;
-            return Launch(_config, debug);
+            return Launch(config, debug);
         }
 
         private int Launch(LaunchConfiguration config, bool debug) {

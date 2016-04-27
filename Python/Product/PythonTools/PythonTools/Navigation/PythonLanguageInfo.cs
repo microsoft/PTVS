@@ -125,8 +125,12 @@ namespace Microsoft.PythonTools.Navigation {
 
 
             var projFile = buffer.GetAnalysisEntry(_serviceProvider);
-            var names = projFile.Analyzer.GetProximityExpressionsAsync(projFile, buffer, iLine, iCol, cLines).WaitOrDefault(1000);
-            ppEnum = new EnumBSTR(names);
+            if (projFile != null) {
+                var names = projFile.Analyzer.GetProximityExpressionsAsync(projFile, buffer, iLine, iCol, cLines).WaitOrDefault(1000);
+                ppEnum = new EnumBSTR(names);
+            } else {
+                ppEnum = new EnumBSTR(Enumerable.Empty<string>());
+            }
             return VSConstants.S_OK;
         }
 
