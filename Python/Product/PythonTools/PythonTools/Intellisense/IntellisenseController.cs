@@ -82,6 +82,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void TextView_Closed(object sender, EventArgs e) {
+            Close();
+        }
+
+        internal void Close() {
             _textView.MouseHover -= TextViewMouseHover;
             _textView.Closed -= TextView_Closed;
             _textView.Properties.RemoveProperty(typeof(IntellisenseController));

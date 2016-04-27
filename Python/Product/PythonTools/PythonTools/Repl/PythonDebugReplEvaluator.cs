@@ -513,6 +513,11 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
+        protected override Task ExecuteStartupScripts() {
+            // Do not execute scripts for debug evaluator
+            return Task.FromResult<object>(null);
+        }
+
         public PythonProcess Process {
             get { return _process; }
 

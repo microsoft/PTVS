@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
@@ -31,6 +32,8 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Debugger {
     public static class DebugLaunchHelper {
+        private static readonly Regex SubstitutionPattern = new Regex(@"\%([\w_]+)\%");
+
         private static IEnumerable<string> GetGlobalDebuggerOptions(
             PythonToolsService pyService,
             bool allowPauseAtEnd = true,
@@ -71,6 +74,20 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
+        private static string DoSubstitutions(IDictionary<string, string> environment, string str) {
+            if (string.IsNullOrEmpty(str)) {
+                return str;
+            }
+
+            return SubstitutionPattern.Replace(
+                str,
+                m => {
+                    string value;
+                    return environment.TryGetValue(m.Groups[1].Value, out value) ? value : "";
+                }
+            );
+        }
+
         public static unsafe DebugTargetInfo CreateDebugTargetInfo(IServiceProvider provider, LaunchConfiguration config) {
             var pyService = provider.GetPythonToolsService();
             var dti = new DebugTargetInfo(provider);
@@ -105,7 +122,16 @@ namespace Microsoft.PythonTools.Debugger {
                     dti.Info.bstrEnv = buf.ToString();
                 }
 
-                dti.Info.bstrArg = config.ScriptArguments;
+                var args = string.Join(" ", new[] {
+                    config.InterpreterArguments,
+                    ProcessOutput.QuoteSingleArgument(config.ScriptName),
+                    config.ScriptArguments
+                }.Where(s => !string.IsNullOrEmpty(s)));
+
+                if (config.Environment != null) {
+                    args = DoSubstitutions(config.Environment, args);
+                }
+                dti.Info.bstrArg = args;
 
                 if (nativeDebug) {
                     dti.Info.dwClsidCount = 2;

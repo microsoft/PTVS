@@ -289,7 +289,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Current debuggee.
+        ///   Looks up a localized string similar to Debug.
         /// </summary>
         public static string DebugReplDisplayName {
             get {

@@ -331,21 +331,21 @@ namespace PythonToolsUITests {
                 var project = app.OpenProject(@"TestData\Environments.sln");
 
                 app.OpenSolutionExplorer().SelectProject(project);
-                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 2.7\"");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 32-bit 2.7\"");
 
                 using (var createVenv = AutomationDialog.FromDte(app, "Python.AddVirtualEnvironment")) {
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-                    Assert.AreEqual("Python 2.7", baseInterp);
+                    Assert.AreEqual("Python 32-bit 2.7", baseInterp);
                     createVenv.Cancel();
                 }
 
-                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 3.3\"");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 32-bit 3.3\"");
 
                 using (var createVenv = AutomationDialog.FromDte(app, "Python.AddVirtualEnvironment")) {
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-                    Assert.AreEqual("Python 3.3", baseInterp);
+                    Assert.AreEqual("Python 32-bit 3.3", baseInterp);
                     createVenv.Cancel();
                 }
             }
@@ -539,12 +539,12 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                         Assert.IsFalse(fact.Configuration.IsAvailable(), string.Format("{0} was not unavailable", fact.Configuration.Description));
                     }
 
-                    AssertUtil.AreEqual(factories.Select(f => f.Configuration.Description),
-                        "Invalid BaseInterpreter (unavailable)",
-                        "Invalid InterpreterPath (unavailable)",
-                        "Invalid WindowsInterpreterPath (unavailable)",
-                        "Invalid LibraryPath (unavailable)",
-                        "Absent BaseInterpreter (unavailable)"
+                    AssertUtil.AreEqual(factories.Select(f => f.Configuration.FullDescription),
+                        "Invalid BaseInterpreter 2.7 (unavailable)",
+                        "Invalid InterpreterPath 2.7 (unavailable)",
+                        "Invalid WindowsInterpreterPath 2.7 (unavailable)",
+                        "Invalid LibraryPath 2.7 (unavailable)",
+                        "Absent BaseInterpreter 2.7 (unavailable)"
                     );
                 }
             } finally {
@@ -563,7 +563,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
             Directory.CreateDirectory(path1);
             Directory.CreateDirectory(path2);
 
-            env.Select();
+            app.OpenSolutionExplorer().SelectProject(project);
             app.Dte.ExecuteCommand("Python.Interactive");
 
             using (var window = app.GetInteractiveWindow(string.Format("{0} Interactive", project.Name))) {
@@ -600,7 +600,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                     pp.AddInterpreter(dis.CurrentDefault.Configuration.Id);
                 });
 
-                var envName = dis.CurrentDefault.Configuration.Description;
+                var envName = dis.CurrentDefault.Configuration.FullDescription;
                 var sln = app.OpenSolutionExplorer();
                 var env = sln.FindChildOfProject(project, Strings.Environments, envName);
 

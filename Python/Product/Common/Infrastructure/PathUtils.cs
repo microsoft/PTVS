@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace Microsoft.PythonTools.Infrastructure {
     public static class PathUtils {
@@ -723,12 +724,12 @@ namespace Microsoft.PythonTools.Infrastructure {
             params string[] keysToMerge
         ) {
             var env = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var kv in baseEnvironment) {
+            foreach (var kv in baseEnvironment.MaybeEnumerate()) {
                 env[kv.Key] = kv.Value;
             }
 
             var merge = new HashSet<string>(keysToMerge, StringComparer.OrdinalIgnoreCase);
-            foreach (var kv in subEnvironment) {
+            foreach (var kv in subEnvironment.MaybeEnumerate()) {
                 string existing;
                 if (env.TryGetValue(kv.Key, out existing) && !string.IsNullOrWhiteSpace(existing)) {
                     if (merge.Contains(kv.Key)) {
@@ -761,5 +762,21 @@ namespace Microsoft.PythonTools.Infrastructure {
 
             return env;
         }
-}
+
+        /// <summary>
+        /// Joins a list of paths using the path separator character (typically
+        /// a semicolon).
+        /// </summary>
+        public static string JoinPathList(IEnumerable<string> paths) {
+            var sb = new StringBuilder();
+            foreach (var p in paths) {
+                sb.Append(p);
+                sb.Append(Path.PathSeparator);
+            }
+            if (sb.Length > 0) {
+                sb.Length -= 1;
+            }
+            return sb.ToString();
+        }
+    }
 }

@@ -25,6 +25,7 @@ using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger;
@@ -48,8 +49,6 @@ namespace Microsoft.PythonTools.Project.Web {
     /// </summary>
     class PythonWebLauncher : IProjectLauncher {
         private int? _testServerPort;
-
-        public const string OpenBrowser = "OpenBrowser";
 
         public const string RunWebServerCommand = "PythonRunWebServerCommand";
         public const string DebugWebServerCommand = "PythonDebugWebServerCommand";
@@ -83,23 +82,26 @@ namespace Microsoft.PythonTools.Project.Web {
 
         #region IPythonLauncher Members
 
-        private static bool IsDebugging(IVsDebugger debugger) {
-            var mode = new[] { DBGMODE.DBGMODE_Design };
-            return ErrorHandler.Succeeded(debugger.GetMode(mode)) && mode[0] != DBGMODE.DBGMODE_Design;
+        private static bool IsDebugging(IServiceProvider provider, IVsDebugger debugger) {
+            return provider.GetUIThread().Invoke(() => {
+                var mode = new[] { DBGMODE.DBGMODE_Design };
+                return ErrorHandler.Succeeded(debugger.GetMode(mode)) && mode[0] != DBGMODE.DBGMODE_Design;
+            });
         }
 
         public int LaunchProject(bool debug) {
             var config = debug ? _debugConfig : _runConfig;
 
-            var url = GetFullUrl(config);
+            Uri url;
+            int port;
+            GetFullUrl(config, out url, out port);
 
-            var env = PathUtils.MergeEnvironments(
-                new Dictionary<string, string> {
-                    { "SERVER_HOST", url?.Host ?? "localhost" },
-                    { "SERVER_PORT", url?.Port.ToString() ?? "" }
-                },
-                config.Environment
-            );
+            var env = new Dictionary<string, string> { { "SERVER_PORT", port.ToString() } };
+            if (url != null) {
+                env["SERVER_HOST"] = url.Host;
+            }
+
+            config.Environment = PathUtils.MergeEnvironments(env, config.Environment);
 
             if (debug) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 1);
@@ -110,7 +112,7 @@ namespace Microsoft.PythonTools.Project.Web {
 
                 var debugger = (IVsDebugger)_serviceProvider.GetService(typeof(SVsShellDebugger));
                 if (url != null && debugger != null) {
-                    StartBrowser(url.AbsoluteUri, () => IsDebugging(debugger));
+                    StartBrowser(url.AbsoluteUri, () => !IsDebugging(_serviceProvider, debugger));
                 }
             } else {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
@@ -160,19 +162,25 @@ namespace Microsoft.PythonTools.Project.Web {
 
         #endregion
 
-        private Uri GetFullUrl(LaunchConfiguration config) {
+        private void GetFullUrl(LaunchConfiguration config, out Uri uri, out int port) {
+            int p;
+            if (!int.TryParse(config.GetLaunchOption(PythonConstants.WebBrowserPortSetting) ?? "", out p)) {
+                p = TestServerPort;
+            }
+            port = p;
+
             var host = config.GetLaunchOption(PythonConstants.WebBrowserUrlSetting);
             if (string.IsNullOrEmpty(host)) {
-                return null;
+                uri = null;
+                return;
             }
-
             try {
-                return GetFullUrl(host, TestServerPort);
+                uri = GetFullUrl(host, p);
             } catch (UriFormatException) {
                 var output = OutputWindowRedirector.GetGeneral(_serviceProvider);
                 output.WriteErrorLine(Strings.ErrorInvalidLaunchUrl.FormatUI(host));
                 output.ShowAndActivate();
-                return null;
+                uri = null;
             }
         }
 

@@ -211,7 +211,7 @@ namespace PythonToolsUITests {
 
                     AssertUtil.AreEqual(
                         wpf.Invoke(() => environments.Select(ev => ev.Description).ToList()),
-                        "Test Factory 1", "Test Factory 2", "Test Factory 3"
+                        "Test Factory 1 2.7", "Test Factory 2 3.0", "Test Factory 3 3.3"
                     );
                     // TF 1 and 3 can be set as default
                     AssertUtil.AreEqual(

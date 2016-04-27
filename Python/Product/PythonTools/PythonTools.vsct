@@ -765,6 +765,9 @@ permissions and limitations under the License.
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidOpenCommandPromptHere" priority="0x0180">
       <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_EXPLORE"/>
     </CommandPlacement>
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidOpenInteractiveForEnvironment" priority="0x0020">
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_EXPLORE"/>
+    </CommandPlacement>
   </CommandPlacements>
 
   <KeyBindings>

@@ -712,7 +712,7 @@ Your web browser will not be opened.</value>
     <value>Python Interactive</value>
   </data>
   <data name="DebugReplDisplayName" xml:space="preserve">
-    <value>Current debuggee</value>
+    <value>Debug</value>
   </data>
   <data name="RememberMySelection" xml:space="preserve">
     <value>&amp;Remember my selection</value>

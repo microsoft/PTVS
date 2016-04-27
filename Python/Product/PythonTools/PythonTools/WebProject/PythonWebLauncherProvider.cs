@@ -15,16 +15,12 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.BuildTasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools.Project;
 
@@ -46,31 +42,12 @@ namespace Microsoft.PythonTools.Project.Web {
             return new PythonWebLauncherOptions(properties);
         }
 
-        public string Name {
-            get {
-                return PythonConstants.WebLauncherName;
-            }
-        }
+        public string Name => PythonConstants.WebLauncherName;
+        public string LocalizedName => Strings.PythonWebLauncherName;
+        public string Description => Strings.PythonWebLauncherDescription;
+        public int SortPriority => 100;
 
-        public string LocalizedName {
-            get {
-                return Strings.PythonWebLauncherName;
-            }
-        }
-
-        public string Description {
-            get {
-                return Strings.PythonWebLauncherDescription;
-            }
-        }
-
-        public int SortPriority {
-            get {
-                return 100;
-            }
-        }
-
-        internal static string DoSubstitutions(IPythonProject project, string str) {
+        internal static string DoSubstitutions(LaunchConfiguration original, IPythonProject project, string str) {
             if (string.IsNullOrEmpty(str)) {
                 return str;
             }
@@ -80,16 +57,10 @@ namespace Microsoft.PythonTools.Project.Web {
                 m => {
                     switch (m.Groups[1].Value.ToLowerInvariant()) {
                         case "startupfile":
-                            return project.GetProperty(PythonConstants.StartupFileSetting);
+                            return original.ScriptName;
                         case "startupmodule":
                             try {
-                                return ModulePath.FromFullPath(
-                                    PathUtils.GetAbsoluteFilePath(
-                                        project.ProjectHome,
-                                        project.GetProperty(PythonConstants.StartupFileSetting)
-                                    ),
-                                    project.ProjectHome
-                                ).ModuleName;
+                                return ModulePath.FromFullPath(original.ScriptName, project.ProjectHome).ModuleName;
                             } catch (ArgumentException) {
                             }
                             break;
@@ -107,31 +78,39 @@ namespace Microsoft.PythonTools.Project.Web {
             string argumentsProperty,
             string environmentProperty
         ) {
-            var target = DoSubstitutions(project, project.GetProperty(targetProperty));
+            var target = DoSubstitutions(original, project, project.GetProperty(targetProperty));
             if (string.IsNullOrEmpty(target)) {
-                return original;
+                target = original.ScriptName;
             }
 
             var targetType = project.GetProperty(targetTypeProperty);
             if (string.IsNullOrEmpty(targetType)) {
-                return original;
+                targetType = PythonCommandTask.TargetTypeScript;
             }
 
             var config = original.Clone();
             if (PythonCommandTask.TargetTypeModule.Equals(targetType, StringComparison.OrdinalIgnoreCase)) {
-                config.InterpreterArguments = (config.InterpreterArguments ?? "") + " -m " + target;
+                if (string.IsNullOrEmpty(config.InterpreterArguments)) {
+                    config.InterpreterArguments = "-m " + target;
+                } else {
+                    config.InterpreterArguments = config.InterpreterArguments + " -m " + target;
+                }
             } else if (PythonCommandTask.TargetTypeExecutable.Equals(targetType, StringComparison.OrdinalIgnoreCase)) {
                 config.InterpreterPath = target;
-            } else if (PythonCommandTask.TargetTypeScript.Equals(targetType, StringComparison.OrdinalIgnoreCase)) {
+            } else {
                 config.ScriptName = target;
             }
 
-            var args = DoSubstitutions(project, project.GetProperty(argumentsProperty));
+            var args = DoSubstitutions(original, project, project.GetProperty(argumentsProperty));
             if (!string.IsNullOrEmpty(args)) {
-                config.ScriptArguments = (config.ScriptArguments ?? "") + " " + args;
+                if (string.IsNullOrEmpty(config.ScriptArguments)) {
+                    config.ScriptArguments = args;
+                } else {
+                    config.ScriptArguments = config.ScriptArguments + " " + args;
+                }
             }
 
-            var env = DoSubstitutions(project, project.GetProperty(environmentProperty));
+            var env = DoSubstitutions(original, project, project.GetProperty(environmentProperty));
             config.Environment = PathUtils.MergeEnvironments(config.Environment, PathUtils.ParseEnvironment(env));
 
             return config;

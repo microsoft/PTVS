@@ -520,7 +520,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async void BufferDetached(AnalysisEntry entry, ITextBuffer buffer) {
-            var bufferParser = entry.BufferParser;
+            var bufferParser = entry?.BufferParser;
             if (bufferParser != null) {
                 bufferParser.RemoveBuffer(buffer);
                 int attachedViews;

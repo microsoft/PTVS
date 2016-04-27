@@ -45,7 +45,7 @@ namespace Microsoft.PythonTools.Repl {
         private readonly IVsInteractiveWindowFactory _windowFactory;
         private readonly IContentType _pythonContentType;
 
-        internal static readonly object VsInteractiveWindowKey = new object();
+        private static readonly object VsInteractiveWindowKey = new object();
 
         [ImportingConstructor]
         public InteractiveWindowProvider(
@@ -199,6 +199,11 @@ namespace Microsoft.PythonTools.Repl {
             replWindow.InteractiveWindow.InitializeAsync();
 
             return replWindow;
+        }
+
+        internal static IVsInteractiveWindow GetVsInteractiveWindow(IInteractiveWindow window) {
+            IVsInteractiveWindow wnd = null;
+            return (window?.Properties.TryGetProperty(VsInteractiveWindowKey, out wnd) ?? false) ? wnd : null;
         }
 
         internal static void Close(object obj) {

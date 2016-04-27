@@ -73,6 +73,12 @@ namespace Microsoft.PythonTools.Intellisense {
             return controller;
         }
 
+        internal static IntellisenseController GetController(ITextView textView) {
+            IntellisenseController controller;
+            textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller);
+            return controller;
+        }
+
         internal static IntellisenseController GetOrCreateController(
             IServiceProvider serviceProvider,
             IComponentModel model,

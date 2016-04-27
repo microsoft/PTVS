@@ -1364,6 +1364,15 @@ namespace Microsoft.PythonTools.Project {
 
             config.Environment = PathUtils.ParseEnvironment(GetProjectProperty(PythonConstants.EnvironmentSetting) ?? "");
 
+            str = GetProjectProperty(PythonConstants.WebBrowserUrlSetting);
+            if (!string.IsNullOrEmpty(str)) {
+                config.LaunchOptions[PythonConstants.WebBrowserUrlSetting] = str;
+            }
+            str = GetProjectProperty(PythonConstants.WebBrowserPortSetting);
+            if (!string.IsNullOrEmpty(str)) {
+                config.LaunchOptions[PythonConstants.WebBrowserPortSetting] = str;
+            }
+
             if (!File.Exists(config.GetInterpreterPath())) {
                 throw new MissingInterpreterException(
                     Strings.DebugLaunchInterpreterMissing_Path.FormatUI(config.GetInterpreterPath())
@@ -1752,7 +1761,8 @@ namespace Microsoft.PythonTools.Project {
             IEnumerable<HierarchyNode> selectedNodes,
             Dictionary<string, string> args,
             out InterpretersNode node,
-            out IPythonInterpreterFactory factory
+            out IPythonInterpreterFactory factory,
+            bool useProjectByDefault = true
         ) {
             factory = null;
 
@@ -1793,7 +1803,9 @@ namespace Microsoft.PythonTools.Project {
                     return;
                 }
 
-                factory = GetInterpreterFactory();
+                if (useProjectByDefault) {
+                    factory = GetInterpreterFactory();
+                }
             }
 
             if (_interpretersContainer != null && factory != null) {
@@ -1879,7 +1891,8 @@ namespace Microsoft.PythonTools.Project {
         private int ExecActivateEnvironment(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
             InterpretersNode selectedInterpreter;
             IPythonInterpreterFactory selectedInterpreterFactory;
-            GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
+            GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory,
+                useProjectByDefault: false);
             if (selectedInterpreterFactory != null) {
                 return SetInterpreterFactory(selectedInterpreterFactory);
             }
@@ -1889,9 +1902,10 @@ namespace Microsoft.PythonTools.Project {
         private int ExecOpenInteractiveForEnvironment(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
             InterpretersNode selectedInterpreter;
             IPythonInterpreterFactory selectedInterpreterFactory;
-            GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
+            GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory,
+                useProjectByDefault: false);
             try {
-                ExecuteInReplCommand.EnsureReplWindow(Site, selectedInterpreterFactory.Configuration, this).Show(true);
+                ExecuteInReplCommand.EnsureReplWindow(Site, selectedInterpreterFactory?.Configuration, this).Show(true);
             } catch (InvalidOperationException ex) {
                 MessageBox.Show(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex), Strings.ProductTitle);
             }

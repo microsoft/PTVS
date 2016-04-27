@@ -17,8 +17,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -39,7 +37,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 InterpreterPath = InterpreterPath,
                 InterpreterArguments = InterpreterArguments,
                 ScriptName = ScriptName,
-                ScriptArguments = ScriptArguments
+                ScriptArguments = ScriptArguments,
+                WorkingDirectory = WorkingDirectory,
+                Environment = Environment != null ? new Dictionary<string, string>(Environment) : null,
+                SearchPaths = SearchPaths?.ToList()
             };
         }
 

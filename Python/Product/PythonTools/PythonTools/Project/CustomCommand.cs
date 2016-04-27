@@ -523,11 +523,20 @@ namespace Microsoft.PythonTools.Project {
                 Filename = item.ItemSpec,
                 Arguments = item.GetMetadata(CreatePythonCommandItem.ArgumentsKey),
                 WorkingDirectory = item.GetMetadata(CreatePythonCommandItem.WorkingDirectoryKey),
-                EnvironmentVariables = PathUtils.ParseEnvironment(item.GetMetadata(CreatePythonCommandItem.EnvironmentKey)),
                 TargetType = item.GetMetadata(CreatePythonCommandItem.TargetTypeKey),
                 ExecuteIn = item.GetMetadata(CreatePythonCommandItem.ExecuteInKey),
                 RequiredPackages = item.GetMetadata(CreatePythonCommandItem.RequiredPackagesKey).Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries)
             };
+
+            var pathVar = config.Interpreter.PathEnvironmentVariable;
+            var env = new Dictionary<string, string> {
+                { pathVar, PathUtils.JoinPathList(config.SearchPaths) }
+            };
+            startInfo.EnvironmentVariables = PathUtils.MergeEnvironments(
+                PathUtils.MergeEnvironments(env, config.Environment, pathVar),
+                PathUtils.ParseEnvironment(item.GetMetadata(CreatePythonCommandItem.EnvironmentKey)),
+                "Path", config.Interpreter.PathEnvironmentVariable
+            );
 
             try {
                 startInfo.WorkingDirectory = PathUtils.GetAbsoluteFilePath(project.ProjectHome, startInfo.WorkingDirectory);

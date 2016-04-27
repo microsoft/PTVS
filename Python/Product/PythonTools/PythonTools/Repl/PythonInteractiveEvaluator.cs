@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Repl {
             _serviceProvider = serviceProvider;
             _deferredOutput = new StringBuilder();
             _enableMultipleScopes = true;
-            _analysisFilename = Guid.NewGuid().ToString("N") + ".py";
+            _analysisFilename = Guid.NewGuid().ToString() + ".py";
         }
 
         protected void Dispose(bool disposing) {
@@ -306,27 +306,31 @@ namespace Microsoft.PythonTools.Repl {
                     return newerThread;
                 }
 
-                var scriptsPath = ScriptsPath;
-                if (string.IsNullOrEmpty(scriptsPath)) {
-                    scriptsPath = GetScriptsPath(null, DisplayName) ??
-                        GetScriptsPath(null, Configuration.Interpreter.Version.ToString());
-                }
-
-                if (File.Exists(scriptsPath)) {
-                    if (!(await ExecuteFileAsync(scriptsPath, null)).IsSuccessful) {
-                        WriteError("Error executing " + scriptsPath);
-                    }
-                } else if (Directory.Exists(scriptsPath)) {
-                    foreach (var file in Directory.EnumerateFiles(scriptsPath, "*.py", SearchOption.TopDirectoryOnly)) {
-                        if (!(await ExecuteFileAsync(file, null)).IsSuccessful) {
-                            WriteError("Error executing " + file);
-                        }
-                    }
-                }
+                await ExecuteStartupScripts();
 
                 thread.AvailableScopesChanged += Thread_AvailableScopesChanged;
                 return thread;
             });
+        }
+
+        protected virtual async Task ExecuteStartupScripts() {
+            var scriptsPath = ScriptsPath;
+            if (string.IsNullOrEmpty(scriptsPath)) {
+                scriptsPath = GetScriptsPath(null, DisplayName) ??
+                    GetScriptsPath(null, Configuration?.Interpreter.Version.ToString());
+            }
+
+            if (File.Exists(scriptsPath)) {
+                if (!(await ExecuteFileAsync(scriptsPath, null)).IsSuccessful) {
+                    WriteError("Error executing " + scriptsPath);
+                }
+            } else if (Directory.Exists(scriptsPath)) {
+                foreach (var file in PathUtils.EnumerateFiles(scriptsPath, "*.py", recurse: false)) {
+                    if (!(await ExecuteFileAsync(file, null)).IsSuccessful) {
+                        WriteError("Error executing " + file);
+                    }
+                }
+            }
         }
 
         internal void UpdatePropertiesFromProjectMoniker() {
@@ -356,7 +360,7 @@ namespace Microsoft.PythonTools.Repl {
                 if (string.IsNullOrEmpty(root)) {
                     root = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
                     parts = new[] { "Visual Studio " + AssemblyVersionInfo.VSName, "Python Scripts" }
-                        .Concat(parts).ToArray();
+                        .Concat(parts).Where(p => !string.IsNullOrEmpty(p)).ToArray();
                 }
             }
             if (parts.Length > 0) {

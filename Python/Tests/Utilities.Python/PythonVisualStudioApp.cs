@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -25,6 +26,7 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using EnvDTE;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
@@ -206,6 +208,11 @@ namespace TestUtilities.UI.Python {
             var iwp = GetService<IComponentModel>(typeof(SComponentModel))?.GetService<InteractiveWindowProvider>();
             var window = iwp?.AllOpenWindows.FirstOrDefault(w => ((ToolWindowPane)w).Caption == title);
             if (window == null) {
+                Trace.TraceWarning(
+                    "Failed to find {0} in {1}",
+                    title,
+                    string.Join(", ", iwp?.AllOpenWindows.Select(w => ((ToolWindowPane)w).Caption) ?? Enumerable.Empty<string>())
+                );
                 return null;
             }
             return new ReplWindowProxy(this, window.InteractiveWindow, (ToolWindowPane)window, settings ?? new PythonReplWindowProxySettings());
@@ -296,7 +303,19 @@ namespace TestUtilities.UI.Python {
                     envPath = new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).GetValue();
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-                    envName = string.Format("{0} ({1})", envPath, baseInterp);
+                    var baseConfig = ComponentModel.GetService<IInterpreterRegistryService>().Configurations
+                        .FirstOrDefault(c => c.FullDescription == baseInterp);
+
+                    if (baseConfig == null) {
+                        envName = "{0} ({1})".FormatUI(envPath, baseInterp);
+                    } else {
+                        envName = "{0} {1} {2} ({3})".FormatUI(
+                            envPath,
+                            baseConfig.Architecture == System.Reflection.ProcessorArchitecture.Amd64 ? "64-bit" : "32-bit",
+                            baseConfig.Version,
+                            baseInterp
+                        );
+                    }
 
                     Console.WriteLine("Expecting environment named: {0}", envName);
 

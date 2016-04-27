@@ -29,6 +29,7 @@ using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Execution")]
@@ -107,37 +108,37 @@ namespace Microsoft.PythonTools.Repl {
                 DetachMultipleScopeHandling(oldEval);
             }
 
+            _evaluator = eval;
+            _evaluatorId = id;
+
             if (eval != null) {
                 eval.CurrentWindow = CurrentWindow;
                 if (eval.CurrentWindow != null) {
                     // Otherwise, we'll initialize when the window is set
-                    eval.InitializeAsync().DoNotWait();
-
-                    var analyzer = (eval as IPythonInteractiveIntellisense)?.Analyzer;
-                    if (analyzer != null) {
-                        analyzer.MonitorTextBufferAsync(eval.CurrentWindow.TextView.TextBuffer, true).DoNotWait();
-                    }
+                    DoInitializeAsync(eval).DoNotWait();
                 }
             }
-            _evaluator = eval;
-            _evaluatorId = id;
-
             UpdateCaption();
 
             EvaluatorChanged?.Invoke(this, EventArgs.Empty);
             AttachMultipleScopeHandling(eval);
         }
 
-        private void DetachWindow(IInteractiveEvaluator oldEval) {
-            var oldAnalyzer = (oldEval as IPythonInteractiveIntellisense)?.Analyzer;
-            var oldFile = (oldEval as IPythonInteractiveIntellisense)?.AnalysisFilename;
+        private async Task DoInitializeAsync(IInteractiveEvaluator eval) {
+            await eval.InitializeAsync();
 
+            var view = eval?.CurrentWindow?.TextView;
+            var buffer = eval?.CurrentWindow?.CurrentLanguageBuffer;
+            if (view != null && buffer != null) {
+                var controller = IntellisenseControllerProvider.GetOrCreateController(_serviceProvider, _serviceProvider.GetComponentModel(), view);
+                controller.DisconnectSubjectBuffer(buffer);
+                controller.ConnectSubjectBuffer(buffer);
+            }
+        }
+
+        private void DetachWindow(IInteractiveEvaluator oldEval) {
             var oldView = oldEval?.CurrentWindow?.TextView;
             if (oldView != null) {
-                if (oldAnalyzer != null && oldFile != null) {
-                    oldAnalyzer.BufferDetached(oldAnalyzer.GetAnalysisEntryFromPath(oldFile), oldView.TextBuffer);
-                }
-
                 foreach (var buffer in oldView.BufferGraph.GetTextBuffers(EditorExtensions.IsPythonContent)) {
                     if (oldEval.CurrentWindow.CurrentLanguageBuffer == buffer) {
                         continue;
@@ -153,8 +154,8 @@ namespace Microsoft.PythonTools.Repl {
                 return;
             }
 
-            IVsInteractiveWindow viw;
-            if (window.Properties.TryGetProperty(InteractiveWindowProvider.VsInteractiveWindowKey, out viw)) {
+            var viw = InteractiveWindowProvider.GetVsInteractiveWindow(window);
+            if (viw == null) {
                 return;
             }
 
@@ -185,12 +186,7 @@ namespace Microsoft.PythonTools.Repl {
                 if (eval != null && eval.CurrentWindow != value) {
                     eval.CurrentWindow = value;
                     if (value != null) {
-                        eval.InitializeAsync().DoNotWait();
-
-                        var analyzer = (eval as IPythonInteractiveIntellisense)?.Analyzer;
-                        if (analyzer != null) {
-                            analyzer.MonitorTextBufferAsync(eval.CurrentWindow.TextView.TextBuffer).DoNotWait();
-                        }
+                        DoInitializeAsync(eval).DoNotWait();
                     }
                 }
                 UpdateCaption();

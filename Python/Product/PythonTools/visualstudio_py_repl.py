@@ -1031,7 +1031,7 @@ due to the exec, so we do it here"""
 
 class DebugReplBackend(BasicReplBackend):
     def __init__(self, debugger):
-        BasicReplBackend.__init__(self, None, None)
+        BasicReplBackend.__init__(self)
         self.debugger = debugger
         self.thread_id = None
         self.frame_id = None

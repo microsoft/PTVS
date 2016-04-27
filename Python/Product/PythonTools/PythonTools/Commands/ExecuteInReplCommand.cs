@@ -49,9 +49,9 @@ namespace Microsoft.PythonTools.Commands {
             var provider = compModel.GetService<InteractiveWindowProvider>();
             var vsProjectContext = compModel.GetService<VsProjectContextProvider>();
 
-            string replId = project != null ?
-                PythonReplEvaluatorProvider.GetEvaluatorId(project) :
-                PythonReplEvaluatorProvider.GetEvaluatorId(config);
+            string replId = config != null ?
+                PythonReplEvaluatorProvider.GetEvaluatorId(config) :
+                PythonReplEvaluatorProvider.GetEvaluatorId(project);
             var window = provider.OpenOrCreate(replId);
             project?.AddActionOnClose(window, InteractiveWindowProvider.Close);
 
