@@ -1716,7 +1716,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Return the value of a project property
         /// </summary>
         /// <param name="propertyName">Name of the property to get</param>
-        /// <param name="resetCache">True to use the cache</param>
+        /// <param name="resetCache">True to avoid using the cache</param>
         /// <returns>null if property does not exist, otherwise value of the property</returns>
         public virtual string GetProjectProperty(string propertyName, bool resetCache) {
             Site.GetUIThread().MustBeCalledFromUIThread();

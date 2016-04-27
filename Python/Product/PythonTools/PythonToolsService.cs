@@ -292,13 +292,13 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        public SuppressDialogOptions SuppressDialogOptions {
+        #endregion
+
+        internal SuppressDialogOptions SuppressDialogOptions {
             get {
                 return _suppressDialogOptions;
             }
         }
-
-        #endregion
 
         #region Code formatting options
 

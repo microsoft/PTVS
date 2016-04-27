@@ -21,7 +21,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Options {
-    public sealed class SuppressDialogOptions {
+    sealed class SuppressDialogOptions {
         private readonly PythonToolsService _service;
 
         private const string Category = "SuppressDialog";

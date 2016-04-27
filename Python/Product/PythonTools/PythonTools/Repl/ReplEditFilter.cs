@@ -615,9 +615,5 @@ namespace Microsoft.PythonTools.Repl {
             }
             return true;
         }
-
-
-        internal void DoIdle(IOleComponentManager compMgr) {
-        }
     }
 }

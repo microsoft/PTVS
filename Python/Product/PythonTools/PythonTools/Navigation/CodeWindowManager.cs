@@ -205,10 +205,6 @@ namespace Microsoft.PythonTools.Navigation {
                 if (_curView.Properties.TryGetProperty(typeof(EditFilter), out editFilter) && editFilter != null) {
                     editFilter.DoIdle((IOleComponentManager)_serviceProvider.GetService(typeof(SOleComponentManager)));
                 }
-                ReplEditFilter replEditFilter;
-                if (_curView.Properties.TryGetProperty(typeof(ReplEditFilter), out replEditFilter) && replEditFilter != null) {
-                    replEditFilter.DoIdle((IOleComponentManager)_serviceProvider.GetService(typeof(SOleComponentManager)));
-                }
             }
         }
     }

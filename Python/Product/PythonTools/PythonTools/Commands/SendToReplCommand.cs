@@ -53,6 +53,8 @@ namespace Microsoft.PythonTools.Commands {
 
             repl.Show(true);
 
+            // Work around an issue where SubmitAsync only processes the first
+            // line of code.
             foreach (var code in GetActiveInputs(activeView, version)) {
                 await repl.InteractiveWindow.SubmitAsync(new[] { code });
             }
