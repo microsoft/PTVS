@@ -129,7 +129,8 @@ public:
         IsDebug(debug),
         SetTrace(nullptr),
         PyThreadState_New(nullptr),
-        ThreadState_Swap(nullptr) {
+        ThreadState_Swap(nullptr),
+		Thread_UncheckedGet(nullptr) {
     }
 
     ~InterpreterInfo() {
