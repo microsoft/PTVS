@@ -513,7 +513,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        protected override Task ExecuteStartupScripts() {
+        protected override Task ExecuteStartupScripts(string scriptsPath) {
             // Do not execute scripts for debug evaluator
             return Task.FromResult<object>(null);
         }

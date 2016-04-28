@@ -129,7 +129,7 @@ namespace Microsoft.PythonTools.Repl {
             args.Add(portNum.ToString());
 
             args.Add("--execution-mode");
-            args.Add("standard");
+            args.Add(string.IsNullOrEmpty(BackendName) ? "standard" : BackendName);
 
             processInfo.Arguments = string.Join(" ", args);
 
@@ -452,10 +452,13 @@ namespace Microsoft.PythonTools.Repl {
 
                 var prompt1 = _stream.ReadString();
                 var prompt2 = _stream.ReadString();
+                var supportMultipleStatements = _stream.ReadInt32() != 0;
                 Trace.TraceInformation("New prompts: \"{0}\" \"{1}\"", prompt1, prompt2);
+                Trace.TraceInformation("  Support multiple statements: {0}", supportMultipleStatements);
 
                 PrimaryPrompt = prompt1;
                 SecondaryPrompt = prompt2;
+                _eval.SupportsMultipleStatements = supportMultipleStatements;
             }
 
             public event EventHandler AvailableScopesChanged;
@@ -463,6 +466,7 @@ namespace Microsoft.PythonTools.Repl {
             private void HandleModulesChanged() {
                 // modules changed
                 using (new StreamUnlock(this)) {
+                    _eval.EnableMultipleScopes = true;
                     AvailableScopesChanged?.Invoke(this, EventArgs.Empty);
                 }
             }

@@ -74,7 +74,6 @@ namespace Microsoft.PythonTools.Repl {
         public PythonInteractiveEvaluator(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             _deferredOutput = new StringBuilder();
-            _enableMultipleScopes = true;
             _analysisFilename = Guid.NewGuid().ToString() + ".py";
         }
 
@@ -116,6 +115,7 @@ namespace Microsoft.PythonTools.Repl {
 
         public bool UseSmartHistoryKeys { get; set; }
         public bool LiveCompletionsOnly { get; set; }
+        public string BackendName { get; set; }
 
         internal virtual void OnConnected() { }
         internal virtual void OnAttach() { }
@@ -232,6 +232,8 @@ namespace Microsoft.PythonTools.Repl {
         public event EventHandler<EventArgs> AvailableScopesChanged;
         public event EventHandler<EventArgs> MultipleScopeSupportChanged;
 
+        public bool SupportsMultipleStatements { get; set; }
+
         private async void Thread_AvailableScopesChanged(object sender, EventArgs e) {
             _availableScopes = (await ((CommandProcessorThread)sender).GetAvailableUserScopesAsync(10000))?.ToArray();
             AvailableScopesChanged?.Invoke(this, EventArgs.Empty);
@@ -298,6 +300,26 @@ namespace Microsoft.PythonTools.Repl {
                     }
                 }
 
+                var scriptsPath = ScriptsPath;
+                if (!Directory.Exists(scriptsPath)) {
+                    scriptsPath = GetScriptsPath(_serviceProvider, DisplayName, Configuration.Interpreter);
+                }
+
+                if (!string.IsNullOrEmpty(scriptsPath)) {
+                    var modeFile = PathUtils.GetAbsoluteFilePath(scriptsPath, "mode.txt");
+                    if (File.Exists(modeFile)) {
+                        try {
+                            BackendName = File.ReadAllLines(modeFile).FirstOrDefault(line =>
+                                !string.IsNullOrEmpty(line) && !line.TrimStart().StartsWith("#")
+                            );
+                        } catch (Exception ex) when (!ex.IsCriticalException()) {
+                            WriteError(Strings.ReplCannotReadFile.FormatUI(modeFile));
+                        }
+                    } else {
+                        BackendName = null;
+                    }
+                }
+
                 thread = Connect();
 
                 var newerThread = Interlocked.CompareExchange(ref _thread, thread, null);
@@ -306,20 +328,14 @@ namespace Microsoft.PythonTools.Repl {
                     return newerThread;
                 }
 
-                await ExecuteStartupScripts();
+                await ExecuteStartupScripts(scriptsPath);
 
                 thread.AvailableScopesChanged += Thread_AvailableScopesChanged;
                 return thread;
             });
         }
 
-        protected virtual async Task ExecuteStartupScripts() {
-            var scriptsPath = ScriptsPath;
-            if (string.IsNullOrEmpty(scriptsPath)) {
-                scriptsPath = GetScriptsPath(null, DisplayName) ??
-                    GetScriptsPath(null, Configuration?.Interpreter.Version.ToString());
-            }
-
+        protected virtual async Task ExecuteStartupScripts(string scriptsPath) {
             if (File.Exists(scriptsPath)) {
                 if (!(await ExecuteFileAsync(scriptsPath, null)).IsSuccessful) {
                     WriteError("Error executing " + scriptsPath);
@@ -350,32 +366,45 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             Configuration = pyProj.GetLaunchConfigurationOrThrow();
-            ScriptsPath = GetScriptsPath(pyProj.ProjectHome, "Scripts");
+            ScriptsPath = GetScriptsPath(
+                _serviceProvider,
+                PathUtils.GetAbsoluteDirectoryPath(pyProj.ProjectHome, "Scripts"),
+                pyProj.GetInterpreterFactory()?.Configuration
+            );
         }
 
-        internal string GetScriptsPath(string root, params string[] parts) {
-            if (string.IsNullOrEmpty(root)) {
-                // TODO: Allow customizing the scripts path
-                //root = _serviceProvider.GetPythonToolsService().InteractiveOptions.ScriptsPath;
-                if (string.IsNullOrEmpty(root)) {
-                    root = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-                    parts = new[] { "Visual Studio " + AssemblyVersionInfo.VSName, "Python Scripts" }
-                        .Concat(parts).Where(p => !string.IsNullOrEmpty(p)).ToArray();
-                }
-            }
-            if (parts.Length > 0) {
-                try {
-                    root = CommonUtils.GetAbsoluteDirectoryPath(root, Path.Combine(parts));
-                } catch (ArgumentException) {
-                    return null;
+        internal static string GetScriptsPath(
+            IServiceProvider provider,
+            string displayName,
+            InterpreterConfiguration config,
+            bool onlyIfExists = true
+        ) {
+            // TODO: Allow customizing the scripts path
+            //var root = _serviceProvider.GetPythonToolsService().InteractiveOptions.ScriptsPath;
+            var root = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
+            root = PathUtils.GetAbsoluteDirectoryPath(root, Path.Combine(
+                "Visual Studio " + AssemblyVersionInfo.VSName,
+                "Python Scripts"
+            ));
+
+            string candidate;
+            if (!string.IsNullOrEmpty(displayName)) {
+                candidate = PathUtils.GetAbsoluteDirectoryPath(root, displayName);
+                if (!onlyIfExists || Directory.Exists(candidate)) {
+                    return candidate;
                 }
             }
 
-            if (!Directory.Exists(root)) {
-                return null;
+            var version = config?.Version?.ToString();
+            if (!string.IsNullOrEmpty(version)) {
+                candidate = PathUtils.GetAbsoluteDirectoryPath(root, version);
+                if (!onlyIfExists || Directory.Exists(candidate)) {
+                    return candidate;
+                }
             }
 
-            return root;
+            return null;
         }
 
 
@@ -550,11 +579,13 @@ namespace Microsoft.PythonTools.Repl {
             UseSmartHistoryKeys = options.UseSmartHistory;
             LiveCompletionsOnly = options.LiveCompletionsOnly;
 
+            EnableMultipleScopes = false;
+
             return ExecutionResult.Success;
         }
 
         internal Task InvokeAsync(Action action) {
-            return ((System.Windows.UIElement)_window).Dispatcher.InvokeAsync(action).Task;
+            return ((System.Windows.UIElement)_window.GetTextViewHost()).Dispatcher.InvokeAsync(action).Task;
         }
 
         internal void WriteFrameworkElement(System.Windows.UIElement control, System.Windows.Size desiredSize) {

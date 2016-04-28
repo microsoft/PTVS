@@ -467,7 +467,11 @@ namespace Microsoft.PythonTools.Repl {
             var splitCode = JoinCodeLines(SplitCode(startText + pasting + endText), version).ToList();
             curBuffer.Delete(new Span(0, curBuffer.CurrentSnapshot.Length));
 
-            if (splitCode.Count == 1) {
+            bool supportMultiple = window.GetPythonEvaluator()?.SupportsMultipleStatements ?? false;
+
+            if (supportMultiple) {
+                await window.SubmitAsync(new[] { string.Join(Environment.NewLine, splitCode) });
+            } else if (splitCode.Count == 1) {
                 curBuffer.Insert(0, splitCode[0]);
                 var viewPoint = view.BufferGraph.MapUpToBuffer(
                     new SnapshotPoint(curBuffer.CurrentSnapshot, Math.Min(inputPoint.Value.Position + pasting.Length, curBuffer.CurrentSnapshot.Length)),
@@ -483,10 +487,24 @@ namespace Microsoft.PythonTools.Repl {
                 var lastCode = splitCode[splitCode.Count - 1];
                 splitCode.RemoveAt(splitCode.Count - 1);
 
-                foreach (var code in splitCode) {
+                while (splitCode.Any()) {
+                    var code = splitCode[0];
+                    splitCode.RemoveAt(0);
                     await window.SubmitAsync(new[] { code });
+
+                    supportMultiple = window.GetPythonEvaluator()?.SupportsMultipleStatements ?? false;
+                    if (supportMultiple) {
+                        // Might have changed while we were executing
+                        break;
+                    }
                 }
-                window.CurrentLanguageBuffer.Insert(0, lastCode);
+
+                if (supportMultiple) {
+                    // Submit all remaning lines of code
+                    await window.SubmitAsync(new[] { string.Join(Environment.NewLine, splitCode) });
+                } else {
+                    window.CurrentLanguageBuffer.Insert(0, lastCode);
+                }
             } else {
                 window.CurrentLanguageBuffer.Insert(0, startText + pasting + endText);
             }

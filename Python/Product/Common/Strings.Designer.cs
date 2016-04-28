@@ -1324,6 +1324,41 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to #
+        ///# This file specifies the REPL backend, which is an callable that
+        ///# can be imported by the interpreter.
+        ///#
+        ///# Currently, supported options are:
+        ///#   standard
+        ///#   visualstudio_ipython_repl.IPythonBackend
+        ///#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab
+        ///#
+        ///
+        ///visualstudio_ipython_repl.IPythonBackend.
+        /// </summary>
+        public static string ReplScriptPathIPythonModeTxtContents {
+            get {
+                return ResourceManager.GetString("ReplScriptPathIPythonModeTxtContents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This directory can contain a set of initialization scripts (Python files) for the Python interactive window in 
+        ///Visual Studio. Feel free to add your own files to import modules, define functions, or whatever you like.
+        ///
+        ///Whenever the interactive window for this environment is reset, each .py file in this directory will be 
+        ///executed in alphabetical order.
+        ///
+        ///Visit http://aka.ms/ptvsdocs for more information about what interactive window functionality can be 
+        ///modified from these scripts..
+        /// </summary>
+        public static string ReplScriptPathReadmeContents {
+            get {
+                return ResourceManager.GetString("ReplScriptPathReadmeContents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Switching interactive environment....
         /// </summary>
         public static string ReplSwitchEvaluator {

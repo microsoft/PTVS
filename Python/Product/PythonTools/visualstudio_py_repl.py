@@ -170,7 +170,7 @@ actual inspection and introspection."""
     _EXIT = to_bytes('EXIT')
     _DONE = to_bytes('DONE')
     _MODC = to_bytes('MODC')
-    
+
     def __init__(self, *args, **kwargs):
         import threading
         self.conn = None
@@ -179,7 +179,7 @@ actual inspection and introspection."""
         self.input_event.acquire()  # lock starts acquired (we use it like a manual reset event)
         self.input_string = None
         self.exit_requested = False
-    
+
     def connect(self, port):
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.conn.connect(('127.0.0.1', port))
@@ -203,7 +203,7 @@ actual inspection and introspection."""
                 # the next command.
                 self.flush()                
                 self.conn.settimeout(10)
-                
+
                 # 2.x raises SSLError in case of timeout (http://bugs.python.org/issue10272)
                 if SSLError:
                     timeout_exc_types = (socket.timeout, SSLError)
@@ -222,7 +222,7 @@ actual inspection and introspection."""
                 if inp == '':
                     break
                 self.flush()
-            
+
                 cmd = ReplBackend._COMMANDS.get(inp)
                 if cmd is not None:
                     cmd(self)
@@ -230,9 +230,9 @@ actual inspection and introspection."""
             _debug_write('error in repl loop')
             _debug_write(traceback.format_exc())
             self.exit_process()
-            
+
             time.sleep(2) # try and exit gracefully, then interrupt main if necessary
-            
+
             if sys.platform == 'cli':
                 # just kill us as fast as possible
                 import System
@@ -294,7 +294,7 @@ actual inspection and introspection."""
                     write_string(self.conn, (doc or '')[:4096])
                     arg_count = len(args) + (vargs is not None) + (varkw is not None)
                     write_int(self.conn, arg_count)
-                    
+
                     def_values = [''] * (len(args) - len(defaults)) + ['=' + d for d in defaults]
                     for arg, def_value in zip(args, def_values):
                         write_string(self.conn, (arg or '') + def_value)
@@ -302,7 +302,7 @@ actual inspection and introspection."""
                         write_string(self.conn, '*' + vargs)
                     if varkw is not None:
                         write_string(self.conn, '**' + varkw)
-    
+
     def _cmd_setm(self):
         global exec_mod
         """sets the current module which code will execute against"""
@@ -323,7 +323,7 @@ actual inspection and introspection."""
             res.sort()
         except:
             res = []
-        
+
         with self.send_lock:
             write_bytes(self.conn, ReplBackend._MODS)
             write_int(self.conn, len(res))
@@ -335,7 +335,7 @@ actual inspection and introspection."""
         """handles the input command which returns a string of input"""
         self.input_string = read_string(self.conn)
         self.input_event.release()
-    
+
     def _cmd_excf(self):
         """handles executing a single file"""
         filename = read_string(self.conn)
@@ -407,18 +407,19 @@ actual inspection and introspection."""
             write_int(self.conn, len(xaml_bytes))
             write_bytes(self.conn, xaml_bytes)
 
-    def send_prompt(self, ps1, ps2):
+    def send_prompt(self, ps1, ps2, allow_multiple_statements):
         """sends the current prompt to the interactive window"""
         with self.send_lock:
             write_bytes(self.conn, ReplBackend._PRPC)
             write_string(self.conn, ps1)
             write_string(self.conn, ps2)
-    
+            write_int(self.conn, 1 if allow_multiple_statements else 0)
+
     def send_error(self):
         """reports that an error occured to the interactive window"""
         with self.send_lock:
             write_bytes(self.conn, ReplBackend._ERRE)
-        
+
     def send_exit(self):
         """reports the that the REPL process has exited to the interactive window"""
         with self.send_lock:
@@ -427,7 +428,7 @@ actual inspection and introspection."""
     def send_command_executed(self):
         with self.send_lock:
             write_bytes(self.conn, ReplBackend._DONE)
-    
+
     def send_modules_changed(self):
         with self.send_lock:
             write_bytes(self.conn, ReplBackend._MODC)
@@ -444,7 +445,7 @@ actual inspection and introspection."""
         with self.send_lock:
             write_bytes(self.conn, ReplBackend._STDO)
             write_string(self.conn, value)
-    
+
     def write_stderr(self, value):
         """writes a string to standard input in the remote console"""
         with self.send_lock:
@@ -453,15 +454,15 @@ actual inspection and introspection."""
 
     ################################################################
     # Implementation of execution, etc...
-    
+
     def execution_loop(self):
         """starts processing execution requests"""
         raise NotImplementedError
-    
+
     def run_command(self, command):
         """runs the specified command which is a string containing code"""
         raise NotImplementedError
-        
+
     def execute_file(self, filename, args):
         """executes the given filename as the main module"""
         return self.execute_file_ex('script', filename, args)
@@ -473,7 +474,7 @@ actual inspection and introspection."""
     def interrupt_main(self):
         """aborts the current running command"""
         raise NotImplementedError
-        
+
     def exit_process(self):
         """exits the REPL process"""
         raise NotImplementedError
@@ -481,7 +482,7 @@ actual inspection and introspection."""
     def get_members(self, expression):
         """returns a tuple of the type name, instance members, and type members"""
         raise NotImplementedError
-        
+
     def get_signatures(self, expression):
         """returns doc, args, vargs, varkw, defaults."""
         raise NotImplementedError
@@ -489,7 +490,7 @@ actual inspection and introspection."""
     def set_current_module(self, module):
         """sets the module which code executes against"""
         raise NotImplementedError
-        
+
     def set_current_thread_and_frame(self, thread_id, frame_id, frame_kind):
         """sets the current thread and frame which code will execute against"""
         raise NotImplementedError
@@ -505,7 +506,7 @@ actual inspection and introspection."""
     def attach_process(self, port, debugger_id, debug_options):
         """starts processing execution requests"""
         raise NotImplementedError
-    
+
 def exit_work_item():
     sys.exit(0)
 
@@ -529,7 +530,7 @@ if sys.platform == 'cli':
 
     from System import DBNull, ParamArrayAttribute
     builtin_method_descriptor_type = type(list.append)
-    
+
     import System
     NamespaceType = type(System)
 
@@ -607,7 +608,7 @@ due to the exec, so we do it here"""
         def func():
             code.Execute(self.exec_mod)
         return func
-    
+
     def execute_code_work_item(self):
         _debug_write('Executing: ' + repr(self.current_code))
         stripped_code = self.current_code.strip()
@@ -645,30 +646,30 @@ due to the exec, so we do it here"""
             except:
                 pass
             cur_modules = new_modules
-        
+
             self.execute_item_lock.acquire()
 
             if self.check_for_exit_execution_loop():
                 return True, None, None, None
-        
+
             if self.execute_item is not None:
                 try:
                     self.execute_item()
                 finally:
                     self.execute_item = None
-            
+
             try:
                 self.send_command_executed()
             except SocketError:
                 return True, None, None, None
-        
+
             try:
                 if cur_ps1 != sys.ps1 or cur_ps2 != sys.ps2:
                     new_ps1 = str(sys.ps1)
                     new_ps2 = str(sys.ps2)
-                
-                    self.send_prompt(new_ps1, new_ps2)
-        
+
+                    self.send_prompt(new_ps1, new_ps2, allow_multiple_statements=False)
+
                     cur_ps1 = new_ps1
                     cur_ps2 = new_ps2
             except:
@@ -704,7 +705,7 @@ due to the exec, so we do it here"""
             except SocketError:
                 _debug_write('err sending DONE')
                 return True, None, None, None
-        
+
         return False, cur_modules, cur_ps1, cur_ps2
 
     def skip_internal_frames(self, tb):
@@ -722,7 +723,7 @@ due to the exec, so we do it here"""
 
     def execution_loop(self):
         """loop on the main thread which is responsible for executing code"""
-        
+
         if sys.platform == 'cli' and sys.version_info[:3] < (2, 7, 1):
             # IronPython doesn't support thread.interrupt_main until 2.7.1
             import System
@@ -738,7 +739,7 @@ due to the exec, so we do it here"""
             sys.ps1 = cur_ps1 = '>>> '
             sys.ps2 = cur_ps2 = '... '
 
-        self.send_prompt(cur_ps1, cur_ps2)
+        self.send_prompt(cur_ps1, cur_ps2, allow_multiple_statements=False)
 
         while True:
             exit, cur_modules, cur_ps1, cur_ps2 = self.run_one_command(cur_modules, cur_ps1, cur_ps2)
@@ -853,7 +854,7 @@ due to the exec, so we do it here"""
             else:
                 val = eval(expression, self.exec_mod.__dict__, self.exec_mod.__dict__)
                 members = dir(val)
-    
+
         return self.collect_members(val, members, getattr_func)
 
     def collect_members(self, val, members, getattr_func):
@@ -871,7 +872,7 @@ due to the exec, so we do it here"""
                 pass
 
         # collect the type members
-        
+
         type_members = {}
         for mem_name in members:
             if mem_name not in inst_members:
@@ -879,7 +880,7 @@ due to the exec, so we do it here"""
                 if mem_t is not None:
                     type_members[mem_name] = mem_t
 
-    
+
         return t.__module__ + '.' + t.__name__, inst_members, type_members
 
     def get_ipy_sig(self, obj, ctor):
@@ -899,7 +900,7 @@ due to the exec, so we do it here"""
                 defaults.append(repr(param.DefaultValue))
 
         return obj.__doc__, args, vargs, varkw, tuple(defaults)
-    
+
     def get_signatures(self, expression):
         if sys.platform == 'cli':
             code = python_context.CreateSnippet(expression, None, SourceCodeKind.AutoDetect)
@@ -939,7 +940,7 @@ due to the exec, so we do it here"""
         if remove_self:
             # remove self for instance methods and types
             args = args[1:]
-            
+
         if defaults is not None:
             defaults = [repr(default) for default in defaults]
         else:
@@ -971,7 +972,7 @@ due to the exec, so we do it here"""
             except:
                 pass
         return res
-    
+
     def get_namespaces(self, basename, namespace, names):
         names.append((basename, ''))
         try:
@@ -983,7 +984,7 @@ due to the exec, so we do it here"""
                     self.get_namespaces(new_name, new_namespace, names)
         except:
             pass
-    
+
     def flush(self):
         sys.stdout.flush()
 
@@ -997,10 +998,10 @@ due to the exec, so we do it here"""
             import visualstudio_py_debugger
             visualstudio_py_debugger.DETACH_CALLBACKS.append(self.do_detach)
             visualstudio_py_debugger.attach_process(port, debugger_id, debug_options, report=True, block=True)
-        
+
         self.execute_item = execute_attach_process_work_item
         self.execute_item_lock.release()
-    
+
     @staticmethod
     def get_type_name(val):
         try:
@@ -1174,7 +1175,7 @@ class _ReplOutput(object):
     def flush(self):
         if self.old_out:
             self.old_out.flush()
-    
+
     def fileno(self):
         if self.pipe is None:
             self.pipe = os.pipe()
@@ -1202,7 +1203,7 @@ class _ReplOutput(object):
         for line in lines:
             self.write(line)
             self.write('\n')
-    
+
     def write(self, value):
         _debug_write('printing ' + repr(value) + '\n')
         if self.is_stdout:
@@ -1211,7 +1212,7 @@ class _ReplOutput(object):
             self.backend.write_stderr(value)
         if self.old_out:
             self.old_out.write(value)
-    
+
     def isatty(self):
         return True
 
@@ -1223,10 +1224,10 @@ class _ReplInput(object):
     """file like object which redirects input from the repl window"""
     def __init__(self, backend):
         self.backend = backend
-    
+
     def readline(self):
         return self.backend.read_line()
-    
+
     def readlines(self, size = None):
         res = []
         while True:
@@ -1235,12 +1236,12 @@ class _ReplInput(object):
                 res.append(line)
             else:
                 break
-        
+
         return res
 
     def xreadlines(self):
         return self
-    
+
     def write(self, *args):
         raise IOError("File not open for writing")
 
@@ -1261,7 +1262,7 @@ if sys.platform == 'cli':
     class DotNetOutput(System.IO.TextWriter):        
         def __new__(cls, backend, is_stdout, old_out=None):
             return System.IO.TextWriter.__new__(cls)
-        
+
         def __init__(self, backend, is_stdout, old_out=None):
             self.backend = backend
             self.is_stdout = is_stdout
@@ -1300,7 +1301,7 @@ if sys.platform == 'cli':
         @property
         def Encoding(self):
             return System.Text.Encoding.UTF8
-    
+
 
 BACKEND = None
 
@@ -1309,15 +1310,15 @@ def _run_repl():
 
     parser = OptionParser(prog='repl', description='Process REPL options')
     parser.add_option('--port', dest='port',
-                   help='the port to connect back to')
+                      help='the port to connect back to')
     parser.add_option('--execution-mode', dest='backend',
-                   help='the backend to use')
+                      help='the backend to use')
     parser.add_option('--enable-attach', dest='enable_attach', 
-                    action="store_true", default=False,
-                   help='enable attaching the debugger via $attach')
+                      action="store_true", default=False,
+                      help='enable attaching the debugger via $attach')
 
     (options, args) = parser.parse_args()
-    
+
     # kick off repl
     # make us available under our "normal" name, not just __main__ which we'll likely replace.
     sys.modules['visualstudio_py_repl'] = sys.modules['__main__']
@@ -1343,7 +1344,14 @@ def _run_repl():
     sys.argv = args or ['']
 
     global BACKEND
-    BACKEND = backend_type()
+    try:
+        BACKEND = backend_type()
+    except UnsupportedReplException:
+        backend_error = sys.exc_info()[1].reason
+        BACKEND = BasicReplBackend()
+    except Exception:
+        backend_error = traceback.format_exc()
+        BACKEND = BasicReplBackend()
     BACKEND.connect(int(options.port))
 
     if options.enable_attach:

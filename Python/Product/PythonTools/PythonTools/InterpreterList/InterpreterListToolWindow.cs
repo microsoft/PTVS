@@ -69,6 +69,11 @@ namespace Microsoft.PythonTools.InterpreterList {
                 OpenInteractiveWindow_CanExecute
             ));
             list.CommandBindings.Add(new CommandBinding(
+                EnvironmentView.OpenInteractiveScripts,
+                OpenInteractiveScripts_Executed,
+                OpenInteractiveScripts_CanExecute
+            ));
+            list.CommandBindings.Add(new CommandBinding(
                 EnvironmentPathsExtension.StartInterpreter,
                 StartInterpreter_Executed,
                 StartInterpreter_CanExecute
@@ -98,8 +103,115 @@ namespace Microsoft.PythonTools.InterpreterList {
                 OpenInCommandPrompt_Executed,
                 OpenInCommandPrompt_CanExecute
             ));
+            list.CommandBindings.Add(new CommandBinding(
+                EnvironmentView.EnableIPythonInteractive,
+                EnableIPythonInteractive_Executed,
+                EnableIPythonInteractive_CanExecute
+            ));
+            list.CommandBindings.Add(new CommandBinding(
+                EnvironmentView.DisableIPythonInteractive,
+                DisableIPythonInteractive_Executed,
+                DisableIPythonInteractive_CanExecute
+            ));
 
             Content = list;
+        }
+
+        private string GetScriptPath(EnvironmentView view) {
+            if (view == null) {
+                return null;
+            }
+
+            return PythonInteractiveEvaluator.GetScriptsPath(
+                _site,
+                view.Description,
+                view.Factory.Configuration,
+                false
+            );
+        }
+
+        private void OpenInteractiveScripts_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var path = GetScriptPath(e.Parameter as EnvironmentView);
+            e.CanExecute = path != null;
+            e.Handled = true;
+        }
+
+        private bool EnsureScriptDirectory(string path) {
+            if (string.IsNullOrEmpty(path)) {
+                return false;
+            }
+
+            if (!Directory.Exists(path)) {
+                try {
+                    Directory.CreateDirectory(path);
+                    File.WriteAllText(PathUtils.GetAbsoluteFilePath(path, "readme.txt"), Strings.ReplScriptPathReadmeContents);
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    TaskDialog.ForException(_site, ex, issueTrackerUrl: PythonConstants.IssueTrackerUrl).ShowModal();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private void OpenInteractiveScripts_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var path = GetScriptPath(e.Parameter as EnvironmentView);
+            if (!EnsureScriptDirectory(path)) {
+                return;
+            }
+
+            var psi = new ProcessStartInfo();
+            psi.UseShellExecute = false;
+            psi.FileName = "explorer.exe";
+            psi.Arguments = "\"" + path + "\"";
+
+            Process.Start(psi).Dispose();
+            e.Handled = true;
+        }
+
+        private void EnableIPythonInteractive_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var path = GetScriptPath(e.Parameter as EnvironmentView);
+            e.CanExecute = path != null && !File.Exists(PathUtils.GetAbsoluteFilePath(path, "mode.txt"));
+            e.Handled = true;
+        }
+
+        private void EnableIPythonInteractive_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var path = GetScriptPath(e.Parameter as EnvironmentView);
+            if (!EnsureScriptDirectory(path)) {
+                return;
+            }
+
+            path = PathUtils.GetAbsoluteFilePath(path, "mode.txt");
+            try {
+                File.WriteAllText(path, Strings.ReplScriptPathIPythonModeTxtContents);
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                TaskDialog.ForException(_site, ex, issueTrackerUrl: PythonConstants.IssueTrackerUrl).ShowModal();
+                return;
+            }
+
+            e.Handled = true;
+        }
+
+        private void DisableIPythonInteractive_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var path = GetScriptPath(e.Parameter as EnvironmentView);
+            e.CanExecute = path != null && File.Exists(PathUtils.GetAbsoluteFilePath(path, "mode.txt"));
+            e.Handled = true;
+        }
+
+        private void DisableIPythonInteractive_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var path = GetScriptPath(e.Parameter as EnvironmentView);
+            if (!EnsureScriptDirectory(path)) {
+                return;
+            }
+
+            path = PathUtils.GetAbsoluteFilePath(path, "mode.txt");
+            if (File.Exists(path)) {
+                try {
+                    File.Delete(path);
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    TaskDialog.ForException(_site, ex, issueTrackerUrl: PythonConstants.IssueTrackerUrl).ShowModal();
+                    return;
+                }
+            }
         }
 
         private void List_ViewCreated(object sender, EnvironmentViewEventArgs e) {
