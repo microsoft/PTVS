@@ -301,7 +301,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
 
                 var scriptsPath = ScriptsPath;
-                if (!Directory.Exists(scriptsPath)) {
+                if (!Directory.Exists(scriptsPath) && Configuration != null) {
                     scriptsPath = GetScriptsPath(_serviceProvider, DisplayName, Configuration.Interpreter);
                 }
 

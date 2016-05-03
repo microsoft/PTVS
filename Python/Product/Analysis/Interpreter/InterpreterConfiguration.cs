@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     res += " 32-bit";
                 }
 
-                if (_version != new Version()) {
+                if (_version != null && _version != new Version()) {
                     res += " " + _version.ToString();
                 }
 

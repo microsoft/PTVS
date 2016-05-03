@@ -1385,6 +1385,9 @@ namespace Microsoft.PythonTools.Project {
                 );
             }
 
+            // Ensure working directory is a search path.
+            config.SearchPaths.Insert(0, config.WorkingDirectory);
+
             return config;
         }
 

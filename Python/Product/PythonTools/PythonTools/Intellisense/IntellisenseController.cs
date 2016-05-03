@@ -159,7 +159,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (analyzer != null) {
                 analyzer.MonitorTextBufferAsync(subjectBuffer, isTemporaryFile).ContinueWith(task => {
                     var newParser = task.Result;
-                    lock(newParser) {
+                    if (newParser != null) {
                         lock(newParser) {
                             newParser.AttachedViews++;
                         }
