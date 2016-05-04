@@ -1412,7 +1412,7 @@ input()");
             using (var interactive = Prepare()) {
                 const string code = "$unknown";
                 interactive.SubmitCode(code);
-                interactive.WaitForText(">" + code, "Unknown command 'unknown', use \"$help\" for help", ">");
+                interactive.WaitForText(">" + code, "Unknown command '$unknown', use '$help' for a list of commands.", ">");
             }
         }
 
@@ -1457,7 +1457,7 @@ input()");
                     ">$help",
                     "Keyboard shortcuts:",
                     "  Enter                Evaluate the current input if it appears to be complete."
-);
+                );
             }
         }
 
@@ -1708,7 +1708,7 @@ $cls
 
     static class ReplWindowProxyExtensions {
         public static VsProjectAnalyzer GetAnalyzer(this ReplWindowProxy proxy) {
-            return ((IPythonReplIntellisense)proxy.Window.Evaluator).ReplAnalyzer;
+            return ((IPythonInteractiveIntellisense)proxy.Window.Evaluator).Analyzer;
         }
     }
 }

@@ -108,7 +108,7 @@ namespace ProfilingUITests {
                     foreach (var interpreter in service.Interpreters) {
                         options.DefaultInterpreter = interpreter;
                         using (var dialog = app.LaunchPythonProfiling()) {
-                            Assert.AreEqual(interpreter.Configuration.Description, dialog.SelectedInterpreter);
+                            Assert.AreEqual(interpreter.Configuration.FullDescription, dialog.SelectedInterpreter);
                         }
                         app.WaitForDialogDismissed();
                     }

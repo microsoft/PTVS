@@ -160,7 +160,7 @@ namespace Microsoft.PythonTools.Commands {
 
                         foreach (var factory in pyProj.InterpreterFactories) {
                             res.AppendLine();
-                            res.AppendLine("        Interpreter: " + factory.Configuration.Description);
+                            res.AppendLine("        Interpreter: " + factory.Configuration.FullDescription);
                             res.AppendLine("            Id: " + factory.Configuration.Id);
                             res.AppendLine("            Version: " + factory.Configuration.Version);
                             res.AppendLine("            Arch: " + factory.Configuration.Architecture);
@@ -188,7 +188,7 @@ namespace Microsoft.PythonTools.Commands {
                 res.AppendLine("    " + provider.GetType().FullName);
                 foreach (var config in provider.GetInterpreterConfigurations()) {
                     res.AppendLine("        Id: " + config.Id);
-                    res.AppendLine("        Factory: " + config.Description);
+                    res.AppendLine("        Factory: " + config.FullDescription);
                     res.AppendLine("        Version: " + config.Version);
                     res.AppendLine("        Arch: " + config.Architecture);
                     res.AppendLine("        Prefix Path: " + config.PrefixPath ?? "(null)");
@@ -282,7 +282,7 @@ namespace Microsoft.PythonTools.Commands {
             res.AppendLine("Environment Analysis Logs: ");
             foreach (var provider in knownProviders) {
                 foreach (var factory in provider.GetInterpreterFactories().OfType<IPythonInterpreterFactoryWithDatabase>()) {
-                    res.AppendLine(factory.Configuration.Description);
+                    res.AppendLine(factory.Configuration.FullDescription);
                     string analysisLog = factory.GetAnalysisLogContent(CultureInfo.InvariantCulture);
                     if (!string.IsNullOrEmpty(analysisLog)) {
                         res.AppendLine(analysisLog);

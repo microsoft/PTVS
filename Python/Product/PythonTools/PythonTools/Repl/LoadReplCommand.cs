@@ -39,10 +39,12 @@ namespace Microsoft.PythonTools.Repl {
         public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
             var finder = new FileFinder(arguments);
 
-            var eval = window.Evaluator as BasePythonReplEvaluator;
-            if (eval != null && eval.CurrentOptions != null) {
-                finder.Search(eval.CurrentOptions.WorkingDirectory);
-                finder.SearchAll(eval.CurrentOptions.SearchPaths, ';');
+            var eval = window.GetPythonEvaluator();
+            if (eval != null) {
+                finder.Search(eval.Configuration.WorkingDirectory);
+                foreach (var p in eval.Configuration.SearchPaths) {
+                    finder.Search(p);
+                }
             }
 
             finder.ThrowIfNotFound();
@@ -53,7 +55,7 @@ namespace Microsoft.PythonTools.Repl {
             IEnumerable<string> submissions;
 
             if (eval != null) {
-                submissions = eval.JoinCode(lines).Where(CommentPrefixPredicate);
+                submissions = ReplEditFilter.JoinCodeLines(lines, eval.LanguageVersion).Where(CommentPrefixPredicate);
             } else {
                 // v1 behavior, will probably never be hit, but if someone was developing their own IReplEvaluator
                 // and using this class it would be hit.
@@ -80,7 +82,7 @@ namespace Microsoft.PythonTools.Repl {
                 submissions = submissionList;
             }
 
-            window.Submit(submissions);
+            window.SubmitAsync(submissions);
             return ExecutionResult.Succeeded;
         }
 

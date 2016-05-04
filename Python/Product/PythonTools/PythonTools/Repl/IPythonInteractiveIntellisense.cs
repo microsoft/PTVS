@@ -26,13 +26,12 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Repl {
-    interface IPythonReplIntellisense {
+    interface IPythonInteractiveIntellisense {
         bool LiveCompletionsOnly { get; }
         IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind();
         CompletionResult[] GetMemberNames(string text);
         OverloadDoc[] GetSignatureDocumentation(string text);
-        VsProjectAnalyzer ReplAnalyzer {
-            get;
-        }
+        VsProjectAnalyzer Analyzer { get; }
+        string AnalysisFilename { get; }
     }
 }

@@ -16,6 +16,8 @@
 
 using System;
 using System.ComponentModel.Composition.Hosting;
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.PythonTools.Interpreter;
@@ -80,6 +82,82 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
 
         private void OpenConsole_Executed(object sender, ExecutedRoutedEventArgs e) {
             MessageBox.Show("Opening console for " + ((EnvironmentView)e.Parameter).InterpreterPath);
+        }
+
+
+        internal static string GetScriptsPath(EnvironmentView view) {
+            if (view == null) {
+                return null;
+            }
+
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
+                "Visual Studio " + AssemblyVersionInfo.VSName,
+                "Python Scripts",
+                view.Description
+            );
+        }
+
+        private void OpenInteractiveScripts_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var path = GetScriptsPath(e.Parameter as EnvironmentView);
+            e.CanExecute = !string.IsNullOrEmpty(path);
+            e.Handled = true;
+        }
+
+        private void OpenInteractiveScripts_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var path = GetScriptsPath(e.Parameter as EnvironmentView);
+            if (string.IsNullOrEmpty(path)) {
+                return;
+            }
+
+            if (!Directory.Exists(path)) {
+                Directory.CreateDirectory(path);
+            }
+
+            var psi = new ProcessStartInfo();
+            psi.UseShellExecute = false;
+            psi.FileName = "explorer.exe";
+            psi.Arguments = "\"" + path + "\"";
+
+            Process.Start(psi).Dispose();
+            e.Handled = true;
+        }
+
+        private void EnableIPythonInteractive_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var path = GetScriptsPath(e.Parameter as EnvironmentView);
+            e.CanExecute = !string.IsNullOrEmpty(path) && !File.Exists(Path.Combine(path, "__test_mode.txt"));
+            e.Handled = true;
+        }
+
+        private void EnableIPythonInteractive_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var path = GetScriptsPath(e.Parameter as EnvironmentView);
+            if (string.IsNullOrEmpty(path)) {
+                return;
+            }
+
+            if (!Directory.Exists(path)) {
+                Directory.CreateDirectory(path);
+            }
+
+            File.WriteAllText(Path.Combine(path, "__test_mode.txt"), "# Contents of the file");
+        }
+
+        private void DisableIPythonInteractive_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var path = GetScriptsPath(e.Parameter as EnvironmentView);
+            e.CanExecute = !string.IsNullOrEmpty(path) && File.Exists(Path.Combine(path, "__test_mode.txt"));
+            e.Handled = true;
+        }
+
+        private void DisableIPythonInteractive_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var path = GetScriptsPath(e.Parameter as EnvironmentView);
+            if (string.IsNullOrEmpty(path)) {
+                return;
+            }
+
+            path = Path.Combine(path, "__test_mode.txt");
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
         }
     }
 }

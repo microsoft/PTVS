@@ -22,12 +22,14 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.Utilities;
+using IServiceProvider = System.IServiceProvider;
 
 namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(IIntellisenseControllerProvider)), ContentType(PythonCoreConstants.ContentType), Order]
@@ -60,7 +62,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public IIntellisenseController TryCreateIntellisenseController(ITextView textView, IList<ITextBuffer> subjectBuffers) {
             IntellisenseController controller;
-            if (!textView.Properties.TryGetProperty<IntellisenseController>(typeof(IntellisenseController), out controller)) {
+            if (!textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller)) {
                 controller = new IntellisenseController(this, textView, _ServiceProvider);
             }
 
@@ -71,13 +73,19 @@ namespace Microsoft.PythonTools.Intellisense {
             return controller;
         }
 
+        internal static IntellisenseController GetController(ITextView textView) {
+            IntellisenseController controller;
+            textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller);
+            return controller;
+        }
+
         internal static IntellisenseController GetOrCreateController(
             IServiceProvider serviceProvider,
             IComponentModel model,
             ITextView textView
         ) {
             IntellisenseController controller;
-            if (!textView.Properties.TryGetProperty<IntellisenseController>(typeof(IntellisenseController), out controller)) {
+            if (!textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller)) {
                 var intellisenseControllerProvider = (
                    from export in model.DefaultExportProvider.GetExports<IIntellisenseControllerProvider, IContentTypeMetadata>()
                    from exportedContentType in export.Metadata.ContentTypes

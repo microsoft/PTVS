@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return GetConfigurations()
                     .Values
-                    .OrderBy(config => config.Description)
+                    .OrderBy(config => config.FullDescription)
                     .ThenBy(config => config.Version);
             }
         }
@@ -262,6 +262,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     .SelectMany(GetFactories)
                     .Where(fact => fact != null)
                     .OrderBy(fact => fact.Configuration.Description)
+                    .ThenBy(fact => fact.Configuration.Architecture)
                     .ThenBy(fact => fact.Configuration.Version);
             }
 

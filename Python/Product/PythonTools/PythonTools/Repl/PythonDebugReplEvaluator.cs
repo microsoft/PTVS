@@ -19,7 +19,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
@@ -29,6 +31,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.Text;
@@ -40,8 +43,11 @@ namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Debug")]
     [ContentType(PythonCoreConstants.ContentType)]
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
-    internal class PythonDebugReplEvaluator : IInteractiveEvaluator, IMultipleScopeEvaluator, IPythonReplIntellisense {
-        private IInteractiveWindow _window;
+    internal class PythonDebugReplEvaluator :
+        IPythonInteractiveEvaluator,
+        IMultipleScopeEvaluator,
+        IPythonInteractiveIntellisense
+    {
         private PythonDebugProcessReplEvaluator _activeEvaluator;
         private readonly Dictionary<int, PythonDebugProcessReplEvaluator> _evaluators = new Dictionary<int, PythonDebugProcessReplEvaluator>(); // process id to evaluator
         private EnvDTE.DebuggerEvents _debuggerEvents;
@@ -66,25 +72,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        public string PrimaryPrompt {
-            get {
-                if (_activeEvaluator != null) {
-                    return _activeEvaluator.PrimaryPrompt;
-                }
-                return ">>> ";
-            }
-        }
-
-        public string SecondaryPrompt {
-            get {
-                if (_activeEvaluator != null) {
-                    return _activeEvaluator.SecondaryPrompt;
-                }
-                return "... ";
-            }
-        }
-
-        internal PythonInteractiveCommonOptions CurrentOptions {
+        internal PythonInteractiveOptions CurrentOptions {
             get {
                 return _pyService.DebugInteractiveOptions;
             }
@@ -97,15 +85,6 @@ namespace Microsoft.PythonTools.Repl {
                 return true;
             }
             return dte.Debugger.CurrentMode == EnvDTE.dbgDebugMode.dbgBreakMode;
-        }
-
-        public Task<ExecutionResult> Initialize(IInteractiveWindow window) {
-            _window = window;
-            _window.SetSmartUpDown(CurrentOptions.ReplSmartHistory);
-            _window.WriteLine("Python debug interactive window.  Type $help for a list of commands.");
-
-            _window.ReadyForInput += new Action(OnReadyForInput);
-            return ExecutionResult.Succeeded;
         }
 
         private void OnReadyForInput() {
@@ -145,7 +124,7 @@ namespace Microsoft.PythonTools.Repl {
             return true;
         }
 
-        public Task<ExecutionResult> ExecuteText(string text) {
+        public Task<ExecutionResult> ExecuteCodeAsync(string text) {
             var res = _commands.TryExecuteCommand();
             if (res != null) {
                 return res;
@@ -157,24 +136,22 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             if (_activeEvaluator != null) {
-                return _activeEvaluator.ExecuteText(text);
+                return _activeEvaluator.ExecuteCodeAsync(text);
             }
             return ExecutionResult.Succeeded;
         }
 
-        public void ExecuteFile(string filename) {
+        public Task<ExecutionResult> ExecuteFileAsync(string filename, string extraArgs) {
             if (!IsInDebugBreakMode()) {
                 NoExecutionIfNotStoppedInDebuggerError();
-                return;
+                return ExecutionResult.Succeeded;
             }
 
-            if (_activeEvaluator != null) {
-                _activeEvaluator.ExecuteFile(filename);
-            }
+            return _activeEvaluator?.ExecuteFileAsync(filename, extraArgs) ?? ExecutionResult.Succeeded;
         }
 
         public void AbortExecution() {
-            _window.WriteError("Abort is not supported." + Environment.NewLine);
+            CurrentWindow.WriteError("Abort is not supported." + Environment.NewLine);
         }
 
         public Task<ExecutionResult> Reset() {
@@ -234,20 +211,16 @@ namespace Microsoft.PythonTools.Repl {
             get { return CurrentOptions.LiveCompletionsOnly; }
         }
 
-        public IInteractiveWindow CurrentWindow {
-            get {
-                return _window;
-            }
-            set {
-                _window = value;
-            }
-        }
+        public IInteractiveWindow CurrentWindow { get; set; }
 
-        public VsProjectAnalyzer ReplAnalyzer {
-            get {
-                return _activeEvaluator?.ReplAnalyzer ?? _pyService.DefaultAnalyzer;
-            }
-        }
+        public VsProjectAnalyzer Analyzer => _activeEvaluator?.Analyzer;
+        public string AnalysisFilename => _activeEvaluator?.AnalysisFilename;
+
+        public bool IsDisconnected => _activeEvaluator?.IsDisconnected ?? true;
+
+        public bool IsExecuting => _activeEvaluator?.IsExecuting ?? false;
+
+        public string DisplayName => Strings.DebugReplDisplayName;
 
         public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind() {
             if (_activeEvaluator != null) {
@@ -276,7 +249,7 @@ namespace Microsoft.PythonTools.Repl {
         internal void StepOut() {
             if (_activeEvaluator != null) {
                 _activeEvaluator.StepOut();
-                _window.TextView.VisualElement.Focus();
+                CurrentWindow.TextView.VisualElement.Focus();
             } else {
                 NoProcessError();
             }
@@ -285,7 +258,7 @@ namespace Microsoft.PythonTools.Repl {
         internal void StepInto() {
             if (_activeEvaluator != null) {
                 _activeEvaluator.StepInto();
-                _window.TextView.VisualElement.Focus();
+                CurrentWindow.TextView.VisualElement.Focus();
             } else {
                 NoProcessError();
             }
@@ -294,7 +267,7 @@ namespace Microsoft.PythonTools.Repl {
         internal void StepOver() {
             if (_activeEvaluator != null) {
                 _activeEvaluator.StepOver();
-                _window.TextView.VisualElement.Focus();
+                CurrentWindow.TextView.VisualElement.Focus();
             } else {
                 NoProcessError();
             }
@@ -303,7 +276,7 @@ namespace Microsoft.PythonTools.Repl {
         internal void Resume() {
             if (_activeEvaluator != null) {
                 _activeEvaluator.Resume();
-                _window.TextView.VisualElement.Focus();
+                CurrentWindow.TextView.VisualElement.Focus();
             } else {
                 NoProcessError();
             }
@@ -327,15 +300,15 @@ namespace Microsoft.PythonTools.Repl {
 
         internal void DisplayActiveProcess() {
             if (_activeEvaluator != null) {
-                _window.WriteLine(_activeEvaluator.ProcessId.ToString());
+                _activeEvaluator.WriteOutput(_activeEvaluator.ProcessId.ToString());
             } else {
-                _window.WriteLine("None");
+                CurrentWindow.WriteLine("None" + Environment.NewLine);
             }
         }
 
         internal void DisplayActiveThread() {
             if (_activeEvaluator != null) {
-                _window.WriteLine(_activeEvaluator.ThreadId.ToString());
+                _activeEvaluator.WriteOutput(_activeEvaluator.ThreadId.ToString());
             } else {
                 NoProcessError();
             }
@@ -343,7 +316,7 @@ namespace Microsoft.PythonTools.Repl {
 
         internal void DisplayActiveFrame() {
             if (_activeEvaluator != null) {
-                _window.WriteLine(_activeEvaluator.FrameId.ToString());
+                _activeEvaluator.WriteOutput(_activeEvaluator.FrameId.ToString());
             } else {
                 NoProcessError();
             }
@@ -353,7 +326,7 @@ namespace Microsoft.PythonTools.Repl {
             if (_evaluators.Keys.Contains(id)) {
                 SwitchProcess(_evaluators[id].Process, verbose);
             } else {
-                _window.WriteError(String.Format("Invalid process id '{0}'.", id));
+                CurrentWindow.WriteError(string.Format("Invalid process id '{0}'.", id));
             }
         }
 
@@ -363,7 +336,7 @@ namespace Microsoft.PythonTools.Repl {
                 if (thread != null) {
                     _activeEvaluator.SwitchThread(thread, verbose);
                 } else {
-                    _window.WriteError(String.Format("Invalid thread id '{0}'.", id));
+                    CurrentWindow.WriteError(String.Format("Invalid thread id '{0}'.", id));
                 }
             } else {
                 NoProcessError();
@@ -376,7 +349,7 @@ namespace Microsoft.PythonTools.Repl {
                 if (frame != null) {
                     _activeEvaluator.SwitchFrame(frame);
                 } else {
-                    _window.WriteError(String.Format("Invalid frame id '{0}'.", id));
+                    CurrentWindow.WriteError(String.Format("Invalid frame id '{0}'.", id));
                 }
             } else {
                 NoProcessError();
@@ -384,9 +357,11 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal void DisplayProcesses() {
-            foreach (var target in _evaluators.Values) {
-                if (target.Process != null) {
-                    _window.WriteLine(String.Format("{2}Process id={0}, Language version={1}", target.Process.Id, target.Process.LanguageVersion, target.Process.Id == _activeEvaluator.ProcessId ? currentPrefix : notCurrentPrefix));
+            if (_activeEvaluator != null) {
+                foreach (var target in _evaluators.Values) {
+                    if (target.Process != null) {
+                        _activeEvaluator.WriteOutput(string.Format("{2}Process id={0}, Language version={1}", target.Process.Id, target.Process.LanguageVersion, target.Process.Id == _activeEvaluator.ProcessId ? currentPrefix : notCurrentPrefix));
+                    }
                 }
             }
         }
@@ -394,7 +369,7 @@ namespace Microsoft.PythonTools.Repl {
         internal void DisplayThreads() {
             if (_activeEvaluator != null) {
                 foreach (var target in _activeEvaluator.GetThreads()) {
-                    _window.WriteLine(String.Format("{2}Thread id={0}, name={1}", target.Id, target.Name, target.Id == _activeEvaluator.ThreadId ? currentPrefix : notCurrentPrefix));
+                    _activeEvaluator.WriteOutput(string.Format("{2}Thread id={0}, name={1}", target.Id, target.Name, target.Id == _activeEvaluator.ThreadId ? currentPrefix : notCurrentPrefix));
                 }
             } else {
                 NoProcessError();
@@ -404,19 +379,10 @@ namespace Microsoft.PythonTools.Repl {
         internal void DisplayFrames() {
             if (_activeEvaluator != null) {
                 foreach (var target in _activeEvaluator.GetFrames()) {
-                    _window.WriteLine(String.Format("{2}Frame id={0}, function={1}", target.FrameId, target.FunctionName, target.FrameId == _activeEvaluator.FrameId ? currentPrefix : notCurrentPrefix));
+                    _activeEvaluator.WriteOutput(string.Format("{2}Frame id={0}, function={1}", target.FrameId, target.FunctionName, target.FrameId == _activeEvaluator.FrameId ? currentPrefix : notCurrentPrefix));
                 }
             } else {
                 NoProcessError();
-            }
-        }
-
-        internal IEnumerable<string> SplitCode(string code) {
-            if (_activeEvaluator != null) {
-                return _activeEvaluator.SplitCode(code);
-            } else {
-                NoProcessError();
-                return new string[0];
             }
         }
 
@@ -438,7 +404,7 @@ namespace Microsoft.PythonTools.Repl {
                 _activeEvaluator = newEvaluator;
                 ActiveProcessChanged();
                 if (verbose) {
-                    _window.WriteLine(String.Format("Current process changed to {0}", process.Id));
+                    CurrentWindow.WriteLine(string.Format("Current process changed to {0}", process.Id));
                 }
             }
         }
@@ -451,8 +417,8 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             process.ProcessExited += new EventHandler<ProcessExitedEventArgs>(OnProcessExited);
-            var evaluator = new PythonDebugProcessReplEvaluator(_serviceProvider, process, _pyService, threadIdMapper);
-            evaluator.Window = _window;
+            var evaluator = new PythonDebugProcessReplEvaluator(_serviceProvider, process, threadIdMapper);
+            evaluator.CurrentWindow = CurrentWindow;
             evaluator.InitializeAsync().WaitAndUnwrapExceptions();
             evaluator.AvailableScopesChanged += new EventHandler<EventArgs>(evaluator_AvailableScopesChanged);
             evaluator.MultipleScopeSupportChanged += new EventHandler<EventArgs>(evaluator_MultipleScopeSupportChanged);
@@ -478,87 +444,78 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void evaluator_MultipleScopeSupportChanged(object sender, EventArgs e) {
-            var supportChanged = MultipleScopeSupportChanged;
-            if (supportChanged != null) {
-                supportChanged(this, EventArgs.Empty);
-            }
+            MultipleScopeSupportChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void evaluator_AvailableScopesChanged(object sender, EventArgs e) {
-            var curScopesChanged = AvailableScopesChanged;
-            if (curScopesChanged != null) {
-                curScopesChanged(this, EventArgs.Empty);
-            }
+            AvailableScopesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void ActiveProcessChanged() {
-            var supportChanged = MultipleScopeSupportChanged;
-            if (supportChanged != null) {
-                supportChanged(this, EventArgs.Empty);
-            }
-
-            var curScopesChanged = AvailableScopesChanged;
-            if (curScopesChanged != null) {
-                curScopesChanged(this, EventArgs.Empty);
-            }
+            MultipleScopeSupportChanged?.Invoke(this, EventArgs.Empty);
+            AvailableScopesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void NoProcessError() {
-            _window.WriteError("Command only available when a process is being debugged.");
+            CurrentWindow.WriteError("Command only available when a process is being debugged.");
         }
 
         private void NoExecutionIfNotStoppedInDebuggerError() {
-            _window.WriteError("Code can only be executed while stopped in debugger.");
+            CurrentWindow.WriteError("Code can only be executed while stopped in debugger.");
         }
 
         public Task<ExecutionResult> InitializeAsync() {
-            _commands = BasePythonReplEvaluator.GetInteractiveCommands(_serviceProvider, _window, this);
+            _commands = PythonInteractiveEvaluator.GetInteractiveCommands(_serviceProvider, CurrentWindow, this);
 
-            return Initialize(CurrentWindow);
+            CurrentWindow.TextView.Options.SetOptionValue(InteractiveWindowOptions.SmartUpDown, CurrentOptions.UseSmartHistory);
+            CurrentWindow.WriteLine("Python debug interactive window. Type $help for a list of commands.");
+
+            CurrentWindow.ReadyForInput += OnReadyForInput;
+            return ExecutionResult.Succeeded;
         }
 
         public Task<ExecutionResult> ResetAsync(bool initialize = true) {
             return Reset();
         }
 
-        public Task<ExecutionResult> ExecuteCodeAsync(string text) {
-            return ExecuteText(text);
-        }
-
         public string GetPrompt() {
-            if ((_window?.CurrentLanguageBuffer?.CurrentSnapshot?.LineCount ?? 0) > 1) {
-                return SecondaryPrompt;
-            }
-
-            return PrimaryPrompt;
+            return _activeEvaluator?.GetPrompt();
         }
     }
 
     [InteractiveWindowRole("Debug")]
     [ContentType(PythonCoreConstants.ContentType)]
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
-    internal class PythonDebugProcessReplEvaluator : BasePythonReplEvaluator {
+    internal class PythonDebugProcessReplEvaluator : PythonInteractiveEvaluator {
+        private ExceptionDispatchInfo _connectFailure;
         private readonly PythonProcess _process;
         private readonly IThreadIdMapper _threadIdMapper;
         private long _threadId;
         private int _frameId;
         private PythonLanguageVersion _languageVersion;
 
-        public PythonDebugProcessReplEvaluator(IServiceProvider serviceProvider, PythonProcess process, PythonToolsService pyService, IThreadIdMapper threadIdMapper)
-            : base(serviceProvider, pyService, GetOptions(serviceProvider, pyService)) {
+        public PythonDebugProcessReplEvaluator(IServiceProvider serviceProvider, PythonProcess process, IThreadIdMapper threadIdMapper)
+            : base(serviceProvider) {
             _process = process;
             _threadIdMapper = threadIdMapper;
             _threadId = process.GetThreads()[0].Id;
             _languageVersion = process.LanguageVersion;
+            DisplayName = "Debug " + _languageVersion.ToVersion();
 
-            EnsureConnected();
+            EnsureConnectedOnCreate();
         }
 
-        private static PythonReplEvaluatorOptions GetOptions(IServiceProvider serviceProvider, PythonToolsService pyService) {
-            return new DefaultPythonReplEvaluatorOptions(
-                serviceProvider,
-                () => pyService.DebugInteractiveOptions
-            );
+        private async void EnsureConnectedOnCreate() {
+            try {
+                await EnsureConnectedAsync();
+            } catch (Exception ex) {
+                _connectFailure = ExceptionDispatchInfo.Capture(ex);
+            }
+        }
+
+        protected override Task ExecuteStartupScripts(string scriptsPath) {
+            // Do not execute scripts for debug evaluator
+            return Task.FromResult<object>(null);
         }
 
         public PythonProcess Process {
@@ -577,66 +534,45 @@ namespace Microsoft.PythonTools.Repl {
             get { return _frameId; }
         }
 
-        protected override PythonLanguageVersion AnalyzerProjectLanguageVersion {
-            get {
-                return _languageVersion;
-            }
-        }
-
-        protected override PythonLanguageVersion LanguageVersion {
-            get {
-                return _languageVersion;
-            }
-        }
-
-        public override VsProjectAnalyzer ReplAnalyzer {
-            get {
-                return CurrentOptions.ProjectAnalyzer;
-            }
-        }
-
-        internal override string DisplayName {
-            get {
-                return "Debug" + _languageVersion.ToString();
-            }
-        }
-
-        protected override void Connect() {
+        protected override CommandProcessorThread Connect() {
             var remoteProcess = _process as PythonRemoteProcess;
             if (remoteProcess == null) {
-                Socket listenerSocket;
-                int portNum;
-                CreateConnection(out listenerSocket, out portNum);
-                Process proc = System.Diagnostics.Process.GetProcessById(_process.Id);
-                CreateCommandProcessor(listenerSocket, false, proc);
+                var conn = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
+                conn.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+                conn.Listen(0);
+                var portNum = ((IPEndPoint)conn.LocalEndPoint).Port;
+                var proc = System.Diagnostics.Process.GetProcessById(_process.Id);
+
+                var thread = CommandProcessorThread.Create(this, conn, proc);
                 _process.ConnectRepl(portNum);
-            } else {
-                // Ignore SSL errors, since user was already prompted about them and chose to ignore them when he attached to this process.
-                var stream = remoteProcess.Connect(false);
-                bool connected = false;
-                try {
-                    stream.Write(PythonRemoteProcess.ReplCommandBytes);
+                return thread;
+            }
 
-                    string attachResp = stream.ReadAsciiString(PythonRemoteProcess.Accepted.Length);
-                    if (attachResp != PythonRemoteProcess.Accepted) {
-                        throw new ConnectionException(ConnErrorMessages.RemoteAttachRejected);
-                    }
+            // Ignore SSL errors, since user was already prompted about them and chose to ignore them when he attached to this process.
+            var stream = remoteProcess.Connect(false);
+            bool connected = false;
+            try {
+                stream.Write(PythonRemoteProcess.ReplCommandBytes);
 
-                    connected = true;
-                } finally {
-                    if (!connected) {
-                        if (stream != null) {
-                            stream.Close();
-                        }
-                        stream = null;
-                    }
+                string attachResp = stream.ReadAsciiString(PythonRemoteProcess.Accepted.Length);
+                if (attachResp != PythonRemoteProcess.Accepted) {
+                    throw new ConnectionException(ConnErrorMessages.RemoteAttachRejected);
                 }
 
-                CreateCommandProcessor(stream, false, null);
+                connected = true;
+            } finally {
+                if (!connected) {
+                    if (stream != null) {
+                        stream.Close();
+                    }
+                    stream = null;
+                }
             }
+
+            return CommandProcessorThread.Create(this, stream);
         }
 
-        protected override void OnConnected() {
+        internal override void OnConnected() {
             // Finish initialization now that the socket connection has been established
             var threads = _process.GetThreads();
             PythonThread activeThread = null;
@@ -663,8 +599,6 @@ namespace Microsoft.PythonTools.Repl {
             if (activeThread != null) {
                 SwitchThread(activeThread, false);
             }
-
-            OnMultipleScopeSupportChanged();
         }
 
         internal IList<PythonThread> GetThreads() {
@@ -679,22 +613,22 @@ namespace Microsoft.PythonTools.Repl {
         internal void SwitchThread(PythonThread thread, bool verbose) {
             var frame = thread.Frames.FirstOrDefault();
             if (frame == null) {
-                Window.WriteError(string.Format("Cannot change current thread to {0}, because it does not have any visible frames.", thread.Id));
+                WriteError(string.Format("Cannot change current thread to {0}, because it does not have any visible frames.", thread.Id));
                 return;
             }
 
             _threadId = thread.Id;
             _frameId = frame.FrameId;
-            SetThreadAndFrameCommand(thread.Id, _frameId, frame.Kind);
+            _thread?.SetThreadAndFrameCommand(thread.Id, _frameId, frame.Kind);
             if (verbose) {
-                Window.WriteLine(String.Format("Current thread changed to {0}, frame {1}", _threadId, _frameId));
+                WriteOutput(string.Format("Current thread changed to {0}, frame {1}", _threadId, _frameId));
             }
         }
 
         internal void SwitchFrame(PythonStackFrame frame) {
             _frameId = frame.FrameId;
-            SetThreadAndFrameCommand(frame.Thread.Id, frame.FrameId, frame.Kind);
-            Window.WriteLine(String.Format("Current frame changed to {0}", frame.FrameId));
+            _thread?.SetThreadAndFrameCommand(frame.Thread.Id, frame.FrameId, frame.Kind);
+            WriteOutput(string.Format("Current frame changed to {0}", frame.FrameId));
         }
 
         internal void FrameUp() {

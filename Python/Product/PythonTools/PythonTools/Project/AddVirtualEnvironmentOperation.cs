@@ -63,13 +63,19 @@ namespace Microsoft.PythonTools.Project {
         public async Task Run() {
             var service = _project.Site.GetComponentModel().GetService<IInterpreterRegistryService>();
 
-            var factory = await _project.CreateOrAddVirtualEnvironment(
-                service,
-                _create,
-                _virtualEnvPath,
-                _baseInterpreter,
-                _useVEnv
-            );
+            IPythonInterpreterFactory factory;
+            try {
+                factory = await _project.CreateOrAddVirtualEnvironment(
+                    service,
+                    _create,
+                    _virtualEnvPath,
+                    _baseInterpreter,
+                    _useVEnv
+                );
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                WriteError(ex.Message);
+                factory = null;
+            }
 
             if (factory == null) {
                 return;

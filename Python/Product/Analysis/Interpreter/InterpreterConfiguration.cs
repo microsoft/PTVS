@@ -21,7 +21,7 @@ using System.Reflection;
 
 namespace Microsoft.PythonTools.Interpreter {
     public sealed class InterpreterConfiguration {
-        readonly string _prefixPath, _id, _description;
+        readonly string _prefixPath, _id, _description, _descriptionSuffix;
         readonly string _interpreterPath;
         readonly string _windowsInterpreterPath;
         readonly string _libraryPath;
@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Interpreter {
         readonly ProcessorArchitecture _architecture;
         readonly Version _version;
         readonly InterpreterUIMode _uiMode;
-       
+
         /// <summary>
         /// <para>Constructs a new interpreter configuration based on the
         /// provided values.</para>
@@ -50,7 +50,8 @@ namespace Microsoft.PythonTools.Interpreter {
             string pathVar = "",
             ProcessorArchitecture arch = ProcessorArchitecture.None,
             Version version = null,
-            InterpreterUIMode uiMode = InterpreterUIMode.Normal
+            InterpreterUIMode uiMode = InterpreterUIMode.Normal,
+            string descriptionSuffix = ""
         ) {
             _id = id;
             _description = description;
@@ -68,6 +69,7 @@ namespace Microsoft.PythonTools.Interpreter {
             _architecture = arch;
             _version = version;
             _uiMode = uiMode;
+            _descriptionSuffix = descriptionSuffix;
         }
 
         /// <summary>
@@ -90,8 +92,12 @@ namespace Microsoft.PythonTools.Interpreter {
                     res += " 32-bit";
                 }
 
-                if (_version != new Version()) {
+                if (_version != null && _version != new Version()) {
                     res += " " + _version.ToString();
+                }
+
+                if (!string.IsNullOrEmpty(_descriptionSuffix)) {
+                    res += " " + _descriptionSuffix;
                 }
 
                 return res;

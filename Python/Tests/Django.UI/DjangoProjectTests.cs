@@ -99,12 +99,13 @@ namespace DjangoUITests {
 
                     app.Dte.ExecuteCommand("Project.CollectStaticFiles");
 
-                    var console = app.GetInteractiveWindow("Django Management Console - " + project.Name);
-                    Assert.IsNotNull(console);
+                    using (var console = app.GetInteractiveWindow("Django Management Console - " + project.Name)) {
+                        Assert.IsNotNull(console);
 
-                    console.WaitForTextEnd("The Python REPL process has exited", ">>> ");
+                        console.WaitForTextEnd("The Python REPL process has exited", ">");
 
-                    Assert.IsTrue(console.Text.Contains("0 static files copied"));
+                        Assert.IsTrue(console.TextView.TextSnapshot.GetText().Contains("0 static files copied"));
+                    }
                 }
             }
         }
@@ -176,9 +177,15 @@ namespace DjangoUITests {
                 app.SolutionExplorerTreeView.SelectProject(project);
                 app.Dte.ExecuteCommand("Project.ValidateDjangoApp");
 
-                var console = app.GetInteractiveWindow("Django Management Console - " + project.Name);
-                Assert.IsNotNull(console);
-                console.WaitForTextEnd("Executing manage.py validate", "0 errors found", "The Python REPL process has exited", ">>> ");
+                using (var console = app.GetInteractiveWindow("Django Management Console - " + project.Name)) {
+                    Assert.IsNotNull(console);
+                    console.WaitForTextEnd(
+                        "Executing manage.py validate",
+                        "0 errors found",
+                        "The Python REPL process has exited",
+                        ">"
+                    );
+                }
 
                 app.SolutionExplorerTreeView.SelectProject(project);
 
@@ -289,7 +296,7 @@ namespace DjangoUITests {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject("TestData\\DjangoProjectWithSubDirectory.sln");
 
-                var pyProj = (IPythonProject2)project.GetPythonProject();
+                var pyProj = project.GetPythonProject();
                 var dsm = pyProj.Site.GetUIThread().Invoke(() => pyProj.GetProperty("DjangoSettingsModule"));
                 Assert.AreEqual("config.settings", dsm);
                 var workDir = pyProj.Site.GetUIThread().Invoke(() => pyProj.GetWorkingDirectory()).TrimEnd('\\');

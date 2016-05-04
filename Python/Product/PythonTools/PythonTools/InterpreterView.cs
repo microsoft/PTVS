@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools {
                 .Interpreters
                 .Where(p => !p.Configuration.Id.StartsWith("MSBuild|"))
                 .Where(PythonInterpreterFactoryExtensions.IsUIVisible)
-                .OrderBy(fact => fact.Configuration.Description)
+                .OrderBy(fact => fact.Configuration.FullDescription)
                 .ThenBy(fact => fact.Configuration.Version)
                 .Select(i => new InterpreterView(i, i.Configuration.FullDescription, i == project.ActiveInterpreter));
         }

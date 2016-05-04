@@ -157,6 +157,7 @@ namespace Microsoft.PythonTools.Project {
 
         private void Interpreter_Format(object sender, ListControlConvertEventArgs e) {
             var factory = e.ListItem as IPythonInterpreterFactory;
+
             if (factory != null) {
                 e.Value = factory.Configuration.FullDescription;
             } else {

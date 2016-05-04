@@ -90,8 +90,10 @@ namespace PythonToolsTests {
                 Assert.IsTrue(evaluator.CanExecuteCode("for i in xrange(2):  print i\r\n\r\n"));
                 Assert.IsTrue(evaluator.CanExecuteCode("raise Exception()\n"));
 
-                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    \r\n    "));
-                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    \r\n    "));
+                Assert.IsFalse(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    "));
+                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    \r\n"));
+                Assert.IsFalse(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    "));
+                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    \r\n"));
                 Assert.IsFalse(evaluator.CanExecuteCode("x = \\"));
                 Assert.IsTrue(evaluator.CanExecuteCode("x = \\\r\n42\r\n\r\n"));
             }
@@ -179,17 +181,21 @@ g()",
             };
 
             using (var evaluator = MakeEvaluator()) {
+                int counter = 0;
                 foreach (var testCase in testCases) {
-                    AssertUtil.AreEqual(evaluator.JoinCode(evaluator.SplitCode(testCase.Code)), testCase.Expected);
+                    Console.WriteLine("Test case {0}", ++counter);
+                    AssertUtil.AreEqual(ReplEditFilter.JoinCodeLines(ReplEditFilter.SplitCode(testCase.Code), Microsoft.PythonTools.Parsing.PythonLanguageVersion.V35), testCase.Expected);
                 }
             }
         }
 
-        private static PythonReplEvaluator MakeEvaluator() {
+        private static PythonInteractiveEvaluator MakeEvaluator() {
             var python = PythonPaths.Python27 ?? PythonPaths.Python27_x64 ?? PythonPaths.Python26 ?? PythonPaths.Python26_x64;
             python.AssertInstalled();
             var provider = new SimpleFactoryProvider(python.InterpreterPath, python.InterpreterPath);
-            var eval = new PythonReplEvaluator(provider.GetInterpreterFactories().First(), PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
+            var eval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
+                Configuration = new LaunchConfiguration(python.Configuration)
+            };
             Assert.IsTrue(eval._Initialize(new MockReplWindow(eval)).Result.IsSuccessful);
             return eval;
         }
@@ -232,11 +238,11 @@ g()",
             public event EventHandler InterpreterFactoriesChanged { add { } remove { } }
         }
 
-        private static void TestOutput(MockReplWindow window, PythonReplEvaluator evaluator, string code, bool success, params string[] expectedOutput) {
+        private static void TestOutput(MockReplWindow window, PythonInteractiveEvaluator evaluator, string code, bool success, params string[] expectedOutput) {
             TestOutput(window, evaluator, code, success, null, true, 3000, expectedOutput);
         }
 
-        private static void TestOutput(MockReplWindow window, PythonReplEvaluator evaluator, string code, bool success, Action<bool> afterExecute, bool equalOutput, int timeout = 3000, params string[] expectedOutput) {
+        private static void TestOutput(MockReplWindow window, PythonInteractiveEvaluator evaluator, string code, bool success, Action<bool> afterExecute, bool equalOutput, int timeout = 3000, params string[] expectedOutput) {
             window.ClearScreen();
 
             bool completed = false;
@@ -297,13 +303,9 @@ g()",
         public void NoInterpreterPath() {
             // http://pytools.codeplex.com/workitem/662
 
-            var emptyFact = InterpreterFactoryCreator.CreateInterpreterFactory(
-                new InterpreterFactoryCreationOptions() {
-                    Id = "Test Interpreter",
-                    Description = "Test Interpreter"
-                }
-            );
-            var replEval = new PythonReplEvaluator(emptyFact, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
+            var replEval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
+                DisplayName = "Test Interpreter"
+            };
             var replWindow = new MockReplWindow(replEval);
             replEval._Initialize(replWindow);
             var execute = replEval.ExecuteText("42");
@@ -318,29 +320,15 @@ g()",
         public void BadInterpreterPath() {
             // http://pytools.codeplex.com/workitem/662
 
-            var emptyFact = InterpreterFactoryCreator.CreateInterpreterFactory(
-                new InterpreterConfiguration(
-                    "Test Interpreter",
-                    "Test Interpreter",
-                    null,
-                    "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe",
-                    null,
-                    null,
-                    null,
-                    ProcessorArchitecture.None,
-                    new Version(2, 7)
-                ),
-                new InterpreterFactoryCreationOptions()
-            );
-            var replEval = new PythonReplEvaluator(emptyFact, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
+            var replEval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
+                DisplayName = "Test Interpreter",
+                Configuration = new LaunchConfiguration(new InterpreterConfiguration("InvalidInterpreter", "Test Interpreter", path: "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe"))
+            };
             var replWindow = new MockReplWindow(replEval);
             replEval._Initialize(replWindow);
             var execute = replEval.ExecuteText("42");
             var errorText = replWindow.Error;
-            const string expected = 
-                "The interactive window could not be started because the associated Python environment could not be found.\r\n" +
-                "If this version of Python has recently been uninstalled, you can close this window.\r\n" +
-                "Current interactive window is disconnected.";
+            const string expected = "the associated Python environment could not be found.";
 
             if (!errorText.Contains(expected)) {
                 Assert.Fail(string.Format(

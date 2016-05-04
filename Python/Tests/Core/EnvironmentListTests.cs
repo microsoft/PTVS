@@ -211,7 +211,7 @@ namespace PythonToolsUITests {
 
                     AssertUtil.AreEqual(
                         wpf.Invoke(() => environments.Select(ev => ev.Description).ToList()),
-                        "Test Factory 1", "Test Factory 2", "Test Factory 3"
+                        "Test Factory 1 2.7", "Test Factory 2 3.0", "Test Factory 3 3.3"
                     );
                     // TF 1 and 3 can be set as default
                     AssertUtil.AreEqual(
@@ -537,7 +537,7 @@ namespace PythonToolsUITests {
                         var environment = list.Environments.FirstOrDefault(ev =>
                             ev.Factory == interpreter
                         );
-                        Assert.IsNotNull(environment, string.Format("Did not find {0}", interpreter.Configuration.Description));
+                        Assert.IsNotNull(environment, string.Format("Did not find {0}", interpreter.Configuration.FullDescription));
 
                         list.Execute(EnvironmentView.MakeGlobalDefault, environment);
                         Assert.IsTrue(defaultChanged.WaitOne(TimeSpan.FromSeconds(10.0)), "Setting default took too long");
@@ -545,8 +545,8 @@ namespace PythonToolsUITests {
                         Assert.AreEqual(interpreter, service.DefaultInterpreter,
                             string.Format(
                                 "Failed to change default from {0} to {1}",
-                                service.DefaultInterpreter.Configuration.Description,
-                                interpreter.Configuration.Description
+                                service.DefaultInterpreter.Configuration.FullDescription,
+                                interpreter.Configuration.FullDescription
                         ));
                     }
                 } finally {

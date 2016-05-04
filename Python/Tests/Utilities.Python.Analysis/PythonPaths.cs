@@ -121,7 +121,7 @@ namespace TestUtilities {
             var arch = NativeMethods.GetBinaryType(path);
             if (arch == ProcessorArchitecture.X86 && !x64) {
                 return new PythonVersion(path, version, 
-                    CPythonInterpreterFactoryConstants.GetIntepreterId(
+                    CPythonInterpreterFactoryConstants.GetInterpreterId(
                         "PythonCore",
                         arch,
                         version.ToVersion().ToString()
@@ -134,7 +134,7 @@ namespace TestUtilities {
                 return new PythonVersion(
                     path, 
                     version,
-                    CPythonInterpreterFactoryConstants.GetIntepreterId(
+                    CPythonInterpreterFactoryConstants.GetInterpreterId(
                         "PythonCore",
                         arch,
                         version.ToVersion().ToString()
@@ -152,7 +152,7 @@ namespace TestUtilities {
                     return new PythonVersion(
                         path, 
                         version,
-                        CPythonInterpreterFactoryConstants.GetIntepreterId(
+                        CPythonInterpreterFactoryConstants.GetInterpreterId(
                             "PythonCore",
                             arch,
                             version.ToVersion().ToString()
@@ -186,7 +186,7 @@ namespace TestUtilities {
                                 return x64 ? null : new PythonVersion(
                                     path, 
                                     version, 
-                                    CPythonInterpreterFactoryConstants.GetIntepreterId(
+                                    CPythonInterpreterFactoryConstants.GetInterpreterId(
                                         "PythonCore",
                                         arch,
                                         id
@@ -199,7 +199,7 @@ namespace TestUtilities {
                                 return x64 ? new PythonVersion(
                                     path, 
                                     version,
-                                    CPythonInterpreterFactoryConstants.GetIntepreterId(
+                                    CPythonInterpreterFactoryConstants.GetInterpreterId(
                                         "PythonCore",
                                         arch,
                                         id
@@ -247,7 +247,7 @@ namespace TestUtilities {
                 return new PythonVersion(
                     interpreter.FullName, 
                     version,
-                    CPythonInterpreterFactoryConstants.GetIntepreterId(
+                    CPythonInterpreterFactoryConstants.GetInterpreterId(
                         "Jython",
                         ProcessorArchitecture.X86,
                         version.ToVersion().ToString()

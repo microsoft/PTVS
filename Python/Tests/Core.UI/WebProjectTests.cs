@@ -72,7 +72,7 @@ namespace PythonToolsUITests {
                 extender.StartWebServerOnDebug = false;
 
                 var proj = project.GetCommonProject();
-                var ccp = proj as IPythonProject2;
+                var ccp = proj as IPythonProject;
                 Assert.IsNotNull(ccp);
                 Assert.IsNotNull(ccp.FindCommand("PythonRunWebServerCommand"), "No PythonRunWebServerCommand");
                 Assert.IsNotNull(ccp.FindCommand("PythonDebugWebServerCommand"), "No PythonDebugWebServerCommand");
@@ -83,7 +83,7 @@ namespace PythonToolsUITests {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\CheckCommandLineArgs.sln");
 
-                var proj = project.GetCommonProject() as IPythonProject2;
+                var proj = project.GetCommonProject() as IPythonProject;
                 Assert.IsNotNull(proj);
 
                 var outFile = Path.Combine(Path.GetDirectoryName(project.FullName), "output.txt");
@@ -127,7 +127,7 @@ namespace PythonToolsUITests {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\CheckEnvironment.sln");
 
-                var proj = project.GetCommonProject() as IPythonProject2;
+                var proj = project.GetCommonProject() as IPythonProject;
                 Assert.IsNotNull(proj);
 
                 var outFile = Path.Combine(Path.GetDirectoryName(project.FullName), "output.txt");
@@ -247,8 +247,9 @@ namespace PythonToolsUITests {
                     "WebProjectBuildWarnings"
                 );
 
-                var proj = project.GetCommonProject();
+                var proj = project.GetPythonProject();
                 Assert.IsNotNull(proj);
+                Assert.AreEqual(new Version(3, 3), app.ServiceProvider.GetUIThread().Invoke(() => proj.GetLaunchConfigurationOrThrow().Interpreter.Version));
 
                 for (int iteration = 0; iteration <= 2; ++iteration) {
                     var warnings = app.ServiceProvider.GetUIThread().Invoke(() => {
@@ -259,6 +260,7 @@ namespace PythonToolsUITests {
                         project.DTE.Solution.SolutionBuild.Build(true);
 
                         var text = app.GetOutputWindowText("Build");
+                        Console.WriteLine(text);
                         return text.Split('\r', '\n')
                             .Select(s => Regex.Match(s, @"warning\s*:\s*(?<msg>.+)"))
                             .Where(m => m.Success)
@@ -390,9 +392,7 @@ namespace PythonToolsUITests {
                 
                 var project = t.WaitAndUnwrapExceptions();
 
-                var provider = project.Properties.Item("InterpreterFactoryProvider").Value as MSBuildProjectInterpreterFactoryProvider;
-
-                var contextProvider = app.GetService<VsProjectContextProvider>();
+                var contextProvider = app.ComponentModel.GetService<VsProjectContextProvider>();
                 for (int retries = 20; retries > 0; --retries) {
                     if (contextProvider.IsProjectSpecific(project.GetPythonProject().ActiveInterpreter.Configuration)) {
                         break;
@@ -432,8 +432,6 @@ namespace PythonToolsUITests {
                 }
 
                 var project = t.WaitAndUnwrapExceptions();
-
-                var provider = project.Properties.Item("InterpreterFactoryProvider").Value as MSBuildProjectInterpreterFactoryProvider;
 
                 Assert.AreSame(app.OptionsService.DefaultInterpreter, project.GetPythonProject().ActiveInterpreter);
 

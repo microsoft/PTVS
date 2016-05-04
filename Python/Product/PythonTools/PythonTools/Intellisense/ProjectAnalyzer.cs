@@ -121,7 +121,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _commentTaskProvider.TokensChanged += CommentTaskTokensChanged;
 
             _conn = StartConnection(
-                projectFile?.FullPath ?? (implicitProject ? "Global Analysis" : "Misc. Non Project Analysis"), 
+                projectFile?.FullPath ?? (implicitProject ? "Global Analysis" : "Misc. Non Project Analysis"),
                 out _analysisProcess
             );
             _userCount = 1;
@@ -142,7 +142,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 mefExtensions = providers.ToArray()
             };
 
-            if (projectFile != null) { 
+            if (projectFile != null) {
                 initialize.projectFile = projectFile.FullPath;
                 initialize.projectHome = CommonUtils.GetAbsoluteDirectoryPath(
                     Path.GetDirectoryName(projectFile.FullPath),
@@ -247,7 +247,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             Debug.WriteLine(String.Format("Disposing of parser {0}", _analysisProcess.Id));
             _commentTaskProvider.TokensChanged -= CommentTaskTokensChanged;
-                
+
             foreach (var openFile in _projectFiles) {
                 var bufferParser = openFile.Value.BufferParser;
                 if (bufferParser != null) {
@@ -520,7 +520,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async void BufferDetached(AnalysisEntry entry, ITextBuffer buffer) {
-            var bufferParser = entry.BufferParser;
+            var bufferParser = entry?.BufferParser;
             if (bufferParser != null) {
                 bufferParser.RemoveBuffer(buffer);
                 int attachedViews;
@@ -541,20 +541,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal async void StopMonitoringTextBuffer(BufferParser bufferParser, ITextView textView) {
-
-
-            if (ImplicitProject) {
-            }
-        }
-
         private static object _filenameKey = new object();
 
         private static string GetFilePath(ITextBuffer textBuffer) {
             string path;
-            var replEval = textBuffer.GetReplEvaluator();
+            var replEval = textBuffer.GetInteractiveWindow()?.GetPythonEvaluator();
             if (replEval != null) {
-                path = (replEval as PythonReplEvaluator)?.AnalysisFilename;
+                path = replEval.AnalysisFilename;
             } else {
                 path = textBuffer.GetFilePath();
                 if (path == null) {
@@ -758,7 +751,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (analysis == null) {
                 return new SignatureAnalysis("", 0, new ISignature[0]);
             }
-            
+
             var analyzer = analysis.Analyzer;
             var buffer = snapshot.TextBuffer;
 
@@ -867,7 +860,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             AnalysisEntry entry;
-            if(!view.TryGetAnalysisEntry(snapshot.TextBuffer, serviceProvider, out entry)) {
+            if (!view.TryGetAnalysisEntry(snapshot.TextBuffer, serviceProvider, out entry)) {
                 return MissingImportAnalysis.Empty;
             }
 
@@ -1033,7 +1026,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     var textBuffer = bufferParser.GetBuffer(buffer.bufferId);
                     translator = new LocationTracker(
                         entry.GetAnalysisVersion(textBuffer),
-                        textBuffer, 
+                        textBuffer,
                         buffer.version
                     );
                 }
@@ -1054,7 +1047,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         VSTASKCATEGORY.CAT_BUILDCOMPILE)
                     );
 
-                   
+
                     _errorProvider.ReplaceItems(
                         entry,
                         ParserTaskMoniker,
@@ -1132,14 +1125,12 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private SignatureAnalysis TryGetLiveSignatures(ITextSnapshot snapshot, int paramIndex, string text, ITrackingSpan applicableSpan, string lastKeywordArg) {
-            IInteractiveEvaluator eval;
-            IPythonReplIntellisense dlrEval;
-            if (snapshot.TextBuffer.Properties.TryGetProperty(typeof(IInteractiveEvaluator), out eval) &&
-                (dlrEval = eval as IPythonReplIntellisense) != null) {
+            var eval = snapshot.TextBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense;
+            if (eval != null) {
                 if (text.EndsWith("(")) {
                     text = text.Substring(0, text.Length - 1);
                 }
-                var liveSigs = dlrEval.GetSignatureDocumentation(text);
+                var liveSigs = eval.GetSignatureDocumentation(text);
 
                 if (liveSigs != null && liveSigs.Length > 0) {
                     return new SignatureAnalysis(text, paramIndex, GetLiveSignatures(text, liveSigs, paramIndex, applicableSpan, lastKeywordArg), lastKeywordArg);
@@ -1183,7 +1174,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal bool ShouldEvaluateForCompletion(string source) {
-            switch (_pyService.GetInteractiveOptions(_interpreterFactory.Configuration).ReplIntellisenseMode) {
+            switch (_pyService.InteractiveOptions.CompletionMode) {
                 case ReplIntellisenseMode.AlwaysEvaluate: return true;
                 case ReplIntellisenseMode.NeverEvaluate: return false;
                 case ReplIntellisenseMode.DontEvaluateCalls:
@@ -1373,7 +1364,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 res = await conn.SendRequestAsync(request, _processExitedCancelSource.Token).ConfigureAwait(false);
             } catch (OperationCanceledException) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
-            } catch(IOException) {
+            } catch (IOException) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
             } catch (FailedRequestException e) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOpertionFailed, e.Message);
@@ -1382,7 +1373,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        internal async Task SendEventAsync(Event eventValue)  {
+        internal async Task SendEventAsync(Event eventValue) {
             var conn = _conn;
             if (conn == null) {
                 return;
@@ -1482,7 +1473,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     paramCount = paramCount
                 }
             ).ConfigureAwait(false);
-            
+
             return res?.names ?? Array.Empty<string>();
         }
 
@@ -1571,7 +1562,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task FormatCodeAsync(SnapshotSpan span, ITextView view, CodeFormattingOptions options, bool selectResult) {
             var fileInfo = view.GetAnalysisEntry(span.Snapshot.TextBuffer, _serviceProvider);
             var buffer = span.Snapshot.TextBuffer;
-            
+
             await fileInfo.EnsureCodeSyncedAsync(buffer);
 
             var bufferId = fileInfo.GetBufferId(buffer);
@@ -1595,21 +1586,21 @@ namespace Microsoft.PythonTools.Intellisense {
                     int start = translator.TranslateForward(res.startIndex);
                     int end = translator.TranslateForward(res.endIndex);
                     Debug.Assert(
-                        start < view.TextBuffer.CurrentSnapshot.Length, 
-                        String.Format("Bad span: {0} vs {1} (was {2} before translation, from {3} to {4})", 
-                            start, 
-                            view.TextBuffer.CurrentSnapshot.Length, 
+                        start < view.TextBuffer.CurrentSnapshot.Length,
+                        String.Format("Bad span: {0} vs {1} (was {2} before translation, from {3} to {4})",
+                            start,
+                            view.TextBuffer.CurrentSnapshot.Length,
                             res.startIndex,
                             res.version,
                             view.TextBuffer.CurrentSnapshot.Version.VersionNumber
                         )
                     );
                     Debug.Assert(
-                        end <= view.TextBuffer.CurrentSnapshot.Length, 
+                        end <= view.TextBuffer.CurrentSnapshot.Length,
                         String.Format(
-                            "Bad span: {0} vs {1} (was {2} before translation, from {3} to {4})", 
-                            end, 
-                            view.TextBuffer.CurrentSnapshot.Length, 
+                            "Bad span: {0} vs {1} (was {2} before translation, from {3} to {4})",
+                            end,
+                            view.TextBuffer.CurrentSnapshot.Length,
                             res.endIndex,
                             res.version,
                             view.TextBuffer.CurrentSnapshot.Version.VersionNumber
@@ -1666,7 +1657,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var conn = _conn;
-            if(conn == null) {
+            if (conn == null) {
                 return new ExportedMemberInfo[0];
             }
 
@@ -1747,7 +1738,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async Task<NavigationInfo> GetNavigationsAsync(ITextView view) {
             AnalysisEntry entry;
             var textBuffer = view.TextBuffer;
-            if (view.TryGetAnalysisEntry(textBuffer, _serviceProvider,  out entry)) {
+            if (view.TryGetAnalysisEntry(textBuffer, _serviceProvider, out entry)) {
                 var lastVersion = entry.GetAnalysisVersion(textBuffer);
 
                 var navigations = await SendRequestAsync(
@@ -1817,7 +1808,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async Task<AP.RemoveReferenceResponse> RemoveReferenceAsync(ProjectReference reference) {
-            lock(_references) {
+            lock (_references) {
                 _references.Remove(reference);
             }
             return await SendRequestAsync(

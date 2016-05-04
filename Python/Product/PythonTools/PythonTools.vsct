@@ -286,24 +286,13 @@ permissions and limitations under the License.
         </Strings>
       </Button>
 
-      <Button guid="guidPythonToolsCmdSet" id="cmdidSendToDefiningModule" priority="0x201" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="EditMenuGroup"/>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <Strings>
-          <ButtonText>Send to &amp;Defining Module</ButtonText>
-          <ToolTipText>Sends the current editor selection to the defining module in a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.SendSelectionToInteractiveDefiningModule</LocCanonicalName>
-        </Strings>
-      </Button>
-
       <Button guid="guidPythonToolsCmdSet" id="cmdidFillParagraph" priority="0x7f0f" type="Button">
         <Parent guid="guidStdEditor" id="IDG_VS_EDITOR_ADVANCED_CMDS"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>&amp;Fill Comment Paragraph</ButtonText>
-          <ToolTipText>TODO: Explain what this command actually does</ToolTipText>
+          <ToolTipText>Reflows the selected paragraph to adjust its width.</ToolTipText>
           <LocCanonicalName>.Python.FillCommentParagraph</LocCanonicalName>
         </Strings>
       </Button>
@@ -464,8 +453,6 @@ permissions and limitations under the License.
       <Button guid="guidPythonToolsCmdSet" id="cmdidDebugReplWindow" priority="0x0950" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="PythonDebugMenuGroup"/>
         <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>P&amp;ython Debug Interactive</ButtonText>
@@ -491,210 +478,11 @@ permissions and limitations under the License.
       <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow" priority="0x0200" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
         <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
-          <ButtonText>Python Interactive Default</ButtonText>
-          <ToolTipText>Open the default Python Interactive window</ToolTipText>
-          <LocCanonicalName>.Python.InteractiveDefault</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow2" priority="0x0201" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>Python Interactive 1</ButtonText>
-          <ToolTipText>Opens a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.Interactive2</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow3" priority="0x0202" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>Python Interactive 2</ButtonText>
-          <ToolTipText>Opens a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.Interactive3</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow4" priority="0x0203" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>Python Interactive 3</ButtonText>
-          <ToolTipText>Opens a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.Interactive4</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow5" priority="0x0204" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>Python Interactive 4</ButtonText>
-          <ToolTipText>Opens a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.Interactive5</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow6" priority="0x0205" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>Python Interactive 5</ButtonText>
-          <ToolTipText>Opens a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.Interactive6</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow7" priority="0x0206" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>Python Interactive 6</ButtonText>
-          <ToolTipText>Opens a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.Interactive7</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" priority="0x0207" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>Python Interactive 7</ButtonText>
-          <ToolTipText>Opens a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.Interactive8</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" priority="0x0208" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>Python Interactive 8</ButtonText>
-          <ToolTipText>Opens a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.Interactive9</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" priority="0x0209" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>Python Interactive 9</ButtonText>
-          <ToolTipText>Opens a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.Interactive10</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowB" priority="0x020A" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>Python Interactive 10</ButtonText>
-          <ToolTipText>Opens a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.Interactive11</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowC" priority="0x020B" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>Python Interactive 11</ButtonText>
-          <ToolTipText>Opens a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.Interactive12</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowD" priority="0x020C" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>Python Interactive 12</ButtonText>
-          <ToolTipText>Opens a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.Interactive13</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowE" priority="0x020D" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>Python Interactive 13</ButtonText>
-          <ToolTipText>Opens a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.Interactive14</LocCanonicalName>
-        </Strings>
-      </Button>
-
-      <Button guid="guidPythonToolsCmdSet" id="cmdidReplWindowF" priority="0x020E" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
-        <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
-        <CommandFlag>TextChanges</CommandFlag>
-        <CommandFlag>IconIsMoniker</CommandFlag>
-        <Strings>
-          <ButtonText>Python Interactive 14</ButtonText>
-          <ToolTipText>Opens a Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.Interactive15</LocCanonicalName>
+          <ButtonText>P&amp;ython Interactive Window</ButtonText>
+          <ToolTipText>Open the Python Interactive window.</ToolTipText>
+          <LocCanonicalName>.Python.Interactive</LocCanonicalName>
         </Strings>
       </Button>
 
@@ -891,24 +679,58 @@ permissions and limitations under the License.
         </Strings>
       </Button>
 
+      <!--===========================================================================================================-->
+      <!--=========================================== Interactive Window toolbar ====================================-->
+      <!--===========================================================================================================-->
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidNewInteractiveWindow" priority="0x0100" type="Button">
+        <Parent guid="guidInteractiveWindowCmdSet" id="InteractiveToolbarGroup"/>
+        <Icon guid="ImageCatalogGuid" id="NewWindow"/>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>New Window</ButtonText>
+          <ToolTipText>Create a new interactive window</ToolTipText>
+          <LocCanonicalName>.Python.NewInteractive</LocCanonicalName>
+        </Strings>
+      </Button>
     </Buttons>
 
     <Combos>
       <Combo guid="guidPythonToolsCmdSet" 
+             id="comboIdReplEvaluators" 
+             idCommandList="comboIdReplEvaluatorsGetList" 
+             priority="0x0200" 
+             type="DropDownCombo" 
+             defaultWidth="150">
+        <Parent guid="guidInteractiveWindowCmdSet" id="InteractiveToolbarGroup"/>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconAndText</CommandFlag>
+        <Strings>
+          <ButtonText>Environment:</ButtonText>
+          <ToolTipText>Select the environment to execute against.</ToolTipText>
+          <CanonicalName>InteractiveEnvironment</CanonicalName>
+        </Strings>
+      </Combo>
+      
+      <Combo guid="guidPythonToolsCmdSet" 
              id="comboIdReplScopes" 
              idCommandList="comboIdReplScopesGetList" 
-             priority="0x0400" 
+             priority="0x0300" 
              type="DropDownCombo" 
              defaultWidth="130">
         <Parent guid="guidInteractiveWindowCmdSet" id="InteractiveToolbarGroup"/>
         <CommandFlag>DynamicVisibility</CommandFlag>
         <CommandFlag>DefaultInvisible</CommandFlag>
         <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconAndText</CommandFlag>
         <Strings>
-          <ButtonText>Scopes: </ButtonText>
+          <ButtonText>Scope: </ButtonText>
           <ToolTipText>Selects the current file scope that the interactive window is executing against.</ToolTipText>
-          <CommandName>DropDown Combo</CommandName>
-          <CanonicalName>DropDown Combo</CanonicalName>
+          <CanonicalName>InteractiveScope</CanonicalName>
         </Strings>
       </Combo>
     </Combos>
@@ -939,50 +761,11 @@ permissions and limitations under the License.
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow" priority="0x7F00">
       <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
     </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow2" priority="0x7F01">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow3" priority="0x7F02">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow4" priority="0x7F03">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow5" priority="0x7F04">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow6" priority="0x7F05">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow7" priority="0x7F06">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" priority="0x7F07">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" priority="0x7F08">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" priority="0x7F09">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowB" priority="0x7F0A">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowC" priority="0x7F0B">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowD" priority="0x7F0C">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowE" priority="0x7F0D">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-    </CommandPlacement>
-    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidReplWindowF" priority="0x7F0E">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
-    </CommandPlacement>
 
     <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidOpenCommandPromptHere" priority="0x0180">
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_EXPLORE"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonToolsCmdSet" id="cmdidOpenInteractiveForEnvironment" priority="0x0020">
       <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_EXPLORE"/>
     </CommandPlacement>
   </CommandPlacements>
@@ -992,18 +775,8 @@ permissions and limitations under the License.
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidDebugReplWindow" mod1="Alt Shift" key1="I" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" key1="E" mod1="Control" key2="E" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidSendToRepl" key1="E" mod1="Control" key2="E" mod2="Control" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidSendToDefiningModule" key1="E" mod1="Control" key2="M" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidFillParagraph" key1="E" mod1="Control" key2="P" mod2="Control" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow" key1="I" mod1="Alt" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow2" key1="K" mod1="Control" key2="1" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow3" key1="K" mod1="Control" key2="2" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow4" key1="K" mod1="Control" key2="3" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow5" key1="K" mod1="Control" key2="4" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow6" key1="K" mod1="Control" key2="5" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow7" key1="K" mod1="Control" key2="6" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow8" key1="K" mod1="Control" key2="7" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindow9" key1="K" mod1="Control" key2="8" editor="guidVSStd97"/>
-    <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidReplWindowA" key1="K" mod1="Control" key2="9" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" key1="K" mod1="Control" key2="VK_OEM_3" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidInterpreterList" key1="K" mod1="Control" key2="VK_OEM_3" mod2="Control" editor="guidVSStd97"/>
     <KeyBinding guid="guidPythonToolsCmdSet" id="cmdidRemoveImports" key1="K" mod1="Control" key2="J" mod2="Control" editor="guidVSStd97"/>
@@ -1023,7 +796,6 @@ permissions and limitations under the License.
     <GuidSymbol name="guidPythonToolsCmdSet" value="{bdfa79d2-2cd2-474a-a82a-ce8694116825}">
       <IDSymbol name="cmdidExecuteFileInRepl" value="0x0102" />
       <IDSymbol name="cmdidSendToRepl" value="0x0103"/>
-      <IDSymbol name="cmdidSendToDefiningModule" value="0x0104"/>
       <IDSymbol name="cmdidFillParagraph" value="0x0105"/>
       <IDSymbol name="cmdidDiagnostics" value ="0x0106" />
       <IDSymbol name="cmdidRemoveImports" value ="0x0107" />
@@ -1034,20 +806,7 @@ permissions and limitations under the License.
       <IDSymbol name="cmdidSurveyNews" value ="0x010e" />
 
       <IDSymbol name="cmdidReplWindow" value="0x0201" />
-      <IDSymbol name="cmdidReplWindow2" value="0x0202" />
-      <IDSymbol name="cmdidReplWindow3" value="0x0203" />
-      <IDSymbol name="cmdidReplWindow4" value="0x0204" />
-      <IDSymbol name="cmdidReplWindow5" value="0x0205" />
-      <IDSymbol name="cmdidReplWindow6" value="0x0206" />
-      <IDSymbol name="cmdidReplWindow7" value="0x0207" />
-      <IDSymbol name="cmdidReplWindow8" value="0x0208" />
-      <IDSymbol name="cmdidReplWindow9" value="0x0209" />
-      <IDSymbol name="cmdidReplWindowA" value="0x020A" />
-      <IDSymbol name="cmdidReplWindowB" value="0x020B" />
-      <IDSymbol name="cmdidReplWindowC" value="0x020C" />
-      <IDSymbol name="cmdidReplWindowD" value="0x020D" />
-      <IDSymbol name="cmdidReplWindowE" value="0x020E" />
-      <IDSymbol name="cmdidReplWindowF" value="0x020F" />
+      <IDSymbol name="cmdidNewInteractiveWindow" value="0x0202" />
       <IDSymbol name="cmdidDebugReplWindow" value="0x0210" />
       <IDSymbol name="cmdidInterpreterList" value="0x0220" />
       <IDSymbol name="cmdidSetAsStartupFile" value="0x3001" />
@@ -1115,6 +874,8 @@ permissions and limitations under the License.
       <!-- combos -->
       <IDSymbol name="comboIdReplScopes" value="0x5000"/>
       <IDSymbol name="comboIdReplScopesGetList" value="0x5001"/>
+      <IDSymbol name="comboIdReplEvaluators" value="0x5002"/>
+      <IDSymbol name="comboIdReplEvaluatorsGetList" value="0x5003"/>
 
       <!-- Shared commands, defined in CommonConstants.cs -->
       <IDSymbol name="cmdidAddExistingFolder" value="0x10001" />

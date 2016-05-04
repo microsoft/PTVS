@@ -16,38 +16,36 @@
 
 using System;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudio.InteractiveWindow.Shell;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
     /// Provides the command for starting the Python REPL window.
     /// </summary>
     class OpenReplCommand : Command {
-        private readonly int _cmdId;
-        private readonly InterpreterConfiguration _config;
         private readonly IServiceProvider _serviceProvider;
+        private readonly int _cmdId;
 
-        public OpenReplCommand(IServiceProvider serviceProvider, int cmdId, InterpreterConfiguration config) {
+        public OpenReplCommand(IServiceProvider serviceProvider, int cmdId) {
             _serviceProvider = serviceProvider;
             _cmdId = cmdId;
-            _config = config;
         }
 
         public override void DoCommand(object sender, EventArgs e) {
-            // _factory is never null, but if a specific factory or command line
-            // is passed as an argument, use that instead.
-            var config = _config;
+            // Use the factory or command line passed as an argument.
+            IPythonInterpreterFactory factory = null;
+            InterpreterConfiguration config = null;
             var oe = e as OleMenuCmdEventArgs;
             if (oe != null) {
-                IPythonInterpreterFactory asFactory;
                 string args;
-                if ((asFactory = oe.InValue as IPythonInterpreterFactory) != null) {
-                    config = asFactory.Configuration;
+                if ((factory = oe.InValue as IPythonInterpreterFactory) != null) {
+                    config = factory.Configuration;
+                } else if ((config = oe.InValue as InterpreterConfiguration) != null) {
                 } else if (!string.IsNullOrEmpty(args = oe.InValue as string)) {
                     string description;
                     var parse = _serviceProvider.GetService(typeof(SVsParseCommandLine)) as IVsParseCommandLine;
@@ -57,52 +55,44 @@ namespace Microsoft.PythonTools.Commands {
                         !string.IsNullOrEmpty(description)
                     ) {
                         var service = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-                        var matchingConfig = service.Configurations.FirstOrDefault(
+                        config = service.Configurations.FirstOrDefault(
                             // Descriptions are localized strings, hence CCIC
                             f => description.Equals(f.FullDescription, StringComparison.CurrentCultureIgnoreCase)
                         );
-                        if (matchingConfig != null) {
-                            config = matchingConfig;
-                        }
                     }
                 }
             }
 
-            // These commands are project-insensitive, so pass null for project.
-            ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, config, null).Show(true);
-        }
+            if (config == null) {
+                var service = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
+                var registry = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                config = service.DefaultInterpreter?.Configuration ?? registry.Configurations.FirstOrDefault();
+            }
 
-        public override EventHandler BeforeQueryStatus {
-            get {
-                return QueryStatusMethod;
+            // This command is project-insensitive
+            var provider = _serviceProvider.GetComponentModel()?.GetService<Repl.InteractiveWindowProvider>();
+            try {
+                provider?.OpenOrCreate(
+                    config != null ? Repl.PythonReplEvaluatorProvider.GetEvaluatorId(config) : null
+                );
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                throw new InvalidOperationException(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex));
             }
         }
+
+        public override EventHandler BeforeQueryStatus => QueryStatusMethod;
 
         private void QueryStatusMethod(object sender, EventArgs args) {
             var oleMenu = (OleMenuCommand)sender;
-
             oleMenu.ParametersDescription = "e,env,environment:";
 
-            if (_config == null) {
-                oleMenu.Visible = false;
-                oleMenu.Enabled = false;
-                oleMenu.Supported = false;
-            } else {
-                oleMenu.Visible = true;
-                oleMenu.Enabled = true;
-                oleMenu.Supported = true;
-                oleMenu.Text = Description;
-            }
+            oleMenu.Visible = true;
+            oleMenu.Enabled = true;
+            oleMenu.Supported = true;
         }
 
-        public string Description {
-            get {
-                return _config.FullDescription + " Interactive";
-            }
-        }
-        
         public override int CommandId {
-            get { return (int)_cmdId; }
+            get { return _cmdId; }
         }
     }
 }

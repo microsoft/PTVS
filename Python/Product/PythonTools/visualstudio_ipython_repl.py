@@ -172,7 +172,11 @@ class VsIOPubChannel(DefaultHandler, IOPubChannel):
         output = content['data']
         execution_count = content['execution_count']
         self._vs_backend.execution_count = execution_count + 1
-        self._vs_backend.send_prompt('\r\nIn [%d]: ' % (execution_count + 1), '   ' + ('.' * (len(str(execution_count + 1)) + 2)) + ': ', False)
+        self._vs_backend.send_prompt(
+            '\r\nIn [%d]: ' % (execution_count + 1),
+            '   ' + ('.' * (len(str(execution_count + 1)) + 2)) + ': ',
+            allow_multiple_statements=True
+        )
         self.write_data(output, execution_count)
         
     def write_data(self, data, execution_count = None):
@@ -220,7 +224,11 @@ class VsIOPubChannel(DefaultHandler, IOPubChannel):
     def handle_execute_input(self, content):
         # just a rebroadcast of the command to be executed, can be ignored
         self._vs_backend.execution_count += 1
-        self._vs_backend.send_prompt('\r\nIn [%d]: ' % (self._vs_backend.execution_count), '   ' + ('.' * (len(str(self._vs_backend.execution_count)) + 2)) + ': ', False)
+        self._vs_backend.send_prompt(
+            '\r\nIn [%d]: ' % (self._vs_backend.execution_count),
+            '   ' + ('.' * (len(str(self._vs_backend.execution_count)) + 2)) + ': ',
+            allow_multiple_statements=True
+        )
         pass
         
     def handle_status(self, content):
@@ -309,13 +317,9 @@ exec(compile(%(contents)r, %(filename)r, 'exec'))
         self.run_command(code, True)
 
     def execution_loop(self):
-        # launch the startup script if one has been specified
-        if self.launch_file:
-            self.execute_file_as_main(self.launch_file, None)
-
         # we've got a bunch of threads setup for communication, we just block
         # here until we're requested to exit.  
-        self.send_prompt('\r\nIn [1]: ', '   ...: ', False)
+        self.send_prompt('\r\nIn [1]: ', '   ...: ', allow_multiple_statements=True)
         self.exit_lock.acquire()
     
     def run_command(self, command, silent = False):
@@ -324,14 +328,17 @@ exec(compile(%(contents)r, %(filename)r, 'exec'))
         else:
             self.km.shell_channel.execute(command, silent)
 
-    def execute_file(self, filename, args):
-        self.execute_file_as_main(filename, args)
+    def execute_file_ex(self, filetype, filename, args):
+        if filetype == 'script':
+            self.execute_file_as_main(filename, args)
+        else:
+            raise NotImplementedError("Cannot execute %s file" % filetype)
 
     def exit_process(self):
         self.exit_lock.release()
 
     def get_members(self, expression):
-        """returns a tuple of the type name, instance members, and type members"""      
+        """returns a tuple of the type name, instance members, and type members"""
         text = expression + '.'
         if is_ipython_versionorgreater(3, 0):
             self.km.complete(text)

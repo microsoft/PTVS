@@ -48,6 +48,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools {
     public static class Extensions {
@@ -274,14 +275,14 @@ namespace Microsoft.PythonTools {
         /// <param name="entry"></param>
         /// <returns></returns>
         internal static bool TryGetAnalysisEntry(this ITextView view, ITextBuffer buffer, IServiceProvider provider, out AnalysisEntry entry) {
-            PythonReplEvaluator evaluator;
-            IInteractiveEvaluator interactiveEval;
-            if ((buffer.Properties.TryGetProperty(typeof(IInteractiveEvaluator), out interactiveEval) 
-                && (evaluator = interactiveEval as PythonReplEvaluator) != null) ||
-                (view != null && view.Properties.TryGetProperty(typeof(PythonReplEvaluator), out evaluator))) {
-
-                var analyzer = evaluator.ReplAnalyzer;
-                entry = analyzer.GetAnalysisEntryFromPath(evaluator.AnalysisFilename);
+            IPythonInteractiveIntellisense evaluator;
+            if ((evaluator = buffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
+                var analyzer = evaluator.Analyzer;
+                if (analyzer != null && !string.IsNullOrEmpty(evaluator.AnalysisFilename)) {
+                    entry = analyzer.GetAnalysisEntryFromPath(evaluator.AnalysisFilename);
+                } else {
+                    entry = null;
+                }
                 return entry != null;
             }
 
@@ -321,9 +322,9 @@ namespace Microsoft.PythonTools {
         /// </summary>
         internal static VsProjectAnalyzer GetBestAnalyzer(this ITextView textView, IServiceProvider serviceProvider) {
             // If we have a REPL evaluator we'll use it's analyzer
-            PythonReplEvaluator evaluator;
-            if (textView.Properties.TryGetProperty(typeof(PythonReplEvaluator), out evaluator)) {
-                return evaluator.ReplAnalyzer;
+            var evaluator = textView.TextBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense;
+            if (evaluator != null) {
+                return evaluator.Analyzer;
             }
 
             // If we have a difference viewer we'll match the LHS w/ the RHS
@@ -380,6 +381,14 @@ namespace Microsoft.PythonTools {
                 }
             }
             return null;
+        }
+
+        internal static PythonLanguageVersion GetLanguageVersion(this ITextView textView, IServiceProvider serviceProvider) {
+            var evaluator = textView.TextBuffer.GetInteractiveWindow().GetPythonEvaluator();
+            if (evaluator != null) {
+                return evaluator.LanguageVersion;
+            }
+            return textView.GetBestAnalyzer(serviceProvider).LanguageVersion;
         }
 
         /// <summary>

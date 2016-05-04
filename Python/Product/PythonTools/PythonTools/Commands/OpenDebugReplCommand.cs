@@ -38,39 +38,11 @@ namespace Microsoft.PythonTools.Commands {
             var compModel = serviceProvider.GetComponentModel();
             var provider = compModel.GetService<InteractiveWindowProvider>();
 
-            string replId = PythonDebugReplEvaluatorProvider.GetDebugReplId();
-            var window = provider.FindReplWindow(replId);
-            if (window == null) {
-                window = provider.CreateInteractiveWindow(serviceProvider.GetPythonContentType(), "Python Debug Interactive", typeof(PythonLanguageInfo).GUID, replId);
-
-                var pyService = serviceProvider.GetPythonToolsService();
-                window.InteractiveWindow.SetSmartUpDown(pyService.DebugInteractiveOptions.ReplSmartHistory);
-            }
-            return window;
+            return provider.OpenOrCreate(PythonDebugReplEvaluatorProvider.GetDebugReplId());
         }
 
         public override void DoCommand(object sender, EventArgs args) {
             EnsureReplWindow(_serviceProvider).Show(true);
-        }
-
-        public override EventHandler BeforeQueryStatus {
-            get {
-                return QueryStatusMethod;
-            }
-        }
-
-        private void QueryStatusMethod(object sender, EventArgs args) {
-            var oleMenu = sender as OleMenuCommand;
-
-            oleMenu.Visible = true;
-            oleMenu.Enabled = true;
-            oleMenu.Supported = true;
-        }
-
-        public string Description {
-            get {
-                return "Python Interactive Debug";
-            }
         }
 
         public override int CommandId {

@@ -104,7 +104,7 @@ namespace AnalysisTests {
         public void RunInterpreterOutput() {
             foreach (var fact in Factories) {
                 using (var output = fact.Run("-c", "import sys; print(sys.version)")) {
-                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.Description + " exceeded timeout");
+                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.FullDescription + " exceeded timeout");
 
                     foreach (var line in output.StandardOutputLines) {
                         Console.WriteLine(line);
@@ -128,7 +128,7 @@ namespace AnalysisTests {
             foreach(var fact in Factories) {
                 using (var output = fact.Run("-c", "assert False")) {
                     Console.WriteLine(output.Arguments);
-                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.Description + " exceeded timeout");
+                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.FullDescription + " exceeded timeout");
 
                     Assert.AreEqual(0, output.StandardOutputLines.Count(), "Expected no standard output");
                     var error = output.StandardErrorLines.ToList();

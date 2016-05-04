@@ -62,34 +62,70 @@ namespace Microsoft.PythonTools.Language {
     /// to be registered in our .vsct file so that VS knows about them.
     /// </summary>
     internal sealed class EditFilter : IOleCommandTarget {
+        private readonly IVsTextView _vsTextView;
         private readonly ITextView _textView;
-        private readonly IEditorOperations _editorOps;
         private readonly IServiceProvider _serviceProvider;
         private readonly IComponentModel _componentModel;
+        private readonly IEditorOperations _editorOps;
         private readonly PythonToolsService _pyService;
-        internal IOleCommandTarget _next;
-        //
-        // A list of scopes if this REPL is multi-scoped
-        // 
-        private string[] _currentScopes;
-        private bool _scopeListVisible;
+        private readonly IOleCommandTarget _next;
 
-        public EditFilter(ITextView textView, IEditorOperations editorOps, IServiceProvider serviceProvider) {
+        private EditFilter(
+            IVsTextView vsTextView,
+            ITextView textView,
+            IEditorOperations editorOps,
+            IServiceProvider serviceProvider,
+            IOleCommandTarget next
+        ) {
+            _vsTextView = vsTextView;
             _textView = textView;
-            _textView.Properties[typeof(EditFilter)] = this;
             _editorOps = editorOps;
             _serviceProvider = serviceProvider;
             _componentModel = _serviceProvider.GetComponentModel();
             _pyService = _serviceProvider.GetPythonToolsService();
+            _next = next;
 
             BraceMatcher.WatchBraceHighlights(textView, _componentModel);
-            InitializeScopeList();
-        }
 
-        internal void AttachKeyboardFilter(IVsTextView vsTextView) {
             if (_next == null) {
                 ErrorHandler.ThrowOnFailure(vsTextView.AddCommandFilter(this, out _next));
             }
+        }
+
+        public static EditFilter GetOrCreate(
+            IServiceProvider serviceProvider,
+            IComponentModel componentModel,
+            ITextView textView,
+            IOleCommandTarget next = null
+        ) {
+            var editorFactory = componentModel.GetService<IVsEditorAdaptersFactoryService>();
+            var opsFactory = componentModel.GetService<IEditorOperationsFactoryService>();
+            var vsTextView = editorFactory.GetViewAdapter(textView);
+            return textView.Properties.GetOrCreateSingletonProperty(() => new EditFilter(
+                vsTextView,
+                textView,
+                opsFactory.GetEditorOperations(textView),
+                serviceProvider,
+                next
+            ));
+        }
+
+        public static EditFilter GetOrCreate(
+            IServiceProvider serviceProvider,
+            IComponentModel componentModel,
+            IVsTextView vsTextView,
+            IOleCommandTarget next = null
+        ) {
+            var editorFactory = componentModel.GetService<IVsEditorAdaptersFactoryService>();
+            var opsFactory = componentModel.GetService<IEditorOperationsFactoryService>();
+            var textView = editorFactory.GetWpfTextView(vsTextView);
+            return textView.Properties.GetOrCreateSingletonProperty(() => new EditFilter(
+                vsTextView,
+                textView,
+                opsFactory.GetEditorOperations(textView),
+                serviceProvider,
+                next
+            ));
         }
 
         /// <summary>
@@ -158,18 +194,12 @@ namespace Microsoft.PythonTools.Language {
             Debug.Assert(location.Column > 0);
 
             if (PathUtils.IsSamePath(location.FilePath, _textView.GetFilePath())) {
-                var viewAdapter = GetViewAdapter();
+                var viewAdapter = _vsTextView;
                 viewAdapter.SetCaretPos(location.Line - 1, location.Column - 1);
                 viewAdapter.CenterLines(location.Line - 1, 1);
             } else {
                 location.GotoSource(_serviceProvider);
             }
-        }
-
-        private IVsTextView GetViewAdapter() {
-            var adapterFactory = _componentModel.GetService<IVsEditorAdaptersFactoryService>();
-            var viewAdapter = adapterFactory.GetViewAdapter(_textView);
-            return viewAdapter;
         }
 
         /// <summary>
@@ -601,36 +631,12 @@ namespace Microsoft.PythonTools.Language {
         public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             // preprocessing
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
-                PythonReplEvaluator eval;
                 switch ((VSConstants.VSStd97CmdID)nCmdID) {
-                    case VSConstants.VSStd97CmdID.Cut:
-                        if (_textView.Properties.TryGetProperty(typeof(PythonReplEvaluator), out eval)) {
-                            if (_editorOps.CutSelection()) {
-                                return VSConstants.S_OK;
-                            }
-                        }
-                        break;
-                    case VSConstants.VSStd97CmdID.Copy:
-                        if (_textView.Properties.TryGetProperty(typeof(PythonReplEvaluator), out eval)) {
-                            if (_editorOps.CopySelection()) {
-                                return VSConstants.S_OK;
-                            }
-                        }
-                        break;
                     case VSConstants.VSStd97CmdID.Paste:
-                        if (_textView.Properties.TryGetProperty(typeof(PythonReplEvaluator), out eval)) {
-                            string pasting = eval.FormatClipboard() ?? Clipboard.GetText();
-                            if (pasting != null) {
-                                PasteReplCode(eval, pasting);
-                                
-                                return VSConstants.S_OK;
-                            }
-                        } else {
-                            string updated = RemoveReplPrompts(_pyService, _textView.Options.GetNewLineCharacter());
-                            if (updated != null) {
-                                _editorOps.ReplaceSelection(updated);
-                                return VSConstants.S_OK;
-                            }
+                        string updated = RemoveReplPrompts(_pyService, Clipboard.GetText(), _textView.Options.GetNewLineCharacter());
+                        if (updated != null) {
+                            _editorOps.ReplaceSelection(updated);
+                            return VSConstants.S_OK;
                         }
                         break;
                     case VSConstants.VSStd97CmdID.GotoDefn: GotoDefinition(); return VSConstants.S_OK;
@@ -729,13 +735,6 @@ namespace Microsoft.PythonTools.Language {
                 }
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
                 switch (nCmdID) {
-                    case PkgCmdIDList.comboIdReplScopes:
-                        ScopeComboBoxHandler(pvaIn, pvaOut);
-                        return VSConstants.S_OK;
-
-                    case PkgCmdIDList.comboIdReplScopesGetList:
-                        ScopeComboBoxGetList(pvaOut);
-                        return VSConstants.S_OK;
                     case PkgCmdIDList.cmdidRefactorRenameIntegratedShell:
                         RefactorRename();
                         return VSConstants.S_OK;
@@ -749,80 +748,6 @@ namespace Microsoft.PythonTools.Language {
             return _next.Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         }
 
-        private void InitializeScopeList() {
-            var interactive = _textView.TextBuffer.GetInteractiveWindow();
-            if (interactive != null) {
-                IMultipleScopeEvaluator multiScopeEval = interactive.Evaluator as IMultipleScopeEvaluator;
-                if (multiScopeEval != null) {
-                    _scopeListVisible = IsMultiScopeEnabled();
-                    multiScopeEval.AvailableScopesChanged += UpdateScopeList;
-                    multiScopeEval.MultipleScopeSupportChanged += MultipleScopeSupportChanged;
-                }
-            }
-        }
-
-        private void UpdateScopeList(object sender, EventArgs e) {
-            if (!((UIElement)_textView).Dispatcher.CheckAccess()) {
-                ((UIElement)_textView).Dispatcher.BeginInvoke(new Action(() => UpdateScopeList(sender, e)));
-                return;
-            }
-
-            var interactive = _textView.TextBuffer.GetInteractiveWindow();
-            if (interactive != null) {
-                _currentScopes = ((IMultipleScopeEvaluator)interactive.Evaluator).GetAvailableScopes().ToArray();
-            }
-        }
-
-        private bool IsMultiScopeEnabled() {
-            var interactive = _textView.TextBuffer.GetInteractiveWindow();
-            if (interactive != null) {
-                var multiScope = interactive.Evaluator as IMultipleScopeEvaluator;
-                return multiScope != null && multiScope.EnableMultipleScopes;
-            }
-            return false;
-        }
-
-        private void MultipleScopeSupportChanged(object sender, EventArgs e) {
-            _scopeListVisible = IsMultiScopeEnabled();
-        }
-
-        /// <summary>
-        /// Handles getting or setting the current value of the combo box.
-        /// </summary>
-        private void ScopeComboBoxHandler(IntPtr newValue, IntPtr outCurrentValue) {
-            var interactive = _textView.TextBuffer.GetInteractiveWindow();
-            if (interactive != null) {
-                // getting the current value
-                if (outCurrentValue != IntPtr.Zero) {
-                    Marshal.GetNativeVariantForObject(((IMultipleScopeEvaluator)interactive.Evaluator).CurrentScopeName, outCurrentValue);
-                }
-
-                // setting the current value
-                if (newValue != IntPtr.Zero) {
-                    SetCurrentScope((string)Marshal.GetObjectForNativeVariant(newValue));
-                }
-            }
-        }
-
-        /// <summary>
-        /// Gets the list of scopes that should be available in the combo box.
-        /// </summary>
-        private void ScopeComboBoxGetList(IntPtr outList) {
-            if (_currentScopes != null) {
-                Debug.Assert(outList != IntPtr.Zero);
-                
-                Marshal.GetNativeVariantForObject(_currentScopes, outList);
-            }
-        }
-
-        internal void SetCurrentScope(string newItem) {
-            var interactive = _textView.TextBuffer.GetInteractiveWindow();
-            if (interactive != null) {
-                string activeCode = interactive.CurrentLanguageBuffer.CurrentSnapshot.GetText();
-                ((IMultipleScopeEvaluator)interactive.Evaluator).SetScope(newItem);
-                interactive.InsertCode(activeCode);
-            }
-        }
 
         private void ExtractMethod() {
             new MethodExtractor(_serviceProvider, _textView).ExtractMethod(new ExtractMethodUserInput(_serviceProvider)).DoNotWait();
@@ -856,101 +781,8 @@ namespace Microsoft.PythonTools.Language {
             ).DoNotWait();
         }
 
-        private static void PasteReplCode(PythonReplEvaluator eval, string pasting) {
-            // there's some text in the buffer...
-            var view = eval.Window.TextView;
-            var caret = view.Caret;
-
-            if (view.Selection.IsActive && !view.Selection.IsEmpty) {
-                foreach (var span in view.Selection.SelectedSpans) {
-                    foreach (var normalizedSpan in view.BufferGraph.MapDownToBuffer(span, SpanTrackingMode.EdgeInclusive, eval.Window.CurrentLanguageBuffer)) {
-                        normalizedSpan.Snapshot.TextBuffer.Delete(normalizedSpan);
-                    }
-                }
-            }
-
-            var curBuffer = eval.Window.CurrentLanguageBuffer;
-            var inputPoint = view.BufferGraph.MapDownToBuffer(
-                caret.Position.BufferPosition,
-                PointTrackingMode.Positive,
-                curBuffer,
-                PositionAffinity.Successor
-            );
-
-
-            // if we didn't find a location then see if we're in a prompt, and if so, then we want
-            // to insert after the prompt.
-            if (caret.Position.BufferPosition != eval.Window.TextView.TextBuffer.CurrentSnapshot.Length) {
-                for (int i = caret.Position.BufferPosition + 1;
-                    inputPoint == null && i <= eval.Window.TextView.TextBuffer.CurrentSnapshot.Length;
-                    i++) {
-                    inputPoint = view.BufferGraph.MapDownToBuffer(
-                        new SnapshotPoint(eval.Window.TextView.TextBuffer.CurrentSnapshot, i),
-                        PointTrackingMode.Positive,
-                        curBuffer,
-                        PositionAffinity.Successor
-                    );
-                }
-            }
-
-            if (inputPoint == null) {
-                // we didn't find a point to insert, insert at the beginning.
-                inputPoint = new SnapshotPoint(curBuffer.CurrentSnapshot, 0);
-            }
-            
-            // we want to insert the pasted code at the caret, but we also want to
-            // respect the stepping.  So first grab the code before and after the caret.
-            string startText = curBuffer.CurrentSnapshot.GetText(0, inputPoint.Value);
-
-            string endText = curBuffer.CurrentSnapshot.GetText(
-                inputPoint.Value,
-                curBuffer.CurrentSnapshot.Length - inputPoint.Value);
-
-
-            var splitCode = eval.JoinCode(eval.SplitCode(startText + pasting + endText)).ToList();
-            curBuffer.Delete(new Span(0, curBuffer.CurrentSnapshot.Length));
-
-            if (splitCode.Count == 1) {
-                curBuffer.Insert(0, splitCode[0]);
-                var viewPoint = view.BufferGraph.MapUpToBuffer(
-                    new SnapshotPoint(curBuffer.CurrentSnapshot, Math.Min(inputPoint.Value.Position + pasting.Length, curBuffer.CurrentSnapshot.Length)),
-                    PointTrackingMode.Positive,
-                    PositionAffinity.Successor,
-                    view.TextBuffer
-                );
-
-                if (viewPoint != null) {
-                    view.Caret.MoveTo(viewPoint.Value);
-                }
-            } else if (splitCode.Count != 0) {
-                var lastCode = splitCode[splitCode.Count - 1];
-                splitCode.RemoveAt(splitCode.Count - 1);
-
-                eval.Window.ReadyForInput += new PendLastSplitCode(eval.CurrentWindow, lastCode).AppendCode;
-                eval.Window.Submit(splitCode);
-            } else {
-                eval.Window.CurrentLanguageBuffer.Insert(0, startText + pasting + endText);
-            }
-        }
-
-        class PendLastSplitCode {
-            public readonly IInteractiveWindow Window;
-            public readonly string Text;
-
-            public PendLastSplitCode(IInteractiveWindow window, string text) {
-                Window = window;
-                Text = text;
-            }
-
-            public void AppendCode() {
-                if (((PythonReplEvaluator)Window.Evaluator)._lastExecutionResult.Result.IsSuccessful) {
-                    Window.CurrentLanguageBuffer.Insert(0, Text);
-                }
-                Window.ReadyForInput -= AppendCode;
-            }
-        }
-
         private const uint CommandDisabledAndHidden = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+
         /// <summary>
         /// Called from VS to see what commands we support.  
         /// </summary>
@@ -969,14 +801,6 @@ namespace Microsoft.PythonTools.Language {
             } else if (pguidCmdGroup == GuidList.guidPythonToolsCmdSet) {
                 for (int i = 0; i < cCmds; i++) {
                     switch (prgCmds[i].cmdID) {
-                        case PkgCmdIDList.comboIdReplScopes:
-                            if (_scopeListVisible) {
-                                prgCmds[0].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                            } else {
-                                prgCmds[0].cmdf = CommandDisabledAndHidden;
-                            }
-                            return VSConstants.S_OK;
-
                         case PkgCmdIDList.cmdidRefactorRenameIntegratedShell:
                             // C# provides the refactor context menu for the main VS command outside
                             // of the integrated shell.  In the integrated shell we provide our own
@@ -1080,34 +904,42 @@ namespace Microsoft.PythonTools.Language {
 
 #endregion
 
-        internal static string RemoveReplPrompts(PythonToolsService pyService, string newline) {
-            if (pyService.AdvancedOptions.PasteRemovesReplPrompts) {
-                string text = Clipboard.GetText();
-                if (text != null) {
-                    string[] lines = text.Replace("\r\n", "\n").Split('\n');
+        internal static string RemoveReplPrompts(
+            PythonToolsService pyService,
+            string text,
+            string newline
+        ) {
+            if (string.IsNullOrEmpty(text)) {
+                return text;
+            }
 
-                    bool allPrompts = true;
-                    foreach (var line in lines) {
-                        if (!(line.StartsWith("... ") || line.StartsWith(">>> "))) {
-                            if (!String.IsNullOrWhiteSpace(line)) {
-                                allPrompts = false;
-                                break;
-                            }
-                        }
-                    }
+            if (!pyService.AdvancedOptions.PasteRemovesReplPrompts) {
+                return null;
+            }
 
-                    if (allPrompts) {
-                        for (int i = 0; i < lines.Length; i++) {
-                            if (!String.IsNullOrWhiteSpace(lines[i])) {
-                                lines[i] = lines[i].Substring(4);
-                            }
-                        }
+            string[] lines = text.Replace("\r\n", "\n").Split('\n');
 
-                        return String.Join(newline, lines);
+            bool allPrompts = true;
+            foreach (var line in lines) {
+                if (!(line.StartsWith("... ") || line.StartsWith(">>> "))) {
+                    if (!string.IsNullOrWhiteSpace(line)) {
+                        allPrompts = false;
+                        break;
                     }
                 }
             }
-            return null;
+
+            if (!allPrompts) {
+                return text;
+            }
+
+            for (int i = 0; i < lines.Length; i++) {
+                if (!string.IsNullOrWhiteSpace(lines[i])) {
+                    lines[i] = lines[i].Substring(4);
+                }
+            }
+
+            return string.Join(newline, lines);
         }
 
         internal void DoIdle(IOleComponentManager compMgr) {

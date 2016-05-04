@@ -46,7 +46,7 @@ Press Enter to close. . .''')
 # 1. Working directory.
 # 2. VS debugger port to connect to.
 # 3. GUID for the debug session.
-# 4. Debug options (as integer - see enum PythonDebugOptions).
+# 4. Debug options (as list of names - see enum PythonDebugOptions).
 # 5. '-m' or '-c' to override the default run-as mode. [optional]
 # 6. Startup script name.
 # 7. Script arguments.

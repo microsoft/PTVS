@@ -87,7 +87,10 @@ def exec_code(code, file, global_variables):
             except AttributeError:
                 pass
 
-    sys.path[0] = os.path.split(file)[0]
+    if os.path.isdir(sys.path[0]):
+        sys.path.insert(0, os.path.split(file)[0])
+    else:
+        sys.path[0] = os.path.split(file)[0]
     code_obj = compile(code, file, 'exec')
     exec(code_obj, global_variables)
 

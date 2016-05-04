@@ -77,7 +77,7 @@ namespace TestUtilities.UI {
             var replWindowProvider = compModel.GetService<InteractiveWindowProvider>();
             _replWindow = replWindowProvider
 #if DEV14_OR_LATER
-                .GetReplToolWindows()
+                .AllOpenWindows
 #else
                 .GetReplWindows()
 #endif
@@ -111,7 +111,7 @@ namespace TestUtilities.UI {
                 compModel = (IComponentModel)VSTestContext.ServiceProvider.GetService(typeof(SComponentModel));
             }
             var replWindowProvider = compModel.GetService<InteractiveWindowProvider>();
-            foreach (var frame in replWindowProvider.GetReplWindows()
+            foreach (var frame in replWindowProvider.AllOpenWindows
                 .OfType<ToolWindowPane>()
                 .Select(r => r.Frame)
                 .OfType<IVsWindowFrame>()) {
@@ -311,7 +311,7 @@ namespace TestUtilities.UI {
 #if NTVS_FEATURE_INTERACTIVEWINDOW
 #error Implement for NTVS
 #else
-                return (ReplWindow.Evaluator as BasePythonReplEvaluator)?.PrimaryPrompt ?? ">>>";
+                return _interactive.GetPythonEvaluator()?.PrimaryPrompt ?? ">>> ";
 #endif
 #else
                 return (string)ReplWindow.GetOptionValue(ReplOptions.CurrentPrimaryPrompt);
@@ -325,7 +325,7 @@ namespace TestUtilities.UI {
 #if NTVS_FEATURE_INTERACTIVEWINDOW
 #error Implement for NTVS
 #else
-                return (ReplWindow.Evaluator as BasePythonReplEvaluator)?.SecondaryPrompt ?? "...";
+                return _interactive.GetPythonEvaluator()?.SecondaryPrompt ?? "... ";
 #endif
 #else
                 return (string)ReplWindow.GetOptionValue(ReplOptions.CurrentSecondaryPrompt);
