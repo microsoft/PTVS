@@ -146,7 +146,6 @@ namespace Microsoft.PythonTools.Navigation {
             if (wpfTextView != null) {
                 var factory = ComponentModel.GetService<IEditorOperationsFactoryService>();
                 EditFilter.GetOrCreate(_serviceProvider, ComponentModel, vsTextView);
-                ReplEditFilter.GetOrCreate(_serviceProvider, ComponentModel, vsTextView);
                 new TextViewFilter(_serviceProvider, vsTextView);
                 wpfTextView.GotAggregateFocus += OnTextViewGotAggregateFocus;
                 wpfTextView.LostAggregateFocus += OnTextViewLostAggregateFocus;
