@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             var availableInterpreters = registry.Configurations.Select(
                 config => new PythonInterpreterView(
-                    config.Description, 
+                    config.FullDescription, 
                     config.Id, 
                     config.InterpreterPath
                 )

@@ -49,31 +49,11 @@ namespace Microsoft.PythonTools.Commands {
             var provider = compModel.GetService<InteractiveWindowProvider>();
             var vsProjectContext = compModel.GetService<VsProjectContextProvider>();
 
-            string replId = PythonReplEvaluatorProvider.GetReplId(config.Id, project);
-            var window = provider.FindReplWindow(replId);
-            if (window == null) {
-                window = provider.CreateInteractiveWindow(
-                    serviceProvider.GetPythonContentType(),
-                    config.FullDescription + " Interactive",
-                    typeof(PythonLanguageInfo).GUID,
-                    replId
-                );
-
-#if DEV14
-                var toolWindow = window as ToolWindowPane;
-                if (toolWindow != null) {
-                    toolWindow.BitmapImageMoniker = KnownMonikers.PYInteractiveWindow;
-                }
-#endif
-
-                var pyService = serviceProvider.GetPythonToolsService();
-                window.InteractiveWindow.SetSmartUpDown(pyService.GetInteractiveOptions(config).ReplSmartHistory);
-            }
-
-            
-            if (project != null && vsProjectContext.IsProjectSpecific(config)) {
-                project.AddActionOnClose(window, BasePythonReplEvaluator.CloseReplWindow);
-            }
+            string replId = config != null ?
+                PythonReplEvaluatorProvider.GetEvaluatorId(config) :
+                PythonReplEvaluatorProvider.GetEvaluatorId(project);
+            var window = provider.OpenOrCreate(replId);
+            project?.AddActionOnClose(window, InteractiveWindowProvider.Close);
 
             return window;
         }
@@ -120,45 +100,35 @@ namespace Microsoft.PythonTools.Commands {
             }
         }
 
-        public override void DoCommand(object sender, EventArgs args) {
+        public override async void DoCommand(object sender, EventArgs e) {
             var pyProj = CommonPackage.GetStartupProject(_serviceProvider) as PythonProjectNode;
             var textView = CommonPackage.GetActiveTextView(_serviceProvider);
 
-            VsProjectAnalyzer analyzer;
-            string filename, dir = null;
-
-            if (pyProj != null) {
-                analyzer = pyProj.GetAnalyzer();
-                filename = pyProj.GetStartupFile();
-                dir = pyProj.GetWorkingDirectory();
-            } else if (textView != null) {
+            var config = pyProj?.GetLaunchConfigurationOrThrow();
+            if (config == null && textView != null) {
                 var pyService = _serviceProvider.GetPythonToolsService();
-                analyzer = pyService.DefaultAnalyzer;
-                filename = textView.GetFilePath();
-            } else {
+                config = new LaunchConfiguration(pyService.DefaultInterpreterConfiguration) {
+                    ScriptName = textView.GetFilePath(),
+                    WorkingDirectory = PathUtils.GetParent(textView.GetFilePath())
+                };
+            }
+            if (config == null) {
                 Debug.Fail("Should not be executing command when it is invisible");
                 return;
             }
-            if (string.IsNullOrEmpty(filename)) {
-                // TODO: Error reporting
-                return;
-            }
-            if (string.IsNullOrEmpty(dir)) {
-                dir = PathUtils.GetParent(filename);
-            }
 
-            var window = EnsureReplWindow(_serviceProvider, analyzer, pyProj);
-
+            var window = EnsureReplWindow(_serviceProvider, config.Interpreter, pyProj);
             window.Show(true);
 
+            var eval = (IPythonInteractiveEvaluator)window.InteractiveWindow.Evaluator;
+
             // The interpreter may take some time to startup, do this off the UI thread.
-            ThreadPool.QueueUserWorkItem(x => {
-                window.InteractiveWindow.Evaluator.ResetAsync().WaitAndUnwrapExceptions();
+            await ThreadHelper.JoinableTaskFactory.RunAsync(async () => {
+                await eval.ResetAsync();
 
-                window.InteractiveWindow.WriteLine(String.Format("Running {0}", filename));
-                string scopeName = Path.GetFileNameWithoutExtension(filename);
+                window.InteractiveWindow.WriteLine(string.Format("Running {0}", config.ScriptName));
 
-                ((PythonReplEvaluator)window.InteractiveWindow.Evaluator).ExecuteFile(filename);
+                await eval.ExecuteFileAsync(config.ScriptName, config.ScriptArguments);
             });
         }
 

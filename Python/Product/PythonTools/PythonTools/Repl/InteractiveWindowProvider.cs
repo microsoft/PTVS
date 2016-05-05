@@ -17,8 +17,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Linq;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
@@ -30,202 +34,183 @@ namespace Microsoft.PythonTools.Repl {
     [Export(typeof(InteractiveWindowProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     class InteractiveWindowProvider {
-        private readonly Dictionary<int, InteractiveWindowInfo> _windows = new Dictionary<int, InteractiveWindowInfo>();
+        private readonly Dictionary<int, IVsInteractiveWindow> _windows = new Dictionary<int, IVsInteractiveWindow>();
+        private int _nextId = 1;
+
+        private readonly List<IVsInteractiveWindow> _mruWindows = new List<IVsInteractiveWindow>();
+        private readonly Dictionary<string, int> _temporaryWindows = new Dictionary<string, int>();
+
+        private readonly IServiceProvider _serviceProvider;
         private readonly IInteractiveEvaluatorProvider[] _evaluators;
         private readonly IVsInteractiveWindowFactory _windowFactory;
+        private readonly IContentType _pythonContentType;
+
+        private static readonly object VsInteractiveWindowKey = new object();
 
         [ImportingConstructor]
-        public InteractiveWindowProvider([Import]IVsInteractiveWindowFactory factory, [ImportMany]IInteractiveEvaluatorProvider[] evaluators) {
+        public InteractiveWindowProvider(
+            [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
+            [Import] IVsInteractiveWindowFactory factory,
+            [ImportMany] IInteractiveEvaluatorProvider[] evaluators,
+            [Import] IContentTypeRegistryService contentTypeService
+        ) {
+            _serviceProvider = serviceProvider;
             _evaluators = evaluators;
             _windowFactory = factory;
+            _pythonContentType = contentTypeService.GetContentType(PythonCoreConstants.ContentType);
         }
 
-        class InteractiveWindowInfo {
-            public readonly string Id;
-            public readonly IVsInteractiveWindow Window;
-
-            public InteractiveWindowInfo(IVsInteractiveWindow replWindow, string replId) {
-                Window = replWindow;
-                Id = replId;
-            }
-        }
-
-        public IVsInteractiveWindow FindReplWindow(string replId) {
-            foreach (var idAndWindow in _windows) {
-                var window = idAndWindow.Value;
-                if (window.Id == replId) {
-                    return window.Window;
+        public IEnumerable<IVsInteractiveWindow> AllOpenWindows {
+            get {
+                lock (_windows) {
+                    return _windows.Values.ToArray();
                 }
             }
-            return null;
         }
 
-        public IVsInteractiveWindow CreateInteractiveWindow(
+        private int GetNextId() {
+            lock (_windows) {
+                return _nextId++;
+            }
+        }
+
+        public IVsInteractiveWindow OpenOrCreate(string replId) {
+            IVsInteractiveWindow wnd;
+            lock (_windows) {
+                foreach(var window in _windows.Values) {
+                    var eval = window.InteractiveWindow?.Evaluator as SelectableReplEvaluator;
+                    if (eval?.CurrentEvaluator == replId) {
+                        window.Show(true);
+                        return window;
+                    }
+                }
+            }
+
+            wnd = Create(replId);
+            wnd.Show(true);
+            return wnd;
+        }
+
+        public IVsInteractiveWindow Create(string replId) {
+            int curId = GetNextId();
+
+            var window = CreateInteractiveWindowInternal(
+                new SelectableReplEvaluator(_serviceProvider, _evaluators, replId),
+                _pythonContentType,
+                false,
+                curId,
+                Strings.ReplCaptionNoEvaluator,
+                typeof(Navigation.PythonLanguageInfo).GUID,
+                "PythonInteractive"
+            );
+
+            lock (_windows) {
+                _windows[curId] = window;
+            }
+
+            window.InteractiveWindow.TextView.Closed += (s, e) => {
+                lock (_windows) {
+                    Debug.Assert(ReferenceEquals(_windows[curId], window));
+                    _windows.Remove(curId);
+                }
+            };
+
+            return window;
+        }
+
+        public IVsInteractiveWindow OpenOrCreateTemporary(string replId, string title) {
+            bool dummy;
+            return OpenOrCreateTemporary(replId, title, out dummy);
+        }
+
+        public IVsInteractiveWindow OpenOrCreateTemporary(string replId, string title, out bool wasCreated) {
+            IVsInteractiveWindow wnd;
+            lock (_windows) {
+                int curId;
+                if (_temporaryWindows.TryGetValue(replId, out curId)) {
+                    if (_windows.TryGetValue(curId, out wnd)) {
+                        wnd.Show(true);
+                        wasCreated = false;
+                        return wnd;
+                    }
+                }
+                _temporaryWindows.Remove(replId);
+            }
+
+            wnd = CreateTemporary(replId, title);
+            wnd.Show(true);
+            wasCreated = true;
+            return wnd;
+        }
+
+        public IVsInteractiveWindow CreateTemporary(string replId, string title) {
+            int curId = GetNextId();
+
+            var window = CreateInteractiveWindowInternal(
+                _evaluators.Select(p => p.GetEvaluator(replId)).FirstOrDefault(e => e != null),
+                _pythonContentType,
+                false,
+                curId,
+                title,
+                typeof(Navigation.PythonLanguageInfo).GUID,
+                replId
+            );
+
+            lock (_windows) {
+                _windows[curId] = window;
+                _temporaryWindows[replId] = curId;
+            }
+
+            window.InteractiveWindow.TextView.Closed += (s, e) => {
+                lock (_windows) {
+                    Debug.Assert(ReferenceEquals(_windows[curId], window));
+                    _windows.Remove(curId);
+                    _temporaryWindows.Remove(replId);
+                }
+            };
+
+            return window;
+        }
+
+        private IVsInteractiveWindow CreateInteractiveWindowInternal(
+            IInteractiveEvaluator evaluator,
             IContentType contentType,
-            string/*!*/ title,
+            bool alwaysCreate,
+            int id,
+            string title,
             Guid languageServiceGuid,
             string replId
         ) {
-            int curId = 0;
+            var creationFlags =
+                __VSCREATETOOLWIN.CTW_fMultiInstance |
+                __VSCREATETOOLWIN.CTW_fActivateWithProject;
 
-            InteractiveWindowInfo window;
-            do {
-                curId++;
-                window = FindReplWindowInternal(curId);
-            } while (window != null);
-
-            foreach (var provider in _evaluators) {
-                var evaluator = provider.GetEvaluator(replId);
-                if (evaluator != null) {
-                    string[] roles = evaluator.GetType().GetCustomAttributes(typeof(InteractiveWindowRoleAttribute), true)
-                        .OfType<InteractiveWindowRoleAttribute>()
-                        .Select(r => r.Name)
-                        .ToArray();
-                    window = CreateInteractiveWindowInternal(evaluator, contentType, roles, curId, title, languageServiceGuid, replId);
-
-                    return window.Window;
-                }
-            }
-
-            throw new InvalidOperationException(String.Format("ReplId {0} was not provided by an IInteractiveWindowProvider", replId));
-        }
-
-        private InteractiveWindowInfo FindReplWindowInternal(int id) {
-            InteractiveWindowInfo res;
-            if (_windows.TryGetValue(id, out res)) {
-                return res;
-            }
-            return null;
-        }
-
-        private const string ActiveReplsKey = "ActiveRepls";
-        private const string ContentTypeKey = "ContentType";
-        private const string RolesKey = "Roles";
-        private const string TitleKey = "Title";
-        private const string ReplIdKey = "ReplId";
-        private const string LanguageServiceGuidKey = "LanguageServiceGuid";
-
-        private static RegistryKey GetRegistryRoot() {
-            return VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_UserSettings, writable: true).CreateSubKey(ActiveReplsKey);
-        }
-
-        private void SaveInteractiveInfo(int id, IInteractiveEvaluator evaluator, IContentType contentType, string[] roles, string title, Guid languageServiceGuid, string replId) {
-            using (var root = GetRegistryRoot()) {
-                if (root != null) {
-                    using (var replInfo = root.CreateSubKey(id.ToString())) {
-                        replInfo.SetValue(ContentTypeKey, contentType.TypeName);
-                        replInfo.SetValue(TitleKey, title);
-                        replInfo.SetValue(ReplIdKey, replId.ToString());
-                        replInfo.SetValue(LanguageServiceGuidKey, languageServiceGuid.ToString());
-                    }
-                }
-            }
-        }
-
-        internal bool CreateFromRegistry(IComponentModel model, int id) {
-            string contentTypeName, title, replId, languageServiceId;
-
-            using (var root = GetRegistryRoot()) {
-                if (root == null) {
-                    return false;
-                }
-
-                using (var replInfo = root.OpenSubKey(id.ToString())) {
-                    if (replInfo == null) {
-                        return false;
-                    }
-
-                    contentTypeName = replInfo.GetValue(ContentTypeKey) as string;
-                    if (contentTypeName == null) {
-                        return false;
-                    }
-
-                    title = replInfo.GetValue(TitleKey) as string;
-                    if (title == null) {
-                        return false;
-                    }
-
-                    replId = replInfo.GetValue(ReplIdKey) as string;
-                    if (replId == null) {
-                        return false;
-                    }
-
-                    languageServiceId = replInfo.GetValue(LanguageServiceGuidKey) as string;
-                    if (languageServiceId == null) {
-                        return false;
-                    }
-                }
-            }
-
-            Guid languageServiceGuid;
-            if (!Guid.TryParse(languageServiceId, out languageServiceGuid)) {
-                return false;
-            }
-
-            var contentTypes = model.GetService<IContentTypeRegistryService>();
-            var contentType = contentTypes.GetContentType(contentTypeName);
-            if (contentType == null) {
-                return false;
-            }
-
-            string[] roles;
-            var evaluator = GetInteractiveEvaluator(model, replId, out roles);
-            if (evaluator == null) {
-                return false;
-            }
-
-            CreateInteractiveWindow(evaluator, contentType, roles, id, title, languageServiceGuid, replId);
-            return true;
-        }
-
-        public IEnumerable<IInteractiveWindow> GetReplWindows() {
-            return _windows.Values.Select(x => x.Window.InteractiveWindow);
-        }
-
-        internal IEnumerable<IVsInteractiveWindow> GetReplToolWindows() {
-            return _windows.Values.Select(x => x.Window);
-        }
-
-        private static IInteractiveEvaluator GetInteractiveEvaluator(IComponentModel model, string replId, out string[] roles) {
-            roles = new string[0];
-            foreach (var provider in model.GetExtensions<IInteractiveEvaluatorProvider>()) {
-                var evaluator = provider.GetEvaluator(replId);
-
-                if (evaluator != null) {
-                    roles = evaluator.GetType().GetCustomAttributes(typeof(InteractiveWindowRoleAttribute), true)
-                        .OfType<InteractiveWindowRoleAttribute>()
-                        .Select(r => r.Name)
-                        .ToArray();
-                    return evaluator;
-                }
-            }
-            return null;
-        }
-
-        private InteractiveWindowInfo CreateInteractiveWindow(IInteractiveEvaluator/*!*/ evaluator, IContentType/*!*/ contentType, string[] roles, int id, string/*!*/ title, Guid languageServiceGuid, string replId) {
-            return CreateInteractiveWindowInternal(evaluator, contentType, roles, id, title, languageServiceGuid, replId);
-        }
-
-        private InteractiveWindowInfo CreateInteractiveWindowInternal(IInteractiveEvaluator evaluator, IContentType contentType, string[] roles, int id, string title, Guid languageServiceGuid, string replId) {
-            var service = (IVsUIShell)ServiceProvider.GlobalProvider.GetService(typeof(SVsUIShell));
-            var model = (IComponentModel)ServiceProvider.GlobalProvider.GetService(typeof(SComponentModel));
-
-            SaveInteractiveInfo(id, evaluator, contentType, roles, title, languageServiceGuid, replId);
-
-            // we don't pass __VSCREATETOOLWIN.CTW_fMultiInstance because multi instance panes are
-            // destroyed when closed.  We are really multi instance but we don't want to be closed.  This
-            // seems to work fine.
-            __VSCREATETOOLWIN creationFlags = 0;
-            if (!roles.Contains("DontPersist")) {
+            if (alwaysCreate) {
                 creationFlags |= __VSCREATETOOLWIN.CTW_fForceCreate;
             }
 
             var replWindow = _windowFactory.Create(GuidList.guidPythonInteractiveWindowGuid, id, title, evaluator, creationFlags);
+            replWindow.InteractiveWindow.Properties[VsInteractiveWindowKey] = replWindow;
+            var toolWindow = replWindow as ToolWindowPane;
+            if (toolWindow != null) {
+                toolWindow.BitmapImageMoniker = KnownMonikers.PYInteractiveWindow;
+            }
             replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, contentType);
             replWindow.InteractiveWindow.InitializeAsync();
 
-            return _windows[id] = new InteractiveWindowInfo(replWindow, replId);
+            return replWindow;
         }
 
+        internal static IVsInteractiveWindow GetVsInteractiveWindow(IInteractiveWindow window) {
+            IVsInteractiveWindow wnd = null;
+            return (window?.Properties.TryGetProperty(VsInteractiveWindowKey, out wnd) ?? false) ? wnd : null;
+        }
+
+        internal static void Close(object obj) {
+            var vwnd = obj as IVsInteractiveWindow;
+            if (vwnd != null) {
+                vwnd.InteractiveWindow.Close();
+            }
+        }
     }
 }

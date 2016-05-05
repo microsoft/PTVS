@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Options {
                 null,
                 null,
                 ProcessorArchitecture.None,
-                null,
+                new Version(),
                 InterpreterUIMode.Normal
             );
         }

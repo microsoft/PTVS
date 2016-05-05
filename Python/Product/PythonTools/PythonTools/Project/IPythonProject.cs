@@ -119,13 +119,7 @@ namespace Microsoft.PythonTools.Project {
         /// New in 2.0.
         /// </summary>
         event EventHandler ProjectAnalyzerChanged;
-    }
-    /// <summary>
-    /// Extends <see cref="IPythonProject"/>
-    /// 
-    /// New in 2.1
-    /// </summary>
-    public interface IPythonProject2 : IPythonProject {
+
         /// <summary>
         /// Returns a command with the provided name if one is available. The
         /// name matches the target name in the associated MSBuild project.
@@ -172,14 +166,7 @@ namespace Microsoft.PythonTools.Project {
         /// (which will be resolved later).
         /// </summary>
         event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
-    }
 
-    /// <summary>
-    /// Extends <see cref="IPythonProject2"/>
-    /// 
-    /// New in 2.2
-    /// </summary>
-    public interface IPythonProject3 : IPythonProject2 {
         /// <summary>
         /// Gets the interpreter factory for this project and throws if it is
         /// unusable.
@@ -189,14 +176,22 @@ namespace Microsoft.PythonTools.Project {
         /// <exception cref="MissingInterpreterException">The active interpreter
         /// is not available.</exception>
         IPythonInterpreterFactory GetInterpreterFactoryOrThrow();
-    }
 
-    public static class IPythonProjectExtensions {
         /// <summary>
-        /// Returns a sequence of absolute search paths for the provided project.
+        /// Returns the current launch configuration or throws an appropriate
+        /// exception. These exceptions have localized strings that may be
+        /// shown to the user.
         /// </summary>
-        public static IEnumerable<string> GetSearchPaths(this IPythonProject project) {
-            return PythonProjectLaunchProperties.EnumerateSearchPaths(project);
-        }
+        /// <returns>The active interpreter factory.</returns>
+        /// <exception cref="NoInterpretersException">
+        /// No interpreters are available at all.
+        /// </exception>
+        /// <exception cref="MissingInterpreterException">
+        /// The specified interpreter is not suitable for use.
+        /// </exception>
+        /// <exception cref="DirectoryNotFoundException">
+        /// The working directory specified by the project does not exist.
+        /// </exception>
+        LaunchConfiguration GetLaunchConfigurationOrThrow();
     }
 }

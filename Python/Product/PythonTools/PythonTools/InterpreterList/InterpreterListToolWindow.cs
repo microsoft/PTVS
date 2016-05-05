@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -22,18 +23,16 @@ using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Windows.Input;
-using Microsoft.PythonTools.Commands;
+using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.EnvironmentsList;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
-using Microsoft.PythonTools.Infrastructure;
-using System.Collections.Generic;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.InterpreterList {
     [Guid(PythonConstants.InterpreterListToolWindowGuid)]
@@ -70,9 +69,9 @@ namespace Microsoft.PythonTools.InterpreterList {
                 OpenInteractiveWindow_CanExecute
             ));
             list.CommandBindings.Add(new CommandBinding(
-                EnvironmentView.OpenInteractiveOptions,
-                OpenInteractiveOptions_Executed,
-                OpenInteractiveOptions_CanExecute
+                EnvironmentView.OpenInteractiveScripts,
+                OpenInteractiveScripts_Executed,
+                OpenInteractiveScripts_CanExecute
             ));
             list.CommandBindings.Add(new CommandBinding(
                 EnvironmentPathsExtension.StartInterpreter,
@@ -104,8 +103,115 @@ namespace Microsoft.PythonTools.InterpreterList {
                 OpenInCommandPrompt_Executed,
                 OpenInCommandPrompt_CanExecute
             ));
+            list.CommandBindings.Add(new CommandBinding(
+                EnvironmentView.EnableIPythonInteractive,
+                EnableIPythonInteractive_Executed,
+                EnableIPythonInteractive_CanExecute
+            ));
+            list.CommandBindings.Add(new CommandBinding(
+                EnvironmentView.DisableIPythonInteractive,
+                DisableIPythonInteractive_Executed,
+                DisableIPythonInteractive_CanExecute
+            ));
 
             Content = list;
+        }
+
+        private string GetScriptPath(EnvironmentView view) {
+            if (view == null) {
+                return null;
+            }
+
+            return PythonInteractiveEvaluator.GetScriptsPath(
+                _site,
+                view.Description,
+                view.Factory.Configuration,
+                false
+            );
+        }
+
+        private void OpenInteractiveScripts_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var path = GetScriptPath(e.Parameter as EnvironmentView);
+            e.CanExecute = path != null;
+            e.Handled = true;
+        }
+
+        private bool EnsureScriptDirectory(string path) {
+            if (string.IsNullOrEmpty(path)) {
+                return false;
+            }
+
+            if (!Directory.Exists(path)) {
+                try {
+                    Directory.CreateDirectory(path);
+                    File.WriteAllText(PathUtils.GetAbsoluteFilePath(path, "readme.txt"), Strings.ReplScriptPathReadmeContents);
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    TaskDialog.ForException(_site, ex, issueTrackerUrl: PythonConstants.IssueTrackerUrl).ShowModal();
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private void OpenInteractiveScripts_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var path = GetScriptPath(e.Parameter as EnvironmentView);
+            if (!EnsureScriptDirectory(path)) {
+                return;
+            }
+
+            var psi = new ProcessStartInfo();
+            psi.UseShellExecute = false;
+            psi.FileName = "explorer.exe";
+            psi.Arguments = "\"" + path + "\"";
+
+            Process.Start(psi).Dispose();
+            e.Handled = true;
+        }
+
+        private void EnableIPythonInteractive_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var path = GetScriptPath(e.Parameter as EnvironmentView);
+            e.CanExecute = path != null && !File.Exists(PathUtils.GetAbsoluteFilePath(path, "mode.txt"));
+            e.Handled = true;
+        }
+
+        private void EnableIPythonInteractive_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var path = GetScriptPath(e.Parameter as EnvironmentView);
+            if (!EnsureScriptDirectory(path)) {
+                return;
+            }
+
+            path = PathUtils.GetAbsoluteFilePath(path, "mode.txt");
+            try {
+                File.WriteAllText(path, Strings.ReplScriptPathIPythonModeTxtContents);
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                TaskDialog.ForException(_site, ex, issueTrackerUrl: PythonConstants.IssueTrackerUrl).ShowModal();
+                return;
+            }
+
+            e.Handled = true;
+        }
+
+        private void DisableIPythonInteractive_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var path = GetScriptPath(e.Parameter as EnvironmentView);
+            e.CanExecute = path != null && File.Exists(PathUtils.GetAbsoluteFilePath(path, "mode.txt"));
+            e.Handled = true;
+        }
+
+        private void DisableIPythonInteractive_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var path = GetScriptPath(e.Parameter as EnvironmentView);
+            if (!EnsureScriptDirectory(path)) {
+                return;
+            }
+
+            path = PathUtils.GetAbsoluteFilePath(path, "mode.txt");
+            if (File.Exists(path)) {
+                try {
+                    File.Delete(path);
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    TaskDialog.ForException(_site, ex, issueTrackerUrl: PythonConstants.IssueTrackerUrl).ShowModal();
+                    return;
+                }
+            }
         }
 
         private void List_ViewCreated(object sender, EnvironmentViewEventArgs e) {
@@ -221,7 +327,12 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void OpenInteractiveWindow_Executed(object sender, ExecutedRoutedEventArgs e) {
             var view = (EnvironmentView)e.Parameter;
-            var factory = view.Factory;
+            var config = view.Factory.Configuration;
+
+            var replId = PythonReplEvaluatorProvider.GetEvaluatorId(config);
+
+            var compModel = _site.GetComponentModel();
+            var service = compModel.GetService<InteractiveWindowProvider>();
             IVsInteractiveWindow window;
 
             // TODO: Figure out another way to get the project
@@ -229,33 +340,15 @@ namespace Microsoft.PythonTools.InterpreterList {
             //var vsProject = provider == null ?
             //    null :
             //    provider.GetProject(factory);
-            PythonProjectNode project = null;// vsProject == null ? null : vsProject.GetPythonProject();
+            //PythonProjectNode project = vsProject == null ? null : vsProject.GetPythonProject();
             try {
-                window = ExecuteInReplCommand.EnsureReplWindow(_site, factory.Configuration, project);
-            } catch (InvalidOperationException ex) {
+                window = service.OpenOrCreate(replId);
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 MessageBox.Show(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex), Strings.ProductTitle);
                 return;
             }
-            if (window != null) {
-                var pane = window as ToolWindowPane;
-                if (pane != null) {
-                    ErrorHandler.ThrowOnFailure(((IVsWindowFrame)pane.Frame).Show());
-                }
-                window.Show(true);
-            }
-        }
 
-        private void OpenInteractiveOptions_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            var view = e.Parameter as EnvironmentView;
-            e.CanExecute = view != null && view.Factory != null && view.Factory.CanBeConfigured();
-        }
-
-        private void OpenInteractiveOptions_Executed(object sender, ExecutedRoutedEventArgs e) {
-            PythonToolsPackage.ShowOptionPage(
-                _site,
-                typeof(PythonInteractiveOptionsPage),
-                ((EnvironmentView)e.Parameter).Factory.Configuration
-            );
+            window?.Show(true);
         }
 
         private void StartInterpreter_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -268,30 +361,21 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void StartInterpreter_Executed(object sender, ExecutedRoutedEventArgs e) {
             var view = (EnvironmentView)e.Parameter;
-            var factory = view.Factory;
 
-            var psi = new ProcessStartInfo();
-            psi.UseShellExecute = false;
+            var config = new LaunchConfiguration(view.Factory.Configuration) {
+                PreferWindowedInterpreter = (e.Command == EnvironmentPathsExtension.StartWindowsInterpreter),
+                WorkingDirectory = view.Factory.Configuration.PrefixPath,
+                SearchPaths = new List<string>()
+            };
 
-            psi.FileName = e.Command == EnvironmentPathsExtension.StartInterpreter ?
-                factory.Configuration.InterpreterPath :
-                factory.Configuration.WindowsInterpreterPath;
-            psi.WorkingDirectory = factory.Configuration.PrefixPath;
-
-            // TODO: Figure out some other wa to get the project
-            //var provider = _service.KnownProviders.OfType<LoadedProjectInterpreterFactoryProvider>().FirstOrDefault();
-            //var vsProject = provider == null ?
-            //    null :
-            //    provider.GetProject(factory);
-            IPythonProject project = null;// vsProject == null ? null : vsProject.GetPythonProject();
-            if (project != null) {
-                psi.EnvironmentVariables[factory.Configuration.PathEnvironmentVariable] = 
-                    string.Join(";", project.GetSearchPaths());
-            } else {
-                psi.EnvironmentVariables[factory.Configuration.PathEnvironmentVariable] = string.Empty;
+            var sln = (IVsSolution)_site.GetService(typeof(SVsSolution));
+            foreach (var pyProj in sln.EnumerateLoadedPythonProjects()) {
+                if (pyProj.InterpreterConfigurations.Contains(config.Interpreter)) {
+                    config.SearchPaths.AddRange(pyProj.GetSearchPaths());
+                }
             }
 
-            Process.Start(psi).Dispose();
+            Process.Start(DebugLaunchHelper.CreateProcessStartInfo(_site, config)).Dispose();
         }
 
         private void OnlineHelp_CanExecute(object sender, CanExecuteRoutedEventArgs e) {

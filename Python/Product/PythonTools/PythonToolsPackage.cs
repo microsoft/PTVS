@@ -78,8 +78,6 @@ namespace Microsoft.PythonTools {
 
     // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideMenuResource(1000, 1)]
-    [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.NoSolution)]
-    [ProvideAutoLoad(Microsoft.VisualStudio.Shell.Interop.UIContextGuids.SolutionExists)]
     [Description("Python Tools Package")]
     [ProvideAutomationObject("VsPython")]
     [ProvideLanguageEditorOptionPage(typeof(PythonAdvancedEditorOptionsPage), PythonConstants.LanguageName, "", "Advanced", "113")]
@@ -88,12 +86,7 @@ namespace Microsoft.PythonTools {
     [ProvideLanguageEditorOptionPage(typeof(PythonFormattingSpacingOptionsPage), PythonConstants.LanguageName, "Formatting", "Spacing", "122")]
     [ProvideLanguageEditorOptionPage(typeof(PythonFormattingStatementsOptionsPage), PythonConstants.LanguageName, "Formatting", "Statements", "123")]
     [ProvideLanguageEditorOptionPage(typeof(PythonFormattingWrappingOptionsPage), PythonConstants.LanguageName, "Formatting", "Wrapping", "124")]
-    // Continue to provide this options page as "Interpreters" for DTE access
-    // and because it matches the registry store. The localized string should
-    // read "Environments".
-    [ProvideOptionPage(typeof(PythonInterpreterOptionsPage), "Python Tools", "Interpreters", 115, 116, true)]
     [ProvideOptionPage(typeof(PythonInteractiveOptionsPage), "Python Tools", "Interactive Windows", 115, 117, true)]
-    [ProvideOptionPage(typeof(PythonDebugInteractiveOptionsPage), "Python Tools", "Debug Interactive Window", 115, 119, true)]
     [ProvideOptionPage(typeof(PythonGeneralOptionsPage), "Python Tools", "General", 115, 120, true)]
     [ProvideOptionPage(typeof(PythonDebuggingOptionsPage), "Python Tools", "Debugging", 115, 125, true)]
     [Guid(GuidList.guidPythonToolsPkgString)]              // our packages GUID        
@@ -104,9 +97,6 @@ namespace Microsoft.PythonTools {
     [ProvideDebugLanguage("Python", "{DA3C7D59-F9E4-4697-BEE7-3A0703AF6BFF}", PythonExpressionEvaluatorGuid, AD7Engine.DebugEngineId)]
     [ProvideDebugPortSupplier("Python remote (ptvsd)", typeof(PythonRemoteDebugPortSupplier), PythonRemoteDebugPortSupplier.PortSupplierId, typeof(PythonRemoteDebugPortPicker))]
     [ProvideDebugPortPicker(typeof(PythonRemoteDebugPortPicker))]
-    [ProvidePythonExecutionMode(ExecutionMode.StandardModeId, "Standard", "Standard")]
-    [ProvidePythonExecutionMode("{91BB0245-B2A9-47BF-8D76-DD428C6D8974}", "IPython", "visualstudio_ipython_repl.IPythonBackend", supportsMultipleScopes: false, supportsMultipleCompleteStatementInputs: true)]
-    [ProvidePythonExecutionMode("{3E390328-A806-4250-ACAD-97B5B37076E2}", "IPython w/o PyLab", "visualstudio_ipython_repl.IPythonBackendWithoutPyLab", supportsMultipleScopes: false, supportsMultipleCompleteStatementInputs: true)]
     #region Exception List
     [ProvideDebugException(AD7Engine.DebugEngineId, "Python Exceptions")]
 
@@ -333,19 +323,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-        protected override int CreateToolWindow(ref Guid toolWindowType, int id) {
-            if (toolWindowType == GuidList.guidPythonInteractiveWindowGuid) {
-                var res = ComponentModel.GetService<InteractiveWindowProvider>().CreateFromRegistry(
-                    ComponentModel,
-                    id
-                );
-
-                return res ? VSConstants.S_OK : VSConstants.E_FAIL;
-            }
-
-            return base.CreateToolWindow(ref toolWindowType, id);
-        }
-
         internal static void OpenNoInterpretersHelpPage(System.IServiceProvider serviceProvider, string page = null) {
             OpenVsWebBrowser(serviceProvider, page ?? PythonToolsInstallPath.GetFile("NoInterpreters.mht"));
         }
@@ -396,36 +373,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             get {
                 return (PythonAdvancedEditorOptionsPage)GetDialogPage(typeof(PythonAdvancedEditorOptionsPage));
             }
-        }
-
-        internal PythonInterpreterOptionsPage InterpreterOptionsPage {
-            get {
-                return (PythonInterpreterOptionsPage)GetDialogPage(typeof(PythonInterpreterOptionsPage));
-            }
-        }
-
-        internal PythonInteractiveOptionsPage InteractiveOptionsPage {
-            get {
-                return (PythonInteractiveOptionsPage)GetDialogPage(typeof(PythonInteractiveOptionsPage));
-            }
-        }
-
-        internal PythonDebugInteractiveOptionsPage InteractiveDebugOptionsPage {
-            get {
-                return (PythonDebugInteractiveOptionsPage)GetDialogPage(typeof(PythonDebugInteractiveOptionsPage));
-            }
-        }
-
-        internal static void ShowOptionPage(System.IServiceProvider serviceProvider, Type dialogPage, InterpreterConfiguration interpreter) {
-            if (dialogPage == typeof(PythonInterpreterOptionsPage)) {
-                PythonInterpreterOptionsPage.NextOptionsSelection = interpreter;
-            } else if (dialogPage == typeof(PythonInteractiveOptionsPage)) {
-                PythonInteractiveOptionsPage.NextOptionsSelection = interpreter;
-            } else {
-                throw new InvalidOperationException();
-            }
-
-            serviceProvider.ShowOptionsPage(dialogPage);
         }
 
 
@@ -557,14 +504,15 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             UIContext.FromUIContextGuid(DkmEngineId.NativeEng).IsActive = true;
 
             // Add our command handlers for menu (commands must exist in the .vsct file)
-            RegisterCommands(new Command[] {
-                new OpenDebugReplCommand(this),
-                new ExecuteInReplCommand(this),
-                new SendToReplCommand(this),
-                new StartWithoutDebuggingCommand(this),
-                new StartDebuggingCommand(this),
-                new FillParagraphCommand(this),
-                new SendToDefiningModuleCommand(this),
+            RegisterCommands(new Command[] { 
+                new OpenReplCommand(this, (int)PkgCmdIDList.cmdidReplWindow),
+                new OpenReplCommand(this, (int)PythonConstants.OpenInteractiveForEnvironment),
+                new OpenDebugReplCommand(this), 
+                new ExecuteInReplCommand(this), 
+                new SendToReplCommand(this), 
+                new StartWithoutDebuggingCommand(this), 
+                new StartDebuggingCommand(this), 
+                new FillParagraphCommand(this), 
                 new DiagnosticsCommand(this),
                 new RemoveImportsCommand(this, true),
                 new RemoveImportsCommand(this, false),
@@ -587,18 +535,13 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 #endif
 
 
-            RegisterCommands(GetReplCommands(), GuidList.guidPythonToolsCmdSet);
-
             RegisterProjectFactory(new PythonWebProjectFactory(this));
 
             // Enable the Python debugger UI context
             UIContext.FromUIContextGuid(AD7Engine.DebugEngineGuid).IsActive = true;
 
             var interpreters = ComponentModel.GetService<IInterpreterRegistryService>();
-            interpreters.InterpretersChanged += RefreshReplCommands;
-
             var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
-            interpreterService.DefaultInterpreterChanged += RefreshReplCommands;
 
             //var loadedProjectProvider = interpreterService.KnownProviders
             //    .OfType<LoadedProjectInterpreterFactoryProvider>()
@@ -613,76 +556,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             // The variable is inherited by child processes backing Test Explorer, and is used in PTVS
             // test discoverer and test executor to connect back to VS.
             Environment.SetEnvironmentVariable("_PTVS_PID", Process.GetCurrentProcess().Id.ToString());
-        }
-
-        private void RefreshReplCommands(object sender, EventArgs e) {
-            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (mcs == null) {
-                return;
-            }
-            List<OpenReplCommand> replCommands = new List<OpenReplCommand>();
-            lock (CommandsLock) {
-                foreach (var keyValue in Commands) {
-                    var command = keyValue.Key;
-                    OpenReplCommand openRepl = command as OpenReplCommand;
-                    if (openRepl != null) {
-                        replCommands.Add(openRepl);
-
-                        mcs.RemoveCommand(keyValue.Value);
-                    }
-                }
-
-                foreach (var command in replCommands) {
-                    Commands.Remove(command);
-                }
-
-                RegisterCommands(GetReplCommands(), GuidList.guidPythonToolsCmdSet);
-            }
-        }
-
-        private List<OpenReplCommand> GetReplCommands() {
-            var replCommands = new List<OpenReplCommand>();
-
-            var compModel = ComponentModel;
-            if (compModel == null) {
-                return replCommands;
-            }
-
-            var interpreters = compModel.GetService<IInterpreterRegistryService>();
-            if (interpreters == null) {
-                return replCommands;
-            }
-
-            var factories = interpreters.Configurations.ToList();
-            if (factories.Count == 0) {
-                return replCommands;
-            }
-
-            var interpreterService = compModel.GetService<IInterpreterOptionsService>();
-            if (interpreterService == null) {
-                return replCommands;
-            }
-
-            var defaultFactory = interpreterService.DefaultInterpreter;
-            if (defaultFactory != null) {
-                factories.Remove(defaultFactory.Configuration);
-                factories.Insert(0, defaultFactory.Configuration);
-            }
-
-            for (int i = 0; i < (PkgCmdIDList.cmdidReplWindowF - PkgCmdIDList.cmdidReplWindow) && i < factories.Count; i++) {
-                var factory = factories[i];
-
-                var cmd = new OpenReplCommand(this, (int)PkgCmdIDList.cmdidReplWindow + i, factory);
-                replCommands.Add(cmd);
-            }
-
-            if (defaultFactory != null) {
-                // This command is a fallback for the Python.Interactive command
-                // If no project is selected, the default environment will be
-                // used.
-                replCommands.Add(new OpenReplCommand(this, (int)PythonConstants.OpenInteractiveForEnvironment, defaultFactory.Configuration));
-            }
-            return replCommands;
         }
 
         internal static bool TryGetStartupFileAndDirectory(System.IServiceProvider serviceProvider, out string filename, out string dir, out VsProjectAnalyzer analyzer) {
@@ -743,71 +616,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         public string BrowseForDirectory(IntPtr owner, string initialDirectory = null) {
             return ((System.IServiceProvider)this).BrowseForDirectory(owner, initialDirectory);
         }
-
-        /// <summary>
-        /// Creates a new Python REPL window which is independent from the
-        /// default Python REPL windows.
-        /// 
-        /// This window will not persist across VS sessions.
-        /// </summary>
-        /// <param name="id">An ID which can be used to retrieve the window again and can survive across VS sessions.
-        /// 
-        /// The ID cannot include the | character.</param>
-        /// <param name="title">The title of the window to be displayed</param>
-        /// <param name="interpreter">The interpreter to be used.  This implies the language version and provides the path to the Python interpreter to be used.</param>
-        /// <param name="startupFile">The file to be executed on the startup of the REPL.  Can be null, which will result in an interactive REPL.</param>
-        /// <param name="workingDir">The working directory of the REPL process</param>
-        /// <param name="project">The IVsHierarchy representing the Python project.</param>
-        public IInteractiveWindow CreatePythonRepl(string id, string title, IPythonInterpreterFactory interpreter, string workingDir, Dictionary<string, string> envVars = null, IVsHierarchy project = null) {
-            Utilities.ArgumentNotNull("interpreter", interpreter);
-            Utilities.ArgumentNotNull("id", id);
-            Utilities.ArgumentNotNull("title", title);
-
-            // The previous format of repl ID would produce new windows for
-            // distinct working directories and/or env vars. To emulate this,
-            // we now put all of these values into the user ID part, even though
-            // they must still be manually provided after the evaluator is
-            // created.
-            var realId = string.Format(
-                "{0};{1};{2}",
-                id,
-                workingDir ?? "",
-                envVars == null ?
-                    "" :
-                    string.Join(";", envVars.Select(kvp => kvp.Key + "=" + kvp.Value))
-            );
-
-            string replId = PythonReplEvaluatorProvider.GetConfigurableReplId(realId);
-
-            var replProvider = ComponentModel.GetService<InteractiveWindowProvider>();
-            var vsWindow = replProvider.FindReplWindow(replId) ?? replProvider.CreateInteractiveWindow(
-                this.GetPythonContentType(),
-                title,
-                typeof(PythonLanguageInfo).GUID,
-                replId
-            );
-            var window = vsWindow.InteractiveWindow;
-            var commandProvider = project as IPythonProject2;
-            if (commandProvider != null) {
-                commandProvider.AddActionOnClose((object)window, BasePythonReplEvaluator.CloseReplWindow);
-            }
-
-            var evaluator = window.Evaluator as BasePythonReplEvaluator;
-            var options = (evaluator != null) ? evaluator.CurrentOptions as ConfigurablePythonReplOptions : null;
-            if (options == null) {
-                throw new NotSupportedException("Cannot modify options of " + window.Evaluator.GetType().FullName);
-            }
-            options.InterpreterFactory = interpreter;
-            options.Project = project as PythonProjectNode;
-            options._workingDir = workingDir;
-            options._envVars = new Dictionary<string, string>(envVars);
-            evaluator.Reset(quiet: true)
-                .HandleAllExceptions(this, GetType())
-                .DoNotWait();
-
-            return window;
-        }
-
 
         #region IVsComponentSelectorProvider Members
 

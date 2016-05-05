@@ -313,8 +313,8 @@ Try moving your source code to a location where you can read and write files.</v
   </data>
   <data name="ReplEvaluatorInterpreterNotFound" xml:space="preserve">
     <value>The interactive window could not be started because the associated Python environment could not be found.
-If this version of Python has recently been uninstalled, you can close this window.
-</value>
+
+If this version of Python has recently been uninstalled, you can close this window.</value>
   </data>
   <data name="ReplEvaluatorInterpreterNotConfigured" xml:space="preserve">
     <value>{0} cannot be started because the path to the interpreter has not been configured.
@@ -322,7 +322,9 @@ Please update the environment in Tools-&gt;Options-&gt;Python Tools-&gt;Environm
 </value>
   </data>
   <data name="ReplInitializationMessage" xml:space="preserve">
-    <value>Python interactive window. Type $help for a list of commands.</value>
+    <value>&amp;#x1b;[94;21m{0} interactive window &amp;#x1b;[m[PTVS {1}-{2}]
+Type $help for a list of commands.</value>
+    <comment>{0} is the Python language version, {1} is the PTVS version, {2} is the VS version</comment>
   </data>
   <data name="CustomCommandPrerequisitesContent" xml:space="preserve">
     <value>'{0}' command requires some packages that are not installed in your Python environment. Those packages need to be installed first before the command can be run.</value>
@@ -403,7 +405,7 @@ The web.config file will be configured to resolve URIs matching this pattern to 
   <data name="DebugLaunchInterpreterMissing" xml:space="preserve">
     <value>The project cannot be launched because no Python interpreter is specified. Please check the Python Environments window and ensure the version of Python is installed and has all settings specified.</value>
   </data>
-  <data name="DebugLaunchWorkingDirectoryMissing" xml:space="preserve">
+  <data name="DebugLaunchWorkingDirectoryMissing_Path" xml:space="preserve">
     <value>The project cannot be launched because the specified working directory "{0}" does not exist. Please check the Project Properties window and correct any configuration errors.</value>
   </data>
   <data name="ErrorOpeningInteractiveWindow" xml:space="preserve">
@@ -676,10 +678,98 @@ You will need to restart Visual Studio after installation.</value>
 
 Your web browser will not be opened.</value>
   </data>
+  <data name="ReplCannotReadFile" xml:space="preserve">
+    <value>Unable to read file '{0}'</value>
+  </data>
+  <data name="ReplDisconnected" xml:space="preserve">
+    <value>Current interactive window is disconnected.</value>
+  </data>
+  <data name="ReplDisconnectedReset" xml:space="preserve">
+    <value>This interactive window has encountered an issue. Please Reset the window.</value>
+  </data>
+  <data name="ReplExited" xml:space="preserve">
+    <value>The interactive Python process has exited.</value>
+  </data>
+  <data name="ReplModuleCannotChange" xml:space="preserve">
+    <value>Cannot change module, interactive window is disconnected</value>
+  </data>
+  <data name="ReplModuleChanged" xml:space="preserve">
+    <value>Current module changed to {0}</value>
+  </data>
+  <data name="ReplNotStarted" xml:space="preserve">
+    <value>Interactive window is not yet started.</value>
+  </data>
+  <data name="ReplReset" xml:space="preserve">
+    <value>Resetting Python state.</value>
+  </data>
+  <data name="ReplUnknownCommand" xml:space="preserve">
+    <value>Unknown command '{0}', use '$help' for a list of commands.</value>
+  </data>
+  <data name="ReplCaption" xml:space="preserve">
+    <value>{0} Interactive</value>
+  </data>
+  <data name="ReplCaptionNoEvaluator" xml:space="preserve">
+    <value>Python Interactive</value>
+  </data>
+  <data name="DebugReplDisplayName" xml:space="preserve">
+    <value>Debug</value>
+  </data>
+  <data name="RememberMySelection" xml:space="preserve">
+    <value>&amp;Remember my selection</value>
+  </data>
+  <data name="ReplQuerySwitchEvaluator" xml:space="preserve">
+    <value>Changing to {0} will reset your current state.</value>
+    <comment>{0} is the user-provided description of the Python interpreter</comment>
+  </data>
+  <data name="ReplQuerySwitchEvaluatorHint" xml:space="preserve">
+    <value>This includes variables and imported modules,
+but your command history will be preserved.</value>
+  </data>
+  <data name="ReplQuerySwitchNewTab" xml:space="preserve">
+    <value>&amp;Open a new tab</value>
+  </data>
+  <data name="ReplQuerySwitchNewTabHint" xml:space="preserve">
+    <value>Your existing state will still be available in this window.</value>
+  </data>
+  <data name="ReplQuerySwitchThisTab" xml:space="preserve">
+    <value>&amp;Switch this tab</value>
+  </data>
+  <data name="ReplQuerySwitchThisTabHint" xml:space="preserve">
+    <value>Your previous work will be lost when you change environment.</value>
+  </data>
+  <data name="ReplSwitchEvaluator" xml:space="preserve">
+    <value>Switching interactive environment...</value>
+  </data>
   <data name="MissingEnvironmentUnknownVersion" xml:space="preserve">
     <value>The environment "{0}" appears to be incorrectly configured or missing. You may need to install it or re-create a virtual environment.</value>
   </data>
+  <data name="DebugLaunchWorkingDirectoryMissing" xml:space="preserve">
+    <value>The project cannot be launched because the no working directory was provided. Please check the Project Properties window and correct any configuration errors.</value>
+  </data>
   <data name="ExtractMethod" xml:space="preserve">
     <value>Extract Method</value>
+  </data>
+  <data name="ReplScriptPathIPythonModeTxtContents" xml:space="preserve">
+    <value>#
+# This file specifies the REPL backend, which is an callable that
+# can be imported by the interpreter.
+#
+# Currently, supported options are:
+#   standard
+#   visualstudio_ipython_repl.IPythonBackend
+#   visualstudio_ipython_repl.IPythonBackendWithoutPyLab
+#
+
+visualstudio_ipython_repl.IPythonBackend</value>
+  </data>
+  <data name="ReplScriptPathReadmeContents" xml:space="preserve">
+    <value>This directory can contain a set of initialization scripts (Python files) for the Python interactive window in 
+Visual Studio. Feel free to add your own files to import modules, define functions, or whatever you like.
+
+Whenever the interactive window for this environment is reset, each .py file in this directory will be 
+executed in alphabetical order.
+
+Visit http://aka.ms/ptvsdocs for more information about what interactive window functionality can be 
+modified from these scripts.</value>
   </data>
 </root>

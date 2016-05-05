@@ -170,11 +170,7 @@ namespace Microsoft.PythonTools.Project {
             interpExe = PathUtils.FindFile(prefixPath, interpExe, firstCheck: scripts);
             winterpExe = PathUtils.FindFile(prefixPath, winterpExe, firstCheck: scripts);
             string pathVar = baseInterpreter.Configuration.PathEnvironmentVariable;
-            string description = string.Format(
-                "{0} ({1})",
-                PathUtils.GetFileOrDirectoryName(prefixPath),
-                baseInterpreter.Configuration.Description
-            );
+            string description = PathUtils.GetFileOrDirectoryName(prefixPath);
 
             return new InterpreterConfiguration(
                 id ?? baseInterpreter.Configuration.Id,
@@ -186,7 +182,8 @@ namespace Microsoft.PythonTools.Project {
                 pathVar,
                 baseInterpreter.Configuration.Architecture,
                 baseInterpreter.Configuration.Version,
-                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase
+                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase,
+                baseInterpreter != null ? string.Format("({0})", baseInterpreter.Configuration.FullDescription) : ""
             );
         }
 

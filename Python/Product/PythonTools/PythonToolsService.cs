@@ -59,10 +59,11 @@ namespace Microsoft.PythonTools {
         private readonly AdvancedEditorOptions _advancedOptions;
         private readonly DebuggerOptions _debuggerOptions;
         private readonly GeneralOptions _generalOptions;
-        private readonly PythonInteractiveCommonOptions _debugInteractiveOptions;
+        private readonly PythonInteractiveOptions _debugInteractiveOptions;
         private readonly GlobalInterpreterOptions _globalInterpreterOptions;
-        internal readonly Dictionary<string, PythonInteractiveOptions> _interactiveOptions = new Dictionary<string, PythonInteractiveOptions>();
+        private readonly PythonInteractiveOptions _interactiveOptions;
         internal readonly Dictionary<string, InterpreterOptions> _interpreterOptions = new Dictionary<string, InterpreterOptions>();
+        private readonly SuppressDialogOptions _suppressDialogOptions;
         private readonly SurveyNewsService _surveyNews;
         private readonly IdleManager _idleManager;
         private Func<CodeFormattingOptions> _optionsFactory;
@@ -119,9 +120,13 @@ namespace Microsoft.PythonTools {
             _debuggerOptions = new DebuggerOptions(this);
             _generalOptions = new GeneralOptions(this);
             _surveyNews = new SurveyNewsService(container);
+            _suppressDialogOptions = new SuppressDialogOptions(this);
             _globalInterpreterOptions = new GlobalInterpreterOptions(this, _interpreterOptionsService, _interpreterRegistry);
             _globalInterpreterOptions.Load();
-            _debugInteractiveOptions = new PythonInteractiveCommonOptions(this, "Debug Interactive Window", "");
+            _interactiveOptions = new PythonInteractiveOptions(this, "Interactive");
+            _interactiveOptions.Load();
+            _debugInteractiveOptions = new PythonInteractiveOptions(this, "Debug Interactive Window");
+            _debuggerOptions.Load();
             _factoryProviders = ComponentModel.DefaultExportProvider.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>();
             _logger = new PythonToolsLogger(ComponentModel.GetExtensions<IPythonToolsLogger>().ToArray());
             InitializeLogging();
@@ -242,6 +247,12 @@ namespace Microsoft.PythonTools {
 
         #region Public API
 
+        public InterpreterConfiguration DefaultInterpreterConfiguration {
+            get {
+                return _interpreterOptionsService.DefaultInterpreter.Configuration;
+            }
+        }
+
         public VsProjectAnalyzer DefaultAnalyzer {
             get {
                 if (_analyzer == null) {
@@ -269,7 +280,7 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        internal PythonInteractiveCommonOptions DebugInteractiveOptions {
+        internal PythonInteractiveOptions DebugInteractiveOptions {
             get {
                 return _debugInteractiveOptions;
             }
@@ -282,6 +293,12 @@ namespace Microsoft.PythonTools {
         }
 
         #endregion
+
+        internal SuppressDialogOptions SuppressDialogOptions {
+            get {
+                return _suppressDialogOptions;
+            }
+        }
 
         #region Code formatting options
 
@@ -409,7 +426,6 @@ namespace Microsoft.PythonTools {
                 // Remove any items
                 foreach (var option in InterpreterOptions.Select(kv => kv.Value).Where(o => o.Removed).ToList()) {
                     _interpreterOptionsService.RemoveConfigurableInterpreter(option._config.Id);
-                    RemoveInteractiveOptions(option._config.Id);
                     RemoveInterpreterOptions(option._config.Id);
                 }
 
@@ -444,10 +460,6 @@ namespace Microsoft.PythonTools {
                                 Version.Parse(option.Version) ?? new Version(2, 7)
                             )
                         );
-                        if (option.InteractiveOptions != null) {
-                            option.InteractiveOptions._id = actualFactory;
-                            option.InteractiveOptions.Save(actualFactory);
-                        }
                     }
                 }
 
@@ -484,11 +496,8 @@ namespace Microsoft.PythonTools {
             RaiseEnvironmentsChanged();
         }
 
-        internal void AddInterpreterOptions(string id, InterpreterOptions options, bool addInteractive = false) {
+        internal void AddInterpreterOptions(string id, InterpreterOptions options) {
             _interpreterOptions[id] = options;
-            if (addInteractive) {
-                _interactiveOptions[id] = options.InteractiveOptions;
-            }
             RaiseEnvironmentsChanged();
         }
 
@@ -550,33 +559,7 @@ namespace Microsoft.PythonTools {
 
         #region Interactive Options
 
-        internal PythonInteractiveOptions GetInteractiveOptions(InterpreterConfiguration config) {
-            PythonInteractiveOptions options;
-            if (!_interactiveOptions.TryGetValue(config.Id, out options)) {
-                var path = config.Id;
-                _interactiveOptions[config.Id] = options = new PythonInteractiveOptions(_container, this, "Interactive Windows", path);
-                options.Load();
-            }
-            return options;
-        }
-
-        internal IEnumerable<KeyValuePair<string, PythonInteractiveOptions>> InteractiveOptions {
-            get {
-                return _interactiveOptions;
-            }
-        }
-
-        internal void AddInteractiveOptions(string id, PythonInteractiveOptions options) {
-            _interactiveOptions[id] = options;
-        }
-
-        internal void RemoveInteractiveOptions(string id) {
-            _interactiveOptions.Remove(id);
-        }
-
-        internal void ClearInteractiveOptions() {
-            _interactiveOptions.Clear();
-        }
+        internal PythonInteractiveOptions InteractiveOptions => _interactiveOptions;
 
         /// <summary>
         /// Gets a path which is unique for this interpreter (based upon the Id and version).

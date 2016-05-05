@@ -242,7 +242,7 @@ namespace Microsoft.PythonTools.Interpreter {
             // ensure we're up to date...
             _cpythonProvider.Value.DiscoverInterpreterFactories();
 
-            return CPythonInterpreterFactoryConstants.GetIntepreterId(
+            return CPythonInterpreterFactoryConstants.GetInterpreterId(
                 "VisualStudio",
                 config.Architecture,
                 name

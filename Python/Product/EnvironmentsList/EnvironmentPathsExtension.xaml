@@ -22,6 +22,8 @@
 
                 <ResourceDictionary>
 
+                    <wpf:Lambda Lambda="b => b ? Visibility.Visible : Visibility.Collapsed" x:Key="VisibleIfEnabled" />
+
                     <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="EnvironmentIsDefault">
                         <Grid Margin="6">
                             <Button x:Name="MakeDefaultButton"
@@ -106,6 +108,69 @@
                                 </Grid>
                             </Button>
 
+                            <Button Command="{x:Static l:EnvironmentView.OpenInteractiveScripts}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource NavigationButton}"
+                                    Margin="12 6 6 6"
+                                    HorizontalAlignment="Left">
+                                <Grid Background="Transparent">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <Control Grid.Column="0"
+                                             Margin="3 0"
+                                             Style="{StaticResource SettingsImage}" />
+                                    <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
+                                        Explore interactive scripts
+                                    </TextBlock>
+                                </Grid>
+                            </Button>
+
+                            <!--
+                            This command is not expected to remain long-term,
+                            but should be replaced with a more general startup
+                            script tool.
+                            -->
+                            <Button Command="{x:Static l:EnvironmentView.EnableIPythonInteractive}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource NavigationButton}"
+                                    Margin="12 6 6 6"
+                                    HorizontalAlignment="Left"
+                                    Visibility="{Binding IsEnabled,RelativeSource={RelativeSource Self},Converter={StaticResource VisibleIfEnabled}}">
+                                <Grid Background="Transparent">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <Control Grid.Column="0"
+                                             Margin="3 0"
+                                             Style="{StaticResource CheckBoxUncheckedImage}" />
+                                    <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
+                                        Use IPython interactive mode
+                                    </TextBlock>
+                                </Grid>
+                            </Button>
+                            <Button Command="{x:Static l:EnvironmentView.DisableIPythonInteractive}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource NavigationButton}"
+                                    Margin="12 6 6 6"
+                                    HorizontalAlignment="Left"
+                                    Visibility="{Binding IsEnabled,RelativeSource={RelativeSource Self},Converter={StaticResource VisibleIfEnabled}}">
+                                <Grid Background="Transparent">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <Control Grid.Column="0"
+                                             Margin="3 0"
+                                             Style="{StaticResource CheckBoxCheckedImage}" />
+                                    <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
+                                        Use IPython interactive mode
+                                    </TextBlock>
+                                </Grid>
+                            </Button>
+
                             <Button Command="{x:Static l:EnvironmentView.OpenInPowerShell}"
                                     CommandParameter="{Binding Mode=OneWay}"
                                     Style="{StaticResource NavigationButton}"
@@ -136,25 +201,6 @@
                                         </MenuItem>
                                     </ContextMenu>
                                 </Button.ContextMenu>
-                            </Button>
-
-                            <Button Command="{x:Static l:EnvironmentView.OpenInteractiveOptions}"
-                                    CommandParameter="{Binding}"
-                                    Style="{StaticResource NavigationButton}"
-                                    Margin="6"
-                                    HorizontalAlignment="Left">
-                                <Grid Background="Transparent">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="auto" />
-                                        <ColumnDefinition />
-                                    </Grid.ColumnDefinitions>
-                                    <Control Grid.Column="0"
-                                             Margin="3 0"
-                                             Style="{StaticResource SettingsImage}" />
-                                    <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
-                                        Configure interactive window
-                                    </TextBlock>
-                                </Grid>
                             </Button>
                         </StackPanel>
                     </DataTemplate>

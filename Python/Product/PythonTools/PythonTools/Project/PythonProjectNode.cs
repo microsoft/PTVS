@@ -57,10 +57,9 @@ namespace Microsoft.PythonTools.Project {
     [Guid(PythonConstants.ProjectNodeGuid)]
     internal class PythonProjectNode :
         CommonProjectNode,
-        IPythonProject3,
+        IPythonProject,
         IAzureRoleProject,
-        IProjectInterpreterDbChanged,
-        IPythonProjectLaunchProperties {
+        IProjectInterpreterDbChanged {
         // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
         // about the directory from the search path that referenced them in IProjectEntry.Properties[_searchPathEntryKey], so that
         // they can be located and removed when that directory is removed from the path.
@@ -140,11 +139,11 @@ namespace Microsoft.PythonTools.Project {
             _customCommandsDisplayLabel = CustomCommand.GetCommandsDisplayLabel(project, this);
         }
 
-        IAsyncCommand IPythonProject2.FindCommand(string canonicalName) {
+        public IAsyncCommand FindCommand(string canonicalName) {
             return _customCommands.FirstOrDefault(cc => cc.Target == canonicalName);
         }
 
-        ProjectInstance IPythonProject2.GetMSBuildProjectInstance() {
+        public ProjectInstance GetMSBuildProjectInstance() {
             if (CurrentConfig == null) {
                 SetCurrentConfiguration();
                 if (CurrentConfig == null) {
@@ -739,7 +738,7 @@ namespace Microsoft.PythonTools.Project {
 
                 string projHome = ProjectHome;
                 string workDir = GetWorkingDirectory();
-                IList<string> searchPath = ParseSearchPath();
+                IList<string> searchPath = GetSearchPaths();
 
                 //Refresh regular search path nodes
 
@@ -882,19 +881,19 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Parses SearchPath property into a list of distinct absolute paths, preserving the order.
         /// </summary>
-        protected IList<string> ParseSearchPath() {
+        public IList<string> GetSearchPaths() {
             var searchPath = GetProjectProperty(PythonConstants.SearchPathSetting, true);
-            return ParseSearchPath(searchPath);
+            return GetSearchPaths(searchPath, true);
         }
 
         /// <summary>
         /// Parses SearchPath string into a list of distinct absolute paths, preserving the order.
         /// </summary>
-        protected IList<string> ParseSearchPath(string searchPath) {
+        protected IList<string> GetSearchPaths(string searchPath, bool includeReferences) {
             var result = new List<string>();
+            var seen = new HashSet<string>();
 
             if (!string.IsNullOrEmpty(searchPath)) {
-                var seen = new HashSet<string>();
                 foreach (var path in searchPath.Split(';')) {
                     if (string.IsNullOrEmpty(path)) {
                         continue;
@@ -907,8 +906,27 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
+            if (includeReferences) {
+                foreach (var r in (GetReferenceContainer()?.EnumReferences()).MaybeEnumerate()) {
+                    string absPath;
+                    try {
+                        absPath = PathUtils.GetAbsoluteFilePath(ProjectHome, r.Url);
+                    } catch (InvalidOperationException) {
+                        continue;
+                    }
+
+                    if (!string.IsNullOrEmpty(absPath)) {
+                        var parentPath = PathUtils.GetParent(absPath);
+                        if (!string.IsNullOrEmpty(parentPath) && seen.Add(parentPath)) {
+                            result.Add(parentPath);
+                        }
+                    }
+                }
+            }
+
             return result;
         }
+
 
         /// <summary>
         /// Saves list of paths back as SearchPath project property.
@@ -930,7 +948,7 @@ namespace Microsoft.PythonTools.Project {
         internal void AddSearchPathEntry(string newpath) {
             Utilities.ArgumentNotNull("newpath", newpath);
 
-            var searchPath = ParseSearchPath();
+            var searchPath = GetSearchPaths();
             var absPath = PathUtils.GetAbsoluteFilePath(ProjectHome, newpath);
             // Ignore the end separator when determining whether the path has
             // already been added. Having both "C:\Fob" and "C:\Fob\" is not
@@ -949,7 +967,7 @@ namespace Microsoft.PythonTools.Project {
         internal void RemoveSearchPathEntry(string path) {
             var absPath = PathUtils.TrimEndSeparator(PathUtils.GetAbsoluteFilePath(ProjectHome, path));
             var absPathWithEndSeparator = PathUtils.EnsureEndSeparator(absPath);
-            var searchPath = ParseSearchPath();
+            var searchPath = GetSearchPaths();
 
             var newSearchPath = searchPath
                 // Ignore the end separator when determining paths to remove.
@@ -998,29 +1016,33 @@ namespace Microsoft.PythonTools.Project {
                 case PythonConstants.SearchPathSetting:
                     RefreshSearchPaths();
 
-                    // we need to remove old files from the analyzer and add the new files
-                    HashSet<string> oldDirs = new HashSet<string>(ParseSearchPath(e.OldValue), StringComparer.OrdinalIgnoreCase);
-                    HashSet<string> newDirs = new HashSet<string>(ParseSearchPath(e.NewValue), StringComparer.OrdinalIgnoreCase);
+                    var analyzer = _analyzer;
+                    if (analyzer != null) {
+                        // we need to remove old files from the analyzer and add the new files
+                        HashSet<string> oldDirs = new HashSet<string>(GetSearchPaths(e.OldValue, true), StringComparer.OrdinalIgnoreCase);
+                        HashSet<string> newDirs = new HashSet<string>(GetSearchPaths(e.NewValue, true), StringComparer.OrdinalIgnoreCase);
 
-                    // figure out all the possible directory names we could be removing...
-                    foreach (var fileProject in _analyzer.LoadedFiles) {
-                        string file = fileProject.Key;
-                        var projectEntry = fileProject.Value;
-                        string searchPathEntry = fileProject.Value.SearchPathEntry;
-                        if (projectEntry != null &&
-                            searchPathEntry != null &&
-                            !newDirs.Contains(searchPathEntry)) {
-                            _analyzer.UnloadFileAsync(projectEntry).DoNotWait();
+                        // figure out all the possible directory names we could be removing...
+                        foreach (var fileProject in analyzer.LoadedFiles) {
+                            string file = fileProject.Key;
+                            var projectEntry = fileProject.Value;
+                            string searchPathEntry = fileProject.Value.SearchPathEntry;
+                            if (projectEntry != null &&
+                                searchPathEntry != null &&
+                                !newDirs.Contains(searchPathEntry)) {
+                                analyzer.UnloadFileAsync(projectEntry).DoNotWait();
+                            }
                         }
+
+                        // find the values only in the old list, and let the analyzer know it shouldn't be watching those dirs
+                        oldDirs.ExceptWith(newDirs);
+                        foreach (var dir in oldDirs) {
+                            await analyzer.StopAnalyzingDirectoryAsync(dir);
+                        }
+
+                        AnalyzeSearchPaths(newDirs);
                     }
 
-                    // find the values only in the old list, and let the analyzer know it shouldn't be watching those dirs
-                    oldDirs.ExceptWith(newDirs);
-                    foreach (var dir in oldDirs) {
-                        await _analyzer.StopAnalyzingDirectoryAsync(dir);
-                    }
-
-                    AnalyzeSearchPaths(newDirs);
                     break;
             }
 
@@ -1170,7 +1192,7 @@ namespace Microsoft.PythonTools.Project {
                 return service.DefaultAnalyzer;
             } else if (_analyzer == null) {
                 _analyzer = CreateAnalyzer();
-                AnalyzeSearchPaths(ParseSearchPath());
+                AnalyzeSearchPaths(GetSearchPaths());
             }
             return _analyzer;
         }
@@ -1275,6 +1297,18 @@ namespace Microsoft.PythonTools.Project {
             return fact;
         }
 
+        /// <summary>
+        /// Returns the active interpreter factory or throws an appropriate
+        /// exception. These exceptions have localized strings that may be
+        /// shown to the user.
+        /// </summary>
+        /// <returns>The active interpreter factory.</returns>
+        /// <exception cref="NoInterpretersException">
+        /// No interpreters are available at all.
+        /// </exception>
+        /// <exception cref="MissingInterpreterException">
+        /// The specified interpreter is not suitable for use.
+        /// </exception>
         public IPythonInterpreterFactory GetInterpreterFactoryOrThrow() {
             var fact = ActiveInterpreter;
             if (fact == null) {
@@ -1283,7 +1317,7 @@ namespace Microsoft.PythonTools.Project {
 
             if (!fact.Configuration.IsAvailable()) {
                 throw new MissingInterpreterException(
-                    Strings.MissingEnvironment.FormatUI(fact.Configuration.Description, fact.Configuration.Version)
+                    Strings.MissingEnvironment.FormatUI(fact.Configuration.FullDescription, fact.Configuration.Version)
                 );
             } else if (IsActiveInterpreterGlobalDefault && 
                 !String.IsNullOrWhiteSpace(BuildProject.GetPropertyValue(MSBuildConstants.InterpreterIdProperty))) {
@@ -1297,6 +1331,66 @@ namespace Microsoft.PythonTools.Project {
             Site.GetPythonToolsService().EnsureCompletionDb(fact);
 
             return fact;
+        }
+
+        /// <summary>
+        /// Returns the current launch configuration or throws an appropriate
+        /// exception. These exceptions have localized strings that may be
+        /// shown to the user.
+        /// </summary>
+        /// <returns>The active interpreter factory.</returns>
+        /// <exception cref="NoInterpretersException">
+        /// No interpreters are available at all.
+        /// </exception>
+        /// <exception cref="MissingInterpreterException">
+        /// The specified interpreter is not suitable for use.
+        /// </exception>
+        /// <exception cref="DirectoryNotFoundException">
+        /// The working directory specified by the project does not exist.
+        /// </exception>
+        public LaunchConfiguration GetLaunchConfigurationOrThrow() {
+            var fact = GetInterpreterFactoryOrThrow();
+
+            var config = new LaunchConfiguration(fact.Configuration) {
+                InterpreterPath = GetProjectProperty(PythonConstants.InterpreterPathSetting, resetCache: false),
+                InterpreterArguments = GetProjectProperty(PythonConstants.InterpreterArgumentsSetting, resetCache: false),
+                ScriptName = GetStartupFile(),
+                ScriptArguments = GetProjectProperty(PythonConstants.CommandLineArgumentsSetting, resetCache: false),
+                WorkingDirectory = GetWorkingDirectory(),
+                SearchPaths = GetSearchPaths().ToList()
+            };
+
+            var str = GetProjectProperty(PythonConstants.IsWindowsApplicationSetting);
+            bool preferWindowed;
+            config.PreferWindowedInterpreter = bool.TryParse(str, out preferWindowed) && preferWindowed;
+
+            config.Environment = PathUtils.ParseEnvironment(GetProjectProperty(PythonConstants.EnvironmentSetting) ?? "");
+
+            str = GetProjectProperty(PythonConstants.WebBrowserUrlSetting);
+            if (!string.IsNullOrEmpty(str)) {
+                config.LaunchOptions[PythonConstants.WebBrowserUrlSetting] = str;
+            }
+            str = GetProjectProperty(PythonConstants.WebBrowserPortSetting);
+            if (!string.IsNullOrEmpty(str)) {
+                config.LaunchOptions[PythonConstants.WebBrowserPortSetting] = str;
+            }
+
+            if (!File.Exists(config.GetInterpreterPath())) {
+                throw new MissingInterpreterException(
+                    Strings.DebugLaunchInterpreterMissing_Path.FormatUI(config.GetInterpreterPath())
+                );
+            }
+
+            if (!Directory.Exists(config.WorkingDirectory)) {
+                throw new DirectoryNotFoundException(
+                    Strings.DebugLaunchWorkingDirectoryMissing.FormatUI(config.WorkingDirectory)
+                );
+            }
+
+            // Ensure working directory is a search path.
+            config.SearchPaths.Insert(0, config.WorkingDirectory);
+
+            return config;
         }
 
         /// <summary>
@@ -1356,7 +1450,7 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
-                var searchPath = ParseSearchPath();
+                var searchPath = GetSearchPaths();
                 if (searchPath != null && analyzer != null) {
                     AnalyzeSearchPaths(searchPath);
                 }
@@ -1450,42 +1544,41 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        internal int OpenCommandPrompt(string path, IPythonInterpreterFactory factory = null, string subtitle = null) {
+        internal int OpenCommandPrompt(string path, InterpreterConfiguration interpreterConfig = null, string subtitle = null) {
             var psi = new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "cmd.exe"));
             psi.UseShellExecute = false;
             psi.WorkingDirectory = path;
 
-            factory = factory ?? GetInterpreterFactory();
-            var config = factory == null ? null : factory.Configuration;
-            if (config != null) {
-                psi.Arguments = string.Format("/K \"title {0} Command Prompt\"",
-                    string.IsNullOrEmpty(subtitle) ? Caption : subtitle
-                );
+            var config = GetLaunchConfigurationOrThrow();
+            if (interpreterConfig != null) {
+                config = config.Clone(interpreterConfig);
+            }
 
-                var props = PythonProjectLaunchProperties.Create(this);
-                var env = new Dictionary<string, string>(props.GetEnvironment(true), StringComparer.OrdinalIgnoreCase);
+            psi.Arguments = string.Format("/K \"title {0} Command Prompt\"",
+                string.IsNullOrEmpty(subtitle) ? Caption : subtitle
+            );
 
-                var paths = new List<string>();
-                var prefix = config.PrefixPath;
-                if (factory == null) {
-                    paths.Add(PathUtils.GetParent(props.GetInterpreterPath()));
-                }
-                paths.Add(PathUtils.GetParent(config.InterpreterPath));
-                if (!string.IsNullOrEmpty(config.PrefixPath)) {
-                    paths.Add(PathUtils.GetAbsoluteDirectoryPath(config.PrefixPath, "Scripts"));
-                }
-                if (psi.EnvironmentVariables.ContainsKey("PATH")) {
-                    paths.AddRange(psi.EnvironmentVariables["PATH"].Split(Path.PathSeparator));
-                }
-                paths.AddRange(Environment.GetEnvironmentVariable("PATH").Split(Path.PathSeparator));
 
-                PythonProjectLaunchProperties.MergeEnvironmentBelow(env, new[]{ new KeyValuePair<string, string>(
-                    "PATH", string.Join(new string(Path.PathSeparator, 1), paths.Where(Directory.Exists).Distinct())
-                )}, true);
+            var paths = config.Interpreter.PrefixPath;
+            if (!Directory.Exists(paths)) {
+                paths = PathUtils.GetParent(config.GetInterpreterPath());
+            }
+            string scripts;
+            if (Directory.Exists(paths) &&
+                Directory.Exists(scripts = PathUtils.GetAbsoluteDirectoryPath(paths, "Scripts"))) {
+                paths += Path.PathSeparator + scripts;
+            }
 
-                foreach (var kv in env) {
-                    psi.EnvironmentVariables[kv.Key] = kv.Value;
-                }
+            var env = PathUtils.MergeEnvironments(
+                config.GetEnvironmentVariables(),
+                new KeyValuePair<string, string>[] {
+                    new KeyValuePair<string, string>("PATH", paths),
+                },
+                "PATH", config.Interpreter.PathEnvironmentVariable
+            );
+
+            foreach (var kv in env) {
+                psi.EnvironmentVariables[kv.Key] = kv.Value;
             }
 
             Process.Start(psi);
@@ -1673,7 +1766,8 @@ namespace Microsoft.PythonTools.Project {
             IEnumerable<HierarchyNode> selectedNodes,
             Dictionary<string, string> args,
             out InterpretersNode node,
-            out IPythonInterpreterFactory factory
+            out IPythonInterpreterFactory factory,
+            bool useProjectByDefault = true
         ) {
             factory = null;
 
@@ -1714,7 +1808,9 @@ namespace Microsoft.PythonTools.Project {
                     return;
                 }
 
-                factory = GetInterpreterFactory();
+                if (useProjectByDefault) {
+                    factory = GetInterpreterFactory();
+                }
             }
 
             if (_interpretersContainer != null && factory != null) {
@@ -1800,7 +1896,8 @@ namespace Microsoft.PythonTools.Project {
         private int ExecActivateEnvironment(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
             InterpretersNode selectedInterpreter;
             IPythonInterpreterFactory selectedInterpreterFactory;
-            GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
+            GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory,
+                useProjectByDefault: false);
             if (selectedInterpreterFactory != null) {
                 return SetInterpreterFactory(selectedInterpreterFactory);
             }
@@ -1810,9 +1907,10 @@ namespace Microsoft.PythonTools.Project {
         private int ExecOpenInteractiveForEnvironment(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
             InterpretersNode selectedInterpreter;
             IPythonInterpreterFactory selectedInterpreterFactory;
-            GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
+            GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory,
+                useProjectByDefault: false);
             try {
-                ExecuteInReplCommand.EnsureReplWindow(Site, selectedInterpreterFactory.Configuration, this).Show(true);
+                ExecuteInReplCommand.EnsureReplWindow(Site, selectedInterpreterFactory?.Configuration, this).Show(true);
             } catch (InvalidOperationException ex) {
                 MessageBox.Show(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex), Strings.ProductTitle);
             }
@@ -2854,57 +2952,6 @@ namespace Microsoft.PythonTools.Project {
             nav.AppendChildElement(null, "RoleInstanceValue", null, null);
             nav = nav.SelectSingleNode("sd:RoleInstanceValue", ns);
             nav.CreateAttribute(null, "xpath", null, "/RoleEnvironment/Deployment/@emulated");
-        }
-
-        string IProjectLaunchProperties.GetArguments() {
-            return GetProjectProperty(CommonConstants.CommandLineArguments);
-        }
-
-        string IProjectLaunchProperties.GetWorkingDirectory() {
-            return GetWorkingDirectory();
-        }
-
-        IDictionary<string, string> IProjectLaunchProperties.GetEnvironment(bool includeSearchPaths) {
-            var res = PythonProjectLaunchProperties.ParseEnvironment(GetProjectProperty(PythonConstants.EnvironmentSetting));
-
-            if (includeSearchPaths) {
-                PythonProjectLaunchProperties.AddSearchPaths(res, this, Site);
-            }
-
-            return res;
-        }
-
-        string IPythonProjectLaunchProperties.GetInterpreterPath() {
-            var str = GetProjectProperty(PythonConstants.InterpreterPathSetting);
-            if (!string.IsNullOrEmpty(str)) {
-                str = PathUtils.GetAbsoluteFilePath(ProjectHome, str);
-                if (!File.Exists(str)) {
-                    throw new MissingInterpreterException(Strings.DebugLaunchInterpreterMissing_Path.FormatUI(str));
-                }
-                return str;
-            }
-
-            var factory = GetInterpreterFactoryOrThrow();
-            if (((IPythonProjectLaunchProperties)this).GetIsWindowsApplication() ?? false) {
-                return factory.Configuration.WindowsInterpreterPath;
-            }
-            return factory.Configuration.InterpreterPath;
-        }
-
-        string IPythonProjectLaunchProperties.GetInterpreterArguments() {
-            return GetProjectProperty(PythonConstants.InterpreterArgumentsSetting);
-        }
-
-        bool? IPythonProjectLaunchProperties.GetIsWindowsApplication() {
-            var str = GetProjectProperty(PythonConstants.IsWindowsApplicationSetting);
-            bool isWindowsApp;
-            return bool.TryParse(str, out isWindowsApp) ? (bool?)isWindowsApp : null;
-        }
-
-        bool? IPythonProjectLaunchProperties.GetIsNativeDebuggingEnabled() {
-            var str = GetProjectProperty(PythonConstants.EnableNativeCodeDebugging);
-            bool isNativeDebug;
-            return bool.TryParse(str, out isNativeDebug) ? (bool?)isNativeDebug : null;
         }
     }
 }

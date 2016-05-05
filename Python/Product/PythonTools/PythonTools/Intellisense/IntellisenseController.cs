@@ -82,6 +82,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void TextView_Closed(object sender, EventArgs e) {
+            Close();
+        }
+
+        internal void Close() {
             _textView.MouseHover -= TextViewMouseHover;
             _textView.Closed -= TextView_Closed;
             _textView.Properties.RemoveProperty(typeof(IntellisenseController));
@@ -161,7 +165,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     // when we close the view)
                     subjectBuffer.Properties[_intellisenseAnalysisEntry] = newParser.AnalysisEntry;
 
-                    lock (newParser) {
+                    if (newParser != null) {
                         lock(newParser) {
                             newParser.AttachedViews++;
                         }
@@ -169,7 +173,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 });
             }
         }
-        
+
         public void DisconnectSubjectBuffer(ITextBuffer subjectBuffer) {
             if (_subjectBuffers.Remove(subjectBuffer)) {
                 AnalysisEntry analysis;

@@ -15,9 +15,12 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using Microsoft.PythonTools.Project;
+using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.BuildTasks;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools.Project;
 
@@ -26,6 +29,8 @@ namespace Microsoft.PythonTools.Project.Web {
     class PythonWebLauncherProvider : IPythonLauncherProvider2 {
         private readonly PythonToolsService _pyService;
         private readonly IServiceProvider _serviceProvider;
+
+        private static readonly Regex SubstitutionPattern = new Regex(@"\{([\w_]+)\}");
 
         [ImportingConstructor]
         public PythonWebLauncherProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
@@ -37,32 +42,114 @@ namespace Microsoft.PythonTools.Project.Web {
             return new PythonWebLauncherOptions(properties);
         }
 
-        public string Name {
-            get {
-                return PythonConstants.WebLauncherName;
+        public string Name => PythonConstants.WebLauncherName;
+        public string LocalizedName => Strings.PythonWebLauncherName;
+        public string Description => Strings.PythonWebLauncherDescription;
+        public int SortPriority => 100;
+
+        internal static string DoSubstitutions(LaunchConfiguration original, IPythonProject project, string str) {
+            if (string.IsNullOrEmpty(str)) {
+                return str;
             }
+
+            return SubstitutionPattern.Replace(
+                str,
+                m => {
+                    switch (m.Groups[1].Value.ToLowerInvariant()) {
+                        case "startupfile":
+                            return original.ScriptName;
+                        case "startupmodule":
+                            try {
+                                return ModulePath.FromFullPath(original.ScriptName, project.ProjectHome).ModuleName;
+                            } catch (ArgumentException) {
+                            }
+                            break;
+                    }
+                    return m.Value;
+                }
+            );
         }
 
-        public string LocalizedName {
-            get {
-                return Strings.PythonWebLauncherName;
+        private static LaunchConfiguration GetMSBuildCommandConfig(
+            LaunchConfiguration original,
+            IPythonProject project,
+            string targetProperty,
+            string targetTypeProperty,
+            string argumentsProperty,
+            string environmentProperty
+        ) {
+            var target = DoSubstitutions(original, project, project.GetProperty(targetProperty));
+            if (string.IsNullOrEmpty(target)) {
+                target = original.ScriptName;
             }
-        }
 
-        public string Description {
-            get {
-                return Strings.PythonWebLauncherDescription;
+            var targetType = project.GetProperty(targetTypeProperty);
+            if (string.IsNullOrEmpty(targetType)) {
+                targetType = PythonCommandTask.TargetTypeScript;
             }
-        }
 
-        public int SortPriority {
-            get {
-                return 100;
+            var config = original.Clone();
+            if (PythonCommandTask.TargetTypeModule.Equals(targetType, StringComparison.OrdinalIgnoreCase)) {
+                if (string.IsNullOrEmpty(config.InterpreterArguments)) {
+                    config.InterpreterArguments = "-m " + target;
+                } else {
+                    config.InterpreterArguments = config.InterpreterArguments + " -m " + target;
+                }
+            } else if (PythonCommandTask.TargetTypeExecutable.Equals(targetType, StringComparison.OrdinalIgnoreCase)) {
+                config.InterpreterPath = target;
+            } else {
+                config.ScriptName = target;
             }
+
+            var args = DoSubstitutions(original, project, project.GetProperty(argumentsProperty));
+            if (!string.IsNullOrEmpty(args)) {
+                if (string.IsNullOrEmpty(config.ScriptArguments)) {
+                    config.ScriptArguments = args;
+                } else {
+                    config.ScriptArguments = config.ScriptArguments + " " + args;
+                }
+            }
+
+            var env = DoSubstitutions(original, project, project.GetProperty(environmentProperty));
+            config.Environment = PathUtils.MergeEnvironments(config.Environment, PathUtils.ParseEnvironment(env));
+
+            return config;
         }
 
         public IProjectLauncher CreateLauncher(IPythonProject project) {
-            return new PythonWebLauncher(_serviceProvider, _pyService, project);
+            var defaultConfig = project.GetLaunchConfigurationOrThrow();
+
+            var runConfig = GetMSBuildCommandConfig(
+                defaultConfig,
+                project,
+                PythonWebLauncher.RunWebServerTargetProperty,
+                PythonWebLauncher.RunWebServerTargetTypeProperty,
+                PythonWebLauncher.RunWebServerArgumentsProperty,
+                PythonWebLauncher.RunWebServerEnvironmentProperty
+            );
+            var debugConfig = GetMSBuildCommandConfig(
+                defaultConfig,
+                project,
+                PythonWebLauncher.DebugWebServerTargetProperty,
+                PythonWebLauncher.DebugWebServerTargetTypeProperty,
+                PythonWebLauncher.DebugWebServerArgumentsProperty,
+                PythonWebLauncher.DebugWebServerEnvironmentProperty
+            );
+
+            // Check project type GUID and enable the Django-specific features
+            // of the debugger if required.
+            var projectGuids = project.GetUnevaluatedProperty("ProjectTypeGuids") ?? "";
+            // HACK: Literal GUID string to avoid introducing Django-specific public API
+            // We don't want to expose a constant from PythonTools.dll.
+            // TODO: Add generic breakpoint extension point
+            // to avoid having to pass this property for Django and any future
+            // extensions.
+            if (projectGuids.IndexOf("5F0BE9CA-D677-4A4D-8806-6076C0FAAD37", StringComparison.OrdinalIgnoreCase) >= 0) {
+                debugConfig.LaunchOptions["DjangoDebug"] = "true";
+                defaultConfig.LaunchOptions["DjangoDebug"] = "true";
+            }
+
+            return new PythonWebLauncher(_serviceProvider, runConfig, debugConfig, defaultConfig);
         }
     }
 }

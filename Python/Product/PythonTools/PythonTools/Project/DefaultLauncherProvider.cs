@@ -64,7 +64,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public IProjectLauncher CreateLauncher(IPythonProject project) {
-            return new DefaultPythonLauncher(_serviceProvider, _pyService, project);
+            return new DefaultPythonLauncher(_serviceProvider, project.GetLaunchConfigurationOrThrow());
         }
     }
 }

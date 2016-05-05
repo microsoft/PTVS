@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -25,11 +26,14 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using EnvDTE;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
@@ -68,7 +72,14 @@ namespace TestUtilities.UI.Python {
         protected override void Dispose(bool disposing) {
             if (!IsDisposed) {
                 try {
-                    InteractiveWindow.CloseAll(this);
+                    ServiceProvider.GetUIThread().Invoke(() => {
+                        var iwp = ComponentModel.GetService<InteractiveWindowProvider>();
+                        if (iwp != null) {
+                            foreach (var w in iwp.AllOpenWindows) {
+                                w.InteractiveWindow.Close();
+                            }
+                        }
+                    });
                 } catch (Exception ex) {
                     Console.WriteLine("Error while closing all interactive windows");
                     Console.WriteLine(ex);
@@ -100,16 +111,16 @@ namespace TestUtilities.UI.Python {
             }
         }
 
-        public const string PythonApplicationTemplate = "ConsoleAppProject.zip";
-        public const string EmptyWebProjectTemplate = "EmptyWebProject.zip";
-        public const string BottleWebProjectTemplate = "WebProjectBottle.zip";
-        public const string FlaskWebProjectTemplate = "WebProjectFlask.zip";
-        public const string DjangoWebProjectTemplate = "DjangoProject.zip";
-        public const string WorkerRoleProjectTemplate = "WorkerRoleProject.zip";
+        public const string PythonApplicationTemplate = "ConsoleAppProject";
+        public const string EmptyWebProjectTemplate = "WebProjectEmpty";
+        public const string BottleWebProjectTemplate = "WebProjectBottle";
+        public const string FlaskWebProjectTemplate = "WebProjectFlask";
+        public const string DjangoWebProjectTemplate = "DjangoProject";
+        public const string WorkerRoleProjectTemplate = "WorkerRoleProject";
         
-        public const string EmptyFileTemplate = "EmptyPyFile.zip";
-        public const string WebRoleSupportTemplate = "AzureCSWebRole.zip";
-        public const string WorkerRoleSupportTemplate = "AzureCSWorkerRole.zip";
+        public const string EmptyFileTemplate = "EmptyPyFile";
+        public const string WebRoleSupportTemplate = "AzureCSWebRole";
+        public const string WorkerRoleSupportTemplate = "AzureCSWorkerRole";
 
         /// <summary>
         /// Opens and activates the solution explorer window.
@@ -183,43 +194,28 @@ namespace TestUtilities.UI.Python {
             }
         }
 
-        public InteractiveWindow GetInteractiveWindow(string title) {
-            AutomationElement element = null;
-            for (int i = 0; i < 5 && element == null; i++) {
-                element = Element.FindFirst(TreeScope.Descendants,
-                    new AndCondition(
-                        new PropertyCondition(
-                            AutomationElement.NameProperty,
-                            title
-                        ),
-                        new PropertyCondition(
-                            AutomationElement.ControlTypeProperty,
-                            ControlType.Pane
-                        )
-                    )
-                );
-                if (element == null) {
-                    System.Threading.Thread.Sleep(100);
-                }
-            }
+        public ReplWindowProxy ExecuteInInteractive(Project project, PythonReplWindowProxySettings settings = null) {
+            OpenSolutionExplorer().SelectProject(project);
+            ExecuteCommand("Python.ExecuteInInteractive");
+            return GetInteractiveWindow(project);
+        }
 
-            if (element == null) {
-                DumpVS();
+        public ReplWindowProxy GetInteractiveWindow(Project project, PythonReplWindowProxySettings settings = null) {
+            return GetInteractiveWindow(project.Name + " Interactive", settings);
+        }
+
+        public ReplWindowProxy GetInteractiveWindow(string title, PythonReplWindowProxySettings settings = null) {
+            var iwp = GetService<IComponentModel>(typeof(SComponentModel))?.GetService<InteractiveWindowProvider>();
+            var window = iwp?.AllOpenWindows.FirstOrDefault(w => ((ToolWindowPane)w).Caption == title);
+            if (window == null) {
+                Trace.TraceWarning(
+                    "Failed to find {0} in {1}",
+                    title,
+                    string.Join(", ", iwp?.AllOpenWindows.Select(w => ((ToolWindowPane)w).Caption) ?? Enumerable.Empty<string>())
+                );
                 return null;
             }
-
-            return new InteractiveWindow(
-                title,
-                element.FindFirst(
-                    TreeScope.Descendants,
-                    new PropertyCondition(
-                        AutomationElement.AutomationIdProperty,
-                        "WpfTextView"
-                    )
-                ),
-                this
-            );
-
+            return new ReplWindowProxy(this, window.InteractiveWindow, (ToolWindowPane)window, settings ?? new PythonReplWindowProxySettings());
         }
 
         internal Document WaitForDocument(string docName) {
@@ -307,7 +303,19 @@ namespace TestUtilities.UI.Python {
                     envPath = new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).GetValue();
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-                    envName = string.Format("{0} ({1})", envPath, baseInterp);
+                    var baseConfig = ComponentModel.GetService<IInterpreterRegistryService>().Configurations
+                        .FirstOrDefault(c => c.FullDescription == baseInterp);
+
+                    if (baseConfig == null) {
+                        envName = "{0} ({1})".FormatUI(envPath, baseInterp);
+                    } else {
+                        envName = "{0} {1} {2} ({3})".FormatUI(
+                            envPath,
+                            baseConfig.Architecture == System.Reflection.ProcessorArchitecture.Amd64 ? "64-bit" : "32-bit",
+                            baseConfig.Version,
+                            baseInterp
+                        );
+                    }
 
                     Console.WriteLine("Expecting environment named: {0}", envName);
 

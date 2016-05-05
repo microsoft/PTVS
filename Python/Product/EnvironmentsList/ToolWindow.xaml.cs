@@ -444,7 +444,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             const string baseName = "New Environment";
             string name = baseName;
             int count = 2;
-            while (_interpreters.FindConfiguration(CPythonInterpreterFactoryConstants.GetIntepreterId("VisualStudio", ProcessorArchitecture.X86, name)) != null) {
+            while (_interpreters.FindConfiguration(CPythonInterpreterFactoryConstants.GetInterpreterId("VisualStudio", ProcessorArchitecture.X86, name)) != null) {
                 name = baseName + " " + count++;
             }
 

@@ -331,21 +331,21 @@ namespace PythonToolsUITests {
                 var project = app.OpenProject(@"TestData\Environments.sln");
 
                 app.OpenSolutionExplorer().SelectProject(project);
-                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 2.7\"");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 32-bit 2.7\"");
 
                 using (var createVenv = AutomationDialog.FromDte(app, "Python.AddVirtualEnvironment")) {
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-                    Assert.AreEqual("Python 2.7", baseInterp);
+                    Assert.AreEqual("Python 32-bit 2.7", baseInterp);
                     createVenv.Cancel();
                 }
 
-                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 3.3\"");
+                app.Dte.ExecuteCommand("Python.ActivateEnvironment", "/env:\"Python 32-bit 3.3\"");
 
                 using (var createVenv = AutomationDialog.FromDte(app, "Python.AddVirtualEnvironment")) {
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-                    Assert.AreEqual("Python 3.3", baseInterp);
+                    Assert.AreEqual("Python 32-bit 3.3", baseInterp);
                     createVenv.Cancel();
                 }
             }
@@ -527,24 +527,24 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
                     var factories = provider.GetInterpreterFactories().ToList();
                     foreach (var fact in factories) {
-                        Console.WriteLine("{0}: {1}", fact.GetType().FullName, fact.Configuration.Description);
+                        Console.WriteLine("{0}: {1}", fact.GetType().FullName, fact.Configuration.FullDescription);
                     }
 
                     foreach (var fact in factories) {
                         Assert.IsInstanceOfType(
                             fact,
                             typeof(MSBuildProjectInterpreterFactoryProvider.NotFoundInterpreterFactory),
-                            string.Format("{0} was not correct type", fact.Configuration.Description)
+                            string.Format("{0} was not correct type", fact.Configuration.FullDescription)
                         );
                         Assert.IsFalse(fact.Configuration.IsAvailable(), string.Format("{0} was not unavailable", fact.Configuration.Description));
                     }
 
-                    AssertUtil.AreEqual(factories.Select(f => f.Configuration.Description),
-                        "Invalid BaseInterpreter (unavailable)",
-                        "Invalid InterpreterPath (unavailable)",
-                        "Invalid WindowsInterpreterPath (unavailable)",
-                        "Invalid LibraryPath (unavailable)",
-                        "Absent BaseInterpreter (unavailable)"
+                    AssertUtil.AreEqual(factories.Select(f => f.Configuration.FullDescription),
+                        "Invalid BaseInterpreter 2.7 (unavailable)",
+                        "Invalid InterpreterPath 2.7 (unavailable)",
+                        "Invalid WindowsInterpreterPath 2.7 (unavailable)",
+                        "Invalid LibraryPath 2.7 (unavailable)",
+                        "Absent BaseInterpreter 2.7 (unavailable)"
                     );
                 }
             } finally {
@@ -556,39 +556,35 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
         private void EnvironmentReplWorkingDirectoryTest(
             PythonVisualStudioApp app,
             EnvDTE.Project project,
-            TreeNode env,
-            string envName
+            TreeNode env
         ) {
             var path1 = Path.Combine(Path.GetDirectoryName(project.FullName), Guid.NewGuid().ToString("N"));
             var path2 = Path.Combine(Path.GetDirectoryName(project.FullName), Guid.NewGuid().ToString("N"));
             Directory.CreateDirectory(path1);
             Directory.CreateDirectory(path2);
 
-            env.Select();
+            app.OpenSolutionExplorer().SelectProject(project);
             app.Dte.ExecuteCommand("Python.Interactive");
 
-            var window = app.GetInteractiveWindow(string.Format("{0} Interactive", envName));
-            Assert.IsNotNull(window, string.Format("Failed to find '{0} Interactive'", envName));
-            try {
+            using (var window = app.GetInteractiveWindow(string.Format("{0} Interactive", project.Name))) {
+                Assert.IsNotNull(window, string.Format("Failed to find '{0} Interactive'", project.Name));
                 app.ServiceProvider.GetUIThread().Invoke(() => project.GetPythonProject().SetProjectProperty("WorkingDirectory", path1));
 
                 window.Reset();
-                window.ReplWindow.Evaluator.ExecuteText("import os; os.getcwd()").Wait();
+                window.ExecuteText("import os; os.getcwd()").Wait();
                 window.WaitForTextEnd(
                     string.Format("'{0}'", path1.Replace("\\", "\\\\")),
-                    ">>>"
+                    ">"
                 );
 
                 app.ServiceProvider.GetUIThread().Invoke(() => project.GetPythonProject().SetProjectProperty("WorkingDirectory", path2));
 
                 window.Reset();
-                window.ReplWindow.Evaluator.ExecuteText("import os; os.getcwd()").Wait();
+                window.ExecuteText("import os; os.getcwd()").Wait();
                 window.WaitForTextEnd(
                     string.Format("'{0}'", path2.Replace("\\", "\\\\")),
-                    ">>>"
+                    ">"
                 );
-            } finally {
-                window.Close();
             }
         }
 
@@ -604,11 +600,11 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                     pp.AddInterpreter(dis.CurrentDefault.Configuration.Id);
                 });
 
-                var envName = dis.CurrentDefault.Configuration.Description;
+                var envName = dis.CurrentDefault.Configuration.FullDescription;
                 var sln = app.OpenSolutionExplorer();
                 var env = sln.FindChildOfProject(project, Strings.Environments, envName);
 
-                EnvironmentReplWorkingDirectoryTest(app, project, env, envName);
+                EnvironmentReplWorkingDirectoryTest(app, project, env);
             }
         }
 
@@ -622,7 +618,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 string envName;
                 var env = app.CreateVirtualEnvironment(project, out envName);
 
-                EnvironmentReplWorkingDirectoryTest(app, project, env, envName);
+                EnvironmentReplWorkingDirectoryTest(app, project, env);
             }
         }
     }

@@ -20,9 +20,11 @@ using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
@@ -145,8 +147,7 @@ namespace Microsoft.PythonTools.Navigation {
             var wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
             if (wpfTextView != null) {
                 var factory = ComponentModel.GetService<IEditorOperationsFactoryService>();
-                var editFilter = new EditFilter(wpfTextView, factory.GetEditorOperations(wpfTextView), _serviceProvider);
-                editFilter.AttachKeyboardFilter(vsTextView);
+                EditFilter.GetOrCreate(_serviceProvider, ComponentModel, vsTextView);
                 new TextViewFilter(_serviceProvider, vsTextView);
                 wpfTextView.GotAggregateFocus += OnTextViewGotAggregateFocus;
                 wpfTextView.LostAggregateFocus += OnTextViewLostAggregateFocus;

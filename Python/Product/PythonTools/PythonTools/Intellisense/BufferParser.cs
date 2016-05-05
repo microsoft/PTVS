@@ -55,6 +55,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private const int ReparseDelay = 1000;      // delay in MS before we re-parse a buffer w/ non-line changes.
 
+        public static readonly object DoNotParse = new object();
+
         public BufferParser(AnalysisEntry analysis, VsProjectAnalyzer parser, ITextBuffer buffer) {
             Debug.Assert(analysis != null);
 
@@ -189,7 +191,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public ITextBuffer[] Buffers {
             get {
                 return _buffers.Where(
-                    x => !x.Properties.ContainsProperty(PythonReplEvaluator.InputBeforeReset)
+                    x => !x.Properties.ContainsProperty(DoNotParse)
                 ).ToArray();
             }
         }
@@ -303,7 +305,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     var snapshot = snapshots[i];
                     var bufferInfo = bufferInfos[i];
 
-                    if (snapshot.TextBuffer.Properties.ContainsProperty(PythonReplEvaluator.InputBeforeReset) ||
+                    if (snapshot.TextBuffer.Properties.ContainsProperty(DoNotParse) ||
                         snapshot.IsReplBufferWithCommand()) {
                         continue;
                     }

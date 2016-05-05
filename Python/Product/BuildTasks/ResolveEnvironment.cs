@@ -165,7 +165,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                         LibraryPath = PathUtils.EnsureEndSeparator(factory.Configuration.LibraryPath);
                         Architecture = factory.Configuration.Architecture.ToString();
                         PathEnvironmentVariable = factory.Configuration.PathEnvironmentVariable;
-                        Description = factory.Configuration.Description;
+                        Description = factory.Configuration.FullDescription;
                         MajorVersion = factory.Configuration.Version.Major.ToString();
                         MinorVersion = factory.Configuration.Version.Minor.ToString();
 
