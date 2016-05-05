@@ -138,6 +138,8 @@ namespace Microsoft.PythonTools.Intellisense {
             _quickInfoSession = _provider._QuickInfoBroker.TriggerQuickInfo(_textView);
         }
 
+        private static object _intellisenseAnalysisEntry = new object();
+
         public void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
             _subjectBuffers.Add(subjectBuffer);
 
@@ -155,7 +157,11 @@ namespace Microsoft.PythonTools.Intellisense {
             if (analyzer != null) {
                 analyzer.MonitorTextBufferAsync(subjectBuffer, isTemporaryFile).ContinueWith(task => {
                     var newParser = task.Result;
-                    lock(newParser) {
+                    // store the analysis entry so that we can detach it (the file path is lost
+                    // when we close the view)
+                    subjectBuffer.Properties[_intellisenseAnalysisEntry] = newParser.AnalysisEntry;
+
+                    lock (newParser) {
                         lock(newParser) {
                             newParser.AttachedViews++;
                         }
@@ -166,9 +172,10 @@ namespace Microsoft.PythonTools.Intellisense {
         
         public void DisconnectSubjectBuffer(ITextBuffer subjectBuffer) {
             if (_subjectBuffers.Remove(subjectBuffer)) {
-                var analysis = _textView.GetAnalysisEntry(subjectBuffer, _serviceProvider);
-                if (analysis != null) {
+                AnalysisEntry analysis;
+                if (subjectBuffer.Properties.TryGetProperty(_intellisenseAnalysisEntry, out analysis)) {
                     analysis.Analyzer.BufferDetached(analysis, subjectBuffer);
+                    subjectBuffer.Properties.RemoveProperty(_intellisenseAnalysisEntry);
                 }
             }
         }

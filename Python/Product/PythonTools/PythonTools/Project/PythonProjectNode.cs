@@ -1127,6 +1127,8 @@ namespace Microsoft.PythonTools.Project {
                     _analyzer = null;
                 }
 
+                InterpreterOptions.DefaultInterpreterChanged -= GlobalDefaultInterpreterChanged;
+
                 if (_interpretersContainer != null) {
                     _interpretersContainer.Dispose();
                     _interpretersContainer = null;

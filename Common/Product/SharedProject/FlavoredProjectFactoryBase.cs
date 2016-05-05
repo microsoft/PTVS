@@ -108,7 +108,7 @@ namespace Microsoft.VisualStudioTools.Project {
             projectIUnknown = IntPtr.Zero;  // always initialize out parameters of COM interfaces!
 
             object newProject = PreCreateForOuter(outerProjectIUnknown);
-
+            
             IntPtr newProjectIUnknown = IntPtr.Zero;
             ILocalRegistryCorrected localRegistry = (ILocalRegistryCorrected)_serviceProvider.GetService(typeof(SLocalRegistry));
             Debug.Assert(localRegistry != null, "Could not get the ILocalRegistry object");
@@ -120,7 +120,7 @@ namespace Microsoft.VisualStudioTools.Project {
             uint dwClsCtx = (uint)CLSCTX.CLSCTX_INPROC_SERVER;
             IntPtr aggregateProjectIUnknown = IntPtr.Zero;
             IVsProjectAggregator2 vsProjectAggregator2 = null;
-
+            
             try {
                 ErrorHandler.ThrowOnFailure(localRegistry.CreateInstance(clsid, outerProjectIUnknown, ref riid, dwClsCtx, out aggregateProjectIUnknown));
 

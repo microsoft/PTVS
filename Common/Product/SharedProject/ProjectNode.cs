@@ -1605,6 +1605,12 @@ namespace Microsoft.VisualStudioTools.Project {
                 taskProvider.Tasks.Clear();
             }
 
+            var autoObject = GetAutomationObject() as Automation.OAProject;
+            if (autoObject != null) {
+                autoObject.Dispose();
+            }
+            this.configProvider = null;
+
             try {
                 // Walk the tree and close all nodes.
                 // This has to be done before the project closes, since we want
@@ -2794,9 +2800,17 @@ namespace Microsoft.VisualStudioTools.Project {
             if (!IsProjectOpened)
                 return;
 
-            EnvDTE.Project automationObject = GetAutomationObject() as EnvDTE.Project;
+            var solutionBuild = (IVsSolutionBuildManager)GetService(typeof(SVsSolutionBuildManager));
 
-            SetConfiguration(Utilities.GetActiveConfigurationName(automationObject));
+            IVsProjectCfg[] cfg = new IVsProjectCfg[1];
+            ErrorHandler.ThrowOnFailure(
+                solutionBuild.FindActiveProjectCfg(IntPtr.Zero, IntPtr.Zero, GetOuterHierarchy(), cfg)
+            );
+
+            string name;
+            ErrorHandler.ThrowOnFailure(cfg[0].get_CanonicalName(out name));
+
+            SetConfiguration(name);
         }
 
         /// <summary>
@@ -4837,7 +4851,12 @@ If the files in the existing folder have the same names as files in the folder y
 
             if (canceled != 1) {
                 // Set ourself as the project
-                return Marshal.QueryInterface(Marshal.GetIUnknownForObject(this), ref iid, out projectPointer);
+                IntPtr project = Marshal.GetIUnknownForObject(this);
+                try {
+                    return Marshal.QueryInterface(project, ref iid, out projectPointer);
+                } finally {
+                    Marshal.Release(project);
+                }
             }
 
             return VSConstants.OLE_E_PROMPTSAVECANCELLED;

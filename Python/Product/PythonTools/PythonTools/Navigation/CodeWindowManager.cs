@@ -40,6 +40,7 @@ namespace Microsoft.PythonTools.Navigation {
         private readonly PythonToolsService _pyService;
         private uint _cookieVsCodeWindowEvents;
         private DropDownBarClient _client;
+        private int _viewCount;
         private IVsEditorAdaptersFactoryService _vsEditorAdaptersFactoryService;
 
         public CodeWindowManager(IServiceProvider serviceProvider, IVsCodeWindow codeWindow) {
@@ -140,6 +141,7 @@ namespace Microsoft.PythonTools.Navigation {
         #region IVsCodeWindowEvents Members
 
         int IVsCodeWindowEvents.OnNewView(IVsTextView vsTextView) {
+            _viewCount++;
             var wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
             if (wpfTextView != null) {
                 var factory = ComponentModel.GetService<IEditorOperationsFactoryService>();
@@ -153,6 +155,11 @@ namespace Microsoft.PythonTools.Navigation {
         }
 
         int IVsCodeWindowEvents.OnCloseView(IVsTextView vsTextView) {
+            _viewCount--;
+            if (_viewCount == 0) {
+                _pyService.CodeWindowClosed(_window);
+            }
+            _pyService.OnIdle -= OnIdle;
             var wpfTextView = VsEditorAdaptersFactoryService.GetWpfTextView(vsTextView);
             if (wpfTextView != null) {
                 wpfTextView.GotAggregateFocus -= OnTextViewGotAggregateFocus;
