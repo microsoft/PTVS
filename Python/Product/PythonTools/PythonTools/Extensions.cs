@@ -593,7 +593,25 @@ namespace Microsoft.PythonTools {
             if (serviceProvider == null) {
                 return null;
             }
-            return (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
+            var pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
+            if (pyService == null) {
+                var shell = (IVsShell)serviceProvider.GetService(typeof(SVsShell));
+
+                var pkgGuid = GuidList.guidPythonToolsPackage;
+                IVsPackage pkg;
+                if (!ErrorHandler.Succeeded(shell.IsPackageLoaded(ref pkgGuid, out pkg)) && pkg != null) {
+                    Debug.Fail("Python Tools Package was loaded but could not get service");
+                    return null;
+                }
+                var hr = shell.LoadPackage(ref pkgGuid, out pkg);
+                if (!ErrorHandler.Succeeded(hr)) {
+                    Debug.Fail("Failed to load Python Tools Package: 0x{0:X08}".FormatUI(hr));
+                    ErrorHandler.ThrowOnFailure(hr);
+                }
+
+                pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
+            }
+            return pyService;
         }
 
         internal static IComponentModel GetComponentModel(this IServiceProvider serviceProvider) {
