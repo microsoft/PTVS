@@ -63,6 +63,10 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
             }
         }
 
+        public void Dispose() {
+            configurationManager = null;
+        }
+
         /// <summary>
         /// Microsoft Internal Use Only.  Gets the file name of the project.
         /// </summary>

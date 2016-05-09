@@ -158,8 +158,12 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (IntPtr.Zero == unknownPtr) {
                     return null;
                 }
-                IVsHierarchy hier = Marshal.GetObjectForIUnknown(unknownPtr) as IVsHierarchy;
-                return hier;
+                try {
+                    IVsHierarchy hier = Marshal.GetObjectForIUnknown(unknownPtr) as IVsHierarchy;
+                    return hier;
+                } finally {
+                    Marshal.Release(unknownPtr);
+                }
             }
         }
 

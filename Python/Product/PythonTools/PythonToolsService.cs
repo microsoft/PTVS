@@ -705,6 +705,9 @@ namespace Microsoft.PythonTools {
             return value;
         }
 
+        internal void CodeWindowClosed(IVsCodeWindow window) {
+            _codeWindowManagers.Remove(window);
+        }
         #endregion
 
         #region Intellisense

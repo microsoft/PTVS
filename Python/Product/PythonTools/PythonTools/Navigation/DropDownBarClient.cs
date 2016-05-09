@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools.Navigation {
                     _textView.Properties.RemoveProperty(typeof(DropDownBarClient));
                 }
             }
-
+            _textView.TextBuffer.UnregisterForParseTree(ParserOnNewParseTree);
 #if DEBUG
             IVsDropdownBar existing;
             IVsDropdownBarClient existingClient;
