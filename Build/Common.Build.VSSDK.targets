@@ -80,7 +80,7 @@
   </PropertyGroup>
   
   <!-- Import the VS SDK headers -->
-  <Import Project="$(VSSDKTargets)" />
+  <Import Project="$(VSSDKTargets)" Condition="Exists($(VSSDKTargets))" />
 
   <!-- For non-debug builds, don't copy debug symbols -->
   <Target Name="_ClearVSIXSourceItemLocalOnly"
