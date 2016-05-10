@@ -482,7 +482,7 @@ permissions and limitations under the License.
         <Strings>
           <ButtonText>P&amp;ython Interactive Window</ButtonText>
           <ToolTipText>Open the Python Interactive window.</ToolTipText>
-          <LocCanonicalName>.Python.InteractiveBlah</LocCanonicalName>
+          <LocCanonicalName>.Python.InteractiveOpen</LocCanonicalName>
         </Strings>
       </Button>
 
