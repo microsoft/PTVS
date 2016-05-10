@@ -398,6 +398,7 @@ namespace Microsoft.PythonTools.Intellisense {
 #if DEBUG
             public Dictionary<int, string> newCode;
 #endif
+            public bool? failed;
         }
 
         public sealed class UnresolvedImportsRequest : Request<UnresolvedImportsResponse> {
