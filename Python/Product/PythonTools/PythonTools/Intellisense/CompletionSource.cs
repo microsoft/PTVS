@@ -25,11 +25,6 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     public static class CompletionSessionExtensions {
-        [Obsolete("A IServiceProvider should be passed in")]
-        public static CompletionOptions GetOptions(this ICompletionSession session) {
-            return GetOptions(session, PythonToolsPackage.Instance);
-        }
-
         public static CompletionOptions GetOptions(this ICompletionSession session, IServiceProvider serviceProvider) {
             var pyService = serviceProvider.GetPythonToolsService();
 

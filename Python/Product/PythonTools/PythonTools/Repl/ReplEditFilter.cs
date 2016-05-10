@@ -464,7 +464,7 @@ namespace Microsoft.PythonTools.Repl {
                 curBuffer.CurrentSnapshot.Length - inputPoint.Value);
 
 
-            var splitCode = JoinCodeLines(SplitCode(startText + pasting + endText), version).ToList();
+            var splitCode = JoinToCompleteStatements(SplitAndDedent(startText + pasting + endText), version).ToList();
             curBuffer.Delete(new Span(0, curBuffer.CurrentSnapshot.Length));
 
             bool supportMultiple = window.GetPythonEvaluator()?.SupportsMultipleStatements ?? false;
@@ -525,7 +525,7 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        internal static IEnumerable<string> JoinCodeLines(IEnumerable<string> lines, PythonLanguageVersion version) {
+        internal static IEnumerable<string> JoinToCompleteStatements(IEnumerable<string> lines, PythonLanguageVersion version, bool fixNewLine = true) {
             StringBuilder temp = new StringBuilder();
             string prevText = null;
             ParseResult? prevParseResult = null;
@@ -560,7 +560,7 @@ namespace Microsoft.PythonTools.Repl {
                             temp.Clear();
                         }
                     } else if (result == ParseResult.Complete) {
-                        yield return FixEndingNewLine(newCode);
+                        yield return FixEndingNewLine(newCode, fixNewLine);
                         temp.Clear();
 
                         prevParseResult = null;
@@ -570,7 +570,7 @@ namespace Microsoft.PythonTools.Repl {
                         prevParseResult = result;
                     } else if (prevText != null) {
                         // we have a complete input
-                        yield return FixEndingNewLine(prevText);
+                        yield return FixEndingNewLine(prevText, fixNewLine);
                         temp.Clear();
 
                         // reparse this line so our state remains consistent as if we just started out.
@@ -584,11 +584,11 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             if (temp.Length > 0) {
-                yield return FixEndingNewLine(temp.ToString());
+                yield return FixEndingNewLine(temp.ToString(), fixNewLine);
             }
         }
 
-        internal static IEnumerable<string> SplitCode(string code) {
+        internal static IEnumerable<string> SplitAndDedent(string code) {
             var lines = code.Split(new[] { "\r\n", "\n", "\r" }, StringSplitOptions.None);
             if (lines.Length == 0) {
                 return lines;
@@ -607,7 +607,11 @@ namespace Microsoft.PythonTools.Repl {
             });
         }
 
-        private static string FixEndingNewLine(string prevText) {
+        public static string FixEndingNewLine(string prevText, bool fixNewLine = true) {
+            if (!fixNewLine) {
+                return prevText;
+            }
+
             if ((prevText.IndexOf('\n') == prevText.LastIndexOf('\n')) &&
                 (prevText.IndexOf('\r') == prevText.LastIndexOf('\r'))) {
                 prevText = prevText.TrimEnd();
@@ -621,7 +625,7 @@ namespace Microsoft.PythonTools.Repl {
 
         internal IEnumerable<string> JoinCode(IEnumerable<string> code) {
             var version = _textView.GetLanguageVersion(_serviceProvider);
-            var split = JoinCodeLines(TrimIndent(code), version);
+            var split = JoinToCompleteStatements(TrimIndent(code), version);
             return Enumerable.Repeat(string.Join(Environment.NewLine, split), 1);
         }
 

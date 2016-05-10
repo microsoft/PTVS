@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
@@ -23,7 +22,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
@@ -39,15 +37,12 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Project.Web;
-using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
@@ -78,6 +73,7 @@ namespace Microsoft.PythonTools {
 
     // This attribute is needed to let the shell know that this package exposes some menus.
     [ProvideMenuResource(1000, 1)]
+    [ProvideKeyBindingTable(PythonConstants.EditorFactoryGuid, 3004, AllowNavKeyBinding = true)]
     [Description("Python Tools Package")]
     [ProvideAutomationObject("VsPython")]
     [ProvideLanguageEditorOptionPage(typeof(PythonAdvancedEditorOptionsPage), PythonConstants.LanguageName, "", "Advanced", "113")]
@@ -179,11 +175,8 @@ namespace Microsoft.PythonTools {
     [ProvideBraceCompletion(PythonCoreConstants.ContentType)]
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "Object is owned by VS and cannot be disposed")]
-    public sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
-        [Obsolete("Services should be queried from an IServiceProvider flowed into the requesting component")]
-        public static PythonToolsPackage Instance;
+    internal sealed class PythonToolsPackage : CommonPackage, IVsComponentSelectorProvider, IPythonToolsToolWindowService {
         private PythonAutomation _autoObject;
-        private IContentType _contentType;
         private PackageContainer _packageContainer;
         internal const string PythonExpressionEvaluatorGuid = "{D67D5DB8-3D44-4105-B4B8-47AB1BA66180}";
         internal PythonToolsService _pyService;
@@ -197,9 +190,6 @@ namespace Microsoft.PythonTools {
         /// </summary>
         public PythonToolsPackage() {
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering constructor for: {0}", this.ToString()));
-#pragma warning disable 0618
-            Instance = this;
-#pragma warning restore 0618
 
 #if DEBUG
             System.Threading.Tasks.TaskScheduler.UnobservedTaskException += (sender, e) => {
@@ -373,34 +363,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             get {
                 return (PythonAdvancedEditorOptionsPage)GetDialogPage(typeof(PythonAdvancedEditorOptionsPage));
             }
-        }
-
-
-        /// <summary>
-        /// Gets a CodeFormattingOptions object configured to match the current settings.
-        /// </summary>
-        /// <returns></returns>
-        [Obsolete("Use PythonToolsService.GetCodeFormattingOptions")]
-        public CodeFormattingOptions GetCodeFormattingOptions() {
-            return _pyService.GetCodeFormattingOptions();
-        }
-
-        /// <summary>
-        /// Sets an individual code formatting option for the user's profile.
-        /// <param name="name">a name of one of the properties on the CodeFormattingOptions class.</param>
-        /// </summary>
-        [Obsolete("Use PythonToolsService.SetFormattingOption")]
-        public void SetFormattingOption(string name, object value) {
-            _pyService.SetFormattingOption(name, value);
-        }
-
-        /// <summary>
-        /// Gets an individual code formatting option as configured by the user.
-        /// <param name="name">a name of one of the properties on the CodeFormattingOptions class.</param>
-        /// <returns></returns>
-        [Obsolete("Use PythonToolsService.GetFormattingOption")]
-        public object GetFormattingOption(string name) {
-            return _pyService.GetFormattingOption(name);
         }
 
         private new IComponentModel ComponentModel {
@@ -579,42 +541,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             return true;
         }
 
-        [Obsolete("Use PythonToolsService.AdvancedOptions.AutoListMembers")]
-        public bool AutoListMembers {
-            get {
-                return _pyService.LangPrefs.AutoListMembers;
-            }
-        }
-
         public EnvDTE.DTE DTE {
             get {
                 return (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
             }
-        }
-
-        [Obsolete("Use IServiceProvider.GetPythonContentType extension method")]
-        public IContentType ContentType {
-            get {
-                if (_contentType == null) {
-                    _contentType = ComponentModel.GetService<IContentTypeRegistryService>().GetContentType(PythonCoreConstants.ContentType);
-                }
-                return _contentType;
-            }
-        }
-
-        [Obsolete("Use IServiceProvider.BrowseForFileOpen extension method")]
-        public string BrowseForFileOpen(IntPtr owner, string filter, string initialPath = null) {
-            return ((System.IServiceProvider)this).BrowseForFileOpen(owner, filter, initialPath);
-        }
-
-        [Obsolete("Use IServiceProvider.BrowseForFileSave extension method")]
-        public string BrowseForFileSave(IntPtr owner, string filter, string initialPath = null) {
-            return ((System.IServiceProvider)this).BrowseForFileSave(owner, filter, initialPath);
-        }
-
-        [Obsolete("Use IServiceProvider.BrowseForDirectory extension method")]
-        public string BrowseForDirectory(IntPtr owner, string initialDirectory = null) {
-            return ((System.IServiceProvider)this).BrowseForDirectory(owner, initialDirectory);
         }
 
         #region IVsComponentSelectorProvider Members

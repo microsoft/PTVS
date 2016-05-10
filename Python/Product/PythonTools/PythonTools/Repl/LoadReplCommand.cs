@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Repl {
             IEnumerable<string> submissions;
 
             if (eval != null) {
-                submissions = ReplEditFilter.JoinCodeLines(lines, eval.LanguageVersion).Where(CommentPrefixPredicate);
+                submissions = ReplEditFilter.JoinToCompleteStatements(lines, eval.LanguageVersion).Where(CommentPrefixPredicate);
             } else {
                 // v1 behavior, will probably never be hit, but if someone was developing their own IReplEvaluator
                 // and using this class it would be hit.
