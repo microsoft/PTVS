@@ -16,13 +16,24 @@
 
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="auto" />
-                            <ColumnDefinition Width="*" MinWidth="8" />
+                            <ColumnDefinition Width="*">
+                                <ColumnDefinition.Style>
+                                    <Style>
+                                        <Setter Property="ColumnDefinition.MinWidth" Value="8" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Mode=OneWay,Converter={StaticResource FileNameEllipsisBody}}" Value="">
+                                                <Setter Property="ColumnDefinition.MinWidth" Value="0" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </ColumnDefinition.Style>
+                            </ColumnDefinition>
                             <ColumnDefinition Width="auto" />
                         </Grid.ColumnDefinitions>
 
                         <TextBlock Grid.Column="0"
                                    Text="{Binding Mode=OneWay,Converter={StaticResource FileNameEllipsisHead}}" />
-                        <TextBlock Grid.Column="1" x:Name="Body"
+                        <TextBlock Grid.Column="1"
                                    Text="{Binding Mode=OneWay,Converter={StaticResource FileNameEllipsisBody}}"
                                    TextTrimming="CharacterEllipsis" />
                         <TextBlock Grid.Column="2"
