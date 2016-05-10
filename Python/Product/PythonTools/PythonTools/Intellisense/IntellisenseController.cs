@@ -161,11 +161,11 @@ namespace Microsoft.PythonTools.Intellisense {
             if (analyzer != null) {
                 analyzer.MonitorTextBufferAsync(subjectBuffer, isTemporaryFile).ContinueWith(task => {
                     var newParser = task.Result;
-                    // store the analysis entry so that we can detach it (the file path is lost
-                    // when we close the view)
-                    subjectBuffer.Properties[_intellisenseAnalysisEntry] = newParser.AnalysisEntry;
-
                     if (newParser != null) {
+                        // store the analysis entry so that we can detach it (the file path is lost
+                        // when we close the view)
+                        subjectBuffer.Properties[_intellisenseAnalysisEntry] = newParser.AnalysisEntry;
+
                         lock(newParser) {
                             newParser.AttachedViews++;
                         }
