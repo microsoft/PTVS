@@ -67,7 +67,7 @@ namespace Microsoft.PythonTools.Commands {
             if (selection.StreamSelectionSpan.Length > 0) {
                 // Easy, just send the selection to the interactive window.
                 input = activeView.Selection.StreamSelectionSpan.GetText();
-                if (!input.EndsWith("\n")) {
+                if (!input.EndsWith("\n") && !input.EndsWith("\r")) {
                     input += activeView.Options.GetNewLineCharacter();
                 }
                 focusRepl = true;
@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Commands {
                     activeView.Caret.PositionChanged += Caret_PositionChanged;
                     activeView.Properties[_executedLastLine] = _executedLastLine;
                 }
-            } else if (repl.InteractiveWindow.CurrentLanguageBuffer.CurrentSnapshot.Length != 0) {
+            } else if ((repl.InteractiveWindow.CurrentLanguageBuffer?.CurrentSnapshot.Length ?? 0) != 0) {
                 // We reached the end of the file but have some text buffered.  Execute it now.
                 input = activeView.Options.GetNewLineCharacter();
             } else {
@@ -107,10 +107,9 @@ namespace Microsoft.PythonTools.Commands {
             if (input != null) {
                 repl.Show(focusRepl);
 
-                InteractiveInputs inputs;
-                if (!repl.InteractiveWindow.Properties.TryGetProperty(typeof(InteractiveInputs), out inputs)) {
-                    repl.InteractiveWindow.Properties[typeof(InteractiveInputs)] = inputs = new InteractiveInputs(repl.InteractiveWindow, _serviceProvider);
-                }
+                var inputs = repl.InteractiveWindow.Properties.GetOrCreateSingletonProperty(
+                    () => new InteractiveInputs(repl.InteractiveWindow, _serviceProvider)
+                );
 
                 inputs.Enqueue(input);
             }

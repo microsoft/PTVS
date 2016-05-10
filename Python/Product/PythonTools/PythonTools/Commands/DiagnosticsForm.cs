@@ -24,13 +24,6 @@ namespace Microsoft.PythonTools.Commands {
     public partial class DiagnosticsForm : Form {
         private readonly IServiceProvider _provider;
 
-        [Obsolete("Use IServiceProvider overload")]
-        public DiagnosticsForm(string content)
-#pragma warning disable 0618
-            : this(PythonToolsPackage.Instance, content) {
-#pragma warning restore 0618
-        }
-
         public DiagnosticsForm(IServiceProvider serviceProvider, string content) {
             _provider = serviceProvider;
             InitializeComponent();

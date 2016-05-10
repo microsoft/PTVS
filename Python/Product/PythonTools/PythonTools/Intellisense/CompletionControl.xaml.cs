@@ -41,11 +41,6 @@ namespace Microsoft.PythonTools.Intellisense {
         public static readonly DependencyProperty WarningVisibilityProperty = WarningVisibilityPropertyKey.DependencyProperty;
         private readonly IServiceProvider _serviceProvider;
 
-        [Obsolete("Use version which takes IServiceProvider")]
-        public CompletionControl(UIElement view, ICompletionSession session)
-            : this(PythonToolsPackage.Instance, view, session) {
-        }
-
         public CompletionControl(IServiceProvider serviceProvider, UIElement view, ICompletionSession session) {
             _serviceProvider = serviceProvider;
 

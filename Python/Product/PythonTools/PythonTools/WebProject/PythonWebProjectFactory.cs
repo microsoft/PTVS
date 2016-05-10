@@ -22,10 +22,10 @@ using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Project.Web {
     [Guid(PythonConstants.WebProjectFactoryGuid)]
-    public class PythonWebProjectFactory : FlavoredProjectFactoryBase {
+    internal class PythonWebProjectFactory : FlavoredProjectFactoryBase {
         private PythonToolsPackage _package;
 
-        public PythonWebProjectFactory(PythonToolsPackage package) {
+        internal PythonWebProjectFactory(PythonToolsPackage package) {
             _package = package;
         }
 

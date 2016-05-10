@@ -23,11 +23,6 @@ namespace Microsoft.PythonTools.Project {
     public partial class StartWithErrorsDialog : Form {
         private readonly PythonToolsService _pyService;
 
-        [Obsolete("Use constructor which provides a PythonToolsService instead")]
-        public StartWithErrorsDialog()
-            : this(PythonToolsPackage.Instance._pyService) {
-        }
-
         public StartWithErrorsDialog(PythonToolsService pyService) {
             _pyService = pyService;
             InitializeComponent();
