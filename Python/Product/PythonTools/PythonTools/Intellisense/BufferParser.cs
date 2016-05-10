@@ -179,13 +179,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void StopMonitoring() {
             foreach (var buffer in _buffers) {
-                buffer.ChangedLowPriority -= BufferChangedLowPriority;
-                if (_document != null) {
-                    _document.EncodingChanged -= EncodingChanged;
-                    _document = null;
-                }
+                UninitBuffer(buffer);
             }
             _timer.Dispose();
+            AnalysisEntry.BufferParser = null;
         }
 
         public ITextBuffer[] Buffers {
