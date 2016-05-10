@@ -18,16 +18,20 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
+using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 using IServiceProvider = System.IServiceProvider;
 
@@ -124,9 +128,34 @@ namespace Microsoft.PythonTools.Intellisense {
             if (textView.Properties.TryGetProperty<IntellisenseController>(typeof(IntellisenseController), out controller)) {
                 controller.AttachKeyboardFilter();
             }
+            InitKeyBindings(textViewAdapter);
         }
 
         #endregion
-    }
 
+        public void InitKeyBindings(IVsTextView vsTextView) {
+            var os = vsTextView as IObjectWithSite;
+
+            IntPtr unkSite = IntPtr.Zero;
+            IntPtr unkFrame = IntPtr.Zero;
+
+            try {
+                os.GetSite(typeof(VisualStudio.OLE.Interop.IServiceProvider).GUID, out unkSite);
+                var sp = Marshal.GetObjectForIUnknown(unkSite) as VisualStudio.OLE.Interop.IServiceProvider;
+
+                sp.QueryService(typeof(SVsWindowFrame).GUID, typeof(IVsWindowFrame).GUID, out unkFrame);
+
+                var frame = Marshal.GetObjectForIUnknown(unkFrame) as IVsWindowFrame;
+                frame.SetGuidProperty((int)__VSFPROPID.VSFPROPID_InheritKeyBindings, VSConstants.GUID_TextEditorFactory);
+            } finally {
+                if (unkSite != IntPtr.Zero) {
+                    Marshal.Release(unkSite);
+                }
+                if (unkFrame != IntPtr.Zero) {
+                    Marshal.Release(unkFrame);
+                }
+            }
+        }
+
+    }
 }
