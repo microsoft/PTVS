@@ -633,20 +633,18 @@ namespace Microsoft.PythonTools.Language {
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
                 switch ((VSConstants.VSStd97CmdID)nCmdID) {
                     case VSConstants.VSStd97CmdID.Paste:
-                        string updated = RemoveReplPrompts(
-                            _pyService,
-                            Clipboard.GetText(),
-                            _textView.Options.GetNewLineCharacter()
-                        );
-
-                        if (IsSingleLineWithNewline(updated) && string.IsNullOrEmpty(_editorOps.SelectedText)) {
-                            _editorOps.MoveToStartOfLine(false);
+                        if (Clipboard.ContainsData("VisualStudioEditorOperationsLineCutCopyClipboardTag")) {
+                            // Copying a full line, so we won't strip prompts.
+                            // Deferring to VS paste also inserts the entire
+                            // line rather than breaking up the current one.
+                            break;
                         }
-
+                        string updated = RemoveReplPrompts(_pyService, Clipboard.GetText(), _textView.Options.GetNewLineCharacter());
                         if (updated != null) {
                             _editorOps.ReplaceSelection(updated);
+                            return VSConstants.S_OK;
                         }
-                        return VSConstants.S_OK;
+                        break;
                     case VSConstants.VSStd97CmdID.GotoDefn: GotoDefinition(); return VSConstants.S_OK;
                     case VSConstants.VSStd97CmdID.FindReferences: FindAllReferences(); return VSConstants.S_OK;
                 }
@@ -756,18 +754,6 @@ namespace Microsoft.PythonTools.Language {
             return _next.Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         }
 
-        private static bool IsSingleLineWithNewline(string text) {
-            if (string.IsNullOrEmpty(text)) {
-                return false;
-            }
-
-            if (text.EndsWith("\r\n")) {
-                // Ensure there are no newlines before the last one
-                return text.IndexOf('\r') == text.Length - 2 && text.IndexOf('\n') == text.Length - 1;
-            }
-
-            return text.IndexOfAny(new[] { '\r', '\n' }) == text.Length - 1;
-        }
 
         private void ExtractMethod() {
             new MethodExtractor(_serviceProvider, _textView).ExtractMethod(new ExtractMethodUserInput(_serviceProvider)).DoNotWait();
@@ -929,8 +915,12 @@ namespace Microsoft.PythonTools.Language {
             string text,
             string newline
         ) {
-            if (string.IsNullOrEmpty(text) || !pyService.AdvancedOptions.PasteRemovesReplPrompts) {
+            if (string.IsNullOrEmpty(text)) {
                 return text;
+            }
+
+            if (!pyService.AdvancedOptions.PasteRemovesReplPrompts) {
+                return null;
             }
 
             string[] lines = text.Replace("\r\n", "\n").Split('\n');
