@@ -200,6 +200,11 @@ namespace TestUtilities.UI.Python {
             return GetInteractiveWindow(project);
         }
 
+        public void SendToInteractive() {
+            ExecuteCommand("Python.SendSelectionToInteractive");
+        }
+
+
         public ReplWindowProxy GetInteractiveWindow(Project project, PythonReplWindowProxySettings settings = null) {
             return GetInteractiveWindow(project.Name + " Interactive", settings);
         }

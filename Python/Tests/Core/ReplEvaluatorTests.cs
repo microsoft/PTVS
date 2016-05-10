@@ -184,7 +184,7 @@ g()",
                 int counter = 0;
                 foreach (var testCase in testCases) {
                     Console.WriteLine("Test case {0}", ++counter);
-                    AssertUtil.AreEqual(ReplEditFilter.JoinCodeLines(ReplEditFilter.SplitCode(testCase.Code), Microsoft.PythonTools.Parsing.PythonLanguageVersion.V35), testCase.Expected);
+                    AssertUtil.AreEqual(ReplEditFilter.JoinToCompleteStatements(ReplEditFilter.SplitAndDedent(testCase.Code), Microsoft.PythonTools.Parsing.PythonLanguageVersion.V35), testCase.Expected);
                 }
             }
         }
