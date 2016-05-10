@@ -321,9 +321,6 @@ namespace Microsoft.PythonTools.Intellisense {
                             }
                             if (text == "*" || text == "**") {
                                 if (enumerator.MoveNext()) {
-                                    while (enumerator.Current == null && enumerator.MoveNext()) {
-                                    }
-
                                     if (enumerator.Current.ClassificationType == Classifier.Provider.CommaClassification) {
                                         isParameterName = IsParameterNameComma(enumerator);
                                     } else if (enumerator.Current.IsOpenGrouping() && enumerator.Current.Span.GetText() == "(") {
