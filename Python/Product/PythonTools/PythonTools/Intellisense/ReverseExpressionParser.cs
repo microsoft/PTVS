@@ -320,7 +320,7 @@ namespace Microsoft.PythonTools.Intellisense {
                                 return null;
                             }
                             if (text == "*" || text == "**") {
-                                if (enumerator.MoveNext()) {
+                                if (MoveNextSkipExplicitNewLines(enumerator)) {
                                     if (enumerator.Current.ClassificationType == Classifier.Provider.CommaClassification) {
                                         isParameterName = IsParameterNameComma(enumerator);
                                     } else if (enumerator.Current.IsOpenGrouping() && enumerator.Current.Span.GetText() == "(") {
