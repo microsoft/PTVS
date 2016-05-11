@@ -633,6 +633,12 @@ namespace Microsoft.PythonTools.Language {
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
                 switch ((VSConstants.VSStd97CmdID)nCmdID) {
                     case VSConstants.VSStd97CmdID.Paste:
+                        if (Clipboard.ContainsData("VisualStudioEditorOperationsLineCutCopyClipboardTag")) {
+                            // Copying a full line, so we won't strip prompts.
+                            // Deferring to VS paste also inserts the entire
+                            // line rather than breaking up the current one.
+                            break;
+                        }
                         string updated = RemoveReplPrompts(_pyService, Clipboard.GetText(), _textView.Options.GetNewLineCharacter());
                         if (updated != null) {
                             _editorOps.ReplaceSelection(updated);
