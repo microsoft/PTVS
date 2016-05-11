@@ -165,7 +165,7 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var variableInfo in DeclaringModule.Scope.AllVariables) {
                 variableInfo.Value.ClearOldValues(ProjectEntry);
                 if (variableInfo.Value._dependencies.Count == 0 &&
-                    variableInfo.Value.TypesNoCopy.Count == 0) {
+                    !variableInfo.Value.HasTypes) {
                     if (toRemove == null) {
                         toRemove = new List<KeyValuePair<string, VariableDef>>();
                     }
@@ -466,7 +466,7 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var baseValue in bases) {
                 ClassInfo ci = baseValue as ClassInfo;
                 if (ci != null) {
-                    ci.SubClasses.AddTypes(newClass.AnalysisUnit, new[] { newClass });
+                    ci.SubClasses.AddTypes(newClass.AnalysisUnit, newClass);
                 }
             }
 

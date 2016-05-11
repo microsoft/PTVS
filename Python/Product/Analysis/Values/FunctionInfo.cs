@@ -110,7 +110,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                         // of all calls to this function.
                         var res = AnalysisSet.Empty;
                         foreach (var call in _allCalls.Values) {
-                            res = res.Union(call.ReturnValue.TypesNoCopy);
+                            res = res.Union(call.ReturnValue.GetTypesNoCopy(unit, DeclaringModule));
                         }
                         return res;
                     } else {
@@ -496,7 +496,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _functionAttrs[name] = varRef = new VariableDef();
             }
             varRef.AddAssignment(node, unit);
-            varRef.AddTypes(unit, value);
+            varRef.AddTypes(unit, value, true, DeclaringModule);
         }
 
         public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
@@ -560,7 +560,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return false;
                 }
 
-                param.AddTypes(unit, av);
+                param.AddTypes(unit, av, true, DeclaringModule);
             }
 
             return true;

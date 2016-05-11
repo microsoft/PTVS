@@ -54,12 +54,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IAnalysisSet Await(Node node, AnalysisUnit unit) {
             Returns.AddDependency(unit);
-            return Returns.TypesNoCopy;
+            return Returns.GetTypesNoCopy(unit, DeclaringModule);
         }
 
         public void AddReturn(Node node, AnalysisUnit unit, IAnalysisSet returnValue, bool enqueue = true) {
             Returns.MakeUnionStrongerIfMoreThan(ProjectState.Limits.ReturnTypes, returnValue);
-            Returns.AddTypes(unit, returnValue, enqueue);
+            Returns.AddTypes(unit, returnValue, enqueue, DeclaringModule);
         }
     }
 }

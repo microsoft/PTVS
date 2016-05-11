@@ -63,14 +63,16 @@ namespace Microsoft.PythonTools.Analysis {
         /// Enqueues any nodes which depend upon this type into the provided analysis queue for
         /// further analysis.
         /// </summary>
-        public void EnqueueDependents() {
+        public virtual void EnqueueDependents(IProjectEntry assigner = null, IProjectEntry declaringScope = null) {
             bool hasOldValues = false;
             foreach (var keyValue in _dependencies) {
                 if (keyValue.Key.AnalysisVersion == keyValue.Value.Version) {
-                    var val = keyValue.Value;
-                    if (val.DependentUnits != null) {
-                        foreach (var analysisUnit in val.DependentUnits) {
-                            analysisUnit.Enqueue();
+                    if (assigner == null || IsVisible(keyValue.Key, declaringScope, assigner)) {
+                        var val = keyValue.Value;
+                        if (val.DependentUnits != null) {
+                            foreach (var analysisUnit in val.DependentUnits) {
+                                analysisUnit.Enqueue();
+                            }
                         }
                     }
                 } else {
@@ -89,6 +91,19 @@ namespace Microsoft.PythonTools.Analysis {
             }
             return false;
         }
+
+        protected static bool IsVisible(IProjectEntry accessor, IProjectEntry declaringScope, IProjectEntry assigningScope) {
+            return true;
+            /*
+            if (accessor != null && accessor.IsVisible(assigningScope)) {
+                return true;
+            }
+            if (declaringScope != null && declaringScope.IsVisible(assigningScope)) {
+                return true;
+            }
+            return false;*/
+        }
+
     }
 
     class DependentData : DependentData<DependencyInfo> {
@@ -128,21 +143,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// 
     /// TODO: We should store built-in types not keyed off of the ModuleInfo.
     /// </summary>
-    class VariableDef : DependentData<TypedDependencyInfo<AnalysisValue>>, IReferenceable {
-        internal static VariableDef[] EmptyArray = new VariableDef[0];
-
-        /// <summary>
-        /// Returns an infinite sequence of VariableDef instances. This can be
-        /// used with .Take(x).ToArray() to create an array of x instances.
-        /// </summary>
-        internal static IEnumerable<VariableDef> Generator {
-            get {
-                while (true) {
-                    yield return new VariableDef();
-                }
-            }
-        }
-
+    abstract class TypedDef<T> : DependentData<T> where T : TypedDependencyInfo {
         /// <summary>
         /// This limit is used to prevent analysis from continuing forever due
         /// to bugs or unanalyzable code. It is tested in Types and
@@ -153,10 +154,10 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         internal const int HARD_TYPE_LIMIT = 1000;
 
-        static readonly ConditionalWeakTable<VariableDef, object> LockedVariableDefs = new ConditionalWeakTable<VariableDef, object>();
+        static readonly ConditionalWeakTable<TypedDef<T>, object> LockedVariableDefs = new ConditionalWeakTable<TypedDef<T>, object>();
         static readonly object LockedVariableDefsValue = new object();
 
-        private IAnalysisSet _emptySet = AnalysisSet.Empty;
+        protected IAnalysisSet _emptySet = AnalysisSet.Empty;
 
         /// <summary>
         /// Marks the current VariableDef as exceeding the limit and not to be
@@ -244,10 +245,6 @@ namespace Microsoft.PythonTools.Analysis {
         }
 #endif
 
-        protected override TypedDependencyInfo<AnalysisValue> NewDefinition(int version) {
-            return new TypedDependencyInfo<AnalysisValue>(version, _emptySet);
-        }
-
         protected int EstimateTypeCount(IAnalysisSet extraTypes = null) {
             // Use a fast estimate of the number of types we have, since this
             // function will be called very often.
@@ -261,8 +258,8 @@ namespace Microsoft.PythonTools.Analysis {
             return roughSet.Count;
         }
 
-        public bool AddTypes(AnalysisUnit unit, IEnumerable<AnalysisValue> newTypes, bool enqueue = true) {
-            return AddTypes(unit.ProjectEntry, newTypes, enqueue);
+        public bool AddTypes(AnalysisUnit unit, IAnalysisSet newTypes, bool enqueue = true, IProjectEntry declaringScope = null) {
+            return AddTypes(unit.ProjectEntry, newTypes, enqueue, declaringScope);
         }
 
         // Set checks ensure that the wasChanged result is correct. The checks
@@ -273,19 +270,17 @@ namespace Microsoft.PythonTools.Analysis {
         private static bool ENABLE_SET_CHECK = false;
 #endif
 
-        public bool AddTypes(IProjectEntry projectEntry, IEnumerable<AnalysisValue> newTypes, bool enqueue = true) {
+        public bool AddTypes(IProjectEntry projectEntry, IAnalysisSet newTypes, bool enqueue = true, IProjectEntry declaringScope = null) {
             object dummy;
             if (LockedVariableDefs.TryGetValue(this, out dummy)) {
                 return false;
             }
             
             bool added = false;
-            foreach (var value in newTypes) {
-                var declaringModule = value.DeclaringModule;
-                if (declaringModule == null || declaringModule.AnalysisVersion == value.DeclaringVersion) {
-                    var newTypesEntry = value.DeclaringModule ?? projectEntry;
+            if (newTypes.Count > 0) {
+                var dependencies = GetDependentItems(projectEntry);
 
-                    var dependencies = GetDependentItems(newTypesEntry);
+                foreach (var value in newTypes) {
 
 #if DEBUG || FULL_VALIDATION
                     if (ENABLE_SET_CHECK) {
@@ -309,10 +304,76 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (added && enqueue) {
-                EnqueueDependents();
+                EnqueueDependents(projectEntry, declaringScope);
             }
 
             return added;
+        }
+
+        public IAnalysisSet GetTypes(AnalysisUnit accessor, ProjectEntry declaringScope = null) {
+            bool needsCopy;
+            var res = GetTypesWorker(accessor.ProjectEntry, declaringScope, out needsCopy);
+            if (needsCopy) {
+                res = res.Clone();
+            }
+            return res;
+        }
+
+        public IAnalysisSet GetTypesNoCopy(AnalysisUnit accessor, IProjectEntry declaringScope = null) {
+            return GetTypesNoCopy(accessor.ProjectEntry, declaringScope);
+        }
+
+        public IAnalysisSet GetTypesNoCopy(IProjectEntry accessor = null, IProjectEntry declaringScope = null) {
+            bool needsCopy;
+            return GetTypesWorker(accessor, declaringScope, out needsCopy);
+        }
+
+        private IAnalysisSet GetTypesWorker(IProjectEntry accessor, IProjectEntry declaringScope, out bool needsCopy) {
+            needsCopy = false;
+            var res = _emptySet;
+            if (_dependencies.Count != 0) {
+                SingleDict<IProjectEntry, T>.SingleDependency oneDependency;
+                if (_dependencies.TryGetSingleDependency(out oneDependency)) {
+                    if (oneDependency.Value.Types.Count > 0 && IsVisible(accessor, declaringScope, oneDependency.Key)) {
+                        var types = oneDependency.Value.Types;
+                        if (types != null) {
+                            needsCopy = !(types is IImmutableAnalysisSet);
+                            res = types;
+                        }
+                    }
+                } else {
+                    foreach (var kvp in (AnalysisDictionary<IProjectEntry, T>)_dependencies._data) {
+                        if (kvp.Value.Types.Count > 0 && IsVisible(accessor, declaringScope, kvp.Key)) {
+                            res = res.Union(kvp.Value.Types);
+                        }
+                    }
+                }
+            }
+
+            if (res.Count > HARD_TYPE_LIMIT) {
+                ExceedsTypeLimit();
+            }
+
+            return res;
+        }
+
+        public bool HasTypes {
+            get {
+                if (_dependencies.Count == 0) {
+                    return false;
+                }
+                T oneDependency;
+                if (_dependencies.TryGetSingleValue(out oneDependency)) {
+                    return oneDependency.Types.Count > 0;
+                } else {
+                    foreach (var mod in ((AnalysisDictionary<IProjectEntry, T>)_dependencies._data)) {
+                        if (mod.Value.Types.Count > 0) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
         }
 
         /// <summary>
@@ -325,13 +386,15 @@ namespace Microsoft.PythonTools.Analysis {
             get {
                 var res = _emptySet;
                 if (_dependencies.Count != 0) {
-                    TypedDependencyInfo<AnalysisValue> oneDependency;
+                    T oneDependency;
                     if (_dependencies.TryGetSingleValue(out oneDependency)) {
                         res = oneDependency.Types ?? AnalysisSet.Empty;
                     } else {
 
                         foreach (var mod in _dependencies.DictValues) {
-                            res = res.Union(mod.Types);
+                            if (mod.Types.Count > 0) {
+                                res = res.Union(mod.Types);
+                            }
                         }
                     }
                 }
@@ -353,6 +416,157 @@ namespace Microsoft.PythonTools.Analysis {
             get {
                 return TypesNoCopy.Clone();
             }
+        }
+
+        public virtual bool IsEphemeral {
+            get {
+                return false;
+            }
+        }    
+
+        /// <summary>
+        /// If the number of types associated with this variable exceeds a
+        /// given limit, increases the union strength. This will cause more
+        /// types to be combined.
+        /// </summary>
+        /// <param name="typeCount">The number of types at which to increase
+        /// union strength.</param>
+        /// <param name="extraTypes">A set of types that is about to be added.
+        /// The estimated number of types includes these types.</param>
+        /// <returns>True if the type set was modified. This may be safely
+        /// ignored in many cases, since modifications will reenqueue dependent
+        /// units automatically.</returns>
+        internal bool MakeUnionStrongerIfMoreThan(int typeCount, IAnalysisSet extraTypes = null) {
+            if (EstimateTypeCount(extraTypes) >= typeCount) {
+                return MakeUnionStronger();
+            }
+            return false;
+        }
+
+        internal bool MakeUnionStronger() {
+            var uc = _emptySet.Comparer as UnionComparer;
+            int strength = uc != null ? uc.Strength + 1 : 0;
+            return MakeUnion(strength);
+        }
+
+        internal bool MakeUnion(int strength) {
+            if (strength > UnionStrength) {
+                bool anyChanged = false;
+
+                _emptySet = AnalysisSet.CreateUnion(strength);
+                foreach (var value in _dependencies.Values) {
+                    anyChanged |= value.MakeUnion(strength);
+                }
+
+                if (anyChanged) {
+                    EnqueueDependents();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        internal int UnionStrength {
+            get {
+                var uc = _emptySet.Comparer as UnionComparer;
+                return uc != null ? uc.Strength : -1;
+            }
+        }
+    }
+
+    class TypedDef : TypedDef<TypedDependencyInfo> {
+        internal static TypedDef[] EmptyArray = new TypedDef[0];
+
+        public TypedDef() {
+        }
+
+        protected override TypedDependencyInfo NewDefinition(int version) {
+            return new TypedDependencyInfo(version, _emptySet);
+        }
+
+        /// <summary>
+        /// Returns an infinite sequence of VariableDef instances. This can be
+        /// used with .Take(x).ToArray() to create an array of x instances.
+        /// </summary>
+        internal static IEnumerable<TypedDef> Generator {
+            get {
+                while (true) {
+                    yield return new TypedDef();
+                }
+            }
+        }
+
+    }
+
+    class VariableDef : TypedDef<ReferenceableDependencyInfo>, IReferenceable {
+        internal static VariableDef[] EmptyArray = new VariableDef[0];
+
+#if VARDEF_STATS
+        ~VariableDef() {
+            IncStat(String.Format("References_{0:D3}", References.Count()));
+            IncStat(String.Format("Assignments_{0:D3}", Definitions.Count()));
+        }
+#endif
+
+        internal static IEnumerable<VariableDef> Generator {
+            get {
+                while (true) {
+                    yield return new VariableDef();
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Checks to see if a variable still exists.  This depends upon the variable not
+        /// being ephemeral and that we still have valid type information for dependents.
+        /// </summary>
+        public bool VariableStillExists {
+            get {
+                if (!IsEphemeral) {
+                    if (HasTypes) {
+                        return true;
+                    }
+
+                    foreach (var dep in _dependencies) {
+                        if (dep.Value.Assignments != null) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        }
+
+        internal bool CopyTo(VariableDef to) {
+            bool anyChange = false;
+            Debug.Assert(this != to);
+            foreach (var keyValue in _dependencies) {
+                var projEntry = keyValue.Key;
+                var dependencies = keyValue.Value;
+
+                anyChange |= to.AddTypes(projEntry, dependencies.Types, false);
+                if (dependencies.DependentUnits != null) {
+                    foreach (var unit in dependencies.DependentUnits) {
+                        anyChange |= to.AddDependency(unit);
+                    }
+                }
+                if (dependencies._references != null) {
+                    foreach (var encodedLoc in dependencies._references) {
+                        anyChange |= to.AddReference(encodedLoc, projEntry);
+                    }
+                }
+                if (dependencies._assignments != null) {
+                    foreach (var assignment in dependencies._assignments) {
+                        anyChange |= to.AddAssignment(assignment, projEntry);
+                    }
+                }
+            }
+            return anyChange;
+        }
+
+        protected override ReferenceableDependencyInfo NewDefinition(int version) {
+            return new ReferenceableDependencyInfo(version, _emptySet);
         }
 
         public bool AddReference(Node node, AnalysisUnit unit) {
@@ -406,99 +620,8 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public virtual bool IsEphemeral {
-            get {
-                return false;
-            }
-        }
-
-        internal bool CopyTo(VariableDef to) {
-            bool anyChange = false;
-            Debug.Assert(this != to);
-            foreach (var keyValue in _dependencies) {
-                var projEntry = keyValue.Key;
-                var dependencies = keyValue.Value;
-
-                anyChange |= to.AddTypes(projEntry, dependencies.Types, false);
-                if (dependencies.DependentUnits != null) {
-                    foreach (var unit in dependencies.DependentUnits) {
-                        anyChange |= to.AddDependency(unit);
-                    }
-                }
-                if (dependencies._references != null) {
-                    foreach (var encodedLoc in dependencies._references) {
-                        anyChange |= to.AddReference(encodedLoc, projEntry);
-                    }
-                }
-                if (dependencies._assignments != null) {
-                    foreach (var assignment in dependencies._assignments) {
-                        anyChange |= to.AddAssignment(assignment, projEntry);
-                    }
-                }
-            }
-            return anyChange;
-        }
-
-
-        /// <summary>
-        /// Checks to see if a variable still exists.  This depends upon the variable not
-        /// being ephemeral and that we still have valid type information for dependents.
-        /// </summary>
-        public bool VariableStillExists {
-            get {
-                return !IsEphemeral && (_dependencies.Count > 0 || TypesNoCopy.Count > 0);
-            }
-        }
-
-        /// <summary>
-        /// If the number of types associated with this variable exceeds a
-        /// given limit, increases the union strength. This will cause more
-        /// types to be combined.
-        /// </summary>
-        /// <param name="typeCount">The number of types at which to increase
-        /// union strength.</param>
-        /// <param name="extraTypes">A set of types that is about to be added.
-        /// The estimated number of types includes these types.</param>
-        /// <returns>True if the type set was modified. This may be safely
-        /// ignored in many cases, since modifications will reenqueue dependent
-        /// units automatically.</returns>
-        internal bool MakeUnionStrongerIfMoreThan(int typeCount, IAnalysisSet extraTypes = null) {
-            if (EstimateTypeCount(extraTypes) >= typeCount) {
-                return MakeUnionStronger();
-            }
-            return false;
-        }
-
-        internal bool MakeUnionStronger() {
-            var uc = _emptySet.Comparer as UnionComparer;
-            int strength = uc != null ? uc.Strength + 1 : 0;
-            return MakeUnion(strength);
-        }
-
-        internal bool MakeUnion(int strength) {
-            if (strength > UnionStrength) {
-                bool anyChanged = false;
-
-                _emptySet = AnalysisSet.CreateUnion(strength);
-                foreach (var value in _dependencies.Values) {
-                    anyChanged |= value.MakeUnion(strength);
-                }
-
-                if (anyChanged) {
-                    EnqueueDependents();
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        internal int UnionStrength {
-            get {
-                var uc = _emptySet.Comparer as UnionComparer;
-                return uc != null ? uc.Strength : -1;
-            }
-        }
     }
+
 
     /// <summary>
     /// A variable def which was created on a read.  We need to create a variable def when
@@ -509,7 +632,7 @@ namespace Microsoft.PythonTools.Analysis {
     sealed class EphemeralVariableDef : VariableDef {
         public override bool IsEphemeral {
             get {
-                return TypesNoCopy.Count == 0;
+                return !HasTypes;
             }
         }
     }

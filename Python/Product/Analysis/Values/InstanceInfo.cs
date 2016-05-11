@@ -188,7 +188,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                             if (baseClass != null &&
                                 baseClass.Instance._instanceAttrs != null &&
                                 baseClass.Instance._instanceAttrs.TryGetValue(name, out def)) {
-                                res = res.Union(def.TypesNoCopy);
+                                res = res.Union(def.GetTypesNoCopy(unit, DeclaringModule));
                             }
                         } finally {
                             ns.Pop();
@@ -236,7 +236,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             instMember.AddAssignment(node, unit);
             instMember.MakeUnionStrongerIfMoreThan(ProjectState.Limits.InstanceMembers, value);
-            instMember.AddTypes(unit, value);
+            instMember.AddTypes(unit, value, true, DeclaringModule);
         }
 
         public override void DeleteMember(Node node, AnalysisUnit unit, string name) {

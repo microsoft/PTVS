@@ -92,6 +92,10 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        internal bool IsVisible(ProjectEntry assigningScope) {
+            return true;
+        }
+
         public void GetTreeAndCookie(out PythonAst tree, out IAnalysisCookie cookie) {
             lock (this) {
                 tree = _tree;
@@ -340,6 +344,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         bool IsAnalyzed { get; }
 
+        
         /// <summary>
         /// Returns the current analysis version of the project entry.
         /// </summary>

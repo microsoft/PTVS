@@ -117,9 +117,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
     }
 
-    internal class TypedDependencyInfo<T> : DependencyInfo where T : AnalysisValue {
+    internal class TypedDependencyInfo : DependencyInfo {
         private IAnalysisSet _types;
-        public ISet<EncodedLocation> _references, _assignments;
 #if FULL_VALIDATION
         internal int _changeCount = 0;
 #endif
@@ -167,6 +166,19 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 return _types;
             }
         }
+
+    }
+
+    internal class ReferenceableDependencyInfo : TypedDependencyInfo {
+        public ISet<EncodedLocation> _references, _assignments;
+
+        public ReferenceableDependencyInfo(int version)
+            : base(version) { }
+
+        public ReferenceableDependencyInfo(int version, IAnalysisSet emptySet)
+            : base(version, emptySet) {
+        }
+
 
         public bool AddReference(EncodedLocation location) {
             return HashSetExtensions.AddValue(ref _references, location);

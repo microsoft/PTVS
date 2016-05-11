@@ -25,13 +25,21 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly IAnalysisSet _function;
         private readonly IAnalysisSet[] _args;
         private readonly NameExpression[] _keywordArgNames;
+        private readonly IPythonProjectEntry _declProjEntry;
         private IAnalysisSet _argsTuple;
         private IAnalysisSet _keywordsDict;
 
-        public PartialFunctionInfo(IAnalysisSet function, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+        public PartialFunctionInfo(ProjectEntry declProjEntry, IAnalysisSet function, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            _declProjEntry = declProjEntry;
             _function = function;
             _args = args;
             _keywordArgNames = keywordArgNames;
+        }
+
+        public override IPythonProjectEntry DeclaringModule {
+            get {
+                return _declProjEntry;
+            }
         }
 
         public override IAnalysisSet Call(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
@@ -113,7 +121,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     _argsTuple = new SequenceInfo(_args.Take(_args.Length - _keywordArgNames.Length)
                         .Select(v => {
                             var vd = new VariableDef();
-                            vd.AddTypes(unit, v, false);
+                            vd.AddTypes(unit, v, false, DeclaringModule);
                             return vd;
                         }).ToArray(),
                         unit.ProjectState.ClassInfos[BuiltinTypeId.Tuple],

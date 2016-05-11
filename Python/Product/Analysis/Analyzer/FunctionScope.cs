@@ -38,10 +38,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             ReturnValue = new VariableDef();
             if (Function.FunctionDefinition.IsCoroutine) {
                 Coroutine = new CoroutineInfo(function.ProjectState, declModule);
-                ReturnValue.AddTypes(function.ProjectEntry, Coroutine.SelfSet, false);
+                ReturnValue.AddTypes(function.ProjectEntry, Coroutine.SelfSet, false, declModule);
             } else if (Function.FunctionDefinition.IsGenerator) {
                 Generator = new GeneratorInfo(function.ProjectState, declModule);
-                ReturnValue.AddTypes(function.ProjectEntry, Generator.SelfSet, false);
+                ReturnValue.AddTypes(function.ProjectEntry, Generator.SelfSet, false, declModule);
             }
         }
 
@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     param = AddVariable(astParams[i].Name);
                 }
                 param.MakeUnionStrongerIfMoreThan(limits.NormalArgumentTypes, others.Args[i]);
-                added |= param.AddTypes(entry, others.Args[i], false);
+                added |= param.AddTypes(entry, others.Args[i], false, unit.ProjectEntry);
             }
             if (_seqParameters != null) {
                 _seqParameters.List.MakeUnionStrongerIfMoreThan(limits.ListArgumentTypes, others.SequenceArgs);
@@ -113,10 +113,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 for (int i = 0; i < others.Args.Length && i < astParams.Count; ++i) {
                     VariableDef defParam, param;
                     if (TryGetVariable(astParams[i].Name, out param) &&
-                        !param.TypesNoCopy.Any() &&
+                        !param.HasTypes &&
                         scopeWithDefaultParameters.TryGetVariable(astParams[i].Name, out defParam)) {
-                        param.MakeUnionStrongerIfMoreThan(limits.NormalArgumentTypes, defParam.TypesNoCopy);
-                        added |= param.AddTypes(entry, defParam.TypesNoCopy, false);
+                        param.MakeUnionStrongerIfMoreThan(limits.NormalArgumentTypes, defParam.GetTypesNoCopy(entry, AnalysisValue.DeclaringModule));
+                        added |= param.AddTypes(entry, defParam.GetTypesNoCopy(unit, AnalysisValue.DeclaringModule), false, unit.ProjectEntry);
                     }
                 }
             }

@@ -602,7 +602,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return GenerateTypeName(bci._type);
             }
 
-            IterableInfo iteri = baseClass as IterableInfo;
+            IterableValue iteri = baseClass as IterableValue;
             if (iteri != null) {
                 return GenerateTypeName(iteri.PythonType, isRef, iteri.IndexTypes);
             }

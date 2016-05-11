@@ -215,7 +215,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            def._dependencies = default(SingleDict<IProjectEntry, TypedDependencyInfo<AnalysisValue>>);
+            def._dependencies = default(SingleDict<IProjectEntry, ReferenceableDependencyInfo>);
             foreach (var item in items) {
                 def.AddTypes(item.DeclaringModule, new SpecializedCallable(item, callable, mergeOriginalAnalysis).SelfSet);
             }
@@ -237,7 +237,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
             var variable = Scope.CreateVariable(node, unit, name, false);
-            if (variable.AddTypes(unit, value)) {
+            if (variable.AddTypes(unit, value, true, ProjectEntry)) {
                 ModuleDefinition.EnqueueDependents();
             }
 
@@ -341,7 +341,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (linkedScope != null) {
                 linkedScope.AddLinkedVariable(linkedName ?? name, importedValue);
             }
-            return importedValue.TypesNoCopy;
+            return importedValue.GetTypesNoCopy(unit, DeclaringModule);
         }
 
 

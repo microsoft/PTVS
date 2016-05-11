@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             IndexTypes[0].MakeUnionStrongerIfMoreThan(ProjectState.Limits.IndexTypes, set);
-            IndexTypes[0].AddTypes(unit, set);
+            IndexTypes[0].AddTypes(unit, set, true, DeclaringModule);
 
             UnionType = null;
         }
