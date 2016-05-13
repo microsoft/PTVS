@@ -772,4 +772,10 @@ executed in alphabetical order.
 Visit http://aka.ms/ptvsdocs for more information about what interactive window functionality can be 
 modified from these scripts.</value>
   </data>
+  <data name="UpgradedInterpreterReference" xml:space="preserve">
+    <value>One or more environment references has been updated and will no longer be recognized by previous versions.</value>
+  </data>
+  <data name="UpgradedInterpreterReferenceFailed" xml:space="preserve">
+    <value>Updating an environment reference failed because some information was missing. Please remove and re-add any environments that are not working.</value>
+  </data>
 </root>
