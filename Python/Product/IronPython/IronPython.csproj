@@ -128,11 +128,11 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(BuildRoot)Python\Product\Analysis\Analysis.csproj">
+    <ProjectReference Include="..\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Microsoft.PythonTools.Analysis</Name>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Product\PythonTools\PythonTools.csproj">
+    <ProjectReference Include="..\PythonTools\PythonTools.csproj">
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
       <Name>Microsoft.PythonTools</Name>
     </ProjectReference>
@@ -141,7 +141,7 @@
       <Name>Microsoft.PythonTools.IronPython.Interpreter</Name>
       <IncludeInVSIX>true</IncludeInVSIX>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Product\IronPythonResolver\IronPythonResolver.csproj">
+    <ProjectReference Include="..\IronPythonResolver\IronPythonResolver.csproj">
       <Project>{31F224B1-68DA-4524-9A1C-95F22492775B}</Project>
       <Name>Microsoft.IronPythonTools.Resolver</Name>
       <IncludeInVSIX>true</IncludeInVSIX>
