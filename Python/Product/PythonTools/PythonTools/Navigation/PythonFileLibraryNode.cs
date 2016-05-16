@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Navigation {
     class PythonFileLibraryNode : LibraryNode {
         private readonly HierarchyNode _hierarchy;
         public PythonFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename)
-            : base(parent, name, filename, LibraryNodeType.Namespaces, children: new PythonFileChildren((PythonFileNode)hierarchy)) {
+            : base(parent, name, filename, LibraryNodeType.Namespaces, children: new PythonFileChildren((FileNode)hierarchy)) {
             _hierarchy = hierarchy;
 
             ((PythonFileChildren)Children)._parent = this;
@@ -100,10 +100,10 @@ namespace Microsoft.PythonTools.Navigation {
 
     abstract class ObjectBrowserChildren : IList<LibraryNode> {
         private LibraryNode[] _children;
-        protected readonly PythonFileNode _hierarchy;
+        protected readonly FileNode _hierarchy;
         internal LibraryNode _parent;
 
-        public ObjectBrowserChildren(PythonFileNode hierarchy) {
+        public ObjectBrowserChildren(FileNode hierarchy) {
             _hierarchy = hierarchy;
         }
 
@@ -200,7 +200,7 @@ namespace Microsoft.PythonTools.Navigation {
     }
 
     class PythonFileChildren : ObjectBrowserChildren {
-        public PythonFileChildren(PythonFileNode hierarchy) : base(hierarchy) {
+        public PythonFileChildren(FileNode hierarchy) : base(hierarchy) {
         }
 
         protected override IEnumerable<CompletionResult> GetChildren() {
@@ -221,7 +221,7 @@ namespace Microsoft.PythonTools.Navigation {
     class MemberChildren : ObjectBrowserChildren {
         private readonly string _member;
 
-        public MemberChildren(PythonFileNode hierarchy, string member) : base(hierarchy) {
+        public MemberChildren(FileNode hierarchy, string member) : base(hierarchy) {
             _member = member;
         }
 

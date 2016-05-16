@@ -947,15 +947,16 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private BufferVersion GetBufferVersion(int fileId, int bufferId) {
             var entry = _projectFiles[fileId] as IPythonProjectEntry;
+            if (entry != null) {
+                PythonAst ast;
+                IAnalysisCookie cookie;
+                entry.GetTreeAndCookie(out ast, out cookie);
 
-            PythonAst ast;
-            IAnalysisCookie cookie;
-            entry.GetTreeAndCookie(out ast, out cookie);
-
-            var versions = cookie as VersionCookie;
-            BufferVersion versionInfo;
-            if (versions != null && versions.Buffers.TryGetValue(bufferId, out versionInfo)) {
-                return versionInfo;
+                var versions = cookie as VersionCookie;
+                BufferVersion versionInfo;
+                if (versions != null && versions.Buffers.TryGetValue(bufferId, out versionInfo)) {
+                    return versionInfo;
+                }
             }
             return null;
         }
@@ -1664,6 +1665,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private Response UpdateContent(AP.FileUpdateRequest request) {
             var entry = _projectFiles[request.fileId];
+            if (entry == null) {
+                return new AP.FileUpdateResponse() {
+                    failed = true
+                };
+            }
 
             SortedDictionary<int, CodeInfo> codeByBuffer = new SortedDictionary<int, CodeInfo>();
 #if DEBUG
@@ -1790,7 +1796,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
             IProjectEntry item;
             if (!_projectFiles.TryGetValue(path, out item)) {
-                if (ModulePath.IsPythonSourceFile(path)) {
+                if (path.EndsWith(".xaml", StringComparison.OrdinalIgnoreCase)) {
+                    item = _pyAnalyzer.AddXamlFile(path, null);
+                } else {
+                    // assume it's a Python file...
                     string modName;
                     try {
                         modName = ModulePath.FromFullPath(path, addingFromDirectory).ModuleName;
@@ -1821,8 +1830,6 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
 
                     item = pyEntry;
-                } else if (path.EndsWith(".xaml", StringComparison.OrdinalIgnoreCase)) {
-                    item = _pyAnalyzer.AddXamlFile(path, null);
                 }
 
                 if (item != null) {

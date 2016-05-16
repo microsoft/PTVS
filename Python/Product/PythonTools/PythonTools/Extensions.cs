@@ -316,6 +316,10 @@ namespace Microsoft.PythonTools {
             return false;
         }
 
+        internal static AnalysisEntry GetAnalysisEntry(this FileNode node) {
+            return ((PythonProjectNode)node.ProjectMgr).GetAnalyzer().GetAnalysisEntryFromPath(node.Url);
+        }
+
         /// <summary>
         /// Gets the best analyzer for this text view, accounting for things like REPL windows and
         /// difference windows.

@@ -577,7 +577,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         path = path
                     }).ConfigureAwait(false);
 
-                if (res != null) {
+                if (res != null && res.fileId != -1) {
                     OnAnalysisStarted();
 
                     var id = res.fileId;

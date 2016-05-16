@@ -900,8 +900,8 @@ namespace Microsoft.PythonTools.Language {
         }
 
         private void QueryStatusRename(OLECMD[] prgCmds, int i) {
-            IWpfTextView activeView = CommonPackage.GetActiveTextView(_serviceProvider);
-            if (activeView != null && activeView.GetPythonBufferAtCaret() != null) {
+            var analyzer = _textView.GetAnalyzerAtCaret(_serviceProvider);
+            if (analyzer != null && _textView.GetPythonBufferAtCaret() != null) {
                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
             } else {
                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
