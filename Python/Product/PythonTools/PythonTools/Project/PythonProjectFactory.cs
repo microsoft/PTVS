@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Build.Construction;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
@@ -64,6 +65,16 @@ namespace Microsoft.PythonTools.Project {
         internal const string PtvsTargets = @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets";
         internal const string WebTargets = @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets";
 
+        // These GUIDs were used for well-known interpreter IDs
+        private static readonly Dictionary<Guid, string> InterpreterIdMap = new Dictionary<Guid, string> {
+            { new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}"), "Global|PythonCore|{0}|x86" },
+            { new Guid("{9A7A9026-48C1-4688-9D5D-E5699D47D074}"), "Global|PythonCore|{0}|x64" },
+            { new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), "IronPython|{0}-32" },
+            { new Guid("{FCC291AA-427C-498C-A4D7-4502D6449B8C}"), "IronPython|{0}-64" },
+        };
+
+        
+
         public PythonProjectFactory(IServiceProvider/*!*/ package)
             : base(package) {
         }
@@ -84,6 +95,26 @@ namespace Microsoft.PythonTools.Project {
                     return Guid.TryParse(s, out g) && !IgnoredProjectTypeGuids.Contains(g);
                 })
             );
+        }
+
+        private static bool IsGuidValue(ProjectPropertyElement e) {
+            Guid g;
+            return Guid.TryParse(e.Value, out g);
+        }
+
+        private static bool IsGuidValue(ProjectMetadataElement e) {
+            Guid g;
+            return Guid.TryParse(e.Value, out g);
+        }
+
+        private static bool IsGuidValue(ProjectItemElement e) {
+            Guid g;
+            foreach (var i in (e.Include?.Split('/', '\\')).MaybeEnumerate()) {
+                if (Guid.TryParse(i?.Trim() ?? "", out g)) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         protected override ProjectUpgradeState UpgradeProjectCheck(
@@ -111,6 +142,19 @@ namespace Microsoft.PythonTools.Project {
                     log(__VSUL_ERRORLEVEL.VSUL_ERROR, Strings.ProjectRequiresVWDExpress);
                     return ProjectUpgradeState.Incompatible;
                 }
+            }
+
+            // Referencing an interpreter by GUID
+            if (projectXml.Properties.Where(p => p.Name == "InterpreterId").Any(IsGuidValue) ||
+                projectXml.ItemGroups.SelectMany(g => g.Items)
+                    .Where(i => i.ItemType == "InterpreterReference")
+                    .Any(IsGuidValue) ||
+                projectXml.ItemGroups.SelectMany(g => g.Items)
+                    .Where(i => i.ItemType == "Interpreter")
+                    .SelectMany(i => i.Metadata.Where(m => m.Name == "BaseInterpreter"))
+                    .Any(IsGuidValue)
+            ) {
+                return ProjectUpgradeState.OneWayUpgrade;
             }
 
             var imports = new HashSet<string>(projectXml.Imports.Select(p => p.Project), StringComparer.OrdinalIgnoreCase);
@@ -147,6 +191,59 @@ namespace Microsoft.PythonTools.Project {
                 version < new Version(4, 0)) {
                 projectXml.ToolsVersion = "4.0";
                 log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedToolsVersion);
+            }
+
+            // Referencing an interpreter by GUID
+            bool interpreterChanged = false;
+            var msbuildInterpreters = new Dictionary<Guid, string>();
+
+            foreach (var i in projectXml.ItemGroups.SelectMany(g => g.Items).Where(i => i.ItemType == "Interpreter")) {
+                var id = i.Metadata.LastOrDefault(m => m.Name == "Id");
+                if (id != null) {
+                    Guid guid;
+                    if (Guid.TryParse(id.Value, out guid)) {
+                        msbuildInterpreters[guid] = i.Include?.Trim('/', '\\');
+                    }
+                }
+
+                var mdBase = i.Metadata.LastOrDefault(m => m.Name == "BaseInterpreter");
+                if (mdBase == null) {
+                    continue;
+                }
+                var mdVer = i.Metadata.LastOrDefault(m => m.Name == "Version");
+                if (mdVer == null) {
+                    log(__VSUL_ERRORLEVEL.VSUL_ERROR, Strings.UpgradedInterpreterReferenceFailed);
+                    continue;
+                }
+
+                var newId = MapInterpreterId(mdBase.Value, mdVer.Value, null);
+                if (newId != null) {
+                    mdBase.Value = newId;
+                    interpreterChanged = true;
+                }
+            }
+
+            var interpreterId = projectXml.Properties.LastOrDefault(p => p.Name == "InterpreterId");
+            var interpreterVersion = projectXml.Properties.LastOrDefault(p => p.Name == "InterpreterVersion");
+            if (interpreterId != null && interpreterVersion != null) {
+                var newId = MapInterpreterId(interpreterId.Value, interpreterVersion.Value, msbuildInterpreters);
+                if (newId != null) {
+                    interpreterId.Value = newId;
+                    interpreterVersion.Parent.RemoveChild(interpreterVersion);
+                    interpreterChanged = true;
+                }
+            }
+
+            foreach (var i in projectXml.ItemGroups.SelectMany(g => g.Items).Where(i => i.ItemType == "InterpreterReference")) {
+                var newId = MapInterpreterId(i.Include, null, null);
+                if (newId != null) {
+                    i.Include = newId;
+                    interpreterChanged = true;
+                }
+            }
+
+            if (interpreterChanged) {
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedInterpreterReference);
             }
 
             // Importing a targets file from 2.1 Beta
@@ -230,6 +327,41 @@ namespace Microsoft.PythonTools.Project {
             if (!anySet) {
                 group.AddProperty(name, value);
             }
+        }
+
+        private static string MapInterpreterId(string idStr, string versionStr, IDictionary<Guid, string> msBuildInterpreters) {
+            int splitter = idStr.IndexOfAny(new[] { '/', '\\' });
+            if (splitter > 0) {
+                versionStr = idStr.Substring(splitter + 1);
+                idStr = idStr.Remove(splitter);
+            }
+
+            Guid id;
+            Version version;
+            if (string.IsNullOrEmpty(idStr) || !Guid.TryParse(idStr, out id)) {
+                return null;
+            }
+
+            string fmt;
+            if (InterpreterIdMap.TryGetValue(id, out fmt)) {
+                if (string.IsNullOrEmpty(versionStr) || !Version.TryParse(versionStr, out version)) {
+                    return null;
+                }
+
+                // CPython 3.5 32-bit needs a special fix to the version string
+                if (id == new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}") && version == new Version(3, 5)) {
+                    return fmt.FormatInvariant("3.5-32");
+                }
+
+                return fmt.FormatInvariant(version.ToString());
+            }
+
+            string msbuildId = null;
+            if ((msBuildInterpreters?.TryGetValue(id, out msbuildId) ?? false) && !string.IsNullOrEmpty(msbuildId)) {
+                return "MSBuild|{0}|$(MSBuildProjectFullPath)".FormatInvariant(msbuildId);
+            }
+
+            return null;
         }
     }
 }

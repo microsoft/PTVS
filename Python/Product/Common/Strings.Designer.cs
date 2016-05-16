@@ -1767,6 +1767,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to One or more environment references has been updated and will no longer be recognized by previous versions..
+        /// </summary>
+        public static string UpgradedInterpreterReference {
+            get {
+                return ResourceManager.GetString("UpgradedInterpreterReference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Updating an environment reference failed because some information was missing. Please remove and re-add any environments that are not working..
+        /// </summary>
+        public static string UpgradedInterpreterReferenceFailed {
+            get {
+                return ResourceManager.GetString("UpgradedInterpreterReferenceFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to This project has had old build references removed and may no longer work with prior PTVS versions..
         /// </summary>
         public static string UpgradedRemoveCommonProps {
