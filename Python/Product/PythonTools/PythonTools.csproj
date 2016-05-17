@@ -104,6 +104,9 @@
     <ProjectReference2 Include="$(BuildRoot)Python\Product\ProjectWizards\ProjectWizards.csproj" />
     <ProjectReference2 Include="$(BuildRoot)Python\Product\TestAdapter\TestAdapter.csproj" />
     <ProjectReference2 Include="$(BuildRoot)Python\Product\XamlDesignerSupport\XamlDesignerSupport.csproj" />
+    <Reference Include="Microsoft.VisualStudio.Debugger.Interop.14.0, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.Threading, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.WindowsAzure.CommonAzureTools.Contracts.1.2">
       <SpecificVersion>False</SpecificVersion>
@@ -254,6 +257,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
+    <Compile Include="PythonTools\Debugger\DTEDebuggerExtensions.cs" />
     <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisLocation.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisVariable.cs" />

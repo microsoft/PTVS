@@ -43,6 +43,7 @@ using Microsoft.VisualStudio.Text.Projection;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
+using Microsoft.PythonTools.Debugger;
 
 namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Execution")]
@@ -416,7 +417,9 @@ namespace Microsoft.PythonTools.Repl {
 
             var thread = await EnsureConnectedAsync();
             if (thread != null) {
-                return await thread.ExecuteText(text);
+                ExecutionResult result = await thread.ExecuteText(text);
+                _serviceProvider.GetDTE().Debugger.RefreshVariableViews();
+                return result;
             }
 
             WriteError(Strings.ReplDisconnected);

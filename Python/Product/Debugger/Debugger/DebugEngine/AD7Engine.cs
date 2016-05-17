@@ -1481,5 +1481,9 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             }
             return null;
         }
+
+        internal async void RefreshThreadFrames(long threadId) {
+            await _process.GetThreadFramesAsync(threadId);
+        }
     }
 }
