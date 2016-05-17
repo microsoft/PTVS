@@ -26,6 +26,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger;
@@ -39,6 +40,7 @@ using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Project.Web {
     /// <summary>
@@ -112,17 +114,21 @@ namespace Microsoft.PythonTools.Project.Web {
 
                 var debugger = (IVsDebugger)_serviceProvider.GetService(typeof(SVsShellDebugger));
                 if (url != null && debugger != null) {
-                    StartBrowser(url.AbsoluteUri, () => !IsDebugging(_serviceProvider, debugger));
+                    StartBrowser(url.AbsoluteUri, () => !IsDebugging(_serviceProvider, debugger))
+                        .HandleAllExceptions(_serviceProvider, GetType())
+                        .DoNotWait();
                 }
             } else {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
 
                 var psi = DebugLaunchHelper.CreateProcessStartInfo(_serviceProvider, config);
 
-                using (var process = Process.Start(psi)) {
-                    if (url != null && process != null) {
-                        StartBrowser(url.AbsoluteUri, () => process.HasExited);
-                    }
+                var process = Process.Start(psi);
+                if (url != null && process != null) {
+                    StartBrowser(url.AbsoluteUri, () => process.HasExited)
+                        .ContinueWith(t => { process.Close(); })
+                        .HandleAllExceptions(_serviceProvider, GetType())
+                        .DoNotWait();
                 }
             }
 
@@ -134,29 +140,41 @@ namespace Microsoft.PythonTools.Project.Web {
         }
 
 
-        private void StartBrowser(string url, Func<bool> shortCircuitPredicate) {
+        private Task StartBrowser(string url, Func<bool> shortCircuitPredicate) {
             Uri uri;
             if (!String.IsNullOrWhiteSpace(url) && Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri)) {
+                var tcs = new TaskCompletionSource<object>();
+
                 OnPortOpenedHandler.CreateHandler(
                     uri.Port,
                     shortCircuitPredicate: shortCircuitPredicate,
                     action: () => {
-                        var web = _serviceProvider.GetService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
-                        if (web == null) {
-                            PythonToolsPackage.OpenWebBrowser(url);
-                            return;
-                        }
+                        try {
+                            var web = _serviceProvider.GetService(typeof(SVsWebBrowsingService)) as IVsWebBrowsingService;
+                            if (web == null) {
+                                CommonPackage.OpenWebBrowser(url);
+                                return;
+                            }
 
-                        ErrorHandler.ThrowOnFailure(
-                            web.CreateExternalWebBrowser(
-                                (uint)__VSCREATEWEBBROWSER.VSCWB_ForceNew,
-                                VSPREVIEWRESOLUTION.PR_Default,
-                                url
-                            )
-                        );
+                            ErrorHandler.ThrowOnFailure(
+                                web.CreateExternalWebBrowser(
+                                    (uint)__VSCREATEWEBBROWSER.VSCWB_ForceNew,
+                                    VSPREVIEWRESOLUTION.PR_Default,
+                                    url
+                                )
+                            );
+                        } catch (Exception ex) when (!ex.IsCriticalException()) {
+                            tcs.SetException(ex);
+                        } finally {
+                            tcs.TrySetResult(null);
+                        }
                     }
                 );
+
+                return tcs.Task;
             }
+
+            return Task.FromResult<object>(null);
         }
 
 
