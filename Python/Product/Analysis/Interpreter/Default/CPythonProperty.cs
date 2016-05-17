@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public IEnumerable<LocationInfo> Locations {
             get {
                 if (_hasLocation) {
-                    yield return new LocationInfo(_declaringModule, _line, _column);
+                    yield return new LocationInfo(_declaringModule.FilePath, _line, _column);
                 }
             }
         }

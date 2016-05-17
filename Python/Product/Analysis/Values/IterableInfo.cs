@@ -21,23 +21,19 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     /// <summary>
-    /// Specialized built-in instance for sequences (lists, tuples)
+    /// Base class for iterables.  Not tied to whether the iterable is fixed to
+    /// certain known types (e.g. an iterable for a string) or a user defined
+    /// iterable.
+    /// 
+    /// Implementors just need to provide the UnionType and the ability to make
+    /// an iterator for the iterable.
     /// </summary>
-    internal class IterableInfo : BuiltinInstanceInfo {
-        internal readonly Node _node;
-        private IAnalysisSet _unionType;        // all types that have been seen
-        private VariableDef[] _indexTypes;     // types for known indices
+    internal abstract class BaseIterableValue : BuiltinInstanceInfo {
+        protected IAnalysisSet _unionType;        // all types that have been seen
         private AnalysisValue _iterMethod;
 
-        public IterableInfo(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node)
+        public BaseIterableValue(BuiltinClassInfo seqType)
             : base(seqType) {
-            _indexTypes = indexTypes;
-            _node = node;
-        }
-
-        public VariableDef[] IndexTypes {
-            get { return _indexTypes; }
-            set { _indexTypes = value; }
         }
 
         public IAnalysisSet UnionType {
@@ -48,15 +44,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             set { _unionType = value; }
         }
 
-        public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
-            if (_indexTypes.Length == 0) {
-                _indexTypes = new[] { new VariableDef() };
-                _indexTypes[0].AddDependency(unit);
-                return AnalysisSet.Empty;
-            } else {
-                _indexTypes[0].AddDependency(unit);
-            }
+        protected abstract void EnsureUnionType();
+        protected abstract IAnalysisSet MakeIteratorInfo(Node n, AnalysisUnit unit);
 
+        public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
             EnsureUnionType();
             return _unionType;
         }
@@ -75,41 +66,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            return GetTypeMember(node, unit, name);
-        }
-
         private IAnalysisSet IterableIter(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 0) {
                 return unit.Scope.GetOrMakeNodeValue(
                     node,
                     NodeValueKind.Iterator,
-                    n => new IteratorInfo(
-                        _indexTypes,
-                        IteratorInfo.GetIteratorTypeFromType(ClassInfo, unit),
-                        n
-                    )
+                    n => MakeIteratorInfo(n, unit)
                 );
             }
             return AnalysisSet.Empty;
         }
 
-        internal bool AddTypes(AnalysisUnit unit, IAnalysisSet[] types) {
-            if (_indexTypes.Length < types.Length) {
-                _indexTypes = _indexTypes.Concat(VariableDef.Generator).Take(types.Length).ToArray();
-            }
 
-            bool added = false;
-            for (int i = 0; i < types.Length; i++) {
-                added |= _indexTypes[i].MakeUnionStrongerIfMoreThan(ProjectState.Limits.IndexTypes, types[i]);
-                added |= _indexTypes[i].AddTypes(unit, types[i]);
+        public override string Description {
+            get {
+                return MakeDescription("iterable");
             }
-
-            if (added) {
-                _unionType = null;
-            }
-
-            return added;
         }
 
         protected string MakeDescription(string typeName) {
@@ -136,13 +108,72 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return typeName;
         }
 
-        public override string Description {
+        public override string ShortDescription {
             get {
-                return MakeDescription("iterable");
+                return _type.Name;
             }
         }
+    }
 
-        protected void EnsureUnionType() {
+    /// <summary>
+    /// Specialized built-in instance for sequences (lists, tuples) which are iterable.
+    /// 
+    /// Used for user defined sequence types where we'll track the individual values
+    /// inside of the iterable.
+    /// </summary>
+    internal class IterableValue : BaseIterableValue {
+        private VariableDef[] _indexTypes;     // types for known indices
+        internal readonly Node _node;
+
+        public IterableValue(VariableDef[] indexTypes, BuiltinClassInfo seqType, Node node)
+            : base(seqType) {
+            _indexTypes = indexTypes;
+            _node = node;
+        }
+
+        public VariableDef[] IndexTypes {
+            get { return _indexTypes; }
+            set { _indexTypes = value; }
+        }
+
+        public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+            if (_indexTypes.Length == 0) {
+                _indexTypes = new[] { new VariableDef() };
+                _indexTypes[0].AddDependency(unit);
+                return AnalysisSet.Empty;
+            } else {
+                _indexTypes[0].AddDependency(unit);
+            }
+
+            return base.GetEnumeratorTypes(node, unit);
+        }
+
+        internal bool AddTypes(AnalysisUnit unit, IAnalysisSet[] types) {
+            if (_indexTypes.Length < types.Length) {
+                _indexTypes = _indexTypes.Concat(VariableDef.Generator).Take(types.Length).ToArray();
+            }
+
+            bool added = false;
+            for (int i = 0; i < types.Length; i++) {
+                added |= _indexTypes[i].MakeUnionStrongerIfMoreThan(ProjectState.Limits.IndexTypes, types[i]);
+                added |= _indexTypes[i].AddTypes(unit, types[i], true, DeclaringModule);
+            }
+
+            if (added) {
+                _unionType = null;
+            }
+
+            return added;
+        }
+
+        protected override IAnalysisSet MakeIteratorInfo(Node n, AnalysisUnit unit) {
+            return new IteratorValue(
+                this,
+                BaseIteratorValue.GetIteratorTypeFromType(ClassInfo, unit)
+            );
+        }
+
+        protected override void EnsureUnionType() {
             if (_unionType == null) {
                 IAnalysisSet unionType = AnalysisSet.EmptyUnion;
                 if (Push()) {
@@ -158,15 +189,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override string ShortDescription {
-            get {
-                return _type.Name;
-            }
-        }
-
         internal override bool UnionEquals(AnalysisValue ns, int strength) {
             if (strength < MergeStrength.IgnoreIterableNode) {
-                var si = ns as IterableInfo;
+                var si = ns as IterableValue;
                 if (si != null && !_node.Equals(_node)) {
                     // If nodes are not equal, iterables cannot be merged.
                     return false;

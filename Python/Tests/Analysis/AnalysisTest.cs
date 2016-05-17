@@ -734,11 +734,120 @@ class D(object):
                 Prepare(mod2, GetSourceUnit(text2, "mod1"));
                 mod2.Analyze(CancellationToken.None);
 
-                VerifyReferences(UniqifyVariables(mod1.Analysis.GetVariablesByIndex("SomeMethod", text1.IndexOf("SomeMethod"))),
-                    new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(6, 20, VariableType.Reference));
+                var vars = mod1.Analysis.GetVariablesByIndex("SomeMethod", text1.IndexOf("SomeMethod"));
+                VerifyReferences(
+                    UniqifyVariables(vars),
+                    new VariableLocation(6, 9, VariableType.Definition), 
+                    new VariableLocation(6, 20, VariableType.Reference)
+                );
             }
 
         }
+
+        [TestMethod, Priority(0)]
+        public void MutatingCalls() {
+            using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
+
+                var text1 = @"
+def f(abc):
+    return abc
+";
+
+                var text2 = @"
+import mod1
+z = mod1.f(42)
+";
+
+                var mod1 = state.AddModule("mod1", "mod1", null);
+                Prepare(mod1, GetSourceUnit(text1, "mod1"));
+                var mod2 = state.AddModule("mod2", "mod2", null);
+                Prepare(mod2, GetSourceUnit(text2, "mod2"));
+
+                mod1.Analyze(CancellationToken.None);
+                mod2.Analyze(CancellationToken.None);
+
+                AssertUtil.ContainsExactly(
+                    mod2.Analysis.GetDescriptionsByIndex("z", text2.IndexOf("z = ")), 
+                    "int"
+                );
+                AssertUtil.ContainsExactly(
+                    mod1.Analysis.GetDescriptionsByIndex("abc", text1.IndexOf("return abc")),
+                    "int"
+                );
+                // change caller in text2
+                text2 = @"
+import mod1
+z = mod1.f('abc')
+";
+                Prepare(mod2, GetSourceUnit(text2, "mod2"));
+                mod2.Analyze(CancellationToken.None);
+
+                AssertUtil.ContainsExactly(
+                    mod2.Analysis.GetDescriptionsByIndex("z", text2.IndexOf("z = ")),
+                    "str"
+                );
+                AssertUtil.ContainsExactly(
+                    mod1.Analysis.GetDescriptionsByIndex("abc", text1.IndexOf("return abc")),
+                    "str"
+                );
+
+            }
+        }
+
+        /* Doesn't pass, we don't have a way to clear the assignments across modules...
+        [TestMethod, Priority(0)]
+        public void MutatingVariables() {
+            using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
+
+                var text1 = @"
+print(x)
+";
+
+                var text2 = @"
+import mod1
+mod1.x = x
+";
+
+
+                var text3 = @"
+import mod2
+mod2.x = 42
+";
+                var mod1 = state.AddModule("mod1", "mod1", null);
+                Prepare(mod1, GetSourceUnit(text1, "mod1"));
+                var mod2 = state.AddModule("mod2", "mod2", null);
+                Prepare(mod2, GetSourceUnit(text2, "mod2"));
+                var mod3 = state.AddModule("mod3", "mod3", null);
+                Prepare(mod3, GetSourceUnit(text3, "mod3"));
+
+                mod3.Analyze(CancellationToken.None);
+                mod2.Analyze(CancellationToken.None);
+                mod1.Analyze(CancellationToken.None);
+
+                state.AnalyzeQueuedEntries(CancellationToken.None);
+
+                AssertUtil.ContainsExactly(
+                    mod1.Analysis.GetDescriptionsByIndex("x", text1.IndexOf("x")),
+                    "int"
+                );
+                
+                text3 = @"
+import mod2
+mod2.x = 'abc'
+";
+
+                Prepare(mod3, GetSourceUnit(text3, "mod3"));
+                mod3.Analyze(CancellationToken.None);
+                state.AnalyzeQueuedEntries(CancellationToken.None);
+                state.AnalyzeQueuedEntries(CancellationToken.None);
+
+                AssertUtil.ContainsExactly(
+                    mod1.Analysis.GetDescriptionsByIndex("x", text1.IndexOf("x")),
+                    "str"
+                );
+            }
+        }
+        */
 
         [TestMethod, Priority(0)]
         public void PrivateMembers() {

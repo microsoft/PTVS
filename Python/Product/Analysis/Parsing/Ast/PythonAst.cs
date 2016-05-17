@@ -24,7 +24,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
     /// <summary>
     /// Top-level ast for all Python code.  Holds onto the body and the line mapping information.
     /// </summary>
-    public sealed class PythonAst : ScopeStatement, ILocationResolver {
+    public sealed class PythonAst : ScopeStatement {
         private readonly PythonLanguageVersion _langVersion;
         private readonly Statement _body;
         internal readonly NewLineLocation[] _lineLocations;
@@ -193,22 +193,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _body.AppendCodeString(res, ast, format);
             res.Append(this.GetExtraVerbatimText(ast));
         }
-
-        #region ILocationResolver Members
-
-        LocationInfo ILocationResolver.ResolveLocation(IProjectEntry project, object location) {
-            Node node = (Node)location;
-            MemberExpression me = node as MemberExpression;
-            SourceSpan span;
-            if (me != null) {
-                span = me.GetNameSpan(this);
-            } else {
-                span = node.GetSpan(this);
-            }
-            return new LocationInfo(project, span.Start.Line, span.Start.Column);
-        }
-
-        #endregion
     }
 }
 

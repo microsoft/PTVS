@@ -320,16 +320,17 @@ namespace Microsoft.PythonTools.Analysis {
 
         IAnalysisSet SpecialIter(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 1) {
-                return args[0].GetIterator(node, unit);
+                var res = args[0].GetIterator(node, unit);
+                return res;
             } else if (args.Length == 2) {
+
                 var iterator = unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.Iterator, n => {
-                    var iterTypes = new[] { new VariableDef() };
-                    return new IteratorInfo(iterTypes, unit.ProjectState.ClassInfos[BuiltinTypeId.CallableIterator], node);
+                    return new SingleIteratorValue(new VariableDef(), unit.ProjectState.ClassInfos[BuiltinTypeId.CallableIterator], unit.ProjectEntry);
                 });
-                foreach (var iter in iterator.OfType<IteratorInfo>()) {
+                foreach (var iter in iterator.OfType<SingleIteratorValue>()) {
                     // call the callable object
                     // the sentinel's type is never seen, so don't include it
-                    iter.AddTypes(unit, new[] { args[0].Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames) });
+                    iter._indexTypes.AddTypes(unit, args[0].Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames), true, unit.ProjectEntry);
                 }
                 return iterator;
             }
@@ -394,16 +395,16 @@ namespace Microsoft.PythonTools.Analysis {
         IAnalysisSet PartialFunction(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length >= 1) {
                 return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.PartialFunction, n => {
-                    return new PartialFunctionInfo(args[0], args.Skip(1).ToArray(), keywordArgNames);
+                    return new PartialFunctionInfo(unit.ProjectEntry, args[0], args.Skip(1).ToArray(), keywordArgNames);
                 });
             }
 
             return AnalysisSet.Empty;
         }
 
-        private static IEnumerable<string> IterateStringConstants(IEnumerable<VariableDef> args) {
+        private static IEnumerable<string> IterateStringConstants(AnalysisUnit unit, IEnumerable<VariableDef> args) {
             return args
-                .SelectMany(arg => arg.TypesNoCopy)
+                .SelectMany(arg => arg.GetTypesNoCopy(unit))
                 .Where(obj => obj != null)
                 .Select(obj => obj.GetConstantValueAsString())
                 .Where(value => !string.IsNullOrEmpty(value));
@@ -412,8 +413,8 @@ namespace Microsoft.PythonTools.Analysis {
         IAnalysisSet UpdateWrapperFunction(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             var wrapper = GetArg(args, keywordArgNames, "wrapper", 0);
             var wrapped = GetArg(args, keywordArgNames, "wrapped", 1);
-            var assigned = GetArg(args, keywordArgNames, "assigned", 2) as IterableInfo;
-            var updated = GetArg(args, keywordArgNames, "updated", 3) as IterableInfo;
+            var assigned = GetArg(args, keywordArgNames, "assigned", 2) as IterableValue;
+            var updated = GetArg(args, keywordArgNames, "updated", 3) as IterableValue;
 
             if (wrapper == null || wrapped == null) {
                 return AnalysisSet.Empty;
@@ -422,7 +423,7 @@ namespace Microsoft.PythonTools.Analysis {
             wrapper.SetMember(node, unit, "__wrapped__", wrapped);
             
             var assignedItems = (assigned != null) ?
-                IterateStringConstants(assigned.IndexTypes) :
+                IterateStringConstants(unit, assigned.IndexTypes) :
                 new[] { "__module__", "__name__", "__qualname__", "__doc__", "__annotations__" };
 
             foreach (var attr in assignedItems) {
@@ -433,7 +434,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             var updatedItems = (updated != null) ?
-                IterateStringConstants(updated.IndexTypes) :
+                IterateStringConstants(unit, updated.IndexTypes) :
                 new[] { "__dict__" };
 
             foreach (var attr in updatedItems) {
@@ -490,6 +491,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
 
                 return new PartialFunctionInfo(
+                    unit.ProjectEntry,
                     updateWrapper,
                     newArgs,
                     newKeywords
@@ -550,7 +552,10 @@ namespace Microsoft.PythonTools.Analysis {
                                     VariableDef def;
                                     if (instInfo.InstanceAttributes.TryGetValue(keyValue.Key, out def)) {
                                         def.AddAssignment(
-                                            new EncodedLocation(SourceLocationResolver.Instance, new SourceLocation(1, type.LineNumber, type.LineOffset)),
+                                            new EncodedLocation(
+                                                new LocationInfo(xamlProject.FilePath, type.LineNumber, type.LineOffset),
+                                                null
+                                            ),
                                             xamlProject
                                         );
                                     }
@@ -573,7 +578,10 @@ namespace Microsoft.PythonTools.Analysis {
                                     VariableDef def;
                                     if (ci.Scope.TryGetVariable(keyValue.Key, out def)) {
                                         def.AddReference(
-                                            new EncodedLocation(SourceLocationResolver.Instance, new SourceLocation(1, member.LineNumber, member.LineOffset)),
+                                            new EncodedLocation(
+                                                new LocationInfo(xamlProject.FilePath, member.LineNumber, member.LineOffset),
+                                                null
+                                            ),
                                             xamlProject
                                         );
                                     }

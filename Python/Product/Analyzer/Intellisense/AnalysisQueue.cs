@@ -205,8 +205,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         if (ex.IsCriticalException() || System.Diagnostics.Debugger.IsAttached) {
                             throw;
                         }
-
-                        //ex.ReportUnhandledException(null, GetType());
+                        _analyzer.ReportUnhandledException(ex);
                         _cancel.Cancel();
                     }
                 } else {

@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
@@ -21,10 +22,8 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    class SequenceBuiltinInstanceInfo : BuiltinInstanceInfo {
+    class SequenceBuiltinInstanceInfo : BaseIterableValue {
         private readonly bool _supportsMod;
-        private readonly IAnalysisSet _indexTypes;
-        private AnalysisValue _iterMethod, _iterator;
 
         public SequenceBuiltinInstanceInfo(BuiltinClassInfo klass, bool sequenceOfSelf, bool supportsMod)
             : base(klass) {
@@ -32,43 +31,31 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             var seqInfo = klass as SequenceBuiltinClassInfo;
             if (seqInfo != null) {
-                _indexTypes = seqInfo.IndexTypes;
+                UnionType = seqInfo.IndexTypes;
             } else if (sequenceOfSelf) {
-                _indexTypes = SelfSet;
+                UnionType = SelfSet;
             } else {
-                _indexTypes = AnalysisSet.Empty;
+                UnionType = AnalysisSet.Empty;
             }
+        }
+
+        protected override void EnsureUnionType() {
+        }
+
+        protected override IAnalysisSet MakeIteratorInfo(Node n, AnalysisUnit unit) {
+            return new FixedIteratorValue(
+                UnionType,
+                BaseIteratorValue.GetIteratorTypeFromType(ClassInfo, unit)
+            );
         }
 
         public override IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
-            return _indexTypes;
+            return UnionType;
         }
 
         public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
-            return _indexTypes;
-        }
-
-        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
-            var res = base.GetTypeMember(node, unit, name);
-
-            if (name == "__iter__") {
-                return _iterMethod = _iterMethod ?? new SpecializedCallable(
-                    res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
-                    SequenceIter,
-                    false
-                );
-            }
-
-            return res;
-        }
-        private IAnalysisSet SequenceIter(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            if (_iterator == null) {
-                var types = new [] { new VariableDef() };
-                types[0].AddTypes(unit, _indexTypes, false);
-                _iterator = new IteratorInfo(types, IteratorInfo.GetIteratorTypeFromType(ClassInfo, unit), node);
-            }
-            return _iterator ?? AnalysisSet.Empty;
-        }
+            return UnionType;
+        }       
 
         public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, Parsing.PythonOperator operation, IAnalysisSet rhs) {
             var res = AnalysisSet.Empty;
@@ -107,12 +94,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return Description;
         }
 
+        public override string ShortDescription {
+            get {
+                return Description;
+            }
+        }
+
         public override string Description {
             get {
-                if (_indexTypes == this) {
+                if (UnionType == this) {
                     return _type.Name;
                 } else {
-                    return IterableInfo.MakeDescription(this, _type.Name, _indexTypes);
+                    return IterableValue.MakeDescription(this, _type.Name, UnionType);
                 }
             }
         }

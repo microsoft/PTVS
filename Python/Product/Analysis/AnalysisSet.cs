@@ -44,6 +44,13 @@ namespace Microsoft.PythonTools.Analysis {
     }
 
     /// <summary>
+    /// Marker interface to indicate that an analysis set is a read-only copy on write
+    /// analysis set.
+    /// </summary>
+    internal interface IImmutableAnalysisSet : IAnalysisSet {
+    }
+
+    /// <summary>
     /// Provides factory and extension methods for objects implementing
     /// <see cref="IAnalysisSet" />.
     /// </summary>
@@ -594,7 +601,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
-        sealed class AnalysisSetEmptyObject : IAnalysisSet {
+        sealed class AnalysisSetEmptyObject : IAnalysisSet, IImmutableAnalysisSet {
             public static readonly IAnalysisSet Instance = new AnalysisSetEmptyObject();
 
             public IAnalysisSet Add(AnalysisValue item, bool canMutate = true) {
@@ -663,7 +670,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
-        sealed class AnalysisSetOneObject : IAnalysisSet {
+        sealed class AnalysisSetOneObject : IAnalysisSet, IImmutableAnalysisSet {
             public readonly AnalysisValue Value;
 
             public AnalysisSetOneObject(AnalysisValue value) {
@@ -760,7 +767,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
-        sealed class AnalysisSetTwoObject : IAnalysisSet {
+        sealed class AnalysisSetTwoObject : IAnalysisSet, IImmutableAnalysisSet {
             public readonly AnalysisValue Value1, Value2;
 
             public AnalysisSetTwoObject(AnalysisValue value1, AnalysisValue value2) {
@@ -883,7 +890,7 @@ namespace Microsoft.PythonTools.Analysis {
 
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
-        sealed class AnalysisSetEmptyUnion : IAnalysisSet {
+        sealed class AnalysisSetEmptyUnion : IAnalysisSet, IImmutableAnalysisSet {
             public static readonly IAnalysisSet[] Instances = UnionComparer.Instances.Select(cmp => new AnalysisSetEmptyUnion(cmp)).ToArray();
 
             private readonly UnionComparer _comparer;
@@ -961,7 +968,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
-        sealed class AnalysisSetOneUnion : IAnalysisSet {
+        sealed class AnalysisSetOneUnion : IAnalysisSet, IImmutableAnalysisSet {
             public readonly AnalysisValue Value;
             private readonly UnionComparer _comparer;
 
@@ -1083,7 +1090,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         [DebuggerDisplay(DebugViewProxy.DisplayString), DebuggerTypeProxy(typeof(DebugViewProxy))]
-        sealed class AnalysisSetTwoUnion : IAnalysisSet {
+        sealed class AnalysisSetTwoUnion : IAnalysisSet, IImmutableAnalysisSet {
             public readonly AnalysisValue Value1, Value2;
             private readonly UnionComparer _comparer;
 

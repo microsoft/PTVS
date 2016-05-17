@@ -20,25 +20,19 @@ using System.Collections.Generic;
 namespace Microsoft.PythonTools.Analysis {
     public class LocationInfo : IEquatable<LocationInfo>, ILocationResolver {
         private readonly int _line, _column;
-        private readonly IProjectEntry _entry;
+        private readonly string _path;
         internal static LocationInfo[] Empty = new LocationInfo[0];
 
         private static readonly IEqualityComparer<LocationInfo> _fullComparer = new FullLocationComparer();
 
-        internal LocationInfo(IProjectEntry entry, int line, int column) {
-            _entry = entry;
+        internal LocationInfo(string path, int line, int column) {
+            _path = path;
             _line = line;
             _column = column;
         }
 
-        public IProjectEntry ProjectEntry {
-            get {
-                return _entry;
-            }
-        }
-
         public string FilePath {
-            get { return _entry.FilePath; }
+            get { return _path; }
         }
 
         public int Line {
@@ -60,7 +54,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public override int GetHashCode() {
-            return Line.GetHashCode() ^ ProjectEntry.GetHashCode();
+            return Line.GetHashCode() ^ FilePath.GetHashCode();
         }
 
         public bool Equals(LocationInfo other) {
@@ -68,7 +62,7 @@ namespace Microsoft.PythonTools.Analysis {
             // This works nicely for get and call which can both add refs and when they're broken
             // apart you still see both refs, but when they're together you only see 1.
             return Line == other.Line &&
-                ProjectEntry == other.ProjectEntry;
+                FilePath == other.FilePath;
         }
 
         /// <summary>
@@ -85,17 +79,17 @@ namespace Microsoft.PythonTools.Analysis {
             public bool Equals(LocationInfo x, LocationInfo y) {
                 return x.Line == y.Line &&
                     x.Column == y.Column &&
-                    x.ProjectEntry == y.ProjectEntry;
+                    x.FilePath == y.FilePath;
             }
 
             public int GetHashCode(LocationInfo obj) {
-                return obj.Line.GetHashCode() ^ obj.Column.GetHashCode() ^ obj.ProjectEntry.GetHashCode();
+                return obj.Line.GetHashCode() ^ obj.Column.GetHashCode() ^ obj.FilePath.GetHashCode();
             }
         }
 
         #region ILocationResolver Members
 
-        LocationInfo ILocationResolver.ResolveLocation(IProjectEntry project, object location) {
+        LocationInfo ILocationResolver.ResolveLocation(object location) {
             return this;
         }
 

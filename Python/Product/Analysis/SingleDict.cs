@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Analysis {
         where TValue : class
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-        private object _data; // AnalysisDictionary<TKey, TValue>, SingleEntry<TKey, TValue> or IEqualityComparer<TKey>
+        internal object _data; // AnalysisDictionary<TKey, TValue>, SingleEntry<TKey, TValue> or IEqualityComparer<TKey>
 
         public SingleDict(IEqualityComparer<TKey> comparer) {
             _data = comparer;
@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        sealed class SingleDependency {
+        internal sealed class SingleDependency {
             public readonly TKey Key;
             public TValue Value;
             public readonly IEqualityComparer<TKey> Comparer;
@@ -175,6 +175,11 @@ namespace Microsoft.PythonTools.Analysis {
             }
             value = default(TValue);
             return false;
+        }
+
+        public bool TryGetSingleDependency(out SingleDependency dependency) {
+            dependency = _data as SingleDependency;
+            return dependency != null;
         }
 
 

@@ -387,7 +387,7 @@ namespace Microsoft.PythonTools.Analysis {
                                 }
 
                                 foreach (var location in type.Locations) {
-                                    if (location.ProjectEntry != modInfo.ProjectEntry) {
+                                    if (location.FilePath != modInfo.ProjectEntry.FilePath) {
                                         // declared in another module
                                         return false;
                                     }

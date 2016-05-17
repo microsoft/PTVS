@@ -63,6 +63,7 @@ namespace Microsoft.PythonTools.Analysis {
         private static object _nullKey = new object();
         private readonly SemaphoreSlim _reloadLock = new SemaphoreSlim(1, 1);
         private ExceptionDispatchInfo _loadKnownTypesException;
+        private Dictionary<IProjectEntry[], AggregateProjectEntry> _aggregates = new Dictionary<IProjectEntry[], AggregateProjectEntry>(AggregateComparer.Instance);
 
         private const string AnalysisLimitsKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion +
             @"\Analysis\Project";
@@ -1050,5 +1051,77 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         #endregion
+
+        internal AggregateProjectEntry GetAggregate(params IProjectEntry[] aggregating) {
+            Debug.Assert(new HashSet<IProjectEntry>(aggregating).Count == aggregating.Length);
+
+            SortAggregates(aggregating);
+
+            return GetAggregateWorker(aggregating);
+        }
+
+        private static void SortAggregates(IProjectEntry[] aggregating) {
+            Array.Sort(aggregating, (x, y) => x.GetHashCode() - y.GetHashCode());
+        }
+
+        internal AggregateProjectEntry GetAggregate(HashSet<IProjectEntry> from, IProjectEntry with) {
+            Debug.Assert(!from.Contains(with));
+
+            IProjectEntry[] all = new IProjectEntry[from.Count + 1];
+            from.CopyTo(all);
+            all[from.Count] = with;
+
+            SortAggregates(all);
+
+            return GetAggregateWorker(all);
+        }
+
+        internal void ClearAggregate(AggregateProjectEntry entry) {
+            var aggregating = entry._aggregating.ToArray();
+            SortAggregates(aggregating);
+
+            _aggregates.Remove(aggregating);
+        }
+
+        private AggregateProjectEntry GetAggregateWorker(IProjectEntry[] all) {
+            AggregateProjectEntry agg;
+            if (!_aggregates.TryGetValue(all, out agg)) {
+                _aggregates[all] = agg = new AggregateProjectEntry(new HashSet<IProjectEntry>(all));
+
+                foreach (var proj in all) {
+                    IAggregateableProjectEntry aggretable = proj as IAggregateableProjectEntry;
+                    if (aggretable != null) {
+                        aggretable.AggregatedInto(agg);
+                    }
+                }
+            }
+
+            return agg;
+        }
+
+        class AggregateComparer : IEqualityComparer<IProjectEntry[]> {
+            public static AggregateComparer Instance = new AggregateComparer();
+
+            public bool Equals(IProjectEntry[] x, IProjectEntry[] y) {
+                if (x.Length != y.Length) {
+                    return false;
+                }
+                for (int i = 0; i < x.Length; i++) {
+                    if (x[i] != y[i]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            public int GetHashCode(IProjectEntry[] obj) {
+                int res = 0;
+                for (int i = 0; i < obj.Length; i++) {
+                    res ^= obj[i].GetHashCode();
+                }
+                return res;
+            }
+        }
+
     }
 }

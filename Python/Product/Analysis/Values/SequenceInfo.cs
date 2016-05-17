@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// <summary>
     /// Specialized built-in instance for sequences (lists, tuples)
     /// </summary>
-    internal class SequenceInfo : IterableInfo {
+    internal class SequenceInfo : IterableValue {
         private readonly ProjectEntry _declaringModule;
         private readonly int _declaringVersion;
         
@@ -68,9 +68,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
                                 _ => new SequenceInfo(new[] { new VariableDef() }, ClassInfo, node, unit.ProjectEntry)
                             );
                             idx = seq.IndexTypes[0];
-                            idx.AddTypes(unit, GetEnumeratorTypes(node, unit));
+                            idx.AddTypes(unit, GetEnumeratorTypes(node, unit), true, DeclaringModule);
                         }
-                        idx.AddTypes(unit, type.GetEnumeratorTypes(node, unit));
+                        idx.AddTypes(unit, type.GetEnumeratorTypes(node, unit), true, DeclaringModule);
                     }
 
                     if (seq != null) {
@@ -191,7 +191,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 IndexTypes = newTypes;
             }
-            IndexTypes[index].AddTypes(unit, value);
+            IndexTypes[index].AddTypes(unit, value, true, DeclaringModule);
         }
 
         public override void SetIndex(Node node, AnalysisUnit unit, IAnalysisSet index, IAnalysisSet value) {
@@ -203,7 +203,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (IndexTypes.Length == 0) {
                     IndexTypes = new[] { new VariableDef() };
                 }
-                IndexTypes[0].AddTypes(unit, value);
+                IndexTypes[0].AddTypes(unit, value, true, DeclaringModule);
             }
         }
 
@@ -216,15 +216,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override string ToString() {
             return "*" + base.ToString();
-        }
-
-        internal int TypesCount {
-            get {
-                if (IndexTypes == null) {
-                    return 0;
-                }
-                return IndexTypes.Aggregate(0, (total, it) => total + it.TypesNoCopy.Count);
-            }
         }
 
         internal void MakeUnionStronger() {
@@ -261,7 +252,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 location,
                 unit.ProjectEntry
             );
-            base.AddTypes(unit, List);
+            base.AddTypes(unit, List, false, unit.DeclaringModule.ProjectEntry);
         }
 
         public ListParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
@@ -272,7 +263,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 location,
                 unit.ProjectEntry
             );
-            base.AddTypes(unit, List);
+            base.AddTypes(unit, List, false, unit.DeclaringModule.ProjectEntry);
         }
     }
 

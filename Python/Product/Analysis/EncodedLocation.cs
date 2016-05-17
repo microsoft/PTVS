@@ -67,8 +67,8 @@ namespace Microsoft.PythonTools.Analysis {
 
         #endregion
 
-        public LocationInfo GetLocationInfo(IProjectEntry project) {
-            return Resolver.ResolveLocation(project, Location);
+        public LocationInfo GetLocationInfo() {
+            return Resolver.ResolveLocation(Location);
         }
     }
 }

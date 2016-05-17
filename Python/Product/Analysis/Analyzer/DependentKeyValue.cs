@@ -218,7 +218,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         internal bool CopyKeysTo(VariableDef to) {
             bool added = false;
             foreach (var dependency in _dependencies) {
-                added |= to.AddTypes(dependency.Key, dependency.Value.KeyValues.Keys);
+                added |= to.AddTypes(dependency.Key, AnalysisSet.Create(dependency.Value.KeyValues.Keys));
             }
 
             if (added) {

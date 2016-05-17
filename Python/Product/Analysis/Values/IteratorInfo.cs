@@ -14,18 +14,22 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
     /// <summary>
-    /// Specialized built-in instance for sequences (lists, tuples)
+    /// Base class for an iterator.  Used for both built-in types with fixed
+    /// iteration types as well as user defined iterators where the types can
+    /// change.
     /// </summary>
-    internal class IteratorInfo : IterableInfo {
+    internal abstract class BaseIteratorValue : BuiltinInstanceInfo {
         private AnalysisValue _iter;
         private AnalysisValue _next;
+
+        public BaseIteratorValue(BuiltinClassInfo klass) : base(klass) {
+        }
 
         internal static BuiltinClassInfo GetIteratorTypeFromType(BuiltinClassInfo klass, AnalysisUnit unit) {
             switch (klass.PythonType.TypeId) {
@@ -58,41 +62,112 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public IteratorInfo(VariableDef[] indexTypes, BuiltinClassInfo iterType, Node node)
-            : base(indexTypes, iterType, node) {
-        }
-
         public override IAnalysisSet GetIterator(Node node, AnalysisUnit unit) {
             return SelfSet;
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var res = base.GetMember(node, unit, name);
-
             if (unit.ProjectState.LanguageVersion.Is2x() && name == "next" ||
                 unit.ProjectState.LanguageVersion.Is3x() && name == "__next__") {
                 return _next = _next ?? new SpecializedCallable(
-                    res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                    null,
                     IteratorNext,
                     false
                 );
             } else if (name == "__iter__") {
                 return _iter = _iter ?? new SpecializedCallable(
-                    res.OfType<BuiltinNamespace<IPythonType>>().FirstOrDefault(),
+                    null,
                     IteratorIter,
                     false
                 );
             }
-            return res;
+
+            return base.GetMember(node, unit, name);
         }
 
         private IAnalysisSet IteratorIter(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             return this;
         }
 
-        private IAnalysisSet IteratorNext(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            return UnionType;
+        protected abstract IAnalysisSet IteratorNext(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames);
+    }
+
+    /// <summary>
+    /// Iterator which always produces the same type of object.
+    /// </summary>
+    internal class FixedIteratorValue : BaseIteratorValue {
+        private readonly IAnalysisSet _iterable;
+
+        public FixedIteratorValue(IAnalysisSet iterable, BuiltinClassInfo klass) : base(klass) {
+            _iterable = iterable;
+        }
+
+        protected override IAnalysisSet IteratorNext(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            return _iterable;
+        }
+    }
+
+    /// <summary>
+    /// Iterator for user defined sequence which can have types added to it but is tracked
+    /// by a single VariableDef for all types.  Used for iterators over things like 
+    /// dictionary keys.
+    /// </summary>
+    internal class SingleIteratorValue : BaseIteratorValue {
+        internal readonly VariableDef _indexTypes;
+        private readonly IPythonProjectEntry _declModule;
+
+        public SingleIteratorValue(VariableDef indexTypes, BuiltinClassInfo iterType, IPythonProjectEntry declModule)
+            : base(iterType) {
+            _indexTypes = indexTypes;
+            _declModule = declModule;
+        }
+
+        public override IPythonProjectEntry DeclaringModule {
+            get {
+                return _declModule;
+            }
+        }
+
+        protected override IAnalysisSet IteratorNext(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            return _indexTypes.GetTypesNoCopy(unit, DeclaringModule);
+        }
+    }
+
+    /// <summary>
+    /// Iterator for a user defined sequence which can have multiple independent indicies
+    /// whoses values are all precisely tracked.
+    /// </summary>
+    internal class IteratorValue : BaseIteratorValue {
+        private readonly IterableValue _iterable;
+
+        public IteratorValue(IterableValue iterable, BuiltinClassInfo iterType)
+            : base(iterType) {
+            _iterable = iterable;
+        }
+
+        public override IPythonProjectEntry DeclaringModule {
+            get {
+                return _iterable.DeclaringModule;
+            }
+        }
+
+        public override int DeclaringVersion {
+            get {
+                return _iterable.DeclaringVersion;
+            }
+        }
+
+        protected override IAnalysisSet IteratorNext(Node node, Analysis.AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            return _iterable.UnionType;
+        }
+
+        public IAnalysisSet UnionType {
+            get {
+                return _iterable.UnionType;
+            }
+            set {
+                _iterable.UnionType = value;
+            }
         }
     }
 }

@@ -41,7 +41,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 lock (refs) {
                     refs.GetReferences(unit.DeclaringModule.ProjectEntry)
-                        .AddReference(new EncodedLocation(unit.Tree, node));
+                        .AddReference(new EncodedLocation(unit, node));
                 }
             }
         }
@@ -96,7 +96,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 foreach (var keyValue in this) {
                     if (keyValue.Value.References != null) {
                         foreach (var reference in keyValue.Value.References) {
-                            yield return reference.GetLocationInfo(keyValue.Key);
+                            yield return reference.GetLocationInfo();
                         }
                     }
                 }
@@ -109,12 +109,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// </summary>
     class ReferenceList : IReferenceable {
         public readonly int Version;
-        public readonly IProjectEntry Project;
+        public readonly string Project;
         public ISet<EncodedLocation> References;
 
         public ReferenceList(IProjectEntry project) {
             Version = project.AnalysisVersion;
-            Project = project;
+            Project = project.FilePath;
             References = new HashSet<EncodedLocation>();
         }
 
@@ -126,23 +126,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         #region IReferenceable Members
 
-        public IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> Definitions {
+        public IEnumerable<EncodedLocation> Definitions {
             get { yield break; }
         }
 
-        IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> IReferenceable.References {
+        IEnumerable<EncodedLocation> IReferenceable.References {
             get {
                 return ReferencesNoLock.AsLockedEnumerable(this);
             }
         }
 
-        IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> ReferencesNoLock {
+        IEnumerable<EncodedLocation> ReferencesNoLock {
             get {
                 if (References != null) {
-                    foreach (var location in References) {
-                        yield return new KeyValuePair<IProjectEntry, EncodedLocation>(Project, location);
-                    }
+                    return References;
                 }
+                return Enumerable.Empty<EncodedLocation>();
             }
         }
 
@@ -161,16 +160,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         #region IReferenceable Members
 
-        public IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> Definitions {
+        public IEnumerable<EncodedLocation> Definitions {
             get {
-                yield return new KeyValuePair<IProjectEntry, EncodedLocation>(
-                    _location.ProjectEntry,
-                    new EncodedLocation(_location, null)
-                );
+
+                yield return new EncodedLocation(_location, null);
             }
         }
 
-        IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> IReferenceable.References {
+        IEnumerable<EncodedLocation> IReferenceable.References {
             get { yield break; }
         }
 

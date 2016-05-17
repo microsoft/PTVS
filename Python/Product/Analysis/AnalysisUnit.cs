@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// AnalysisUnit which is dependent upon the variable.  If the value of a variable changes then all of the dependent
     /// AnalysisUnit's will be re-enqueued.  This proceeds until we reach a fixed point.
     /// </summary>
-    public class AnalysisUnit : ISet<AnalysisUnit> {
+    public class AnalysisUnit : ISet<AnalysisUnit>, ILocationResolver {
         internal InterpreterScope _scope;
         private ModuleInfo _declaringModule;
 #if DEBUG
@@ -103,6 +103,12 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        public virtual IVersioned DependencyProject {
+            get {
+                return ProjectEntry;
+            }
+        }
+
         internal ProjectEntry ProjectEntry {
             get { return DeclaringModule.ProjectEntry; }
         }
@@ -122,8 +128,6 @@ namespace Microsoft.PythonTools.Analysis {
                 this.IsInQueue = true;
             }
         }
-
-
 
         /// <summary>
         /// The AST which will be analyzed when this node is analyzed
@@ -165,7 +169,7 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var variableInfo in DeclaringModule.Scope.AllVariables) {
                 variableInfo.Value.ClearOldValues(ProjectEntry);
                 if (variableInfo.Value._dependencies.Count == 0 &&
-                    variableInfo.Value.TypesNoCopy.Count == 0) {
+                    !variableInfo.Value.HasTypes) {
                     if (toRemove == null) {
                         toRemove = new List<KeyValuePair<string, VariableDef>>();
                     }
@@ -339,6 +343,19 @@ namespace Microsoft.PythonTools.Analysis {
 
             return ProjectState.BuiltinModule.GetMember(node, this, name);
         }
+
+        public LocationInfo ResolveLocation(object location) {
+            Node node = (Node)location;
+            MemberExpression me = node as MemberExpression;
+            SourceSpan span;
+            if (me != null) {
+                span = me.GetNameSpan(Tree);
+            } else {
+                span = node.GetSpan(Tree);
+            }
+
+            return new LocationInfo(ProjectEntry.FilePath, span.Start.Line, span.Start.Column);
+        }
     }
 
     /// <summary>
@@ -466,7 +483,7 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var baseValue in bases) {
                 ClassInfo ci = baseValue as ClassInfo;
                 if (ci != null) {
-                    ci.SubClasses.AddTypes(newClass.AnalysisUnit, new[] { newClass });
+                    ci.SubClasses.AddTypes(newClass.AnalysisUnit, newClass);
                 }
             }
 
