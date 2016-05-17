@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private int _callDepthLimit;
         private int _callsSinceLimitChange;
 
-        internal CallChainSet<FunctionAnalysisUnit> _allCalls;
+        internal CallChainSet _allCalls;
 
         internal FunctionInfo(FunctionDefinition node, AnalysisUnit declUnit, InterpreterScope declScope) {
             _projectEntry = declUnit.ProjectEntry;
@@ -100,11 +100,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 calledUnit = (FunctionAnalysisUnit)AnalysisUnit;
             } else {
                 if (_allCalls == null) {
-                    _allCalls = new CallChainSet<FunctionAnalysisUnit>();
+                    _allCalls = new CallChainSet();
                 }
 
                 var chain = new CallChain(node, unit, _callDepthLimit);
-                if (!_allCalls.TryGetValue(unit.ProjectEntry, chain, _callDepthLimit, out calledUnit)) {
+                var aggregate = GetAggregate(unit);
+                if (!_allCalls.TryGetValue(aggregate, chain, _callDepthLimit, out calledUnit)) {
                     if (unit.ForEval) {
                         // Call expressions that weren't analyzed get the union result
                         // of all calls to this function.
@@ -119,12 +120,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
                             _callDepthLimit -= 1;
                             _callsSinceLimitChange = 0;
                             AnalysisLog.ReduceCallDepth(this, _allCalls.Count, _callDepthLimit);
-                            
+
                             _allCalls.Clear();
                             chain = chain.Trim(_callDepthLimit);
                         }
-                        calledUnit = new FunctionAnalysisUnit((FunctionAnalysisUnit)AnalysisUnit, chain, callArgs);
-                        _allCalls.Add(unit.ProjectEntry, chain, calledUnit);
+
+                        calledUnit = new CalledFunctionAnalysisUnit(aggregate, (FunctionAnalysisUnit)AnalysisUnit, chain, callArgs);
+                        _allCalls.Add(aggregate, chain, calledUnit);
                         updateArguments = false;
                     }
                 }
@@ -139,6 +141,22 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             calledUnit.ReturnValue.AddDependency(unit);
             return calledUnit.ReturnValue.Types;
+        }
+
+        private IVersioned GetAggregate(AnalysisUnit unit) {
+            IVersioned agg;
+            var fau = unit as CalledFunctionAnalysisUnit;
+            if (fau == null || _callDepthLimit == 1) {
+                // The caller is top-level or a normal FAU, not one with a call chain.
+                // Just aggregate the caller w/ ourselves
+                agg = AggregateProjectEntry.GetAggregate(unit.ProjectEntry, ProjectEntry);
+            } else {
+                // The caller is part of a call chain, aggregate ourselves with everyone
+                // else who's in it.
+                agg = AggregateProjectEntry.GetAggregate(fau.DependencyProject, ProjectEntry);
+            }
+
+            return agg;
         }
 
         public override string Name {
@@ -329,7 +347,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 var start = FunctionDefinition.NameExpression.GetStart(FunctionDefinition.GlobalParent);
                 return new[] { new LocationInfo(
-                    ProjectEntry,
+                    ProjectEntry.FilePath,
                     start.Line,
                     start.Column)
                 };
@@ -636,7 +654,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_references == null) {
                     _references = new ReferenceDict();
                 }
-                _references.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new EncodedLocation(unit.Tree, node));
+                _references.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new EncodedLocation(unit, node));
             }
         }
 

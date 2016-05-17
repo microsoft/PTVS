@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Analysis {
                 locatedDef.Entry.Tree != null &&    // null tree if there are errors in the file
                 locatedDef.DeclaringVersion == locatedDef.Entry.AnalysisVersion) {
                 var start = locatedDef.Node.GetStart(locatedDef.Entry.Tree);
-                yield return new AnalysisVariable(VariableType.Definition, new LocationInfo(locatedDef.Entry, start.Line, start.Column));
+                yield return new AnalysisVariable(VariableType.Definition, new LocationInfo(locatedDef.Entry.FilePath, start.Line, start.Column));
             }
 
             VariableDef def = referenceable as VariableDef;
@@ -117,11 +117,17 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             foreach (var reference in referenceable.Definitions) {
-                yield return new AnalysisVariable(VariableType.Definition, reference.Value.GetLocationInfo(reference.Key));
+                yield return new AnalysisVariable(
+                    VariableType.Definition, 
+                    reference.GetLocationInfo()
+                );
             }
 
             foreach (var reference in referenceable.References) {
-                yield return new AnalysisVariable(VariableType.Reference, reference.Value.GetLocationInfo(reference.Key));
+                yield return new AnalysisVariable(
+                    VariableType.Reference, 
+                    reference.GetLocationInfo()
+                );
             }
         }
 

@@ -317,7 +317,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 EnsureLoaded();
 
                 Debug.Assert(_loadState == LoadState.Loaded);
-                yield return new LocationInfo(this, 1, 1);
+                yield return new LocationInfo(FilePath, 1, 1);
             }
         }
 

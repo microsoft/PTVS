@@ -215,7 +215,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            def._dependencies = default(SingleDict<IProjectEntry, ReferenceableDependencyInfo>);
+            def._dependencies = default(SingleDict<IVersioned, ReferenceableDependencyInfo>);
             foreach (var item in items) {
                 def.AddTypes(item.DeclaringModule, new SpecializedCallable(item, callable, mergeOriginalAnalysis).SelfSet);
             }
@@ -313,7 +313,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IEnumerable<LocationInfo> Locations {
             get {
-                return new[] { new LocationInfo(ProjectEntry, 1, 1) };
+                return new[] { new LocationInfo(ProjectEntry.FilePath, 1, 1) };
             }
         }
 

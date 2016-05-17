@@ -192,6 +192,12 @@ namespace Microsoft.PythonTools.Intellisense {
             await done(response);
         }
 
+        internal void ReportUnhandledException(Exception ex) {
+            _connection.SendEventAsync(
+                new AP.UnhandledExceptionEvent(ex)
+            ).Wait();
+        }
+
         private Response Initialize(AP.InitializeRequest request) {
             List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
 
@@ -1198,16 +1204,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 column = location.Column,
                 line = location.Line,
                 kind = GetVariableType(type),
-                file = GetFile(location.ProjectEntry)
+                file = location?.FilePath
             };
-        }
-
-        private string GetFile(IProjectEntry projectEntry) {
-            if (projectEntry != null) {
-                return projectEntry.FilePath;
-            }
-            return null;
-        }
+        }        
 
         private static string GetVariableType(VariableType type) {
             switch (type) {

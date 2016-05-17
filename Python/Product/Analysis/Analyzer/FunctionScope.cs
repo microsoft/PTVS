@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             var astParams = Function.FunctionDefinition.Parameters;
             bool added = false;
-            var entry = unit.ProjectEntry;
+            var entry = unit.DependencyProject;
             var state = unit.ProjectState;
             var limits = state.Limits;
 
@@ -115,7 +115,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     if (TryGetVariable(astParams[i].Name, out param) &&
                         !param.HasTypes &&
                         scopeWithDefaultParameters.TryGetVariable(astParams[i].Name, out defParam)) {
-                        param.MakeUnionStrongerIfMoreThan(limits.NormalArgumentTypes, defParam.GetTypesNoCopy(entry, AnalysisValue.DeclaringModule));
+                        param.MakeUnionStrongerIfMoreThan(
+                            limits.NormalArgumentTypes, 
+                            defParam.GetTypesNoCopy(unit, AnalysisValue.DeclaringModule)
+                        );
                         added |= param.AddTypes(entry, defParam.GetTypesNoCopy(unit, AnalysisValue.DeclaringModule), false, unit.ProjectEntry);
                     }
                 }

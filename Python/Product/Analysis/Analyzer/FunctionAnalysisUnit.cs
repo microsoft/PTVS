@@ -30,11 +30,9 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
     /// if we take a dependency on something which later gets updated.
     /// </summary>
     class FunctionAnalysisUnit : AnalysisUnit {
-        private readonly FunctionAnalysisUnit _originalUnit;
         public readonly FunctionInfo Function;
 
-        public readonly CallChain CallChain;
-        private readonly AnalysisUnit _declUnit;
+        internal readonly AnalysisUnit _declUnit;
         private readonly Dictionary<Node, Expression> _decoratorCalls;
 
         internal FunctionAnalysisUnit(
@@ -55,35 +53,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             AnalysisLog.NewUnit(this);
         }
 
-        public FunctionAnalysisUnit(FunctionAnalysisUnit originalUnit, CallChain callChain, ArgumentSet callArgs)
-            : base(originalUnit.Ast, null) {
-            _originalUnit = originalUnit;
-            _declUnit = originalUnit._declUnit;
-            Function = originalUnit.Function;
-
-            CallChain = callChain;
-
-            var scope = new FunctionScope(
-                Function,
-                Ast,
-                originalUnit.Scope.OuterScope,
-                originalUnit.DeclaringModule.ProjectEntry
-            );
-            scope.UpdateParameters(this, callArgs, false, originalUnit.Scope as FunctionScope);
-            _scope = scope;
-
-            var walker = new OverviewWalker(_originalUnit.ProjectEntry, this, Tree);
-            if (Ast.Body != null) {
-                Ast.Body.Walk(walker);
-            }
-
-            AnalysisLog.NewUnit(this);
-            Enqueue();
+        internal FunctionAnalysisUnit(FunctionInfo function, AnalysisUnit declUnit) : base(function.FunctionDefinition, null)  {
+            _declUnit = declUnit;
+            Function = function;
         }
-
-        internal bool UpdateParameters(ArgumentSet callArgs, bool enqueue = true) {
-            var defScope = _originalUnit != null ? _originalUnit.Scope as FunctionScope : null;
-            return ((FunctionScope)Scope).UpdateParameters(this, callArgs, enqueue, defScope);
+            
+        internal virtual bool UpdateParameters(ArgumentSet callArgs, bool enqueue = true) {
+            return ((FunctionScope)Scope).UpdateParameters(this, callArgs, enqueue, null);
         }
 
         internal void AddNamedParameterReferences(AnalysisUnit caller, NameExpression[] names) {
@@ -153,7 +129,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                                 }
                                 decorated = decorated.Union(ns.Call(expr, this, new[] { types }, ExpressionEvaluator.EmptyNames));
                             }
-                            
+
                             // If processing decorators, update the current
                             // function type. Otherwise, we are acting as if
                             // each decorator returns the function unmodified.
@@ -203,7 +179,57 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         public override string ToString() {
             return string.Format("{0}{1}({2})->{3}",
                 base.ToString(),
-                _originalUnit == null ? " def:" : "",
+                " def:",
+                string.Join(", ", Ast.Parameters.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),
+                ((FunctionScope)Scope).ReturnValue.TypesNoCopy.ToString()
+            );
+        }
+    }
+
+    class CalledFunctionAnalysisUnit : FunctionAnalysisUnit {
+        private readonly FunctionAnalysisUnit _originalUnit;
+        public readonly CallChain CallChain;
+        private readonly IVersioned _agg;
+
+        public CalledFunctionAnalysisUnit(IVersioned agg, FunctionAnalysisUnit originalUnit, CallChain callChain, ArgumentSet callArgs)
+            : base(originalUnit.Function, originalUnit._declUnit) {
+            _originalUnit = originalUnit;
+            _agg = agg;
+            CallChain = callChain;
+
+            var scope = new FunctionScope(
+                Function,
+                Ast,
+                originalUnit.Scope.OuterScope,
+                originalUnit.DeclaringModule.ProjectEntry
+            );
+            scope.UpdateParameters(this, callArgs, false, originalUnit.Scope as FunctionScope);
+            _scope = scope;
+
+            var walker = new OverviewWalker(_originalUnit.ProjectEntry, this, Tree);
+            if (Ast.Body != null) {
+                Ast.Body.Walk(walker);
+            }
+
+            AnalysisLog.NewUnit(this);
+            Enqueue();
+        }
+
+        public override IVersioned DependencyProject {
+            get {
+                return _agg;
+            }
+        }
+
+        internal override bool UpdateParameters(ArgumentSet callArgs, bool enqueue = true) {
+            var defScope = _originalUnit.Scope;
+            return ((FunctionScope)Scope).UpdateParameters(this, callArgs, enqueue, (FunctionScope)defScope);
+        }
+
+        public override string ToString() {
+            return string.Format("{0}{1}({2})->{3}",
+                base.ToString(),
+                "",
                 string.Join(", ", Ast.Parameters.Select(p => Scope.GetVariable(p.Name).TypesNoCopy.ToString())),
                 ((FunctionScope)Scope).ReturnValue.TypesNoCopy.ToString()
             );

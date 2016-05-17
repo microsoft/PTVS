@@ -174,7 +174,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 if (_declVersion == DeclaringModule.AnalysisVersion) {
                     var start = ClassDefinition.NameExpression.GetStart(ClassDefinition.GlobalParent);
-                    return new[] { new LocationInfo(DeclaringModule, start.Line, start.Column) };
+                    return new[] { new LocationInfo(DeclaringModule.FilePath, start.Line, start.Column) };
                 }
                 return LocationInfo.Empty;
             }
@@ -396,7 +396,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_references == null) {
                     _references = new ReferenceDict();
                 }
-                _references.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new EncodedLocation(unit.Tree, node));
+                _references.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new EncodedLocation(unit, node));
             }
         }
 

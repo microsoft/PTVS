@@ -841,5 +841,15 @@ namespace Microsoft.PythonTools.Intellisense {
             public int startIndex, endIndex, bufferId;
             public Navigation[] children;
         }
+
+        internal class UnhandledExceptionEvent : Event {
+            public string message;
+            public const string Name = "unhandledException";
+
+            public UnhandledExceptionEvent(Exception ex) {
+                message = ex.ToString();
+            }
+            public override string name => Name;
+        }
     }
 }

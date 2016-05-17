@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal struct CallChain : IEnumerable<Node> {
+    internal struct CallChain : IEnumerable<Node>, IEquatable<CallChain> {
         private readonly object _chain;
 
         private static Node EmptyNode = new NameExpression(null);
@@ -46,7 +46,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public CallChain(Node call, AnalysisUnit unit, int limit) {
-            var fau = unit as FunctionAnalysisUnit;
+            var fau = unit as CalledFunctionAnalysisUnit;
             if (fau == null || limit == 1) {
                 _chain = call;
             } else {
@@ -124,30 +124,41 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public bool PrefixMatches(CallChain other, int limit) {
             return this.Take(limit).SequenceEqual(other.Take(limit));
         }
+
+        public bool Equals(CallChain other) {
+            return this.SequenceEqual(other);
+        }
     }
 
-    internal class CallChainSet<T> {
-        private readonly Dictionary<IPythonProjectEntry, KeyValuePair<int, Dictionary<CallChain, T>>> _data;
+    /// <summary>
+    /// Maintains a mapping from the CallChain to the FunctionAnalysisUnit's used
+    /// for analyzing each unique call.
+    /// 
+    /// Entries are stored keyed off the ProjectEntry and get thrown away when
+    /// a new version of the project entry shows up.
+    /// </summary>
+    internal class CallChainSet {
+        private readonly Dictionary<IVersioned, CallChainEntry> _data;
 
         public CallChainSet() {
-            _data = new Dictionary<IPythonProjectEntry, KeyValuePair<int, Dictionary<CallChain, T>>>();
+            _data = new Dictionary<IVersioned, CallChainEntry>();
         }
 
-        public bool TryGetValue(IPythonProjectEntry entry, CallChain chain, int prefixLength, out T value) {
-            value = default(T);
+        public bool TryGetValue(IVersioned entry, CallChain chain, int prefixLength, out FunctionAnalysisUnit value) {
+            value = null;
 
-            KeyValuePair<int, Dictionary<CallChain, T>> entryData;
+            CallChainEntry entryData;
             lock (_data) {
                 if (!_data.TryGetValue(entry, out entryData)) {
                     return false;
                 }
-                if (entryData.Key != entry.AnalysisVersion) {
+                if (entryData.AnalysisVersion != entry.AnalysisVersion) {
                     _data.Remove(entry);
                     return false;
                 }
             }
-            lock (entryData.Value) {
-                return entryData.Value.TryGetValue(chain, out value);
+            lock (entryData.Calls) {
+                return entryData.Calls.TryGetValue(chain, out value);
             }
         }
 
@@ -164,35 +175,45 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     return 0;
                 }
                 lock (data) {
-                    return data.Values.Sum(v => v.Value.Count);
+                    return data.Values.Sum(v => v.Calls.Count);
                 }
             }
         }
 
-        public void Add(IPythonProjectEntry entry, CallChain chain, T value) {
-            KeyValuePair<int, Dictionary<CallChain, T>> entryData;
+        public void Add(IVersioned entry, CallChain chain, FunctionAnalysisUnit value) {
+            CallChainEntry entryData;
             lock (_data) {
-                if (!_data.TryGetValue(entry, out entryData) || entryData.Key != entry.AnalysisVersion) {
-                    _data[entry] = entryData = new KeyValuePair<int, Dictionary<CallChain, T>>(
+                if (!_data.TryGetValue(entry, out entryData) || entryData.AnalysisVersion != entry.AnalysisVersion) {
+                    _data[entry] = entryData = new CallChainEntry(
                         entry.AnalysisVersion,
-                        new Dictionary<CallChain, T>()
+                        new Dictionary<CallChain, FunctionAnalysisUnit>()
                     );
                 }
             }
 
-            lock (entryData.Value) {
-                entryData.Value[chain] = value;
+            lock (entryData.Calls) {
+                entryData.Calls[chain] = value;
             }
         }
 
-        public IEnumerable<T> Values {
+        public IEnumerable<FunctionAnalysisUnit> Values {
             get {
                 if (_data == null) {
-                    return Enumerable.Empty<T>();
+                    return Enumerable.Empty<FunctionAnalysisUnit>();
                 }
 
                 return _data.AsLockedEnumerable()
-                    .SelectMany(v => v.Value.Value.Values.AsLockedEnumerable(v.Value.Value));
+                    .SelectMany(v => v.Value.Calls.Values.AsLockedEnumerable(v.Value.Calls));
+            }
+        }
+
+        struct CallChainEntry {
+            public readonly int AnalysisVersion;
+            public readonly Dictionary<CallChain, FunctionAnalysisUnit> Calls;
+
+            public CallChainEntry(int version, Dictionary<CallChain, FunctionAnalysisUnit> calls) {
+                AnalysisVersion = version;
+                Calls = calls;
             }
         }
     }

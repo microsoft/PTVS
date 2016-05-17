@@ -23,7 +23,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
     abstract class DependentData<TStorageType> where TStorageType : DependencyInfo {
-        internal SingleDict<IProjectEntry, TStorageType> _dependencies;
+        internal SingleDict<IVersioned, TStorageType> _dependencies;
 
         /// <summary>
         /// Clears old values from old modules.  These old values are values which were assigned from
@@ -40,7 +40,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// an out of data analysis.
         /// </summary>
         /// <param name="fromModule"></param>
-        public void ClearOldValues(IProjectEntry fromModule) {
+        public void ClearOldValues(IVersioned fromModule) {
             TStorageType deps;
             if (_dependencies.TryGetValue(fromModule, out deps)) {
                 if (deps.Version != fromModule.AnalysisVersion) {
@@ -49,7 +49,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        protected TStorageType GetDependentItems(IProjectEntry module) {
+        protected TStorageType GetDependentItems(IVersioned module) {
             TStorageType result;
             if (!_dependencies.TryGetValue(module, out result) || result.Version != module.AnalysisVersion) {
                 _dependencies[module] = result = NewDefinition(module.AnalysisVersion);
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// Enqueues any nodes which depend upon this type into the provided analysis queue for
         /// further analysis.
         /// </summary>
-        public virtual void EnqueueDependents(IProjectEntry assigner = null, IProjectEntry declaringScope = null) {
+        public virtual void EnqueueDependents(IVersioned assigner = null, IProjectEntry declaringScope = null) {
             bool hasOldValues = false;
             foreach (var keyValue in _dependencies) {
                 if (keyValue.Key.AnalysisVersion == keyValue.Value.Version) {
@@ -87,12 +87,12 @@ namespace Microsoft.PythonTools.Analysis {
 
         public bool AddDependency(AnalysisUnit unit) {
             if (!unit.ForEval) {
-                return GetDependentItems(unit.DeclaringModule.ProjectEntry).AddDependentUnit(unit);
+                return GetDependentItems(unit.DependencyProject).AddDependentUnit(unit);
             }
             return false;
         }
 
-        protected static bool IsVisible(IProjectEntry accessor, IProjectEntry declaringScope, IProjectEntry assigningScope) {
+        protected static bool IsVisible(IVersioned accessor, IVersioned declaringScope, IVersioned assigningScope) {
             return true;
             /*
             if (accessor != null && accessor.IsVisible(assigningScope)) {
@@ -259,7 +259,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public bool AddTypes(AnalysisUnit unit, IAnalysisSet newTypes, bool enqueue = true, IProjectEntry declaringScope = null) {
-            return AddTypes(unit.ProjectEntry, newTypes, enqueue, declaringScope);
+            return AddTypes(unit.DependencyProject, newTypes, enqueue, declaringScope);
         }
 
         // Set checks ensure that the wasChanged result is correct. The checks
@@ -270,7 +270,7 @@ namespace Microsoft.PythonTools.Analysis {
         private static bool ENABLE_SET_CHECK = false;
 #endif
 
-        public bool AddTypes(IProjectEntry projectEntry, IAnalysisSet newTypes, bool enqueue = true, IProjectEntry declaringScope = null) {
+        public bool AddTypes(IVersioned projectEntry, IAnalysisSet newTypes, bool enqueue = true, IProjectEntry declaringScope = null) {
             object dummy;
             if (LockedVariableDefs.TryGetValue(this, out dummy)) {
                 return false;
@@ -332,7 +332,7 @@ namespace Microsoft.PythonTools.Analysis {
             needsCopy = false;
             var res = _emptySet;
             if (_dependencies.Count != 0) {
-                SingleDict<IProjectEntry, T>.SingleDependency oneDependency;
+                SingleDict<IVersioned, T>.SingleDependency oneDependency;
                 if (_dependencies.TryGetSingleDependency(out oneDependency)) {
                     if (oneDependency.Value.Types.Count > 0 && IsVisible(accessor, declaringScope, oneDependency.Key)) {
                         var types = oneDependency.Value.Types;
@@ -342,7 +342,7 @@ namespace Microsoft.PythonTools.Analysis {
                         }
                     }
                 } else {
-                    foreach (var kvp in (AnalysisDictionary<IProjectEntry, T>)_dependencies._data) {
+                    foreach (var kvp in (AnalysisDictionary<IVersioned, T>)_dependencies._data) {
                         if (kvp.Value.Types.Count > 0 && IsVisible(accessor, declaringScope, kvp.Key)) {
                             res = res.Union(kvp.Value.Types);
                         }
@@ -366,7 +366,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if (_dependencies.TryGetSingleValue(out oneDependency)) {
                     return oneDependency.Types.Count > 0;
                 } else {
-                    foreach (var mod in ((AnalysisDictionary<IProjectEntry, T>)_dependencies._data)) {
+                    foreach (var mod in ((AnalysisDictionary<IVersioned, T>)_dependencies._data)) {
                         if (mod.Value.Types.Count > 0) {
                             return true;
                         }
@@ -571,34 +571,34 @@ namespace Microsoft.PythonTools.Analysis {
 
         public bool AddReference(Node node, AnalysisUnit unit) {
             if (!unit.ForEval) {
-                var deps = GetDependentItems(unit.DeclaringModule.ProjectEntry);
-                return deps.AddReference(new EncodedLocation(unit.Tree, node)) && deps.AddDependentUnit(unit);
+                var deps = GetDependentItems(unit.DependencyProject);
+                return deps.AddReference(new EncodedLocation(unit, node)) && deps.AddDependentUnit(unit);
             }
             return false;
         }
 
-        public bool AddReference(EncodedLocation location, IProjectEntry module) {
+        public bool AddReference(EncodedLocation location, IVersioned module) {
             return GetDependentItems(module).AddReference(location);
         }
 
-        public bool AddAssignment(EncodedLocation location, IProjectEntry entry) {
+        public bool AddAssignment(EncodedLocation location, IVersioned entry) {
             return GetDependentItems(entry).AddAssignment(location);
         }
 
         public bool AddAssignment(Node node, AnalysisUnit unit) {
             if (!unit.ForEval) {
-                return AddAssignment(new EncodedLocation(unit.Tree, node), unit.DeclaringModule.ProjectEntry);
+                return AddAssignment(new EncodedLocation(unit, node), unit.DependencyProject);
             }
             return false;
         }
 
-        public IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> References {
+        public IEnumerable<EncodedLocation> References {
             get {
                 if (_dependencies.Count != 0) {
                     foreach (var keyValue in _dependencies) {
                         if (keyValue.Value.References != null && keyValue.Key.AnalysisVersion == keyValue.Value.Version) {
                             foreach (var reference in keyValue.Value.References) {
-                                yield return new KeyValuePair<IProjectEntry, EncodedLocation>(keyValue.Key, reference);
+                                yield return reference;
                             }
                         }
                     }
@@ -606,13 +606,13 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> Definitions {
+        public IEnumerable<EncodedLocation> Definitions {
             get {
                 if (_dependencies.Count != 0) {
                     foreach (var keyValue in _dependencies) {
                         if (keyValue.Value.Assignments != null && keyValue.Key.AnalysisVersion == keyValue.Value.Version) {
                             foreach (var reference in keyValue.Value.Assignments) {
-                                yield return new KeyValuePair<IProjectEntry, EncodedLocation>(keyValue.Key, reference);
+                                yield return reference;
                             }
                         }
                     }

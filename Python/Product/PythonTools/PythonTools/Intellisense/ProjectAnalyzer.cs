@@ -381,6 +381,12 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                     entry.SearchPathEntry = childFile.parent;
                     break;
+                case AP.UnhandledExceptionEvent.Name:
+                    Debug.Fail("Unhandled exception from analyzer");
+                    var exception = (AP.UnhandledExceptionEvent)e.Event;
+
+                    VisualStudio.Shell.ActivityLog.LogError(Strings.ProductTitle, exception.message);
+                    break;
             }
         }
 

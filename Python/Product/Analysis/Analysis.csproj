@@ -56,6 +56,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AggregateProjectEntry.cs" />
     <Compile Include="AnalysisDictionary.cs" />
     <Compile Include="AnalysisExtensions.cs" />
     <Compile Include="AnalysisHashSet.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="Analyzer\IsInstanceScope.cs" />
     <Compile Include="Analyzer\StatementScope.cs" />
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="IAggregateableProjectEntry.cs" />
     <Compile Include="Interpreter\Default\AnalysisOnlyInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonSequenceType.cs" />
@@ -116,7 +118,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="ReadOnlyWrapper.cs" />
-    <Compile Include="SourceLocationResolver.cs" />
     <Compile Include="ExportedMemberInfo.cs" />
     <Compile Include="EmptyBuiltinModule.cs" />
     <Compile Include="GetMemberOptions.cs" />
