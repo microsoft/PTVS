@@ -244,7 +244,7 @@ namespace Microsoft.PythonTools.Analysis {
                 string pathPrefix = Path.GetDirectoryName(_filePath) + "\\";
                 var children =
                     from pair in _projectState.ModulesByFilename
-                        // Is the candidate child package in a subdirectory of our package?
+                    // Is the candidate child package in a subdirectory of our package?
                     let fileName = pair.Key
                     where fileName.StartsWith(pathPrefix)
                     let moduleName = pair.Value.Name
