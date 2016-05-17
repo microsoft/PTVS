@@ -16,6 +16,7 @@
 
 using System;
 using System.IO;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -128,7 +129,7 @@ namespace PythonToolsTests {
             var projectFile = TestData.GetPath(Path.Combine("TestData", "ProjectUpgrade", "CorrectToolsVersion.pyproj"));
 
             var upgrade = (IVsProjectUpgradeViaFactory)factory;
-            
+
             foreach (var testCase in new[] {
                 new { Name = "12.0", Expected = 0 },
                 new { Name = "4.0", Expected = 0 }
@@ -182,43 +183,44 @@ namespace PythonToolsTests {
 
                 // Use a copy of the project so we don't interfere with other
                 // tests using them.
-                var origProject = Path.Combine("TestData", "ProjectUpgrade", testCase.Name);
-                var tempProject = Path.Combine(TestData.GetTempPath("ProjectUpgrade", true), testCase.Name);
-                File.Copy(origProject, tempProject);
+                var project = Path.Combine("TestData", "ProjectUpgrade", testCase.Name);
+                using (FileUtils.Backup(project)) {
+                    var origText = File.ReadAllText(project);
+                    var hr = upgrade.UpgradeProject(
+                        project,
+                        0u,  // no backups
+                        null,
+                        out newLocation,
+                        null,
+                        out actual,
+                        out factoryGuid
+                    );
 
-                var hr = upgrade.UpgradeProject(
-                    tempProject,
-                    0u,  // no backups
-                    null,
-                    out newLocation,
-                    null,
-                    out actual,
-                    out factoryGuid
-                );
-
-                Assert.AreEqual(0, hr, string.Format("Wrong HR for {0}", testCase.Name));
-                Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for {0}", testCase.Name));
-                Assert.AreEqual(tempProject, newLocation, string.Format("Wrong location for {0}", testCase.Name));
-                if (testCase.Expected != 0) {
-                    Assert.IsFalse(
-                        File.ReadAllText(tempProject).Contains("<Import Project=\"$(VSToolsPath)"),
-                        string.Format("Upgraded {0} should not import from $(VSToolsPath)", testCase.Name)
-                    );
-                    Assert.IsTrue(
-                        File.ReadAllText(tempProject).Contains("Microsoft.PythonTools.Web.targets"),
-                        string.Format("Upgraded {0} should import Web.targets", testCase.Name)
-                    );
-                    Assert.IsTrue(
-                        File.ReadAllText(tempProject).Contains("<PythonWsgiHandler>"),
-                        string.Format("Upgraded {0} should contain <PythonWsgiHandler>", testCase.Name)
-                    );
-                } else {
-                    Assert.IsTrue(
-                        File.ReadAllText(tempProject) == File.ReadAllText(origProject),
-                        string.Format("Non-upgraded {0} has different content to original", testCase.Name)
-                    );
+                    Assert.AreEqual(0, hr, string.Format("Wrong HR for {0}", testCase.Name));
+                    Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for {0}", testCase.Name));
+                    Assert.AreEqual(project, newLocation, string.Format("Wrong location for {0}", testCase.Name));
+                    var text = File.ReadAllText(project);
+                    if (testCase.Expected != 0) {
+                        Assert.IsFalse(
+                            text.Contains("<Import Project=\"$(VSToolsPath)"),
+                            string.Format("Upgraded {0} should not import from $(VSToolsPath)", testCase.Name)
+                        );
+                        Assert.IsTrue(
+                            text.Contains("Microsoft.PythonTools.Web.targets"),
+                            string.Format("Upgraded {0} should import Web.targets", testCase.Name)
+                        );
+                        Assert.IsTrue(
+                            text.Contains("<PythonWsgiHandler>"),
+                            string.Format("Upgraded {0} should contain <PythonWsgiHandler>", testCase.Name)
+                        );
+                    } else {
+                        Assert.IsTrue(
+                            text == origText,
+                            string.Format("Non-upgraded {0} has different content to original", testCase.Name)
+                        );
+                    }
+                    Assert.AreEqual(Guid.Empty, factoryGuid);
                 }
-                Assert.AreEqual(Guid.Empty, factoryGuid);
             }
         }
 
@@ -231,33 +233,32 @@ namespace PythonToolsTests {
             factory.Site = sp;
 
             var upgrade = (IVsProjectUpgradeViaFactory)factory;
-            var origProject = TestData.GetPath("TestData\\ProjectUpgrade\\OldCommonProps.pyproj");
-            var tempProject = Path.Combine(TestData.GetTempPath("ProjectUpgrade", true), "OldCommonProps.pyproj");
-            File.Copy(origProject, tempProject);
+            var project = TestData.GetPath("TestData\\ProjectUpgrade\\OldCommonProps.pyproj");
+            using (FileUtils.Backup(project)) {
+                int actual;
+                Guid factoryGuid;
+                string newLocation;
 
-            int actual;
-            Guid factoryGuid;
-            string newLocation;
+                var hr = upgrade.UpgradeProject(
+                    project,
+                    0u,  // no backups
+                    null,
+                    out newLocation,
+                    null,
+                    out actual,
+                    out factoryGuid
+                );
 
-            var hr = upgrade.UpgradeProject(
-                tempProject,
-                0u,  // no backups
-                null,
-                out newLocation,
-                null,
-                out actual,
-                out factoryGuid
-            );
+                Assert.AreEqual(0, hr, string.Format("Wrong HR for OldCommonProps.pyproj"));
+                Assert.AreEqual(1, actual, string.Format("Wrong result for OldCommonProps.pyproj"));
+                Assert.AreEqual(project, newLocation, string.Format("Wrong location for OldCommonProps.pyproj"));
 
-            Assert.AreEqual(0, hr, string.Format("Wrong HR for OldCommonProps.pyproj"));
-            Assert.AreEqual(1, actual, string.Format("Wrong result for OldCommonProps.pyproj"));
-            Assert.AreEqual(tempProject, newLocation, string.Format("Wrong location for OldCommonProps.pyproj"));
-
-            Assert.IsFalse(
-                File.ReadAllText(tempProject).Contains("<Import Project=\"" + PythonProjectFactory.CommonProps),
-                string.Format("Upgraded OldCommonProps.pyproj should not import from $(VSToolsPath)")
-            );
-            Assert.AreEqual(Guid.Empty, factoryGuid);
+                Assert.IsFalse(
+                    File.ReadAllText(project).Contains("<Import Project=\"" + PythonProjectFactory.CommonProps),
+                    string.Format("Upgraded OldCommonProps.pyproj should not import from $(VSToolsPath)")
+                );
+                Assert.AreEqual(Guid.Empty, factoryGuid);
+            }
         }
 
         [TestMethod, Priority(1)]
@@ -269,45 +270,45 @@ namespace PythonToolsTests {
             factory.Site = sp;
 
             var upgrade = (IVsProjectUpgradeViaFactory)factory;
-            var origProject = TestData.GetPath("TestData\\ProjectUpgrade\\OldCommonTargets.pyproj");
-            var tempProject = Path.Combine(TestData.GetTempPath("ProjectUpgrade", true), "OldCommonTargets.pyproj");
-            File.Copy(origProject, tempProject);
+            var project = TestData.GetPath("TestData\\ProjectUpgrade\\OldCommonTargets.pyproj");
+            using (FileUtils.Backup(project)) {
+                int actual;
+                Guid factoryGuid;
+                string newLocation;
 
-            int actual;
-            Guid factoryGuid;
-            string newLocation;
+                var hr = upgrade.UpgradeProject(
+                    project,
+                    0u,  // no backups
+                    null,
+                    out newLocation,
+                    null,
+                    out actual,
+                    out factoryGuid
+                );
 
-            var hr = upgrade.UpgradeProject(
-                tempProject,
-                0u,  // no backups
-                null,
-                out newLocation,
-                null,
-                out actual,
-                out factoryGuid
-            );
+                Assert.AreEqual(0, hr, string.Format("Wrong HR for OldCommonTargets.pyproj"));
+                Assert.AreEqual(1, actual, string.Format("Wrong result for OldCommonTargets.pyproj"));
+                Assert.AreEqual(project, newLocation, string.Format("Wrong location for OldCommonTargets.pyproj"));
 
-            Assert.AreEqual(0, hr, string.Format("Wrong HR for OldCommonTargets.pyproj"));
-            Assert.AreEqual(1, actual, string.Format("Wrong result for OldCommonTargets.pyproj"));
-            Assert.AreEqual(tempProject, newLocation, string.Format("Wrong location for OldCommonTargets.pyproj"));
-
-            Assert.IsTrue(
-                File.ReadAllText(tempProject).Contains("<Import Project=\"" + PythonProjectFactory.CommonTargets + "\" Condition=\"!Exists($(PtvsTargetsFile)"),
-                string.Format("Upgraded OldCommonTargets.pyproj should conditionally import from $(VSToolsPath)")
-            );
-            Assert.IsTrue(
-                File.ReadAllText(tempProject).Contains("<VisualStudioVersion"),
-                string.Format("Upgraded OldCommonTargets.pyproj should define $(VisualStudioVersion)")
-            );
-            Assert.IsTrue(
-                File.ReadAllText(tempProject).Contains("<PtvsTargetsFile>" + PythonProjectFactory.PtvsTargets),
-                string.Format("Upgraded OldCommonTargets.pyproj should define $(PtvsTargetsFile)")
-            );
-            Assert.IsTrue(
-                File.ReadAllText(tempProject).Contains("<Import Project=\"$(PtvsTargetsFile)\" Condition=\"Exists($(PtvsTargetsFile))\""),
-                string.Format("Upgraded OldCommonTargets.pyproj should import $(PtvsTargetsFile)")
-            );
-            Assert.AreEqual(Guid.Empty, factoryGuid);
+                var text = File.ReadAllText(project);
+                Assert.IsTrue(
+                    text.Contains("<Import Project=\"" + PythonProjectFactory.CommonTargets + "\" Condition=\"!Exists($(PtvsTargetsFile)"),
+                    string.Format("Upgraded OldCommonTargets.pyproj should conditionally import from $(VSToolsPath)")
+                );
+                Assert.IsTrue(
+                    text.Contains("<VisualStudioVersion"),
+                    string.Format("Upgraded OldCommonTargets.pyproj should define $(VisualStudioVersion)")
+                );
+                Assert.IsTrue(
+                    text.Contains("<PtvsTargetsFile>" + PythonProjectFactory.PtvsTargets),
+                    string.Format("Upgraded OldCommonTargets.pyproj should define $(PtvsTargetsFile)")
+                );
+                Assert.IsTrue(
+                    text.Contains("<Import Project=\"$(PtvsTargetsFile)\" Condition=\"Exists($(PtvsTargetsFile))\""),
+                    string.Format("Upgraded OldCommonTargets.pyproj should import $(PtvsTargetsFile)")
+                );
+                Assert.AreEqual(Guid.Empty, factoryGuid);
+            }
         }
 
         [TestMethod, Priority(1)]
@@ -316,7 +317,7 @@ namespace PythonToolsTests {
             const int ShellSkuValue = 1000;
             const int ProSkuValue = 2000;
             const int PremiumUltimateSkuValue = 3000;
-            
+
             const int VWDExpressSkuValue = 0x0040;
             const int WDExpressSkuValue = 0x8000;
             const int PremiumSubSkuValue = 0x0080;
@@ -363,6 +364,140 @@ namespace PythonToolsTests {
                 );
 
                 Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for {0}", testCase.Name));
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        public void InterpreterIdUpgrade() {
+            // PTVS 3.0 changed interpreter ID format.
+            var factory = new PythonProjectFactory(null);
+            var sp = new MockServiceProvider();
+            sp.Services[typeof(SVsQueryEditQuerySave).GUID] = null;
+            sp.Services[typeof(SVsActivityLog).GUID] = new MockActivityLog();
+            factory.Site = sp;
+
+            var upgrade = (IVsProjectUpgradeViaFactory)factory;
+            foreach (var testCase in new[] {
+                new { Name = "CPythonInterpreterId.pyproj", Expected = 1, Id = "Global|PythonCore|2.7|x86" },
+                new { Name = "CPython35InterpreterId.pyproj", Expected = 1, Id = "Global|PythonCore|3.5-32|x86" },
+                new { Name = "CPythonx64InterpreterId.pyproj", Expected = 1, Id = "Global|PythonCore|3.5|x64" },
+                new { Name = "MSBuildInterpreterId.pyproj", Expected = 1, Id = "MSBuild|env|$(MSBuildProjectFullPath)" },
+                new { Name = "IronPythonInterpreterId.pyproj", Expected = 1, Id = "IronPython|2.7-32" },
+            }) {
+                int actual;
+                Guid factoryGuid;
+                string newLocation;
+
+                var project = TestData.GetPath("TestData\\ProjectUpgrade\\" + testCase.Name);
+                using (FileUtils.Backup(project)) {
+
+                    var hr = upgrade.UpgradeProject(
+                        project,
+                        0u,  // no backups
+                        null,
+                        out newLocation,
+                        null,
+                        out actual,
+                        out factoryGuid
+                    );
+
+                    Assert.AreEqual(0, hr, string.Format("Wrong HR for {0}", testCase.Name));
+                    Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for {0}", testCase.Name));
+                    Assert.AreEqual(project, newLocation, string.Format("Wrong location for {0}", testCase.Name));
+
+                    AssertUtil.Contains(
+                        File.ReadAllText(project),
+                        "<InterpreterId>{0}</InterpreterId>".FormatInvariant(testCase.Id)
+                    );
+                    Assert.AreEqual(Guid.Empty, factoryGuid);
+                }
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        public void InterpreterReferenceUpgrade() {
+            // PTVS 3.0 changed interpreter ID format.
+            var factory = new PythonProjectFactory(null);
+            var sp = new MockServiceProvider();
+            sp.Services[typeof(SVsQueryEditQuerySave).GUID] = null;
+            sp.Services[typeof(SVsActivityLog).GUID] = new MockActivityLog();
+            factory.Site = sp;
+
+            var upgrade = (IVsProjectUpgradeViaFactory)factory;
+            foreach (var testCase in new[] {
+                new { Name = "CPythonInterpreterReference.pyproj", Expected = 1, Id = "Global|PythonCore|3.5-32|x86" },
+                new { Name = "IronPythonInterpreterReference.pyproj", Expected = 1, Id = "IronPython|2.7-32" },
+            }) {
+                int actual;
+                Guid factoryGuid;
+                string newLocation;
+
+                var project = TestData.GetPath("TestData\\ProjectUpgrade\\" + testCase.Name);
+                using (FileUtils.Backup(project)) {
+
+                    var hr = upgrade.UpgradeProject(
+                        project,
+                        0u,  // no backups
+                        null,
+                        out newLocation,
+                        null,
+                        out actual,
+                        out factoryGuid
+                    );
+
+                    Assert.AreEqual(0, hr, string.Format("Wrong HR for {0}", testCase.Name));
+                    Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for {0}", testCase.Name));
+                    Assert.AreEqual(project, newLocation, string.Format("Wrong location for {0}", testCase.Name));
+
+                    AssertUtil.Contains(
+                        File.ReadAllText(project),
+                        "<InterpreterReference Include=\"{0}\" />".FormatInvariant(testCase.Id)
+                    );
+                    Assert.AreEqual(Guid.Empty, factoryGuid);
+                }
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        public void BaseInterpreterUpgrade() {
+            // PTVS 3.0 changed interpreter ID format.
+            var factory = new PythonProjectFactory(null);
+            var sp = new MockServiceProvider();
+            sp.Services[typeof(SVsQueryEditQuerySave).GUID] = null;
+            sp.Services[typeof(SVsActivityLog).GUID] = new MockActivityLog();
+            factory.Site = sp;
+
+            var upgrade = (IVsProjectUpgradeViaFactory)factory;
+            foreach (var testCase in new[] {
+                new { Name = "CPythonBaseInterpreter.pyproj", Expected = 1, Id = "Global|PythonCore|3.4|x86" },
+            }) {
+                int actual;
+                Guid factoryGuid;
+                string newLocation;
+
+                var project = TestData.GetPath("TestData\\ProjectUpgrade\\" + testCase.Name);
+                using (FileUtils.Backup(project)) {
+
+                    var hr = upgrade.UpgradeProject(
+                        project,
+                        0u,  // no backups
+                        null,
+                        out newLocation,
+                        null,
+                        out actual,
+                        out factoryGuid
+                    );
+
+                    Assert.AreEqual(0, hr, string.Format("Wrong HR for {0}", testCase.Name));
+                    Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for {0}", testCase.Name));
+                    Assert.AreEqual(project, newLocation, string.Format("Wrong location for {0}", testCase.Name));
+
+                    AssertUtil.Contains(
+                        File.ReadAllText(project),
+                        "<BaseInterpreter>{0}</BaseInterpreter>".FormatInvariant(testCase.Id)
+                    );
+                    Assert.AreEqual(Guid.Empty, factoryGuid);
+                }
             }
         }
     }

@@ -110,6 +110,16 @@ a.b
             ProximityTest(code, "a.b");
         }
 
+
+        [TestMethod, Priority(1)]
+        public void AutosNoTrueFalseInV27() {
+            string code = @"
+a = True
+b = False
+";
+            ProximityTest(PythonLanguageVersion.V27, code, 0, int.MaxValue, "a", "b");
+        }
+
         private void ProximityTest(string code, params string[] exprs) {
             ProximityTest(PythonLanguageVersion.V34, code, 0, int.MaxValue, exprs);
         }

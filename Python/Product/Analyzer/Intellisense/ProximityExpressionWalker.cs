@@ -80,6 +80,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public override void PostWalk(NameExpression node) {
             if (IsInRange(node)) {
+                if(_ast.LanguageVersion.Is2x()) {
+                    // In 2.7 True and False are constants, we made an exception to not show them Autos window.
+                    if(node.Name == "True" || node.Name == "False") {
+                        return;
+                    }
+                }
+
                 _expressions.Add(node, null);
             }
 
