@@ -21,6 +21,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.DkmDebugger;
@@ -1482,8 +1483,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return null;
         }
 
-        internal async void RefreshThreadFrames(long threadId) {
-            await _process.GetThreadFramesAsync(threadId);
+        internal async System.Threading.Tasks.Task RefreshThreadFrames(long threadId) {
+            await _process.GetThreadFramesAsync(threadId).ConfigureAwait(false);
         }
     }
 }

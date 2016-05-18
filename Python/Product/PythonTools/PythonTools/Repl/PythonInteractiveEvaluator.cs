@@ -25,6 +25,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -43,7 +44,6 @@ using Microsoft.VisualStudio.Text.Projection;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
-using Microsoft.PythonTools.Debugger;
 
 namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Execution")]
@@ -418,7 +418,13 @@ namespace Microsoft.PythonTools.Repl {
             var thread = await EnsureConnectedAsync();
             if (thread != null) {
                 ExecutionResult result = await thread.ExecuteText(text);
-                _serviceProvider.GetDTE().Debugger.RefreshVariableViews();
+
+                try {
+                    await _serviceProvider.RefreshVariableViews();
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    Debug.Fail(ex.ToString());
+                }
+                
                 return result;
             }
 
