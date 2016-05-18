@@ -82,7 +82,19 @@ namespace Microsoft.PythonTools.Commands {
             var dlg = new DiagnosticsForm(_serviceProvider, "Gathering data...");
 
             ThreadPool.QueueUserWorkItem(x => {
-                var data = GetData();
+                string data;
+                try {
+                    data = GetData();
+                } catch (Exception e) {
+                    if (e.IsCriticalException()) {
+                        throw;
+                    }
+                    data = string.Format(
+                        "An error occurred collecting diagnostics information.{0}{0}{1}",
+                        Environment.NewLine,
+                        e.ToString()
+                    );
+                }
                 try {
                     dlg.BeginInvoke((Action)(() => {
                         dlg.Ready(data);
@@ -254,12 +266,22 @@ namespace Microsoft.PythonTools.Commands {
 
             res.AppendLine("Loaded assemblies:");
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().OrderBy(assem => assem.FullName)) {
-                var assemFileVersion = assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false).OfType<AssemblyFileVersionAttribute>().FirstOrDefault();
+                AssemblyFileVersionAttribute assemFileVersion;
+                try {
+                    assemFileVersion = assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false)
+                        .OfType<AssemblyFileVersionAttribute>()
+                        .FirstOrDefault();
 
-                res.AppendLine(string.Format("  {0}, FileVersion={1}",
-                    assembly.FullName,
-                    assemFileVersion == null ? "(null)" : assemFileVersion.Version
-                ));
+                    res.AppendLine(string.Format("  {0}, FileVersion={1}",
+                        assembly.FullName,
+                        assemFileVersion == null ? "(null)" : assemFileVersion.Version
+                    ));
+                } catch (Exception e) {
+                    if (e.IsCriticalException()) {
+                        throw;
+                    }
+                    res.AppendLine(string.Format("  {0}, {1}: {2}", assembly.FullName, e.GetType().Name, e.Message));
+                }
             }
             res.AppendLine();
 
@@ -272,7 +294,9 @@ namespace Microsoft.PythonTools.Commands {
                     if (e.IsCriticalException()) {
                         throw;
                     }
-                    res.AppendLine("Error reading: " + e);
+                    res.AppendLine("Error reading the global analysis log.");
+                    res.AppendLine("Please wait for analysis to complete and try again.");
+                    res.AppendLine(e.ToString());
                 }
             }
             res.AppendLine();
