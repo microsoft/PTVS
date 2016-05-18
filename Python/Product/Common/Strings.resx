@@ -778,4 +778,7 @@ modified from these scripts.</value>
   <data name="UpgradedInterpreterReferenceFailed" xml:space="preserve">
     <value>Updating an environment reference failed because some information was missing. Please remove and re-add any environments that are not working.</value>
   </data>
+  <data name="DebugAttachGettingSiteInformation" xml:space="preserve">
+    <value>Getting attach information from web site.</value>
+  </data>
 </root>
