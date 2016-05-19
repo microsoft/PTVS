@@ -253,6 +253,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Getting attach information from web site..
+        /// </summary>
+        public static string DebugAttachGettingSiteInformation {
+            get {
+                return ResourceManager.GetString("DebugAttachGettingSiteInformation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The project cannot be launched because no Python interpreter is specified. Please check the Python Environments window and ensure the version of Python is installed and has all settings specified..
         /// </summary>
         public static string DebugLaunchInterpreterMissing {
