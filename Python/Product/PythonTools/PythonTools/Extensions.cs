@@ -745,14 +745,13 @@ namespace Microsoft.PythonTools {
 
         internal static async System.Threading.Tasks.Task RefreshVariableViews(this IServiceProvider serviceProvider) {
             EnvDTE.Debugger debugger = serviceProvider.GetDTE().Debugger;
-            foreach (AD7Engine engine in AD7Engine.GetEngines()) {
-                if (engine.Process != null && engine.Process.Id == debugger.CurrentProcess.ProcessID) {
-                    await engine.RefreshThreadFrames(debugger.CurrentThread.ID);
-                    var vsDebugger = (IDebugRefreshNotification140)serviceProvider.GetShellDebugger();
-                    if (vsDebugger != null) {
-                        // Passing fCallstackFormattingAffected = TRUE to OnExpressionEvaluationRefreshRequested to force refresh
-                        vsDebugger.OnExpressionEvaluationRefreshRequested(1);
-                    }
+            AD7Engine engine = AD7Engine.GetEngineForProcess(debugger.CurrentProcess);
+            if (engine != null) {
+                await engine.RefreshThreadFrames(debugger.CurrentThread.ID);
+                var vsDebugger = (IDebugRefreshNotification140)serviceProvider.GetShellDebugger();
+                if (vsDebugger != null) {
+                    // Passing fCallstackFormattingAffected = TRUE to OnExpressionEvaluationRefreshRequested to force refresh
+                    vsDebugger.OnExpressionEvaluationRefreshRequested(1);
                 }
             }
         }

@@ -65,6 +65,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             get { return _guidLanguageDjangoTemplate; }
         }
 
+        static private Guid _guidLocalPortSupplier = new Guid("708C1ECA-FF48-11D2-904F-00C04FA302A1");
+        static public Guid guidLocalPortSupplier {
+            get { return _guidLocalPortSupplier; }
+        }
+
         public const int E_EVALUATE_BUSY_WITH_EVALUATION=unchecked((int)0x80040030);
         public const int E_EVALUATE_TIMEOUT=unchecked((int)0x80040031);
     }
