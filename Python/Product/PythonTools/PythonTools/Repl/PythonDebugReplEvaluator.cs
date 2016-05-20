@@ -500,7 +500,7 @@ namespace Microsoft.PythonTools.Repl {
             _threadIdMapper = threadIdMapper;
             _threadId = process.GetThreads()[0].Id;
             _languageVersion = process.LanguageVersion;
-            DisplayName = "Debug " + _languageVersion.ToVersion();
+            DisplayName = "Debug";
 
             EnsureConnectedOnCreate();
         }
