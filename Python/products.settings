@@ -18,8 +18,6 @@
     <IncludeML Condition="'$(VSTarget)' == '10.0' or '$(VSTarget)' == '11.0'">false</IncludeML>
 
     <!-- Features default to true for release builds -->
-    <FeatureAzureRemoteDebug>$(ReleaseBuild)</FeatureAzureRemoteDebug>
-    <FeatureAzureRemoteDebug Condition="$(VSMajorVersion) > 12 or ($(VSMajorVersion) == 12 and $(VSUpdateVersion) >= 30723)">true</FeatureAzureRemoteDebug>
-    <FeatureAzureRemoteDebug Condition="'$(FeatureAzureRemoteDebug)' == ''">false</FeatureAzureRemoteDebug>
+    <FeatureAzureRemoteDebug>true</FeatureAzureRemoteDebug>
   </PropertyGroup>
 </Project>
