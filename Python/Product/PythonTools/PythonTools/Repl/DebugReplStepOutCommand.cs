@@ -29,9 +29,12 @@ namespace Microsoft.PythonTools.Repl {
     [ContentType(PythonCoreConstants.ContentType)]
     class DebugReplStepOutCommand : IInteractiveWindowCommand {
         public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
-            var eval = window.Evaluator as PythonDebugReplEvaluator;
-            if (eval != null) {
-                eval.StepOut();
+            var selectableEval = window.Evaluator as SelectableReplEvaluator;
+            if (selectableEval != null) {
+                var eval = selectableEval.Evaluator as PythonDebugReplEvaluator;
+                if (eval != null) {
+                    eval.StepOut();
+                }
             }
             return ExecutionResult.Succeeded;
         }

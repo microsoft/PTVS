@@ -33,16 +33,19 @@ namespace Microsoft.PythonTools.Repl {
     [ContentType(PythonCoreConstants.ContentType)]
     class DebugReplThreadCommand : IInteractiveWindowCommand {
         public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
-            var eval = window.Evaluator as PythonDebugReplEvaluator;
-            if (eval != null) {
-                if (string.IsNullOrEmpty(arguments)) {
-                    eval.DisplayActiveThread();
-                } else {
-                    long id;
-                    if (long.TryParse(arguments, out id)) {
-                        eval.ChangeActiveThread(id, true);
+            var selectableEval = window.Evaluator as SelectableReplEvaluator;
+            if (selectableEval != null) {
+                var eval = selectableEval.Evaluator as PythonDebugReplEvaluator;
+                if (eval != null) {
+                    if (string.IsNullOrEmpty(arguments)) {
+                        eval.DisplayActiveThread();
                     } else {
-                        window.WriteError(String.Format("Invalid arguments '{0}'. Expected thread id.", arguments));
+                        long id;
+                        if (long.TryParse(arguments, out id)) {
+                            eval.ChangeActiveThread(id, true);
+                        } else {
+                            window.WriteError(String.Format("Invalid arguments '{0}'. Expected thread id.", arguments));
+                        }
                     }
                 }
             }
