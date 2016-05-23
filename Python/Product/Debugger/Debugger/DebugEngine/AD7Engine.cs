@@ -21,6 +21,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using System.Windows.Forms;
 using Microsoft.PythonTools.DkmDebugger;
@@ -1475,6 +1476,33 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        internal System.Threading.Tasks.Task RefreshThreadFrames(long threadId) {
+            return _process.GetThreadFramesAsync(threadId);
+        }
+
+        internal static AD7Engine GetEngineForProcess(EnvDTE.Process process) {
+            EnvDTE80.Process2 process2 = (EnvDTE80.Process2)process;
+            foreach (var engine in AD7Engine._engines) {
+                AD7Engine target = (AD7Engine)engine.Target;
+                if (target != null) {
+                    var pythonProcess = target.Process as PythonRemoteProcess;
+                    if (pythonProcess != null) {
+                        if (process2.Transport.ID == PythonRemoteDebugPortSupplier.PortSupplierId) {
+                            Uri transportUri;
+                            if (Uri.TryCreate(process2.TransportQualifier, UriKind.RelativeOrAbsolute, out transportUri) && (pythonProcess.Uri == transportUri)) {
+                                return target;
+                            }
+                        }
+                    } else {
+                        if ((target.Process.Id == process.ProcessID) && (Guid.Parse(process2.Transport.ID) == DebuggerConstants.guidLocalPortSupplier)) {
+                            return target;
                         }
                     }
                 }

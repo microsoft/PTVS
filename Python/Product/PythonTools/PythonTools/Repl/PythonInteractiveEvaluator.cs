@@ -25,6 +25,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
@@ -416,7 +417,15 @@ namespace Microsoft.PythonTools.Repl {
 
             var thread = await EnsureConnectedAsync();
             if (thread != null) {
-                return await thread.ExecuteText(text);
+                ExecutionResult result = await thread.ExecuteText(text);
+
+                try {
+                    await _serviceProvider.RefreshVariableViews();
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    Debug.Fail(ex.ToString());
+                }
+                
+                return result;
             }
 
             WriteError(Strings.ReplDisconnected);
