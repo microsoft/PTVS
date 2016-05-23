@@ -699,4 +699,16 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
     }
+
+    internal static class PythonDebugReplEvaluatorExtensions {
+        public static PythonDebugReplEvaluator GetPythonDebugReplEvaluator(this IInteractiveWindow window) {
+            var eval = window?.Evaluator as PythonDebugReplEvaluator;
+            if (eval != null) {
+                return eval;
+            }
+
+            eval = (window?.Evaluator as SelectableReplEvaluator)?.Evaluator as PythonDebugReplEvaluator;
+            return eval;
+        }
+    }
 }

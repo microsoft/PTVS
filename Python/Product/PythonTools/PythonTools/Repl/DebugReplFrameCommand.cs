@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Repl {
     [ContentType(PythonCoreConstants.ContentType)]
     class DebugReplFrameCommand : IInteractiveWindowCommand {
         public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
-            var eval = window.Evaluator as PythonDebugReplEvaluator;
+            var eval = window.GetPythonDebugReplEvaluator();
             if (eval != null) {
                 if (string.IsNullOrEmpty(arguments)) {
                     eval.DisplayActiveFrame();

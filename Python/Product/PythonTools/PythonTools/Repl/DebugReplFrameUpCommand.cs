@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Repl {
     [ContentType(PythonCoreConstants.ContentType)]
     class DebugReplFrameUpCommand : IInteractiveWindowCommand {
         public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
-            var eval = window.Evaluator as PythonDebugReplEvaluator;
+            var eval = window.GetPythonDebugReplEvaluator();
             if (eval != null) {
                 eval.FrameUp();
             }
