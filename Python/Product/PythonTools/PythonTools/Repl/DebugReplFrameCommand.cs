@@ -33,19 +33,16 @@ namespace Microsoft.PythonTools.Repl {
     [ContentType(PythonCoreConstants.ContentType)]
     class DebugReplFrameCommand : IInteractiveWindowCommand {
         public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
-            var selectableEval = window.Evaluator as SelectableReplEvaluator;
-            if (selectableEval != null) {
-                var eval = selectableEval.Evaluator as PythonDebugReplEvaluator;
-                if (eval != null) {
-                    if (string.IsNullOrEmpty(arguments)) {
-                        eval.DisplayActiveFrame();
+            var eval = window.GetPythonDebugReplEvaluator();
+            if (eval != null) {
+                if (string.IsNullOrEmpty(arguments)) {
+                    eval.DisplayActiveFrame();
+                } else {
+                    int id;
+                    if (int.TryParse(arguments, out id)) {
+                        eval.ChangeActiveFrame(id);
                     } else {
-                        int id;
-                        if (int.TryParse(arguments, out id)) {
-                            eval.ChangeActiveFrame(id);
-                        } else {
-                            window.WriteError(String.Format("Invalid arguments '{0}'. Expected frame id.", arguments));
-                        }
+                        window.WriteError(String.Format("Invalid arguments '{0}'. Expected frame id.", arguments));
                     }
                 }
             }

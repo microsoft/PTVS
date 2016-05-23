@@ -30,19 +30,16 @@ namespace Microsoft.PythonTools.Repl {
     [ContentType(PythonCoreConstants.ContentType)]
     class DebugReplProcessCommand : IInteractiveWindowCommand {
         public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
-            var selectableEval = window.Evaluator as SelectableReplEvaluator;
-            if (selectableEval != null) {
-                var eval = selectableEval.Evaluator as PythonDebugReplEvaluator;
-                if (eval != null) {
-                    if (string.IsNullOrEmpty(arguments)) {
-                        eval.DisplayActiveProcess();
+            var eval = window.GetPythonDebugReplEvaluator();
+            if (eval != null) {
+                if (string.IsNullOrEmpty(arguments)) {
+                    eval.DisplayActiveProcess();
+                } else {
+                    int id;
+                    if (int.TryParse(arguments, out id)) {
+                        eval.ChangeActiveProcess(id, true);
                     } else {
-                        int id;
-                        if (int.TryParse(arguments, out id)) {
-                            eval.ChangeActiveProcess(id, true);
-                        } else {
-                            window.WriteError(String.Format("Invalid arguments '{0}'. Expected process id.", arguments));
-                        }
+                        window.WriteError(String.Format("Invalid arguments '{0}'. Expected process id.", arguments));
                     }
                 }
             }
