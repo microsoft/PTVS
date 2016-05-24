@@ -106,12 +106,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private static readonly HashSet<string> allowedCalls = new HashSet<string> {
-                "abs", "bool", "callable", "chr", "cmp", "complex", "divmod", "float", "format",
-                "getattr", "hasattr", "hash", "hex", "id", "int", "isinstance", "issubclass",
-                "len", "max", "min", "oct", "ord", "pow", "repr", "round", "str", "tuple", "type"
-            };
-
         public override void PostWalk(CallExpression node) {
             if (IsInRange(node) && node.Target != null) {
                 // For call nodes, we don't want either the call nor the called function to show up,
@@ -128,7 +122,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 // Hardcode some commonly used side-effect-free builtins to show even in calls.
                 var name = node.Target as NameExpression;
-                if (name != null && allowedCalls.Contains(name.Name) && node.Args.All(arg => IsValidTarget(arg.Expression))) {
+                if (name != null && DetectSideEffectsWalker.IsSideEffectFreeCall(name.Name) && node.Args.All(arg => IsValidTarget(arg.Expression))) {
                     _expressions.Add(node, null);
                 }
             }
@@ -139,40 +133,6 @@ namespace Microsoft.PythonTools.Intellisense {
             int isct0 = Math.Max(span.Start.Line, _startLine);
             int isct1 = Math.Min(span.End.Line, _endLine);
             return isct0 <= isct1;
-        }
-
-        private class DetectSideEffectsWalker : PythonWalker {
-            public bool HasSideEffects { get; private set; }
-
-            public override bool Walk(AwaitExpression node) {
-                HasSideEffects = true;
-                return false;
-            }
-
-            public override bool Walk(CallExpression node) {
-                HasSideEffects = true;
-                return false;
-            }
-
-            public override bool Walk(BackQuoteExpression node) {
-                HasSideEffects = true;
-                return false;
-            }
-
-            public override bool Walk(ErrorExpression node) {
-                HasSideEffects = true;
-                return false;
-            }
-
-            public override bool Walk(YieldExpression node) {
-                HasSideEffects = true;
-                return false;
-            }
-
-            public override bool Walk(YieldFromExpression node) {
-                HasSideEffects = true;
-                return false;
-            }
         }
 
         private bool IsValidTarget(Node node) {

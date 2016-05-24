@@ -185,6 +185,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ValueDescriptionRequest.Command: response = GetValueDescriptions((AP.ValueDescriptionRequest)request); break;
                 case AP.ExtensionRequest.Command: response = ExtensionRequest((AP.ExtensionRequest)request); break;
                 case AP.InitializeRequest.Command: response = Initialize((AP.InitializeRequest)request); break;
+                case AP.ExpressionForDataTipRequest.Command: response = ExpressionForDataTip((AP.ExpressionForDataTipRequest)request); break;
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
@@ -1153,6 +1154,31 @@ namespace Microsoft.PythonTools.Intellisense {
                 name = name,
                 startIndex = stmt.StartIndex,
                 endIndex = stmt.EndIndex
+            };
+        }
+
+        private Response ExpressionForDataTip(AP.ExpressionForDataTipRequest request) {
+            var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+
+            string dataTipExpression = null;
+            var options = new CodeFormattingOptions() {
+                UseVerbatimImage = false
+            };
+
+            if (pyEntry != null && pyEntry.Analysis != null) {
+                var ast = pyEntry.Analysis.GetAstFromText(request.expr, new SourceLocation(request.index, request.line, request.column));
+                if (ast != null) {
+                    var walker = new DataTipExpressionWalker(ast);
+                    ast.Walk(walker);
+                    var expressions = walker.GetExpressions().ToArray();
+                    if (expressions.Length == 1) {
+                        dataTipExpression = expressions[0].ToCodeString(ast, options);
+                    }
+                }
+            }
+
+            return new AP.ExpressionForDataTipResponse() {
+                expression = dataTipExpression
             };
         }
 

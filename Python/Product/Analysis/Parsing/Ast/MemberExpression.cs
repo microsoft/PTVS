@@ -76,7 +76,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             res.Append('.');
             if (!this.IsIncompleteNode(ast)) {
                 res.Append(this.GetSecondWhiteSpaceDefaultNull(ast));
-                res.Append(this.GetVerbatimImage(ast) ?? _name);
+                if (format.UseVerbatimImage) {
+                    res.Append(this.GetVerbatimImage(ast) ?? _name);
+                }else {
+                    res.Append(_name);
+                }
             }
         }
 

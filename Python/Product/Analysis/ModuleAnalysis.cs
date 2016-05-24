@@ -816,7 +816,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// 
         /// If the expression is a member expression such as "fob.__bar" and the
         /// line number is inside of a class definition this will return a
-        /// MemberExpression with the mangled name like "fob.__ClassName_Bar".
+        /// MemberExpression with the mangled name like "fob._ClassName__bar".
         /// </summary>
         /// <param name="exprText">The expression to evaluate.</param>
         /// <param name="index">

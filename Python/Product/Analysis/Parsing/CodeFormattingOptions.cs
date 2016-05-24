@@ -236,6 +236,11 @@ namespace Microsoft.PythonTools.Parsing {
         [CodeFormattingDefaultValue(true)]
         public bool BreakMultipleStatementsPerLine { get; set; }
 
+        [CodeFormattingExample("foo.__bar", "foo._A__bar")]
+        [CodeFormattingCategory(CodeFormattingCategory.Statements)]
+        [CodeFormattingDescription("UseVerbatimImageShort", "UseVerbatimImageLong")]
+        [CodeFormattingDefaultValue(true)]
+        public bool UseVerbatimImage { get; set; }
         #endregion
 
         /*

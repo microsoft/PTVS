@@ -851,5 +851,19 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             public override string name => Name;
         }
+
+        public sealed class ExpressionForDataTipRequest : Request<ExpressionForDataTipResponse> {
+            public const string Command = "exprForDataTip";
+
+            public int fileId;
+            public string expr;
+            public int line, column, index;
+
+            public override string command => Command;
+        }
+
+        public sealed class ExpressionForDataTipResponse : Response {
+            public string expression;
+        }
     }
 }
