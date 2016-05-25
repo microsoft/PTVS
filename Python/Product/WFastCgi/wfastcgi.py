@@ -13,11 +13,11 @@
 # 
 # See the Apache Version 2.0 License for specific language governing
 # permissions and limitations under the License.
+from __future__ import absolute_import, print_function, with_statement
 
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.0.0.0"
 
-from __future__ import absolute_import, print_function, with_statement
 import ctypes
 import datetime
 import os
@@ -340,8 +340,16 @@ REQUEST_PROCESSORS = {
     FCGI_GET_VALUES : read_fastcgi_get_values
 }
 
+APPINSIGHT_CLIENT = None
+
 def log(txt):
     """Logs messages to a log file if WSGI_LOG env var is defined."""
+    if APPINSIGHT_CLIENT:
+        try:
+            APPINSIGHT_CLIENT.track_event(txt)
+        except:
+            pass
+    
     log_file = os.environ.get('WSGI_LOG')
     if log_file:
         with open(log_file, 'a+', encoding='utf-8') as f:
@@ -612,6 +620,7 @@ def get_wsgi_handler(handler_name):
     return handler
 
 def read_wsgi_handler(physical_path):
+    global APPINSIGHT_CLIENT
     env = get_environment(physical_path)
     os.environ.update(env)
     for path in (v for k, v in env.items() if k.lower() == 'pythonpath'):
@@ -623,18 +632,18 @@ def read_wsgi_handler(physical_path):
         )
         sys.path.extend(fs_encode(p) for p in expanded_path.split(';') if p)
     
-    handler = get_wsgi_handler(os.getenv('WSGI_HANDLER'))
-    instr_key = env.get("APPINSIGHTS_INSTRUMENTATIONKEY")
+    handler = get_wsgi_handler(os.getenv("WSGI_HANDLER"))
+    instr_key = os.getenv("APPINSIGHTS_INSTRUMENTATIONKEY")
     if instr_key:
         try:
-            # Attempt the import after updating sys.path- sites must
+            # Attempt the import after updating sys.path - sites must
             # include applicationinsights themselves.
             from applicationinsights.requests import WSGIApplication
         except ImportError:
             maybe_log("Failed to import applicationinsights: " + traceback.format_exc())
-            pass
         else:
             handler = WSGIApplication(instr_key, handler)
+            APPINSIGHT_CLIENT = handler.client
             # Ensure we will flush any remaining events when we exit
             on_exit(handler.client.flush)
 
