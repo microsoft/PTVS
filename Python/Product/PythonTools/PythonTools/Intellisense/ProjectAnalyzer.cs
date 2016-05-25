@@ -1397,20 +1397,6 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.WriteLine(String.Format("{1} Done sending event {0}", eventValue.name, DateTime.Now));
         }
 
-        private T SendRequest<T>(Request<T> request) where T : Response, new() {
-            SynchronizationContext currentSyncContext = SynchronizationContext.Current;
-            SendRequestSynchronizationContext requestContext = new SendRequestSynchronizationContext();
-            SynchronizationContext.SetSynchronizationContext(requestContext);
-            T response = null;
-            requestContext.Post(async _ => {
-                response = await SendRequestAsync(request).HandleAllExceptions(_serviceProvider);
-                requestContext.RequestCompleted();
-            }, null);
-            requestContext.SendRequestAndWait();
-            SynchronizationContext.SetSynchronizationContext(currentSyncContext);
-            return response;
-        }
-
         internal async Task<IEnumerable<CompletionResult>> GetAllAvailableMembersAsync(AnalysisEntry entry, SourceLocation location, GetMemberOptions options) {
             var members = await SendRequestAsync(new AP.TopLevelCompletionsRequest() {
                 fileId = entry.FileId,
@@ -1974,7 +1960,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AnalysisVariable(type, location);
         }
 
-        internal static string ExpressionForDataTip(IServiceProvider serviceProvider, ITextView view, SnapshotSpan span) {
+        internal static async Task<string> ExpressionForDataTipAsync(IServiceProvider serviceProvider, ITextView view, SnapshotSpan span) {
             var analysis = GetApplicableExpression(
                 view.GetAnalysisEntry(span.Start.Snapshot.TextBuffer, serviceProvider),
                 span.Start
@@ -1991,7 +1977,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     fileId = analysis.Entry.FileId,
                 };
 
-                var resp = analysis.Entry.Analyzer.SendRequest(req);
+                var resp = await analysis.Entry.Analyzer.SendRequestAsync(req).ConfigureAwait(false);
 
                 if (resp != null) {
                     result = resp.expression;
@@ -1999,39 +1985,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             return result;
-        }
-
-        private class SendRequestSynchronizationContext : SynchronizationContext {
-            private Queue<Tuple<SendOrPostCallback, object>> _callbacks = new Queue<Tuple<SendOrPostCallback, object>>();
-            private AutoResetEvent _callbackEnquedEvent = new AutoResetEvent(false);
-            private AutoResetEvent _requestCompleted = new AutoResetEvent(false);
-
-            public override void Post(SendOrPostCallback callback, object state) {
-                lock (_callbacks) {
-                    _callbacks.Enqueue(Tuple.Create(callback, state));
-                }
-                _callbackEnquedEvent.Set();
-            }
-
-            public void SendRequestAndWait(int intervalMiliseconds = 0) {
-                while (!_requestCompleted.WaitOne(intervalMiliseconds)) {
-                    Tuple<SendOrPostCallback, object> tuple = null;
-                    lock (_callbacks) {
-                        if (_callbacks.Count > 0) {
-                            tuple = _callbacks.Dequeue();
-                        }
-                    }
-                    if (tuple != null) {
-                        tuple.Item1(tuple.Item2);
-                    } else {
-                        _callbackEnquedEvent.WaitOne();
-                    }
-                }
-            }
-
-            public void RequestCompleted() {
-                Post(_ => { _requestCompleted.Set(); }, null);
-            }
         }
 
         class ApplicableExpression {

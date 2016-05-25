@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -120,7 +121,7 @@ namespace Microsoft.PythonTools.Language {
             if (exprSpan != null) {
                 SnapshotPointToLineAndColumnNumber(exprSpan.Value.Start, out pSpan[0].iStartLine, out pSpan[0].iStartIndex);
                 SnapshotPointToLineAndColumnNumber(exprSpan.Value.End, out pSpan[0].iEndLine, out pSpan[0].iEndIndex);
-                expr = VsProjectAnalyzer.ExpressionForDataTip(_serviceProvider, _wpfTextView, exprSpan.Value);
+                expr = VsProjectAnalyzer.ExpressionForDataTipAsync(_serviceProvider, _wpfTextView, exprSpan.Value).RunSynchronouslyOnUIThread(_serviceProvider);
             } else {
                 // If it's not an expression, suppress the tip.
                 pbstrText = null;

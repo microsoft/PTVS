@@ -20,5 +20,5 @@ Python/Product/Django/Templates/Projects/*/*RoleConfiguration.mht
 Python/Product/Django/Templates/Projects/*/ConfigureCloudService.ps1
 Python/Product/Django/Templates/Projects/*/ps.cmd
 __pycache__/
-/Python/PythonTools.VC.VC.opendb
-/Python/PythonTools.VC.db
+/Python/*.VC.opendb
+/Python/*.VC.db

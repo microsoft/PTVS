@@ -240,7 +240,7 @@ namespace Microsoft.PythonTools.Parsing {
         [CodeFormattingCategory(CodeFormattingCategory.Statements)]
         [CodeFormattingDescription("UseVerbatimImageShort", "UseVerbatimImageLong")]
         [CodeFormattingDefaultValue(true)]
-        public bool UseVerbatimImage { get; set; }
+        internal bool UseVerbatimImage { get; set; }
         #endregion
 
         /*
