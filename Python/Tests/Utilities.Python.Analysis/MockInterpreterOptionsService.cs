@@ -165,5 +165,9 @@ namespace TestUtilities.Python {
         public string AddConfigurableInterpreter(string name, InterpreterConfiguration config) {
             throw new NotImplementedException();
         }
+
+        public string FindAssociatedProjectMoniker(string id) {
+            throw new NotImplementedException();
+        }
     }
 }

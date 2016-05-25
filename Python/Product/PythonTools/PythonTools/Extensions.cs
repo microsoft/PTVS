@@ -290,8 +290,15 @@ namespace Microsoft.PythonTools {
 
             string path = buffer.GetFilePath();
             if (path != null) {
-                var docTable = provider.GetService(typeof(SVsRunningDocumentTable)) as IVsRunningDocumentTable4;
-                var cookie = docTable.GetDocumentCookie(path);
+                var docTable = (IVsRunningDocumentTable4)provider.GetService(typeof(SVsRunningDocumentTable));
+                var cookie = VSConstants.VSCOOKIE_NIL;
+                try {
+                    cookie = docTable.GetDocumentCookie(path);
+                } catch (ArgumentException) {
+                    // Exception may be raised while VS is shutting down
+                    entry = null;
+                    return false;
+                }
                 VsProjectAnalyzer analyzer = null;
                 if (cookie != VSConstants.VSCOOKIE_NIL) {
                     IVsHierarchy hierarchy;
@@ -486,7 +493,14 @@ namespace Microsoft.PythonTools {
                 IVsHierarchy hierarchy;
                 uint itemid;
                 docTable.GetDocumentHierarchyItem(cookie, out hierarchy, out itemid);
-                return hierarchy.GetProject()?.GetPythonProject();
+                var project = hierarchy.GetProject();
+                if (project != null) {
+                    return project.GetPythonProject();
+                }
+
+                object projectObj;
+                ErrorHandler.ThrowOnFailure(hierarchy.GetProperty(itemid, (int)__VSHPROPID.VSHPROPID_ExtObject, out projectObj));
+                return (projectObj as EnvDTE.Project)?.GetPythonProject();
             }
             return null;
         }

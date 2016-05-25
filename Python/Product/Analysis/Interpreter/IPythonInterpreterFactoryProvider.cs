@@ -46,6 +46,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Gets a specific configured interpreter
         /// </summary>
         IPythonInterpreterFactory GetInterpreterFactory(string id);
+
+        /// <summary>
+        /// Gets the associated project moniker, if any.
+        /// </summary>
+        string GetAssociatedProjectMoniker(string id);
     }
 
     public static class PythonInterpreterExtensions {

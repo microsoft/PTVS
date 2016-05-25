@@ -45,6 +45,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
         InterpreterConfiguration FindConfiguration(string id);
 
+        string FindAssociatedProjectMoniker(string id);
+
         /// <summary>
         /// Raised when the set of interpreters changes. This is not raised when
         /// the set is first initialized.

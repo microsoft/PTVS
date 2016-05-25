@@ -134,7 +134,17 @@ namespace Microsoft.PythonTools.Repl {
                 if (config == null) {
                     _analyzer = _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
                 } else {
-                    _analyzer = new VsProjectAnalyzer(_serviceProvider, interpreterService.FindInterpreter(config.Interpreter.Id));
+                    Build.Evaluation.Project projectFile = null;
+                    var moniker = ProjectMoniker ??
+                        interpreterService.FindAssociatedProjectMoniker(config.Interpreter.Id);
+                    if (!string.IsNullOrEmpty(moniker)) {
+                        projectFile = _serviceProvider.GetProjectFromFile(moniker)?.BuildProject;
+                    }
+                    _analyzer = new VsProjectAnalyzer(
+                        _serviceProvider,
+                        interpreterService.FindInterpreter(config.Interpreter.Id),
+                        projectFile: projectFile
+                    );
                 }
                 return _analyzer;
             }
@@ -283,22 +293,20 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             return await _serviceProvider.GetUIThread().InvokeTask(async () => {
-                if (!string.IsNullOrEmpty(ProjectMoniker)) {
-                    try {
-                        UpdatePropertiesFromProjectMoniker();
-                    } catch (NoInterpretersException ex) {
-                        WriteError(ex.ToString());
-                        return null;
-                    } catch (MissingInterpreterException ex) {
-                        WriteError(ex.ToString());
-                        return null;
-                    } catch (DirectoryNotFoundException ex) {
-                        WriteError(ex.ToString());
-                        return null;
-                    } catch (Exception ex) when (!ex.IsCriticalException()) {
-                        WriteError(ex.ToUnhandledExceptionMessage(GetType()));
-                        return null;
-                    }
+                try {
+                    UpdatePropertiesFromProjectMoniker();
+                } catch (NoInterpretersException ex) {
+                    WriteError(ex.ToString());
+                    return null;
+                } catch (MissingInterpreterException ex) {
+                    WriteError(ex.ToString());
+                    return null;
+                } catch (DirectoryNotFoundException ex) {
+                    WriteError(ex.ToString());
+                    return null;
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    WriteError(ex.ToUnhandledExceptionMessage(GetType()));
+                    return null;
                 }
 
                 var scriptsPath = ScriptsPath;
@@ -351,17 +359,18 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal void UpdatePropertiesFromProjectMoniker() {
-            var solution = _serviceProvider.GetService(typeof(SVsSolution)) as IVsSolution;
-            if (solution == null) {
+            var moniker = ProjectMoniker;
+            var interpreter = Configuration?.Interpreter;
+            if (interpreter != null && string.IsNullOrEmpty(moniker)) {
+                var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                moniker = interpreterService?.FindAssociatedProjectMoniker(Configuration.Interpreter.Id);
+            }
+
+            if (string.IsNullOrEmpty(moniker)) {
                 return;
             }
 
-            IVsHierarchy hier;
-            if (string.IsNullOrEmpty(ProjectMoniker) ||
-                ErrorHandler.Failed(solution.GetProjectOfUniqueName(ProjectMoniker, out hier))) {
-                return;
-            }
-            var pyProj = hier?.GetProject()?.GetPythonProject();
+            var pyProj = _serviceProvider.GetProjectFromFile(moniker)?.GetPythonProject();
             if (pyProj == null) {
                 return;
             }

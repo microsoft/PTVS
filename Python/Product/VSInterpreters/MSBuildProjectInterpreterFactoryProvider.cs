@@ -129,6 +129,11 @@ namespace Microsoft.PythonTools.Interpreter {
             return null;
         }
 
+        public string GetAssociatedProjectMoniker(string id) {
+            var moniker = id.Substring(id.LastIndexOf('|') + 1);
+            return PathUtils.IsValidPath(moniker) ? moniker : null;
+        }
+
         public static string GetInterpreterId(string file, string id) {
             return String.Join("|", MSBuildProviderName, id, file);
         }

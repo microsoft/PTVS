@@ -230,6 +230,8 @@ namespace CanopyInterpreter {
                 .FirstOrDefault();
         }
 
+        public string GetAssociatedProjectMoniker(string id) => null;
+
         public event EventHandler InterpreterFactoriesChanged;
 
         private void OnInterpreterFactoriesChanged() {

@@ -120,5 +120,7 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
                 .Where(x => x.Configuration.Id == id)
                 .FirstOrDefault();
         }
+
+        public string GetAssociatedProjectMoniker(string id) => null;
     }
 }

@@ -361,6 +361,11 @@ namespace Microsoft.PythonTools.Interpreter {
             return null;
         }
 
+        public string FindAssociatedProjectMoniker(string id) {
+            var factoryProvider = GetFactoryProvider(id);
+            return factoryProvider?.GetAssociatedProjectMoniker(id);
+        }
+
         private IPythonInterpreterFactoryProvider GetFactoryProvider(string id) {
             var interpAndId = id.Split(new[] { '|' }, 2);
             if (interpAndId.Length == 2) {
