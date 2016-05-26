@@ -122,24 +122,38 @@ namespace Microsoft.PythonTools.Repl {
         internal virtual void OnAttach() { }
         internal virtual void OnDetach() { }
 
+        private PythonProjectNode GetAssociatedPythonProject(InterpreterConfiguration interpreter = null) {
+            var moniker = ProjectMoniker;
+            if (interpreter == null) {
+                interpreter = Configuration?.Interpreter;
+            }
+
+            if (string.IsNullOrEmpty(moniker) && interpreter != null) {
+                var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                moniker = interpreterService.GetProperty(interpreter.Id, "ProjectMoniker") as string;
+            }
+
+            if (string.IsNullOrEmpty(moniker)) {
+                return null;
+            }
+
+            return _serviceProvider.GetProjectFromFile(moniker);
+        }
+
+
         public VsProjectAnalyzer Analyzer {
             get {
                 if (_analyzer != null) {
                     return _analyzer;
                 }
 
-                var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
                 var config = Configuration;
 
                 if (config == null) {
                     _analyzer = _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
                 } else {
-                    Build.Evaluation.Project projectFile = null;
-                    var moniker = ProjectMoniker ??
-                        interpreterService.GetProperty(config.Interpreter.Id, "ProjectMoniker") as string;
-                    if (!string.IsNullOrEmpty(moniker)) {
-                        projectFile = _serviceProvider.GetProjectFromFile(moniker)?.BuildProject;
-                    }
+                    var projectFile = GetAssociatedPythonProject(config.Interpreter)?.BuildProject;
+                    var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
                     _analyzer = new VsProjectAnalyzer(
                         _serviceProvider,
                         interpreterService.FindInterpreter(config.Interpreter.Id),
@@ -359,18 +373,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal void UpdatePropertiesFromProjectMoniker() {
-            var moniker = ProjectMoniker;
-            var interpreter = Configuration?.Interpreter;
-            if (interpreter != null && string.IsNullOrEmpty(moniker)) {
-                var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-                moniker = interpreterService?.GetProperty(Configuration.Interpreter.Id, "ProjectMoniker") as string;
-            }
-
-            if (string.IsNullOrEmpty(moniker)) {
-                return;
-            }
-
-            var pyProj = _serviceProvider.GetProjectFromFile(moniker)?.GetPythonProject();
+            var pyProj = GetAssociatedPythonProject();
             if (pyProj == null) {
                 return;
             }
