@@ -1981,9 +1981,6 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonProjectEntry pyEntry;
             IExternalProjectEntry externalEntry;
 
-            string zipFileName = GetZipFileName(entry);
-            string pathInZipFile = GetPathInZipFile(entry);
-
             SortedDictionary<int, ParseResult> parseResults = new SortedDictionary<int, ParseResult>();
 
             if ((pyEntry = entry as IPythonProjectEntry) != null) {
