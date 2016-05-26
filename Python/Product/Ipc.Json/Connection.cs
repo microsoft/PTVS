@@ -139,7 +139,21 @@ namespace Microsoft.PythonTools.Ipc.Json {
                 var reader = new StreamReader(_reader, Encoding.UTF8);
                 string line;
                 while ((line = await ReadPacket(reader).ConfigureAwait(false)) != null) {
-                    var packet = JsonConvert.DeserializeObject<JObject>(line);
+                    string message = "";
+                    JObject packet = null;
+                    try {
+                        packet = JsonConvert.DeserializeObject<JObject>(line);
+                    } catch (JsonSerializationException ex) {
+                        message = ": " + ex.Message;
+                    }
+
+                    if (packet == null) {
+                        if (reader.EndOfStream) {
+                            return;
+                        }
+                        await WriteError("Failed to parse packet" + message).ConfigureAwait(false);
+                        return;
+                    }
 
                     var type = packet["type"].ToObject<string>();
                     var seq = packet["seq"].ToObject<int?>();
