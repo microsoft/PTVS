@@ -361,7 +361,7 @@ namespace Microsoft.PythonTools.Interpreter {
             _interpFactoriesChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public string GetAssociatedProjectMoniker(string id) => null;
+        public object GetProperty(string id, string propName) => null;
 
         #endregion
 

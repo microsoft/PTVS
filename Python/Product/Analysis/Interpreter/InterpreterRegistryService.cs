@@ -361,9 +361,9 @@ namespace Microsoft.PythonTools.Interpreter {
             return null;
         }
 
-        public string FindAssociatedProjectMoniker(string id) {
+        public object GetProperty(string id, string propName) {
             var factoryProvider = GetFactoryProvider(id);
-            return factoryProvider?.GetAssociatedProjectMoniker(id);
+            return factoryProvider?.GetProperty(id, propName);
         }
 
         private IPythonInterpreterFactoryProvider GetFactoryProvider(string id) {

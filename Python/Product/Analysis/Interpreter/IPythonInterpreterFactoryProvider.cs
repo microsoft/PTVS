@@ -48,9 +48,15 @@ namespace Microsoft.PythonTools.Interpreter {
         IPythonInterpreterFactory GetInterpreterFactory(string id);
 
         /// <summary>
-        /// Gets the associated project moniker, if any.
+        /// Gets a property value associated with the specified interpreter. If
+        /// the property is not set or available, return <c>null</c>.
+        /// 
+        /// Property values should not change over the process lifetime.
         /// </summary>
-        string GetAssociatedProjectMoniker(string id);
+        /// <param name="id">The interpreter id.</param>
+        /// <param name="propName">A case-sensitive string identifying the name
+        /// of the property. Values will be compared by ordinal.</param>
+        object GetProperty(string id, string propName);
     }
 
     public static class PythonInterpreterExtensions {

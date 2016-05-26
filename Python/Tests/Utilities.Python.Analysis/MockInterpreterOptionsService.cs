@@ -166,7 +166,7 @@ namespace TestUtilities.Python {
             throw new NotImplementedException();
         }
 
-        public string FindAssociatedProjectMoniker(string id) {
+        public object GetProperty(string id, string propName) {
             throw new NotImplementedException();
         }
     }

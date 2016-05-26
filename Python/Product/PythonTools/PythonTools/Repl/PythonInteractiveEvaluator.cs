@@ -136,7 +136,7 @@ namespace Microsoft.PythonTools.Repl {
                 } else {
                     Build.Evaluation.Project projectFile = null;
                     var moniker = ProjectMoniker ??
-                        interpreterService.FindAssociatedProjectMoniker(config.Interpreter.Id);
+                        interpreterService.GetProperty(config.Interpreter.Id, "ProjectMoniker") as string;
                     if (!string.IsNullOrEmpty(moniker)) {
                         projectFile = _serviceProvider.GetProjectFromFile(moniker)?.BuildProject;
                     }
@@ -363,7 +363,7 @@ namespace Microsoft.PythonTools.Repl {
             var interpreter = Configuration?.Interpreter;
             if (interpreter != null && string.IsNullOrEmpty(moniker)) {
                 var interpreterService = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
-                moniker = interpreterService?.FindAssociatedProjectMoniker(Configuration.Interpreter.Id);
+                moniker = interpreterService?.GetProperty(Configuration.Interpreter.Id, "ProjectMoniker") as string;
             }
 
             if (string.IsNullOrEmpty(moniker)) {

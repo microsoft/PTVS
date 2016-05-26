@@ -235,7 +235,7 @@ g()",
                     .FirstOrDefault();
             }
 
-            public string GetAssociatedProjectMoniker(string id) => null;
+            public object GetProperty(string id, string propName) => null;
 
             public event EventHandler InterpreterFactoriesChanged { add { } remove { } }
         }

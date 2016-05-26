@@ -171,7 +171,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public event EventHandler InterpreterFactoriesChanged;
 
-        public string GetAssociatedProjectMoniker(string id) => null;
+        public object GetProperty(string id, string propName) => null;
 
         #endregion
 
