@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -178,6 +179,13 @@ namespace Microsoft.PythonTools.Interpreter {
                 if ((versionValue == null || !Version.TryParse(versionValue, out version)) &&
                     !TryParsePythonVersion(key, out version, out arch2, ref id)) {
                     version = new Version(2, 7);
+                }
+
+                try {
+                    var langVer = version.ToLanguageVersion();
+                } catch (InvalidOperationException) {
+                    // Version is not currently supported
+                    return;
                 }
 
                 var archStr = interpKey.GetValue("Architecture") as string;
@@ -352,6 +360,8 @@ namespace Microsoft.PythonTools.Interpreter {
         private void OnInterpreterFactoriesChanged() {
             _interpFactoriesChanged?.Invoke(this, EventArgs.Empty);
         }
+
+        public object GetProperty(string id, string propName) => null;
 
         #endregion
 

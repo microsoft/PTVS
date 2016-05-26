@@ -230,6 +230,8 @@ namespace CanopyInterpreter {
                 .FirstOrDefault();
         }
 
+        public object GetProperty(string id, string propName) => null;
+
         public event EventHandler InterpreterFactoriesChanged;
 
         private void OnInterpreterFactoriesChanged() {

@@ -46,6 +46,17 @@ namespace Microsoft.PythonTools.Interpreter {
         InterpreterConfiguration FindConfiguration(string id);
 
         /// <summary>
+        /// Gets a property value relating to a specific interpreter.
+        /// 
+        /// If the property is not set, returns <c>null</c>.
+        /// </summary>
+        /// <param name="id">The interpreter identifier.</param>
+        /// <param name="propName">A case-sensitive string identifying the
+        /// property. Values will be compared by ordinal.</param>
+        /// <returns>The property value, or <c>null</c> if not set.</returns>
+        object GetProperty(string id, string propName);
+
+        /// <summary>
         /// Raised when the set of interpreters changes. This is not raised when
         /// the set is first initialized.
         /// </summary>
