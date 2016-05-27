@@ -236,11 +236,6 @@ namespace Microsoft.PythonTools.Parsing {
         [CodeFormattingDefaultValue(true)]
         public bool BreakMultipleStatementsPerLine { get; set; }
 
-        [CodeFormattingExample("foo.__bar", "foo._A__bar")]
-        [CodeFormattingCategory(CodeFormattingCategory.Statements)]
-        [CodeFormattingDescription("UseVerbatimImageShort", "UseVerbatimImageLong")]
-        [CodeFormattingDefaultValue(true)]
-        internal bool UseVerbatimImage { get; set; }
         #endregion
 
         /*
@@ -281,6 +276,8 @@ namespace Microsoft.PythonTools.Parsing {
         public int WrappingWidth { get; set; }
 
         #endregion
+
+        internal bool UseVerbatimImage { get; set; } = true;
 
         /// <summary>
         /// Appends one of 3 strings depending upon a code formatting setting.  The 3 settings are the on and off

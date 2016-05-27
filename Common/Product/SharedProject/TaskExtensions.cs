@@ -16,6 +16,8 @@
 
 using System;
 using System.Threading.Tasks;
+using System.Windows.Threading;
+using Microsoft.VisualStudio.Threading;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.VisualStudioTools.Infrastructure {
@@ -44,6 +46,36 @@ namespace Microsoft.VisualStudioTools.Infrastructure {
         /// </summary>
         public static T WaitAndUnwrapExceptions<T>(this Task<T> task) {
             return task.GetAwaiter().GetResult();
+        }
+
+        /// <summary>
+        /// Waits for a task to complete. If current thread is UI thread then switches thread 
+        /// context to <see cref="NoMessagePumpSyncContext"/>. If an exception occurs, the 
+        /// exception will be raised without being wrapped in a <see cref="AggregateException"/>. 
+        /// </summary>
+        public static void WaitAndUnwrapExceptions(this Task task, Dispatcher dispatcher) {
+            if (dispatcher.CheckAccess()) {
+                using (ThreadingTools.Apply(new NoMessagePumpSyncContext(), true)) {
+                    task.GetAwaiter().GetResult();
+                }
+            } else {
+                task.GetAwaiter().GetResult();
+            }
+        }
+
+        /// <summary>
+        /// Waits for a task to complete. If current thread is UI thread then switches thread 
+        /// context to <see cref="NoMessagePumpSyncContext"/>. If an exception occurs, the 
+        /// exception will be raised without being wrapped in a <see cref="AggregateException"/>. 
+        /// </summary>
+        public static T WaitAndUnwrapExceptions<T>(this Task<T> task, Dispatcher dispatcher) {
+            if (dispatcher.CheckAccess()) {
+                using (ThreadingTools.Apply(new NoMessagePumpSyncContext(), true)) {
+                    return task.GetAwaiter().GetResult();
+                }
+            } else {
+                return task.GetAwaiter().GetResult();
+            }
         }
 
         /// <summary>

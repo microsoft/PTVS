@@ -21,14 +21,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Threading;
-using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -50,7 +47,6 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Differencing;
 using Microsoft.VisualStudio.Text.Editor;
-using Microsoft.VisualStudio.Threading;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -950,33 +946,6 @@ namespace Microsoft.PythonTools {
                 prettyPrinted.AppendLine("...");
             }
             return prettyPrinted.ToString().Trim();
-        }
-
-        public static void RunSynchronouslyOnUIThread(this System.Threading.Tasks.Task task, IServiceProvider serviceProvider, [CallerMemberNameAttribute] string callerMemberName = "") {
-            if (!Dispatcher.CurrentDispatcher.CheckAccess()) {
-                string message = string.Format("{0} must be called on a UI thread.", callerMemberName);
-                Debug.Fail(message);
-                return;
-            }
-            IVsTaskSchedulerService2 serviceInstance = serviceProvider.GetVsTaskSchedulerService() as IVsTaskSchedulerService2;
-            JoinableTaskContext taskContext = serviceInstance?.GetAsyncTaskContext() as JoinableTaskContext;
-            JoinableTaskFactory taskFactory = taskContext?.Factory;
-            taskFactory?.Run(async () => await task);
-        }
-
-        public static T RunSynchronouslyOnUIThread<T>(this Task<T> task, IServiceProvider serviceProvider, [CallerMemberNameAttribute] string callerMemberName = "") {
-            if (!Dispatcher.CurrentDispatcher.CheckAccess()) {
-                string message = string.Format("{0} must be called on a UI thread.", callerMemberName);
-                Debug.Fail(message);
-                return default(T);
-            }
-            IVsTaskSchedulerService2 serviceInstance = serviceProvider.GetVsTaskSchedulerService() as IVsTaskSchedulerService2;
-            JoinableTaskContext taskContext = serviceInstance?.GetAsyncTaskContext() as JoinableTaskContext;
-            JoinableTaskFactory taskFactory = taskContext?.Factory;
-            if (taskFactory != null) {
-                return taskFactory.Run(async () => await task);
-            }
-            return default(T);
         }
     }
 }
