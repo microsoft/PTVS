@@ -806,7 +806,7 @@ namespace Microsoft.PythonTools.Analysis {
             _progressTotal += filesInDatabase.Count / 10;
             Clean(filesInDatabase, 10);
 
-            return _scrapeFileGroups.Any() || _analyzeFileGroups.Any();
+            return _scrapeFileGroups.Any() || _analyzeFileGroups.Any() || _all;
         }
 
         internal static async Task<IEnumerable<PythonLibraryPath>> GetSearchPathsFromModulePath(
