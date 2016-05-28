@@ -24,6 +24,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
@@ -87,7 +88,7 @@ namespace Microsoft.PythonTools.Commands {
             ThreadPool.QueueUserWorkItem(x => {
                 string data;
                 try {
-                    data = GetData();
+                    data = GetData(dlg);
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     data = ex.ToUnhandledExceptionMessage(GetType());
                 }
@@ -102,16 +103,29 @@ namespace Microsoft.PythonTools.Commands {
             dlg.ShowDialog();
         }
 
-        private string GetData() {
+        private string GetData(System.Windows.Forms.Control ui) {
             StringBuilder res = new StringBuilder();
 
             if (PythonToolsPackage.IsIpyToolsInstalled()) {
                 res.AppendLine("WARNING: IpyTools is installed on this machine.  Having both IpyTools and Python Tools for Visual Studio installed will break Python editing.");
             }
 
-            var pythonPathIsMasked = _serviceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath ? " (masked)" : "";
+            string pythonPathIsMasked = "";
+            EnvDTE.DTE dte = null;
+            IPythonInterpreterFactoryProvider[] knownProviders = null;
+            IPythonLauncherProvider[] launchProviders = null;
+            InMemoryLogger inMemLogger = null;
+            ui.Invoke((Action)(() => {
+                pythonPathIsMasked = _serviceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath
+                    ? " (masked)"
+                    : "";
+                dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
+                var model = _serviceProvider.GetComponentModel();
+                knownProviders = model.GetExtensions<IPythonInterpreterFactoryProvider>().ToArray();
+                launchProviders = model.GetExtensions<IPythonLauncherProvider>().ToArray();
+                inMemLogger = model.GetService<InMemoryLogger>();
+            }));
 
-            var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
             res.AppendLine("Projects: ");
 
             var projects = dte.Solution.Projects;
@@ -149,14 +163,14 @@ namespace Microsoft.PythonTools.Commands {
 
                     var pyProj = project.GetPythonProject();
                     if (pyProj != null) {
-                        _serviceProvider.GetUIThread().Invoke(() => {
+                        ui.Invoke((Action)(() => {
                             foreach (var prop in InterestingProjectProperties) {
                                 var propValue = pyProj.GetProjectProperty(prop);
                                 if (propValue != null) {
                                     res.AppendLine("        " + prop + ": " + propValue);
                                 }
                             }
-                        });
+                        }));
 
                         foreach (var factory in pyProj.InterpreterFactories) {
                             res.AppendLine();
@@ -183,8 +197,7 @@ namespace Microsoft.PythonTools.Commands {
             }
 
             res.AppendLine("Environments: ");
-            var knownProviders = _serviceProvider.GetComponentModel().GetExtensions<IPythonInterpreterFactoryProvider>();
-            foreach (var provider in knownProviders) {
+            foreach (var provider in knownProviders.MaybeEnumerate()) {
                 res.AppendLine("    " + provider.GetType().FullName);
                 foreach (var config in provider.GetInterpreterConfigurations()) {
                     res.AppendLine("        Id: " + config.Id);
@@ -201,8 +214,7 @@ namespace Microsoft.PythonTools.Commands {
             }
 
             res.AppendLine("Launchers:");
-            var launchProviders = _serviceProvider.GetComponentModel().GetExtensions<IPythonLauncherProvider>();
-            foreach (var launcher in launchProviders) {
+            foreach (var launcher in launchProviders.MaybeEnumerate()) {
                 res.AppendLine("    Launcher: " + launcher.GetType().FullName);
                 res.AppendLine("        " + launcher.Description);
                 res.AppendLine("        " + launcher.Name);
@@ -211,7 +223,6 @@ namespace Microsoft.PythonTools.Commands {
 
             try {
                 res.AppendLine("Logged events/stats:");
-                var inMemLogger = _serviceProvider.GetComponentModel().GetService<InMemoryLogger>();
                 res.AppendLine(inMemLogger.ToString());
                 res.AppendLine();
             } catch (Exception ex) when (!ex.IsCriticalException()) {
