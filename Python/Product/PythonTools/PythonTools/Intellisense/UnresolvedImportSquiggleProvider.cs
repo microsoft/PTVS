@@ -17,6 +17,7 @@
 using System;
 using System.Linq;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 
@@ -26,10 +27,23 @@ namespace Microsoft.PythonTools.Intellisense {
         internal static bool _alwaysCreateSquiggle;
         private readonly IServiceProvider _serviceProvider;
         private readonly TaskProvider _taskProvider;
+        private bool _enabled;
 
         public UnresolvedImportSquiggleProvider(IServiceProvider serviceProvider, TaskProvider taskProvider) {
             _serviceProvider = serviceProvider;
             _taskProvider = taskProvider;
+            var options = _serviceProvider.GetPythonToolsService()?.GeneralOptions;
+            if (options != null) {
+                _enabled = options.UnresolvedImportWarning;
+                options.Changed += GeneralOptions_Changed;
+            }
+        }
+
+        private void GeneralOptions_Changed(object sender, EventArgs e) {
+            var options = sender as GeneralOptions;
+            if (options != null) {
+                _enabled = options.UnresolvedImportWarning;
+            }
         }
 
         public void ListenForNextNewAnalysis(AnalysisEntry entry, ITextBuffer buffer) {
@@ -42,11 +56,9 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async void OnNewAnalysis(AnalysisEntry entry, ITextBuffer buffer) {
-            if (!_alwaysCreateSquiggle) {
-                var service = _serviceProvider.GetPythonToolsService();
-                if (service == null || !service.GeneralOptions.UnresolvedImportWarning) {
-                    return;
-                }
+            if (!_enabled && !_alwaysCreateSquiggle) {
+                _taskProvider.Clear(entry, VsProjectAnalyzer.UnresolvedImportMoniker);
+                return;
             }
 
             var missingImports = await entry.Analyzer.GetMissingImportsAsync(entry, buffer);

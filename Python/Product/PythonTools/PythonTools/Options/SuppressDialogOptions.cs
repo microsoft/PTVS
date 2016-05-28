@@ -35,15 +35,20 @@ namespace Microsoft.PythonTools.Options {
 
         public void Load() {
             SwitchEvaluator = _service.LoadString(SwitchEvaluatorSetting, Category);
+            Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Save() {
             _service.SaveString(SwitchEvaluatorSetting, Category, SwitchEvaluator);
+            Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Reset() {
             SwitchEvaluator = null;
+            Changed?.Invoke(this, EventArgs.Empty);
         }
+
+        public event EventHandler Changed;
 
         public string SwitchEvaluator { get; set; }
     }

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Windows.Media;
+using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.StandardClassification;
@@ -32,11 +33,26 @@ namespace Microsoft.PythonTools {
         private Dictionary<string, IClassificationType> _categoryMap;
         private readonly IContentType _type;
         internal readonly IServiceProvider _serviceProvider;
+        internal bool _colorNames, _colorNamesWithAnalysis;
 
         [ImportingConstructor]
         public PythonAnalysisClassifierProvider(IContentTypeRegistryService contentTypeRegistryService, [Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
             _type = contentTypeRegistryService.GetContentType(PythonCoreConstants.ContentType);
             _serviceProvider = serviceProvider;
+            var options = serviceProvider.GetPythonToolsService()?.AdvancedOptions;
+            if (options != null) {
+                options.Changed += AdvancedOptions_Changed;
+                _colorNames = options.ColorNames;
+                _colorNamesWithAnalysis = options.ColorNamesWithAnalysis;
+            }
+        }
+
+        private void AdvancedOptions_Changed(object sender, EventArgs e) {
+            var options = sender as AdvancedEditorOptions;
+            if (options != null) {
+                _colorNames = options.ColorNames;
+                _colorNamesWithAnalysis = options.ColorNamesWithAnalysis;
+            }
         }
 
         /// <summary>

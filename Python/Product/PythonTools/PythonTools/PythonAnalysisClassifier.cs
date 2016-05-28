@@ -18,7 +18,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Threading;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
@@ -54,11 +53,9 @@ namespace Microsoft.PythonTools {
             _buffer = buffer;
             _buffer.RegisterForNewAnalysis(OnNewAnalysis);
         }
-        
+
         private async void OnNewAnalysis(AnalysisEntry entry) {
-            var pyService = _provider._serviceProvider.GetPythonToolsService();
-            var options = pyService != null ? pyService.AdvancedOptions : null;
-            if (options == null || options.ColorNames == false) {
+            if (!_provider._colorNames) {
                 bool raise = false;
                 lock (_spanCacheLock) {
                     if (_spanCache != null) {
@@ -76,7 +73,7 @@ namespace Microsoft.PythonTools {
             var classifications = await entry.Analyzer.GetAnalysisClassificationsAsync(
                 entry,
                 _buffer,
-                options.ColorNamesWithAnalysis
+                _provider._colorNamesWithAnalysis
             );
 
             if (classifications != null) {
@@ -217,7 +214,7 @@ namespace Microsoft.PythonTools {
     internal static partial class ClassifierExtensions {
         public static PythonAnalysisClassifier GetPythonAnalysisClassifier(this ITextBuffer buffer) {
             PythonAnalysisClassifier res;
-            if (buffer.Properties.TryGetProperty<PythonAnalysisClassifier>(typeof(PythonAnalysisClassifier), out res)) {
+            if (buffer.Properties.TryGetProperty(typeof(PythonAnalysisClassifier), out res)) {
                 return res;
             }
             return null;

@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Options {
@@ -58,6 +59,7 @@ namespace Microsoft.PythonTools.Options {
             ColorNames = _service.LoadBool(ColorNamesSetting, Category) ?? true;
             ColorNamesWithAnalysis = _service.LoadBool(ColorNamesWithAnalysisSetting, Category) ?? true;
             AutoListIdentifiers = _service.LoadBool(AutoListIdentifiersSetting, Category) ?? true;
+            Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Save() {
@@ -72,6 +74,7 @@ namespace Microsoft.PythonTools.Options {
             _service.SaveBool(ColorNamesSetting, Category, ColorNames);
             _service.SaveBool(ColorNamesWithAnalysisSetting, Category, ColorNamesWithAnalysis);
             _service.SaveBool(AutoListIdentifiersSetting, Category, AutoListIdentifiers);
+            Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Reset() {
@@ -86,7 +89,10 @@ namespace Microsoft.PythonTools.Options {
             ColorNames = true;
             ColorNamesWithAnalysis = true;
             AutoListIdentifiers = true;
+            Changed?.Invoke(this, EventArgs.Empty);
         }
+
+        public event EventHandler Changed;
 
         public string CompletionCommittedBy {
             get;
