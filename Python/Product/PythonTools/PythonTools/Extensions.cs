@@ -613,6 +613,14 @@ namespace Microsoft.PythonTools {
             if (serviceProvider == null) {
                 return null;
             }
+#if DEBUG
+            // https://github.com/Microsoft/PTVS/issues/1205
+            // Help see when this function is being incorrectly called from off
+            // the UI thread. There's a chance that GetUIThread() will fail in
+            // this case too, but mostly it will succeed (and then assert).
+            serviceProvider.GetUIThread().MustBeCalledFromUIThread();
+#endif
+
             var pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
             if (pyService == null) {
                 var shell = (IVsShell)serviceProvider.GetService(typeof(SVsShell));
