@@ -164,21 +164,26 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public bool Equals(DBPackageView x, DBPackageView y) {
             if (x != null && y != null) {
-                return StringComparer.OrdinalIgnoreCase.Equals(x.FullName, y.FullName);
+                return StringComparer.OrdinalIgnoreCase.Equals(x.FullName, y.FullName) &&
+                    x.IsUpToDate == y.IsUpToDate;
             }
             return x == y;
         }
 
         public int GetHashCode(DBPackageView obj) {
             if (obj != null) {
-                return StringComparer.OrdinalIgnoreCase.GetHashCode(obj.FullName);
+                return StringComparer.OrdinalIgnoreCase.GetHashCode(obj.FullName) ^ obj.IsUpToDate.GetHashCode();
             }
             return 0;
         }
 
         public int Compare(DBPackageView x, DBPackageView y) {
             if (x != null && y != null) {
-                return StringComparer.CurrentCultureIgnoreCase.Compare(x.FullName, y.FullName);
+                int cmp = StringComparer.CurrentCultureIgnoreCase.Compare(x.FullName, y.FullName);
+                if (cmp != 0) {
+                    return cmp;
+                }
+                return x.IsUpToDate.CompareTo(y.IsUpToDate);
             } else if (x == null && y == null) {
                 return 0;
             } else {
@@ -231,7 +236,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             for (int i = 0; i < modules.Count; ) {
                 if (stdLib.Contains(modules[i])) {
                     stdLibPackage._isUpToDate = knownModules == null ||
-                        knownModules.Contains(modules[i]) == areKnownModulesUpToDate; ;
+                        knownModules.Contains(modules[i]) == areKnownModulesUpToDate;
                     stdLibPackage._moduleCount += 1;
                     i += 1;
                     continue;
@@ -277,14 +282,17 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public DBExtensionProvider(PythonInterpreterFactoryWithDatabase factory) {
             _factory = factory;
             _factory.IsCurrentChanged += Factory_IsCurrentChanged;
+            _factory.NewDatabaseAvailable += Factory_NewDatabaseAvailable;
+        }
+
+        private void Factory_NewDatabaseAvailable(object sender, EventArgs e) {
+            _modules = null;
+            ModulesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void Factory_IsCurrentChanged(object sender, EventArgs e) {
             _modules = null;
-            var evt = ModulesChanged;
-            if (evt != null) {
-                evt(this, EventArgs.Empty);
-            }
+            ModulesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public int SortPriority {
