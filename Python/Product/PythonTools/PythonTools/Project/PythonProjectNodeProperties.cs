@@ -53,6 +53,9 @@ namespace Microsoft.PythonTools.Project {
             get {
                 return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.CommandLineArguments, true);
             }
+            set {
+                this.Node.ProjectMgr.SetProjectProperty(CommonConstants.CommandLineArguments, value);
+            }
         }
 
         /// <summary>
