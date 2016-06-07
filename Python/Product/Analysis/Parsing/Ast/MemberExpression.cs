@@ -78,7 +78,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 res.Append(this.GetSecondWhiteSpaceDefaultNull(ast));
                 if (format.UseVerbatimImage) {
                     res.Append(this.GetVerbatimImage(ast) ?? _name);
-                }else {
+                } else {
                     res.Append(_name);
                 }
             }
