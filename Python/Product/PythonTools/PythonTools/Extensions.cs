@@ -26,6 +26,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -771,10 +772,6 @@ namespace Microsoft.PythonTools {
                     vsDebugger.OnExpressionEvaluationRefreshRequested(1);
                 }
             }
-        }
-
-        internal static IVsTaskSchedulerService GetVsTaskSchedulerService(this IServiceProvider provider) {
-            return (IVsTaskSchedulerService)provider.GetService(typeof(SVsTaskSchedulerService));
         }
 
         internal static SolutionEventsListener GetSolutionEvents(this IServiceProvider serviceProvider) {

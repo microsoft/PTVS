@@ -1167,12 +1167,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (pyEntry != null && pyEntry.Analysis != null) {
                 var ast = pyEntry.Analysis.GetAstFromText(request.expr, new SourceLocation(request.index, request.line, request.column));
+                var expr = Statement.GetExpression(ast.Body);
+
                 if (ast != null) {
-                    var walker = new DataTipExpressionWalker(ast);
+                    var walker = new DetectSideEffectsWalker();
                     ast.Walk(walker);
-                    var expressions = walker.GetExpressions().ToArray();
-                    if (expressions.Length == 1) {
-                        dataTipExpression = expressions[0].ToCodeString(ast, options);
+                    if (!walker.HasSideEffects) {
+                        dataTipExpression = expr?.ToCodeString(ast, new CodeFormattingOptions() { UseVerbatimImage = false });
                     }
                 }
             }

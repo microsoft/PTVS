@@ -71,7 +71,6 @@
     <Compile Include="Intellisense\AssignmentWalker.cs" />
     <Compile Include="Intellisense\ClassifierWalker.cs" />
     <Compile Include="Intellisense\CompletionOptions.cs" />
-    <Compile Include="Intellisense\DataTipExpressionWalker.cs" />
     <Compile Include="Intellisense\DetectSideEffectsWalker.cs" />
     <Compile Include="Intellisense\EnclosingNodeWalker.cs" />
     <Compile Include="Intellisense\ExtractedMethodCreator.cs" />
