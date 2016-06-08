@@ -405,6 +405,7 @@ permissions and limitations under the License.
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidImportCoverage" priority="0x0100" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
+        <CommandFlag>AllowParams</CommandFlag>
         <Strings>
           <ButtonText>&amp;Import coverage file...</ButtonText>
           <ToolTipText>Imports a coverage.xml file produced by coverage.py.</ToolTipText>

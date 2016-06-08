@@ -17,14 +17,12 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
@@ -39,6 +37,10 @@ using Microsoft.VisualStudioTools.Project;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.TestAdapter {
+    using System.Xml;
+    using System.Xml.XPath;
+    using ValidateArg = Microsoft.VisualStudio.TestPlatform.ObjectModel.ValidateArg;
+
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "object owned by VS")]
     [ExtensionUri(TestExecutor.ExecutorUriString)]
@@ -70,7 +72,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             ValidateArg.NotNull(sources, "sources");
             ValidateArg.NotNull(runContext, "runContext");
             ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
-
+            
             _cancelRequested.Reset();
 
             var receiver = new TestReceiver();
@@ -103,24 +105,147 @@ namespace Microsoft.PythonTools.TestAdapter {
             // .pyproj file path -> project settings
             var sourceToSettings = new Dictionary<string, PythonProjectSettings>();
 
+            bool codeCoverage = EnableCodeCoverage(runContext);
+            string covPath = null;
+            if (codeCoverage) {
+                covPath = GetCoveragePath(tests);
+            }
+
             foreach (var test in tests) {
                 if (_cancelRequested.WaitOne(0)) {
                     break;
                 }
 
                 try {
-                    RunTestCase(frameworkHandle, runContext, test, sourceToSettings);
+                    RunTestCase(frameworkHandle, runContext, test, sourceToSettings, covPath);
                 } catch (Exception ex) {
                     frameworkHandle.SendMessage(TestMessageLevel.Error, ex.ToString());
                 }
             }
+
+            if (codeCoverage) {
+                if (File.Exists(covPath + ".xml")) {
+                    var set = new AttachmentSet(
+                        PythonRunSettings.PythonCodeCoverageUri,
+                        "CodeCoverage"
+                    );
+
+                    set.Attachments.Add(
+                        new UriDataAttachment(new Uri(covPath + ".xml"), "Coverage Data")
+                    );
+                    frameworkHandle.RecordAttachments(new[] { set });
+
+                    File.Delete(covPath);
+                } else {
+                    frameworkHandle.SendMessage(
+                        TestMessageLevel.Warning,
+                        Resources.NoCoverageProduced
+                    );
+                }
+            }
+        }
+
+        private static string GetCoveragePath(IEnumerable<TestCase> tests) {
+            string bestFile = null, bestClass = null, bestMethod = null;
+
+            // Try and generate a friendly name for the coverage report.  We use
+            // the filename, class, and method.  We include each one if we're
+            // running from a single filename/class/method.  When we have multiple
+            // we drop the identifying names.  If we have multiple files we
+            // go to the top level directory...  If all else fails we do "pycov".
+            foreach (var test in tests) {
+                string testFile, testClass, testMethod;
+                TestAnalyzer.ParseFullyQualifiedTestName(
+                    test.FullyQualifiedName,
+                    out testFile,
+                    out testClass,
+                    out testMethod
+                );
+
+                bestFile = UpdateBestFile(bestFile, test.CodeFilePath);
+                if (bestFile != test.CodeFilePath) {
+                    // Different files, don't include class/methods even
+                    // if they happen to be the same.
+                    bestClass = bestMethod = "";
+                }
+
+                bestClass = UpdateBest(bestClass, testClass);
+                bestMethod = UpdateBest(bestMethod, testMethod);
+            }
+
+            string filename = "";
+
+            if (!String.IsNullOrWhiteSpace(bestFile)) {
+                if (ModulePath.IsPythonSourceFile(bestFile)) {
+                    filename = ModulePath.FromFullPath(bestFile).ModuleName;
+                } else {
+                    filename = Path.GetFileName(bestFile);
+                }
+            } else {
+                filename = "pycov";
+            }
+
+            if (!String.IsNullOrWhiteSpace(bestClass)) {
+                filename += "_" + bestClass;
+            }
+
+            if (!String.IsNullOrWhiteSpace(bestMethod)) {
+                filename += "_" + bestMethod;
+            }
+
+            filename += "_" + DateTime.Now.ToString("s").Replace(':', '_');
+
+            return Path.Combine(Path.GetTempPath(), filename);
+        }
+
+        private static string UpdateBest(string best, string test) {
+            if (best == null || best == test) {
+                best = test;
+            } else if (best != "") {
+                best = "";
+            }
+
+            return best;
+        }
+
+        internal static string UpdateBestFile(string bestFile, string testFile) {
+            if (bestFile == null || bestFile == testFile) {
+                bestFile = testFile;
+            } else if (bestFile != "") {
+                // Get common directory name, trim to the last \\ where we 
+                // have things in common
+                int lastSlash = 0;
+                for (int i = 0; i < bestFile.Length && i < testFile.Length; i++) {
+                    if (bestFile[i] != testFile[i]) {
+                        bestFile = bestFile.Substring(0, lastSlash);
+                        break;
+                    } else if (bestFile[i] == '\\' || bestFile[i] == '/') {
+                        lastSlash = i;
+                    }
+                }
+            }
+
+            return bestFile;
+        }
+
+        private static bool EnableCodeCoverage(IRunContext runContext) {
+            var doc = new XPathDocument(new StringReader(runContext.RunSettings.SettingsXml));
+            XPathNodeIterator nodes = doc.CreateNavigator().Select("/RunSettings/Python/EnableCoverage");
+            bool enableCoverage;
+            if (nodes.MoveNext()) {
+                if (Boolean.TryParse(nodes.Current.Value, out enableCoverage)) {
+                    return enableCoverage;
+                }
+            }
+            return false;
         }
 
         private void RunTestCase(
             IFrameworkHandle frameworkHandle,
             IRunContext runContext,
             TestCase test,
-            Dictionary<string, PythonProjectSettings> sourceToSettings
+            Dictionary<string, PythonProjectSettings> sourceToSettings,
+            string codeCoverageFile
         ) {
             var testResult = new TestResult(test);
             frameworkHandle.RecordStart(test);
@@ -133,13 +258,14 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (settings == null) {
                 frameworkHandle.SendMessage(
                     TestMessageLevel.Error,
-                    "Unable to determine interpreter to use for " + test.Source);
+                    String.Format(Resources.UnableToDetermineInterpreter, test.Source)
+                );
                 RecordEnd(
                     frameworkHandle,
                     test,
                     testResult,
                     null,
-                    "Unable to determine interpreter to use for " + test.Source,
+                    String.Format(Resources.UnableToDetermineInterpreter, test.Source),
                     TestOutcome.Failed);
                 return;
             }
@@ -149,7 +275,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 debugMode = settings.EnableNativeCodeDebugging ? PythonDebugMode.PythonAndNative : PythonDebugMode.PythonOnly;
             }
 
-            var testCase = new PythonTestCase(settings, test, debugMode);
+            var testCase = new PythonTestCase(settings, test, debugMode, codeCoverageFile);
 
             var dte = _app != null ? _app.GetDTE() : null;
             if (dte != null && debugMode != PythonDebugMode.None) {
@@ -157,7 +283,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             if (!File.Exists(settings.Factory.Configuration.InterpreterPath)) {
-                frameworkHandle.SendMessage(TestMessageLevel.Error, "Interpreter path does not exist: " + settings.Factory.Configuration.InterpreterPath);
+                frameworkHandle.SendMessage(TestMessageLevel.Error,  String.Format(Resources.InterpreterDoesNotExist, settings.Factory.Configuration.InterpreterPath));
                 return;
             }
 
@@ -207,7 +333,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (debugMode != PythonDebugMode.None) {
                     if (proc.ExitCode.HasValue) {
                         // Process has already exited
-                        frameworkHandle.SendMessage(TestMessageLevel.Error, "Failed to attach debugger because the process has already exited.");
+                        frameworkHandle.SendMessage(
+                            TestMessageLevel.Error, 
+                            Resources.FailedToAttachExited);
                         if (proc.StandardErrorLines.Any()) {
                             frameworkHandle.SendMessage(TestMessageLevel.Error, "Standard error from Python:");
                             foreach (var line in proc.StandardErrorLines) {
@@ -235,7 +363,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
 #if DEBUG
                     } catch (COMException ex) {
-                        frameworkHandle.SendMessage(TestMessageLevel.Error, "Error occurred connecting to debuggee.");
+                        frameworkHandle.SendMessage(TestMessageLevel.Error, Resources.ErrorConnecting);
                         frameworkHandle.SendMessage(TestMessageLevel.Error, ex.ToString());
                         try {
                             proc.Kill();
@@ -246,7 +374,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     }
 #else
                     } catch (COMException) {
-                        frameworkHandle.SendMessage(TestMessageLevel.Error, "Error occurred connecting to debuggee.");
+                        frameworkHandle.SendMessage(TestMessageLevel.Error, Resources.ErrorConnecting);
                         try {
                             proc.Kill();
                         } catch (InvalidOperationException) {
@@ -446,9 +574,12 @@ namespace Microsoft.PythonTools.TestAdapter {
             public readonly IDictionary<string, string> Environment;
             public readonly IEnumerable<string> Arguments;
 
-            public PythonTestCase(PythonProjectSettings settings, TestCase testCase, PythonDebugMode debugMode) {
+            public readonly string CodeCoverageFile;
+
+            public PythonTestCase(PythonProjectSettings settings, TestCase testCase, PythonDebugMode debugMode, string codeCoverageFile) {
                 Settings = settings;
                 TestCase = testCase;
+                CodeCoverageFile = codeCoverageFile;
 
                 TestAnalyzer.ParseFullyQualifiedTestName(
                     testCase.FullyQualifiedName,
@@ -480,6 +611,11 @@ namespace Microsoft.PythonTools.TestAdapter {
                     "-m", ModulePath.ModuleName,
                     "-t", string.Format("{0}.{1}", TestClass, TestMethod)
                 };
+
+                if (CodeCoverageFile != null) {
+                    arguments.Add("--coverage");
+                    arguments.Add(CodeCoverageFile);
+                }
 
                 if (debugMode == PythonDebugMode.PythonOnly) {
                     var secretBuffer = new byte[24];
@@ -525,4 +661,5 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         }
     }
+
 }

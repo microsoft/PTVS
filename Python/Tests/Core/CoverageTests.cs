@@ -319,7 +319,7 @@ namespace PythonToolsTests {
             );
         }
 
-
+        
         private static string GetPath(string name) {
             return TestData.GetPath(Path.Combine("TestData", "Coverage", name, "coverage.xml"));
         }

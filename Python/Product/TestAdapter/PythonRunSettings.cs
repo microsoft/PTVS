@@ -19,6 +19,7 @@ using System.ComponentModel.Composition;
 using System.IO;
 using System.Windows.Threading;
 using System.Xml.XPath;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestWindow.CodeCoverage;
@@ -36,16 +37,18 @@ namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(IRunSettingsService))]
     class PythonRunSettings : IRunSettingsService {
         private readonly IComponentModel _compModel;
+        private readonly IServiceProvider _serviceProvider;
         private readonly Dispatcher _dispatcher;
         internal static Uri PythonCodeCoverageUri = new Uri("datacollector://Microsoft/PythonCodeCoverage/1.0");
         internal static string CodeCoverageUriString = @"datacollector://Microsoft/CodeCoverage/2.0";
-
+        internal const int cmdidImportCoverage = 0x10f;
         [ImportingConstructor]
         public PythonRunSettings([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
             _compModel = (IComponentModel)serviceProvider.GetService(typeof(SComponentModel));
             var opState = _compModel.GetService<IOperationState>();
             opState.StateChanged += StateChange;
             _dispatcher = Dispatcher.CurrentDispatcher;
+            _serviceProvider = serviceProvider;
         }
 
         private void StateChange(object sender, OperationStateChangedEventArgs e) {
@@ -54,28 +57,27 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (resultUris != null) {
                     foreach (var eachAttachment in resultUris) {
                         string filePath = eachAttachment.LocalPath;
+                        
                         if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath)) {
-                            _dispatcher.BeginInvoke(
-                                new Action(() => {
-                                    CodeCoverageHost.OpenFile(filePath);
-                                }
-                            ));
+                            object inObj = filePath;
+                            object outObj = null;
+
+                            var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
+                            dte.Commands.Raise(
+                                GuidList.guidPythonToolsCmdSet.ToString("B"),
+                                cmdidImportCoverage,
+                                ref inObj,
+                                ref outObj
+                            );
                         }
                     }
                 }
-
             }
         }
 
         public ICodeCoverageSettingsService CodeCoverage {
             get {
                 return _compModel.GetService<ICodeCoverageSettingsService>();
-            }
-        }
-
-        public ICodeCoverageHost CodeCoverageHost {
-            get {
-                return _compModel.GetService<ICodeCoverageHost>();
             }
         }
 

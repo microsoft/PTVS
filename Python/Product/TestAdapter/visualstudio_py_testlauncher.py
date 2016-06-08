@@ -29,7 +29,7 @@ def main():
     parser.add_option('-x', '--mixed-mode', action='store_true', help='wait for mixed-mode debugger to attach')
     parser.add_option('-t', '--test', type='str', dest='tests', action='append', help='specifies a test to run')
     parser.add_option('-m', '--module', type='str', help='name of the module to import the tests from')
-    
+    parser.add_option('-c', '--coverage', type='str', help='enable code coverage and speicfy filename')
     (opts, _) = parser.parse_args()
     
     sys.path[0] = os.getcwd()
@@ -61,14 +61,31 @@ def main():
             if isTracing.value != 0:
                 break
             sleep(0.1)
-                
-    __import__(opts.module)
-    module = sys.modules[opts.module]
-    test = unittest.defaultTestLoader.loadTestsFromNames(opts.tests, module)
-    runner = unittest.TextTestRunner(verbosity=0)
+
+    cov = None
+    try:
+        if opts.coverage:
+            try:
+                import coverage
+                cov = coverage.coverage(opts.coverage)
+                cov.load()
+                cov.start()
+            except:
+                pass
+                    
+        __import__(opts.module)
+        module = sys.modules[opts.module]
+        test = unittest.defaultTestLoader.loadTestsFromNames(opts.tests, module)
+        runner = unittest.TextTestRunner(verbosity=0)
     
-    result = runner.run(test)
-    sys.exit(not result.wasSuccessful())
+        result = runner.run(test)
+        sys.exit(not result.wasSuccessful())
+
+    finally:
+        if cov is not None:
+            cov.stop()
+            cov.save()
+            cov.xml_report(outfile = opts.coverage + '.xml')
 
 if __name__ == '__main__':
     main()
