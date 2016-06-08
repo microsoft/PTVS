@@ -53,7 +53,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TestWindow.CodeCoverage">
-      <HintPath>..\..\..\..\..\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\CommonExtensions\Microsoft\AnalyzeCodeCoverage\Microsoft.VisualStudio.TestWindow.CodeCoverage.dll</HintPath>
+      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\AnalyzeCodeCoverage\Microsoft.VisualStudio.TestWindow.CodeCoverage.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TestWindow.Interfaces">
       <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\TestWindow\Microsoft.VisualStudio.TestWindow.Interfaces.dll</HintPath>

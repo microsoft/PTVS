@@ -24,6 +24,7 @@ using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Threading;
+using System.Xml.XPath;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -37,9 +38,7 @@ using Microsoft.VisualStudioTools.Project;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.TestAdapter {
-    using System.Xml;
-    using System.Xml.XPath;
-    using ValidateArg = Microsoft.VisualStudio.TestPlatform.ObjectModel.ValidateArg;
+    //using ValidateArg = Microsoft.VisualStudio.TestPlatform.ObjectModel.ValidateArg;
 
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "object owned by VS")]
