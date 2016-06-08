@@ -253,6 +253,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PythonTools\CodeCoverage\CoverageExporter.cs" />
+    <Compile Include="PythonTools\CodeCoverage\CoverageFileInfo.cs" />
+    <Compile Include="PythonTools\CodeCoverage\CoverageHit.cs" />
+    <Compile Include="PythonTools\CodeCoverage\CoverageLineInfo.cs" />
+    <Compile Include="PythonTools\CodeCoverage\CoverageMapper.cs" />
+    <Compile Include="PythonTools\CodeCoverage\CoveragePyConverter.cs" />
+    <Compile Include="PythonTools\CodeCoverage\CoverageScope.cs" />
+    <Compile Include="PythonTools\Commands\ImportCoverageCommand.cs" />
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
     <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisLocation.cs" />

@@ -481,6 +481,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 new OpenInterpreterListCommand(this),
                 new ImportWizardCommand(this),
                 new SurveyNewsCommand(this),
+                new ImportCoverageCommand(this),
                 new ShowPythonViewCommand(this),
                 new ShowCppViewCommand(this),
                 new ShowNativePythonFrames(this),
