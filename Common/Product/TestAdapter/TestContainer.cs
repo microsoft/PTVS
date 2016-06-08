@@ -58,7 +58,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
                 // managed executable. This may change in future versions of the
                 // test framework, in which case we may be able to start
                 // returning our own debugger and having it launch properly.
-                yield return new Guid("{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}");
+                yield break;
             }
         }
 
