@@ -500,7 +500,7 @@ namespace Microsoft.PythonTools.Repl {
             _threadIdMapper = threadIdMapper;
             _threadId = process.GetThreads()[0].Id;
             _languageVersion = process.LanguageVersion;
-            DisplayName = "Debug " + _languageVersion.ToVersion();
+            DisplayName = "Debug";
 
             EnsureConnectedOnCreate();
         }
@@ -697,6 +697,18 @@ namespace Microsoft.PythonTools.Repl {
             if (dteActiveThread != _serviceProvider.GetDTE().Debugger.CurrentThread) {
                 _serviceProvider.GetDTE().Debugger.CurrentThread = dteActiveThread;
             }
+        }
+    }
+
+    internal static class PythonDebugReplEvaluatorExtensions {
+        public static PythonDebugReplEvaluator GetPythonDebugReplEvaluator(this IInteractiveWindow window) {
+            var eval = window?.Evaluator as PythonDebugReplEvaluator;
+            if (eval != null) {
+                return eval;
+            }
+
+            eval = (window?.Evaluator as SelectableReplEvaluator)?.Evaluator as PythonDebugReplEvaluator;
+            return eval;
         }
     }
 }

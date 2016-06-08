@@ -361,6 +361,11 @@ namespace Microsoft.PythonTools.Interpreter {
             return null;
         }
 
+        public object GetProperty(string id, string propName) {
+            var factoryProvider = GetFactoryProvider(id);
+            return factoryProvider?.GetProperty(id, propName);
+        }
+
         private IPythonInterpreterFactoryProvider GetFactoryProvider(string id) {
             var interpAndId = id.Split(new[] { '|' }, 2);
             if (interpAndId.Length == 2) {

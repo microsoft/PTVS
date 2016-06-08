@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Repl {
     [ContentType(PythonCoreConstants.ContentType)]
     class DebugReplProcessCommand : IInteractiveWindowCommand {
         public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
-            var eval = window.Evaluator as PythonDebugReplEvaluator;
+            var eval = window.GetPythonDebugReplEvaluator();
             if (eval != null) {
                 if (string.IsNullOrEmpty(arguments)) {
                     eval.DisplayActiveProcess();
@@ -43,7 +43,6 @@ namespace Microsoft.PythonTools.Repl {
                     }
                 }
             }
-
             return ExecutionResult.Succeeded;
         }
 

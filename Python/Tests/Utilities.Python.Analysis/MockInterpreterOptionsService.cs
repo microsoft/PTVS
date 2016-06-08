@@ -165,5 +165,9 @@ namespace TestUtilities.Python {
         public string AddConfigurableInterpreter(string name, InterpreterConfiguration config) {
             throw new NotImplementedException();
         }
+
+        public object GetProperty(string id, string propName) {
+            throw new NotImplementedException();
+        }
     }
 }

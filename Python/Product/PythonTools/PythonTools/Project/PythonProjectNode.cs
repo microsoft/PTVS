@@ -1570,7 +1570,11 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var env = PathUtils.MergeEnvironments(
-                config.GetEnvironmentVariables(),
+                PathUtils.MergeEnvironments(
+                    Environment.GetEnvironmentVariables().AsEnumerable<string, string>(),
+                    config.GetEnvironmentVariables(),
+                    "PATH"
+                ),
                 new KeyValuePair<string, string>[] {
                     new KeyValuePair<string, string>("PATH", paths),
                 },

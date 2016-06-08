@@ -41,7 +41,9 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly Dictionary<int, CompletionInfo> _pendingExecutes = new Dictionary<int, CompletionInfo>();
         private readonly Dictionary<int, ChildrenInfo> _pendingChildEnums = new Dictionary<int, ChildrenInfo>();
         private readonly Dictionary<int, TaskCompletionSource<int>> _pendingGetHitCountRequests = new Dictionary<int, TaskCompletionSource<int>>();
+        private readonly List<TaskCompletionSource<int>> _pendingGetThreadFramesRequests = new List<TaskCompletionSource<int>>();
         private readonly object _pendingGetHitCountRequestsLock = new object();
+        private readonly object _pendingGetThreadFramesRequestsLock = new object();
         private readonly PythonLanguageVersion _langVersion;
         private readonly Guid _processGuid = Guid.NewGuid();
         private readonly List<string[]> _dirMapping;
@@ -807,6 +809,13 @@ namespace Microsoft.PythonTools.Debugger {
                     thread.Name = threadName;
                 }
             }
+
+            lock(_pendingGetThreadFramesRequestsLock) {
+                foreach (TaskCompletionSource<int> tcs in _pendingGetThreadFramesRequests) {
+                    tcs.SetResult(0);
+                }
+                _pendingGetThreadFramesRequests.Clear();
+            }
         }
 
         private void HandleProcessLoad(Stream stream) {
@@ -1005,6 +1014,21 @@ namespace Microsoft.PythonTools.Debugger {
                 _stream.Write(ClearSteppingCommandBytes);
                 _stream.WriteInt64(threadId);
             }
+        }
+
+        public Task GetThreadFramesAsync(long threadId) {
+            DebugWriteCommand("GetThreadFrames");
+            var tcs = new TaskCompletionSource<int>();
+            lock (_pendingGetThreadFramesRequestsLock) {
+                _pendingGetThreadFramesRequests.Add(tcs);
+            }
+
+            lock (_streamLock) {
+                _stream.Write(GetThreadFramesCommandBytes);
+                _stream.WriteInt64(threadId);
+            }
+
+            return tcs.Task;
         }
 
         public void Detach() {

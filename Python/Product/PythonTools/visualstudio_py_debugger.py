@@ -1622,6 +1622,7 @@ class DebuggerLoop(object):
             to_bytes('brka') : self.command_break_all,
             to_bytes('resa') : self.command_resume_all,
             to_bytes('rest') : self.command_resume_thread,
+            to_bytes('thrf') : self.command_get_thread_frames,
             to_bytes('ares') : self.command_auto_resume,
             to_bytes('exec') : self.command_execute_code,
             to_bytes('chld') : self.command_enum_children,
@@ -1804,6 +1805,13 @@ class DebuggerLoop(object):
         global SEND_BREAK_COMPLETE
         SEND_BREAK_COMPLETE = True
         mark_all_threads_for_break()
+
+    def command_get_thread_frames(self):
+        tid = read_int(self.conn)
+        THREADS_LOCK.acquire()
+        thread = THREADS[tid]
+        THREADS_LOCK.release()
+        thread.enum_thread_frames_locally()
 
     def command_resume_all(self):
         # resume all
