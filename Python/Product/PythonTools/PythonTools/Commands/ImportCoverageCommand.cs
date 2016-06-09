@@ -24,7 +24,7 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
-    /// Provides the command for starting a file or the start item of a project in the REPL window.
+    /// Provides the command for importing code coverage information from a coverage.py XML file.
     /// </summary>
     internal sealed class ImportCoverageCommand : Command {
         private readonly IServiceProvider _serviceProvider;
