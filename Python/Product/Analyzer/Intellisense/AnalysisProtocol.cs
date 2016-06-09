@@ -851,5 +851,50 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             public override string name => Name;
         }
+
+        public sealed class GetTestCasesRequest : Request<GetTestCasesResponse> {
+            public const string Command = "getTestCases";
+
+            public override string command => Command;
+
+            public string filename;
+        }
+
+        public sealed class GetTestCasesResponse : Response {
+            public TestCase[] tests;
+        }
+
+        public sealed class TestCase : IEquatable<TestCase> {
+            public string className;
+            public string codeFilePath;
+            public int column;
+            public int line;
+            public string methodName;
+            public int endLine;
+
+            public override bool Equals(object obj) {
+                return Equals(obj as TestCase);
+            }
+
+            public override int GetHashCode() {
+                return (className?.GetHashCode() ?? 0) ^
+                    (codeFilePath?.GetHashCode() ?? 0) ^
+                    column ^
+                    line ^
+                    (methodName?.GetHashCode() ?? 0);
+            }
+
+            public bool Equals(TestCase other) {
+                if (other == null) {
+                    return false;
+                }
+
+                return line == other.line &&
+                    column == other.column &&
+                    className == other.className &&
+                    codeFilePath == other.codeFilePath &&
+                    methodName == other.methodName;
+            }
+        }
     }
 }

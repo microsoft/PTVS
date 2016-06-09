@@ -17,13 +17,17 @@
 using System;
 using System.ComponentModel.Composition;
 using System.IO;
+using System.Linq;
 using System.Windows.Threading;
 using System.Xml.XPath;
-using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestWindow.CodeCoverage;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
+using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudioTools.TestAdapter;
 
 namespace Microsoft.PythonTools.TestAdapter {
 
@@ -57,7 +61,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 if (resultUris != null) {
                     foreach (var eachAttachment in resultUris) {
                         string filePath = eachAttachment.LocalPath;
-                        
+
                         if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath)) {
                             object inObj = filePath;
                             object outObj = null;
@@ -88,24 +92,100 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public IXPathNavigable AddRunSettings(IXPathNavigable inputRunSettingDocument, IRunSettingsConfigurationInfo configurationInfo, ILogger log) {
+            XPathNavigator navigator = inputRunSettingDocument.CreateNavigator();
+            var python = navigator.Select("/RunSettings");
+            if (python.MoveNext()) {
+                using (var writer = python.Current.AppendChild()) {
+                    var pyContainers = configurationInfo.TestContainers
+                        .Where(x => x is TestContainer)
+                        .Cast<TestContainer>()
+                        .GroupBy(x => x.Project);
+
+                    writer.WriteStartElement("Python");
+                    writer.WriteStartElement("TestCases");
+
+                    foreach (var project in pyContainers) {
+                        foreach (var container in project) {
+                            writer.WriteStartElement("Project");
+                            writer.WriteAttributeString("path", project.Key.GetMkDocument());
+                            writer.WriteAttributeString("home", project.Key.ProjectHome);
+                            var ui = project.Key.Site.GetUIThread();
+                            LaunchConfiguration config = null;
+                            string nativeCode = "", djangoSettings = "";
+                            ui.Invoke(() => {
+                                try {
+                                    config = project.Key.GetLaunchConfigurationOrThrow();
+                                } catch {
+                                }
+                                nativeCode = project.Key.GetProjectProperty(PythonConstants.EnableNativeCodeDebugging);
+                                djangoSettings = project.Key.GetProjectProperty("DjangoSettingsModule");
+                            });
+
+                            writer.WriteAttributeString("nativeDebugging", nativeCode);
+                            writer.WriteAttributeString("djangoSettingsModule", djangoSettings);
+                            
+                            try {
+                                writer.WriteAttributeString("workingDir", config.WorkingDirectory);
+                                writer.WriteAttributeString("interpreter", config.GetInterpreterPath());
+                                writer.WriteAttributeString("pathEnv", config.Interpreter.PathEnvironmentVariable);
+
+                                writer.WriteStartElement("Environment");
+                                foreach (var keyValue in config.Environment) {
+                                    writer.WriteStartElement("Variable");
+                                    writer.WriteAttributeString("name", keyValue.Key);
+                                    writer.WriteAttributeString("value", keyValue.Value);
+                                    writer.WriteEndElement();
+                                }
+                                writer.WriteEndElement(); // Environment
+
+                                writer.WriteStartElement("SearchPaths");
+                                foreach (var path in config.SearchPaths) {
+                                    writer.WriteStartElement("Search");
+                                    writer.WriteAttributeString("value", path);
+                                    writer.WriteEndElement();
+                                }
+                                writer.WriteEndElement(); // SearchPaths
+                            } catch (NoInterpretersException) {
+                            } catch (MissingInterpreterException) {
+                            }
+    
+                            foreach (var test in container.TestCases) {
+                                writer.WriteStartElement("Test");
+                                writer.WriteAttributeString("className", test.className);
+                                writer.WriteAttributeString("file", test.codeFilePath);
+                                writer.WriteAttributeString("line", test.line.ToString());
+                                writer.WriteAttributeString("column", test.column.ToString());
+                                writer.WriteAttributeString("method", test.methodName);
+                                writer.WriteEndElement(); // Test
+                            }
+
+                            writer.WriteEndElement();  // Project
+                        }
+                    }
+                    
+                    writer.WriteEndElement(); // TestCases
+                    writer.WriteEndElement(); // Python
+                }
+            }
+
             // We only care about tweaking the settings for execution...
             if (configurationInfo.RequestState != RunSettingConfigurationInfoState.Execution) {
-                return null;
+                return inputRunSettingDocument;
             }
 
             // And we also only care about doing it when we're all Python containers
             bool allPython = true, anyPython = false;
             foreach (var container in configurationInfo.TestContainers) {
-                if (!(container.Discoverer is TestContainerDiscoverer)) {
-                    allPython = false;
-                } else {
+                if (container is TestContainer) {
                     anyPython = true;
+                } else {
+                    allPython = false;
                 }
             }
 
             if (!anyPython) {
                 // Don't mess with code coverage settings if we're not running Python tests
-                return null;
+                return inputRunSettingDocument;
             }
 
             var codeCov = CodeCoverage;
@@ -114,11 +194,11 @@ namespace Microsoft.PythonTools.TestAdapter {
                 // collector if ICodeCoverageSettingsService IRunSettingsService runs 
                 // after ours.  So we tell it that it's been disabled to prevent that 
                 // from happening.
-                XPathNavigator navigator = inputRunSettingDocument.CreateNavigator();
+                navigator = inputRunSettingDocument.CreateNavigator();
 
-                var settings = navigator.Select("/RunSettings");
-                if (settings.MoveNext()) {
-                    settings.Current.AppendChild("<Python><EnableCoverage>true</EnableCoverage></Python>");
+                var pythonNode = navigator.Select("/RunSettings/Python");
+                if (pythonNode.MoveNext()) {
+                    pythonNode.Current.AppendChild("<EnableCoverage>true</EnableCoverage>");
                 }
 
                 if (allPython) {
@@ -136,7 +216,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     }
 
                     if (codeCoverageNode != null &&
-                        codeCoverageNode.GetAttribute("x-keep-ptvs", null) == null) {
+                        String.IsNullOrWhiteSpace(codeCoverageNode.GetAttribute("x-keep-ptvs", null))) {
                         // Code coverage has been added, which means we (likely) came after 
                         // ICodeCoverageSettingsService in the MEF import order.  Let's remove 
                         // the node (we allow the user to define x-keep-ptvs to prevent us 
@@ -144,11 +224,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                         codeCoverageNode.DeleteSelf();
                     }
                 }
-
-                return inputRunSettingDocument;
             }
 
-            return null;
+            return inputRunSettingDocument;
         }
     }
 }

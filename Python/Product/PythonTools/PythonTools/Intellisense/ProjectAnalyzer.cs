@@ -402,8 +402,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 entry.OnAnalysisComplete();
+                AnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs(entry));
             }
         }
+
+        /// <summary>
+        /// Raised when any file has a new analysis.
+        /// </summary>
+        internal event EventHandler<AnalysisCompleteEventArgs> AnalysisComplete;
 
         internal static string GetZipFileName(AnalysisEntry entry) {
             object result;
@@ -494,6 +500,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal void OnAnalysisStarted() {
             AnalysisStarted?.Invoke(this, EventArgs.Empty);
+        }
+
+        internal Task<AP.GetTestCasesResponse> GetTestCasesAsync(string filename) {
+            return SendRequestAsync(new AP.GetTestCasesRequest() { filename = filename });
         }
 
         /// <summary>

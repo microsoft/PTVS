@@ -185,6 +185,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ValueDescriptionRequest.Command: response = GetValueDescriptions((AP.ValueDescriptionRequest)request); break;
                 case AP.ExtensionRequest.Command: response = ExtensionRequest((AP.ExtensionRequest)request); break;
                 case AP.InitializeRequest.Command: response = Initialize((AP.InitializeRequest)request); break;
+                case AP.GetTestCasesRequest.Command: response = GetTestCases((AP.GetTestCasesRequest)request); break;
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
@@ -2563,6 +2564,41 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _queueActivityEvent.Dispose();
+        }
+
+        #endregion
+
+        #region Test Case Discovery
+
+        private Response GetTestCases(AP.GetTestCasesRequest request) {
+            IProjectEntry projEntry;
+            if (request.filename != null &&
+                _projectFiles.TryGetValue(request.filename, out projEntry)) { 
+                
+                return new AP.GetTestCasesResponse() {
+                    tests = GetTestCases(projEntry).ToArray()
+                };
+            }
+
+            return new AP.GetTestCasesResponse() {
+                tests = Array.Empty<AP.TestCase>()
+            };
+        }
+        
+        /// <summary>
+        /// Gets the test cases for a specific project entry
+        /// </summary>
+        private IEnumerable<AP.TestCase> GetTestCases(IProjectEntry value) {
+            foreach (var testCase in _pyAnalyzer.GetTestCases(value)) {
+                yield return new AP.TestCase() {
+                    className = testCase.ClassName,
+                    methodName = testCase.MethodName,
+                    codeFilePath = testCase.Filename,
+                    column = testCase.StartColumn,
+                    line = testCase.StartLine,
+                    endLine = testCase.EndLine
+                };
+            }
         }
 
         #endregion

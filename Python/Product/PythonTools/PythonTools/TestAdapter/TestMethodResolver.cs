@@ -35,7 +35,6 @@ namespace Microsoft.PythonTools.TestAdapter {
     class TestMethodResolver : ITestMethodResolver {
         private readonly IServiceProvider _serviceProvider;
         private readonly TestContainerDiscoverer _discoverer;
-        private readonly IInterpreterOptionsService _interpreterService;
 
         #region ITestMethodResolver Members
 
@@ -44,78 +43,30 @@ namespace Microsoft.PythonTools.TestAdapter {
             [Import]TestContainerDiscoverer discoverer) {
             _serviceProvider = serviceProvider;
             _discoverer = discoverer;
-            _interpreterService = ((IComponentModel)_serviceProvider.GetService(typeof(SComponentModel))).GetService<IInterpreterOptionsService>();
         }
 
         public Uri ExecutorUri {
-            get { return TestExecutor.ExecutorUri; }
+            get { return TestContainerDiscoverer._ExecutorUri; }
         }
 
         public string GetCurrentTest(string filePath, int line, int lineCharOffset) {
             var project = PathToProject(filePath);
-            if (project != null && _discoverer.IsProjectKnown(project)) {
-                var buildEngine = new MSBuild.ProjectCollection();
-                string projectPath;
-                if (project.TryGetProjectPath(out projectPath)) {
-                    var proj = buildEngine.LoadProject(projectPath);
-#if FALSE
-                    var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj);
-                    try {
-                        provider.DiscoverInterpreters();
-                    } catch (InvalidDataException) {
-                        // This exception can be safely ignored here.
+            if (project != null) {
+                var pyProj = project.GetPythonProject();
+                if (pyProj != null) {
+                    var container = _discoverer.GetTestContainer(pyProj, filePath);
+                    if (container != null) {
+                        foreach (var testCase in container.TestCases) {
+                            if (testCase.line >= line && line <= testCase.endLine) {
+                                var moduleName = CommonUtils.CreateFriendlyFilePath(pyProj.ProjectHome, testCase.codeFilePath);
+                                return moduleName + "::" + testCase.className + "::" + testCase.methodName;
+                            }
+                        }
                     }
-                    var factory = provider.ActiveInterpreter;
-
-                    var parser = Parser.CreateParser(
-                        new StreamReader(filePath),
-                        factory.GetLanguageVersion()
-                    );
-                    var ast = parser.ParseFile();
-                    var walker = new FunctionFinder(ast, line, lineCharOffset);
-                    ast.Walk(walker);
-                    var projHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
-
-                    if (walker.ClassName != null && walker.FunctionName != null) {
-                        return TestAnalyzer.MakeFullyQualifiedTestName(
-                            CommonUtils.CreateFriendlyFilePath(projHome, filePath),
-                            walker.ClassName,
-                            walker.FunctionName
-                        );
-                    }
-#endif
                 }
             }
+
             return null;
-        }
-
-        class FunctionFinder : PythonWalker {
-            public string ClassName, FunctionName;
-            private readonly PythonAst _root;
-            private readonly int _line, _lineOffset;
-
-            public FunctionFinder(PythonAst root, int line, int lineOffset) {
-                _root = root;
-                _line = line;
-                _lineOffset = lineOffset;
-            }
-
-            public override bool Walk(ClassDefinition node) {
-                if (FunctionName == null) {
-                    ClassName = node.Name;
-                }
-                return base.Walk(node);
-            }
-
-            public override bool Walk(FunctionDefinition node) {
-                var start = node.GetStart(_root);
-                var end = node.GetEnd(_root);
-                if (start.Line <= _line && end.Line >= _line) {
-                    FunctionName = node.Name;
-                }
-
-                return base.Walk(node);
-            }
         }
 
         private IVsProject PathToProject(string filePath) {
@@ -143,6 +94,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             return hierarchy as IVsProject;
         }
 
-#endregion
+        #endregion
     }
 }

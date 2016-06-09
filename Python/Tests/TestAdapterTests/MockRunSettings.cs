@@ -14,16 +14,29 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
-namespace Microsoft.PythonTools.CodeCoverage {
-    class CoverageFileInfo {
-        public readonly string Filename;
-        public readonly HashSet<int> Hits;
+namespace TestAdapterTests {
+    class MockRunSettings : IRunSettings {
+        private readonly string _xml;
 
-        public CoverageFileInfo(string filename, HashSet<int> hits) {
-            Filename = filename;
-            Hits = hits;
+        public MockRunSettings(string xml) {
+            _xml = xml;
+        }
+
+        public string SettingsXml {
+            get {
+                return _xml;
+            }
+        }
+
+        public ISettingsProvider GetSettings(string settingsName) {
+            throw new NotImplementedException();
         }
     }
 }

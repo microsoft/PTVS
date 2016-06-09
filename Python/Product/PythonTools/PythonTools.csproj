@@ -170,6 +170,17 @@
     <Reference Include="Microsoft.VisualStudio.Text.UI.Wpf, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop" />
     <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0" />
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.ObjectModel">
+      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\TestWindow\Microsoft.VisualStudio.TestPlatform.ObjectModel.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestWindow.CodeCoverage">
+      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\AnalyzeCodeCoverage\Microsoft.VisualStudio.TestWindow.CodeCoverage.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestWindow.Interfaces">
+      <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\TestWindow\Microsoft.VisualStudio.TestWindow.Interfaces.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
@@ -240,6 +251,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\..\Common\Product\TestAdapter\TestContainer.cs">
+      <Link>PythonTools\TestAdapter\TestContainer.cs</Link>
+    </Compile>
     <Compile Include="PythonTools\CodeCoverage\CoverageExporter.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageFileInfo.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageHit.cs" />
@@ -250,6 +264,7 @@
     <Compile Include="PythonTools\Commands\ImportCoverageCommand.cs" />
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
     <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
+    <Compile Include="PythonTools\Intellisense\AnalysisCompleteEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisLocation.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisVariable.cs" />
     <Compile Include="PythonTools\Intellisense\BufferParser.cs" />
@@ -277,6 +292,7 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="PythonTools\Options\SuppressDialogOptions.cs" />
+    <Compile Include="PythonTools\TestAdapter\PythonRunSettings.cs" />
     <Compile Include="PythonTools\Repl\IMultipleScopeEvaluator.cs" />
     <Compile Include="PythonTools\Repl\InlineReplAdornment.cs" />
     <Compile Include="PythonTools\Repl\InlineReplAdornmentManager.cs" />
@@ -386,6 +402,8 @@
     <Compile Include="PythonTools\PythonAnalysisClassifierProvider.cs" />
     <Compile Include="PythonTools\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="PythonTools\PeekableEnumerator.cs" />
+    <Compile Include="PythonTools\TestAdapter\TestContainerDiscoverer.cs" />
+    <Compile Include="PythonTools\TestAdapter\TestMethodResolver.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebPropertyPageControl.cs">
       <SubType>UserControl</SubType>
     </Compile>

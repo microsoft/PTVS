@@ -14,16 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
+using System;
 
-namespace Microsoft.PythonTools.CodeCoverage {
-    class CoverageFileInfo {
-        public readonly string Filename;
-        public readonly HashSet<int> Hits;
+namespace Microsoft.PythonTools.Intellisense {
+    internal sealed class AnalysisCompleteEventArgs : EventArgs {
+        private readonly AnalysisEntry _entry;
 
-        public CoverageFileInfo(string filename, HashSet<int> hits) {
-            Filename = filename;
-            Hits = hits;
+        public AnalysisEntry AnalysisEntry => _entry;
+
+        public AnalysisCompleteEventArgs(AnalysisEntry entry) {
+            _entry = entry;
         }
     }
 }

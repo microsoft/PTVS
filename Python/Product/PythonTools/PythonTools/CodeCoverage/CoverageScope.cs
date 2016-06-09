@@ -28,9 +28,9 @@ namespace Microsoft.PythonTools.CodeCoverage {
     /// </summary>
 
     sealed class CoverageScope {
-        public ScopeStatement Statement;
-        public List<CoverageScope> Children = new List<CoverageScope>();
-        public SortedDictionary<int, CoverageLineInfo> Lines = new SortedDictionary<int, CoverageLineInfo>();
+        public readonly ScopeStatement Statement;
+        public readonly List<CoverageScope> Children = new List<CoverageScope>();
+        public readonly SortedDictionary<int, CoverageLineInfo> Lines = new SortedDictionary<int, CoverageLineInfo>();
         public int BlocksCovered, BlocksNotCovered;
 
         public CoverageScope(ScopeStatement node) {

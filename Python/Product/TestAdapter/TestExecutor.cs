@@ -16,7 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition.Hosting;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -27,15 +27,12 @@ using System.Threading;
 using System.Xml.XPath;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
-using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.TestAdapter {
     //using ValidateArg = Microsoft.VisualStudio.TestPlatform.ObjectModel.ValidateArg;
@@ -45,21 +42,17 @@ namespace Microsoft.PythonTools.TestAdapter {
     [ExtensionUri(TestExecutor.ExecutorUriString)]
     class TestExecutor : ITestExecutor {
         public const string ExecutorUriString = "executor://PythonTestExecutor/v1";
-        public static readonly Uri ExecutorUri = new Uri(ExecutorUriString);
         private static readonly Guid PythonRemoteDebugPortSupplierUnsecuredId = new Guid("{FEB76325-D127-4E02-B59D-B16D93D46CF5}");
         private static readonly Guid PythonDebugEngineGuid = new Guid("EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9");
         private static readonly string TestLauncherPath = PythonToolsInstallPath.GetFile("visualstudio_py_testlauncher.py");
+        internal static Uri PythonCodeCoverageUri = new Uri("datacollector://Microsoft/PythonCodeCoverage/1.0");
 
         private readonly ManualResetEvent _cancelRequested = new ManualResetEvent(false);
 
         private readonly VisualStudioProxy _app;
-        private readonly CompositionContainer _container;
-        private readonly IInterpreterOptionsService _interpreterService;
 
         public TestExecutor() {
             _app = VisualStudioProxy.FromEnvironmentVariable(PythonConstants.PythonToolsProcessIdEnvironmentVariable);
-            _container = InterpreterCatalog.CreateContainer(typeof(IInterpreterRegistryService), typeof(IInterpreterOptionsService), typeof(TestExecutorProjectContext));
-            _interpreterService = _container.GetExportedValue<IInterpreterOptionsService>();
         }
 
 
@@ -71,19 +64,52 @@ namespace Microsoft.PythonTools.TestAdapter {
             ValidateArg.NotNull(sources, "sources");
             ValidateArg.NotNull(runContext, "runContext");
             ValidateArg.NotNull(frameworkHandle, "frameworkHandle");
-            
+
             _cancelRequested.Reset();
 
             var receiver = new TestReceiver();
 
-            var discoverer = new TestDiscoverer(_container);
-            discoverer.DiscoverTests(sources, null, null, receiver);
+            TestDiscoverer.DiscoverTests(sources, frameworkHandle, receiver, runContext.RunSettings);
 
             if (_cancelRequested.WaitOne(0)) {
                 return;
             }
 
             RunTestCases(receiver.Tests, runContext, frameworkHandle);
+        }
+
+        private Dictionary<string, PythonProjectSettings> GetSourceToSettings(IRunSettings settings) {
+            var doc = new XPathDocument(new StringReader(settings.SettingsXml));
+            XPathNodeIterator nodes = doc.CreateNavigator().Select("/RunSettings/Python/TestCases/Project");
+            Dictionary<string, PythonProjectSettings> res = new Dictionary<string, PythonProjectSettings>();
+
+            foreach (XPathNavigator project in nodes) {
+                PythonProjectSettings projSettings = new PythonProjectSettings();
+                var path = project.GetAttribute("path", "");
+                projSettings.ProjectHome = project.GetAttribute("home", "");
+                var nativeDebugging = project.GetAttribute("nativeDebugging", "");
+                bool enableNative;
+                if (bool.TryParse(nativeDebugging, out enableNative)) {
+                    projSettings.EnableNativeCodeDebugging = enableNative;
+                }
+                projSettings.DjangoSettingsModule = project.GetAttribute("djangoSettingsModule", "");
+                projSettings.WorkingDir = project.GetAttribute("workingDir", "");
+                projSettings.InterpreterPath = project.GetAttribute("interpreter", "");
+                projSettings.PathEnv = project.GetAttribute("pathEnv", "");
+
+                foreach (XPathNavigator environment in project.Select("Environment/Variable")) {
+                    projSettings.Environment[environment.GetAttribute("name", "")] = environment.GetAttribute("value", "");
+                }
+
+                foreach (XPathNavigator searchPath in project.Select("SearchPaths/Search")) {
+                    projSettings.SearchPath.Add(searchPath.GetAttribute("value", ""));
+                }
+
+                foreach (XPathNavigator test in project.Select("Test")) {
+                    res[test.GetAttribute("file", "")] = projSettings;
+                }
+            }
+            return res;
         }
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle) {
@@ -102,7 +128,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             IFrameworkHandle frameworkHandle
         ) {
             // .pyproj file path -> project settings
-            var sourceToSettings = new Dictionary<string, PythonProjectSettings>();
+            var sourceToSettings = GetSourceToSettings(runContext.RunSettings);
 
             bool codeCoverage = EnableCodeCoverage(runContext);
             string covPath = null;
@@ -124,10 +150,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             if (codeCoverage) {
                 if (File.Exists(covPath + ".xml")) {
-                    var set = new AttachmentSet(
-                        PythonRunSettings.PythonCodeCoverageUri,
-                        "CodeCoverage"
-                    );
+                    var set = new AttachmentSet(PythonCodeCoverageUri, "CodeCoverage");
 
                     set.Attachments.Add(
                         new UriDataAttachment(new Uri(covPath + ".xml"), "Coverage Data")
@@ -154,7 +177,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             // go to the top level directory...  If all else fails we do "pycov".
             foreach (var test in tests) {
                 string testFile, testClass, testMethod;
-                TestAnalyzer.ParseFullyQualifiedTestName(
+                TestDiscoverer.ParseFullyQualifiedTestName(
                     test.FullyQualifiedName,
                     out testFile,
                     out testClass,
@@ -252,9 +275,6 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             PythonProjectSettings settings;
             if (!sourceToSettings.TryGetValue(test.Source, out settings)) {
-                sourceToSettings[test.Source] = settings = LoadProjectSettings(test.Source);
-            }
-            if (settings == null) {
                 frameworkHandle.SendMessage(
                     TestMessageLevel.Error,
                     String.Format(Resources.UnableToDetermineInterpreter, test.Source)
@@ -281,13 +301,13 @@ namespace Microsoft.PythonTools.TestAdapter {
                 dte.Debugger.DetachAll();
             }
 
-            if (!File.Exists(settings.Factory.Configuration.InterpreterPath)) {
-                frameworkHandle.SendMessage(TestMessageLevel.Error,  String.Format(Resources.InterpreterDoesNotExist, settings.Factory.Configuration.InterpreterPath));
+            if (!File.Exists(settings.InterpreterPath)) {
+                frameworkHandle.SendMessage(TestMessageLevel.Error, String.Format(Resources.InterpreterDoesNotExist, settings.InterpreterPath));
                 return;
             }
 
             var env = new Dictionary<string, string>();
-            var pythonPathVar = settings.Factory.Configuration.PathEnvironmentVariable;
+            var pythonPathVar = settings.PathEnv;
             var pythonPath = testCase.SearchPaths;
             if (!string.IsNullOrWhiteSpace(pythonPathVar)) {
                 if (_app != null) {
@@ -311,9 +331,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             using (var proc = ProcessOutput.Run(
-                !settings.IsWindowsApplication ? 
-                    settings.Factory.Configuration.InterpreterPath :
-                    settings.Factory.Configuration.WindowsInterpreterPath,
+                settings.InterpreterPath,
                 testCase.Arguments,
                 testCase.WorkingDirectory,
                 env,
@@ -333,7 +351,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     if (proc.ExitCode.HasValue) {
                         // Process has already exited
                         frameworkHandle.SendMessage(
-                            TestMessageLevel.Error, 
+                            TestMessageLevel.Error,
                             Resources.FailedToAttachExited);
                         if (proc.StandardErrorLines.Any()) {
                             frameworkHandle.SendMessage(TestMessageLevel.Error, "Standard error from Python:");
@@ -410,103 +428,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private PythonProjectSettings LoadProjectSettings(
-            string projectFile
-        ) {
-            var registry = _container.GetExportedValue<IInterpreterRegistryService>();
-            
-            var buildEngine = new MSBuild.ProjectCollection();
-            MSBuildProjectInterpreterFactoryProvider provider = null;
-            try {
-                
-                var proj = buildEngine.LoadProject(projectFile);
-                var interpreter = proj.GetPropertyValue(MSBuildConstants.InterpreterIdProperty);
-                IPythonInterpreterFactory factory = null;
-                if (interpreter != null) {
-                    factory = registry.FindInterpreter(interpreter);
-                }
-
-                if (factory == null) {
-                    var options = _container.GetExportedValue<IInterpreterOptionsService>();
-                    factory = options.DefaultInterpreter;
-                }
-
-                if (factory == null) {
-                    return null;
-                }
-
-                var projSettings = new PythonProjectSettings();
-                projSettings.Factory = factory;
-
-                projSettings.ProjectHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
-
-                bool isWindowsApplication;
-                if (bool.TryParse(proj.GetPropertyValue(PythonConstants.IsWindowsApplicationSetting), out isWindowsApplication)) {
-                    projSettings.IsWindowsApplication = isWindowsApplication;
-                } else {
-                    projSettings.IsWindowsApplication = false;
-                }
-
-                projSettings.WorkingDir = Path.GetFullPath(Path.Combine(projSettings.ProjectHome, proj.GetPropertyValue(PythonConstants.WorkingDirectorySetting) ?? "."));
-                projSettings.SearchPath.AddRange(
-                    (proj.GetPropertyValue(PythonConstants.SearchPathSetting) ?? "")
-                        .Split(';')
-                        .Where(path => !string.IsNullOrEmpty(path))
-                        .Select(path => Path.GetFullPath(Path.Combine(projSettings.ProjectHome, path)))
-                );
-
-                // Add all extension <Reference> items to search path.
-                foreach (var item in proj.GetItems(ProjectFileConstants.Reference)) {
-                    string path = item.GetMetadataValue(PythonConstants.PythonExtension);
-                    if (string.IsNullOrWhiteSpace(path)) {
-                        continue;
-                    }
-
-                    string absPath;
-                    try {
-                        absPath = CommonUtils.GetAbsoluteFilePath(projSettings.ProjectHome, path);
-                    } catch (InvalidOperationException) {
-                        continue;
-                    }
-
-                    if (!string.IsNullOrEmpty(absPath)) {
-                        string parentPath = CommonUtils.GetParent(absPath);
-                        if (!string.IsNullOrEmpty(parentPath)) {
-                            projSettings.SearchPath.Add(parentPath);
-                        }
-                    }
-                }
-
-                projSettings.DjangoSettingsModule = proj.GetPropertyValue("DjangoSettingsModule");
-
-                bool enableNativeCodeDebugging;
-                if (bool.TryParse(proj.GetPropertyValue(PythonConstants.EnableNativeCodeDebugging), out enableNativeCodeDebugging)) {
-                    projSettings.EnableNativeCodeDebugging = enableNativeCodeDebugging;
-                } else {
-                    projSettings.EnableNativeCodeDebugging = false;
-                }
-
-                var userEnv = proj.GetPropertyValue(PythonConstants.EnvironmentSetting);
-                if (userEnv != null) {
-                    foreach (var envVar in userEnv.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
-                        var nameValue = envVar.Split(new[] { '=' }, 2);
-                        if (nameValue.Length == 2) {
-                            projSettings.Environment[nameValue[0]] = nameValue[1];
-                        }
-                    }
-                }
-
-                return projSettings;
-            } finally {
-                if (provider != null) {
-                    provider.Dispose();
-                }
-
-                buildEngine.UnloadAllProjects();
-                buildEngine.Dispose();
-            }
-        }
-
         private static void RecordEnd(IFrameworkHandle frameworkHandle, TestCase test, TestResult result, string stdout, string stderr, TestOutcome outcome) {
             result.EndTime = DateTimeOffset.Now;
             result.Duration = result.EndTime - result.StartTime;
@@ -540,7 +461,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 Environment = new Dictionary<string, string>();
             }
 
-            public IPythonInterpreterFactory Factory { get; set; }
+            public string InterpreterPath {
+                get; set;
+            }
             public bool IsWindowsApplication { get; set; }
             public List<string> SearchPath { get; private set; }
             public string WorkingDir { get; set; }
@@ -548,6 +471,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             public string DjangoSettingsModule { get; set; }
             public bool EnableNativeCodeDebugging { get; set; }
             public Dictionary<string, string> Environment { get; set; }
+            public string PathEnv { get; set; }
         }
 
         enum PythonDebugMode {
@@ -580,7 +504,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 TestCase = testCase;
                 CodeCoverageFile = codeCoverageFile;
 
-                TestAnalyzer.ParseFullyQualifiedTestName(
+                TestDiscoverer.ParseFullyQualifiedTestName(
                     testCase.FullyQualifiedName,
                     out TestFile,
                     out TestClass,
@@ -657,8 +581,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                     return Path.GetDirectoryName(Path.GetDirectoryName(PythonToolsInstallPath.GetFile("ptvsd\\__init__.py")));
                 }
             }
-
         }
     }
-
 }

@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.CodeCoverage {
             }
 
             // Then try the absolute path.
-            return Path.Combine(basePath, node.GetAttribute("filename", ""));
+            return Path.Combine(basePath, filename);
         }
     }
 }

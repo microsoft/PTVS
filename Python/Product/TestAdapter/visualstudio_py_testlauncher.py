@@ -29,7 +29,7 @@ def main():
     parser.add_option('-x', '--mixed-mode', action='store_true', help='wait for mixed-mode debugger to attach')
     parser.add_option('-t', '--test', type='str', dest='tests', action='append', help='specifies a test to run')
     parser.add_option('-m', '--module', type='str', help='name of the module to import the tests from')
-    parser.add_option('-c', '--coverage', type='str', help='enable code coverage and speicfy filename')
+    parser.add_option('-c', '--coverage', type='str', help='enable code coverage and specify filename')
     (opts, _) = parser.parse_args()
     
     sys.path[0] = os.getcwd()

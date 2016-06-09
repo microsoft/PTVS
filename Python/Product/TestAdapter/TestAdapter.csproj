@@ -117,7 +117,6 @@
       <Link>Guids.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PythonRunSettings.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -127,24 +126,8 @@
     <Compile Include="..\..\..\Common\Product\TestAdapter\ServiceProviderExtension.cs">
       <Link>ServiceProviderExtension.cs</Link>
     </Compile>
-    <Compile Include="TestAnalyzer.cs" />
-    <Compile Include="..\..\..\Common\Product\TestAdapter\TestContainer.cs">
-      <Link>TestContainer.cs</Link>
-    </Compile>
-    <Compile Include="TestContainerDiscoverer.cs" />
     <Compile Include="TestDiscoverer.cs" />
     <Compile Include="TestExecutor.cs" />
-    <Compile Include="..\..\..\Common\Product\TestAdapter\TestFileAddRemoveListener.cs">
-      <Link>TestFileAddRemoveListener.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Product\TestAdapter\TestFilesUpdateWatcher.cs">
-      <Link>TestFilesUpdateWatcher.cs</Link>
-    </Compile>
-    <Compile Include="TestExecutorProjectContext.cs" />
-    <Compile Include="TestMethodResolver.cs" />
-    <Compile Include="..\..\..\Common\Product\TestAdapter\VsProjectExtensions.cs">
-      <Link>VsProjectExtensions.cs</Link>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Analysis\Analysis.csproj">

@@ -1052,6 +1052,92 @@ namespace Microsoft.PythonTools.Analysis {
 
         #endregion
 
+        #region Test Case Discovery
+
+        public IEnumerable<TestCaseInfo> GetTestCases(IProjectEntry projEntry) {
+            var entry = projEntry as IPythonProjectEntry;
+            if (entry == null) {
+                yield break;
+            }
+
+            foreach (var classValue in GetTestCaseClasses(entry)) {
+                // Check the name of all functions on the class using the
+                // analyzer. This will return functions defined on this
+                // class and base classes
+                foreach (var member in GetTestCaseMembers(entry, classValue)) {
+                    // Find the definition to get the real location of the
+                    // member. Otherwise decorators will confuse us.
+                    var definition = entry.Analysis
+                        .GetVariablesByIndex(classValue.Name + "." + member.Key, 0)
+                        .FirstOrDefault(v => v.Type == VariableType.Definition);
+
+                    var location = (definition != null) ?
+                        definition.Location :
+                        member.Value.SelectMany(m => m.Locations).FirstOrDefault(loc => loc != null);
+
+                    int endLine = location?.Line ?? 0;
+                    var funcInfo = member.Value as FunctionInfo;
+                    if (funcInfo != null) {
+                        endLine = funcInfo.FunctionDefinition.GetEnd(funcInfo.FunctionDefinition.GlobalParent).Line;
+                    }
+                    yield return new TestCaseInfo(
+                        classValue.DeclaringModule.FilePath,
+                        classValue.Name,
+                        member.Key,
+                        location.Line,
+                        location.Column,
+                        endLine
+                    );
+                }
+            }
+        }
+
+        private static bool IsTestCaseClass(AnalysisValue cls) {
+            if (cls == null ||
+                cls.DeclaringModule != null ||
+                cls.PythonType == null ||
+                cls.PythonType.DeclaringModule == null) {
+                return false;
+            }
+            var mod = cls.PythonType.DeclaringModule.Name;
+            return (mod == "unittest" || mod.StartsWith("unittest.")) && cls.Name == "TestCase";
+        }
+
+        /// <summary>
+        /// Get Test Case Members for a class.  If the class has 'test*' tests 
+        /// return those.  If there aren't any 'test*' tests return (if one at 
+        /// all) the runTest overridden method
+        /// </summary>
+        private static IEnumerable<KeyValuePair<string, IAnalysisSet>> GetTestCaseMembers(
+            IPythonProjectEntry entry,
+            AnalysisValue classValue
+        ) {
+            var methodFunctions = classValue.GetAllMembers(entry.Analysis.InterpreterContext)
+                .Where(v => v.Value.Any(m => m.MemberType == PythonMemberType.Function || m.MemberType == PythonMemberType.Method));
+
+            var tests = methodFunctions.Where(v => v.Key.StartsWith("test"));
+            var runTest = methodFunctions.Where(v => v.Key.Equals("runTest"));
+
+            if (tests.Any()) {
+                return tests;
+            } else {
+                return runTest;
+            }
+        }
+
+        private static IEnumerable<AnalysisValue> GetTestCaseClasses(IPythonProjectEntry entry) {
+            if (entry.IsAnalyzed) {
+                return entry.Analysis.GetAllAvailableMembersByIndex(0)
+                    .SelectMany(m => entry.Analysis.GetValuesByIndex(m.Name, 0))
+                    .Where(v => v.MemberType == PythonMemberType.Class)
+                    .Where(v => v.Mro.SelectMany(v2 => v2).Any(IsTestCaseClass));
+            } else {
+                return Enumerable.Empty<AnalysisValue>();
+            }
+        }
+
+        #endregion
+
         internal AggregateProjectEntry GetAggregate(params IProjectEntry[] aggregating) {
             Debug.Assert(new HashSet<IProjectEntry>(aggregating).Count == aggregating.Length);
 
