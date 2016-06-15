@@ -402,6 +402,7 @@
     <Compile Include="PythonTools\PythonAnalysisClassifierProvider.cs" />
     <Compile Include="PythonTools\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="PythonTools\PeekableEnumerator.cs" />
+    <Compile Include="PythonTools\TestAdapter\PythonStackTraceParser.cs" />
     <Compile Include="PythonTools\TestAdapter\TestContainerDiscoverer.cs" />
     <Compile Include="PythonTools\TestAdapter\TestMethodResolver.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebPropertyPageControl.cs">

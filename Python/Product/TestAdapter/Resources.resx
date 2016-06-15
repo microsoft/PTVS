@@ -129,6 +129,9 @@
   <data name="NoCoverageProduced" xml:space="preserve">
     <value>Code coverage file not produced...  have you installed coverage.py? http://go.microsoft.com/fwlink/?LinkId=808238</value>
   </data>
+  <data name="NoTestFinishedNotification" xml:space="preserve">
+    <value>Failed to receive test finish notification.  One or more test results may be missing.</value>
+  </data>
   <data name="UnableToDetermineInterpreter" xml:space="preserve">
     <value>Unable to determine interpreter to use for {0}</value>
   </data>

@@ -97,6 +97,15 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to receive test finish notification.  One or more test results may be missing..
+        /// </summary>
+        internal static string NoTestFinishedNotification {
+            get {
+                return ResourceManager.GetString("NoTestFinishedNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to determine interpreter to use for {0}.
         /// </summary>
         internal static string UnableToDetermineInterpreter {
