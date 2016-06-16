@@ -1960,6 +1960,33 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AnalysisVariable(type, location);
         }
 
+        internal static async Task<string> ExpressionForDataTipAsync(IServiceProvider serviceProvider, ITextView view, SnapshotSpan span) {
+            var analysis = GetApplicableExpression(
+                view.GetAnalysisEntry(span.Start.Snapshot.TextBuffer, serviceProvider),
+                span.Start
+            );
+            string result = null;
+
+            if (analysis != null) {
+                var location = analysis.Location;
+                var req = new AP.ExpressionForDataTipRequest() {
+                    expr = span.GetText(),
+                    column = location.Column,
+                    index = location.Index,
+                    line = location.Line,
+                    fileId = analysis.Entry.FileId,
+                };
+
+                var resp = await analysis.Entry.Analyzer.SendRequestAsync(req).ConfigureAwait(false);
+
+                if (resp != null) {
+                    result = resp.expression;
+                }
+            }
+
+            return result;
+        }
+
         class ApplicableExpression {
             public readonly string Text;
             public readonly AnalysisEntry Entry;

@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Windows.Threading;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -24,6 +25,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools.Infrastructure;
 using IServiceProvider = System.IServiceProvider;
 
 namespace Microsoft.PythonTools.Language {
@@ -34,6 +36,7 @@ namespace Microsoft.PythonTools.Language {
     public sealed class TextViewFilter : IOleCommandTarget, IVsTextViewFilter {
         private IVsEditorAdaptersFactoryService _vsEditorAdaptersFactoryService;
         private IVsDebugger _debugger;
+        private IServiceProvider _serviceProvider;
         private readonly IOleCommandTarget _next;
         private readonly IVsTextLines _vsTextLines;
         private readonly IWpfTextView _wpfTextView;
@@ -41,6 +44,7 @@ namespace Microsoft.PythonTools.Language {
         public TextViewFilter(IServiceProvider serviceProvider, IVsTextView vsTextView) {
             var compModel = (IComponentModel)serviceProvider.GetService(typeof(SComponentModel));
             _vsEditorAdaptersFactoryService = compModel.GetService<IVsEditorAdaptersFactoryService>();
+            _serviceProvider = serviceProvider;
             _debugger = (IVsDebugger)serviceProvider.GetService(typeof(IVsDebugger));
 
             vsTextView.GetBuffer(out _vsTextLines);
@@ -114,16 +118,18 @@ namespace Microsoft.PythonTools.Language {
             var trackingSpan = snapshot.CreateTrackingSpan(snapshotSpan.Span, SpanTrackingMode.EdgeExclusive);
             var rep = new ReverseExpressionParser(snapshot, _wpfTextView.TextBuffer, trackingSpan);
             var exprSpan = rep.GetExpressionRange(forCompletion: false);
+            string expr = null;
             if (exprSpan != null) {
                 SnapshotPointToLineAndColumnNumber(exprSpan.Value.Start, out pSpan[0].iStartLine, out pSpan[0].iStartIndex);
                 SnapshotPointToLineAndColumnNumber(exprSpan.Value.End, out pSpan[0].iEndLine, out pSpan[0].iEndIndex);
+                expr = VsProjectAnalyzer.ExpressionForDataTipAsync(_serviceProvider, _wpfTextView, exprSpan.Value).WaitAndUnwrapExceptions(Dispatcher.CurrentDispatcher);
             } else {
                 // If it's not an expression, suppress the tip.
                 pbstrText = null;
                 return VSConstants.E_FAIL;
             }
 
-            return _debugger.GetDataTipValue(_vsTextLines, pSpan, null, out pbstrText);
+            return _debugger.GetDataTipValue(_vsTextLines, pSpan, expr, out pbstrText);
         }
 
         public int GetPairExtents(int iLine, int iIndex, TextSpan[] pSpan) {

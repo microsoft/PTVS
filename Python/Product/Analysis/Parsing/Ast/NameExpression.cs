@@ -59,7 +59,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
             format.ReflowComment(res, this.GetProceedingWhiteSpaceDefaultNull(ast));
-            res.Append(this.GetVerbatimImage(ast) ?? _name);
+            if (format.UseVerbatimImage) {
+                res.Append(this.GetVerbatimImage(ast) ?? _name);
+            } else {
+                res.Append(_name);
+            }
         }
     }
 }
