@@ -174,7 +174,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 var paths = new List<string>();
                 paths.Add(databasePath);
                 if (includeSitePackages) {
-                    paths.AddRange(Directory.EnumerateDirectories(databasePath));
+                    paths.AddRange(PathUtils.EnumerateDirectories(databasePath, recurse: false));
                 }
 
                 try {
@@ -448,8 +448,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private static HashSet<string> GetExistingDatabase(string databasePath) {
             return new HashSet<string>(
-                Directory.EnumerateFiles(databasePath, "*.idb", SearchOption.AllDirectories)
-                    .Select(f => Path.GetFileNameWithoutExtension(f)),
+                PathUtils.EnumerateFiles(databasePath, "*.idb").Select(f => Path.GetFileNameWithoutExtension(f)),
                 StringComparer.InvariantCultureIgnoreCase
             );
         }
@@ -622,7 +621,7 @@ namespace Microsoft.PythonTools.Interpreter {
             // Currently we assume that if the file exists, it's up to date.
             // PyLibAnalyzer will perform timestamp checks if the user manually
             // refreshes.
-            return Directory.EnumerateFiles(DatabasePath, "*.idb", SearchOption.AllDirectories)
+            return PathUtils.EnumerateFiles(DatabasePath, "*.idb")
                 .Select(f => Path.GetFileNameWithoutExtension(f));
         }
 

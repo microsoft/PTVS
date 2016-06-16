@@ -558,11 +558,11 @@ namespace Microsoft.PythonTools.Infrastructure {
                     }
                     continue;
                 }
-                var result = Directory.EnumerateFiles(dir, file, SearchOption.TopDirectoryOnly).FirstOrDefault();
+                var result = EnumerateFiles(dir, file, recurse: false).FirstOrDefault();
                 if (result != null) {
                     return result;
                 }
-                foreach (var subDir in Directory.EnumerateDirectories(dir)) {
+                foreach (var subDir in EnumerateDirectories(dir, recurse: false)) {
                     dirQueue.Enqueue(subDir);
                 }
                 dirQueue.Enqueue("<EOD>");
