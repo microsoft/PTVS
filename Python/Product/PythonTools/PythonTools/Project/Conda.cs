@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Project {
 
             string metaFile;
             try {
-                metaFile = Directory.EnumerateFiles(condaMetaPath, "*.json").FirstOrDefault();
+                metaFile = PathUtils.EnumerateFiles(condaMetaPath, "*.json", recurse: false).FirstOrDefault();
             } catch (Exception ex) {
                 if (ex.IsCriticalException()) {
                     throw;

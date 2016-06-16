@@ -84,14 +84,14 @@ namespace Microsoft.PythonTools.Project {
             var packagesPath = Path.Combine(factory.Configuration.LibraryPath, "site-packages");
             HashSet<string> result = null;
             if (Directory.Exists(packagesPath)) {
-                result = await Task.Run(() => new HashSet<string>(Directory.EnumerateDirectories(packagesPath)
-                    .Select(path => Path.GetFileName(path))
-                    .Select(name => PackageNameRegex.Match(name))
-                    .Where(match => match.Success)
-                    .Select(match => match.Groups["name"].Value)
-                ))
-                    .SilenceException<IOException, HashSet<string>>()
-                    .SilenceException<UnauthorizedAccessException, HashSet<string>>()
+                result = await Task.Run(() => new HashSet<string>(
+                    PathUtils.EnumerateDirectories(packagesPath, recurse: false)
+                        .Select(path => Path.GetFileName(path))
+                        .Select(name => PackageNameRegex.Match(name))
+                        .Where(match => match.Success)
+                        .Select(match => match.Groups["name"].Value)
+                    )
+                )
                     .HandleAllExceptions(null, typeof(Pip));
             }
 
