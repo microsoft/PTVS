@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                 EnableHyperlinks = true,
                 CollapsedControlText = "Show &details",
                 ExpandedControlText = "Hide &details",
-                ExpandedInformation = exception.ToString()
+                ExpandedInformation = "```{0}{1}{0}```".FormatUI(Environment.NewLine, exception)
             };
             td.Buttons.Add(TaskDialogButton.Close);
             if (!string.IsNullOrEmpty(issueTrackerUrl)) {
