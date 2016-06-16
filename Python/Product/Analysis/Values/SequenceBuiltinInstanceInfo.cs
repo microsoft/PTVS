@@ -87,7 +87,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     }
                     break;
             }
-            return res ?? base.BinaryOperation(node, unit, operation, rhs);
+            if (res.Count == 0) {
+                return CallReverseBinaryOp(node, unit, operation, rhs);
+            }
+            return res;
         }
 
         public override string ToString() {

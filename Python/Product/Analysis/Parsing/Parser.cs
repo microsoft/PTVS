@@ -76,13 +76,13 @@ namespace Microsoft.PythonTools.Parsing {
             _langVersion = langVersion;
             _verbatim = verbatim;
             _bindReferences = bindRefs;
-            
+
+            Reset(FutureOptions.None);
+
             if (langVersion.Is3x()) {
                 // 3.x always does true division and absolute import
                 _languageFeatures |= FutureOptions.TrueDivision | FutureOptions.AbsoluteImports;
             }
-
-            Reset(FutureOptions.None);
 
             _privatePrefix = privatePrefix;
         }

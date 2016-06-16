@@ -934,7 +934,7 @@ namespace AnalysisTests {
                         CheckBinaryStmt(One, PythonOperator.Subtract, Two),
                         CheckBinaryStmt(One, PythonOperator.Multiply, Two),
                         CheckBinaryStmt(One, PythonOperator.Power, Two),
-                        CheckBinaryStmt(One, PythonOperator.Divide, Two),
+                        CheckBinaryStmt(One, version.Is3x() ? PythonOperator.TrueDivide : PythonOperator.Divide, Two),
                         CheckBinaryStmt(One, PythonOperator.FloorDivide, Two),
                         CheckBinaryStmt(One, PythonOperator.Mod, Two),
                         CheckBinaryStmt(One, PythonOperator.LeftShift, Two),
@@ -954,6 +954,19 @@ namespace AnalysisTests {
                         CheckExprStmt(CheckAndExpression(One, Two)),
                         CheckBinaryStmt(One, PythonOperator.In, Two),
                         CheckBinaryStmt(One, PythonOperator.NotIn, Two)
+                    )
+                );
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TrueDivide() {
+            foreach (var version in AllVersions) {
+                CheckAst(
+                    ParseFile("TrueDivide.py", ErrorSink.Null, version),
+                    CheckSuite(
+                        CheckFromImport("__future__", new[] { "division" }),
+                        CheckBinaryStmt(One, PythonOperator.TrueDivide, Two)
                     )
                 );
             }
@@ -1149,7 +1162,7 @@ namespace AnalysisTests {
                         CheckAssignment(Fob, PythonOperator.Add, One),
                         CheckAssignment(Fob, PythonOperator.Subtract, One),
                         CheckAssignment(Fob, PythonOperator.Multiply, One),
-                        CheckAssignment(Fob, PythonOperator.Divide, One),
+                        CheckAssignment(Fob, version.Is3x() ? PythonOperator.TrueDivide : PythonOperator.Divide, One),
                         CheckAssignment(Fob, PythonOperator.FloorDivide, One),
                         CheckAssignment(Fob, PythonOperator.Mod, One),
                         CheckAssignment(Fob, PythonOperator.BitwiseAnd, One),
