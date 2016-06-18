@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <OutputArchitecture>neutral</OutputArchitecture>
+    <OutputLocalized>false</OutputLocalized>
+    <OutputType>vsix</OutputType>
+    <IsPackage>true</IsPackage>
+    <SwrFile>$(IntermediateOutputPath)$(OutputName).swr</SwrFile>
+    <Python>py</Python>
+    <GenerateCommand>-s "$(SourcePath)" -b "$(BaseInstall)"</GenerateCommand>
+    <GenerateCommand Condition="$(Configuration) != 'Debug'">$(GenerateCommand) -x "\.pdb$"</GenerateCommand>
+  </PropertyGroup>
+
+  <Import Project="$(TargetsPath)\Common.Shim.targets" />
+
+  <!-- Needed for the MicroBuild signing plugin -->
+  <ItemGroup>
+    <FilesToSign Include="$(OutputPath)$(OutputName)">
+      <Authenticode>Vsix</Authenticode>
+    </FilesToSign>
+  </ItemGroup>  
+
+  <ItemGroup>
+    <Package Include="$(SwrFile)" />
+  </ItemGroup>
+
+  <Target Name="_GeneratePackage" BeforeTargets="Build">
+    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(SwrFile)))" />
+    <WriteLinesToFile File="$(SwrFile).tmp" Lines="use vs
+package name=$(OutputName) version=$(FileVersion)
+" Overwrite="yes" Encoding="ASCII" />
+
+    <PropertyGroup>
+      <_Dependencies Condition="@(Dependency) != ''">@(Dependency->'  vs.dependency id=%(Identity) version=%(Version)', '
+')</_Dependencies>
+    </PropertyGroup>
+<WriteLinesToFile File="$(SwrFile).tmp" Lines="vs.dependencies
+$(_Dependencies)
+" Overwrite="no" Encoding="ASCII" Condition="$(_Dependencies) != ''" />
+
+    <Exec Command="$(Python) &quot;$(MSBuildThisFileDirectory)\swix_generate.py&quot; $(GenerateCommand) -o &quot;$(SwrFile).tmp&quot;" />
+
+    <PropertyGroup>
+      <_Orig Condition="Exists($(SwrFile))">$([System.IO.File]::ReadAllText($(SwrFile)))</_Orig>
+      <_New Condition="Exists('$(SwrFile).tmp')">$([System.IO.File]::ReadAllText(`$(SwrFile).tmp`))</_New>
+    </PropertyGroup>
+
+    <Message Text="Updating $(SwrFile)" Importance="High" Condition="$(_Orig) != $(_New)" />
+    <WriteLinesToFile File="$(SwrFile)" Lines="$(_New)" Condition="$(_Orig) != $(_New)" Overwrite="yes" Encoding="UTF-8" />
+    <Delete Files="$(SwrFile).tmp" />
+  </Target>
+
+  <Target Name="GetNativeManifest" />
+
+  <Import Project="..\SetupProjectAfter.settings" />
+</Project>
+
