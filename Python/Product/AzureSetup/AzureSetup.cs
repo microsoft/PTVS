@@ -258,7 +258,6 @@ namespace AzureSetup {
             if (File.Exists(path)) {
                 return path;
             }
-            path = Path.Combine(physicalDir, "bin", webpiCmdName);
 
             path = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),

@@ -209,13 +209,12 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return VSConstants.E_NOTIMPL;
         }
 
-        int IDebugThread100.GetThreadProperties100(uint dwFields, THREADPROPERTIES100[] props) {
-            int hRes = VSConstants.S_OK;
-
+        int IDebugThread100.GetThreadProperties100(uint dwFields, THREADPROPERTIES100[] props)
+        {
             // Invoke GetThreadProperties to get the VS7/8/9 properties
             THREADPROPERTIES[] props90 = new THREADPROPERTIES[1];
             enum_THREADPROPERTY_FIELDS dwFields90 = (enum_THREADPROPERTY_FIELDS)(dwFields & 0x3f);
-            hRes = ((IDebugThread2)this).GetThreadProperties(dwFields90, props90);
+            int hRes = ((IDebugThread2)this).GetThreadProperties(dwFields90, props90);
             props[0].bstrLocation = props90[0].bstrLocation;
             props[0].bstrName = props90[0].bstrName;
             props[0].bstrPriority = props90[0].bstrPriority;

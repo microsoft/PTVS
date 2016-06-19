@@ -158,7 +158,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             string indent,
             out IEnumerable<IAnalysisItemView> exportChildren
         ) {
-            writer.WriteLine("{0}def {2}({3}):", currentIndent, DisplayType, Name, OverloadSummary);
+            writer.WriteLine("{0}def {1}({2}):", currentIndent, Name, OverloadSummary);
             exportChildren = SortedChildren;
         }
 
@@ -170,9 +170,8 @@ namespace Microsoft.PythonTools.Analysis.Browser {
             out IEnumerable<IAnalysisItemView> exportChildren
         ) {
             writer.WriteLine(
-                "{0}{2}({3}) -> {4}",
+                "{0}{1}({2}) -> {3}",
                 currentIndent,
-                DisplayType,
                 Name,
                 OverloadSummary,
                 ReturnTypesSummary
