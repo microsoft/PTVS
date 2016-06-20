@@ -1064,15 +1064,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This project requires Visual Studio Professional or higher, or Visual Studio Express 2013 for Web..
-        /// </summary>
-        public static string ProjectRequiresVWDExpress {
-            get {
-                return ResourceManager.GetString("ProjectRequiresVWDExpress", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to &amp;Python.
         /// </summary>
         public static string PythonMenuLabel {
