@@ -13,13 +13,6 @@
 
   <Import Project="$(TargetsPath)\Common.Shim.targets" />
 
-  <!-- Needed for the MicroBuild signing plugin -->
-  <ItemGroup>
-    <FilesToSign Include="$(OutputPath)$(OutputName)">
-      <Authenticode>Vsix</Authenticode>
-    </FilesToSign>
-  </ItemGroup>  
-
   <ItemGroup>
     <Package Include="$(SwrFile)" />
   </ItemGroup>

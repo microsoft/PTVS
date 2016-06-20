@@ -14,7 +14,8 @@
     <ProjectFile Include="Microsoft.PythonTools.Uwp.swixproj" Condition="$(IncludeUwp)"/>
     <ProjectFile Include="Microsoft.PythonTools.Uwp.Templates.swixproj" Condition="$(IncludeUwp)"/>
     <ProjectFile Include="Microsoft.PythonTools.Web.Templates.swixproj"/>
-    <ProjectFile Include="vsman.vsmanproj"/>
+    <SequencedProjectFile Include="signswix.proj"/>
+    <SequencedProjectFile Include="vsman.vsmanproj"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
