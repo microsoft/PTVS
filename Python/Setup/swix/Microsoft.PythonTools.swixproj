@@ -9,6 +9,10 @@
     <SourcePath>$(LayoutOutputPath)$(MSBuildThisFileName)</SourcePath>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Package Include="file_associations.swr" />
+  </ItemGroup>
+
   <Import Project="swix.targets" />
 </Project>
 

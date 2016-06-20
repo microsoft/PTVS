@@ -1,0 +1,38 @@
+use vs
+
+vs.fileAssociations
+    vs.fileAssociation
+        Extension=.py
+        ProgId=VisualStudio.py.[InstanceId]
+        DefaultProgramRegistrationPath=$(VSDefaultProgramPath)
+    
+    vs.fileAssociation
+        Extension=.pyw
+        ProgId=VisualStudio.py.[InstanceId]
+        DefaultProgramRegistrationPath=$(VSDefaultProgramPath)
+    
+    vs.fileAssociation
+        Extension=.pyproj
+        ProgId=VisualStudio.Launcher.pyproj.[InstanceId]
+        PerceivedType=text
+        DefaultProgramRegistrationPath=$(VSDefaultProgramPath)
+
+vs.progIds
+    vs.progId
+        Id=VisualStudio.py.[InstanceId]
+        DisplayName="Python source file"
+        Path=[InstallDir]\Common7\IDE\devenv.exe
+        Arguments='/dde "%1"'
+        DefaultIconPath="[InstallDir]\Common7\Extensions\Microsoft\Python\Core\PythonFile.ico"
+        DefaultIconPosition=0
+        Dde=true
+        DdeApplication=$(VsDdeApplication)
+        DdeTopic=system
+    
+    vs.progId
+        Id=VisualStudio.Launcher.pyproj.[InstanceId]
+        DisplayName="Python Project"
+        Path="[ProgramFiles(x86)]\Common Files\Microsoft Shared\MSEnv\VSLauncher.exe"
+        Arguments='"%1"'
+        DefaultIconPath="[InstallDir]\Common7\Extensions\Microsoft\Python\Core\PythonProject.ico"
+        DefaultIconPosition=0

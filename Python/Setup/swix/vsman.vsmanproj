@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <MergeManifest Include="$(OutputPath)*.json" />
+    <MergeManifest Include="$(OutputPath)Microsoft.PythonTools*.json" />
   </ItemGroup>
 
   <Import Project="..\SetupProjectAfter.settings" />
