@@ -20,7 +20,7 @@
   <Target Name="_GeneratePackage" BeforeTargets="Build">
     <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(SwrFile)))" />
     <WriteLinesToFile File="$(SwrFile).tmp" Lines="use vs
-package name=$(OutputName) version=$(FileVersion)
+package name=$([System.IO.Path]::GetFileNameWithoutExtension($(OutputName))) version=$(FileVersion)
 " Overwrite="yes" Encoding="ASCII" />
 
     <PropertyGroup>
