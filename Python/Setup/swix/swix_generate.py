@@ -25,16 +25,17 @@ def main():
     parser.add_argument('--source', '-s', dest='source', type=str, help='source directory')
     parser.add_argument('--out', '-o', dest='output', type=str, default=None, help='append output to this file')
     parser.add_argument('--base', '-b', dest='install', type=str, help='target directory base')
+    parser.add_argument('--include', '-i', dest='inclusions', type=str, action='append', help='regex patterns for filenames to include')
     parser.add_argument('--exclude', '-x', dest='exclusions', type=str, action='append', help='regex patterns for filenames to skip')
     
     args = parser.parse_args()
     
+    inclusions = [re.compile(pattern, re.I) for pattern in (args.inclusions or [])]
     exclusions = [re.compile(pattern, re.I) for pattern in (args.exclusions or [])]
     
     with open_or_stdout(args.output) as out:
         for root, dirs, files in os.walk(args.source):
-            if files and exclusions:
-                files = [f for f in files if not any(r.search(f) for r in exclusions)]
+            files = [f for f in files if (not inclusions or any(r.search(f) for r in inclusions)) and not any(r.search(f) for r in exclusions)]
             
             if files:
                 print(file=out)
