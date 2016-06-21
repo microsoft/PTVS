@@ -464,7 +464,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 throw new ArgumentNullException("factory");
             }
 
-            if (_factories.ContainsKey(factory)) {
+            if (_factories != null && _factories.ContainsKey(factory)) {
                 return;
             }
 
@@ -515,6 +515,9 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             lock (_factoriesLock) {
+                if (_factories == null) {
+                    _factories = new Dictionary<IPythonInterpreterFactory, FactoryInfo>();
+                }
                 _factories[factory] = new FactoryInfo(item, disposeInterpreter);
             }
             OnInterpreterFactoriesChanged();
@@ -534,7 +537,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 throw new ArgumentNullException("factory");
             }
 
-            if (!_factories.ContainsKey(factory)) {
+            if (_factories == null || !_factories.ContainsKey(factory)) {
                 return;
             }
 
@@ -611,7 +614,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public MSBuild.ProjectItem GetProjectItem(IPythonInterpreterFactory factory) {
             lock (_factoriesLock) {
                 FactoryInfo info;
-                if (_factories.TryGetValue(factory, out info)) {
+                if (_factories != null && _factories.TryGetValue(factory, out info)) {
                     return info.ProjectItem;
                 }
             }
@@ -629,7 +632,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public bool IsProjectSpecific(IPythonInterpreterFactory factory) {
             lock (_factoriesLock) {
                 FactoryInfo info;
-                if (_factories.TryGetValue(factory, out info)) {
+                if (_factories != null && _factories.TryGetValue(factory, out info)) {
                     return info.ProjectItem.ItemType.Equals(InterpreterItem);
                 }
             }
@@ -662,7 +665,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </remarks>
         public bool Contains(IPythonInterpreterFactory factory) {
             lock (_factoriesLock) {
-                return _factories.ContainsKey(factory);
+                return _factories != null && _factories.ContainsKey(factory);
             }
         }
 
