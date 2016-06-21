@@ -36,6 +36,7 @@
     <AssemblyName>Microsoft.PythonTools.Common</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SuppressCommonAssemblyVersion>true</SuppressCommonAssemblyVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
