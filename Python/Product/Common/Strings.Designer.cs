@@ -1767,6 +1767,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Some internal properties have been modified in this project..
+        /// </summary>
+        public static string UpgradedImportsFor30 {
+            get {
+                return ResourceManager.GetString("UpgradedImportsFor30", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to One or more environment references has been updated and will no longer be recognized by previous versions..
         /// </summary>
         public static string UpgradedInterpreterReference {
