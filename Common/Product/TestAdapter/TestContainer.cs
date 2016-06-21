@@ -16,23 +16,20 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudio.TestWindow.Extensibility.Model;
 
 namespace Microsoft.VisualStudioTools.TestAdapter {
-    using AP = AnalysisProtocol;
-
     internal class TestContainer : ITestContainer {
         private readonly int _version;
         private readonly Architecture _architecture;
-        private readonly PythonProjectNode _project;
-        private readonly AP.TestCase[] _testCases;
+        private readonly PythonProject _project;
+        private readonly TestCaseInfo[] _testCases;
 
-        public TestContainer(ITestContainerDiscoverer discoverer, string source, PythonProjectNode project, int version, Architecture architecture, AP.TestCase[] testCases) {
+        public TestContainer(ITestContainerDiscoverer discoverer, string source, PythonProject project, int version, Architecture architecture, TestCaseInfo[] testCases) {
             Discoverer = discoverer;
             Source = source;
             _version = version;
@@ -41,7 +38,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             _testCases = testCases;
         }
 
-        public AP.TestCase[] TestCases {
+        public TestCaseInfo[] TestCases {
             get {
                 return _testCases;
             }
@@ -53,7 +50,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             }
         }
 
-        public PythonProjectNode Project {
+        public PythonProject Project {
             get {
                 return _project;
             }

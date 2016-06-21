@@ -82,6 +82,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xaml" />
     <Reference Include="System.Xml.Linq" />
@@ -110,6 +111,9 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\TaskExtensions.cs">
       <Link>TaskExtensions.cs</Link>
     </Compile>
+    <Compile Include="..\..\..\Common\Product\TestAdapter\TestContainer.cs">
+      <Link>TestContainer.cs</Link>
+    </Compile>
     <Compile Include="..\PythonTools\PythonConstants.cs">
       <Link>PythonConstants.cs</Link>
     </Compile>
@@ -117,6 +121,8 @@
       <Link>Guids.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PythonRunSettings.cs" />
+    <Compile Include="PythonStackTraceParser.cs" />
     <Compile Include="Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -126,8 +132,10 @@
     <Compile Include="..\..\..\Common\Product\TestAdapter\ServiceProviderExtension.cs">
       <Link>ServiceProviderExtension.cs</Link>
     </Compile>
+    <Compile Include="TestContainerDiscoverer.cs" />
     <Compile Include="TestDiscoverer.cs" />
     <Compile Include="TestExecutor.cs" />
+    <Compile Include="TestMethodResolver.cs" />
     <Compile Include="TestProtocol.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -143,6 +151,10 @@
       <Project>{e1e1613d-0c96-42f9-9f2d-052c72533297}</Project>
       <Name>Ipc.Json</Name>
     </ProjectReference>
+    <ProjectReference Include="..\TestAdapter.Analysis\TestAdapter.Analysis.csproj">
+      <Project>{6500e6e2-4604-48fc-af4e-1ff12b8c6757}</Project>
+      <Name>TestAdapter.Analysis</Name>
+    </ProjectReference>
     <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
       <Name>Microsoft.PythonTools.VSInterpreters</Name>
@@ -150,6 +162,10 @@
     <ProjectReference Include="..\VSCommon\VSCommon.csproj">
       <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
       <Name>VSCommon</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Analyzer\Analyzer.csproj">
+      <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
+      <Name>Analyzer</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

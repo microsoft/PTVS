@@ -16,14 +16,14 @@
 
 using System;
 
-namespace Microsoft.PythonTools.Intellisense {
-    internal sealed class AnalysisCompleteEventArgs : EventArgs {
-        private readonly AnalysisEntry _entry;
+namespace Microsoft.PythonTools.Projects {
+    public sealed class AnalysisCompleteEventArgs : EventArgs {
+        private readonly string _path;
 
-        public AnalysisEntry AnalysisEntry => _entry;
+        public string Path => _path;
 
-        public AnalysisCompleteEventArgs(AnalysisEntry entry) {
-            _entry = entry;
+        public AnalysisCompleteEventArgs(string path) {
+            _path = path;
         }
     }
 }

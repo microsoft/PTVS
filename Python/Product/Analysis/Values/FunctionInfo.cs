@@ -346,10 +346,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IEnumerable<LocationInfo> Locations {
             get {
                 var start = FunctionDefinition.NameExpression.GetStart(FunctionDefinition.GlobalParent);
-                return new[] { new LocationInfo(
-                    ProjectEntry.FilePath,
-                    start.Line,
-                    start.Column)
+                var end = FunctionDefinition.GetEnd(FunctionDefinition.GlobalParent);
+                return new[] {
+                    new LocationInfo(
+                        ProjectEntry.FilePath,
+                        start.Line,
+                        start.Column,
+                        end.Line,
+                        end.Column
+                    )
                 };
             }
         }

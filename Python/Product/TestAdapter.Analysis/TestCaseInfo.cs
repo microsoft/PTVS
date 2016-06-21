@@ -1,11 +1,11 @@
 ﻿namespace Microsoft.PythonTools.Analysis {
-    public sealed class TestCaseInfo {
+    internal sealed class TestCaseInfo {
         private readonly string _filename;
         private readonly string _method;
         private readonly string _class;
         private readonly int _startLine, _startColumn, _endLine;
 
-        internal TestCaseInfo(string filename, string className, string methodName, int startLine, int startColumn, int endLine) {
+        public TestCaseInfo(string filename, string className, string methodName, int startLine, int startColumn, int endLine) {
             _filename = filename;
             _class = className;
             _method = methodName;
@@ -29,7 +29,7 @@
         }
     }
 
-    public enum TestCaseKind {
+    internal enum TestCaseKind {
         None,
         UnitTest
     }

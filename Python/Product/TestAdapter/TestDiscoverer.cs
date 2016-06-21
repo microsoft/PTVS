@@ -56,12 +56,11 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var line = test.GetAttribute("line", "");
                 var column = test.GetAttribute("column", "");
                 var methodName = test.GetAttribute("method", "");
-                string project = null, projectHome = null;
+                string projectHome = null;
                 if (!test.MoveToParent()) {
                     continue;
                 }
 
-                project = test.GetAttribute("path", "");
                 projectHome = test.GetAttribute("home", "");
 
                 int lineNo, columnNo;

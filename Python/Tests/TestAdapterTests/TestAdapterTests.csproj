@@ -78,6 +78,10 @@
       <Project>{fa7be5f5-e04f-4613-b7ac-70ce10d1bb68}</Project>
       <Name>PythonTools</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Product\TestAdapter.Analysis\TestAdapter.Analysis.csproj">
+      <Project>{6500e6e2-4604-48fc-af4e-1ff12b8c6757}</Project>
+      <Name>TestAdapter.Analysis</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Product\TestAdapter\TestAdapter.csproj">
       <Project>{5085df35-3a32-4894-835e-e5a3956d4f57}</Project>
       <Name>TestAdapter</Name>

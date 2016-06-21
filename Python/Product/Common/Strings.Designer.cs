@@ -597,6 +597,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to convert coverage file: {0}.
+        /// </summary>
+        public static string FailedToConvertCoverageFile {
+            get {
+                return ResourceManager.GetString("FailedToConvertCoverageFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not get resource {1}.{2} from {0}.
         ///
         ///{3}.

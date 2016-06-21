@@ -29,6 +29,7 @@ using System.Xml;
 using System.Xml.XPath;
 using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -59,7 +60,8 @@ namespace Microsoft.PythonTools.Project {
         CommonProjectNode,
         IPythonProject,
         IAzureRoleProject,
-        IProjectInterpreterDbChanged {
+        IProjectInterpreterDbChanged,
+        IPythonProjectProvider {
         // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
         // about the directory from the search path that referenced them in IProjectEntry.Properties[_searchPathEntryKey], so that
         // they can be located and removed when that directory is removed from the path.
@@ -77,6 +79,7 @@ namespace Microsoft.PythonTools.Project {
         internal List<CustomCommand> _customCommands;
         private string _customCommandsDisplayLabel;
         private Dictionary<object, Action<object>> _actionsOnClose;
+        private readonly PythonProject _pythonProject;
 
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
@@ -86,6 +89,7 @@ namespace Microsoft.PythonTools.Project {
             // _active starts as null, so we need to start with this event
             // hooked up.
             InterpreterOptions.DefaultInterpreterChanged += GlobalDefaultInterpreterChanged;
+            _pythonProject = new VsPythonProject(this);
         }
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
@@ -2493,7 +2497,7 @@ namespace Microsoft.PythonTools.Project {
         private void ShowAddInterpreter() {
             var service = InterpreterOptions;
 
-            var result = Project.AddInterpreter.ShowDialog(this, service);
+            var result = PythonTools.Project.AddInterpreter.ShowDialog(this, service);
             if (result == null) {
                 return;
             }
@@ -2650,6 +2654,12 @@ namespace Microsoft.PythonTools.Project {
         public override Guid SharedCommandGuid {
             get {
                 return GuidList.guidPythonToolsCmdSet;
+            }
+        }
+        
+        public PythonProject Project {
+            get {
+                return _pythonProject;
             }
         }
 
@@ -2859,6 +2869,50 @@ namespace Microsoft.PythonTools.Project {
                 ErrorHandler.ThrowOnFailure(lines.ReplaceLines(0, 0, lastLine, lastIndex, pStr, len, new TextSpan[1]));
             } finally {
                 Marshal.FreeCoTaskMem(pStr);
+            }
+        }
+
+        private class VsPythonProject : PythonProject {
+            private readonly PythonProjectNode _node;
+            public VsPythonProject(PythonProjectNode node) {
+                _node = node;
+            }
+
+            public override string ProjectHome {
+                get {
+                    return _node.ProjectHome;
+                }
+            }
+
+            public override event EventHandler ProjectAnalyzerChanged {
+                add { _node.ProjectAnalyzerChanged += value; }
+                remove { _node.ProjectAnalyzerChanged -= value; }
+            }
+
+            public override IPythonInterpreterFactory GetInterpreterFactory() {
+                return _node.GetInterpreterFactory();
+            }
+
+            public override LaunchConfiguration GetLaunchConfigurationOrThrow() {
+                return _node.GetLaunchConfigurationOrThrow();
+            }
+
+            public override ProjectAnalyzer Analyzer {
+                get {
+                    return _node.GetAnalyzer();
+                }
+            }
+
+            public override string GetProperty(string name) {
+                return _node.GetProjectProperty(name);
+            }
+
+            public override string GetUnevaluatedProperty(string name) {
+                return _node.GetUnevaluatedProperty(name);
+            }
+
+            public override void SetProperty(string name, string value) {
+                _node.SetProjectProperty(name, value);
             }
         }
 

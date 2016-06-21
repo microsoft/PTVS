@@ -2816,8 +2816,8 @@ def f(a):
                     for (int i = 0; i < vars.Count; i++) {
                         var have = vars[i];
 
-                        if (have.Location.Line == expected.StartLine &&
-                            have.Location.Column == expected.StartCol &&
+                        if (have.Location.StartLine == expected.StartLine &&
+                            have.Location.StartColumn == expected.StartCol &&
                             have.Type == expected.Type &&
                             (expected.FilePath == null || have.Location.FilePath == expected.FilePath)) {
                             vars.RemoveAt(i);
@@ -2931,9 +2931,9 @@ from baz import abc2 as abc";
             bool careAboutNames = (vars.Select(v => v.Location.FilePath).Distinct().Count() > 1);
             foreach (var var in vars) { //.OrderBy(v => v.Location.Line).ThenBy(v => v.Location.Column)) {
                 if (careAboutNames) {
-                    error.AppendFormat("   new VariableLocation({0}, {1}, VariableType.{2}, \"{3}\"),", var.Location.Line, var.Location.Column, var.Type, var.Location.FilePath);
+                    error.AppendFormat("   new VariableLocation({0}, {1}, VariableType.{2}, \"{3}\"),", var.Location.StartLine, var.Location.StartColumn, var.Type, var.Location.FilePath);
                 } else {
-                    error.AppendFormat("   new VariableLocation({0}, {1}, VariableType.{2}),", var.Location.Line, var.Location.Column, var.Type);
+                    error.AppendFormat("   new VariableLocation({0}, {1}, VariableType.{2}),", var.Location.StartLine, var.Location.StartColumn, var.Type);
                 }
                 error.AppendLine();
             }

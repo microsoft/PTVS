@@ -107,55 +107,50 @@ namespace Microsoft.PythonTools.TestAdapter {
                     foreach (var project in pyContainers) {
                         foreach (var container in project) {
                             writer.WriteStartElement("Project");
-                            writer.WriteAttributeString("path", project.Key.GetMkDocument());
                             writer.WriteAttributeString("home", project.Key.ProjectHome);
-                            var ui = project.Key.Site.GetUIThread();
+
                             LaunchConfiguration config = null;
                             string nativeCode = "", djangoSettings = "";
-                            ui.Invoke(() => {
+                            _dispatcher.Invoke(() => {
                                 try {
                                     config = project.Key.GetLaunchConfigurationOrThrow();
                                 } catch {
                                 }
-                                nativeCode = project.Key.GetProjectProperty(PythonConstants.EnableNativeCodeDebugging);
-                                djangoSettings = project.Key.GetProjectProperty("DjangoSettingsModule");
+                                nativeCode = project.Key.GetProperty(PythonConstants.EnableNativeCodeDebugging);
+                                djangoSettings = project.Key.GetProperty("DjangoSettingsModule");
                             });
 
                             writer.WriteAttributeString("nativeDebugging", nativeCode);
                             writer.WriteAttributeString("djangoSettingsModule", djangoSettings);
                             
-                            try {
-                                writer.WriteAttributeString("workingDir", config.WorkingDirectory);
-                                writer.WriteAttributeString("interpreter", config.GetInterpreterPath());
-                                writer.WriteAttributeString("pathEnv", config.Interpreter.PathEnvironmentVariable);
+                            writer.WriteAttributeString("workingDir", config.WorkingDirectory);
+                            writer.WriteAttributeString("interpreter", config.GetInterpreterPath());
+                            writer.WriteAttributeString("pathEnv", config.Interpreter.PathEnvironmentVariable);
 
-                                writer.WriteStartElement("Environment");
-                                foreach (var keyValue in config.Environment) {
-                                    writer.WriteStartElement("Variable");
-                                    writer.WriteAttributeString("name", keyValue.Key);
-                                    writer.WriteAttributeString("value", keyValue.Value);
-                                    writer.WriteEndElement();
-                                }
-                                writer.WriteEndElement(); // Environment
-
-                                writer.WriteStartElement("SearchPaths");
-                                foreach (var path in config.SearchPaths) {
-                                    writer.WriteStartElement("Search");
-                                    writer.WriteAttributeString("value", path);
-                                    writer.WriteEndElement();
-                                }
-                                writer.WriteEndElement(); // SearchPaths
-                            } catch (NoInterpretersException) {
-                            } catch (MissingInterpreterException) {
+                            writer.WriteStartElement("Environment");
+                            foreach (var keyValue in config.Environment) {
+                                writer.WriteStartElement("Variable");
+                                writer.WriteAttributeString("name", keyValue.Key);
+                                writer.WriteAttributeString("value", keyValue.Value);
+                                writer.WriteEndElement();
                             }
+                            writer.WriteEndElement(); // Environment
+
+                            writer.WriteStartElement("SearchPaths");
+                            foreach (var path in config.SearchPaths) {
+                                writer.WriteStartElement("Search");
+                                writer.WriteAttributeString("value", path);
+                                writer.WriteEndElement();
+                            }
+                            writer.WriteEndElement(); // SearchPaths
     
                             foreach (var test in container.TestCases) {
                                 writer.WriteStartElement("Test");
-                                writer.WriteAttributeString("className", test.className);
-                                writer.WriteAttributeString("file", test.codeFilePath);
-                                writer.WriteAttributeString("line", test.line.ToString());
-                                writer.WriteAttributeString("column", test.column.ToString());
-                                writer.WriteAttributeString("method", test.methodName);
+                                writer.WriteAttributeString("className", test.ClassName);
+                                writer.WriteAttributeString("file", test.Filename);
+                                writer.WriteAttributeString("line", test.StartLine.ToString());
+                                writer.WriteAttributeString("column", test.StartColumn.ToString());
+                                writer.WriteAttributeString("method", test.MethodName);
                                 writer.WriteEndElement(); // Test
                             }
 

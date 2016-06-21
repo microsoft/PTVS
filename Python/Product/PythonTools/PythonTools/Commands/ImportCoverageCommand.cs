@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Windows;
 using Microsoft.PythonTools.CodeCoverage;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell;
@@ -56,12 +57,13 @@ namespace Microsoft.PythonTools.Commands {
             }
 
             if (file != null) {
-                var outFilename = Path.Combine(
-                    Path.GetDirectoryName(file), 
-                    Path.GetFileNameWithoutExtension(file) + ".coveragexml"
-                );
+                var outFilename = Path.ChangeExtension(file, ".coveragexml");
 
-                ConvertCoveragePy(file, outFilename, version);
+                try {
+                    ConvertCoveragePy(file, outFilename, version);
+                } catch (IOException ioex) {
+                    MessageBox.Show(String.Format(Strings.FailedToConvertCoverageFile, ioex.Message));
+                }
 
                 _serviceProvider.GetDTE().ItemOperations.OpenFile(outFilename);
             }

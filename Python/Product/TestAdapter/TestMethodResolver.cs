@@ -16,19 +16,13 @@
 
 using System;
 using System.ComponentModel.Composition;
-using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.TestAdapter;
-using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [Export(typeof(ITestMethodResolver))]
@@ -50,17 +44,14 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         public string GetCurrentTest(string filePath, int line, int lineCharOffset) {
-            var project = PathToProject(filePath);
-            if (project != null) {
-                var pyProj = project.GetPythonProject();
-                if (pyProj != null) {
-                    var container = _discoverer.GetTestContainer(pyProj, filePath);
-                    if (container != null) {
-                        foreach (var testCase in container.TestCases) {
-                            if (testCase.line >= line && line <= testCase.endLine) {
-                                var moduleName = CommonUtils.CreateFriendlyFilePath(pyProj.ProjectHome, testCase.codeFilePath);
-                                return moduleName + "::" + testCase.className + "::" + testCase.methodName;
-                            }
+            var provider = PathToProject(filePath) as IPythonProjectProvider;
+            if (provider != null) {
+                var container = _discoverer.GetTestContainer(provider.Project, filePath);
+                if (container != null) {
+                    foreach (var testCase in container.TestCases) {
+                        if (testCase.StartLine >= line && line <= testCase.EndLine) {
+                            var moduleName = CommonUtils.CreateFriendlyFilePath(provider.Project.ProjectHome, testCase.Filename);
+                            return moduleName + "::" + testCase.ClassName + "::" + testCase.MethodName;
                         }
                     }
                 }

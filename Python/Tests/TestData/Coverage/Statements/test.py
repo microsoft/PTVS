@@ -18,5 +18,5 @@ try:
 finally:
     pass
     
-with open('foo.txt', 'w+'):
+with open('fob.txt', 'w+'):
     x = 1

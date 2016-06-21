@@ -20,7 +20,7 @@ using System.ComponentModel.Composition;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.TestAdapter {
     class TestContainerDiscoverer : ITestContainerDiscoverer, IDisposable {
         private readonly IServiceProvider _serviceProvider;
         private readonly SolutionEventsListener _solutionListener;
-        private readonly Dictionary<PythonProjectNode, ProjectInfo> _projectInfo;
+        private readonly Dictionary<PythonProject, ProjectInfo> _projectInfo;
         private bool _firstLoad, _isDisposed;
         public const string ExecutorUriString = "executor://PythonTestExecutor/v1";
         public static readonly Uri _ExecutorUri = new Uri(ExecutorUriString);
@@ -47,9 +47,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                     operationState) { }
 
         internal bool IsProjectKnown(IVsProject project) {
-            var pyProj = project.GetPythonProject();
+            var pyProj = project as IPythonProjectProvider;
             if (pyProj != null) {
-                return _projectInfo.ContainsKey(pyProj);
+                return _projectInfo.ContainsKey(pyProj.Project);
             }
             return false;
         }
@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             ValidateArg.NotNull(solutionListener, "solutionListener");
             ValidateArg.NotNull(operationState, "operationState");
 
-            _projectInfo = new Dictionary<PythonProjectNode, ProjectInfo>();
+            _projectInfo = new Dictionary<PythonProject, ProjectInfo>();
 
             _serviceProvider = serviceProvider;
 
@@ -104,12 +104,11 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        public TestContainer GetTestContainer(PythonProjectNode project, string path) {
+        public TestContainer GetTestContainer(PythonProject project, string path) {
             ProjectInfo projectInfo;
             if (_projectInfo.TryGetValue(project, out projectInfo)) {
-                var analysis = project.GetAnalyzer().GetAnalysisEntryFromPath(path);
                 TestContainer container;
-                if (analysis != null && projectInfo._containers.TryGetValue(analysis, out container)) {
+                if (projectInfo._containers.TryGetValue(path, out container)) {
                     return container;
                 }
             }
@@ -138,17 +137,14 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private void OnProjectLoaded(object sender, ProjectEventArgs e) {
             if (e.Project != null) {
-                var pyProj = e.Project.GetPythonProject();
-                if (pyProj != null) {
-                    var analyzer = pyProj.GetAnalyzer();
-                    var projectInfo = new ProjectInfo(this, pyProj);
-                    pyProj.InterpreterDbChanged += projectInfo.DatabaseChanged;
-                    _projectInfo[pyProj] = projectInfo;
+                var provider = e.Project as IPythonProjectProvider;
+                if (provider != null) {
+                    var analyzer = provider.Project.Analyzer;
+                    var projectInfo = new ProjectInfo(this, provider.Project);
+                    _projectInfo[provider.Project] = projectInfo;
 
-                    foreach (var file in analyzer.LoadedFiles) {
-                        if (file.Value.IsAnalyzed) {
-                            projectInfo.AnalysisComplete(this, new AnalysisCompleteEventArgs(file.Value));
-                        }
+                    foreach (var file in analyzer.Files) {
+                        projectInfo.AnalysisComplete(this, new AnalysisCompleteEventArgs(file));
                     }
                 }
             }
@@ -157,40 +153,46 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         class ProjectInfo {
-            private readonly PythonProjectNode _project;
+            private readonly PythonProject _project;
             private readonly TestContainerDiscoverer _discoverer;
-            public readonly Dictionary<AnalysisEntry, TestContainer> _containers;
+            public readonly Dictionary<string, TestContainer> _containers;
 
-            public ProjectInfo(TestContainerDiscoverer discoverer, PythonProjectNode project) {
+            public ProjectInfo(TestContainerDiscoverer discoverer, PythonProject project) {
                 _project = project;
                 _discoverer = discoverer;
-                _containers = new Dictionary<AnalysisEntry, TestContainer>();
+                _containers = new Dictionary<string, TestContainer>(StringComparer.OrdinalIgnoreCase);
 
                 project.ProjectAnalyzerChanged += ProjectAnalyzerChanged;
-                HookAnalysisComplete();
+                RegisterWithAnalyzer();
             }
 
-            private void HookAnalysisComplete() {
-                _project.GetAnalyzer().AnalysisComplete += AnalysisComplete;
+            private void RegisterWithAnalyzer() {
+                _project.Analyzer.RegisterExtension(typeof(TestAnalyzer).Assembly.CodeBase);
+                _project.Analyzer.AnalysisComplete += AnalysisComplete;
             }
 
             public async void AnalysisComplete(object sender, AnalysisCompleteEventArgs e) {
-                var testCases = await _project.GetAnalyzer().GetTestCasesAsync(e.AnalysisEntry.Path);
-                if (testCases == null) {
-                    // Call failed for some reason (e.g. the analzyer crashed)...
+                var testCaseData = await _project.Analyzer.SendExtensionCommandAsync(
+                    TestAnalyzer.Name, 
+                    TestAnalyzer.GetTestCasesCommand,
+                    e.Path
+                );
+
+                if (testCaseData == null) {
                     return;
                 }
-                
-                if (testCases.tests.Length != 0) {
+                var testCases = TestAnalyzer.GetTestCases(testCaseData);
+
+                if (testCases.Length != 0) {
                     TestContainer existing;
                     bool changed = true;
-                    if (_containers.TryGetValue(e.AnalysisEntry, out existing)) {
+                    if (_containers.TryGetValue(e.Path, out existing)) {
                         // we have an existing entry, let's see if any of the tests actually changed.
-                        if (existing.TestCases.Length == testCases.tests.Length) {
+                        if (existing.TestCases.Length == testCases.Length) {
                             changed = false;
 
                             for (int i = 0; i < existing.TestCases.Length; i++) {
-                                if (!existing.TestCases[i].Equals(testCases.tests[i])) {
+                                if (!existing.TestCases[i].Equals(testCases[i])) {
                                     changed = true;
                                     break;
                                 }
@@ -201,18 +203,18 @@ namespace Microsoft.PythonTools.TestAdapter {
                     if (changed) {
                         // we have a new entry or some of the tests changed
                         int version = (existing?.Version ?? 0) + 1;
-                        _containers[e.AnalysisEntry] = new TestContainer(
+                        _containers[e.Path] = new TestContainer(
                             _discoverer,
-                            e.AnalysisEntry.Path,
+                            e.Path,
                             _project,
                             version,
                             Architecture,
-                            testCases.tests
+                            testCases
                         );
 
                         ContainersChanged();
                     }
-                } else if (_containers.Remove(e.AnalysisEntry)) {
+                } else if (_containers.Remove(e.Path)) {
                     // Raise containers changed event...
                     ContainersChanged();
                 }
@@ -220,8 +222,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             private Architecture Architecture {
                 get {
-                    return _project.ActiveInterpreter.Configuration.Architecture == System.Reflection.ProcessorArchitecture.Amd64 ?
-                        Architecture.X64 : Architecture.X86;
+                    return Architecture.X86;
                 }
             }
 
@@ -229,26 +230,22 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _discoverer.TestContainersUpdated?.Invoke(_discoverer, EventArgs.Empty);
             }
 
-            public void DatabaseChanged(object sender, EventArgs args) {
-                ContainersChanged();
-            }
-
             public void ProjectAnalyzerChanged(object sender, EventArgs e) {
-                HookAnalysisComplete();
+                RegisterWithAnalyzer();
             }
         }
 
         private void OnProjectUnloaded(object sender, ProjectEventArgs e) {
             if (e.Project != null) {
-                var pyProj = e.Project.GetPythonProject();
+                var provider = e.Project as IPythonProjectProvider;
                 ProjectInfo events;
-                if (pyProj != null && _projectInfo.TryGetValue(pyProj, out events)) {
-                    var analyzer = pyProj.GetAnalyzer();
+                if (provider != null && _projectInfo.TryGetValue(provider.Project, out events)) {
+                    var analyzer = provider.Project.Analyzer;
 
-                    pyProj.ProjectAnalyzerChanged -= events.ProjectAnalyzerChanged;
+                    provider.Project.ProjectAnalyzerChanged -= events.ProjectAnalyzerChanged;
                     analyzer.AnalysisComplete -= events.AnalysisComplete;
 
-                    _projectInfo.Remove(pyProj);
+                    _projectInfo.Remove(provider.Project);
                 }
             }
 

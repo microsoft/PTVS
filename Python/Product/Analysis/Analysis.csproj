@@ -58,6 +58,7 @@
   <ItemGroup>
     <Compile Include="AggregateProjectEntry.cs" />
     <Compile Include="AnalysisDictionary.cs" />
+    <Compile Include="Projects\AnalysisExtensionNameAttribute.cs" />
     <Compile Include="AnalysisExtensions.cs" />
     <Compile Include="AnalysisHashSet.cs" />
     <Compile Include="AnalysisLimits.cs" />
@@ -72,6 +73,7 @@
     <Compile Include="Analyzer\StatementScope.cs" />
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="IAggregateableProjectEntry.cs" />
+    <Compile Include="Projects\IAnalysisExtension.cs" />
     <Compile Include="Interpreter\Default\AnalysisOnlyInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonSequenceType.cs" />
@@ -110,6 +112,10 @@
     <Compile Include="AnalysisSet.cs" />
     <Compile Include="Parsing\Ast\YieldFromExpression.cs" />
     <Compile Include="ProjectEntryExtensions.cs" />
+    <Compile Include="Projects\AnalysisCompleteEventArgs.cs" />
+    <Compile Include="Projects\IPythonProjectProvider.cs" />
+    <Compile Include="Projects\ProjectAnalyzer.cs" />
+    <Compile Include="Projects\PythonProject.cs" />
     <Compile Include="PythonAnalyzer.Specializations.cs" />
     <Compile Include="PythonKeywords.cs" />
     <Compile Include="Resources.Designer.cs">
@@ -152,7 +158,6 @@
     <Compile Include="Analyzer\ModuleScope.cs" />
     <Compile Include="Analyzer\OverviewWalker.cs" />
     <Compile Include="SingleDict.cs" />
-    <Compile Include="TestCaseInfo.cs" />
     <Compile Include="Values\CoroutineInfo.cs" />
     <Compile Include="Values\DictBuiltinClassInfo.cs" />
     <Compile Include="Values\PartialFunctionInfo.cs" />

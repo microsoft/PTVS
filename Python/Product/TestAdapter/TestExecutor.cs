@@ -88,7 +88,6 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             foreach (XPathNavigator project in nodes) {
                 PythonProjectSettings projSettings = new PythonProjectSettings(
-                    project.GetAttribute("path", ""),
                     project.GetAttribute("home", ""),
                     project.GetAttribute("workingDir", ""),
                     project.GetAttribute("interpreter", ""),
@@ -110,7 +109,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
 
                 foreach (XPathNavigator test in project.Select("Test")) {
-                    res[test.GetAttribute("file", "")] = projSettings;
+                    string testFile = test.GetAttribute("file", "");
+                    Debug.Assert(!string.IsNullOrWhiteSpace(testFile));
+                    res[testFile] = projSettings;
                 }
             }
             return res;
@@ -158,7 +159,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var runner = new TestRunner(
                     frameworkHandle,
                     runContext,
-                    tests,
+                    testGroup,
                     covPath,
                     testGroup.Key,
                     _app,
@@ -722,13 +723,12 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         sealed class PythonProjectSettings : IEquatable<PythonProjectSettings> {
-            public readonly string ProjectPath, ProjectHome, WorkingDirectory, InterpreterPath, PathEnv;
+            public readonly string ProjectHome, WorkingDirectory, InterpreterPath, PathEnv;
             public readonly bool EnableNativeCodeDebugging;
             public readonly List<string> SearchPath;
             public readonly Dictionary<string, string> Environment;
 
-            public PythonProjectSettings(string projectPath, string projectHome, string workingDir, string interpreter, string pathEnv, bool nativeDebugging) {
-                ProjectPath = projectPath;
+            public PythonProjectSettings(string projectHome, string workingDir, string interpreter, string pathEnv, bool nativeDebugging) {
                 ProjectHome = projectHome;
                 WorkingDirectory = workingDir;
                 InterpreterPath = interpreter;
@@ -743,8 +743,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             public override int GetHashCode() {
-                return ProjectPath.GetHashCode() ^ 
-                    ProjectHome.GetHashCode() ^ 
+                return ProjectHome.GetHashCode() ^ 
                     WorkingDirectory.GetHashCode() ^ 
                     InterpreterPath.GetHashCode();
             }
@@ -754,8 +753,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     return false;
                 }
 
-                if (ProjectPath == other.ProjectPath &&
-                    ProjectHome == other.ProjectHome &&
+                if (ProjectHome == other.ProjectHome &&
                     WorkingDirectory == other.WorkingDirectory &&
                     InterpreterPath == other.InterpreterPath &&
                     PathEnv == other.PathEnv &&

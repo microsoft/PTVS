@@ -108,7 +108,7 @@ class MyTest(unittest.TestCase):
                 entry.Analyze(CancellationToken.None, true);
                 analyzer.AnalyzeQueuedEntries(CancellationToken.None);
 
-                var test = analyzer.GetTestCases(entry).Single();
+                var test = TestAnalyzer.GetTestCases(entry).Single();
                 Assert.AreEqual("testAbc", test.MethodName);
                 Assert.AreEqual(10, test.StartLine);
             }
@@ -152,7 +152,7 @@ class MyTest3(TestBase):
                 entry3.Analyze(CancellationToken.None, true);
                 analyzer.AnalyzeQueuedEntries(CancellationToken.None);
 
-                var test = analyzer.GetTestCases(entry3).ToList();
+                var test = TestAnalyzer.GetTestCases(entry3).ToList();
                 AssertUtil.ContainsExactly(test.Select(t => t.MethodName), "test1", "test2", "test3");
             }
         }
@@ -172,7 +172,7 @@ class TestBase(unittest.TestCase):
                 entry.Analyze(CancellationToken.None, true);
                 analyzer.AnalyzeQueuedEntries(CancellationToken.None);
 
-                var test = analyzer.GetTestCases(entry).ToList();
+                var test = TestAnalyzer.GetTestCases(entry).ToList();
                 AssertUtil.ContainsExactly(test.Select(t => t.ClassName), "TestBase");
             }
         }
@@ -195,7 +195,7 @@ class TestBase(unittest.TestCase):
                 entry.Analyze(CancellationToken.None, true);
                 analyzer.AnalyzeQueuedEntries(CancellationToken.None);
 
-                var test = analyzer.GetTestCases(entry).ToList();
+                var test = TestAnalyzer.GetTestCases(entry).ToList();
                 AssertUtil.ContainsExactly(test.Select(t => t.MethodName), "test_1");
             }
         }
