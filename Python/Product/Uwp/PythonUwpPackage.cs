@@ -47,7 +47,6 @@ namespace Microsoft.PythonTools.Uwp {
     
     [ProvideObject(typeof(PythonUwpPropertyPage))]
     [ProvideObject(typeof(PythonUwpProject))]
-    [ProvideAutoLoad(VSConstants.UICONTEXT.SolutionHasAppContainerProject_string)]
     [Description("Python Tools Uwp Interpreter")]
     [ProvideProjectFactory(typeof(PythonUwpProjectFactory), null, null, null, null, ".\\NullPath", LanguageVsTemplate = PythonConstants.LanguageName)]
     [ProvidePythonInterpreterFactoryProvider(PythonUwpInterpreterFactory.InterpreterGuidString, typeof(PythonUwpInterpreterFactoryProvider))]
