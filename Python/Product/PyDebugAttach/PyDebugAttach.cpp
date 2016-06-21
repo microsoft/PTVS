@@ -864,7 +864,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             pyDictNew == nullptr || pyCompileString == nullptr || pyEvalCode == nullptr || getDictItem == nullptr || call == nullptr ||
             getBuiltins == nullptr || dictSetItem == nullptr || intFromLong == nullptr || pyErrRestore == nullptr || pyErrFetch == nullptr ||
             errOccurred == nullptr || pyImportMod == nullptr || pyGetAttr == nullptr || pyNone == nullptr || pySetAttr == nullptr || boolFromLong == nullptr ||
-            getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr || releaseLock == nullptr ||
+            getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr ||
             pyGilStateEnsure == nullptr || pyGilStateRelease == nullptr) {
                 // we're missing some APIs, we cannot attach.
                 connInfo.ReportError(ConnError_PythonNotFound);

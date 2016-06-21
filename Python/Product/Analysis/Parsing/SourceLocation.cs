@@ -155,7 +155,7 @@ namespace Microsoft.PythonTools.Parsing {
         /// <returns>0 if the locations are equal, -1 if the left one is less than the right one, 1 otherwise.</returns>
         public static int Compare(SourceLocation left, SourceLocation right) {
             if (left < right) return -1;
-            if (right > left) return 1;
+            if (left > right) return 1;
 
             return 0;
         }
