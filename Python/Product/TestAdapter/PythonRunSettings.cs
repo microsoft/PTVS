@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     foreach (var eachAttachment in resultUris) {
                         string filePath = eachAttachment.LocalPath;
 
-                        if (!string.IsNullOrEmpty(filePath) && File.Exists(filePath)) {
+                        if (File.Exists(filePath)) {
                             object inObj = filePath;
                             object outObj = null;
 
@@ -97,8 +97,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (python.MoveNext()) {
                 using (var writer = python.Current.AppendChild()) {
                     var pyContainers = configurationInfo.TestContainers
-                        .Where(x => x is TestContainer)
-                        .Cast<TestContainer>()
+                        .OfType<TestContainer>()
                         .GroupBy(x => x.Project);
 
                     writer.WriteStartElement("Python");
@@ -120,6 +119,16 @@ namespace Microsoft.PythonTools.TestAdapter {
                                 djangoSettings = project.Key.GetProperty("DjangoSettingsModule");
                             });
 
+                            if (config == null) {
+                                log.Log(
+                                    MessageLevel.Warning,
+                                    String.Format(
+                                        Strings.TestDiscoveryFailedMissingLaunchConfiguration,
+                                        project.Key.ProjectHome
+                                    )
+                                );
+                                continue;
+                            }
                             writer.WriteAttributeString("nativeDebugging", nativeCode);
                             writer.WriteAttributeString("djangoSettingsModule", djangoSettings);
                             

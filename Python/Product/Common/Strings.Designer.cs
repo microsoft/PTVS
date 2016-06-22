@@ -1707,6 +1707,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to get launch configuration for project stored in {0}, tests cannot be discovered..
+        /// </summary>
+        public static string TestDiscoveryFailedMissingLaunchConfiguration {
+            get {
+                return ResourceManager.GetString("TestDiscoveryFailedMissingLaunchConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while upgrading projects: {0}.
         /// </summary>
         public static string UnexpectedUpgradeError {

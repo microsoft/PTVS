@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Projects;
+using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudio.TestWindow.Extensibility.Model;
