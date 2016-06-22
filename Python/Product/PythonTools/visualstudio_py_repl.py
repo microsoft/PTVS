@@ -1164,6 +1164,8 @@ class DebugReplBackend(BasicReplBackend):
 class _ReplOutput(object):
     """file like object which redirects output to the repl window."""
     errors = None
+    closed = False
+    encoding = 'utf8'
 
     def __init__(self, backend, is_stdout, old_out = None):
         self.name = "<stdout>" if is_stdout else "<stderr>"
@@ -1194,10 +1196,6 @@ class _ReplOutput(object):
                     self.write('\r' + data)
             else:
                 self.write(data)
-
-    @property
-    def encoding(self):
-        return 'utf8'
 
     def writelines(self, lines):
         for line in lines:
