@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // prevents us from holding onto every version in the world.
             Debug.Assert(fromVersion >= lastAnalysisVersion.VersionNumber);
 
-            while (lastAnalysisVersion.VersionNumber != fromVersion) {
+            while (lastAnalysisVersion.Next != null && lastAnalysisVersion.VersionNumber != fromVersion) {
                 lastAnalysisVersion = lastAnalysisVersion.Next;
             }
 
