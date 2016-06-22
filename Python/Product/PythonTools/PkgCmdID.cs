@@ -30,6 +30,7 @@ namespace Microsoft.PythonTools {
         public const uint cmdidExtractMethodIntegratedShell = 0x10a;
         public const uint cmdidImportWizard = 0x10d;
         public const uint cmdidSurveyNews = 0x10e;
+        public const uint cmdidImportCoverage = 0x10f;
 
         public const uint cmdidReplWindow = 0x201;
         public const uint cmdidNewInteractiveWindow = 0x202;

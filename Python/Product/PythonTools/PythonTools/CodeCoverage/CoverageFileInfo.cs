@@ -14,21 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.ComponentModel.Composition;
+using System.Collections.Generic;
 
-namespace Microsoft.PythonTools.Intellisense {
-    [MetadataAttribute]
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Field, AllowMultiple = false)]
+namespace Microsoft.PythonTools.CodeCoverage {
+    class CoverageFileInfo {
+        public readonly string Filename;
+        public readonly HashSet<int> Hits;
 
-    public sealed class AnalysisExtensionNameAttribute : Attribute {
-        private readonly string _name;
-
-        public AnalysisExtensionNameAttribute(string name) {
-            _name = name;
+        public CoverageFileInfo(string filename, HashSet<int> hits) {
+            Filename = filename;
+            Hits = hits;
         }
-
-        public string Name => _name;
     }
-
 }

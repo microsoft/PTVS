@@ -453,7 +453,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 try {
                     var message = string.Format(
-                        "ERROR_STDLIB: {0}\\{1}{2}{3}",
+                        "ERROR_STDLIB: {0}\\{1}{2}",
                         request.Factory.Configuration.Id,
                         Environment.NewLine,
                         (exc.InnerException ?? exc).ToString()

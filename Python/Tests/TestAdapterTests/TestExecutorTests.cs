@@ -59,6 +59,21 @@ namespace TestAdapterTests {
             }
         }
 
+        [TestMethod]
+        public void TestBestFile() {
+            var file1 = "C:\\Some\\Path\\file1.py";
+            var file2 = "C:\\Some\\Path\\file2.py";
+            var best = TestExecutor.UpdateBestFile(null, file1);
+            Assert.AreEqual(best, file1);
+
+            best = TestExecutor.UpdateBestFile(null, file1);
+            Assert.AreEqual(best, file1);
+
+            best = TestExecutor.UpdateBestFile(best, file2);
+            Assert.AreEqual("C:\\Some\\Path", best);
+        }
+
+
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
         public void TestRun() {

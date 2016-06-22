@@ -20,6 +20,7 @@ using System.Collections.Generic;
 namespace Microsoft.PythonTools.Analysis {
     public class LocationInfo : IEquatable<LocationInfo>, ILocationResolver {
         private readonly int _line, _column;
+        private readonly int? _endLine, _endColumn;
         private readonly string _path;
         internal static LocationInfo[] Empty = new LocationInfo[0];
 
@@ -31,19 +32,31 @@ namespace Microsoft.PythonTools.Analysis {
             _column = column;
         }
 
+        internal LocationInfo(string path, int line, int column, int? endLine, int? endColumn) {
+            _path = path;
+            _line = line;
+            _column = column;
+            _endLine = endLine;
+            _endColumn = endColumn;
+        }
+
         public string FilePath {
             get { return _path; }
         }
 
-        public int Line {
+        public int StartLine {
             get { return _line; }
         }
 
-        public int Column {
+        public int StartColumn {
             get {
                 return _column;
             }
         }
+
+        public int? EndLine => _endLine;
+
+        public int? EndColumn => _endColumn;
 
         public override bool Equals(object obj) {
             LocationInfo other = obj as LocationInfo;
@@ -54,14 +67,14 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public override int GetHashCode() {
-            return Line.GetHashCode() ^ FilePath.GetHashCode();
+            return StartLine.GetHashCode() ^ FilePath.GetHashCode();
         }
 
         public bool Equals(LocationInfo other) {
             // currently we filter only to line & file - so we'll only show 1 ref per each line
             // This works nicely for get and call which can both add refs and when they're broken
             // apart you still see both refs, but when they're together you only see 1.
-            return Line == other.Line &&
+            return StartLine == other.StartLine &&
                 FilePath == other.FilePath;
         }
 
@@ -77,13 +90,15 @@ namespace Microsoft.PythonTools.Analysis {
 
         sealed class FullLocationComparer : IEqualityComparer<LocationInfo> {
             public bool Equals(LocationInfo x, LocationInfo y) {
-                return x.Line == y.Line &&
-                    x.Column == y.Column &&
-                    x.FilePath == y.FilePath;
+                return x.StartLine == y.StartLine &&
+                    x.StartColumn == y.StartColumn &&
+                    x.FilePath == y.FilePath &&
+                    x.EndLine == y.EndLine &&
+                    x.EndColumn == x.EndColumn;
             }
 
             public int GetHashCode(LocationInfo obj) {
-                return obj.Line.GetHashCode() ^ obj.Column.GetHashCode() ^ obj.FilePath.GetHashCode();
+                return obj.StartLine.GetHashCode() ^ obj.StartColumn.GetHashCode() ^ obj.FilePath.GetHashCode();
             }
         }
 

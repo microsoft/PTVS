@@ -141,7 +141,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                     return "No location";
                 }
                 return string.Join(Environment.NewLine,
-                    withLoc.Locations.Select(loc => string.Format("{0}:{1}", loc.FilePath, loc.Line)));
+                    withLoc.Locations.Select(loc => string.Format("{0}:{1}", loc.FilePath, loc.StartLine)));
             }
         }
 

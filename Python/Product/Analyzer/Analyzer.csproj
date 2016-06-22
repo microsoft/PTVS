@@ -63,7 +63,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="Intellisense\AnalysisExtensionNameAttribute.cs" />
     <Compile Include="Intellisense\AnalysisProtocol.cs" />
     <Compile Include="Intellisense\AnalysisPriority.cs" />
     <Compile Include="Intellisense\AnalysisQueue.cs" />
@@ -76,7 +75,6 @@
     <Compile Include="Intellisense\ExtractedMethodCreator.cs" />
     <Compile Include="Intellisense\ExtractMethodResult.cs" />
     <Compile Include="Intellisense\FlowChecker.cs" />
-    <Compile Include="Intellisense\IAnalysisExtension.cs" />
     <Compile Include="Intellisense\ImportRemover.cs" />
     <Compile Include="Intellisense\LinePreservingCodeReplacer.cs" />
     <Compile Include="Intellisense\OutliningWalker.cs" />

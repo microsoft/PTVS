@@ -778,6 +778,12 @@ modified from these scripts.</value>
   <data name="DebugAttachGettingSiteInformation" xml:space="preserve">
     <value>Getting attach information from web site.</value>
   </data>
+  <data name="FailedToConvertCoverageFile" xml:space="preserve">
+    <value>Failed to convert coverage file: {0}</value>
+  </data>
+  <data name="TestDiscoveryFailedMissingLaunchConfiguration" xml:space="preserve">
+    <value>Failed to get launch configuration for project stored in {0}, tests cannot be discovered.</value>
+  </data>
   <data name="UpgradedImportsFor30" xml:space="preserve">
     <value>Some internal properties have been modified in this project.</value>
   </data>

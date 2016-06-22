@@ -107,6 +107,7 @@
       <Link>DebugExtensions.cs</Link>
     </Compile>
     <Compile Include="BuildTasksTests.cs" />
+    <Compile Include="CoverageTests.cs" />
     <Compile Include="EditorTests.cs" />
     <Compile Include="CodeFormatterTests.cs" />
     <Compile Include="CommentBlockTests.cs" />

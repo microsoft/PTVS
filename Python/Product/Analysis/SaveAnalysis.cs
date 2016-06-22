@@ -699,7 +699,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private static object[] GenerateLocation(LocationInfo location) {
-            return new object[] { location.Line, location.Column };
+            return new object[] { location.StartLine, location.StartColumn };
         }
 
         private static object[] GenerateLocation(IEnumerable<LocationInfo> locations) {

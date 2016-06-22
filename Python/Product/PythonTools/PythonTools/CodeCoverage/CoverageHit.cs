@@ -14,28 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 
-namespace Microsoft.PythonTools.Intellisense {
-    /// <summary>
-    /// Provides an extension which registers against a given analyzer.
-    /// </summary>
-    public interface IAnalysisExtension {
+namespace Microsoft.PythonTools.CodeCoverage {
+    class CoverageHit {
         /// <summary>
-        /// Called when the extension is registered for an analyzer.
+        /// The 1 based line number
         /// </summary>
-        /// <param name="analyzer"></param>
-        void Register(PythonAnalyzer analyzer);
-
+        public readonly int LineNumber;
         /// <summary>
-        /// Handles an extension command.  The extension receives the command body and
-        /// returns a response.
+        /// The starting line of the function (optional, used to disambiguate function)
         /// </summary>
-        string HandleCommand(string commandId, string body);
+        public readonly int? FunctionStart;
     }
 }

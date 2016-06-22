@@ -597,6 +597,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failed to convert coverage file: {0}.
+        /// </summary>
+        public static string FailedToConvertCoverageFile {
+            get {
+                return ResourceManager.GetString("FailedToConvertCoverageFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Could not get resource {1}.{2} from {0}.
         ///
         ///{3}.
@@ -1685,6 +1694,15 @@ namespace Microsoft.PythonTools {
         public static string SurroundWith {
             get {
                 return ResourceManager.GetString("SurroundWith", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to get launch configuration for project stored in {0}, tests cannot be discovered..
+        /// </summary>
+        public static string TestDiscoveryFailedMissingLaunchConfiguration {
+            get {
+                return ResourceManager.GetString("TestDiscoveryFailedMissingLaunchConfiguration", resourceCulture);
             }
         }
         
