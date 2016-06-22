@@ -6,6 +6,7 @@
     <OutputType>vsix</OutputType>
     <IsPackage>true</IsPackage>
     <SwrFile>$(IntermediateOutputPath)$(OutputName).swr</SwrFile>
+    <OutputPath>$(OutputPath)swix\</OutputPath>
     <Python>py</Python>
     <GenerateCommand>$(Python) "$(MSBuildThisFileDirectory)\swix_generate.py"</GenerateCommand>
     <GenerateCommand Condition="$(Configuration) != 'Debug'">$(GenerateCommand) -x "\.pdb$"</GenerateCommand>

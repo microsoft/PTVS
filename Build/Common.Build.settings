@@ -92,9 +92,6 @@
     <SetupOutputPath Condition="'$(SetupOutputPath)' == ''">$(BuildOutputRoot)raw\setup\</SetupOutputPath>
     <SetupOutputPath Condition="!HasTrailingSlash($(SetupOutputPath))">$(SetupOutputPath)\</SetupOutputPath>
 
-    <FopxOutputPath Condition="'$(FopxOutputPath)' == ''">$(BuildOutputRoot)raw\fopx\</FopxOutputPath>
-    <FopxOutputPath Condition="!HasTrailingSlash($(FopxOutputPath))">$(FopxOutputPath)\</FopxOutputPath>
-
     <ToolsOutputPath Condition="'$(ToolsOutputPath)' == ''">$(BuildOutputRoot)raw\tools\</ToolsOutputPath>
     <ToolsOutputPath Condition="!HasTrailingSlash($(ToolsOutputPath))">$(ToolsOutputPath)\</ToolsOutputPath>
 

@@ -10,6 +10,8 @@
     <BuildNumber>$(FileVersion)</BuildNumber>
 
     <TargetName>Microsoft.PythonTools</TargetName>
+    <OutputPath>$(SetupOutputPath)swix\</OutputPath>
+    <OutDir>$(OutputPath)</OutDir>
   </PropertyGroup>
 
   <ItemGroup>
