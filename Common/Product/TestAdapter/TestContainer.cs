@@ -16,25 +16,46 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Projects;
+using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudio.TestWindow.Extensibility.Model;
 
 namespace Microsoft.VisualStudioTools.TestAdapter {
     internal class TestContainer : ITestContainer {
-        private readonly DateTime _timeStamp;
+        private readonly int _version;
         private readonly Architecture _architecture;
+        private readonly PythonProject _project;
+        private readonly TestCaseInfo[] _testCases;
 
-        public TestContainer(ITestContainerDiscoverer discoverer, string source, DateTime timeStamp, Architecture architecture) {
+        public TestContainer(ITestContainerDiscoverer discoverer, string source, PythonProject project, int version, Architecture architecture, TestCaseInfo[] testCases) {
             Discoverer = discoverer;
             Source = source;
-            _timeStamp = timeStamp;
+            _version = version;
+            _project = project;
             _architecture = architecture;
+            _testCases = testCases;
         }
 
-        private TestContainer(TestContainer copy)
-            : this(copy.Discoverer, copy.Source, copy._timeStamp, copy._architecture) { }
+        public TestCaseInfo[] TestCases {
+            get {
+                return _testCases;
+            }
+        }
+
+        public int Version {
+            get {
+                return _version;
+            }
+        }
+
+        public PythonProject Project {
+            get {
+                return _project;
+            }
+        }
 
         public int CompareTo(ITestContainer other) {
             var container = other as TestContainer;
@@ -47,7 +68,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
                 return result;
             }
 
-            return _timeStamp.CompareTo(container._timeStamp);
+            return _version.CompareTo(container._version);
         }
 
         public IEnumerable<Guid> DebugEngines {
@@ -73,7 +94,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         }
 
         public ITestContainer Snapshot() {
-            return new TestContainer(this);
+            return this;
         }
 
         public string Source { get; private set; }

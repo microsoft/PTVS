@@ -174,7 +174,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 if (_declVersion == DeclaringModule.AnalysisVersion) {
                     var start = ClassDefinition.NameExpression.GetStart(ClassDefinition.GlobalParent);
-                    return new[] { new LocationInfo(DeclaringModule.FilePath, start.Line, start.Column) };
+                    var end = ClassDefinition.GetEnd(ClassDefinition.GlobalParent);
+                    return new[] { new LocationInfo(DeclaringModule.FilePath, start.Line, start.Column, end.Line, end.Column) };
                 }
                 return LocationInfo.Empty;
             }

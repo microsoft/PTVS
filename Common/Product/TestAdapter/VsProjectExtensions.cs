@@ -38,18 +38,6 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
             return (project as EnvDTE.Project);
         }
 
-        /// <summary>
-        /// Gets the name of the project.
-        /// </summary>
-        public static string GetProjectName(this IVsProject project) {
-            ValidateArg.NotNull(project, "project");
-
-            var projectHierarchy = (IVsHierarchy)project;
-            object projectName;
-            ErrorHandler.ThrowOnFailure(projectHierarchy.GetProperty((uint)VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_Name, out projectName));
-            return (string)projectName;
-        }
-
         public static bool TryGetProjectPath(this IVsProject project, out string path) {
             ValidateArg.NotNull(project, "project");
 

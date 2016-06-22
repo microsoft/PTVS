@@ -29,6 +29,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -36,13 +37,13 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
+using Microsoft.VisualStudioTools;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.Intellisense {
-    using VisualStudioTools;
     using AP = AnalysisProtocol;
 
-    public sealed class VsProjectAnalyzer : IDisposable {
+    public sealed class VsProjectAnalyzer : ProjectAnalyzer, IDisposable {
         internal readonly Process _analysisProcess;
         private Connection _conn;
         // For entries that were loaded from a .zip file, IProjectEntry.Properties[_zipFileName] contains the full path to that archive.
@@ -183,9 +184,9 @@ namespace Microsoft.PythonTools.Intellisense {
             CommentTaskTokensChanged(null, EventArgs.Empty);
         }
 
-        #region Public API
+        #region ProjectAnalyzer overrides
 
-        public void RegisterExtension(string path) {
+        public override void RegisterExtension(string path) {
             SendEventAsync(
                 new AP.ExtensionAddedEvent() {
                     path = path
@@ -203,7 +204,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// 
         /// Returns null if the extension command fails or the remote process exits unexpectedly.
         /// </summary>
-        public async Task<string> SendExtensionCommandAsync(string extensionName, string commandId, string body) {
+        public override async Task<string> SendExtensionCommandAsync(string extensionName, string commandId, string body) {
             var res = await SendRequestAsync(new AP.ExtensionRequest() {
                 extension = extensionName,
                 commandId = commandId,
@@ -216,6 +217,20 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return null;
         }
+
+        /// <summary>
+        /// Raised when any file has a new analysis.
+        /// </summary>
+        public override event EventHandler<AnalysisCompleteEventArgs> AnalysisComplete;
+
+        public override IEnumerable<string> Files {
+            get {
+                return _projectFiles.Keys;
+            }
+        }
+        #endregion
+
+        #region Public API
 
         public PythonLanguageVersion LanguageVersion {
             get {
@@ -402,6 +417,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 entry.OnAnalysisComplete();
+                AnalysisComplete?.Invoke(this, new AnalysisCompleteEventArgs(entry.Path));
             }
         }
 

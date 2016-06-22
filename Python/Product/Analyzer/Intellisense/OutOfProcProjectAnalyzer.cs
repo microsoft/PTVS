@@ -33,6 +33,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Projects;
 
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
@@ -1228,8 +1229,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private AP.AnalysisReference MakeReference(LocationInfo location, VariableType type) {
             return new AP.AnalysisReference() {
-                column = location.Column,
-                line = location.Line,
+                column = location.StartColumn,
+                line = location.StartLine,
                 kind = GetVariableType(type),
                 file = location?.FilePath
             };
