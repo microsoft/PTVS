@@ -71,8 +71,6 @@ $(_Dependencies)
     <Delete Files="$(SwrFile).tmp" />
   </Target>
 
-  <Target Name="GetNativeManifest" />
-
   <Import Project="..\SetupProjectAfter.settings" />
 </Project>
 

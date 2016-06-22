@@ -16,4 +16,5 @@
   <Target Name="BeforeClean" BeforeTargets="Clean" />
   <Target Name="AfterClean" AfterTargets="Clean" />
 
+  <Target Name="GetNativeManifest" />
 </Project>

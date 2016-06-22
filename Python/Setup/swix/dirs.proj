@@ -26,6 +26,7 @@
     <ProjectFile Include="Microsoft.PythonTools.Web.Templates.swixproj"/>
     <SequencedProjectFile Include="signswix.proj"/>
     <SequencedProjectFile Include="vsman.vsmanproj"/>
+    <SequencedProjectFile Include="vsman_sideload.vsmanproj"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
