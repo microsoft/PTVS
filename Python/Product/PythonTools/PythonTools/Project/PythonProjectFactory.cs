@@ -181,11 +181,7 @@ namespace Microsoft.PythonTools.Project {
             // set it to the latest.
             if (!Version.TryParse(projectXml.ToolsVersion, out version) ||
                 version < new Version(4, 0)) {
-#if DEV15
-                projectXml.ToolsVersion = "15.1";
-#else
-                projectXml.ToolsVersion = "14.0";
-#endif
+                projectXml.ToolsVersion = ToolsVersion;
                 log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedToolsVersion);
             }
 
