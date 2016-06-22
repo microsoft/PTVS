@@ -649,8 +649,8 @@ namespace Microsoft.PythonTools.Analysis {
                 // If the top level does not contain any .idb files, we won't
                 // bother recursing.
                 if (Directory.Exists(_outDir) &&
-                    Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.TopDirectoryOnly).Any()) {
-                    filesInDatabase.UnionWith(Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories));
+                    PathUtils.EnumerateFiles(_outDir, "*.idb", recurse: false).Any()) {
+                    filesInDatabase.UnionWith(PathUtils.EnumerateFiles(_outDir, "*.idb"));
                 }
             } else if (firstRun) {
                 Directory.CreateDirectory(_outDir);
@@ -704,7 +704,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (!_dryRun) {
-                filesInDatabase.UnionWith(Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories));
+                filesInDatabase.UnionWith(PathUtils.EnumerateFiles(_outDir, "*.idb"));
             }
 
             // Store the files we want to keep separately, in case we decide to
@@ -728,9 +728,7 @@ namespace Microsoft.PythonTools.Analysis {
                 } else {
                     // Failed to get builtin names, so don't delete anything
                     // from the main output directory.
-                    filesToKeep.UnionWith(
-                        Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.TopDirectoryOnly)
-                    );
+                    filesToKeep.UnionWith(PathUtils.EnumerateFiles(_outDir, "*.idb", recurse: false));
                 }
             }
 

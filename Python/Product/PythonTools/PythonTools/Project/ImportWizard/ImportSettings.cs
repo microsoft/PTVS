@@ -231,13 +231,13 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
         ) {
             if (Directory.Exists(sourcePath)) {
                 return await Task.Run(() => {
-                    var files = Directory.EnumerateFiles(sourcePath, "*.py", SearchOption.TopDirectoryOnly);
+                    var files = PathUtils.EnumerateFiles(sourcePath, "*.py", recurse: false);
                     // Also include *.pyw files if they were in the filter list
                     foreach (var pywFilters in filters
                         .Split(';')
                         .Where(filter => filter.TrimEnd().EndsWith(".pyw", StringComparison.OrdinalIgnoreCase))
                     ) {
-                        files = files.Concat(Directory.EnumerateFiles(sourcePath, pywFilters, SearchOption.TopDirectoryOnly));
+                        files = files.Concat(PathUtils.EnumerateFiles(sourcePath, pywFilters, recurse: false));
                     }
                     return files.Select(f => Path.GetFileName(f)).ToList();
                 });
@@ -490,10 +490,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             var directories = new List<string>() { source };
             var skipDirectories = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-            try {
-                directories.AddRange(Directory.EnumerateDirectories(source, "*", SearchOption.AllDirectories));
-            } catch (UnauthorizedAccessException) {
-            }
+            directories.AddRange(PathUtils.EnumerateDirectories(source));
 
             foreach (var dir in directories) {
                 if (UnwindDirectory(dir).Any(skipDirectories.Contains)) {
@@ -511,7 +508,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                     }
 
                     foreach (var filter in patterns) {
-                        files.UnionWith(Directory.EnumerateFiles(dir, filter));
+                        files.UnionWith(PathUtils.EnumerateFiles(dir, filter, recurse: false));
                     }
                 } catch (UnauthorizedAccessException) {
                 }

@@ -106,7 +106,7 @@ namespace AnalysisTests {
 
         [TestMethod, Priority(1)]
         public void TemporaryLibTest() {
-            string libPath = "C:\\", dbPath = "C:\\";
+            string libPath, dbPath;
 
             using (var libDb = new TemporaryLibAndDB(
                 "a.py",

@@ -186,6 +186,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ValueDescriptionRequest.Command: response = GetValueDescriptions((AP.ValueDescriptionRequest)request); break;
                 case AP.ExtensionRequest.Command: response = ExtensionRequest((AP.ExtensionRequest)request); break;
                 case AP.InitializeRequest.Command: response = Initialize((AP.InitializeRequest)request); break;
+                case AP.ExpressionForDataTipRequest.Command: response = ExpressionForDataTip((AP.ExpressionForDataTipRequest)request); break;
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
@@ -1154,6 +1155,32 @@ namespace Microsoft.PythonTools.Intellisense {
                 name = name,
                 startIndex = stmt.StartIndex,
                 endIndex = stmt.EndIndex
+            };
+        }
+
+        private Response ExpressionForDataTip(AP.ExpressionForDataTipRequest request) {
+            var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
+
+            string dataTipExpression = null;
+            var options = new CodeFormattingOptions() {
+                UseVerbatimImage = false
+            };
+
+            if (pyEntry != null && pyEntry.Analysis != null) {
+                var ast = pyEntry.Analysis.GetAstFromText(request.expr, new SourceLocation(request.index, request.line, request.column));
+                var expr = Statement.GetExpression(ast.Body);
+
+                if (ast != null) {
+                    var walker = new DetectSideEffectsWalker();
+                    ast.Walk(walker);
+                    if (!walker.HasSideEffects) {
+                        dataTipExpression = expr?.ToCodeString(ast, new CodeFormattingOptions() { UseVerbatimImage = false });
+                    }
+                }
+            }
+
+            return new AP.ExpressionForDataTipResponse() {
+                expression = dataTipExpression
             };
         }
 

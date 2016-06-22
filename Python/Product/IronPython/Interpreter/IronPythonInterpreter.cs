@@ -509,7 +509,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     case ObjectKind.NamespaceTracker: res = new IronPythonNamespace(this, obj); break;
                     case ObjectKind.Constant: res = new IronPythonConstant(this, obj); break;
                     case ObjectKind.ClassMethod: res = new IronPythonGenericMember(this, obj, PythonMemberType.Method); break;
-                    case ObjectKind.Method: res = res = new IronPythonGenericMember(this, obj, PythonMemberType.Method); break;
+                    case ObjectKind.Method: res = new IronPythonGenericMember(this, obj, PythonMemberType.Method); break;
                     case ObjectKind.PythonTypeSlot: res = new IronPythonGenericMember(this, obj, PythonMemberType.Property); break;
                     case ObjectKind.PythonTypeTypeSlot: res = new IronPythonGenericMember(this, obj, PythonMemberType.Property); break;
                     case ObjectKind.Unknown: res = new PythonObject(this, obj); break;

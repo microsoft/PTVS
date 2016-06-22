@@ -378,7 +378,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 allReturn &= Returns || _raises;
 
                 if (elseStmt != null) {
-                    _raises = _raises = false;
+                    _raises = false;
                     elseStmt.Walk(this);
                     allReturn &= Returns || _raises;
                 }

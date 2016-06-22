@@ -55,9 +55,6 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             lock (this) {
-                if (_analysis == null) {
-                    _analysis = new XamlAnalysis(_filename);
-                }
                 _analysis = new XamlAnalysis(new StringReader(_content));
 
                 _version++;

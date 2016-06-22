@@ -76,13 +76,13 @@ namespace Microsoft.PythonTools.Parsing {
             _langVersion = langVersion;
             _verbatim = verbatim;
             _bindReferences = bindRefs;
-            
+
+            Reset(FutureOptions.None);
+
             if (langVersion.Is3x()) {
                 // 3.x always does true division and absolute import
                 _languageFeatures |= FutureOptions.TrueDivision | FutureOptions.AbsoluteImports;
             }
-
-            Reset(FutureOptions.None);
 
             _privatePrefix = privatePrefix;
         }
@@ -5082,7 +5082,7 @@ namespace Microsoft.PythonTools.Parsing {
                                 = new AsciiEncodingInfoWrapper();
                             continue;
                         case "iso_8859_1":
-                            d["iso_ir_100"] = d["iso_8859_1_1987"] = d["iso_8859_1"] = d["iso8859"] = d["ibm819"] = d["csisolatin1"] = d["8859"] = d["latin_1"] =
+                            d["iso_ir_100"] = d["iso_8859_1_1987"] = d["iso_8859_1"] = d["iso8859"] = d["ibm819"] = d["csisolatin1"] = d["8859"] =
                             d["latin1"] = d["iso 8859_1"] = d["iso8859_1"] = d["cp819"] = d["819"] = d["latin"] = d["latin1"] = d["l1"] = encs[i];
                             break;
                         case "utf_7":

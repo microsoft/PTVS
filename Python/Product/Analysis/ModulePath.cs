@@ -151,8 +151,8 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (!skipFiles) {
-                foreach (var file in Directory.EnumerateFiles(path)) {
-                    var filename = Path.GetFileName(file);
+                foreach (var file in PathUtils.EnumerateFiles(path, recurse: false)) {
+                    var filename = PathUtils.GetFileOrDirectoryName(file);
                     var match = PythonFileRegex.Match(filename);
                     if (!match.Success) {
                         match = PythonBinaryRegex.Match(filename);
@@ -168,8 +168,8 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (recurse) {
-                foreach (var dir in Directory.EnumerateDirectories(path)) {
-                    var dirname = Path.GetFileName(dir);
+                foreach (var dir in PathUtils.EnumerateDirectories(path, recurse: false)) {
+                    var dirname = PathUtils.GetFileOrDirectoryName(dir);
                     var match = PythonPackageRegex.Match(dirname);
                     if (match.Success && (!requireInitPy || File.Exists(Path.Combine(dir, "__init__.py")))) {
                         foreach (var entry in GetModuleNamesFromPathHelper(
@@ -238,7 +238,7 @@ namespace Microsoft.PythonTools.Analysis {
         public static IEnumerable<string> ExpandPathFiles(IEnumerable<string> paths) {
             foreach (var path in paths) {
                 if (Directory.Exists(path)) {
-                    foreach (var file in Directory.EnumerateFiles(path, "*.pth")) {
+                    foreach (var file in PathUtils.EnumerateFiles(path, "*.pth", recurse: false)) {
                         using (var reader = new StreamReader(file)) {
                             string line;
                             while ((line = reader.ReadLine()) != null) {

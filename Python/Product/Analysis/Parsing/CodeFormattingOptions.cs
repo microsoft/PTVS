@@ -277,6 +277,8 @@ namespace Microsoft.PythonTools.Parsing {
 
         #endregion
 
+        internal bool UseVerbatimImage { get; set; } = true;
+
         /// <summary>
         /// Appends one of 3 strings depending upon a code formatting setting.  The 3 settings are the on and off
         /// settings as well as the original formatting if the setting is not set.

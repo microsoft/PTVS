@@ -1970,14 +1970,10 @@ namespace Microsoft.PythonTools.Project {
                     publishOptions = TaskDialog.CallWithRetry(
                         _ => new PublishProjectOptions(
                             publishOptions.AdditionalFiles.Concat(
-                                Directory.EnumerateFiles(
-                                    factory.Configuration.PrefixPath,
-                                    "*",
-                                    SearchOption.AllDirectories
-                                )
-                                // Exclude the completion DB
-                                .Where(f => !f.Contains("\\.ptvs\\"))
-                                .Select(f => new PublishFile(f, PathUtils.GetRelativeFilePath(ProjectHome, f)))
+                                PathUtils.EnumerateFiles(factory.Configuration.PrefixPath)
+                                    // Exclude the completion DB
+                                    .Where(f => !f.Contains("\\.ptvs\\"))
+                                    .Select(f => new PublishFile(f, PathUtils.GetRelativeFilePath(ProjectHome, f)))
                             ).ToArray(),
                             publishOptions.DestinationUrl
                         ),

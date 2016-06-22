@@ -96,7 +96,12 @@ namespace PythonToolsUITests {
                 Assert.AreEqual(6, environments.Count);
                 AssertUtil.ContainsExactly(
                     wpf.Invoke(() => environments.Select(ev => ev.Description).ToList()),
-                    Enumerable.Range(1, 6).Select(i => string.Format("Test Factory {0}", i))
+                    "Test Factory 1 2.7",
+                    "Test Factory 2 3.0",
+                    "Test Factory 3 3.3",
+                    "Test Factory 4 2.7",
+                    "Test Factory 5 3.0",
+                    "Test Factory 6 3.3"
                 );
             }
         }

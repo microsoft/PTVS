@@ -2237,6 +2237,25 @@ b = {1}{1}C()
         }
 
         [TestMethod, Priority(0)]
+        public void TrueDividePython3x() {
+            var text = @"
+class C:
+    def __truediv__(self, other):
+        return 42
+    def __rtruediv__(self, other):
+        return 3.0
+
+a = C()
+b = a / 'abc'
+c = 'abc' / a
+";
+
+            var entry = ProcessText(text, PythonLanguageVersion.V35);
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("b", text.IndexOf("b =")), "int");
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("c", text.IndexOf("c =")), "float");
+        }
+
+        [TestMethod, Priority(0)]
         public void BinaryOperators() {
             var operators = new[] {
                 new { Method = "add", Operator = "+", Version = PythonLanguageVersion.V27 },

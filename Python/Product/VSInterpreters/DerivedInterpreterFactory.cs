@@ -121,11 +121,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var paths = new List<string> { databasePath };
             if (includeSitePackages) {
-                try {
-                    paths.AddRange(Directory.EnumerateDirectories(databasePath));
-                } catch (IOException) {
-                } catch (UnauthorizedAccessException) {
-                }
+                paths.AddRange(PathUtils.EnumerateDirectories(databasePath));
             }
             return new PythonTypeDatabase(this, paths, _baseDb);
         }
