@@ -62,7 +62,7 @@
     <TargetsPath>$(BuildRoot)Build</TargetsPath>
 
     <PackagesPath Condition="'$(PackagesPath)' == ''">$(BUILD_BINARIESDIRECTORY)</PackagesPath>
-    <PackagesPath Condition="'$(PackagesPath)' == ''">$(BuildRoot)\BuildOutput</PackagesPath>
+    <PackagesPath Condition="'$(PackagesPath)' == ''">$(BuildRoot)\packages\</PackagesPath>
     <PackagesPath Condition="!HasTrailingSlash($(PackagesPath))">$(PackagesPath)\</PackagesPath>
 
     <!-- BuildOutputRoot contains all build files.

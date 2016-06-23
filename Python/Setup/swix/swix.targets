@@ -60,7 +60,10 @@ $(_Dependencies)
     <Exec Command="$(GenerateCommand) %(SwrSource.ExtraOptions) -s &quot;%(SwrSource.FullPath)&quot; -b &quot;%(SwrSource.BaseInstall)&quot; -o &quot;$(SwrFile).tmp&quot;" />
   </Target>
 
-  <Target Name="_GeneratePackage" BeforeTargets="Build" DependsOnTargets="_GenerateSwrMetadata;_GenerateSwrFromSources">
+  <Target Name="_GeneratePackage"
+          BeforeTargets="Build"
+          DependsOnTargets="_GenerateSwrMetadata;_GenerateSwrFromSources"
+          Condition="'$(MicrosoftSimplifiedWixPropertiesImported)' == 'true'">
     <PropertyGroup>
       <_Orig Condition="Exists($(SwrFile))">$([System.IO.File]::ReadAllText($(SwrFile)))</_Orig>
       <_New Condition="Exists('$(SwrFile).tmp')">$([System.IO.File]::ReadAllText(`$(SwrFile).tmp`))</_New>
