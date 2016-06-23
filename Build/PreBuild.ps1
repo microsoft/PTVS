@@ -4,7 +4,9 @@ param ($vstarget, $source, [switch] $clean, [switch] $full)
 $packages = @(
     @{ name="Microsoft.VSSDK.BuildTools"; version=@{ "14.0"="14.2.25201"; "15.0"="15.0.25201-Dev15Preview2" }; required=$true },
     @{ name="Newtonsoft.Json"; version=@{ "14.0"="6.0.8"; "15.0"="6.0.8" }; required=$true },
-    @{ name="MicroBuild.Core"; version=@{ "14.0"="0.2.0"; "15.0"="0.2.0" }; required=$false }
+    @{ name="MicroBuild.Core"; version=@{ "14.0"="0.2.0"; "15.0"="0.2.0" }; required=$false },
+    @{ name="Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime"; version=@{ "14.0"="14.2.25123"; "15.0"="14.2.25123" }; required=$true },
+    @{ name="Microsoft.VisualStudio.Shell.Interop.14.0.DesignTime"; version=@{ "14.0"="14.2.25123"; "15.0"="14.2.25123" }; required=$true }
 )
 
 if ($full) {
