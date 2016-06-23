@@ -28,6 +28,7 @@
         $(DevEnvDir);
         $(DevEnvDir)CommonExtensions\Microsoft\Editor;
         $(DevEnvDir)PrivateAssemblies;
+        $(DevEnvDir)PublicAssemblies;
         @(_NugetAssemblies->'%(RootDir)%(Directory)',';');
       </AssemblySearchPaths>
     </PropertyGroup>

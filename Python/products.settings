@@ -4,6 +4,9 @@
     <IncludeML Condition="'$(IncludeML)' == ''">true</IncludeML>
     <IncludeML Condition="'$(VSTarget)' == '15.0'">false</IncludeML>
     
+    <!-- Include Django by default -->
+    <IncludeDjango Condition="'$(IncludeDjango)' == ''">true</IncludeDjango>
+    
     <!-- Include IronPython by default -->
     <IncludeIronPython Condition="'$(IncludeIronPython)' == ''">true</IncludeIronPython>
     

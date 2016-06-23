@@ -8,7 +8,7 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
-    <ProjectFile Include="Django\Django.wixproj"/>
+    <ProjectFile Include="Django\Django.wixproj" Condition="'$(IncludeDjango)' == 'True'"/>
     <ProjectFile Include="IronPythonInterpreter\IronPythonInterpreter.wixproj" Condition="'$(IncludeIronPython)' == 'True'"/>
     <ProjectFile Include="Uwp\Uwp.wixproj" Condition="'$(IncludeUwp)' == 'True'"/>
     <ProjectFile Include="PythonTools\PythonTools.wixproj"/>

@@ -12,6 +12,7 @@
       $(DefineConstants);
       IncludeUwp=$(IncludeUwp);
       IncludeIronPython=$(IncludeIronPython);
+      IncludeDjango=$(IncludeDjango);
     </DefineConstants>
     <DefineConstants Condition="$(VSTarget) == '14.0'">
       $(DefineConstants);
@@ -68,7 +69,7 @@
       <Name>IronPythonInterpreterMsm</Name>
       <Project>{92851481-9141-480E-A85D-85120766949C}</Project>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)\Python\Setup\Django\Django.wixproj">
+    <ProjectReference Include="$(BuildRoot)\Python\Setup\Django\Django.wixproj" Condition="'$(IncludeDjango)' == 'True'">
       <Name>DjangoMsm</Name>
       <Project>{16671BE6-DD23-41D9-841A-0B80D47A090D}</Project>
     </ProjectReference>
