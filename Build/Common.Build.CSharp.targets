@@ -18,8 +18,18 @@
     <ResolveAssemblyReferencesDependsOn>$(ResolveAssemblyReferencesDependsOn);_AddPTVSReferences</ResolveAssemblyReferencesDependsOn>
   </PropertyGroup>
   <Target Name="_AddPTVSReferences">
+    <ItemGroup>
+      <_NugetAssemblies Include="$(PackagesPath)\Microsoft.VisualStudio.*\lib\Microsoft.VisualStudio.*.dll" />
+    </ItemGroup>
     <PropertyGroup>
-      <AssemblySearchPaths>$(BuildRoot)Python\References\Dev$(VSTarget);$(AssemblySearchPaths);$(DevEnvDir);$(DevEnvDir)CommonExtensions\Microsoft\Editor;$(DevEnvDir)PrivateAssemblies</AssemblySearchPaths>
+      <AssemblySearchPaths>
+        $(BuildRoot)Python\References\Dev$(VSTarget);
+        $(AssemblySearchPaths);
+        $(DevEnvDir);
+        $(DevEnvDir)CommonExtensions\Microsoft\Editor;
+        $(DevEnvDir)PrivateAssemblies;
+        @(_NugetAssemblies->'%(RootDir)%(Directory)',';');
+      </AssemblySearchPaths>
     </PropertyGroup>
   </Target>
 
