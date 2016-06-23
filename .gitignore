@@ -1,4 +1,5 @@
 BuildOutput/
+packages/
 *.sdf
 *.opensdf
 *.suo

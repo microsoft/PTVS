@@ -5,7 +5,7 @@
     <ProjectFile Include="..\Product\dirs.proj"/>
     <ProjectFile Include="signlayout.proj" />
     <ProjectFile Include="msi.proj" Condition="'$(IncludeMSI)' != 'false'" />
-    <ProjectFile Include="swix\dirs.proj"/>
+    <ProjectFile Include="swix\dirs.proj" />
     <ProjectFile Include="release.proj"/>
   </ItemGroup>
 

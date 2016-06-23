@@ -29,7 +29,7 @@ if ($source) {
 if ($env:BUILD_BINARIESDIRECTORY) {
     $outdir = "${env:BUILD_BINARIESDIRECTORY}"
 } else {
-    $outdir = "$buildroot\BuildOutput"
+    $outdir = "$buildroot\packages"
 }
 
 
