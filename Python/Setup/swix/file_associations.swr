@@ -5,17 +5,19 @@ vs.fileAssociations
         Extension=.py
         ProgId=VisualStudio.py.[InstanceId]
         DefaultProgramRegistrationPath=$(VSDefaultProgramPath)
+        PerceivedType=text
     
     vs.fileAssociation
         Extension=.pyw
         ProgId=VisualStudio.py.[InstanceId]
         DefaultProgramRegistrationPath=$(VSDefaultProgramPath)
+        PerceivedType=text
     
     vs.fileAssociation
         Extension=.pyproj
         ProgId=VisualStudio.Launcher.pyproj.[InstanceId]
-        PerceivedType=text
         DefaultProgramRegistrationPath=$(VSDefaultProgramPath)
+        ContentType=application/xml
 
 vs.progIds
     vs.progId

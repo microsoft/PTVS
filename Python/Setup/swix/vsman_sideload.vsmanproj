@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <MergeManifest Include="product.json" />
+    <MergeManifest Include="sideload.json" />
     <MergeManifest Include="$(OutputPath)Microsoft.PythonTools*.json" />
     
     <Content Include="install.ps1" />

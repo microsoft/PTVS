@@ -48,6 +48,12 @@
         },
         "microsoft.PythonTools.ML": {
           "version": "[3.0.0.0, 4.0)"
+        },
+        "microsoft.PythonTools.Uwp": {
+          "version": "[3.0.0.0, 4.0)"
+        },
+        "microsoft.PythonTools.Uwp.Templates": {
+          "version": "[3.0.0.0, 4.0)"
         }
       },
       "localizedResources": [
