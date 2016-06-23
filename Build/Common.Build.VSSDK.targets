@@ -75,12 +75,9 @@
     <MakeDir Directories="$(SetupOutputPath)" ContinueOnError="true" />
   </Target>
 
-  <PropertyGroup>
-    <VSSDKTargets>$(PackagesPath)Microsoft.VSSDK.BuildTools\tools\VSSDK\Microsoft.VsSDK.targets</VSSDKTargets>
-  </PropertyGroup>
-  
   <!-- Import the VS SDK headers -->
-  <Import Project="$(VSSDKTargets)" Condition="Exists($(VSSDKTargets))" />
+  <Import Project="$(PackagesPath)Microsoft.VSSDK.BuildTools\build\Microsoft.VSSDK.BuildTools.targets" Condition="Exists('$(PackagesPath)Microsoft.VSSDK.BuildTools')" />
+  <Import Project="$(PackagesPath)Microsoft.VSSDK.BuildTools\tools\VSSDK\Microsoft.VsSDK.targets" Condition="Exists('$(PackagesPath)Microsoft.VSSDK.BuildTools')" />
 
   <!-- For non-debug builds, don't copy debug symbols -->
   <Target Name="_ClearVSIXSourceItemLocalOnly"
