@@ -30,6 +30,7 @@
         Microsoft.PythonTools.Profiling.dll;
         Microsoft.PythonTools.ProjectWizards.dll;
         Microsoft.PythonTools.TestAdapter.dll;
+        Microsoft.PythonTools.TestAdapter.Analysis.dll;
         Microsoft.PythonTools.VSCommon.dll;
         Microsoft.PythonTools.VSInterpreters.dll;
         Microsoft.PythonTools.WebRole.dll;
