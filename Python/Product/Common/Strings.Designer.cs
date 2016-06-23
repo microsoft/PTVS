@@ -1073,15 +1073,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This project requires Visual Studio Professional or higher, or Visual Studio Express 2013 for Web..
-        /// </summary>
-        public static string ProjectRequiresVWDExpress {
-            get {
-                return ResourceManager.GetString("ProjectRequiresVWDExpress", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to &amp;Python.
         /// </summary>
         public static string PythonMenuLabel {
@@ -1790,6 +1781,15 @@ namespace Microsoft.PythonTools {
         public static string UpgradedFlaskImports {
             get {
                 return ResourceManager.GetString("UpgradedFlaskImports", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Some internal properties have been modified in this project..
+        /// </summary>
+        public static string UpgradedImportsFor30 {
+            get {
+                return ResourceManager.GetString("UpgradedImportsFor30", resourceCulture);
             }
         }
         

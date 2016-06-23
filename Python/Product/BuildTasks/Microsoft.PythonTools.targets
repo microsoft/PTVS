@@ -18,6 +18,7 @@ permissions and limitations under the License.
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
+    <_PythonToolsPath Condition="!Exists($(_PythonToolsPath)) and $(VsInstallRoot) != ''">$(VsInstallRoot)\Common7\IDE\Extensions\Microsoft\Python\Core\</_PythonToolsPath>
     <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\PythonTools\$(VisualStudioVersion)', 'InstallDir', null, RegistryView.Registry32))</_PythonToolsPath>
     <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)\Extensions\Microsoft\Python Tools for Visual Studio\3.0</_PythonToolsPath>
     <_PythonToolsPath Condition="!HasTrailingSlash('$(_PythonToolsPath)')">$(_PythonToolsPath)\</_PythonToolsPath>
@@ -44,7 +45,7 @@ permissions and limitations under the License.
     </CreatePythonCommandItem>
   </Target>
   -->
-  <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll))"
+  <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)Microsoft.PythonTools.BuildTasks.dll))"
              TaskName="CreatePythonCommandItem"
              TaskFactory="CreatePythonCommandItemFactory">
     <Task Evaluate="true">
@@ -66,7 +67,7 @@ permissions and limitations under the License.
     <Output TaskParameter="ConsoleError" PropertyName="ErrorText" />
   </RunPythonCommand>
   -->
-  <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll))"
+  <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)Microsoft.PythonTools.BuildTasks.dll))"
              TaskName="RunPythonCommand"
              TaskFactory="RunPythonCommandFactory">
     <Task Evaluate="true">
@@ -92,7 +93,7 @@ permissions and limitations under the License.
     <Output TaskParameter="MinorVersion" PropertyName="MinorVersion" />
   </ResolveEnvironment>
   -->
-  <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll))"
+  <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)Microsoft.PythonTools.BuildTasks.dll))"
              TaskName="ResolveEnvironment"
              TaskFactory="ResolveEnvironmentFactory">
     <Task Evaluate="true">
@@ -109,7 +110,7 @@ permissions and limitations under the License.
             ItemName="Modules" />
   </ConvertPathToModuleName>
   -->
-  <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll))"
+  <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)Microsoft.PythonTools.BuildTasks.dll))"
              TaskName="ConvertPathToModuleName" />
 
   <!-- Checks whether a pattern is valid regex.
@@ -120,7 +121,7 @@ permissions and limitations under the License.
   </ValidateRegexPattern>
   -->
   
-  <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)\Microsoft.PythonTools.BuildTasks.dll))"
+  <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)Microsoft.PythonTools.BuildTasks.dll))"
              TaskName="ValidateRegexPattern" />
   
   <!-- Gets the fully qualified path to the project home.  -->

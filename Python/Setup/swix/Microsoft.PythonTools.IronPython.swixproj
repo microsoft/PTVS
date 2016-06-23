@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\SetupProjectBefore.settings" />
+
+  <PropertyGroup>
+    <BaseInstall>InstallDir:\Common7\IDE\Extensions\Microsoft\Python\IronPython</BaseInstall>
+
+    <OutputName>$(MSBuildThisFileName)</OutputName>
+    <SourcePath>$(LayoutOutputPath)$(MSBuildThisFileName)</SourcePath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Dependency Include="Microsoft.PythonTools">
+      <Version>[$(FileVersion)]</Version>
+    </Dependency>
+  </ItemGroup>
+
+  <Import Project="swix.targets" />
+</Project>
+

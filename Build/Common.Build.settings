@@ -57,8 +57,6 @@
     
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">v4.6</TargetFrameworkVersion>
     
-    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-
     <BuildRoot Condition="'$(BuildRoot)' == ''">$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), build.root))</BuildRoot>
     <BuildRoot Condition="!HasTrailingSlash($(BuildRoot))">$(BuildRoot)\</BuildRoot>
     <TargetsPath>$(BuildRoot)Build</TargetsPath>
@@ -91,9 +89,6 @@
 
     <SetupOutputPath Condition="'$(SetupOutputPath)' == ''">$(BuildOutputRoot)raw\setup\</SetupOutputPath>
     <SetupOutputPath Condition="!HasTrailingSlash($(SetupOutputPath))">$(SetupOutputPath)\</SetupOutputPath>
-
-    <FopxOutputPath Condition="'$(FopxOutputPath)' == ''">$(BuildOutputRoot)raw\fopx\</FopxOutputPath>
-    <FopxOutputPath Condition="!HasTrailingSlash($(FopxOutputPath))">$(FopxOutputPath)\</FopxOutputPath>
 
     <ToolsOutputPath Condition="'$(ToolsOutputPath)' == ''">$(BuildOutputRoot)raw\tools\</ToolsOutputPath>
     <ToolsOutputPath Condition="!HasTrailingSlash($(ToolsOutputPath))">$(ToolsOutputPath)\</ToolsOutputPath>
@@ -146,23 +141,10 @@
 
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 
-    <DevEnvDir>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\VisualStudio\$(VSTarget)', 'InstallDir', null, RegistryView.Registry32))\</DevEnvDir>
-    <VSSDKDir>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\VisualStudio\VSIP\$(VSTarget)', 'InstallDir', null, RegistryView.Registry32))\</VSSDKDir>
+    <DevEnvDir Condition="$(VsInstallRoot) != ''">$(VsInstallRoot)Common7\IDE\</DevEnvDir>
+    <DevEnvDir Condition="!Exists($(DevEnvDir))">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\VisualStudio\$(VSTarget)', 'InstallDir', null, RegistryView.Registry32))\</DevEnvDir>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <!--
-    Read the update version for the build machine so we can exclude
-    features that require a particular update to build.
-    
-    See language-specific settings files for feature preprocessor
-    definitions.
-    -->
-    <_VSUpdateVersion Condition="$(VSUpdateVersion)=='' and $(VisualStudioVersion)!='10.0'">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\DevDiv\vs\Servicing\$(VSTarget)\devenv', 'UpdateVersion', null, RegistryView.Registry32))</_VSUpdateVersion>
-    <VSMajorVersion Condition="$(VSMajorVersion)=='' and $(_VSUpdateVersion)!=''">$([System.Int32]::Parse($(_VSUpdateVersion.Substring(0, $(_VSUpdateVersion.IndexOf(`.`))))))</VSMajorVersion>
-    <VSUpdateVersion Condition="$(VSUpdateVersion)=='' and $(_VSUpdateVersion)!=''">$([System.Int32]::Parse($(_VSUpdateVersion.Substring($([MSBuild]::Add(1, $(_VSUpdateVersion.LastIndexOf(`.`))))))))</VSUpdateVersion>
-  </PropertyGroup>
-  
   <ItemDefinitionGroup>
     <!-- By default, references are never copied.
     

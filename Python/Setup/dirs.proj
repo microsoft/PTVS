@@ -3,9 +3,10 @@
 
   <ItemGroup>
     <ProjectFile Include="..\Product\dirs.proj"/>
-    <ProjectFile Include="vsix.proj"/>
-    <ProjectFile Include="fopx.proj"/>
-    <ProjectFile Include="msi.proj"/>
+    <ProjectFile Include="signlayout.proj" />
+    <ProjectFile Include="msi.proj" Condition="'$(IncludeMSI)' != 'false'" />
+    <ProjectFile Include="swix\dirs.proj"/>
+    <ProjectFile Include="release.proj"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

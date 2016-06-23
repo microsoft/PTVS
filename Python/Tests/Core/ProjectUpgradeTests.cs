@@ -105,8 +105,8 @@ namespace PythonToolsTests {
                 Assert.AreEqual(tempProject, newLocation, string.Format("Wrong location for {0}", testCase.Name));
                 if (testCase.Expected != 0) {
                     Assert.IsTrue(
-                        File.ReadAllText(tempProject).Contains("ToolsVersion=\"4.0\""),
-                        string.Format("Upgraded {0} did not contain ToolsVersion=\"4.0\"", testCase.Name)
+                        File.ReadAllText(tempProject).Contains("ToolsVersion=\"" + PythonProjectFactory.ToolsVersion + "\""),
+                        string.Format("Upgraded {0} did not contain ToolsVersion=\"" + PythonProjectFactory.ToolsVersion + "\"", testCase.Name)
                     );
                 } else {
                     Assert.IsTrue(
@@ -291,79 +291,57 @@ namespace PythonToolsTests {
                 Assert.AreEqual(project, newLocation, string.Format("Wrong location for OldCommonTargets.pyproj"));
 
                 var text = File.ReadAllText(project);
-                Assert.IsTrue(
-                    text.Contains("<Import Project=\"" + PythonProjectFactory.CommonTargets + "\" Condition=\"!Exists($(PtvsTargetsFile)"),
-                    string.Format("Upgraded OldCommonTargets.pyproj should conditionally import from $(VSToolsPath)")
-                );
-                Assert.IsTrue(
-                    text.Contains("<VisualStudioVersion"),
-                    string.Format("Upgraded OldCommonTargets.pyproj should define $(VisualStudioVersion)")
-                );
-                Assert.IsTrue(
+                Assert.IsFalse(
                     text.Contains("<PtvsTargetsFile>" + PythonProjectFactory.PtvsTargets),
-                    string.Format("Upgraded OldCommonTargets.pyproj should define $(PtvsTargetsFile)")
+                    string.Format("Upgraded OldCommonTargets.pyproj should not define $(PtvsTargetsFile)")
                 );
                 Assert.IsTrue(
-                    text.Contains("<Import Project=\"$(PtvsTargetsFile)\" Condition=\"Exists($(PtvsTargetsFile))\""),
-                    string.Format("Upgraded OldCommonTargets.pyproj should import $(PtvsTargetsFile)")
+                    text.Contains("<Import Project=\"" + PythonProjectFactory.PtvsTargets + "\""),
+                    string.Format("Upgraded OldCommonTargets.pyproj should import the Python targets directly")
                 );
                 Assert.AreEqual(Guid.Empty, factoryGuid);
             }
         }
 
         [TestMethod, Priority(1)]
-        public void WebProjectCompatibility() {
-            const int ExpressSkuValue = 500;
-            const int ShellSkuValue = 1000;
-            const int ProSkuValue = 2000;
-            const int PremiumUltimateSkuValue = 3000;
-
-            const int VWDExpressSkuValue = 0x0040;
-            const int WDExpressSkuValue = 0x8000;
-            const int PremiumSubSkuValue = 0x0080;
-            const int UltimateSubSkuValue = 0x0188;
-
-            const uint Compatible = (uint)0;
-            const uint Incompatible = (uint)__VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_INCOMPATIBLE;
-
+        public void PythonTargetsProjectUpgrade() {
             var factory = new PythonProjectFactory(null);
             var sp = new MockServiceProvider();
-            var shell = new MockVsShell();
-
             sp.Services[typeof(SVsQueryEditQuerySave).GUID] = null;
             sp.Services[typeof(SVsActivityLog).GUID] = new MockActivityLog();
-            sp.Services[typeof(SVsShell).GUID] = shell;
             factory.Site = sp;
 
-            var projectFile = TestData.GetPath(Path.Combine("TestData", "ProjectUpgrade", "WebProjectType.pyproj"));
-
-            var upgrade = (IVsProjectUpgradeViaFactory4)factory;
-
-            foreach (var testCase in new[] {
-                new { Name = "Ultimate", Sku1 = PremiumUltimateSkuValue, Sku2 = UltimateSubSkuValue, Expected = Compatible },
-                new { Name = "Premium", Sku1 = PremiumUltimateSkuValue, Sku2 = PremiumSubSkuValue, Expected = Compatible },
-                new { Name = "Professional", Sku1 = ProSkuValue, Sku2 = 0, Expected = Compatible },
-                new { Name = "VWDExpress", Sku1 = ExpressSkuValue, Sku2 = VWDExpressSkuValue, Expected = Compatible },
-                new { Name = "WDExpress", Sku1 = ExpressSkuValue, Sku2 = WDExpressSkuValue, Expected = Incompatible },
-                new { Name = "Shell", Sku1 = ShellSkuValue, Sku2 = 0, Expected = Incompatible }
-            }) {
-                uint actual;
+            var upgrade = (IVsProjectUpgradeViaFactory)factory;
+            var project = TestData.GetPath("TestData\\ProjectUpgrade\\OldPythonTargets.pyproj");
+            using (FileUtils.Backup(project)) {
+                int actual;
                 Guid factoryGuid;
-                uint flags;
+                string newLocation;
 
-                // Change the SKU for each test case.
-                shell.Properties[(int)__VSSPROPID2.VSSPROPID_SKUEdition] = testCase.Sku1;
-                shell.Properties[(int)__VSSPROPID2.VSSPROPID_SubSKUEdition] = testCase.Sku2;
-
-                upgrade.UpgradeProject_CheckOnly(
-                    projectFile,
+                var hr = upgrade.UpgradeProject(
+                    project,
+                    0u,  // no backups
+                    null,
+                    out newLocation,
                     null,
                     out actual,
-                    out factoryGuid,
-                    out flags
+                    out factoryGuid
                 );
 
-                Assert.AreEqual(testCase.Expected, actual, string.Format("Wrong result for {0}", testCase.Name));
+                Assert.AreEqual(0, hr, string.Format("Wrong HR for OldPythonTargets.pyproj"));
+                Assert.AreEqual(1, actual, string.Format("Wrong result for OldPythonTargets.pyproj"));
+                Assert.AreEqual(project, newLocation, string.Format("Wrong location for OldPythonTargets.pyproj"));
+
+                var text = File.ReadAllText(project);
+                Assert.IsFalse(
+                    text.Contains("<PtvsTargetsFile>"),
+                    string.Format("Upgraded OldPythonTargets.pyproj should not define $(PtvsTargetsFile)")
+                );
+                Assert.IsTrue(
+                    text.Contains("<Import Project=\"" + PythonProjectFactory.PtvsTargets + "\""),
+                    string.Format("Upgraded OldPythonTargets.pyproj should import the Python targets directly")
+                );
+                Assert.AreEqual(Guid.Empty, factoryGuid);
             }
         }
 

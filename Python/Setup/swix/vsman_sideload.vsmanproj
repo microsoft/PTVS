@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\SetupProjectBefore.settings" />
+
+  <PropertyGroup>
+    <!-- Define properties that drive the manifest creation here. -->
+    <FinalizeManifest>true</FinalizeManifest>
+    <FinalizeSkipLayout>true</FinalizeSkipLayout>
+
+    <BuildNumber>$(FileVersion)</BuildNumber>
+
+    <TargetName>Microsoft.PythonTools_Sideload</TargetName>
+    <OutputPath>$(SetupOutputPath)swix\</OutputPath>
+    <OutDir>$(OutputPath)</OutDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <MergeManifest Include="sideload.json" />
+    <MergeManifest Include="$(OutputPath)Microsoft.PythonTools*.json" />
+    
+    <Content Include="install.ps1" />
+  </ItemGroup>
+
+  <Target Name="_CopyContent" AfterTargets="Build" Inputs="@(Content)" Outputs="$(OutputPath)\%(Filename)%(Extension)">
+    <Copy SourceFiles="%(Content.FullPath)" DestinationFiles="$(OutputPath)%(Filename)%(Extension)" />
+  </Target>
+
+  <Import Project="..\SetupProjectAfter.settings" />
+</Project>

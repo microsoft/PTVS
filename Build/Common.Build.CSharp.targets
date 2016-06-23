@@ -19,7 +19,7 @@
   </PropertyGroup>
   <Target Name="_AddPTVSReferences">
     <PropertyGroup>
-      <AssemblySearchPaths>$(BuildRoot)Python\References\Dev$(VSTarget);$(AssemblySearchPaths);$(DevEnvDir)PrivateAssemblies</AssemblySearchPaths>
+      <AssemblySearchPaths>$(BuildRoot)Python\References\Dev$(VSTarget);$(AssemblySearchPaths);$(DevEnvDir);$(DevEnvDir)CommonExtensions\Microsoft\Editor;$(DevEnvDir)PrivateAssemblies</AssemblySearchPaths>
     </PropertyGroup>
   </Target>
 

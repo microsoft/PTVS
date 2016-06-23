@@ -1,0 +1,33 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\SetupProjectBefore.settings" />
+
+  <ItemDefinitionGroup>
+    <!--
+    We explicitly disable signing for individual projects and batch
+    sign all outputs in one go.
+    -->
+    <ProjectFile>
+      <Properties>SignType=none</Properties>
+    </ProjectFile>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <ProjectFile Include="Microsoft.PythonTools.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.Core.Templates.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.Django.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.Django.Templates.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.IronPython.swixproj" Condition="$(IncludeIronPython)"/>
+    <ProjectFile Include="Microsoft.PythonTools.IronPython.Templates.swixproj" Condition="$(IncludeIronPython)"/>
+    <ProjectFile Include="Microsoft.PythonTools.ML.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.Profiling.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.Samples.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.Uwp.swixproj" Condition="$(IncludeUwp)"/>
+    <ProjectFile Include="Microsoft.PythonTools.Uwp.Templates.swixproj" Condition="$(IncludeUwp)"/>
+    <ProjectFile Include="Microsoft.PythonTools.Web.Templates.swixproj"/>
+    <SequencedProjectFile Include="signswix.proj"/>
+    <SequencedProjectFile Include="vsman.vsmanproj"/>
+    <SequencedProjectFile Include="vsman_sideload.vsmanproj"/>
+  </ItemGroup>
+
+  <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
+</Project>

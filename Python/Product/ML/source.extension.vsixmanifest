@@ -30,6 +30,5 @@
     <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
     <Assembly AssemblyName="|%CurrentProject%;_GetAssemblyName|">|%CurrentProject%;_GetTargetPath|</Assembly>
     <MefComponent>|%CurrentProject%|</MefComponent>
-    <ProjectTemplate>ProjectTemplates</ProjectTemplate>
   </Content>
 </Vsix>

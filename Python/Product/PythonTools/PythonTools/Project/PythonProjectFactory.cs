@@ -23,7 +23,6 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
-using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>
@@ -65,6 +64,14 @@ namespace Microsoft.PythonTools.Project {
         internal const string PtvsTargets = @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets";
         internal const string WebTargets = @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets";
 
+#if DEV15
+        internal const string ToolsVersion = "15.1";
+#elif DEV14
+        internal const string ToolsVersion = "14.0";
+#else
+        internal const string ToolsVersion = "4.0";
+#endif
+
         // These GUIDs were used for well-known interpreter IDs
         private static readonly Dictionary<Guid, string> InterpreterIdMap = new Dictionary<Guid, string> {
             { new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}"), "Global|PythonCore|{0}|x86" },
@@ -72,8 +79,6 @@ namespace Microsoft.PythonTools.Project {
             { new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), "IronPython|{0}-32" },
             { new Guid("{FCC291AA-427C-498C-A4D7-4502D6449B8C}"), "IronPython|{0}-64" },
         };
-
-        
 
         public PythonProjectFactory(IServiceProvider/*!*/ package)
             : base(package) {
@@ -126,24 +131,6 @@ namespace Microsoft.PythonTools.Project {
         ) {
             Version version;
 
-            // Web projects are incompatible with WDExpress/Shell
-            ProjectPropertyElement projectType;
-            if (!IsWebProjectSupported &&
-                (projectType = projectXml.Properties.FirstOrDefault(p => p.Name == "ProjectTypeGuids")) != null) {
-                var webProjectGuid = new Guid(PythonConstants.WebProjectFactoryGuid);
-                if (projectType.Value
-                    .Split(';')
-                    .Select(s => {
-                        Guid g;
-                        return Guid.TryParse(s, out g) ? g : Guid.Empty;
-                    })
-                    .Contains(webProjectGuid)
-                ) {
-                    log(__VSUL_ERRORLEVEL.VSUL_ERROR, Strings.ProjectRequiresVWDExpress);
-                    return ProjectUpgradeState.Incompatible;
-                }
-            }
-
             // Referencing an interpreter by GUID
             if (projectXml.Properties.Where(p => p.Name == "InterpreterId").Any(IsGuidValue) ||
                 projectXml.ItemGroups.SelectMany(g => g.Items)
@@ -155,6 +142,11 @@ namespace Microsoft.PythonTools.Project {
                     .Any(IsGuidValue)
             ) {
                 return ProjectUpgradeState.OneWayUpgrade;
+            }
+
+            // Includes imports from PTVS 2.2
+            if (projectXml.Properties.Any(IsPtvsTargetsFileProperty)) {
+                return ProjectUpgradeState.SafeRepair;
             }
 
             var imports = new HashSet<string>(projectXml.Imports.Select(p => p.Project), StringComparer.OrdinalIgnoreCase);
@@ -186,14 +178,86 @@ namespace Microsoft.PythonTools.Project {
             Version version;
 
             // ToolsVersion less than 4.0 (or unspecified) is not supported, so
-            // set it to 4.0.
+            // set it to the latest.
             if (!Version.TryParse(projectXml.ToolsVersion, out version) ||
                 version < new Version(4, 0)) {
-                projectXml.ToolsVersion = "4.0";
+                projectXml.ToolsVersion = ToolsVersion;
                 log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedToolsVersion);
             }
 
             // Referencing an interpreter by GUID
+            ProcessInterpreterIdsFrom22(projectXml, log);
+
+            // Importing a targets file from 2.2
+            ProcessImportsFrom22(projectXml, log);
+
+            // Importing a targets file from 2.1 Beta
+            ProcessImportsFrom21b(projectXml, log);
+        }
+
+        private static bool IsPtvsTargetsFileProperty(ProjectPropertyElement p) {
+            return p.Name == "PtvsTargetsFile";
+        }
+
+        private static void ProcessImportsFrom22(ProjectRootElement projectXml, Action<__VSUL_ERRORLEVEL, string> log) {
+            bool anyUpdated = false;
+            var propValue = PtvsTargets;
+
+            foreach (var p in projectXml.Properties.Where(IsPtvsTargetsFileProperty).ToArray()) {
+                propValue = p.Value;
+                p.Parent.RemoveChild(p);
+                anyUpdated = true;
+            }
+
+            // Replace:
+            // <Import Condition="Exists($(PtvsTargetsFile))" Project="$(PtvsTargetsFile)" />
+            // <Import Condition="!Exists($(PtvsTargetsFile))" Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+            //
+            // With:
+            // <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+            foreach (var p in projectXml.Imports.Where(i => i.Condition.Contains("$(PtvsTargetsFile)")).ToArray()) {
+                p.Parent.RemoveChild(p);
+            }
+            projectXml.AddImport(PtvsTargets);
+
+            if (anyUpdated) {
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedImportsFor30);
+            }
+        }
+
+        private static void ProcessImportsFrom21b(ProjectRootElement projectXml, Action<__VSUL_ERRORLEVEL, string> log) {
+            var bottleImports = projectXml.Imports.Where(p => p.Project.Equals(Ptvs21BetaBottleTargets, StringComparison.OrdinalIgnoreCase)).ToList();
+            var flaskImports = projectXml.Imports.Where(p => p.Project.Equals(Ptvs21BetaFlaskTargets, StringComparison.OrdinalIgnoreCase)).ToList();
+            foreach (var import in bottleImports.Concat(flaskImports)) {
+                import.Project = WebTargets;
+            }
+
+            if (bottleImports.Any()) {
+                var globals = projectXml.PropertyGroups.FirstOrDefault() ?? projectXml.AddPropertyGroup();
+                AddOrSetProperty(globals, "PythonDebugWebServerCommandArguments", "--debug $(CommandLineArguments)");
+                AddOrSetProperty(globals, "PythonWsgiHandler", "{StartupModule}.wsgi_app()");
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedBottleImports);
+            }
+            if (flaskImports.Any()) {
+                var globals = projectXml.PropertyGroups.FirstOrDefault() ?? projectXml.AddPropertyGroup();
+                AddOrSetProperty(globals, "PythonWsgiHandler", "{StartupModule}.wsgi_app");
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedFlaskImports);
+            }
+
+            var commonPropsImports = projectXml.Imports.Where(p => p.Project.Equals(CommonProps, StringComparison.OrdinalIgnoreCase)).ToList();
+            foreach (var p in commonPropsImports) {
+                projectXml.RemoveChild(p);
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedRemoveCommonProps);
+            }
+
+            if (projectXml.Imports.Count == 1 && projectXml.Imports.First().Project.Equals(CommonTargets, StringComparison.OrdinalIgnoreCase)) {
+                projectXml.RemoveChild(projectXml.Imports.First());
+                projectXml.AddImport(PtvsTargets);
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedRemoveCommonTargets);
+            }
+        }
+
+        private static void ProcessInterpreterIdsFrom22(ProjectRootElement projectXml, Action<__VSUL_ERRORLEVEL, string> log) {
             bool interpreterChanged = false;
             var msbuildInterpreters = new Dictionary<Guid, string>();
 
@@ -244,76 +308,6 @@ namespace Microsoft.PythonTools.Project {
 
             if (interpreterChanged) {
                 log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedInterpreterReference);
-            }
-
-            // Importing a targets file from 2.1 Beta
-            var bottleImports = projectXml.Imports.Where(p => p.Project.Equals(Ptvs21BetaBottleTargets, StringComparison.OrdinalIgnoreCase)).ToList();
-            var flaskImports = projectXml.Imports.Where(p => p.Project.Equals(Ptvs21BetaFlaskTargets, StringComparison.OrdinalIgnoreCase)).ToList();
-            foreach (var import in bottleImports.Concat(flaskImports)) {
-                import.Project = WebTargets;
-            }
-
-            if (bottleImports.Any()) {
-                var globals = projectXml.PropertyGroups.FirstOrDefault() ?? projectXml.AddPropertyGroup();
-                AddOrSetProperty(globals, "PythonDebugWebServerCommandArguments", "--debug $(CommandLineArguments)");
-                AddOrSetProperty(globals, "PythonWsgiHandler", "{StartupModule}.wsgi_app()");
-                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedBottleImports);
-            }
-            if (flaskImports.Any()) {
-                var globals = projectXml.PropertyGroups.FirstOrDefault() ?? projectXml.AddPropertyGroup();
-                AddOrSetProperty(globals, "PythonWsgiHandler", "{StartupModule}.wsgi_app");
-                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedFlaskImports);
-            }
-
-            var commonPropsImports = projectXml.Imports.Where(p => p.Project.Equals(CommonProps, StringComparison.OrdinalIgnoreCase)).ToList();
-            foreach (var p in commonPropsImports) {
-                projectXml.RemoveChild(p);
-                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedRemoveCommonProps);
-            }
-            
-            if (projectXml.Imports.Count == 1 && projectXml.Imports.First().Project.Equals(CommonTargets, StringComparison.OrdinalIgnoreCase)) {
-                projectXml.RemoveChild(projectXml.Imports.First());
-                var group = projectXml.AddPropertyGroup();
-                if (!projectXml.Properties.Any(p => p.Name == "VisualStudioVersion")) {
-                    group.AddProperty("VisualStudioVersion", "10.0").Condition = "'$(VisualStudioVersion)' == ''";
-                }
-                group.AddProperty("PtvsTargetsFile", PtvsTargets);
-                projectXml.AddImport("$(PtvsTargetsFile)").Condition = "Exists($(PtvsTargetsFile))";
-                projectXml.AddImport(CommonTargets).Condition = "!Exists($(PtvsTargetsFile))";
-                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedRemoveCommonTargets);
-            }
-        }
-
-        private const int ExpressSkuValue = 500;
-        private const int ShellSkuValue = 1000;
-        private const int ProSkuValue = 2000;
-        private const int PremiumUltimateSkuValue = 3000;
-
-        private const int VWDExpressSkuValue = 0x0040;
-        private const int WDExpressSkuValue = 0x8000;
-        private const int PremiumSubSkuValue = 0x0080;
-        private const int UltimateSubSkuValue = 0x0188;
-
-        private bool IsWebProjectSupported {
-            get {
-                var shell = (IVsShell)Site.GetService(typeof(SVsShell));
-                if (shell == null) {
-                    // Outside of VS, so we're probably only here for tests.
-                    return true;
-                }
-                object obj;
-                ErrorHandler.ThrowOnFailure(shell.GetProperty((int)__VSSPROPID2.VSSPROPID_SKUEdition, out obj));
-                var sku = (obj as int?) ?? 0;
-                if (sku == ShellSkuValue) {
-                    return false;
-                } else if (sku == ExpressSkuValue) {
-                    ErrorHandler.ThrowOnFailure(shell.GetProperty((int)__VSSPROPID2.VSSPROPID_SubSKUEdition, out obj));
-                    if ((obj as int?) == WDExpressSkuValue) {
-                        return false;
-                    }
-                }
-
-                return true;
             }
         }
 
