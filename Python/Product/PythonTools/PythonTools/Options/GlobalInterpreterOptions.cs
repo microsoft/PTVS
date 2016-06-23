@@ -49,6 +49,7 @@ namespace Microsoft.PythonTools.Options {
                 DefaultInterpreter = _interpreterOptions.DefaultInterpreter.Configuration.Id;
                 DefaultInterpreterVersion = _interpreterOptions.DefaultInterpreter.Configuration.Version;
             }
+            Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Save() {
@@ -57,11 +58,15 @@ namespace Microsoft.PythonTools.Options {
                 _interpreters.Interpreters.LastOrDefault();
             DefaultInterpreter = _interpreterOptions.DefaultInterpreter.Configuration.Id;
             DefaultInterpreterVersion = _interpreterOptions.DefaultInterpreter.Configuration.Version;
-        }        
+            Changed?.Invoke(this, EventArgs.Empty);
+        }
 
         public void Reset() {
             DefaultInterpreter = string.Empty;
+            Changed?.Invoke(this, EventArgs.Empty);
         }
+
+        public event EventHandler Changed;
 
         internal void UpdateInterpreter() {
             var interpreter = _interpreters.FindInterpreter(DefaultInterpreter);

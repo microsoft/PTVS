@@ -75,6 +75,7 @@ namespace Microsoft.PythonTools.Options {
             } else {
                 CrossModuleAnalysisLimit = Convert.ToInt32(analysisLimit);
             }
+            Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Save() {
@@ -95,6 +96,7 @@ namespace Microsoft.PythonTools.Options {
             } else {
                 _pyService.SaveString(CrossModuleAnalysisLimitSetting, AdvancedCategory, "-");
             }
+            Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Reset() {
@@ -113,7 +115,10 @@ namespace Microsoft.PythonTools.Options {
             AutoAnalyzeStandardLibrary = true;
             UpdateSearchPathsWhenAddingLinkedFiles = true;
             CrossModuleAnalysisLimit = null;
+            Changed?.Invoke(this, EventArgs.Empty);
         }
+
+        public event EventHandler Changed;
 
         /// <summary>
         /// True to start analyzing an environment when it is used and has no

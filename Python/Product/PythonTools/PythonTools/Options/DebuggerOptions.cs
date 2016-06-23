@@ -43,6 +43,7 @@ namespace Microsoft.PythonTools.Options {
             TeeStandardOutput = _service.LoadBool(TeeStandardOutSetting, Category) ?? true;
             BreakOnSystemExitZero = _service.LoadBool(BreakOnSystemExitZeroSetting, Category) ?? false;
             DebugStdLib = _service.LoadBool(DebugStdLibSetting, Category) ?? false;
+            Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Save() {
@@ -52,6 +53,7 @@ namespace Microsoft.PythonTools.Options {
             _service.SaveBool(TeeStandardOutSetting, Category, TeeStandardOutput);
             _service.SaveBool(BreakOnSystemExitZeroSetting, Category, BreakOnSystemExitZero);
             _service.SaveBool(DebugStdLibSetting, Category, DebugStdLib);
+            Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Reset() {
@@ -61,7 +63,10 @@ namespace Microsoft.PythonTools.Options {
             TeeStandardOutput = true;
             BreakOnSystemExitZero = false;
             DebugStdLib = false;
+            Changed?.Invoke(this, EventArgs.Empty);
         }
+
+        public event EventHandler Changed;
 
         /// <summary>
         /// True to ask the user whether to run when their code contains errors.
