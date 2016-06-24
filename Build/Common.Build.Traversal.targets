@@ -6,6 +6,8 @@
     <MSBuildAllProjects>
       $(MSBuildAllProjects);$(TargetsPath)\Common.Build.Traversal.targets
     </MSBuildAllProjects>
+    
+    <StopOnFirstFailure Condition="$(StopOnFirstFailure) == ''">false</StopOnFirstFailure>
   </PropertyGroup>
 
   <Target Name="PrepareForBuild" />
@@ -23,8 +25,8 @@
   </Target>
 
   <Target Name="Build" DependsOnTargets="PrepareForBuild">
-    <MSBuild Projects="@(_ProjectFile)" Targets="Build"/>
-    <MSBuild Projects="@(SequencedProjectFile)" Targets="Build"/>
+    <MSBuild Projects="@(_ProjectFile)" Targets="Build" StopOnFirstFailure="$(StopOnFirstFailure)"/>
+    <MSBuild Projects="@(SequencedProjectFile)" Targets="Build" StopOnFirstFailure="$(StopOnFirstFailure)"/>
   </Target>
 
   <Target Name="BeforeBuild" BeforeTargets="Build" />
