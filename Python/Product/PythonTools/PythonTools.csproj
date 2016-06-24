@@ -234,10 +234,10 @@
       <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-      <Private>true</Private>
+      <Private>false</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-      <Private>true</Private>
+      <Private>false</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
