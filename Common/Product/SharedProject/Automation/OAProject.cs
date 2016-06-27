@@ -107,7 +107,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// Gets the Projects collection containing the Project object supporting this property.
         /// </summary>
         public virtual EnvDTE.Projects Collection {
-            get { return null; }
+            get { return new OAProjects(this.project); }
         }
 
         /// <summary>

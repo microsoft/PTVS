@@ -166,6 +166,10 @@
       <Link>SharedProject\Automation\OAProjectItems.cs</Link>
       <Visible>true</Visible>
     </Compile>
+	<Compile Include="$(_ProjectSystemFilesLocation)\Automation\OAProjects.cs">
+      <Link>SharedProject\Automation\OAProjects.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\Automation\OAProperties.cs">
       <Link>SharedProject\Automation\OAProperties.cs</Link>
       <Visible>true</Visible>
