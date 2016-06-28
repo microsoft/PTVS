@@ -8,6 +8,8 @@
   <Import Project="..\SetupProjectBefore.settings" />
 
   <ItemGroup>
+    <Package Include="$(MSBuildProjectName).res.swr" />
+
     <Dependency Include="Microsoft.PythonTools" />
     <Dependency Include="Microsoft.PythonTools.Core.Templates" />
     <Dependency Include="Microsoft.PythonTools.Web.Templates" />

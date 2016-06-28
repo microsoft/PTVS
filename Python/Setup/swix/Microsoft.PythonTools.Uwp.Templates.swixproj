@@ -8,9 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Dependency Include="Microsoft.PythonTools.Uwp">
-      <Version>[$(FileVersion)]</Version>
-    </Dependency>
+    <Dependency Include="Microsoft.PythonTools.Uwp" />
   </ItemGroup>
 
   <Import Project="swix.targets" />

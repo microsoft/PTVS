@@ -1,0 +1,6 @@
+use vs
+
+vs.localizedResources
+  vs.localizedResource language=en-us
+                       title="Python Web Development"
+                       description="yes"

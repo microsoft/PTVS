@@ -24,4 +24,4 @@ vs.payloads
 vs.detectionConditions
     vs.msiProductCondition productCode={E151A5E4-D373-4388-82FB-0C9F5F6CFB76}
                            upgradeCode={1198B6F3-495E-57CF-A923-8B4731BABED7}
-                           productVersion=[3.5.2150.0)
+                           productVersion=[3.5.2150.0,3.6.0.0)

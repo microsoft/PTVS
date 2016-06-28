@@ -8,9 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Dependency Include="Microsoft.PythonTools.Django">
-      <Version>[$(FileVersion)]</Version>
-    </Dependency>
+    <Dependency Include="Microsoft.PythonTools.Django" />
   </ItemGroup>
 
   <Import Project="swix.targets" />

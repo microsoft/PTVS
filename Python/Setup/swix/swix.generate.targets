@@ -6,6 +6,7 @@
     <GenerateCommand>$(Python) "$(MSBuildThisFileDirectory)\swix_generate.py"</GenerateCommand>
     <GenerateCommand Condition="$(Configuration) != 'Debug'">$(GenerateCommand) -x "\.pdb$"</GenerateCommand>
     <SwixPackageType Condition="$(SwixPackageType) == ''">component</SwixPackageType>
+    <SwixVersion Condition="$(SwixVersion) == ''">$(VSTarget).$(BuildNumber)</SwixVersion>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -14,7 +15,7 @@
       <ExtraOptions></ExtraOptions>
     </SwrSource>
     <Dependency>
-      <Version>[$(FileVersion))</Version>
+      <Version>[$(SwixVersion),$([msbuild]::Add($(VSTarget), 1)).0)</Version>
       <Type>Required</Type>
     </Dependency>
   </ItemDefinitionGroup>
@@ -42,7 +43,7 @@
   <Target Name="_GenerateSwrMetadata">
     <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(SwrFile)))" />
     <WriteLinesToFile File="$(SwrFile).tmp" Lines="use vs
-package name=$([System.IO.Path]::GetFileNameWithoutExtension($(OutputName))) version=$(FileVersion) vs.package.type=$(SwixPackageType)
+package name=$([System.IO.Path]::GetFileNameWithoutExtension($(OutputName))) version=$(SwixVersion) vs.package.type=$(SwixPackageType)
 " Overwrite="yes" Encoding="ASCII" />
 
     <PropertyGroup>

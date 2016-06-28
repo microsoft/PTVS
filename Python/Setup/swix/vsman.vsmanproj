@@ -8,7 +8,7 @@
     <FinalizeManifest>true</FinalizeManifest>
     <FinalizeSkipLayout>true</FinalizeSkipLayout>
 
-    <BuildNumber>$(FileVersion)</BuildNumber>
+    <BuildNumber>$(VSTarget).$(BuildNumber)</BuildNumber>
 
     <TargetName>Microsoft.PythonTools</TargetName>
     <OutputPath>$(SetupOutputPath)swix\</OutputPath>
