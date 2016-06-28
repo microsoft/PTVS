@@ -36,6 +36,7 @@
     <DefineConstants>$(DefineConstants);DEV15;DEV15_OR_LATER;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</DefineConstants>
     <VSCTDefinitions>DEV15;DEV15_OR_LATER;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</VSCTDefinitions>
     <MicrosoftBuildAssemblyVersion>15.1.0.0</MicrosoftBuildAssemblyVersion>
+    <MicrosoftBuildEngineAssemblyVersion>15.0.0.0</MicrosoftBuildEngineAssemblyVersion>
     <MicrosoftBuildAssemblyVersionSuffix>Core</MicrosoftBuildAssemblyVersionSuffix>
   </PropertyGroup>
   
@@ -43,6 +44,7 @@
     <DefineConstants>$(DefineConstants);DEV14;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</DefineConstants>
     <VSCTDefinitions>DEV14;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</VSCTDefinitions>
     <MicrosoftBuildAssemblyVersion>14.0.0.0</MicrosoftBuildAssemblyVersion>
+    <MicrosoftBuildEngineAssemblyVersion>14.0.0.0</MicrosoftBuildEngineAssemblyVersion>
     <MicrosoftBuildAssemblyVersionSuffix>Core</MicrosoftBuildAssemblyVersionSuffix>
   </PropertyGroup>
   
