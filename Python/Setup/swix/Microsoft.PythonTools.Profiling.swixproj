@@ -4,8 +4,6 @@
 
   <PropertyGroup>
     <BaseInstall>InstallDir:\Common7\IDE\Extensions\Microsoft\Python\Profiling</BaseInstall>
-
-    <OutputName>$(MSBuildThisFileName)</OutputName>
     <SourcePath>$(LayoutOutputPath)$(MSBuildThisFileName)</SourcePath>
   </PropertyGroup>
 

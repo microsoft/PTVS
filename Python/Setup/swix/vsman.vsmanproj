@@ -16,7 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <MergeManifest Include="$(OutputPath)Microsoft.PythonTools*.json" />
+    <MergeManifest Include="$(OutputPath)*.json" />
   </ItemGroup>
 
   <Import Project="..\SetupProjectAfter.settings" />

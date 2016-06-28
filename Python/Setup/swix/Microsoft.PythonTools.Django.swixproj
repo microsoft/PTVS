@@ -5,8 +5,6 @@
   <PropertyGroup>
     <BaseInstall>InstallDir:\Common7\IDE\Extensions\Microsoft\Python\Django</BaseInstall>
     <TargetsBaseInstall>InstallDir:\MSBuild\Microsoft\VisualStudio\v$(VSTarget)\Python Tools</TargetsBaseInstall>
-
-    <OutputName>$(MSBuildThisFileName)</OutputName>
     <SourcePath>$(LayoutOutputPath)$(MSBuildThisFileName)</SourcePath>
   </PropertyGroup>
 

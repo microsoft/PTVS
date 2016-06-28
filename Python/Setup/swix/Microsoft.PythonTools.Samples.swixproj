@@ -4,8 +4,6 @@
 
   <PropertyGroup>
     <SourcePath>$(BuildRoot)\Python\Templates\Samples</SourcePath>
-
-    <OutputName>$(MSBuildThisFileName)</OutputName>
     <BaseInstall>InstallDir:\Common7\IDE</BaseInstall>
   </PropertyGroup>
 

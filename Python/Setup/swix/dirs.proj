@@ -24,6 +24,9 @@
     <ProjectFile Include="Microsoft.PythonTools.Uwp.swixproj" Condition="'$(IncludeUwp)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.Uwp.Templates.swixproj" Condition="'$(IncludeUwp)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.Web.Templates.swixproj"/>
+    <ProjectFile Include="python3x64.swixproj"/>
+    <ProjectFile Include="python2x64.swixproj"/>
+    <ProjectFile Include="Microsoft.VisualStudio.Workload.Python.swixproj"/>
     <SequencedProjectFile Include="signswix.proj"/>
     <SequencedProjectFile Include="vsman.vsmanproj"/>
     <SequencedProjectFile Include="vsman_sideload.vsmanproj"/>

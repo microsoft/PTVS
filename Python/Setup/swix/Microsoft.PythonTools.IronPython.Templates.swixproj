@@ -4,8 +4,6 @@
 
   <PropertyGroup>
     <SourcePath>$(BuildRoot)\Python\Templates\IronPython</SourcePath>
-
-    <OutputName>$(MSBuildThisFileName)</OutputName>
     <BaseInstall>InstallDir:\Common7\IDE</BaseInstall>
   </PropertyGroup>
 

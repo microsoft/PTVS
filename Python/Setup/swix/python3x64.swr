@@ -1,0 +1,27 @@
+use vs
+
+package name=Python3x64
+        version=3.5.2
+        vs.package.type=exe
+        vs.package.installSize=136314880
+        license=https://docs.python.org/3/license.html
+
+vs.installCommand fileName=[Payload]
+                  parameters="/quiet InstallAllUsers=1 CompileAll=1 Include_symbols=1"
+
+vs.repairCommand fileName=[Payload]
+                 parameters="/quiet /repair"
+
+vs.uninstallCommand fileName=[Payload]
+                    parameters="/quiet /uninstall"
+
+vs.payloads
+    vs.payload size=38797312
+               url=https://www.python.org/ftp/python/3.5.2/python-3.5.2-amd64-webinstall.exe
+               fileName=python-3.5.2-amd64-webinstall.exe
+               sha256=d96dd3d77721fc33da32ccbe0c86a69474558f963768977256b4ea8a6a326a38
+
+vs.detectionConditions
+    vs.msiProductCondition productCode={E151A5E4-D373-4388-82FB-0C9F5F6CFB76}
+                           upgradeCode={1198B6F3-495E-57CF-A923-8B4731BABED7}
+                           productVersion=[3.5.2150.0)
