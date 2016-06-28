@@ -35,7 +35,7 @@
   <PropertyGroup Condition=" '$(VSTarget)' == '15.0' ">
     <DefineConstants>$(DefineConstants);DEV15;DEV15_OR_LATER;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</DefineConstants>
     <VSCTDefinitions>DEV15;DEV15_OR_LATER;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</VSCTDefinitions>
-    <MicrosoftBuildAssemblyVersion>15.0.0.0</MicrosoftBuildAssemblyVersion>
+    <MicrosoftBuildAssemblyVersion>15.1.0.0</MicrosoftBuildAssemblyVersion>
     <MicrosoftBuildAssemblyVersionSuffix>Core</MicrosoftBuildAssemblyVersionSuffix>
   </PropertyGroup>
   
