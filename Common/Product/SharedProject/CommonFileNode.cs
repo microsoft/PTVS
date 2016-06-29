@@ -164,11 +164,12 @@ namespace Microsoft.VisualStudioTools.Project {
             FileDocumentManager manager = this.GetDocumentManager() as FileDocumentManager;
             Utilities.CheckNotNull(manager, "Could not get the FileDocumentManager");
 
-            Guid viewGuid =
-                (IsFormSubType ? VSConstants.LOGVIEWID_Designer : VSConstants.LOGVIEWID_Code);
-            IVsWindowFrame frame;
-            manager.Open(false, false, viewGuid, out frame, WindowFrameShowAction.Show);
-        }
+			if (IsFormSubType)
+				manager.Open(false, false, VSConstants.LOGVIEWID_Designer, out frame, WindowFrameShowAction.Show);
+			else
+				//manager.Open(false, false, VSConstants.LOGVIEWID_Code, out frame, WindowFrameShowAction.Show);    // Do not use, as in VS2010 css files are opened as plain text
+				manager.Open(false, false, WindowFrameShowAction.Show);
+		}
 
         private static Guid CLSID_VsTextBuffer = new Guid("{8E7B96A8-E33D-11d0-A6D5-00C04FB67F6A}");
 
