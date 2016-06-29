@@ -164,6 +164,7 @@ namespace Microsoft.VisualStudioTools.Project {
             FileDocumentManager manager = this.GetDocumentManager() as FileDocumentManager;
             Utilities.CheckNotNull(manager, "Could not get the FileDocumentManager");
 
+			IVsWindowFrame frame;
 			if (IsFormSubType)
 				manager.Open(false, false, VSConstants.LOGVIEWID_Designer, out frame, WindowFrameShowAction.Show);
 			else
