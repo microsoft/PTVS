@@ -25,9 +25,11 @@
     </Dependency>
     <Dependency Include="Python3x64">
       <Type>Optional</Type>
+      <Version>[3.5,3.6)</Version>
     </Dependency>
     <Dependency Include="Python2x64">
       <Type>Optional</Type>
+      <Version>[2.7,2.8)</Version>
     </Dependency>
   </ItemGroup>
 

@@ -20,10 +20,6 @@
     </Dependency>
   </ItemDefinitionGroup>
 
-  <ItemGroup>
-    <Package Include="$(SwrFile)" />
-  </ItemGroup>
-  
   <ItemGroup Condition="'$(SourcePath)' != '' and '$(TargetsBaseInstall)' == ''">
     <SwrSource Include="$(SourcePath)"  />
   </ItemGroup>
@@ -40,7 +36,7 @@
     </SwrSource>
   </ItemGroup>
 
-  <Target Name="_GenerateSwrMetadata">
+  <Target Name="_GenerateSwrMetadata" Condition="@(SwrSource) != '' or @(Dependency) != ''">
     <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(SwrFile)))" />
     <WriteLinesToFile File="$(SwrFile).tmp" Lines="use vs
 package name=$([System.IO.Path]::GetFileNameWithoutExtension($(OutputName))) version=$(SwixVersion) vs.package.type=$(SwixPackageType)
@@ -53,9 +49,13 @@ package name=$([System.IO.Path]::GetFileNameWithoutExtension($(OutputName))) ver
 <WriteLinesToFile File="$(SwrFile).tmp" Lines="vs.dependencies
 $(_Dependencies)
 " Overwrite="no" Encoding="ASCII" Condition="$(_Dependencies) != ''" />
+
+    <ItemGroup>
+      <Package Include="$(SwrFile)" />
+    </ItemGroup>
   </Target>
 
-  <Target Name="_GenerateSwrFromSources">
+  <Target Name="_GenerateSwrFromSources" Condition="@(SwrSource) != ''">
     <Exec Command="$(GenerateCommand) %(SwrSource.ExtraOptions) -s &quot;%(SwrSource.FullPath)&quot; -b &quot;%(SwrSource.BaseInstall)&quot; -o &quot;$(SwrFile).tmp&quot;" />
   </Target>
 
