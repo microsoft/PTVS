@@ -314,7 +314,7 @@ namespace Microsoft.VisualStudioTools.Project {
             Control.Size = new Size(r.right - r.left, r.bottom - r.top);
         }
 
-        void IPropertyPage.SetObjects(uint count, object[] punk) {
+        public virtual void SetObjects(uint count, object[] punk) {
             if (punk == null) {
                 return;
             }
