@@ -271,12 +271,12 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         int IPropertyPage.Apply() {
-            try {
+            //try {
                 Apply();
                 return VSConstants.S_OK;
-            } catch (Exception e) {
-                return Marshal.GetHRForException(e);
-            }
+            //} catch (Exception e) {
+            //    return Marshal.GetHRForException(e);  // catching exception causes VS to ignore it completely, throw is important!
+            //}
         }
 
         void IPropertyPage.Deactivate() {
