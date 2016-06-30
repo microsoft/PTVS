@@ -22,6 +22,12 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 
 namespace TestAdapterTests {
     class MockRunContext : IRunContext {
+        private readonly IRunSettings _runSettings;
+
+        public MockRunContext(IRunSettings runSettings) {
+            _runSettings = runSettings;
+        }
+
         public ITestCaseFilterExpression GetTestCaseFilter(IEnumerable<string> supportedProperties, Func<string, TestProperty> propertyProvider) {
             throw new NotImplementedException();
         }
@@ -50,8 +56,6 @@ namespace TestAdapterTests {
             get { throw new NotImplementedException(); }
         }
 
-        public IRunSettings RunSettings {
-            get { throw new NotImplementedException(); }
-        }
+        public IRunSettings RunSettings => _runSettings;
     }
 }
