@@ -5247,7 +5247,7 @@ If the files in the existing folder have the same names as files in the folder y
             this.sccAuxPath = this.GetProjectProperty(ProjectFileConstants.SccAuxPath, false);
         }
 
-        internal void OnAfterProjectOpen() {
+        internal virtual void OnAfterProjectOpen() {
             this.projectOpened = true;
         }
 
