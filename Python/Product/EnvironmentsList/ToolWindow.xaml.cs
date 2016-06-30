@@ -309,9 +309,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             lock (_environmentsLock) {
                 if (select == null) {
                     var selectView = _environmentsView.View.CurrentItem as EnvironmentView;
-                    if (selectView != null) {
-                        select = selectView.Factory.Configuration.Id;
-                    }
+                    select = selectView?.Factory?.Configuration.Id;
                 }
 
                 _environments.Merge(
