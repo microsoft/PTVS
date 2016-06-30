@@ -1,5 +1,5 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\SetupProjectBefore.settings" />
+  <Import Project="..\..\SetupProjectBefore.settings" />
   
   <PropertyGroup>
     <ProjectGuid>{6AE79541-B1A5-4C40-B431-87252F08157F}</ProjectGuid>
