@@ -4033,7 +4033,7 @@ namespace Microsoft.VisualStudioTools.Project {
                                 }
                             }
                             // https://pytools.codeplex.com/workitem/1251
-                            ErrorHandler.ThrowOnFailure(child.IncludeInProject(false));
+                            ErrorHandler.ThrowOnFailure(child.IncludeInProjectWithRefresh(false));
                         }
                         result[0] = VSADDRESULT.ADDRESULT_Cancel;
                         continue;
@@ -4181,7 +4181,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 if (overwrite) {
                     if (child.IsNonMemberItem) {
-                        ErrorHandler.ThrowOnFailure(child.IncludeInProject(false));
+                        ErrorHandler.ThrowOnFailure(child.IncludeInProjectWithRefresh(false));
                     }
                 } else if (linkedFile != null || isLink) {
                     // files not moving, add the old name, and set the link.
@@ -4266,7 +4266,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 n.AddChild(newChild);
                 targetFolder = newChild;
             } else if (targetFolder.IsNonMemberItem) {
-                int hr = targetFolder.IncludeInProject(true);
+                int hr = targetFolder.IncludeInProjectWithRefresh(true);
                 if (ErrorHandler.Succeeded(hr)) {
                     OnInvalidateItems(targetFolder.Parent);
                 }

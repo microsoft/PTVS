@@ -300,8 +300,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
                 ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
             }
-            ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
-            return VSConstants.S_OK;
+			// PERFORMANCE: call it once only! // ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+			return VSConstants.S_OK;
         }
 
         internal override int IncludeInProject(bool includeChildren) {
@@ -328,15 +328,16 @@ namespace Microsoft.VisualStudioTools.Project {
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
             ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
 
-            // https://nodejstools.codeplex.com/workitem/273, refresh the property browser...
-            ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+			// PERFORMANCE: (99%) call it once only!
+			//// https://nodejstools.codeplex.com/workitem/273, refresh the property browser...
+			//((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
 
-            if (CommonUtils.IsSamePath(ProjectMgr.GetStartupFile(), Url)) {
-                ProjectMgr.BoldItem(this, true);
-            }
-            
-            // On include, the file should be added to source control.
-            this.ProjectMgr.Tracker.OnItemAdded(this.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);
+			//if (CommonUtils.IsSamePath(ProjectMgr.GetStartupFile(), Url)) {
+			//    ProjectMgr.BoldItem(this, true);
+			//}
+
+			// On include, the file should be added to source control.
+			this.ProjectMgr.Tracker.OnItemAdded(this.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);
 
             return VSConstants.S_OK;
         }

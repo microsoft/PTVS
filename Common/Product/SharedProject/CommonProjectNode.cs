@@ -433,7 +433,7 @@ namespace Microsoft.VisualStudioTools.Project {
             _currentMerger = null;
         }
 
-        private void BoldStartupItem() {
+        internal void BoldStartupItem() {
             var startupPath = GetStartupFile();
             if (!string.IsNullOrEmpty(startupPath)) {
                 var startup = FindNodeByFullPath(startupPath);
