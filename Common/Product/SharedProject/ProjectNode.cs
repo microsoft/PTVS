@@ -967,7 +967,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     return this.Caption;
 
                 case __VSHPROPID.VSHPROPID_ProjectDir:
-                    return this.ProjectFolder;
+                    return this.ProjectHome;
 
                 case __VSHPROPID.VSHPROPID_TypeName:
                     return this.ProjectType;
