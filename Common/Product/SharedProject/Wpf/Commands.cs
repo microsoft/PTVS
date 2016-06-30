@@ -76,8 +76,12 @@ namespace Microsoft.VisualStudioTools.Wpf {
             if (!tb.AcceptsReturn) {
                 var path = e.Parameter as string ?? tb.GetValue(TextBox.TextProperty) as string;
                 while (!string.IsNullOrEmpty(path) && !Directory.Exists(path)) {
-                    path = Path.GetDirectoryName(path);
-                }
+					try {
+						path = Path.GetDirectoryName(path);
+					} catch {
+						path = null;  // path was in incorrect format, continue with default (current) directory
+					}
+				}
                 path = Dialogs.BrowseForDirectory(
                     window == null ? IntPtr.Zero : new WindowInteropHelper(window).Handle,
                     path
