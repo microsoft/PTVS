@@ -17,7 +17,7 @@
 using System.ComponentModel.Composition;
 using TestUtilities.SharedProject;
 
-namespace Microsoft.Nodejs.Tests.UI {
+namespace PythonToolsUITests {
     public sealed class PythonTestDefintions {
         [Export]
         [ProjectExtension(".pyproj")]
