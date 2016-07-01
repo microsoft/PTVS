@@ -1,0 +1,8 @@
+use vs
+
+package name=Python2x64
+        version=2.7.12
+        vs.package.type=component
+
+vs.dependencies
+    vs.dependency id=Python2x64.Exe version=[2.7.12]

@@ -1,0 +1,6 @@
+use vs
+
+vs.localizedResources
+  vs.localizedResource language=en-us
+                       title="Python sample projects"
+                       description="A set of sample projects for Python."

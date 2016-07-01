@@ -1,0 +1,25 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\SetupProjectBefore.settings" />
+
+  <ItemDefinitionGroup>
+    <ProjectFile>
+      <Properties>SignType=none</Properties>
+      <Targets>_GeneratePackage;Build</Targets>
+    </ProjectFile>
+  </ItemDefinitionGroup>
+
+  <PropertyGroup>
+    <StopOnFirstFailure>true</StopOnFirstFailure>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectFile Include="CPython2x64.swixproj"/>
+    <ProjectFile Include="CPython3x64.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.Samples.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.Uwp.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.Web.swixproj"/>
+  </ItemGroup>
+
+  <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
+</Project>
