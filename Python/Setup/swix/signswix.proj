@@ -3,7 +3,7 @@
     <IntermediateOutputPathSuffix>signlayout\</IntermediateOutputPathSuffix>
   </PropertyGroup>
   
-  <Import Project="..\SetupProjectBefore.settings" />
+  <Import Project="SetupProjectBefore.settings" />
   <Import Project="$(TargetsPath)\Common.Shim.targets" />
   
   <ItemGroup>
