@@ -5,4 +5,4 @@ package name=CPython2x64
         vs.package.type=component
 
 vs.dependencies
-    vs.dependency id=CPython2x64.Exe version=[2.7.12]
+    vs.dependency id=CPython2x64.Msi version=[2.7.12]

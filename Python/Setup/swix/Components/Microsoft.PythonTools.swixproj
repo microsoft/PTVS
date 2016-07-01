@@ -5,10 +5,10 @@
   <ItemGroup>
     <Dependency Include="Microsoft.PythonTools.Core.Vsix" />
     <Dependency Include="Microsoft.PythonTools.Core.Templates.Vsix" />
-    <Dependency Include="Microsoft.PythonTools.Core.IronPython.Vsix" />
-    <Dependency Include="Microsoft.PythonTools.Core.IronPython.Templates.Vsix" />
-    <Dependency Include="Microsoft.PythonTools.Core.Profiling.Vsix" />
-    <Dependency Include="Microsoft.PythonTools.Core.ML.Vsix" />
+    <Dependency Include="Microsoft.PythonTools.IronPython.Vsix" />
+    <Dependency Include="Microsoft.PythonTools.IronPython.Templates.Vsix" />
+    <Dependency Include="Microsoft.PythonTools.Profiling.Vsix" />
+    <Dependency Include="Microsoft.PythonTools.ML.Vsix" />
   </ItemGroup>
 
   <Import Project="SetupProjectAfter.settings" />
