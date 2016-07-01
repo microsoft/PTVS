@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Dependency Include="Microsoft.PythonTools.Vsix" />
+    <Dependency Include="Microsoft.PythonTools.Core.Vsix" />
   </ItemGroup>
 
   <Import Project="SetupProjectAfter.settings" />
