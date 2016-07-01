@@ -1,0 +1,6 @@
+use vs
+
+vs.localizedResources
+  vs.localizedResource language=en-us
+                       title="CPython 2.7"
+                       description="yes"

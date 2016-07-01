@@ -8,12 +8,12 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
-    <ProjectFile Include="Django\Django.wixproj"/>
-    <ProjectFile Include="IronPythonInterpreter\IronPythonInterpreter.wixproj" Condition="'$(IncludeIronPython)' == 'True'"/>
-    <ProjectFile Include="Uwp\Uwp.wixproj" Condition="'$(IncludeUwp)' == 'True'"/>
-    <ProjectFile Include="PythonTools\PythonTools.wixproj"/>
-    <ProjectFile Include="PythonProfiling\PythonProfiling.wixproj"/>
-    <ProjectFile Include="PythonToolsInstaller\PythonToolsInstaller.wixproj"/>
+    <ProjectFile Include="msi\Django\Django.wixproj" Condition="'$(IncludeDjango)' == 'True'"/>
+    <ProjectFile Include="msi\IronPythonInterpreter\IronPythonInterpreter.wixproj" Condition="'$(IncludeIronPython)' == 'True'"/>
+    <ProjectFile Include="msi\Uwp\Uwp.wixproj" Condition="'$(IncludeUwp)' == 'True'"/>
+    <ProjectFile Include="msi\PythonTools\PythonTools.wixproj"/>
+    <ProjectFile Include="msi\PythonProfiling\PythonProfiling.wixproj"/>
+    <ProjectFile Include="msi\PythonToolsInstaller\PythonToolsInstaller.wixproj"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

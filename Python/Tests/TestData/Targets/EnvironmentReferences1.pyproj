@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
-    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-  </PropertyGroup>
-  <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{9395CB0A-8706-4049-BE9E-257A0C9945B7}</ProjectGuid>
@@ -29,7 +25,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Interpreter Include="env\">
-      <Id>{f7bb6716-ecef-4beb-87b9-2a60d1565ffe}</Id>
+      <Id>env</Id>
       <BaseInterpreter>Global|PythonCore|2.7|x86</BaseInterpreter>
       <Version>2.7</Version>
       <Description>env (Python 2.7)</Description>
@@ -39,7 +35,7 @@
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
     </Interpreter>
     <Interpreter Include="env2\">
-      <Id>{eb7f27e8-1110-4bfa-9678-8ec954a484fa}</Id>
+      <Id>env2</Id>
       <BaseInterpreter>Global|PythonCore|2.7|x86</BaseInterpreter>
       <Version>3.3</Version>
       <Description>env2 (Python 3.3)</Description>
@@ -51,7 +47,7 @@
     <InterpreterReference Include="Global|PythonCore|2.7|x86" />
   </ItemGroup>
   
-  <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 
   <Target Name="TestResolveEnvironment">
     <ResolveEnvironment>

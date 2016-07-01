@@ -31,12 +31,12 @@
       <Description>Invalid Id</Description>
     </Interpreter>
     <Interpreter Include="env\">
-      <Id>{38bdb23a-7f31-47d9-9b0d-6ed2543d0810}</Id>
+      <Id>env</Id>
       <Version>INVALID VERSION</Version>
       <Description>Invalid Version</Description>
     </Interpreter>
     <Interpreter Include="env\">
-      <Id>{094463e9-fdeb-440a-b32f-115e183fcd4e}</Id>
+      <Id>env</Id>
       <BaseInterpreter>INVALID BASE</BaseInterpreter>
       <Version>2.7</Version>
       <Description>Invalid BaseInterpreter</Description>
@@ -46,7 +46,7 @@
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
     </Interpreter>
     <Interpreter Include="env\">
-      <Id>{8bb1b906-9f84-4bdf-ba38-3c9f5010671c}</Id>
+      <Id>env</Id>
       <Version>2.7</Version>
       <Description>Invalid InterpreterPath</Description>
       <InterpreterPath>INVALID&lt;&gt;PATH</InterpreterPath>
@@ -55,7 +55,7 @@
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
     </Interpreter>
     <Interpreter Include="env\">
-      <Id>{2d5f440a-3fef-4799-8089-29a81f42f37f}</Id>
+      <Id>env</Id>
       <Version>2.7</Version>
       <Description>Invalid WindowsInterpreterPath</Description>
       <InterpreterPath>Scripts\python.exe</InterpreterPath>
@@ -64,7 +64,7 @@
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
     </Interpreter>
     <Interpreter Include="env\">
-      <Id>{b7f35585-ff28-4f36-9a37-7cce2fb3965e}</Id>
+      <Id>env</Id>
       <Version>2.7</Version>
       <Description>Invalid LibraryPath</Description>
       <InterpreterPath>Scripts\python.exe</InterpreterPath>
@@ -73,8 +73,8 @@
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
     </Interpreter>
     <Interpreter Include="env\">
-      <Id>{9c35766f-1054-485a-b430-3b2c6ede3138}</Id>
-      <BaseInterpreter>{98512745-4ac7-4abb-9f33-120af32edc77}</BaseInterpreter>
+      <Id>env</Id>
+      <BaseInterpreter>Global|PythonCore|2.8|32-bit</BaseInterpreter>
       <Version>2.7</Version>
       <Description>Absent BaseInterpreter</Description>
       <InterpreterPath>Scripts\python.exe</InterpreterPath>
@@ -82,12 +82,7 @@
       <LibraryPath>Lib\</LibraryPath>
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
     </Interpreter>
-    <InterpreterReference Include="{C8FC2350-F002-49C2-B8A5-741E3E3F09F5}\2.7" />
+    <InterpreterReference Include="MissingInterpreterId" />
   </ItemGroup>
-  <PropertyGroup>
-    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
-    <PtvsTargetsFile>$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets</PtvsTargetsFile>
-  </PropertyGroup>
-  <Import Condition="Exists($(PtvsTargetsFile))" Project="$(PtvsTargetsFile)" />
-  <Import Condition="!Exists($(PtvsTargetsFile))" Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

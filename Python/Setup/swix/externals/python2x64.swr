@@ -1,0 +1,21 @@
+use vs
+
+package name=Python2x64
+        version=2.7.12
+        vs.package.type=msi
+        vs.package.installSize=136314880
+        license=https://docs.python.org/2.7/license.html
+
+vs.msiProperties
+    vs.msiProperty name="ALLUSERS" value="1"
+
+vs.payloads
+    vs.payload size=19820544
+               url=https://www.python.org/ftp/python/2.7.12/python-2.7.12.amd64.msi
+               fileName=python-2.7.12.amd64.msi
+               sha256=909fded3cca65feaf9e1db943e886586eb27f0f4396c977868ad6489063a3912
+
+vs.detectionConditions
+    vs.msiProductCondition productCode={9DA28CE5-0AA5-429E-86D8-686ED898C666}
+                           upgradeCode={6A965A0C-6EE6-4E3A-9983-3263F56311EC}
+                           productVersion=[2.7.12150.0,2.8.0.0)

@@ -4,15 +4,11 @@
 
   <PropertyGroup>
     <BaseInstall>InstallDir:\Common7\IDE\Extensions\Microsoft\Python\IronPython</BaseInstall>
-
-    <OutputName>$(MSBuildThisFileName)</OutputName>
     <SourcePath>$(LayoutOutputPath)$(MSBuildThisFileName)</SourcePath>
   </PropertyGroup>
 
   <ItemGroup>
-    <Dependency Include="Microsoft.PythonTools">
-      <Version>[$(FileVersion)]</Version>
-    </Dependency>
+    <Dependency Include="Microsoft.PythonTools" />
   </ItemGroup>
 
   <Import Project="swix.targets" />

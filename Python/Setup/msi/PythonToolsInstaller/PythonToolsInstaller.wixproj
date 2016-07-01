@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\SetupProjectBefore.settings" />
+  <Import Project="..\..\SetupProjectBefore.settings" />
   <PropertyGroup>
     <ProductVersion>3.5</ProductVersion>
     <ProjectGuid>{4D1D8D10-CEAD-4BA5-ACB2-47B012868050}</ProjectGuid>
@@ -12,6 +12,7 @@
       $(DefineConstants);
       IncludeUwp=$(IncludeUwp);
       IncludeIronPython=$(IncludeIronPython);
+      IncludeDjango=$(IncludeDjango);
     </DefineConstants>
     <DefineConstants Condition="$(VSTarget) == '14.0'">
       $(DefineConstants);
@@ -56,23 +57,23 @@
     <Content Include="PythonToolsInstallerVars.wxi" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(BuildRoot)\Python\Setup\PythonProfiling\PythonProfiling.wixproj">
+    <ProjectReference Include="..\PythonProfiling\PythonProfiling.wixproj">
       <Name>PythonProfiling</Name>
       <Project>{C7D3FCEB-47DA-4539-8D20-6B9047BAC3F7}</Project>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)\Python\Setup\PythonTools\PythonTools.wixproj">
+    <ProjectReference Include="..\PythonTools\PythonTools.wixproj">
       <Name>PythonTools</Name>
       <Project>{0D7C4C3A-A08F-4B91-BD1C-C4C79C013484}</Project>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)\Python\Setup\IronPythonInterpreter\IronPythonInterpreter.wixproj" Condition="'$(INcludeIronPython)' == 'True'">
+    <ProjectReference Include="..\IronPythonInterpreter\IronPythonInterpreter.wixproj" Condition="'$(IncludeIronPython)' == 'True'">
       <Name>IronPythonInterpreterMsm</Name>
       <Project>{92851481-9141-480E-A85D-85120766949C}</Project>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)\Python\Setup\Django\Django.wixproj">
+    <ProjectReference Include="..\Django\Django.wixproj" Condition="'$(IncludeDjango)' == 'True'">
       <Name>DjangoMsm</Name>
       <Project>{16671BE6-DD23-41D9-841A-0B80D47A090D}</Project>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)\Python\Setup\Uwp\Uwp.wixproj">
+    <ProjectReference Include="..\Uwp\Uwp.wixproj">
       <Name>UwpMsm</Name>
       <Project>{83946E81-7A1B-4D3B-927F-4CD67AC95BE7}</Project>
     </ProjectReference>
@@ -87,5 +88,5 @@
       <EmbeddedResource Remove="Strings15.0.wxl" Condition="'$(VSTarget)' != '15.0'" />
     </ItemGroup>
   </Target>
-  <Import Project="..\SetupProjectAfter.settings" />
+  <Import Project="..\..\SetupProjectAfter.settings" />
 </Project>

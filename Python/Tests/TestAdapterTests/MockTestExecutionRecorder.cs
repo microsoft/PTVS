@@ -23,6 +23,7 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 namespace TestAdapterTests {
     class MockTestExecutionRecorder : IFrameworkHandle {
         public readonly List<TestResult> Results = new List<TestResult>();
+        public readonly List<string> Messages = new List<string>();
 
         public bool EnableShutdownAfterTestRun {
             get {
@@ -50,6 +51,7 @@ namespace TestAdapterTests {
         }
 
         public void SendMessage(TestMessageLevel testMessageLevel, string message) {
+            Messages.Add(string.Format("{0}:{1}", testMessageLevel, message));
         }
     }
 }
