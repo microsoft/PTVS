@@ -4,7 +4,7 @@
 
   <PropertyGroup>
     <BaseInstall>InstallDir:\Common7\IDE\Extensions\Microsoft\Python\IronPython</BaseInstall>
-    <SourcePath>$(LayoutOutputPath)$(MSBuildThisFileName)</SourcePath>
+    <SourcePath>$(LayoutOutputPath)Microsoft.PythonTools.IronPython</SourcePath>
   </PropertyGroup>
 
   <ItemGroup>
