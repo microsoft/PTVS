@@ -141,7 +141,7 @@
 
     <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
 
-    <DevEnvDir Condition="$(VsInstallRoot) != ''">$(VsInstallRoot)Common7\IDE\</DevEnvDir>
+    <DevEnvDir Condition="$(VsInstallRoot) != ''">$(VsInstallRoot)\Common7\IDE\</DevEnvDir>
     <DevEnvDir Condition="!Exists($(DevEnvDir))">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\VisualStudio\$(VSTarget)', 'InstallDir', null, RegistryView.Registry32))\</DevEnvDir>
   </PropertyGroup>
 

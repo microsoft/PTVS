@@ -1,7 +1,7 @@
 {
   "manifestVersion": "1.0",
   "info": {
-    "id": "Microsoft.PythonTools_Sideload,version=3.0.0.0"
+    "id": "Microsoft.PythonTools_Sideload,version=15.0.0.0"
   },
   "packages": [
     {
@@ -20,40 +20,40 @@
       "language": "en-us",
       "dependencies": {
         "microsoft.PythonTools": {
-          "version": "[3.0.0.0, 4.0)"
+          "version": "[15.0, 16.0)"
         },
         "microsoft.PythonTools.Core.Templates": {
-          "version": "[3.0.0.0, 4.0)"
+          "version": "[15.0, 16.0)"
         },
         "microsoft.PythonTools.Web.Templates": {
-          "version": "[3.0.0.0, 4.0)"
+          "version": "[15.0, 16.0)"
         },
         "microsoft.PythonTools.Profiling": {
-          "version": "[3.0.0.0, 4.0)"
+          "version": "[15.0, 16.0)"
         },
         "microsoft.PythonTools.Samples": {
-          "version": "[3.0.0.0, 4.0)"
+          "version": "[15.0, 16.0)"
         },
         "microsoft.PythonTools.Django": {
-          "version": "[3.0.0.0, 4.0)"
+          "version": "[15.0, 16.0)"
         },
         "microsoft.PythonTools.Django.Templates": {
-          "version": "[3.0.0.0, 4.0)"
+          "version": "[15.0, 16.0)"
         },
         "microsoft.PythonTools.IronPython": {
-          "version": "[3.0.0.0, 4.0)"
+          "version": "[15.0, 16.0)"
         },
         "microsoft.PythonTools.IronPython.Templates": {
-          "version": "[3.0.0.0, 4.0)"
+          "version": "[15.0, 16.0)"
         },
         "microsoft.PythonTools.ML": {
-          "version": "[3.0.0.0, 4.0)"
+          "version": "[15.0, 16.0)"
         },
         "microsoft.PythonTools.Uwp": {
-          "version": "[3.0.0.0, 4.0)"
+          "version": "[15.0, 16.0)"
         },
         "microsoft.PythonTools.Uwp.Templates": {
-          "version": "[3.0.0.0, 4.0)"
+          "version": "[15.0, 16.0)"
         }
       },
       "localizedResources": [
@@ -64,7 +64,7 @@
         }
       ],
       "id": "Microsoft.PythonTools_Sideload",
-      "version": "3.0.0.0",
+      "version": "15.0.0.0",
       "type": "Product"
     }
   ]

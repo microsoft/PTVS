@@ -4,15 +4,11 @@
 
   <PropertyGroup>
     <SourcePath>$(BuildRoot)\Python\Templates\Django</SourcePath>
-
-    <OutputName>$(MSBuildThisFileName)</OutputName>
     <BaseInstall>InstallDir:\Common7\IDE</BaseInstall>
   </PropertyGroup>
 
   <ItemGroup>
-    <Dependency Include="Microsoft.PythonTools.Django">
-      <Version>[$(FileVersion)]</Version>
-    </Dependency>
+    <Dependency Include="Microsoft.PythonTools.Django" />
   </ItemGroup>
 
   <Import Project="swix.targets" />

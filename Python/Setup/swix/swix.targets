@@ -1,78 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <OutputArchitecture>neutral</OutputArchitecture>
-    <OutputLocalized>false</OutputLocalized>
-    <OutputType>vsix</OutputType>
+    <OutputArchitecture Condition="$(OutputArchitecture) == ''">neutral</OutputArchitecture>
+    <OutputLocalized Condition="$(OutputLocalized) == ''">false</OutputLocalized>
+    <OutputType Condition="$(OutputType) == ''">vsix</OutputType>
     <IsPackage>true</IsPackage>
-    <SwrFile>$(IntermediateOutputPath)$(OutputName).swr</SwrFile>
+    <OutputName Condition="$(OutputName) == ''">$(MSBuildProjectName)</OutputName>
     <OutputPath>$(OutputPath)swix\</OutputPath>
-    <Python>py</Python>
-    <GenerateCommand>$(Python) "$(MSBuildThisFileDirectory)\swix_generate.py"</GenerateCommand>
-    <GenerateCommand Condition="$(Configuration) != 'Debug'">$(GenerateCommand) -x "\.pdb$"</GenerateCommand>
   </PropertyGroup>
 
   <Import Project="$(TargetsPath)\Common.Shim.targets" />
 
-  <ItemDefinitionGroup>
-    <SwrSource>
-      <BaseInstall>$(BaseInstall)</BaseInstall>
-      <ExtraOptions></ExtraOptions>
-    </SwrSource>
-  </ItemDefinitionGroup>
-
-  <ItemGroup>
-    <Package Include="$(SwrFile)" />
-  </ItemGroup>
-  
-  <ItemGroup Condition="'$(TargetsBaseInstall)' == ''">
-    <SwrSource Include="$(SourcePath)"  />
-  </ItemGroup>
-  
-  <ItemGroup Condition="'$(TargetsBaseInstall)' != ''">
-    <SwrSource Include="$(SourcePath)">
-      <BaseInstall>$(BaseInstall)</BaseInstall>
-      <ExtraOptions>-x "\.targets$"</ExtraOptions>
-    </SwrSource>
-    
-    <SwrSource Include="$(SourcePath)">
-      <BaseInstall>$(TargetsBaseInstall)</BaseInstall>
-      <ExtraOptions>-i "\.targets$"</ExtraOptions>
-    </SwrSource>
-  </ItemGroup>
-
-  <Target Name="_GenerateSwrMetadata">
-    <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(SwrFile)))" />
-    <WriteLinesToFile File="$(SwrFile).tmp" Lines="use vs
-package name=$([System.IO.Path]::GetFileNameWithoutExtension($(OutputName))) version=$(FileVersion)
-" Overwrite="yes" Encoding="ASCII" />
-
-    <PropertyGroup>
-      <_Dependencies Condition="@(Dependency) != ''">@(Dependency->'  vs.dependency id=%(Identity) version=%(Version)', '
-')</_Dependencies>
-    </PropertyGroup>
-<WriteLinesToFile File="$(SwrFile).tmp" Lines="vs.dependencies
-$(_Dependencies)
-" Overwrite="no" Encoding="ASCII" Condition="$(_Dependencies) != ''" />
-  </Target>
-
-  <Target Name="_GenerateSwrFromSources">
-    <Exec Command="$(GenerateCommand) %(SwrSource.ExtraOptions) -s &quot;%(SwrSource.FullPath)&quot; -b &quot;%(SwrSource.BaseInstall)&quot; -o &quot;$(SwrFile).tmp&quot;" />
-  </Target>
-
-  <Target Name="_GeneratePackage"
-          BeforeTargets="Build"
-          DependsOnTargets="_GenerateSwrMetadata;_GenerateSwrFromSources"
-          Condition="'$(MicrosoftSimplifiedWixPropertiesImported)' == 'true'">
-    <PropertyGroup>
-      <_Orig Condition="Exists($(SwrFile))">$([System.IO.File]::ReadAllText($(SwrFile)))</_Orig>
-      <_New Condition="Exists('$(SwrFile).tmp')">$([System.IO.File]::ReadAllText(`$(SwrFile).tmp`))</_New>
-    </PropertyGroup>
-
-    <Message Text="Updating $(SwrFile)" Importance="High" Condition="$(_Orig) != $(_New)" />
-    <WriteLinesToFile File="$(SwrFile)" Lines="$(_New)" Condition="$(_Orig) != $(_New)" Overwrite="yes" Encoding="UTF-8" />
-    <Delete Files="$(SwrFile).tmp" />
-  </Target>
+  <Import Project="swix.generate.targets" />
 
   <Import Project="..\SetupProjectAfter.settings" />
 </Project>

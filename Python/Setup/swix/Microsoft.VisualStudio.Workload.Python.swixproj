@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <OutputType>manifest</OutputType>
+    <SwixPackageType>workload</SwixPackageType>
+  </PropertyGroup>
+
+  <Import Project="..\SetupProjectBefore.settings" />
+
+  <ItemGroup>
+    <Package Include="$(MSBuildProjectName).res.swr" />
+
+    <Dependency Include="Microsoft.PythonTools" />
+    <Dependency Include="Microsoft.PythonTools.Core.Templates" />
+    <Dependency Include="Microsoft.PythonTools.Web.Templates" />
+    <Dependency Include="Microsoft.PythonTools.Profiling" />
+    <Dependency Include="Microsoft.PythonTools.Samples">
+      <Type>Optional</Type>
+    </Dependency>
+    <Dependency Include="Microsoft.PythonTools.IronPython">
+      <Type>Optional</Type>
+    </Dependency>
+    <Dependency Include="Microsoft.PythonTools.IronPython.Templates">
+      <Type>Optional</Type>
+    </Dependency>
+    <Dependency Include="Python3x64">
+      <Type>Optional</Type>
+      <Version>[3.5,3.6)</Version>
+    </Dependency>
+    <Dependency Include="Python2x64">
+      <Type>Optional</Type>
+      <Version>[2.7,2.8)</Version>
+    </Dependency>
+  </ItemGroup>
+
+  <Import Project="swix.targets" />
+</Project>
+

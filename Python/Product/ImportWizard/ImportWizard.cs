@@ -24,8 +24,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
-using EnvDTE;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TemplateWizard;
 using Task = System.Threading.Tasks.Task;
 
@@ -48,42 +49,59 @@ namespace Microsoft.PythonTools.ImportWizard {
                 // If it fails (doesn't exist/contains files/read-only), let the directory stay.
             }
 
-            var dte = automationObject as DTE;
-            if (dte == null) {
-                var provider = automationObject as Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
-                if (provider != null) {
-                    dte = new ServiceProvider(provider).GetService(typeof(DTE)) as DTE;
-                }
-            }
-            if (dte == null) {
+            var oleProvider = automationObject as Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
+            if (oleProvider == null) {
                 MessageBox.Show("Unable to start wizard: no automation object available.", "Python Tools for Visual Studio");
-            } else {
-                DoNotWait(Task.Run(() => {
-                    string projName = replacementsDictionary["$projectname$"];
-                    string solnName;
-                    replacementsDictionary.TryGetValue("$specifiedsolutionname$", out solnName);
-                    string directory;
-                    if (String.IsNullOrWhiteSpace(solnName)) {
-                        // Create directory is unchecked, destinationdirectory is the
-                        // directory name the user entered plus the project name, we want
-                        // to remove the project name.
-                        directory = Path.GetDirectoryName(replacementsDictionary["$destinationdirectory$"]);
-                    } else {
-                        // Create directory is checked, the destinationdirectory is the
-                        // directory the user entered plus the project name plus the
-                        // solution name - we want to remove both extra folders
-                        directory = Path.GetDirectoryName(Path.GetDirectoryName(replacementsDictionary["$destinationdirectory$"]));
-                    }
+                throw new WizardBackoutException();
+            }
 
-                    object inObj = projName + "|" + directory, outObj = null; 
-                    dte.Commands.Raise(GuidList.guidPythonToolsCmdSet.ToString("B"), (int)PkgCmdIDList.cmdidImportWizard, ref inObj, ref outObj);
-                }));
+            using (var serviceProvider = new ServiceProvider(oleProvider)) {
+                int hr = EnsurePackageLoaded(serviceProvider);
+                if (ErrorHandler.Failed(hr)) {
+                    MessageBox.Show(string.Format("Unable to start wizard: failed to load Python Tools Package (0x{0:X08})", hr), "Python Tools for Visual Studio");
+                    throw new WizardBackoutException();
+                }
+                var uiShell = (IVsUIShell)serviceProvider.GetService(typeof(SVsUIShell));
+
+                string projName = replacementsDictionary["$projectname$"];
+                string solnName;
+                replacementsDictionary.TryGetValue("$specifiedsolutionname$", out solnName);
+                string directory;
+                if (String.IsNullOrWhiteSpace(solnName)) {
+                    // Create directory is unchecked, destinationdirectory is the
+                    // directory name the user entered plus the project name, we want
+                    // to remove the project name.
+                    directory = Path.GetDirectoryName(replacementsDictionary["$destinationdirectory$"]);
+                } else {
+                    // Create directory is checked, the destinationdirectory is the
+                    // directory the user entered plus the project name plus the
+                    // solution name - we want to remove both extra folders
+                    directory = Path.GetDirectoryName(Path.GetDirectoryName(replacementsDictionary["$destinationdirectory$"]));
+                }
+
+                object inObj = projName + "|" + directory;
+                var guid = GuidList.guidPythonToolsCmdSet;
+                hr = uiShell.PostExecCommand(ref guid, PkgCmdIDList.cmdidImportWizard, 0, ref inObj);
+                if (ErrorHandler.Failed(hr)) {
+                    MessageBox.Show(string.Format("Unable to start wizard: Unexpected error 0x{0:X08}", hr), "Python Tools for Visual Studio");
+                }
             }
             throw new WizardCancelledException();
         }
 
         public bool ShouldAddProjectItem(string filePath) {
             return false;
+        }
+
+        private static int EnsurePackageLoaded(IServiceProvider serviceProvider) {
+            var shell = (IVsShell)serviceProvider.GetService(typeof(SVsShell));
+
+            var pkgGuid = GuidList.guidPythonToolsPackage;
+            IVsPackage pkg;
+            if (ErrorHandler.Failed(shell.IsPackageLoaded(ref pkgGuid, out pkg)) || pkg == null) {
+                return shell.LoadPackage(ref pkgGuid, out pkg);
+            }
+            return VSConstants.S_OK;
         }
     }
 }

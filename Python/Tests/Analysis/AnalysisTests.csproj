@@ -44,12 +44,15 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Dynamic">
       <HintPath>$(BuildRoot)Python\Product\IronPython\Microsoft.Dynamic.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="Microsoft.Scripting">
       <HintPath>$(BuildRoot)Python\Product\IronPython\Microsoft.Scripting.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="Microsoft.Scripting.Metadata">
       <HintPath>$(BuildRoot)Python\Product\IronPython\Microsoft.Scripting.Metadata.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />

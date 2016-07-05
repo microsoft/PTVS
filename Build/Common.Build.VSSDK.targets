@@ -206,5 +206,5 @@
              Value="false" />
   </Target>
 
-
+  <Import Project="Common.Build.VSSDK.RoslynWorkarounds.targets" Condition="$(VSTarget) == '15.0'" />
 </Project>

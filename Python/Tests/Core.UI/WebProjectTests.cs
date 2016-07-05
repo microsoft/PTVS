@@ -451,7 +451,12 @@ namespace PythonToolsUITests {
         private static void CloudProjectTest(string roleType, bool openServiceDefinition) {
             Assert.IsTrue(roleType == "Web" || roleType == "Worker", "Invalid roleType: " + roleType);
 
-            var asm = Assembly.Load("Microsoft.VisualStudio.CloudService.Wizard,Version=1.0.0.0,Culture=neutral,PublicKeyToken=b03f5f7f11d50a3a");
+            Assembly asm = null;
+            try {
+                asm = Assembly.Load("Microsoft.VisualStudio.CloudService.Wizard,Version=1.0.0.0,Culture=neutral,PublicKeyToken=b03f5f7f11d50a3a");
+            } catch {
+                // Failed to load - we'll skip the test below
+            }
             
             if (asm != null && asm.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false)
                 .OfType<AssemblyFileVersionAttribute>()

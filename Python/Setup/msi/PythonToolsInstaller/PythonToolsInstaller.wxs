@@ -172,6 +172,7 @@
         <?endforeach?>
         <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
       </Merge>
+      <?if "$(var.IncludeDjango)" ~= "True" ?>
       <Merge Id="Merge_Django" Language="1033" SourceFile="Django.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
         <ConfigurationData Name="Config_$(var.key)ExtensionsParent" Value="Dir_$(var.key)Extensions" />
@@ -179,6 +180,7 @@
         <?endforeach?>
         <ConfigurationData Name="Config_MSBuildLocation" Value="Dir_MSBuildTargets"/>
       </Merge>
+      <?endif ?>
       <?if "$(var.IncludeUwp)" ~= "True" ?>
       <Merge Id="Merge_Uwp" Language="1033" SourceFile="Uwp.msm" DiskId="1">
         <?foreach key in VS;WD;VWD?>
@@ -218,9 +220,11 @@
       <MergeRef Id="Merge_PythonTools"/>
       <MergeRef Id="Merge_Profiling"/>
 
+      <?if "$(var.IncludeDjango)" ~= "True" ?>
       <Feature Id="Feature_Django" AllowAdvertise="no" Level="1" Title="Django integration" Description="Django integration">
         <MergeRef Id="Merge_Django"/>
       </Feature>
+      <?endif?>
 
       <?if "$(var.IncludeUwp)" ~= "True" ?>
       <Feature Id="Feature_Uwp" AllowAdvertise="no" Level="1" Title="UWP integration" Description="UWP integration">

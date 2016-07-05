@@ -4,15 +4,11 @@
 
   <PropertyGroup>
     <SourcePath>$(BuildRoot)\Python\Templates\Samples</SourcePath>
-
-    <OutputName>$(MSBuildThisFileName)</OutputName>
     <BaseInstall>InstallDir:\Common7\IDE</BaseInstall>
   </PropertyGroup>
 
   <ItemGroup>
-    <Dependency Include="Microsoft.PythonTools">
-      <Version>[$(FileVersion)]</Version>
-    </Dependency>
+    <Dependency Include="Microsoft.PythonTools" />
   </ItemGroup>
 
   <Import Project="swix.targets" />
