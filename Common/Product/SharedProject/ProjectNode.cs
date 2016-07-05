@@ -634,7 +634,8 @@ namespace Microsoft.VisualStudioTools.Project {
                     projectHome = CommonUtils.GetAbsoluteDirectoryPath(
                         this.ProjectFolder,
                         this.GetProjectProperty(CommonConstants.ProjectHome, resetCache: false));
-                }
+					projectHome = CommonUtils.TrimEndSeparator(projectHome);
+				}
 
                 Debug.Assert(projectHome != null, "ProjectHome should not be null");
                 return projectHome;
