@@ -26,7 +26,7 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudio.Imaging;
-using Microsoft.VisualStudio.InteractiveWindow.Shell;
+using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Commands {
