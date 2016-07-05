@@ -54,9 +54,13 @@ namespace PythonToolsMockTests {
             }
             MockVsTextView view = null;
             try {
-                AdvancedOptions = vs.GetPyService().AdvancedOptions;
-                AdvancedOptions.AutoListMembers = true;
-                AdvancedOptions.AutoListIdentifiers = false;
+                AdvancedEditorOptions advancedOptions = null;
+                vs.InvokeSync(() => {
+                    advancedOptions = vs.GetPyService().AdvancedOptions;
+                    advancedOptions.AutoListMembers = true;
+                    advancedOptions.AutoListIdentifiers = false;
+                });
+                AdvancedOptions = advancedOptions;
 
                 if (factory == null) {
                     _disposeFactory = true;
@@ -64,7 +68,9 @@ namespace PythonToolsMockTests {
                 }
                 if (analyzer == null) {
                     _disposeAnalyzer = true;
-                    analyzer = new VsProjectAnalyzer(vs.ServiceProvider, factory);
+                    vs.InvokeSync(() => {
+                        analyzer = new VsProjectAnalyzer(vs.ServiceProvider, factory);
+                    });
                     var task = analyzer.ReloadTask;
                     if (task != null) {
                         task.WaitAndUnwrapExceptions();
@@ -154,10 +160,6 @@ namespace PythonToolsMockTests {
             }
         }
 
-        public void Type(string text) {
-            View.Type(text);
-        }
-
         public ITextSnapshot CurrentSnapshot {
             get { return View.TextView.TextSnapshot; }
         }
@@ -177,7 +179,7 @@ namespace PythonToolsMockTests {
                 index += snapshot.Length + 1;
             }
             View.MoveCaret(new SnapshotPoint(snapshot, index));
-            View.MemberList();
+            VS.Invoke(() => View.MemberList());
             using (var sh = View.WaitForSession<ICompletionSession>(assertIfNoSession: assertIfNoCompletions)) {
                 if (sh == null) {
                     return new List<Completion>();
@@ -185,6 +187,14 @@ namespace PythonToolsMockTests {
                 return sh.Session.CompletionSets.SelectMany(cs => cs.Completions).ToList();
             }
         }
+
+        public void Backspace() => VS.InvokeSync(() => View.Backspace());
+        public void Clear() => VS.InvokeSync(() => View.Clear());
+        public void MoveCaret(int line, int column) => View.MoveCaret(line, column);
+        public void MemberList() => VS.InvokeSync(() => View.MemberList());
+        public void ParamInfo() => VS.InvokeSync(() => View.ParamInfo());
+        public void Type(string text) => VS.InvokeSync(() => View.Type(text));
+
 
         public IEnumerable<string> GetCompletions(int index) {
             return GetCompletionList(index, false).Select(c => c.DisplayText);

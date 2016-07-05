@@ -353,9 +353,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             var view = new MockTextView(buffer);
             var res = new MockVsTextView(_serviceProvider, this, view);
             view.Properties[typeof(MockVsTextView)] = res;
-            if (onCreate != null) {
-                onCreate(res);
-            }
+            onCreate?.Invoke(res);
 
             var classifier = res.Classifier;
             if (classifier != null) {

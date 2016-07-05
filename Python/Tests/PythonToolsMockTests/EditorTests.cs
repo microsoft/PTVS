@@ -56,9 +56,9 @@ namespace PythonToolsMockTests {
         public void SigHelpInClass() {
             using (var view = new PythonEditor()) {
                 view.Type("class C(): pass");
-                view.View.MoveCaret(1, 9);
+                view.MoveCaret(1, 9);
 
-                view.View.ParamInfo();
+                view.ParamInfo();
 
                 view.View.AssertNoIntellisenseSession();
             }
@@ -228,7 +228,7 @@ namespace PythonToolsMockTests {
                         sh.Session.Dismiss();
                     }
 
-                    view.View.Backspace();
+                    view.Backspace();
                 }
 
                 view.View.AssertNoIntellisenseSession();
@@ -242,7 +242,7 @@ namespace PythonToolsMockTests {
 
                     view.View.AssertNoIntellisenseSession();
 
-                    view.View.Backspace();
+                    view.Backspace();
                 }
             }
         }
@@ -364,7 +364,7 @@ namespace PythonToolsMockTests {
 
                     view.View.AssertNoIntellisenseSession();
 
-                    view.View.Clear();
+                    view.Clear();
                 }
             }
         }
@@ -380,9 +380,9 @@ namespace PythonToolsMockTests {
 class B:
     pass
 ")) {
-                view.View.MoveCaret(5, 9);
+                view.MoveCaret(5, 9);
                 view.Type("p");
-                view.View.MemberList();
+                view.MemberList();
                 using (var sh = view.View.WaitForSession<ICompletionSession>()) {
                     AssertUtil.ContainsAtLeast(sh.Session.Completions(), "param1", "param2");
                 }

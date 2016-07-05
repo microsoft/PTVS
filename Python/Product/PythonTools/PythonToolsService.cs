@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools {
 
             _idleManager.Dispose();
 
-            foreach (var window in _codeWindowManagers.Values) {
+            foreach (var window in _codeWindowManagers.Values.ToArray()) {
                 window.RemoveAdornments();
             }
             _codeWindowManagers.Clear();
