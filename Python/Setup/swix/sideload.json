@@ -22,37 +22,13 @@
         "microsoft.PythonTools": {
           "version": "[15.0, 16.0)"
         },
-        "microsoft.PythonTools.Core.Templates": {
-          "version": "[15.0, 16.0)"
-        },
-        "microsoft.PythonTools.Web.Templates": {
-          "version": "[15.0, 16.0)"
-        },
-        "microsoft.PythonTools.Profiling": {
+        "microsoft.PythonTools.Web": {
           "version": "[15.0, 16.0)"
         },
         "microsoft.PythonTools.Samples": {
           "version": "[15.0, 16.0)"
         },
-        "microsoft.PythonTools.Django": {
-          "version": "[15.0, 16.0)"
-        },
-        "microsoft.PythonTools.Django.Templates": {
-          "version": "[15.0, 16.0)"
-        },
-        "microsoft.PythonTools.IronPython": {
-          "version": "[15.0, 16.0)"
-        },
-        "microsoft.PythonTools.IronPython.Templates": {
-          "version": "[15.0, 16.0)"
-        },
-        "microsoft.PythonTools.ML": {
-          "version": "[15.0, 16.0)"
-        },
         "microsoft.PythonTools.Uwp": {
-          "version": "[15.0, 16.0)"
-        },
-        "microsoft.PythonTools.Uwp.Templates": {
           "version": "[15.0, 16.0)"
         }
       },
