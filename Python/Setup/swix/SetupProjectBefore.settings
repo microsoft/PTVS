@@ -1,0 +1,7 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <OutputPathSuffix Condition="$(OutputPathSuffix) == ''">setup\swix</OutputPathSuffix>
+    <IntermediateOutputPathSuffix Condition="$(IntermediateOutputPathSuffix) == ''">setup_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
+  </PropertyGroup>
+  <Import Project="..\SetupProjectBefore.settings" />
+</Project>

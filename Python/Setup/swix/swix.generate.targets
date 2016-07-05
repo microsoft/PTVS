@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <SwrFile>$(IntermediateOutputPath)$(OutputName).swr</SwrFile>
+    <SwrFile>$(IntermediateOutputPath)package.g.swr</SwrFile>
     <Python>py</Python>
     <GenerateCommand>$(Python) "$(MSBuildThisFileDirectory)\swix_generate.py"</GenerateCommand>
     <GenerateCommand Condition="$(Configuration) != 'Debug'">$(GenerateCommand) -x "\.pdb$"</GenerateCommand>
@@ -49,10 +49,6 @@ package name=$([System.IO.Path]::GetFileNameWithoutExtension($(OutputName))) ver
 <WriteLinesToFile File="$(SwrFile).tmp" Lines="vs.dependencies
 $(_Dependencies)
 " Overwrite="no" Encoding="ASCII" Condition="$(_Dependencies) != ''" />
-
-    <ItemGroup>
-      <Package Include="$(SwrFile)" />
-    </ItemGroup>
   </Target>
 
   <Target Name="_GenerateSwrFromSources" Condition="@(SwrSource) != ''">
@@ -71,6 +67,10 @@ $(_Dependencies)
     <Message Text="Updating $(SwrFile)" Importance="High" Condition="$(_Orig) != $(_New)" />
     <WriteLinesToFile File="$(SwrFile)" Lines="$(_New)" Condition="$(_Orig) != $(_New)" Overwrite="yes" Encoding="UTF-8" />
     <Delete Files="$(SwrFile).tmp" />
+
+    <ItemGroup>
+      <Package Include="$(SwrFile)" Condition="Exists($(SwrFile))" />
+    </ItemGroup>
   </Target>
 </Project>
 

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <OutputArchitecture Condition="$(OutputArchitecture) == ''">neutral</OutputArchitecture>
+    <OutputLocalized Condition="$(OutputLocalized) == ''">false</OutputLocalized>
+    <OutputType Condition="$(OutputType) == ''">vsix</OutputType>
+    <IsPackage>true</IsPackage>
+  </PropertyGroup>
+
+  <Import Project="$(TargetsPath)\Common.Shim.targets" />
+
+  <Import Project="..\swix.generate.targets" />
+
+  <Import Project="..\..\SetupProjectAfter.settings" />
+</Project>
+

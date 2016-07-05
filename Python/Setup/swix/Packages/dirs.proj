@@ -1,0 +1,36 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\SetupProjectBefore.settings" />
+
+  <ItemDefinitionGroup>
+    <!--
+    We explicitly disable signing for individual projects and batch
+    sign all outputs in one go.
+    -->
+    <ProjectFile>
+      <Properties>SignType=none</Properties>
+    </ProjectFile>
+  </ItemDefinitionGroup>
+
+  <PropertyGroup>
+    <StopOnFirstFailure>true</StopOnFirstFailure>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectFile Include="Microsoft.PythonTools.Core.Vsix.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.Core.Templates.Vsix.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.Django.Vsix.swixproj" Condition="'$(IncludeDjango)' == 'True'"/>
+    <ProjectFile Include="Microsoft.PythonTools.Django.Templates.Vsix.swixproj" Condition="'$(IncludeDjango)' == 'True'"/>
+    <ProjectFile Include="Microsoft.PythonTools.IronPython.Vsix.swixproj" Condition="'$(IncludeIronPython)' == 'True'"/>
+    <ProjectFile Include="Microsoft.PythonTools.IronPython.Templates.Vsix.swixproj" Condition="'$(IncludeIronPython)' == 'True'"/>
+    <ProjectFile Include="Microsoft.PythonTools.ML.Vsix.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.Profiling.Vsix.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.Samples.Vsix.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.Uwp.Vsix.swixproj" Condition="'$(IncludeUwp)' == 'True'"/>
+    <ProjectFile Include="Microsoft.PythonTools.Uwp.Templates.Vsix.swixproj" Condition="'$(IncludeUwp)' == 'True'"/>
+    <ProjectFile Include="Microsoft.PythonTools.Web.Templates.Vsix.swixproj"/>
+    <ProjectFile Include="CPython2x64.Msi.swixproj"/>
+    <ProjectFile Include="CPython3x64.Exe.swixproj"/>
+  </ItemGroup>
+
+  <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
+</Project>
