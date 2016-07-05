@@ -339,7 +339,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public uint GetDocumentCookie(string moniker) {
-            return _ids[moniker];
+            try {
+                return _ids[moniker];
+            } catch (KeyNotFoundException ex) {
+                throw new ArgumentException("moniker not found", ex);
+            }
         }
 
         public uint GetDocumentFlags(uint cookie) {

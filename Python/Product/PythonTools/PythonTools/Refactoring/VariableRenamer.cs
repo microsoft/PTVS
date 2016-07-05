@@ -26,15 +26,18 @@ using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Refactoring {
     class VariableRenamer {
         private readonly ITextView _view;
         private readonly IServiceProvider _serviceProvider;
+        private readonly UIThreadBase _uiThread;
 
         public VariableRenamer(ITextView textView, IServiceProvider serviceProvider) {
             _view = textView;
             _serviceProvider = serviceProvider;
+            _uiThread = _serviceProvider.GetUIThread();
         }
 
         public async Task RenameVariable(IRenameVariableInput input, IVsPreviewChangesService previewChanges) {
@@ -119,7 +122,7 @@ namespace Microsoft.PythonTools.Refactoring {
             if (expr.IndexOf('.')  == -1) {
                 // let's check if we'r re-naming a keyword argument...
                 ITrackingSpan span = _view.GetCaretSpan();
-                var sigs = await _serviceProvider.GetPythonToolsService().GetSignaturesAsync(_view, _view.TextBuffer.CurrentSnapshot, span)
+                var sigs = await _uiThread.InvokeTask(() => _serviceProvider.GetPythonToolsService().GetSignaturesAsync(_view, _view.TextBuffer.CurrentSnapshot, span))
                     .ConfigureAwait(false);
 
                 foreach (var sig in sigs.Signatures) {
