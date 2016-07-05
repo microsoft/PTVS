@@ -405,8 +405,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 _watcher.Dispose();
             }
 
-			bool? showAllFiles = null;
-			if (UserBuildProject != null) {
+            bool? showAllFiles = null;
+            if (UserBuildProject != null) {
                 showAllFiles = GetShowAllFilesSetting(UserBuildProject.GetPropertyValue(CommonConstants.ProjectView));
             }
 

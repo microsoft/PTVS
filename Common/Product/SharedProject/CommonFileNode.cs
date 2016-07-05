@@ -164,13 +164,13 @@ namespace Microsoft.VisualStudioTools.Project {
             FileDocumentManager manager = this.GetDocumentManager() as FileDocumentManager;
             Utilities.CheckNotNull(manager, "Could not get the FileDocumentManager");
 
-			IVsWindowFrame frame;
-			if (IsFormSubType)
-				manager.Open(false, false, VSConstants.LOGVIEWID_Designer, out frame, WindowFrameShowAction.Show);
-			else
-				//manager.Open(false, false, VSConstants.LOGVIEWID_Code, out frame, WindowFrameShowAction.Show);    // Do not use, as in VS2010 css files are opened as plain text
-				manager.Open(false, false, WindowFrameShowAction.Show);
-		}
+            IVsWindowFrame frame;
+            if (IsFormSubType)
+                manager.Open(false, false, VSConstants.LOGVIEWID_Designer, out frame, WindowFrameShowAction.Show);
+            else
+                //manager.Open(false, false, VSConstants.LOGVIEWID_Code, out frame, WindowFrameShowAction.Show);    // Do not use, as in VS2010 css files are opened as plain text
+                manager.Open(false, false, WindowFrameShowAction.Show);
+        }
 
         private static Guid CLSID_VsTextBuffer = new Guid("{8E7B96A8-E33D-11d0-A6D5-00C04FB67F6A}");
 
@@ -300,8 +300,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
                 ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
             }
-			// PERFORMANCE: call it once only! // ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
-			return VSConstants.S_OK;
+            // PERFORMANCE: call it once only! // ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+            return VSConstants.S_OK;
         }
 
         internal override int IncludeInProject(bool includeChildren) {
@@ -328,16 +328,16 @@ namespace Microsoft.VisualStudioTools.Project {
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
             ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
 
-			// PERFORMANCE: (99%) call it once only!
-			//// https://nodejstools.codeplex.com/workitem/273, refresh the property browser...
-			//((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+            // PERFORMANCE: (99%) call it once only!
+            //// https://nodejstools.codeplex.com/workitem/273, refresh the property browser...
+            //((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
 
-			//if (CommonUtils.IsSamePath(ProjectMgr.GetStartupFile(), Url)) {
-			//    ProjectMgr.BoldItem(this, true);
-			//}
+            //if (CommonUtils.IsSamePath(ProjectMgr.GetStartupFile(), Url)) {
+            //    ProjectMgr.BoldItem(this, true);
+            //}
 
-			// On include, the file should be added to source control.
-			this.ProjectMgr.Tracker.OnItemAdded(this.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);
+            // On include, the file should be added to source control.
+            this.ProjectMgr.Tracker.OnItemAdded(this.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);
 
             return VSConstants.S_OK;
         }

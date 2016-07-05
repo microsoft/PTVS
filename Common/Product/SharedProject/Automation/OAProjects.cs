@@ -28,10 +28,10 @@ using Microsoft.VisualStudio.Shell.Interop;
 namespace Microsoft.VisualStudioTools.Project.Automation
 {
 
-	/// <summary>
-	/// Represents all of the projects of a given kind.
-	/// </summary>
-	[SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix")]
+    /// <summary>
+    /// Represents all of the projects of a given kind.
+    /// </summary>
+    [SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix")]
     [ComVisible(true)]
     public class OAProjects : EnvDTE.Projects, IEnumerable<OAProject> {
         private readonly ProjectNode/*!*/project;

@@ -164,7 +164,8 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 if (parentNode is ProjectNode) {
                     // The root node for the project
                     return ((OAProject)parentNode.GetAutomationObject()).ProjectItems;
-				} if (parentNode is FolderNode) {
+                }
+                if (parentNode is FolderNode) {
                     // The root node for the project
                     return ((OAFolderItem)parentNode.GetAutomationObject()).ProjectItems;
                 } else {

@@ -187,9 +187,9 @@ namespace Microsoft.VisualStudioTools.Project {
 
         private MSBuild.Project buildProject;
 
-		private MSBuild.Project userBuildProject;
+        private MSBuild.Project userBuildProject;
 
-		private MSBuildExecution.ProjectInstance currentConfig;
+        private MSBuildExecution.ProjectInstance currentConfig;
 
         private ConfigProvider configProvider;
 
@@ -634,8 +634,8 @@ namespace Microsoft.VisualStudioTools.Project {
                     projectHome = CommonUtils.GetAbsoluteDirectoryPath(
                         this.ProjectFolder,
                         this.GetProjectProperty(CommonConstants.ProjectHome, resetCache: false));
-					projectHome = CommonUtils.TrimEndSeparator(projectHome);
-				}
+                    projectHome = CommonUtils.TrimEndSeparator(projectHome);
+                }
 
                 Debug.Assert(projectHome != null, "ProjectHome should not be null");
                 return projectHome;
@@ -827,7 +827,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 SetBuildProject(value);
             }
         }
-		
+
         protected internal MSBuild.Project UserBuildProject {
             get {
                 return userBuildProject;
@@ -1125,7 +1125,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     SetBuildProject(null);
                 }
 
-				if (userBuildProject != null) {
+                if (userBuildProject != null) {
                     userBuildProject.ProjectCollection.UnloadProject(userBuildProject);
                 }
 
@@ -1738,7 +1738,7 @@ namespace Microsoft.VisualStudioTools.Project {
             DoAsyncMSBuildSubmission(target, uiThreadCallback);
         }
 
-		        /// <summary>
+        /// <summary>
         /// Set value of user project property
         /// </summary>
         /// <param name="propertyName">Name of property</param>
@@ -2271,10 +2271,10 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 SetBuildProject(Utilities.ReinitializeMsBuildProject(buildEngine, filename, buildProject));
 
-				SetUserBuildProject();
+                SetUserBuildProject();
 
-				// Load the guid
-				SetProjectGuidFromProjectFile();
+                // Load the guid
+                SetProjectGuidFromProjectFile();
 
                 ProcessReferences();
 
@@ -4998,7 +4998,7 @@ If the files in the existing folder have the same names as files in the folder y
         /// <param name="propertyValue">Value of the property (out parameter)</param>
         /// <returns>HRESULT</returns>
         int IVsBuildPropertyStorage.GetPropertyValue(string propertyName, string configName, uint storage, out string propertyValue) {
-			switch((_PersistStorageType)storage) {
+            switch ((_PersistStorageType)storage) {
                 case _PersistStorageType.PST_USER_FILE:
                     return GetUserPropertyValue(propertyName, configName, out propertyValue);
                 case _PersistStorageType.PST_PROJECT_FILE:
@@ -5074,17 +5074,17 @@ If the files in the existing folder have the same names as files in the folder y
         /// <param name="propertyValue">New value for that property</param>
         /// <returns>HRESULT</returns>
         int IVsBuildPropertyStorage.SetPropertyValue(string propertyName, string configName, uint storage, string propertyValue) {
-			switch ((_PersistStorageType)storage) { 
-				case _PersistStorageType.PST_USER_FILE:
-					return SetUserPropertyValue(propertyName, configName, propertyValue);
-				case _PersistStorageType.PST_PROJECT_FILE:
-				default:
-					return SetPropertyValue(propertyName, configName, propertyValue);
-			}
-		}
+            switch ((_PersistStorageType)storage) {
+                case _PersistStorageType.PST_USER_FILE:
+                    return SetUserPropertyValue(propertyName, configName, propertyValue);
+                case _PersistStorageType.PST_PROJECT_FILE:
+                default:
+                    return SetPropertyValue(propertyName, configName, propertyValue);
+            }
+        }
 
-		private int SetPropertyValue(string propertyName, string configName, string propertyValue) {
-			if (string.IsNullOrEmpty(configName)) {
+        private int SetPropertyValue(string propertyName, string configName, string propertyValue) {
+            if (string.IsNullOrEmpty(configName)) {
                 this.SetProjectProperty(propertyName, propertyValue);
             } else {
                 IVsCfg configurationInterface;
@@ -5095,7 +5095,7 @@ If the files in the existing folder have the same names as files in the folder y
             return VSConstants.S_OK;
         }
 
-		private int SetUserPropertyValue(string propertyName, string configName, string propertyValue) {
+        private int SetUserPropertyValue(string propertyName, string configName, string propertyValue) {
             if (string.IsNullOrEmpty(configName)) {
                 this.SetUserProjectProperty(propertyName, propertyValue);
                 return VSConstants.S_OK;
@@ -5332,7 +5332,7 @@ If the files in the existing folder have the same names as files in the folder y
             }
         }
 
-		private void SetUserBuildProject() {
+        private void SetUserBuildProject() {
             string userProjectFilename = FileName + PerUserFileExtension;
             if (File.Exists(userProjectFilename)) {
                 userBuildProject = BuildProject.ProjectCollection.LoadProject(userProjectFilename);

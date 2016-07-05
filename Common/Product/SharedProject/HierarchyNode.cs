@@ -1171,40 +1171,40 @@ namespace Microsoft.VisualStudioTools.Project {
             return VSConstants.S_OK;
         }
 
-		/// <summary>
-		/// Handles the exclude from project command. After operations 
-		/// is completed it refreshes property browser.
-		/// </summary>
-		internal virtual int ExcludeFromProjectWithRefresh() {
-			try	{
-				int hr = this.ExcludeFromProject();
-				if (ErrorHandler.Succeeded(hr))	{
-					// https://pytools.codeplex.com/workitem/1996
-					// Mark the previous sibling or direct parent as the active item
-					IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
-						ProjectMgr.Site,
-						new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
-					windows.ExpandItem(
-						ProjectMgr,
-						PreviousVisibleSibling != null ?
-							PreviousVisibleSibling.ID :
-							Parent.ID,
-						EXPANDFLAGS.EXPF_SelectItem
-					);
-				}
-				return hr;
-			}
-			finally	{
-				((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
-			}
-		}
+        /// <summary>
+        /// Handles the exclude from project command. After operations 
+        /// is completed it refreshes property browser.
+        /// </summary>
+        internal virtual int ExcludeFromProjectWithRefresh() {
+            try {
+                int hr = this.ExcludeFromProject();
+                if (ErrorHandler.Succeeded(hr)) {
+                    // https://pytools.codeplex.com/workitem/1996
+                    // Mark the previous sibling or direct parent as the active item
+                    IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
+                        ProjectMgr.Site,
+                        new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
+                    windows.ExpandItem(
+                        ProjectMgr,
+                        PreviousVisibleSibling != null ?
+                            PreviousVisibleSibling.ID :
+                            Parent.ID,
+                        EXPANDFLAGS.EXPF_SelectItem
+                    );
+                }
+                return hr;
+            }
+            finally {
+                ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+            }
+        }
 
-		/// <summary>
-		/// Handles the exclude from project command potentially displaying
-		/// a progress bar if the operation can take a long time.
-		/// </summary>
-		/// <returns></returns>
-		internal virtual int ExcludeFromProjectWithProgress() {
+        /// <summary>
+        /// Handles the exclude from project command potentially displaying
+        /// a progress bar if the operation can take a long time.
+        /// </summary>
+        /// <returns></returns>
+        internal virtual int ExcludeFromProjectWithProgress() {
             return ExcludeFromProjectWithRefresh();
         }
 
