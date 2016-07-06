@@ -26,8 +26,9 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudio.Imaging;
-using Microsoft.VisualStudio.InteractiveWindow.Shell;
+using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.InteractiveWindow;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -124,7 +125,7 @@ namespace Microsoft.PythonTools.Commands {
 
             // The interpreter may take some time to startup, do this off the UI thread.
             await ThreadHelper.JoinableTaskFactory.RunAsync(async () => {
-                await eval.ResetAsync();
+                await ((IInteractiveEvaluator)eval).ResetAsync();
 
                 window.InteractiveWindow.WriteLine(string.Format("Running {0}", config.ScriptName));
 

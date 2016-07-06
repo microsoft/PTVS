@@ -901,7 +901,7 @@ permissions and limitations under the License.
       <IDSymbol name="groupAzureDiagnostics" value="400" />
     </GuidSymbol>
 
-    <GuidSymbol name="guidInteractiveWindowCmdSet" value="{00B8868B-F9F5-4970-A048-410B05508506}">
+    <GuidSymbol name="guidInteractiveWindowCmdSet" value="{F27554FA-3DF4-4649-A81C-1B97C932E78B}">
       <IDSymbol name="InteractiveToolbarGroup" value="0x1053"/>
     </GuidSymbol>
   </Symbols>

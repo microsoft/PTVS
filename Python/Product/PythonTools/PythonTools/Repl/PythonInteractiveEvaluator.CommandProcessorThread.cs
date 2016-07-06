@@ -20,7 +20,7 @@ using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Task = System.Threading.Tasks.Task;
@@ -675,7 +675,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
 
-            public Task<ExecutionResult> ExecuteFile(string filename, string extraArgs, string fileType) {
+            public async Task<bool> ExecuteFile(string filename, string extraArgs, string fileType) {
                 Action send = () => {
                     if (_process != null) {
                         Microsoft.VisualStudioTools.Project.NativeMethods.AllowSetForegroundWindow(_process.Id);
@@ -693,10 +693,10 @@ namespace Microsoft.PythonTools.Repl {
                         if (_listenerSocket != null) {
                             _deferredExecute = send;
                             _completion = new TaskCompletionSource<ExecutionResult>();
-                            return _completion.Task;
+                            return (await _completion.Task).IsSuccessful;
                         } else {
                             _eval.WriteError(Strings.ReplDisconnectedReset);
-                            return ExecutionResult.Failed;
+                            return false;
                         }
                     }
 
@@ -704,15 +704,15 @@ namespace Microsoft.PythonTools.Repl {
                         send();
                     } catch (IOException) {
                         _eval.WriteError(Strings.ReplDisconnectedReset);
-                        return ExecutionResult.Failed;
+                        return false;
                     }
                 }
 
+                TaskCompletionSource<ExecutionResult> tcs;
                 lock (_completionLock) {
-                    _completion = new TaskCompletionSource<ExecutionResult>();
-                    return _completion.Task;
+                    _completion = tcs = new TaskCompletionSource<ExecutionResult>();
                 }
-
+                return (await tcs.Task).IsSuccessful;
             }
 
             public void AbortCommand() {

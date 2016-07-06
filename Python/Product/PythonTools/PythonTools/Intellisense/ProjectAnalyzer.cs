@@ -31,7 +31,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;

@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Repl {

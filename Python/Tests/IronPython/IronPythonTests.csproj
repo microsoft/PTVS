@@ -53,6 +53,8 @@
     <Reference Include="Microsoft.Dynamic">
       <HintPath>$(BuildRoot)Python\Product\IronPython\Microsoft.Dynamic.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.PythonTools.InteractiveWindow" />
+    <Reference Include="Microsoft.PythonTools.VsInteractiveWindow" />
     <Reference Include="Microsoft.Scripting">
       <HintPath>$(BuildRoot)Python\Product\IronPython\Microsoft.Scripting.dll</HintPath>
     </Reference>
@@ -88,12 +90,6 @@
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
-    <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-      <Private>false</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IronPythonAnalysisTest.cs" />

@@ -16,7 +16,7 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.PythonTools.InteractiveWindow;
 
 namespace Microsoft.PythonTools.Repl {
     interface IInteractiveEvaluatorProvider {

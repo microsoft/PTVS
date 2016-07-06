@@ -30,7 +30,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Imaging;
-using Microsoft.VisualStudio.InteractiveWindow.Shell;
+using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
