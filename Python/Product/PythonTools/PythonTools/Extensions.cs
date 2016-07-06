@@ -628,7 +628,15 @@ namespace Microsoft.PythonTools {
             // this case too, but mostly it will succeed (and then assert).
             serviceProvider.GetUIThread().MustBeCalledFromUIThread();
 #endif
+            return serviceProvider.GetPythonToolsService_NotThreadSafe();
+        }
 
+        /// <summary>
+        /// Gets the current Python Tools service without validating that we are
+        /// on the UI thread. This may return null or crash at (somewhat) random
+        /// but is necessary for some tests.
+        /// </summary>
+        internal static PythonToolsService GetPythonToolsService_NotThreadSafe(this IServiceProvider serviceProvider) {
             var pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
             if (pyService == null) {
                 var shell = (IVsShell)serviceProvider.GetService(typeof(SVsShell));

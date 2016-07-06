@@ -366,8 +366,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 );
 
                 if (res != null) {
+                    Debug.Assert(res.failed != false);
                     _parser.OnAnalysisStarted();
 #if DEBUG
+                    Debug.Assert(res.newCode != null, "FileId={0}, Path={1}".FormatUI(entry.FileId, entry.Path));
                     for (int i = 0; i < bufferInfos.Length; i++) {
                         var snapshot = snapshots[i];
                         var buffer = bufferInfos[i];

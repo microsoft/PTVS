@@ -27,6 +27,7 @@
   <ItemGroup>
     <None Include="Program.py" />
     <None Include="Delayed.py" />
+    <None Include="Cells.py" />
   </ItemGroup>
   <ItemGroup>
     <InterpreterReference Include="Global|PythonCore|3.5|x86" />

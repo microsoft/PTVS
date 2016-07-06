@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly object _currentLock = new object();
         private IEnumerable<SuggestedActionSet> _current;
         private SnapshotSpan _currentSpan;
+        private readonly UIThreadBase _uiThread;
 
         public PythonSuggestedActionsSource(
             IServiceProvider provider,
@@ -44,6 +45,7 @@ namespace Microsoft.PythonTools.Intellisense {
             _view = textView;
             _textBuffer = textBuffer;
             _textBuffer.RegisterForNewAnalysis(OnNewAnalysisEntry);
+            _uiThread = provider.GetUIThread();
         }
 
         private void OnNewAnalysisEntry(AnalysisEntry obj) {
@@ -81,7 +83,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 SpanTrackingMode.EdgePositive,
                 TrackingFidelityMode.Forward
             );
-            var imports = await VsProjectAnalyzer.GetMissingImportsAsync(_provider, _view, textBuffer.CurrentSnapshot, span);
+            var imports = await _uiThread.InvokeTask(() => VsProjectAnalyzer.GetMissingImportsAsync(_provider, _view, textBuffer.CurrentSnapshot, span));
 
             if (imports == MissingImportAnalysis.Empty) {
                 return false;

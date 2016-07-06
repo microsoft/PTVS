@@ -59,6 +59,7 @@ namespace Microsoft.PythonTools {
             private bool _enabled;
             private static readonly Regex _openingRegionRegex = new Regex(@"^\s*#\s*region($|\s+.*$)");
             private static readonly Regex _closingRegionRegex = new Regex(@"^\s*#\s*endregion($|\s+.*$)");
+            internal static readonly Regex _codeCellRegex = new Regex(@"^\s*#%%(.*)$");
 
             public OutliningTagger(PythonToolsService pyService, ITextBuffer buffer) {
                 _pyService = pyService;
@@ -103,7 +104,10 @@ namespace Microsoft.PythonTools {
                 
                 var tags = await entry.Analyzer.GetOutliningTagsAsync(snapshot);
                 if (tags != null) {
-                    _tags = tags.Concat(ProcessRegionTags(_buffer.CurrentSnapshot)).ToArray();
+                    _tags = tags
+                        .Concat(ProcessRegionTags(_buffer.CurrentSnapshot))
+                        .Concat(ProcessCellTags(_buffer.CurrentSnapshot))
+                        .ToArray();
 
                     TagsChanged?.Invoke(
                         this,
@@ -125,6 +129,27 @@ namespace Microsoft.PythonTools {
 
                         yield return outline;
                     }
+                }
+            }
+
+            internal static IEnumerable<TagSpan> ProcessCellTags(ITextSnapshot snapshot) {
+                ITextSnapshotLine region = null, lastNonBlankLine = null;
+                // Walk lines and attempt to find '#%%' tags
+                foreach (var line in snapshot.Lines) {
+                    var lineText = line.GetText();
+                    if (_codeCellRegex.IsMatch(lineText)) {
+                        if (region != null && lastNonBlankLine != null && lastNonBlankLine.LineNumber > region.LineNumber) {
+                            yield return GetTagSpan(snapshot, region.Start, lastNonBlankLine.End);
+                        }
+                        region = line;
+                    }
+                    if (!string.IsNullOrWhiteSpace(lineText) || lastNonBlankLine == null) {
+                        lastNonBlankLine = line;
+                    }
+                }
+
+                if (region != null && lastNonBlankLine != null && lastNonBlankLine.LineNumber > region.LineNumber) {
+                    yield return GetTagSpan(snapshot, region.Start, lastNonBlankLine.End);
                 }
             }
 

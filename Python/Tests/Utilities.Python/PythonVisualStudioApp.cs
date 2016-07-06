@@ -49,9 +49,9 @@ namespace TestUtilities.UI.Python {
         public PythonVisualStudioApp(DTE dte = null)
             : base(dte) {
 
-            var service = ServiceProvider.GetPythonToolsService();
+            var service = ServiceProvider.GetPythonToolsService_NotThreadSafe();
             Assert.IsNotNull(service, "Failed to get PythonToolsService");
-            
+
             // Disable AutoListIdentifiers for tests
             var ao = service.AdvancedOptions;
             Assert.IsNotNull(ao, "Failed to get AdvancedOptions");
