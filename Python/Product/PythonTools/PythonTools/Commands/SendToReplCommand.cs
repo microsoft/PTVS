@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         private static bool IsCellMarker(ITextSnapshotLine line) {
-            return line.GetText().Trim(' ', '\t').StartsWith("#%%");
+            return OutliningTaggerProvider.OutliningTagger._codeCellRegex.IsMatch(line.GetText());
         }
 
         public override async void DoCommand(object sender, EventArgs args) {

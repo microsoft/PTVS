@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools {
             private bool _enabled;
             private static readonly Regex _openingRegionRegex = new Regex(@"^\s*#\s*region($|\s+.*$)");
             private static readonly Regex _closingRegionRegex = new Regex(@"^\s*#\s*endregion($|\s+.*$)");
-            private static readonly Regex _codeCellRegex = new Regex(@"^\s*#%%(.*)$");
+            internal static readonly Regex _codeCellRegex = new Regex(@"^\s*#%%(.*)$");
 
             public OutliningTagger(PythonToolsService pyService, ITextBuffer buffer) {
                 _pyService = pyService;
