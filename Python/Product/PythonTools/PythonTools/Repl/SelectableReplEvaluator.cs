@@ -18,17 +18,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.PythonTools.InteractiveWindow.Commands;
-using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudioTools;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Repl {
@@ -37,6 +33,7 @@ namespace Microsoft.PythonTools.Repl {
     [ContentType(PythonCoreConstants.ContentType)]
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
     sealed class SelectableReplEvaluator : 
+        IInteractiveEvaluator,
         IPythonInteractiveEvaluator,
         IMultipleScopeEvaluator,
         IPythonInteractiveIntellisense,
@@ -277,9 +274,9 @@ namespace Microsoft.PythonTools.Repl {
             return _evaluator?.ResetAsync(initialize) ?? ExecutionResult.Succeeded;
         }
 
-        public Task<ExecutionResult> ExecuteFileAsync(string filename, string extraArgs) {
+        public Task<bool> ExecuteFileAsync(string filename, string extraArgs) {
             return (_evaluator as IPythonInteractiveEvaluator)?.ExecuteFileAsync(filename, extraArgs)
-                ?? ExecutionResult.Failed;
+                ?? Task.FromResult(false);
         }
 
         public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind() {

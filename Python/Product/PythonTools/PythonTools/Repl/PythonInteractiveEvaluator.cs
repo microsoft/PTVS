@@ -51,6 +51,7 @@ namespace Microsoft.PythonTools.Repl {
     [ContentType(PythonCoreConstants.ContentType)]
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
     partial class PythonInteractiveEvaluator :
+        IInteractiveEvaluator,
         IPythonInteractiveEvaluator,
         IMultipleScopeEvaluator,
         IPythonInteractiveIntellisense, 
@@ -360,12 +361,12 @@ namespace Microsoft.PythonTools.Repl {
 
         protected virtual async Task ExecuteStartupScripts(string scriptsPath) {
             if (File.Exists(scriptsPath)) {
-                if (!(await ExecuteFileAsync(scriptsPath, null)).IsSuccessful) {
+                if (!(await ExecuteFileAsync(scriptsPath, null))) {
                     WriteError("Error executing " + scriptsPath);
                 }
             } else if (Directory.Exists(scriptsPath)) {
                 foreach (var file in PathUtils.EnumerateFiles(scriptsPath, "*.py", recurse: false)) {
-                    if (!(await ExecuteFileAsync(file, null)).IsSuccessful) {
+                    if (!(await ExecuteFileAsync(file, null))) {
                         WriteError("Error executing " + file);
                     }
                 }
@@ -444,34 +445,34 @@ namespace Microsoft.PythonTools.Repl {
             return ExecutionResult.Failure;
         }
 
-        public async Task<ExecutionResult> ExecuteFileAsync(string filename, string extraArgs) {
+        public async Task<bool> ExecuteFileAsync(string filename, string extraArgs) {
             var thread = await EnsureConnectedAsync();
             if (thread != null) {
                 return await thread.ExecuteFile(filename, extraArgs, "script");
             }
 
             WriteError(Strings.ReplDisconnected);
-            return ExecutionResult.Failure;
+            return false;
         }
 
-        public async Task<ExecutionResult> ExecuteModuleAsync(string name, string extraArgs) {
+        public async Task<bool> ExecuteModuleAsync(string name, string extraArgs) {
             var thread = await EnsureConnectedAsync();
             if (thread != null) {
                 return await thread.ExecuteFile(name, extraArgs, "module");
             }
 
             WriteError(Strings.ReplDisconnected);
-            return ExecutionResult.Failure;
+            return false;
         }
 
-        public async Task<ExecutionResult> ExecuteProcessAsync(string filename, string extraArgs) {
+        public async Task<bool> ExecuteProcessAsync(string filename, string extraArgs) {
             var thread = await EnsureConnectedAsync();
             if (thread != null) {
                 return await thread.ExecuteFile(filename, extraArgs, "process");
             }
 
             WriteError(Strings.ReplDisconnected);
-            return ExecutionResult.Failure;
+            return false;
         }
 
         const string _splitRegexPattern = @"(?x)\s*,\s*(?=(?:[^""]*""[^""]*"")*[^""]*$)"; // http://regexhero.net/library/52/

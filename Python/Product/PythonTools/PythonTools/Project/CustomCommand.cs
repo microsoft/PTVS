@@ -641,18 +641,18 @@ namespace Microsoft.PythonTools.Project {
                     if (startInfo.IsScript) {
                         interactive.WriteLine(string.Format("Executing {0} {1}", Path.GetFileName(filename), arguments));
                         Debug.WriteLine("Executing {0} {1}", filename, arguments);
-                        result = await pyEvaluator.ExecuteFileAsync(filename, arguments);
+                        await pyEvaluator.ExecuteFileAsync(filename, arguments);
                     } else if (startInfo.IsModule) {
                         interactive.WriteLine(string.Format("Executing -m {0} {1}", filename, arguments));
                         Debug.WriteLine("Executing -m {0} {1}", filename, arguments);
-                        result = await pyEvaluator.ExecuteModuleAsync(filename, arguments);
+                        await pyEvaluator.ExecuteModuleAsync(filename, arguments);
                     } else if (startInfo.IsCode) {
                         Debug.WriteLine("Executing -c \"{0}\"", filename, arguments);
-                        result = await pyEvaluator.ExecuteCodeAsync(filename);
+                        await pyEvaluator.ExecuteCodeAsync(filename);
                     } else {
                         interactive.WriteLine(string.Format("Executing {0} {1}", Path.GetFileName(filename), arguments));
                         Debug.WriteLine("Executing {0} {1}", filename, arguments);
-                        result = await pyEvaluator.ExecuteProcessAsync(filename, arguments);
+                        await pyEvaluator.ExecuteProcessAsync(filename, arguments);
                     }
 
                     if (resetRepl) {

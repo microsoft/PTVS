@@ -16,34 +16,29 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.ExceptionServices;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Options;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.PythonTools.InteractiveWindow.Commands;
+using Microsoft.PythonTools.Options;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Projection;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Debug")]
     [ContentType(PythonCoreConstants.ContentType)]
     [ContentType(PredefinedInteractiveCommandsContentTypes.InteractiveCommandContentTypeName)]
     internal class PythonDebugReplEvaluator :
+        IInteractiveEvaluator,
         IPythonInteractiveEvaluator,
         IMultipleScopeEvaluator,
         IPythonInteractiveIntellisense
@@ -141,13 +136,18 @@ namespace Microsoft.PythonTools.Repl {
             return ExecutionResult.Succeeded;
         }
 
-        public Task<ExecutionResult> ExecuteFileAsync(string filename, string extraArgs) {
+        public async Task<bool> ExecuteFileAsync(string filename, string extraArgs) {
             if (!IsInDebugBreakMode()) {
                 NoExecutionIfNotStoppedInDebuggerError();
-                return ExecutionResult.Succeeded;
+                return true;
             }
 
-            return _activeEvaluator?.ExecuteFileAsync(filename, extraArgs) ?? ExecutionResult.Succeeded;
+            var t = _activeEvaluator?.ExecuteFileAsync(filename, extraArgs);
+            if (t != null) {
+                return await t;
+            }
+            // No evaluator, so say we succeeded
+            return true;
         }
 
         public void AbortExecution() {
