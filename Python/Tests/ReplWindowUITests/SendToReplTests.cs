@@ -63,6 +63,32 @@ namespace ReplWindowUITests {
         }
 
         /// <summary>
+        /// Simple line-by-line tests which verify we submit when we get to
+        /// the next statement.
+        /// </summary>
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public virtual void SendToInteractiveCellByCell() {
+            RunOne("Cells.py",
+                Input(@"#%% cell 1
+... x = 1
+... 
+>>> y = 2").Complete,
+                Input(@"#%% cell 2
+... x = 3
+... 
+>>> y = 4").Complete,
+                Input(@"#%% cell 3
+... if x > y:
+...     print(x ** y)
+... else:
+...     print(y ** x)
+... ").Complete.Outputs("64"),
+                EndOfInput
+            );
+        }
+
+        /// <summary>
         /// Line-by-line tests that verify we work with buffering code
         /// while it's executing.
         /// </summary>

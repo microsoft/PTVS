@@ -76,6 +76,33 @@ class someClass:
 
         #endregion Outlining Regions
 
+        #region Outlining Cells
+
+        [TestMethod, Priority(0)]
+        public void OutlineCells() {
+            string content = @"pass
+#%% cell 1
+pass
+
+#%% empty cell
+#%%cell2
+
+pass
+
+#%% lastcell
+pass
+
+";
+
+            SnapshotCellTest(content,
+                new ExpectedTag(16, 22, "\r\npass"),
+                new ExpectedTag(50, 58, "\r\n\r\npass"),
+                new ExpectedTag(74, 80, "\r\npass")
+            );
+        }
+
+        #endregion
+
         #region Outline Compound Statements
 
         [TestMethod, Priority(0)]
@@ -367,6 +394,13 @@ string'''";
             var snapshot = new TestUtilities.Mocks.MockTextSnapshot(new TestUtilities.Mocks.MockTextBuffer(fileContents), fileContents);
             var ast = Parser.CreateParser(new TextSnapshotToTextReader(snapshot), PythonLanguageVersion.V34).ParseFile();
             var tags = Microsoft.PythonTools.OutliningTaggerProvider.OutliningTagger.ProcessRegionTags(snapshot);
+            VerifyTags(snapshot, tags, expected);
+        }
+
+        private void SnapshotCellTest(string fileContents, params ExpectedTag[] expected) {
+            var snapshot = new TestUtilities.Mocks.MockTextSnapshot(new TestUtilities.Mocks.MockTextBuffer(fileContents), fileContents);
+            var ast = Parser.CreateParser(new TextSnapshotToTextReader(snapshot), PythonLanguageVersion.V34).ParseFile();
+            var tags = Microsoft.PythonTools.OutliningTaggerProvider.OutliningTagger.ProcessCellTags(snapshot);
             VerifyTags(snapshot, tags, expected);
         }
 

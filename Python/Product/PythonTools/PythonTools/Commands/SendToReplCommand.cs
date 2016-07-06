@@ -52,6 +52,10 @@ namespace Microsoft.PythonTools.Commands {
             _serviceProvider = serviceProvider;
         }
 
+        private static bool IsCellMarker(ITextSnapshotLine line) {
+            return line.GetText().Trim(' ', '\t').StartsWith("#%%");
+        }
+
         public override async void DoCommand(object sender, EventArgs args) {
             var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
             var project = activeView.GetProjectAtCaret(_serviceProvider);
@@ -75,7 +79,19 @@ namespace Microsoft.PythonTools.Commands {
                 // No selection, and we haven't hit the end of the file in line-by-line mode.
                 // Send the current line, and then move the caret to the next non-blank line.
                 ITextSnapshotLine targetLine = snapshot.GetLineFromPosition(selection.Start.Position);
-                input = targetLine.GetText();
+                var targetSpan = targetLine.Extent;
+
+                if (IsCellMarker(targetLine)) {
+                    while (targetLine.LineNumber < snapshot.LineCount - 1) {
+                        var nextLine = snapshot.GetLineFromLineNumber(targetLine.LineNumber + 1);
+                        if (IsCellMarker(nextLine)) {
+                            break;
+                        }
+                        targetLine = nextLine;
+                    }
+                    targetSpan = new SnapshotSpan(targetSpan.Start, targetLine.End);
+                }
+                input = targetSpan.GetText();
 
                 bool moved = false;
                 while (targetLine.LineNumber < snapshot.LineCount - 1) {

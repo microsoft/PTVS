@@ -32,6 +32,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.TextManager.Interop;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Navigation {
@@ -65,6 +66,7 @@ namespace Microsoft.PythonTools.Navigation {
         private NavigationInfo _navigations;
         private object _navigationsLock = new object();
         private readonly IServiceProvider _serviceProvider;
+        private readonly UIThreadBase _uiThread;
         private IntPtr _imageList;
 
         private const int NavigationLevels = 2;
@@ -76,6 +78,7 @@ namespace Microsoft.PythonTools.Navigation {
             Utilities.ArgumentNotNull(nameof(analysisEntry), analysisEntry);
 
             _serviceProvider = serviceProvider;
+            _uiThread = _serviceProvider.GetUIThread();
             _analysisEntry = analysisEntry;
             textView.TextBuffer.RegisterForParseTree(ParserOnNewParseTree);
             _textView = textView;
@@ -473,29 +476,30 @@ namespace Microsoft.PythonTools.Navigation {
         /// </summary>
         private async void ParserOnNewParseTree(AnalysisEntry entry) {
             var dropDownBar = _dropDownBar;
-            if (dropDownBar != null) {
+            if (dropDownBar == null) {
+                return;
+            }
 
-                var navigations = await _analysisEntry.Analyzer.GetNavigationsAsync(_textView);
-                lock (_navigationsLock) {
-                    _navigations = navigations;
-                    for (int i = 0; i < _curSelection.Length; i++) {
-                        _curSelection[i] = -1;
-                    }
+            var navigations = await _uiThread.InvokeTask(() => _analysisEntry.Analyzer.GetNavigationsAsync(_textView));
+            lock (_navigationsLock) {
+                _navigations = navigations;
+                for (int i = 0; i < _curSelection.Length; i++) {
+                    _curSelection[i] = -1;
                 }
+            }
 
-                Action callback = () => CaretPositionChanged(
-                    this,
-                    new CaretPositionChangedEventArgs(
-                        _textView,
-                        _textView.Caret.Position,
-                        _textView.Caret.Position
-                    )
-                );
+            Action callback = () => CaretPositionChanged(
+                this,
+                new CaretPositionChangedEventArgs(
+                    _textView,
+                    _textView.Caret.Position,
+                    _textView.Caret.Position
+                )
+            );
 
-                try {
-                    await _dispatcher.BeginInvoke(callback, DispatcherPriority.Background);
-                } catch (TaskCanceledException) {
-                }
+            try {
+                await _dispatcher.BeginInvoke(callback, DispatcherPriority.Background);
+            } catch (TaskCanceledException) {
             }
         }
 
