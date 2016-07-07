@@ -25,6 +25,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
@@ -57,7 +58,18 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public static readonly object DoNotParse = new object();
 
-        public BufferParser(AnalysisEntry analysis, VsProjectAnalyzer parser, ITextBuffer buffer) {
+        public static async Task<BufferParser> CreateAsync(AnalysisEntry analysis, VsProjectAnalyzer parser, ITextBuffer buffer) {
+            var res = new BufferParser(analysis, parser, buffer);
+
+            using (new DebugTimer("BufferParser.ParseBuffers", 100)) {
+                // lock not necessary for _bufferInfo, no one has access to us yet...
+                await res.ParseBuffers(new[] { buffer.CurrentSnapshot }, new[] { res._bufferInfo[buffer] });
+            }
+
+            return res;
+        }
+
+        private BufferParser(AnalysisEntry analysis, VsProjectAnalyzer parser, ITextBuffer buffer) {
             Debug.Assert(analysis != null);
 
             _parser = parser;
@@ -68,9 +80,6 @@ namespace Microsoft.PythonTools.Intellisense {
             analysis.BufferParser = this;
 
             InitBuffer(buffer, 0);
-
-            // lock not necessary for _bufferInfo, no one has access to us yet...
-            ParseBuffers(new[] { buffer.CurrentSnapshot }, new[] { _bufferInfo[buffer] }).DoNotWait();
         }
 
         class BufferInfo {
@@ -366,10 +375,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 );
 
                 if (res != null) {
-                    Debug.Assert(res.failed != false);
+                    Debug.Assert(res.failed != true);
                     _parser.OnAnalysisStarted();
 #if DEBUG
-                    Debug.Assert(res.newCode != null, "FileId={0}, Path={1}".FormatUI(entry.FileId, entry.Path));
                     for (int i = 0; i < bufferInfos.Length; i++) {
                         var snapshot = snapshots[i];
                         var buffer = bufferInfos[i];

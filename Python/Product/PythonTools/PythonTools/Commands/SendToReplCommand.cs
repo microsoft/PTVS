@@ -81,15 +81,19 @@ namespace Microsoft.PythonTools.Commands {
                 ITextSnapshotLine targetLine = snapshot.GetLineFromPosition(selection.Start.Position);
                 var targetSpan = targetLine.Extent;
 
-                if (IsCellMarker(targetLine)) {
-                    while (targetLine.LineNumber < snapshot.LineCount - 1) {
-                        var nextLine = snapshot.GetLineFromLineNumber(targetLine.LineNumber + 1);
-                        if (IsCellMarker(nextLine)) {
-                            break;
+                for (int lineNo = targetLine.LineNumber; lineNo >= 0; --lineNo) {
+                    var line = snapshot.GetLineFromLineNumber(lineNo);
+                    if (IsCellMarker(line)) {
+                        while (targetLine.LineNumber < snapshot.LineCount - 1) {
+                            var nextLine = snapshot.GetLineFromLineNumber(targetLine.LineNumber + 1);
+                            if (IsCellMarker(nextLine)) {
+                                break;
+                            }
+                            targetLine = nextLine;
                         }
-                        targetLine = nextLine;
+                        targetSpan = new SnapshotSpan(line.Start, targetLine.End);
+                        break;
                     }
-                    targetSpan = new SnapshotSpan(targetSpan.Start, targetLine.End);
                 }
                 input = targetSpan.GetText();
 
