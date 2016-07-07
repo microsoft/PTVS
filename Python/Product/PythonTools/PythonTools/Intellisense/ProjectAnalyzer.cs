@@ -533,7 +533,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     _unresolvedSquiggles.ListenForNextNewAnalysis(entry, textBuffer);
                 }
 
-                entry.BufferParser = new BufferParser(entry, this, textBuffer);
+                entry.BufferParser = await BufferParser.CreateAsync(entry, this, textBuffer);
             } else {
                 entry.BufferParser.AddBuffer(textBuffer);
             }

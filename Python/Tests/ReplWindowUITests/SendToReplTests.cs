@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -74,10 +75,14 @@ namespace ReplWindowUITests {
 ... x = 1
 ... 
 >>> y = 2").Complete,
+
+                MoveCaretRelative(1, 0),
                 Input(@"#%% cell 2
 ... x = 3
 ... 
 >>> y = 4").Complete,
+
+                MoveCaretRelative(2, 8),
                 Input(@"#%% cell 3
 ... if x > y:
 ...     print(x ** y)
@@ -207,6 +212,10 @@ namespace ReplWindowUITests {
             return new MoveCaretStep(line, column);
         }
 
+        private static SendToStep MoveCaretRelative(int lines, int columns) {
+            return new MoveCaretRelativeStep(lines, columns);
+        }
+
         /// <summary>
         /// An input that is complete and executes immediately.
         /// </summary>
@@ -273,6 +282,33 @@ namespace ReplWindowUITests {
                 state.Editor.MoveCaret(
                     _line,
                     _column
+                );
+            }
+        }
+
+        class MoveCaretRelativeStep : SendToStep {
+            private readonly int _lines, _columns;
+
+            public MoveCaretRelativeStep(int lines, int columns) {
+                _lines = lines;
+                _columns = columns;
+            }
+
+            public override void Execute(StepState state) {
+                state.Window.Activate();
+
+                int line = 0, column = 0;
+                state.Editor.Invoke(() => {
+                    state.Document.Selection.Clear();
+                    var pos = state.Editor.TextView.Caret.Position.BufferPosition;
+                    var posLine = pos.GetContainingLine();
+                    line = posLine.LineNumber + 1;
+                    column = pos.Position - posLine.Start.Position + 1;
+                });
+
+                state.Editor.MoveCaret(
+                    line + _lines,
+                    column + _columns
                 );
             }
         }

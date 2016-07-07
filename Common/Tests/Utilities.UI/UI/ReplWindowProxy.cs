@@ -430,6 +430,7 @@ namespace TestUtilities.UI {
                     return new SessionHolder<T>((T)res, this);
                 }
                 Thread.Sleep(250);
+                AssertListener.ThrowUnhandled();
             }
 
             Assert.Fail("Failed to find session " + typeof(T).FullName);
