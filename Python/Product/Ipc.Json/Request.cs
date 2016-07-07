@@ -24,6 +24,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
     public class Request {
         [JsonIgnore]
         public virtual string command => null;
+
+        public override string ToString() => command;
     }
 
     public class GenericRequest : Request<Response> {

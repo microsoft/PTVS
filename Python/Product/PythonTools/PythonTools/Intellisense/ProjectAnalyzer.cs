@@ -1339,7 +1339,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal async Task UnloadFileAsync(AnalysisEntry entry) {
             _analysisComplete = false;
-            await SendRequestAsync(new AP.UnloadFileRequest() { fileId = entry.FileId }).ConfigureAwait(false);
             AnalysisEntry removed;
             _projectFiles.TryRemove(entry.Path, out removed);
             _projectFilesById.TryRemove(entry.FileId, out removed);
@@ -1347,6 +1346,8 @@ namespace Microsoft.PythonTools.Intellisense {
             _errorProvider.Clear(entry, ParserTaskMoniker);
             _errorProvider.Clear(entry, UnresolvedImportMoniker);
             _commentTaskProvider.Clear(entry, ParserTaskMoniker);
+
+            await SendRequestAsync(new AP.UnloadFileRequest() { fileId = entry.FileId }).ConfigureAwait(false);
         }
 
         internal void ClearAllTasks() {
@@ -1380,7 +1381,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (conn == null) {
                 return default(T);
             }
-            Debug.WriteLine(String.Format("{1} Sending request {0}", request.command, DateTime.Now));
+            Debug.WriteLine(String.Format("{1} Sending request {0}", request, DateTime.Now));
             T res = defaultValue;
             try {
                 res = await conn.SendRequestAsync(request, _processExitedCancelSource.Token).ConfigureAwait(false);
@@ -1391,7 +1392,7 @@ namespace Microsoft.PythonTools.Intellisense {
             } catch (FailedRequestException e) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOpertionFailed, e.Message);
             }
-            Debug.WriteLine(String.Format("{1} Done sending request {0}", request.command, DateTime.Now));
+            Debug.WriteLine(String.Format("{1} Done sending request {0}", request, DateTime.Now));
             return res;
         }
 
