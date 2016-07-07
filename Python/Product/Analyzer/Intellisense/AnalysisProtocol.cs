@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Parsing;
@@ -310,6 +311,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public int fileId;
             public override string command => Command;
+
+            public override string ToString() => "{0}:{1}".FormatUI(command, fileId);
         }
 
 
@@ -329,6 +332,8 @@ namespace Microsoft.PythonTools.Intellisense {
             public FileUpdate[] updates;
 
             public override string command => Command;
+
+            public override string ToString() => "{0}:{1} ({2} updates)".FormatUI(command, fileId, updates.Length);
         }
 
         public enum FileUpdateKind {
