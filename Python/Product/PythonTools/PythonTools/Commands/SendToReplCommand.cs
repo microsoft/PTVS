@@ -81,6 +81,8 @@ namespace Microsoft.PythonTools.Commands {
                 ITextSnapshotLine targetLine = snapshot.GetLineFromPosition(selection.Start.Position);
                 var targetSpan = targetLine.Extent;
 
+                // If the line is inside a code cell, expand the target span to
+                // contain the entire cell.
                 for (int lineNo = targetLine.LineNumber; lineNo >= 0; --lineNo) {
                     var line = snapshot.GetLineFromLineNumber(lineNo);
                     if (IsCellMarker(line)) {
