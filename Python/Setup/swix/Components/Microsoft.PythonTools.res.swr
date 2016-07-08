@@ -1,6 +1,0 @@
-use vs
-
-vs.localizedResources
-  vs.localizedResource language=en-us
-                       title="Python"
-                       description="Support for writing Python scripts and web services, including IntelliSense and debugging."

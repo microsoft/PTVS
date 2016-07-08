@@ -1,7 +1,0 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <IntermediateOutputPathSuffix Condition="$(IntermediateOutputPathSuffix) == ''">setup_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
-    <SwixPackageType>workload</SwixPackageType>
-  </PropertyGroup>
-  <Import Project="..\SetupProjectBefore.settings" />
-</Project>

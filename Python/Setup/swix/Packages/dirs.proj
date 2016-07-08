@@ -28,8 +28,6 @@
     <ProjectFile Include="Microsoft.PythonTools.Uwp.Vsix.swixproj" Condition="'$(IncludeUwp)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.Uwp.Templates.Vsix.swixproj" Condition="'$(IncludeUwp)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.Web.Templates.Vsix.swixproj"/>
-    <ProjectFile Include="CPython2x64.Msi.swixproj"/>
-    <ProjectFile Include="CPython3x64.Exe.swixproj"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
