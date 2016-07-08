@@ -1,6 +1,0 @@
-use vs
-
-vs.localizedResources
-  vs.localizedResource language=en-us
-                       title="CPython 2.7"
-                       description="Python is a programming language that lets you work more quickly and integrate your systems more effectively. Python 2.7 is a legacy version used in many existing systems."

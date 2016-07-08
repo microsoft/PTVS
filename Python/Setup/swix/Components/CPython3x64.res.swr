@@ -1,6 +1,0 @@
-use vs
-
-vs.localizedResources
-  vs.localizedResource language=en-us
-                       title="CPython 3.5"
-                       description="Python is a programming language that lets you work more quickly and integrate your systems more effectively. This will install the latest version of the language."

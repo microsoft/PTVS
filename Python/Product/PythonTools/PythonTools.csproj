@@ -708,7 +708,7 @@
     </Content>
     <Content Include="Microsoft.PythonTools.VsInteractiveWindow.pkgdef">
       <IncludeInVSIX>true</IncludeInVSIX>
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="NoInterpreters.mht">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
