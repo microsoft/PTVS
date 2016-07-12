@@ -120,7 +120,7 @@ class Runtime(object):
             self._nui.NuiShutdown()
             import traceback
             
-            raise KinectError('Unable to create Kinect runtime '+ traceback.format_exc()) 
+            raise KinectError('Unable to create Kinect runtime %s' % (traceback.format_exc())) 
 
         self.depth_frame_ready = _event()
         self.skeleton_frame_ready = _event()
