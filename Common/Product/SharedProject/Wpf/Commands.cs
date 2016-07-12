@@ -78,7 +78,7 @@ namespace Microsoft.VisualStudioTools.Wpf {
                 while (!string.IsNullOrEmpty(path) && !Directory.Exists(path)) {
                     try {
                         path = Path.GetDirectoryName(path);
-                    } catch {
+                    } catch (ArgumentException) {
                         path = null; // path was in incorrect format, continue with default (current) directory
                     }
                 }
