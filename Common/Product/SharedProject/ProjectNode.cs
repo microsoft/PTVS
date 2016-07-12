@@ -187,6 +187,8 @@ namespace Microsoft.VisualStudioTools.Project {
 
         private MSBuild.Project buildProject;
 
+        private MSBuild.Project userBuildProject;
+
         private MSBuildExecution.ProjectInstance currentConfig;
 
         private ConfigProvider configProvider;
@@ -632,6 +634,7 @@ namespace Microsoft.VisualStudioTools.Project {
                     projectHome = CommonUtils.GetAbsoluteDirectoryPath(
                         this.ProjectFolder,
                         this.GetProjectProperty(CommonConstants.ProjectHome, resetCache: false));
+                    projectHome = CommonUtils.TrimEndSeparator(projectHome);
                 }
 
                 Debug.Assert(projectHome != null, "ProjectHome should not be null");
@@ -822,6 +825,19 @@ namespace Microsoft.VisualStudioTools.Project {
             }
             set {
                 SetBuildProject(value);
+            }
+        }
+
+        protected internal MSBuild.Project UserBuildProject {
+            get {
+                return userBuildProject;
+            }
+        }
+
+        protected bool IsUserProjectFileDirty {
+            get {
+                return userBuildProject != null &&
+                    userBuildProject.Xml.HasUnsavedChanges;
             }
         }
 
@@ -1107,6 +1123,10 @@ namespace Microsoft.VisualStudioTools.Project {
                     buildProject.ProjectCollection.UnloadProject(buildProject);
                     buildProject.ProjectCollection.UnloadProject(buildProject.Xml);
                     SetBuildProject(null);
+                }
+
+                if (userBuildProject != null) {
+                    userBuildProject.ProjectCollection.UnloadProject(userBuildProject);
                 }
 
                 var logger = BuildLogger as IDisposable;
@@ -1719,6 +1739,41 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         /// <summary>
+        /// Set value of user project property
+        /// </summary>
+        /// <param name="propertyName">Name of property</param>
+        /// <param name="propertyValue">Value of property</param>
+        public virtual void SetUserProjectProperty(string propertyName, string propertyValue) {
+            Utilities.ArgumentNotNull("propertyName", propertyName);
+
+            if (userBuildProject == null) {
+                // user project file doesn't exist yet, create it.
+                // We set the content of user file explictly so VS2013 won't add ToolsVersion="12" which would result in incompatibility with VS2010,2012   
+                var root = Microsoft.Build.Construction.ProjectRootElement.Create(BuildProject.ProjectCollection);
+                root.ToolsVersion = "4.0";
+                userBuildProject = new MSBuild.Project(root, null, null, BuildProject.ProjectCollection);
+                userBuildProject.FullPath = FileName + PerUserFileExtension;
+            }
+            userBuildProject.SetProperty(propertyName, propertyValue ?? String.Empty);
+        }
+
+        /// <summary>
+        /// Get value of user project property
+        /// </summary>
+        /// <param name="propertyName">Name of property</param>
+        public virtual string GetUserProjectProperty(string propertyName) {
+            Utilities.ArgumentNotNull("propertyName", propertyName);
+
+            if (userBuildProject == null) {
+                return null;
+            }
+
+            // If user project file exists during project load/reload userBuildProject is initiated 
+            return userBuildProject.GetPropertyValue(propertyName);
+        }
+
+
+        /// <summary>
         /// Return the value of a project property
         /// </summary>
         /// <param name="propertyName">Name of the property to get</param>
@@ -2215,6 +2270,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 eventTriggeringFlag = ProjectNode.EventTriggering.DoNotTriggerHierarchyEvents | ProjectNode.EventTriggering.DoNotTriggerTrackerEvents;
 
                 SetBuildProject(Utilities.ReinitializeMsBuildProject(buildEngine, filename, buildProject));
+
+                SetUserBuildProject();
 
                 // Load the guid
                 SetProjectGuidFromProjectFile();
@@ -3778,6 +3835,13 @@ namespace Microsoft.VisualStudioTools.Project {
         protected virtual void SaveMSBuildProjectFile(string filename) {
             buildProject.Save(filename);
             isDirty = false;
+            SaveMSBuildUserProjectFile(filename);
+        }
+
+        protected void SaveMSBuildUserProjectFile(string filename) {
+            if (userBuildProject != null) {
+                userBuildProject.Save(filename + PerUserFileExtension);
+            }
         }
 
         public virtual int SaveCompleted(string filename) {
@@ -3970,7 +4034,7 @@ namespace Microsoft.VisualStudioTools.Project {
                                 }
                             }
                             // https://pytools.codeplex.com/workitem/1251
-                            ErrorHandler.ThrowOnFailure(child.IncludeInProject(false));
+                            ErrorHandler.ThrowOnFailure(child.IncludeInProjectWithRefresh(false));
                         }
                         result[0] = VSADDRESULT.ADDRESULT_Cancel;
                         continue;
@@ -4118,7 +4182,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 if (overwrite) {
                     if (child.IsNonMemberItem) {
-                        ErrorHandler.ThrowOnFailure(child.IncludeInProject(false));
+                        ErrorHandler.ThrowOnFailure(child.IncludeInProjectWithRefresh(false));
                     }
                 } else if (linkedFile != null || isLink) {
                     // files not moving, add the old name, and set the link.
@@ -4203,7 +4267,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 n.AddChild(newChild);
                 targetFolder = newChild;
             } else if (targetFolder.IsNonMemberItem) {
-                int hr = targetFolder.IncludeInProject(true);
+                int hr = targetFolder.IncludeInProjectWithRefresh(true);
                 if (ErrorHandler.Succeeded(hr)) {
                     OnInvalidateItems(targetFolder.Parent);
                 }
@@ -4934,7 +4998,27 @@ If the files in the existing folder have the same names as files in the folder y
         /// <param name="propertyValue">Value of the property (out parameter)</param>
         /// <returns>HRESULT</returns>
         int IVsBuildPropertyStorage.GetPropertyValue(string propertyName, string configName, uint storage, out string propertyValue) {
-            // TODO: when adding support for User files, we need to update this method
+            switch ((_PersistStorageType)storage) {
+                case _PersistStorageType.PST_USER_FILE:
+                    return GetUserPropertyValue(propertyName, configName, out propertyValue);
+                case _PersistStorageType.PST_PROJECT_FILE:
+                default:
+                    return GetPropertyValue(propertyName, configName, out propertyValue);
+            }
+        }
+
+        private int GetUserPropertyValue(string propertyName, string configName, out string propertyValue)  {
+            propertyValue = null;
+            if (string.IsNullOrEmpty(configName)) {
+                propertyValue = this.GetUserProjectProperty(propertyName);
+                return VSConstants.S_OK;
+            } else {
+                // TODO: Add support for config dependent user properties
+                return VSConstants.E_NOTIMPL;
+            }
+        }
+
+        private int GetPropertyValue(string propertyName, string configName, out string propertyValue) {
             propertyValue = null;
             if (string.IsNullOrEmpty(configName)) {
                 propertyValue = this.GetProjectProperty(propertyName, false);
@@ -4990,7 +5074,16 @@ If the files in the existing folder have the same names as files in the folder y
         /// <param name="propertyValue">New value for that property</param>
         /// <returns>HRESULT</returns>
         int IVsBuildPropertyStorage.SetPropertyValue(string propertyName, string configName, uint storage, string propertyValue) {
-            // TODO: when adding support for User files, we need to update this method
+            switch ((_PersistStorageType)storage) {
+                case _PersistStorageType.PST_USER_FILE:
+                    return SetUserPropertyValue(propertyName, configName, propertyValue);
+                case _PersistStorageType.PST_PROJECT_FILE:
+                default:
+                    return SetPropertyValue(propertyName, configName, propertyValue);
+            }
+        }
+
+        private int SetPropertyValue(string propertyName, string configName, string propertyValue) {
             if (string.IsNullOrEmpty(configName)) {
                 this.SetProjectProperty(propertyName, propertyValue);
             } else {
@@ -5000,6 +5093,16 @@ If the files in the existing folder have the same names as files in the folder y
                 config.SetConfigurationProperty(propertyName, propertyValue);
             }
             return VSConstants.S_OK;
+        }
+
+        private int SetUserPropertyValue(string propertyName, string configName, string propertyValue) {
+            if (string.IsNullOrEmpty(configName)) {
+                this.SetUserProjectProperty(propertyName, propertyValue);
+                return VSConstants.S_OK;
+            } else {
+                // TODO: Add support for config dependent user properties
+                return VSConstants.E_NOTIMPL;
+            }
         }
 
         #endregion
@@ -5145,7 +5248,7 @@ If the files in the existing folder have the same names as files in the folder y
             this.sccAuxPath = this.GetProjectProperty(ProjectFileConstants.SccAuxPath, false);
         }
 
-        internal void OnAfterProjectOpen() {
+        internal virtual void OnAfterProjectOpen() {
             this.projectOpened = true;
         }
 
@@ -5226,6 +5329,13 @@ If the files in the existing folder have the same names as files in the folder y
             }
             if (isNewBuildProject) {
                 NewBuildProject(project);
+            }
+        }
+
+        private void SetUserBuildProject() {
+            string userProjectFilename = FileName + PerUserFileExtension;
+            if (File.Exists(userProjectFilename)) {
+                userBuildProject = BuildProject.ProjectCollection.LoadProject(userProjectFilename);
             }
         }
 

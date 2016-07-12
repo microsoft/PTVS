@@ -164,10 +164,12 @@ namespace Microsoft.VisualStudioTools.Project {
             FileDocumentManager manager = this.GetDocumentManager() as FileDocumentManager;
             Utilities.CheckNotNull(manager, "Could not get the FileDocumentManager");
 
-            Guid viewGuid =
-                (IsFormSubType ? VSConstants.LOGVIEWID_Designer : VSConstants.LOGVIEWID_Code);
             IVsWindowFrame frame;
-            manager.Open(false, false, viewGuid, out frame, WindowFrameShowAction.Show);
+            if (IsFormSubType)
+                manager.Open(false, false, VSConstants.LOGVIEWID_Designer, out frame, WindowFrameShowAction.Show);
+            else
+                //manager.Open(false, false, VSConstants.LOGVIEWID_Code, out frame, WindowFrameShowAction.Show);    // Do not use, as in VS2010 css files are opened as plain text
+                manager.Open(false, false, WindowFrameShowAction.Show);
         }
 
         private static Guid CLSID_VsTextBuffer = new Guid("{8E7B96A8-E33D-11d0-A6D5-00C04FB67F6A}");
@@ -298,7 +300,9 @@ namespace Microsoft.VisualStudioTools.Project {
                 ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
                 ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
             }
-            ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+
+            // For performance reasons we don't want to call RefreshPropertyBrowser here. 
+            // We just want to call refresh once in ExcludeFromProjectWithRefresh
             return VSConstants.S_OK;
         }
 
@@ -326,13 +330,9 @@ namespace Microsoft.VisualStudioTools.Project {
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
             ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
 
-            // https://nodejstools.codeplex.com/workitem/273, refresh the property browser...
-            ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+            // For performance reasons (99%) we don't want to call RefreshPropertyBrowser and 
+            // bold startup file here. We just want to call it once in IncludeInProjectWithRefresh
 
-            if (CommonUtils.IsSamePath(ProjectMgr.GetStartupFile(), Url)) {
-                ProjectMgr.BoldItem(this, true);
-            }
-            
             // On include, the file should be added to source control.
             this.ProjectMgr.Tracker.OnItemAdded(this.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);
 

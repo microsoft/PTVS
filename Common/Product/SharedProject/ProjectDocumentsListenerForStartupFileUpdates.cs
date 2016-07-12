@@ -44,6 +44,9 @@ namespace Microsoft.VisualStudioTools.Project {
             if (!_project.IsRefreshing) {
                 //Get the current value of the StartupFile Property
                 string currentStartupFile = _project.GetProjectProperty(CommonConstants.StartupFile, true);
+                if (string.IsNullOrEmpty(currentStartupFile)) {
+                    return VSConstants.S_OK;
+                }
                 string fullPathToStartupFile = CommonUtils.GetAbsoluteFilePath(_project.ProjectHome, currentStartupFile);
 
                 //Investigate all of the oldFileNames if they are equal to the current StartupFile
@@ -85,6 +88,9 @@ namespace Microsoft.VisualStudioTools.Project {
             if (!_project.IsRefreshing) {
                 //Get the current value of the StartupFile Property
                 string currentStartupFile = _project.GetProjectProperty(CommonConstants.StartupFile, true);
+                if (string.IsNullOrEmpty(currentStartupFile)) {
+                    return VSConstants.S_OK;
+                }
                 string fullPathToStartupFile = CommonUtils.GetAbsoluteFilePath(_project.ProjectHome, currentStartupFile);
 
                 //Investigate all of the oldFileNames if they are equal to the current StartupFile

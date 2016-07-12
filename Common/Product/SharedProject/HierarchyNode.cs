@@ -1172,28 +1172,40 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         /// <summary>
+        /// Handles the exclude from project command. After operations 
+        /// is completed it refreshes property browser.
+        /// </summary>
+        internal int ExcludeFromProjectWithRefresh() {
+            try {
+                int hr = this.ExcludeFromProject();
+                if (ErrorHandler.Succeeded(hr)) {
+                    // https://pytools.codeplex.com/workitem/1996
+                    // Mark the previous sibling or direct parent as the active item
+                    IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
+                        ProjectMgr.Site,
+                        new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
+                    windows.ExpandItem(
+                        ProjectMgr,
+                        PreviousVisibleSibling != null ?
+                            PreviousVisibleSibling.ID :
+                            Parent.ID,
+                        EXPANDFLAGS.EXPF_SelectItem
+                    );
+                }
+                return hr;
+            }
+            finally {
+                ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+            }
+        }
+
+        /// <summary>
         /// Handles the exclude from project command potentially displaying
         /// a progress bar if the operation can take a long time.
         /// </summary>
         /// <returns></returns>
         internal virtual int ExcludeFromProjectWithProgress() {
-
-            int hr = ExcludeFromProject();
-            if (ErrorHandler.Succeeded(hr)) {
-                // https://pytools.codeplex.com/workitem/1996
-                // Mark the previous sibling or direct parent as the active item
-                IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
-                    ProjectMgr.Site,
-                    new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
-                windows.ExpandItem(
-                    ProjectMgr,
-                    PreviousVisibleSibling != null ?
-                        PreviousVisibleSibling.ID :
-                        Parent.ID,
-                    EXPANDFLAGS.EXPF_SelectItem
-                );
-            }
-            return hr;
+            return ExcludeFromProjectWithRefresh();
         }
 
         /// <summary>
@@ -1209,7 +1221,23 @@ namespace Microsoft.VisualStudioTools.Project {
         /// if the operation can potentially take a long time.
         /// </summary>
         internal virtual int IncludeInProjectWithProgress(bool includeChildren) {
-            return IncludeInProject(includeChildren);
+            return IncludeInProjectWithRefresh(includeChildren);
+        }
+
+        /// <summary>
+        /// Handles the include in project command.
+        /// </summary>
+        internal int IncludeInProjectWithRefresh(bool includeChildren) {
+            try {
+                return this.IncludeInProject(includeChildren);
+            }
+            finally {
+                //
+                ((CommonProjectNode)this.ProjectMgr).BoldStartupItem();
+
+                // https://nodejstools.codeplex.com/workitem/273, refresh the property browser...
+                ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+            }
         }
 
         /// <summary>

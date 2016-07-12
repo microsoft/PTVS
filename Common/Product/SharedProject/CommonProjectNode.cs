@@ -64,7 +64,6 @@ namespace Microsoft.VisualStudioTools.Project {
         private readonly Dictionary<string, FileSystemEventHandler> _fileChangedHandlers = new Dictionary<string, FileSystemEventHandler>();
         private Queue<FileSystemChange> _fileSystemChanges = new Queue<FileSystemChange>();
         private object _fileSystemChangesLock = new object();
-        private MSBuild.Project _userBuildProject;
         private readonly Dictionary<string, FileSystemWatcher> _symlinkWatchers = new Dictionary<string, FileSystemWatcher>();
         private DiskMerger _currentMerger;
         private IdleManager _idleManager;
@@ -190,19 +189,6 @@ namespace Microsoft.VisualStudioTools.Project {
         public CommonPropertyPage PropertyPage {
             get { return _propPage; }
             set { _propPage = value; }
-        }
-
-        protected internal MSBuild.Project UserBuildProject {
-            get {
-                return _userBuildProject;
-            }
-        }
-
-        protected bool IsUserProjectFileDirty {
-            get {
-                return _userBuildProject != null &&
-                    _userBuildProject.Xml.HasUnsavedChanges;
-            }
         }
 
 #endregion
@@ -419,14 +405,9 @@ namespace Microsoft.VisualStudioTools.Project {
                 _watcher.Dispose();
             }
 
-            string userProjectFilename = FileName + PerUserFileExtension;
-            if (File.Exists(userProjectFilename)) {
-                _userBuildProject = BuildProject.ProjectCollection.LoadProject(userProjectFilename);
-            }
-
             bool? showAllFiles = null;
-            if (_userBuildProject != null) {
-                showAllFiles = GetShowAllFilesSetting(_userBuildProject.GetPropertyValue(CommonConstants.ProjectView));
+            if (UserBuildProject != null) {
+                showAllFiles = GetShowAllFilesSetting(UserBuildProject.GetPropertyValue(CommonConstants.ProjectView));
             }
 
             _showingAllFiles = showAllFiles ??
@@ -452,7 +433,7 @@ namespace Microsoft.VisualStudioTools.Project {
             _currentMerger = null;
         }
 
-        private void BoldStartupItem() {
+        internal void BoldStartupItem() {
             var startupPath = GetStartupFile();
             if (!string.IsNullOrEmpty(startupPath)) {
                 var startup = FindNodeByFullPath(startupPath);
@@ -514,22 +495,6 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        protected override void SaveMSBuildProjectFileAs(string newFileName) {
-            base.SaveMSBuildProjectFileAs(newFileName);
-
-            if (_userBuildProject != null) {
-                _userBuildProject.Save(FileName + PerUserFileExtension);
-            }
-        }
-
-        protected override void SaveMSBuildProjectFile(string filename) {
-            base.SaveMSBuildProjectFile(filename);
-
-            if (_userBuildProject != null) {
-                _userBuildProject.Save(filename + PerUserFileExtension);
-            }
-        }
-
         protected override void Dispose(bool disposing) {
             if (disposing) {
 #if DEV11_OR_LATER
@@ -540,10 +505,6 @@ namespace Microsoft.VisualStudioTools.Project {
                 _projectDocListenerForStartupFileUpdates = null;
                 if (pdl != null) {
                     pdl.Dispose();
-                }
-
-                if (this._userBuildProject != null) {
-                    _userBuildProject.ProjectCollection.UnloadProject(_userBuildProject);
                 }
                 if (_idleManager != null) {
                     _idleManager.OnIdle -= OnIdle;
@@ -1649,39 +1610,6 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             return service;
-        }
-
-        /// <summary>
-        /// Set value of user project property
-        /// </summary>
-        /// <param name="propertyName">Name of property</param>
-        /// <param name="propertyValue">Value of property</param>
-        public virtual void SetUserProjectProperty(string propertyName, string propertyValue) {
-            Utilities.ArgumentNotNull("propertyName", propertyName);
-
-            if (_userBuildProject == null) {
-                // user project file doesn't exist yet, create it.
-                // We set the content of user file explictly so VS2013 won't add ToolsVersion="12" which would result in incompatibility with VS2010,2012   
-                var root = Microsoft.Build.Construction.ProjectRootElement.Create(BuildProject.ProjectCollection);
-                root.ToolsVersion = "4.0";
-                _userBuildProject = new MSBuild.Project(root, null, null, BuildProject.ProjectCollection);
-                _userBuildProject.FullPath = FileName + PerUserFileExtension;
-            }
-            _userBuildProject.SetProperty(propertyName, propertyValue ?? String.Empty);
-        }
-
-        /// <summary>
-        /// Get value of user project property
-        /// </summary>
-        /// <param name="propertyName">Name of property</param>
-        public virtual string GetUserProjectProperty(string propertyName) {
-            Utilities.ArgumentNotNull("propertyName", propertyName);
-
-            if (_userBuildProject == null)
-                return null;
-
-            // If user project file exists during project load/reload userBuildProject is initiated 
-            return _userBuildProject.GetPropertyValue(propertyName);
         }
 
 #endregion

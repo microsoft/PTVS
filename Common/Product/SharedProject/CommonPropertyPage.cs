@@ -271,12 +271,9 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         int IPropertyPage.Apply() {
-            try {
-                Apply();
-                return VSConstants.S_OK;
-            } catch (Exception e) {
-                return Marshal.GetHRForException(e);
-            }
+            // We're letting exceptions fall through, so VS can handle them
+            Apply();
+            return VSConstants.S_OK;
         }
 
         void IPropertyPage.Deactivate() {
@@ -314,7 +311,7 @@ namespace Microsoft.VisualStudioTools.Project {
             Control.Size = new Size(r.right - r.left, r.bottom - r.top);
         }
 
-        void IPropertyPage.SetObjects(uint count, object[] punk) {
+        public virtual void SetObjects(uint count, object[] punk) {
             if (punk == null) {
                 return;
             }

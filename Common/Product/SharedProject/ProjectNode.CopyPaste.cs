@@ -805,11 +805,11 @@ namespace Microsoft.VisualStudioTools.Project {
                         if (sourceFolder.IsNonMemberItem) {
                             // copying or moving an existing excluded folder, new folder
                             // is excluded too.
-                            ErrorHandler.ThrowOnFailure(newNode.ExcludeFromProject());
+                            ErrorHandler.ThrowOnFailure(newNode.ExcludeFromProjectWithRefresh());
                         } else if (sourceFolder.Parent.IsNonMemberItem) {
                             // We've moved an included folder to a show all files folder,
                             //     add the parent to the project   
-                            ErrorHandler.ThrowOnFailure(sourceFolder.Parent.IncludeInProject(false));
+                            ErrorHandler.ThrowOnFailure(sourceFolder.Parent.IncludeInProjectWithRefresh(false));
                         }
 
                         if (DropEffect == DropEffect.Move) {
@@ -1348,20 +1348,20 @@ namespace Microsoft.VisualStudioTools.Project {
                                 if (wasMemberItem && targetFolder.IsNonMemberItem) {
                                     // dropping/pasting folder into non-member folder, non member folder
                                     // should get included into the project.
-                                    ErrorHandler.ThrowOnFailure(targetFolder.IncludeInProject(false));
+                                    ErrorHandler.ThrowOnFailure(targetFolder.IncludeInProjectWithRefresh(false));
                                 }
 
                                 targetFolder.AddChild(fileNode);
                                 if (!wasMemberItem) {
                                     // added child by default is included,
                                     //   non-member copies are not added to the project
-                                    ErrorHandler.ThrowOnFailure(fileNode.ExcludeFromProject());
+                                    ErrorHandler.ThrowOnFailure(fileNode.ExcludeFromProjectWithRefresh());
                                 }
                             }
                             Project.tracker.OnItemAdded(fileNode.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);
                         } else if (existing.IsNonMemberItem) {
                             // replacing item that already existed, just include it in the project.
-                            existing.IncludeInProject(false);
+                            existing.IncludeInProjectWithRefresh(false);
                         }
                     }
                 }

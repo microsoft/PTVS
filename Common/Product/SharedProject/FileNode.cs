@@ -693,7 +693,7 @@ namespace Microsoft.VisualStudioTools.Project {
             //If we are included in the project and our parent isn't then
             //we need to bring our parent into the project
             if (!this.IsNonMemberItem && newParent.IsNonMemberItem) {
-                ErrorHandler.ThrowOnFailure(newParent.IncludeInProject(false));
+                ErrorHandler.ThrowOnFailure(newParent.IncludeInProjectWithRefresh(false));
             }
 
             // Retrieve child nodes to add later.

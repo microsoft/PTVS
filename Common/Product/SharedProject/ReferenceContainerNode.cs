@@ -457,6 +457,13 @@ namespace Microsoft.VisualStudioTools.Project {
             remove { onChildRemoved -= value; }
         }
 
+        internal void FireChildAdded(ReferenceNode referenceNode) {
+            var added = onChildAdded;
+            if (added != null) {
+                added(this, new HierarchyNodeEventArgs(referenceNode));
+            }
+        }
+
         internal void FireChildRemoved(ReferenceNode referenceNode) {
             var removed = onChildRemoved;
             if (removed != null) {

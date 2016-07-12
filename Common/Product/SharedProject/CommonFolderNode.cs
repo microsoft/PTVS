@@ -155,7 +155,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
                 ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
             }
-            ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+            // PERFORMANCE: call it once only!
+            // ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
 
             return VSConstants.S_OK;
         }
@@ -165,7 +166,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 "Excluding files and folders...",
                 "Excluding files and folders in your project, this may take several seconds...",
                 ProjectMgr.Site)) {
-                return base.ExcludeFromProjectWithProgress();
+                return ExcludeFromProjectWithRefresh();
             }
         }
 
@@ -201,7 +202,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
             ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
-            ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+            // PERFORMANCE: call it once only! // ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
 
             // On include, the folder should be added to source control.
             this.ProjectMgr.Tracker.OnFolderAdded(this.Url, VSADDDIRECTORYFLAGS.VSADDDIRECTORYFLAGS_NoFlags);
@@ -214,8 +215,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 "Including files and folders...",
                 "Including files and folders to your project, this may take several seconds...",
                 ProjectMgr.Site)) {
-
-                return IncludeInProject(includeChildren);
+                return IncludeInProjectWithRefresh(includeChildren);
             }
         }
 
