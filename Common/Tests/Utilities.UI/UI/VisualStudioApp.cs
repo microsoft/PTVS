@@ -778,6 +778,24 @@ namespace TestUtilities.UI {
             return sln.Projects.Cast<Project>().FirstOrDefault(p => p.Name == projectName);
         }
 
+        private static IEnumerable<IVsProject> EnumerateLoadedProjects(IVsSolution solution) {
+            IEnumHierarchies hierarchies;
+            Guid guid = Guid.Empty;
+            ErrorHandler.ThrowOnFailure((solution.GetProjectEnum(
+                (uint)(__VSENUMPROJFLAGS.EPF_ALLINSOLUTION),
+                ref guid,
+                out hierarchies
+            )));
+            IVsHierarchy[] hierarchy = new IVsHierarchy[1];
+            uint fetched;
+            while (ErrorHandler.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
+                var project = hierarchy[0] as IVsProject;
+                if (project != null) {
+                    yield return project;
+                }
+            }
+        }
+
         public Project OpenProject(
             string projName,
             string startItem = null,
@@ -791,15 +809,30 @@ namespace TestUtilities.UI {
             Console.WriteLine("Opening {0}", fullPath);
 
             // If there is a .suo file, delete that so that there is no state carried over from another test.
-            for (int i = 10; i <= 14; ++i) {
+            for (int i = 10; i <= 15; ++i) {
                 string suoPath = Path.ChangeExtension(fullPath, ".v" + i + ".suo");
                 if (File.Exists(suoPath)) {
                     File.Delete(suoPath);
                 }
             }
+            var dotVsPath = Path.Combine(Path.GetDirectoryName(fullPath), ".vs");
+            if (Directory.Exists(dotVsPath)) {
+                foreach (var suoPath in FileUtils.EnumerateFiles(dotVsPath, ".vso")) {
+                    File.Delete(suoPath);
+                }
+            }
 
-            var t = Task.Run(() => Dte.Solution.Open(fullPath));
-            using (var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30))) {
+            var solution = GetService<IVsSolution>(typeof(SVsSolution));
+            var solution4 = solution as IVsSolution4;
+            Assert.IsNotNull(solution, "Failed to obtain SVsSolution service");
+            Assert.IsNotNull(solution4, "Failed to obtain IVsSolution4 interface");
+
+            var t = Task.Run(() => {
+                ErrorHandler.ThrowOnFailure(solution.OpenSolutionFile((uint)0, fullPath));
+                // Force all projects to load before running any tests.
+                solution4.EnsureSolutionIsLoaded((uint)__VSBSLFLAGS.VSBSLFLAGS_None);
+            });
+            using (var cts = System.Diagnostics.Debugger.IsAttached ? new CancellationTokenSource() : new CancellationTokenSource(30000)) {
                 try {
                     if (!t.Wait(1000, cts.Token)) {
                         // Load has taken a while, start checking whether a dialog has
@@ -823,34 +856,52 @@ namespace TestUtilities.UI {
                     Assert.Fail("Failed to open project quickly enough");
                 }
             }
-            Assert.IsTrue(Dte.Solution.IsOpen, "The solution is not open");
 
-            // Force all projects to load before running any tests.
-            var solution = GetService<IVsSolution4>(typeof(SVsSolution));
-            Assert.IsNotNull(solution, "Failed to obtain SVsSolution service");
-            solution.EnsureSolutionIsLoaded((uint)__VSBSLFLAGS.VSBSLFLAGS_None);
-
-            int count = Dte.Solution.Projects.Count;
-            if (expectedProjects != null && expectedProjects.Value != count) {
+            var projects = EnumerateLoadedProjects(solution).ToList();
+            
+            if (expectedProjects != null && expectedProjects.Value != projects.Count) {
                 // if we have other files open we can end up with a bonus project...
-                int i = 0;
-                foreach (EnvDTE.Project proj in Dte.Solution.Projects) {
-                    if (proj.Name != "Miscellaneous Files") {
-                        i++;
-                    }
-                }
-
-                Assert.AreEqual(expectedProjects, i, "Wrong number of loaded projects");
+                Assert.AreEqual(
+                    expectedProjects,
+                    projects.Count(p => {
+                        string mk;
+                        return ErrorHandler.Succeeded(solution.GetUniqueNameOfProject((IVsHierarchy)p, out mk)) &&
+                            mk != "Miscellaneous Files";
+                    }),
+                    "Wrong number of loaded projects"
+                );
             }
 
-            Project project = GetProject(projectName);
+
+            var vsProject = string.IsNullOrEmpty(projName) ?
+                projects.OfType<IVsHierarchy>().FirstOrDefault() :
+                projects.OfType<IVsHierarchy>().FirstOrDefault(p => {
+                string mk;
+                if (ErrorHandler.Failed(solution.GetUniqueNameOfProject(p, out mk))) {
+                    return false;
+                }
+                Console.WriteLine(mk);
+                return Path.GetFileNameWithoutExtension(mk) == projName;
+            });
 
             string outputText = "(unable to get Solution output)";
             try {
                 outputText = GetOutputWindowText("Solution");
             } catch (Exception) {
             }
-            Assert.IsNotNull(project, "No project loaded: " + outputText);
+            Assert.IsNotNull(vsProject, "No project loaded: " + outputText);
+
+            Guid projGuid;
+            ErrorHandler.ThrowOnFailure(solution.GetGuidOfProject(vsProject, out projGuid));
+
+            object o;
+            ErrorHandler.ThrowOnFailure(vsProject.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_ExtObject, out o));
+            var project = (Project)o;
+
+            if (project.Properties == null) {
+                ErrorHandler.ThrowOnFailure(solution4.ReloadProject(ref projGuid));
+            }
+
             // HACK: Testing whether Properties is just slow to initialize
             for (int retries = 10; retries > 0 && project.Properties == null; --retries) {
                 Trace.TraceWarning("Waiting for project.Properties to become non-null");
