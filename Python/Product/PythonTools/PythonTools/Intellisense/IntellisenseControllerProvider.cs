@@ -135,6 +135,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public void InitKeyBindings(IVsTextView vsTextView) {
             var os = vsTextView as IObjectWithSite;
+            if (os == null) {
+                return;
+            }
 
             IntPtr unkSite = IntPtr.Zero;
             IntPtr unkFrame = IntPtr.Zero;

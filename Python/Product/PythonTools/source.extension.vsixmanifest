@@ -45,5 +45,10 @@
     <Asset Type="DebuggerEngineExtension" Path="DkmDebugger.vsdconfig" />
     <Asset Type="NativeVisualizer" Path="PythonDkm.natvis" />
     <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Newtonsoft.Json.dll" AssemblyName="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.InteractiveWindow.dll" AssemblyName="Microsoft.PythonTools.InteractiveWindow, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Microsoft.PythonTools.VsInteractiveWindow.dll" AssemblyName="Microsoft.PythonTools.VsInteractiveWindow, Version=1.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="File" Path="Microsoft.PythonTools.VsInteractiveWindow.pkgdef" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="File" Path="Microsoft.PythonTools.InteractiveWindow.dll" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" d:Source="File" Path="Microsoft.PythonTools.VsInteractiveWindow.dll" />
   </Assets>
 </PackageManifest>

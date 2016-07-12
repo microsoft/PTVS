@@ -516,6 +516,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 } catch (ObjectDisposedException ex) {
                     Trace.TraceError(ex.ToString());
+                    break;
                 } catch (Exception ex) {
                     if (ex.IsCriticalException()) {
                         throw;

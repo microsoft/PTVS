@@ -1,6 +1,0 @@
-use vs
-
-vs.localizedResources
-  vs.localizedResource language=en-us
-                       title="CPython 3.5"
-                       description="yes"

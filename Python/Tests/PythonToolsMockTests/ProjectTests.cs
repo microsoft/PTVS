@@ -49,7 +49,7 @@ namespace PythonToolsMockTests {
                 Assert.IsNotNull(vs.WaitForItem("HelloWorld", "server.py"));
                 var view = vs.OpenItem("HelloWorld", "server.py");
 
-                view.Type("import ");
+                view.Invoke(() => view.Type("import "));
 
                 var session = view.TopSession as ICompletionSession;
 

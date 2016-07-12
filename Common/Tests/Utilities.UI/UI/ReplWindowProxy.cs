@@ -33,8 +33,8 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 #if DEV14_OR_LATER
-using Microsoft.VisualStudio.InteractiveWindow;
-using Microsoft.VisualStudio.InteractiveWindow.Shell;
+using Microsoft.PythonTools.InteractiveWindow;
+using Microsoft.PythonTools.InteractiveWindow.Shell;
 #else
 using Microsoft.VisualStudio.Repl;
 using IInteractiveWindow = Microsoft.VisualStudio.Repl.IReplWindow;
@@ -430,6 +430,7 @@ namespace TestUtilities.UI {
                     return new SessionHolder<T>((T)res, this);
                 }
                 Thread.Sleep(250);
+                AssertListener.ThrowUnhandled();
             }
 
             Assert.Fail("Failed to find session " + typeof(T).FullName);

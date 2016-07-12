@@ -43,7 +43,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.InteractiveWindow.Shell;
+using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;

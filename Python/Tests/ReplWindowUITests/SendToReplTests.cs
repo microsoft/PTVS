@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
@@ -58,6 +59,36 @@ namespace ReplWindowUITests {
                 Input("else:"),
                 Input("    x = 3"),
                 Input("print('hi')").Complete.Outputs("hi").SubmitsPrevious,
+                EndOfInput
+            );
+        }
+
+        /// <summary>
+        /// Simple line-by-line tests which verify we submit when we get to
+        /// the next statement.
+        /// </summary>
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public virtual void SendToInteractiveCellByCell() {
+            RunOne("Cells.py",
+                Input(@"#%% cell 1
+... x = 1
+... 
+>>> y = 2").Complete,
+
+                MoveCaretRelative(1, 0),
+                Input(@"#%% cell 2
+... x = 3
+... 
+>>> y = 4").Complete,
+
+                MoveCaretRelative(2, 8),
+                Input(@"#%% cell 3
+... if x > y:
+...     print(x ** y)
+... else:
+...     print(y ** x)
+... ").Complete.Outputs("64"),
                 EndOfInput
             );
         }
@@ -181,6 +212,10 @@ namespace ReplWindowUITests {
             return new MoveCaretStep(line, column);
         }
 
+        private static SendToStep MoveCaretRelative(int lines, int columns) {
+            return new MoveCaretRelativeStep(lines, columns);
+        }
+
         /// <summary>
         /// An input that is complete and executes immediately.
         /// </summary>
@@ -247,6 +282,33 @@ namespace ReplWindowUITests {
                 state.Editor.MoveCaret(
                     _line,
                     _column
+                );
+            }
+        }
+
+        class MoveCaretRelativeStep : SendToStep {
+            private readonly int _lines, _columns;
+
+            public MoveCaretRelativeStep(int lines, int columns) {
+                _lines = lines;
+                _columns = columns;
+            }
+
+            public override void Execute(StepState state) {
+                state.Window.Activate();
+
+                int line = 0, column = 0;
+                state.Editor.Invoke(() => {
+                    state.Document.Selection.Clear();
+                    var pos = state.Editor.TextView.Caret.Position.BufferPosition;
+                    var posLine = pos.GetContainingLine();
+                    line = posLine.LineNumber + 1;
+                    column = pos.Position - posLine.Start.Position + 1;
+                });
+
+                state.Editor.MoveCaret(
+                    line + _lines,
+                    column + _columns
                 );
             }
         }

@@ -100,14 +100,8 @@
     <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
-    <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-      <HintPath>$(BuildRoot)Python\Product\PythonTools\Microsoft.VisualStudio.InteractiveWindow.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
-      <HintPath>$(BuildRoot)Python\Product\PythonTools\Microsoft.VisualStudio.VsInteractiveWindow.dll</HintPath>
-      <Private>false</Private>
-    </Reference>
+    <Reference Include="Microsoft.PythonTools.InteractiveWindow" />
+    <Reference Include="Microsoft.PythonTools.VsInteractiveWindow" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClassifierTests.cs" />

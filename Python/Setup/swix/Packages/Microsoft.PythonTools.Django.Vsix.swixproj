@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\SetupProjectBefore.settings" />
+  <Import Project="SetupProjectBefore.settings" />
 
   <PropertyGroup>
-    <BaseInstall>InstallDir:\Common7\IDE\Extensions\Microsoft\Python\Core</BaseInstall>
+    <BaseInstall>InstallDir:\Common7\IDE\Extensions\Microsoft\Python\Django</BaseInstall>
     <TargetsBaseInstall>InstallDir:\MSBuild\Microsoft\VisualStudio\v$(VSTarget)\Python Tools</TargetsBaseInstall>
-    <SourcePath>$(LayoutOutputPath)$(MSBuildThisFileName)</SourcePath>
+    <SourcePath>$(LayoutOutputPath)Microsoft.PythonTools.Django</SourcePath>
   </PropertyGroup>
 
   <ItemGroup>
-    <Package Include="file_associations.swr" />
+    <Dependency Include="Microsoft.PythonTools.Core.Vsix" />
   </ItemGroup>
 
-  <Import Project="swix.targets" />
+  <Import Project="SetupProjectAfter.settings" />
 </Project>
 

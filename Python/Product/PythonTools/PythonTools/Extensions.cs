@@ -39,7 +39,7 @@ using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Debugger.Interop;
-using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Shell;
@@ -295,9 +295,6 @@ namespace Microsoft.PythonTools {
                 try {
                     cookie = docTable.GetDocumentCookie(path);
                 } catch (ArgumentException) {
-                    // Exception may be raised while VS is shutting down
-                    entry = null;
-                    return false;
                 }
                 VsProjectAnalyzer analyzer = null;
                 if (cookie != VSConstants.VSCOOKIE_NIL) {
@@ -334,6 +331,12 @@ namespace Microsoft.PythonTools {
         /// difference windows.
         /// </summary>
         internal static VsProjectAnalyzer GetBestAnalyzer(this ITextView textView, IServiceProvider serviceProvider) {
+            // If we have set an analyzer explicitly, return that
+            VsProjectAnalyzer analyzer = null;
+            if (textView.TextBuffer.Properties.TryGetProperty(typeof(VsProjectAnalyzer), out analyzer)) {
+                return analyzer;
+            }
+
             // If we have a REPL evaluator we'll use it's analyzer
             var evaluator = textView.TextBuffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense;
             if (evaluator != null) {
@@ -341,7 +344,12 @@ namespace Microsoft.PythonTools {
             }
 
             // If we have a difference viewer we'll match the LHS w/ the RHS
-            var diffService = serviceProvider.GetComponentModel().GetService<IWpfDifferenceViewerFactoryService>();
+            IWpfDifferenceViewerFactoryService diffService = null;
+            try {
+                diffService = serviceProvider.GetComponentModel().GetService<IWpfDifferenceViewerFactoryService>();
+            } catch (System.ComponentModel.Composition.CompositionException) {
+            } catch (System.ComponentModel.Composition.ImportCardinalityMismatchException) {
+            }
             if (diffService != null) {
                 var viewer = diffService.TryGetViewerForTextView(textView);
                 if (viewer != null) {
@@ -620,7 +628,15 @@ namespace Microsoft.PythonTools {
             // this case too, but mostly it will succeed (and then assert).
             serviceProvider.GetUIThread().MustBeCalledFromUIThread();
 #endif
+            return serviceProvider.GetPythonToolsService_NotThreadSafe();
+        }
 
+        /// <summary>
+        /// Gets the current Python Tools service without validating that we are
+        /// on the UI thread. This may return null or crash at (somewhat) random
+        /// but is necessary for some tests.
+        /// </summary>
+        internal static PythonToolsService GetPythonToolsService_NotThreadSafe(this IServiceProvider serviceProvider) {
             var pyService = (PythonToolsService)serviceProvider.GetService(typeof(PythonToolsService));
             if (pyService == null) {
                 var shell = (IVsShell)serviceProvider.GetService(typeof(SVsShell));

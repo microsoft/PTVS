@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\SetupProjectBefore.settings" />
+  <Import Project="SetupProjectBefore.settings" />
 
   <PropertyGroup>
     <SourcePath>$(BuildRoot)\Python\Templates\IronPython</SourcePath>
@@ -8,9 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Dependency Include="Microsoft.PythonTools.IronPython" />
+    <Dependency Include="Microsoft.PythonTools.IronPython.Vsix" />
   </ItemGroup>
 
-  <Import Project="swix.targets" />
+  <Import Project="SetupProjectAfter.settings" />
 </Project>
 

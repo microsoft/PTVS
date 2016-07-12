@@ -391,12 +391,16 @@ except (sys."}) {
                         view.Text = test;
                         var snapshot = view.CurrentSnapshot;
 
-                        var res = view.VS.GetPyService().GetSignatures(
-                            view.View.TextView,
-                            snapshot,
-                            snapshot.CreateTrackingSpan(snapshot.Length, 0, SpanTrackingMode.EdgeInclusive)
-                        );
+                        SignatureAnalysis res = null;
+                        view.VS.InvokeSync(() => {
+                            res = view.VS.GetPyService().GetSignatures(
+                                view.View.TextView,
+                                snapshot,
+                                snapshot.CreateTrackingSpan(snapshot.Length, 0, SpanTrackingMode.EdgeInclusive)
+                            );
+                        });
 
+                        Assert.IsNotNull(res);
                         Assert.AreEqual(sig.Function, res.Text, test);
                         Assert.AreEqual(sig.Param, res.ParameterIndex, test);
                     }
@@ -1161,12 +1165,16 @@ async def g():
 
             using (var view = new PythonEditor(code, version, vs)) {
                 var snapshot = view.CurrentSnapshot;
-                return vs.GetPyService().AnalyzeExpression(
-                    view.View.TextView,
-                    snapshot,
-                    snapshot.CreateTrackingSpan(location, location < snapshot.Length ? 1 : 0, SpanTrackingMode.EdgeInclusive),
-                    false
-                );
+                ExpressionAnalysis expr = null;
+                vs.InvokeSync(() => {
+                    expr = vs.GetPyService().AnalyzeExpression(
+                        view.View.TextView,
+                        snapshot,
+                        snapshot.CreateTrackingSpan(location, location < snapshot.Length ? 1 : 0, SpanTrackingMode.EdgeInclusive),
+                        false
+                    );
+                });
+                return expr;
             }
         }
 
@@ -1176,13 +1184,16 @@ async def g():
                 index += snapshot.Length + 1;
             }
 
-            var context = view.VS.GetPyService().GetCompletions(
-                view.View.TextView,
-                snapshot,
-                snapshot.GetApplicableSpan(index) ?? snapshot.CreateTrackingSpan(index, 0, SpanTrackingMode.EdgeInclusive),
-                snapshot.CreateTrackingPoint(index, PointTrackingMode.Negative),
-                new CompletionOptions()
-            );
+            CompletionAnalysis context = null;
+            view.VS.InvokeSync(() => {
+                context = view.VS.GetPyService().GetCompletions(
+                    view.View.TextView,
+                    snapshot,
+                    snapshot.GetApplicableSpan(index) ?? snapshot.CreateTrackingSpan(index, 0, SpanTrackingMode.EdgeInclusive),
+                    snapshot.CreateTrackingPoint(index, PointTrackingMode.Negative),
+                    new CompletionOptions()
+                );
+            });
 
             Assert.IsInstanceOfType(context, typeof(NormalCompletionAnalysis));
             var normalContext = (NormalCompletionAnalysis)context;
@@ -1196,11 +1207,15 @@ async def g():
         private static SignatureAnalysis GetSignatureAnalysis(PythonEditor view, int index) {
             var snapshot = view.CurrentSnapshot;
 
-            return view.VS.GetPyService().GetSignatures(
-                view.View.TextView,
-                snapshot,
-                snapshot.CreateTrackingSpan(index, 1, SpanTrackingMode.EdgeInclusive)
-            );
+            SignatureAnalysis sigs = null;
+            view.VS.InvokeSync(() => {
+                sigs = view.VS.GetPyService().GetSignatures(
+                    view.View.TextView,
+                    snapshot,
+                    snapshot.CreateTrackingSpan(index, 1, SpanTrackingMode.EdgeInclusive)
+                );
+            });
+            return sigs;
         }
 
 

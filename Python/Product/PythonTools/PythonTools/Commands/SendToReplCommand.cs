@@ -22,7 +22,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
@@ -52,6 +52,10 @@ namespace Microsoft.PythonTools.Commands {
             _serviceProvider = serviceProvider;
         }
 
+        private static bool IsCellMarker(ITextSnapshotLine line) {
+            return OutliningTaggerProvider.OutliningTagger._codeCellRegex.IsMatch(line.GetText());
+        }
+
         public override async void DoCommand(object sender, EventArgs args) {
             var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
             var project = activeView.GetProjectAtCaret(_serviceProvider);
@@ -75,7 +79,25 @@ namespace Microsoft.PythonTools.Commands {
                 // No selection, and we haven't hit the end of the file in line-by-line mode.
                 // Send the current line, and then move the caret to the next non-blank line.
                 ITextSnapshotLine targetLine = snapshot.GetLineFromPosition(selection.Start.Position);
-                input = targetLine.GetText();
+                var targetSpan = targetLine.Extent;
+
+                // If the line is inside a code cell, expand the target span to
+                // contain the entire cell.
+                for (int lineNo = targetLine.LineNumber; lineNo >= 0; --lineNo) {
+                    var line = snapshot.GetLineFromLineNumber(lineNo);
+                    if (IsCellMarker(line)) {
+                        while (targetLine.LineNumber < snapshot.LineCount - 1) {
+                            var nextLine = snapshot.GetLineFromLineNumber(targetLine.LineNumber + 1);
+                            if (IsCellMarker(nextLine)) {
+                                break;
+                            }
+                            targetLine = nextLine;
+                        }
+                        targetSpan = new SnapshotSpan(line.Start, targetLine.End);
+                        break;
+                    }
+                }
+                input = targetSpan.GetText();
 
                 bool moved = false;
                 while (targetLine.LineNumber < snapshot.LineCount - 1) {

@@ -205,6 +205,4 @@
              Query="/vsx11:PackageManifest/vsx11:Installation/@InstalledByMsi"
              Value="false" />
   </Target>
-
-  <Import Project="Common.Build.VSSDK.RoslynWorkarounds.targets" Condition="$(VSTarget) == '15.0'" />
 </Project>

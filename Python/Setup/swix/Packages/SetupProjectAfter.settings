@@ -3,13 +3,13 @@
   <PropertyGroup>
     <OutputArchitecture Condition="$(OutputArchitecture) == ''">neutral</OutputArchitecture>
     <OutputLocalized Condition="$(OutputLocalized) == ''">false</OutputLocalized>
-    <OutputType Condition="$(OutputType) == ''">manifest</OutputType>
+    <OutputType Condition="$(OutputType) == ''">vsix</OutputType>
     <IsPackage>true</IsPackage>
-    <OutputName Condition="$(OutputName) == ''">$(MSBuildProjectName)</OutputName>
-    <OutputPath>$(OutputPath)swix\externals\</OutputPath>
   </PropertyGroup>
 
   <Import Project="$(TargetsPath)\Common.Shim.targets" />
+
+  <Import Project="..\swix.generate.targets" />
 
   <Import Project="..\..\SetupProjectAfter.settings" />
 </Project>

@@ -78,10 +78,14 @@
       <IncludeInVsix>true</IncludeInVsix>
       <VsixSubPath>ItemTemplates\%(RecursiveDir)</VsixSubPath>
     </Content>
-    <Content Include="Core\ProjectTemplates\**\*;Django\ProjectTemplates\**\*;IronPython\ProjectTemplates\**\*;Web\ProjectTemplates\**\*">
+    <Content Include="Core\ProjectTemplates\**\*;Django\ProjectTemplates\**\*;IronPython\ProjectTemplates\**\*;Web\ProjectTemplates\**\*;Uwp\ProjectTemplates\**\*">
       <IncludeInVsix>true</IncludeInVsix>
       <VsixSubPath>ProjectTemplates\%(RecursiveDir)</VsixSubPath>
     </Content>
   </ItemGroup>
   <Import Project="$(BuildRoot)\Build\Common.Build.targets" />
+  <Target Name="AfterBuild">
+    <Touch Files="$(OutputPath)$(TargetName)$(TargetExt)" AlwaysCreate="true" ForceTouch="true" />
+    <Touch Files="$(OutputPath)$(TargetName).pdb" AlwaysCreate="true" ForceTouch="true" />
+  </Target>
 </Project>

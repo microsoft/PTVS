@@ -105,6 +105,8 @@
     <ProjectReference2 Include="..\TestAdapter\TestAdapter.csproj" />
     <ProjectReference2 Include="..\TestAdapter.Analysis\TestAdapter.Analysis.csproj" />
     <ProjectReference2 Include="..\XamlDesignerSupport\XamlDesignerSupport.csproj" />
+    <Reference Include="Microsoft.PythonTools.InteractiveWindow" />
+    <Reference Include="Microsoft.PythonTools.VsInteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.Threading, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
@@ -231,12 +233,6 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Immutable.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Utilities, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Settings.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.InteractiveWindow">
-      <Private>false</Private>
-    </Reference>
-    <Reference Include="Microsoft.VisualStudio.VsInteractiveWindow">
       <Private>false</Private>
     </Reference>
   </ItemGroup>
@@ -699,6 +695,20 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="$(BuildRoot)\Python\References\Dev$(VSTarget)\Microsoft.PythonTools.InteractiveWindow.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="$(BuildRoot)\Python\References\Dev$(VSTarget)\Microsoft.PythonTools.VsInteractiveWindow.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
+    <Content Include="Microsoft.PythonTools.VsInteractiveWindow.pkgdef">
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="NoInterpreters.mht">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

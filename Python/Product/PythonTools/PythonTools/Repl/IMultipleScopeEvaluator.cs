@@ -16,10 +16,9 @@
 
 using System;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.InteractiveWindow;
 
 namespace Microsoft.PythonTools.Repl {
-    interface IMultipleScopeEvaluator : IInteractiveEvaluator {
+    interface IMultipleScopeEvaluator {
         /// <summary>
         /// Sets the current scope to the given name.
         /// </summary>

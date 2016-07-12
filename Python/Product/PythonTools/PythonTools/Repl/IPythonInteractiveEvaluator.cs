@@ -16,7 +16,7 @@
 
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.PythonTools.InteractiveWindow;
 
 namespace Microsoft.PythonTools.Repl {
     /// <summary>
@@ -27,13 +27,13 @@ namespace Microsoft.PythonTools.Repl {
     /// This interface provides additional functionality for interacting with the Python REPL
     /// above and beyond the standard IReplEvaluator interface.
     /// </summary>
-    public interface IPythonInteractiveEvaluator : IInteractiveEvaluator {
+    interface IPythonInteractiveEvaluator {
         /// <summary>
         /// Executes the specified file in the REPL window.
         /// 
         /// Does not reset the process, and the process will remain after the file is executed.
         /// </summary>
-        Task<ExecutionResult> ExecuteFileAsync(string filename, string extraArgs);
+        Task<bool> ExecuteFileAsync(string filename, string extraArgs);
 
         /// <summary>
         /// Returns true if the REPL window process has exited.

@@ -23,7 +23,7 @@ using System.Windows;
 #if NTVS_FEATURE_INTERACTIVEWINDOW
 using Microsoft.NodejsTools.Repl;
 #elif DEV14_OR_LATER
-using Microsoft.VisualStudio.InteractiveWindow;
+using Microsoft.PythonTools.InteractiveWindow;
 #else
 using Microsoft.VisualStudio.Repl;
 #endif
