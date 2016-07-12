@@ -1175,7 +1175,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Handles the exclude from project command. After operations 
         /// is completed it refreshes property browser.
         /// </summary>
-        internal virtual int ExcludeFromProjectWithRefresh() {
+        internal int ExcludeFromProjectWithRefresh() {
             try {
                 int hr = this.ExcludeFromProject();
                 if (ErrorHandler.Succeeded(hr)) {
@@ -1227,7 +1227,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Handles the include in project command.
         /// </summary>
-        internal virtual int IncludeInProjectWithRefresh(bool includeChildren) {
+        internal int IncludeInProjectWithRefresh(bool includeChildren) {
             try {
                 return this.IncludeInProject(includeChildren);
             }
