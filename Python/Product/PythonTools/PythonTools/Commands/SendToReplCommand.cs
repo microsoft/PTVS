@@ -211,8 +211,14 @@ namespace Microsoft.PythonTools.Commands {
             /// Pends the next input line to the current input buffer, optionally executing it
             /// if it forms a complete statement.
             /// </summary>
-            private void ProcessQueuedInput() {
+            private async void ProcessQueuedInput() {
                 var textView = _window.TextView;
+                var eval = _window.GetPythonEvaluator();
+
+                bool supportsMultipleStatements = false;
+                if (eval != null) {
+                    supportsMultipleStatements = await eval.GetSupportsMultipleStatementsAsync();
+                }
 
                 // Process all of our pending inputs until we get a complete statement
                 while (_pendingInputs.First != null) {
@@ -221,7 +227,19 @@ namespace Microsoft.PythonTools.Commands {
 
                     MoveCaretToEndOfCurrentInput();
 
-                    var statements = RecombineInput(current);
+                    List<string> statements;
+                    var analyzer = textView.GetAnalyzerAtCaret(_serviceProvider);
+                    if (analyzer == null) {
+                        statements = new List<string> { current };
+                    } else {
+                        statements = RecombineInput(
+                            current,
+                            _window.CurrentLanguageBuffer?.CurrentSnapshot.GetText(),
+                            supportsMultipleStatements,
+                            analyzer.LanguageVersion,
+                            textView.Options.GetNewLineCharacter()
+                        );
+                    }
 
                     if (statements.Count > 0) {
                         // If there was more than one statement then save those for execution later...
@@ -251,16 +269,13 @@ namespace Microsoft.PythonTools.Commands {
             /// Also handles any dedents necessary to make the input a valid input, which usually would only
             /// apply if we have no input so far.
             /// </summary>
-            private List<string> RecombineInput(string input) {
-                var textView = _window.TextView;
-                var curLangBuffer = _window.CurrentLanguageBuffer;
-                var analyzer = textView.GetAnalyzerAtCaret(_serviceProvider);
-                if (analyzer == null) {
-                    return new List<string>();
-                }
-
-                var version = analyzer.InterpreterFactory.Configuration.Version.ToLanguageVersion();
-
+            private static List<string> RecombineInput(
+                string input,
+                string pendingInput,
+                bool supportsMultipleStatements,
+                PythonLanguageVersion version,
+                string newLineCharacter
+            ) {
                 // Combine the current input text with the newly submitted text.  This will prevent us
                 // from dedenting code when doing line-by-line submissions of things like:
                 // if True:
@@ -268,16 +283,21 @@ namespace Microsoft.PythonTools.Commands {
                 // 
                 // So that we don't dedent "x = 1" when we submit it by its self.
 
-                string newText = input;
-                var curText = curLangBuffer.CurrentSnapshot.GetText();
-                var combinedText = curText + newText;
-                var oldLineCount = curText.Split(_newLineChars, StringSplitOptions.None).Length - 1;
+                var combinedText = (pendingInput ?? string.Empty) + input;
+                var oldLineCount =  string.IsNullOrEmpty(pendingInput) ?
+                    0 :
+                    pendingInput.Split(_newLineChars, StringSplitOptions.None).Length - 1;
 
                 // The split and join will not alter the number of lines that are fed in and returned but
                 // may change the text by dedenting it if we hadn't submitted the "if True:" in the
                 // code above.
                 var split = ReplEditFilter.SplitAndDedent(combinedText);
-                var joinedLines = ReplEditFilter.JoinToCompleteStatements(split, version, false);
+                IEnumerable<string> joinedLines;
+                if (!supportsMultipleStatements) {
+                    joinedLines = ReplEditFilter.JoinToCompleteStatements(split, version, false);
+                } else {
+                    joinedLines = new[] { string.Join(newLineCharacter, split) };
+                }
 
                 // Remove any of the lines that were previously inputted into the buffer and also
                 // remove any extra newlines in the submission.
@@ -285,10 +305,7 @@ namespace Microsoft.PythonTools.Commands {
                 foreach (var inputLine in joinedLines) {
                     var actualLines = inputLine.Split(_newLineChars, StringSplitOptions.None);
                     var newLine = ReplEditFilter.FixEndingNewLine(
-                        string.Join(
-                            textView.Options.GetNewLineCharacter(),
-                            actualLines.Skip(oldLineCount)
-                        )
+                        string.Join(newLineCharacter, actualLines.Skip(oldLineCount))
                     );
 
                     res.Add(newLine);

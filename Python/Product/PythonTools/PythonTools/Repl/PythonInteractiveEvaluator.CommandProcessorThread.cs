@@ -174,6 +174,9 @@ namespace Microsoft.PythonTools.Repl {
             private TaskCompletionSource<ExecutionResult> _completion;
             private readonly object _completionLock = new object();
 
+            private readonly TaskCompletionSource<object> _receivedPrompts = new TaskCompletionSource<object>();
+            private bool _supportsMultipleStatements;
+
             private Action _deferredExecute;
 
             private readonly Process _process;
@@ -458,7 +461,13 @@ namespace Microsoft.PythonTools.Repl {
 
                 PrimaryPrompt = prompt1;
                 SecondaryPrompt = prompt2;
-                _eval.SupportsMultipleStatements = supportMultipleStatements;
+                _supportsMultipleStatements = supportMultipleStatements;
+                _receivedPrompts.TrySetResult(null);
+            }
+
+            public async Task<bool> GetSupportsMultipleStatementsAsync() {
+                await _receivedPrompts.Task;
+                return _supportsMultipleStatements;
             }
 
             public event EventHandler AvailableScopesChanged;
