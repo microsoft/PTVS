@@ -15,14 +15,14 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
-using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Text;
@@ -52,10 +52,6 @@ namespace Microsoft.PythonTools.Commands {
             _serviceProvider = serviceProvider;
         }
 
-        private static bool IsCellMarker(ITextSnapshotLine line) {
-            return OutliningTaggerProvider.OutliningTagger._codeCellRegex.IsMatch(line.GetText());
-        }
-
         public override async void DoCommand(object sender, EventArgs args) {
             var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
             var project = activeView.GetProjectAtCaret(_serviceProvider);
@@ -66,7 +62,7 @@ namespace Microsoft.PythonTools.Commands {
             var repl = ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, analyzer, project);
 
             string input;
-            bool focusRepl = false;
+            bool focusRepl = false, alwaysSubmit = false;
 
             if (selection.StreamSelectionSpan.Length > 0) {
                 // Easy, just send the selection to the interactive window.
@@ -83,19 +79,12 @@ namespace Microsoft.PythonTools.Commands {
 
                 // If the line is inside a code cell, expand the target span to
                 // contain the entire cell.
-                for (int lineNo = targetLine.LineNumber; lineNo >= 0; --lineNo) {
-                    var line = snapshot.GetLineFromLineNumber(lineNo);
-                    if (IsCellMarker(line)) {
-                        while (targetLine.LineNumber < snapshot.LineCount - 1) {
-                            var nextLine = snapshot.GetLineFromLineNumber(targetLine.LineNumber + 1);
-                            if (IsCellMarker(nextLine)) {
-                                break;
-                            }
-                            targetLine = nextLine;
-                        }
-                        targetSpan = new SnapshotSpan(line.Start, targetLine.End);
-                        break;
-                    }
+                var cellStart = CodeCellAnalysis.FindStartOfCell(targetLine);
+                if (cellStart != null) {
+                    var cellEnd = CodeCellAnalysis.FindEndOfCell(cellStart, targetLine);
+                    targetSpan = new SnapshotSpan(cellStart.Start, cellEnd.End);
+                    targetLine = CodeCellAnalysis.FindEndOfCell(cellEnd, targetLine, includeWhitespace: true);
+                    alwaysSubmit = true;
                 }
                 input = targetSpan.GetText();
 
@@ -134,6 +123,9 @@ namespace Microsoft.PythonTools.Commands {
                 );
 
                 inputs.Enqueue(input);
+                if (alwaysSubmit) {
+                    inputs.SubmitIfNotEmpty();
+                }
             }
 
             // Take focus back if REPL window has stolen it and we're in line-by-line mode.
@@ -206,6 +198,12 @@ namespace Microsoft.PythonTools.Commands {
                 _pendingInputs.AddLast(input);
                 if (!_window.IsRunning) {
                     ProcessQueuedInput();
+                }
+            }
+
+            public void SubmitIfNotEmpty() {
+                if (_window.CurrentLanguageBuffer.CurrentSnapshot.Length > 0) {
+                    _window.Operations.ExecuteInput();
                 }
             }
 
