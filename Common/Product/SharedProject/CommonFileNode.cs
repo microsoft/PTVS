@@ -300,7 +300,9 @@ namespace Microsoft.VisualStudioTools.Project {
                 ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
                 ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
             }
-            // PERFORMANCE: call it once only! // ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+
+            // For performance reasons we don't want to call RefreshPropertyBrowser here. 
+            // We just want to call refresh once in ExcludeFromProjectWithRefresh
             return VSConstants.S_OK;
         }
 
@@ -328,13 +330,8 @@ namespace Microsoft.VisualStudioTools.Project {
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
             ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
 
-            // PERFORMANCE: (99%) call it once only!
-            //// https://nodejstools.codeplex.com/workitem/273, refresh the property browser...
-            //((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
-
-            //if (CommonUtils.IsSamePath(ProjectMgr.GetStartupFile(), Url)) {
-            //    ProjectMgr.BoldItem(this, true);
-            //}
+            // For performance reasons (99%) we don't want to call RefreshPropertyBrowser and 
+            // bold startup file here. We just want to call it once in IncludeInProjectWithRefresh
 
             // On include, the file should be added to source control.
             this.ProjectMgr.Tracker.OnItemAdded(this.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);
