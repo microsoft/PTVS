@@ -23,5 +23,13 @@
 ')" Importance="high" />
   </Target>
 
+  <PropertyGroup>
+    <UpdateCommand>"$(PackagesPath)python\tools\python.exe" "$(MSBuildThisFileDirectory)\swix_update_hash.py" "$(OutputPath)*.json"</UpdateCommand>
+  </PropertyGroup>
+
+  <Target Name="_UpdateHash" AfterTargets="SignFiles">
+    <Exec Command="$(UpdateCommand)" WorkingDirectory="$(OutputPath)" />
+  </Target>
+
   <Import Project="$(TargetsPath)\MicroBuild.targets" />
 </Project>
