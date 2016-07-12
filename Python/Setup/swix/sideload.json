@@ -19,17 +19,32 @@
       },
       "language": "en-us",
       "dependencies": {
-        "microsoft.PythonTools": {
-          "version": "[15.0, 16.0)"
+        "microsoft.PythonTools.Core.Vsix": {
+          "version": "[0.0, 100.0)"
         },
-        "microsoft.PythonTools.Web": {
-          "version": "[15.0, 16.0)"
+        "microsoft.PythonTools.Core.Templates.Vsix": {
+          "version": "[0.0, 100.0)"
         },
-        "microsoft.PythonTools.Samples": {
-          "version": "[15.0, 16.0)"
+        "microsoft.PythonTools.Web.Templates.Vsix": {
+          "version": "[0.0, 100.0)"
         },
-        "microsoft.PythonTools.Uwp": {
-          "version": "[15.0, 16.0)"
+        "microsoft.PythonTools.Profiling.Vsix": {
+          "version": "[0.0, 100.0)"
+        },
+        "microsoft.PythonTools.Django.Vsix": {
+          "version": "[0.0, 100.0)"
+        },
+        "microsoft.PythonTools.Django.Templates.Vsix": {
+          "version": "[0.0, 100.0)"
+        },
+        "microsoft.PythonTools.Samples.Vsix": {
+          "version": "[0.0, 100.0)"
+        },
+        "microsoft.PythonTools.Uwp.Vsix": {
+          "version": "[0.0, 100.0)"
+        },
+        "microsoft.PythonTools.Uwp.Templates.Vsix": {
+          "version": "[0.0, 100.0)"
         }
       },
       "localizedResources": [
