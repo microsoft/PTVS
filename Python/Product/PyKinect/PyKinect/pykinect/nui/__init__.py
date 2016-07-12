@@ -191,7 +191,7 @@ class Runtime(object):
                     continue
         
                 for curSkeleton in frame.SkeletonData:
-                    if curSkeleton.eTrackingState != SkeletonTrackingState.NOT_TRACKED:
+                    if curSkeleton.eTrackingState == SkeletonTrackingState.TRACKED:
                         self.skeleton_frame_ready.fire(frame)
                         break
             elif wait == 1:
