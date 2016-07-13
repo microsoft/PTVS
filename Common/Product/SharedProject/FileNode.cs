@@ -915,7 +915,10 @@ namespace Microsoft.VisualStudioTools.Project {
             string newFolder = Path.GetDirectoryName(newFileName) + Path.DirectorySeparatorChar;
             var parentFolder = ProjectMgr.FindNodeByFullPath(newFolder);
             if (parentFolder == null) {
-                Debug.Assert(newFolder == ProjectMgr.ProjectHome);
+                Debug.Assert(
+                    CommonUtils.IsSameDirectory(newFolder, ProjectMgr.ProjectHome),
+                    string.Format("Expected {0} == {1}", newFolder, ProjectMgr.ProjectHome)
+                );
                 parentFolder = ProjectMgr;
             }
 

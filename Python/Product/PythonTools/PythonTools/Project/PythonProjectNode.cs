@@ -912,12 +912,13 @@ namespace Microsoft.PythonTools.Project {
 
             if (includeReferences) {
                 foreach (var r in (GetReferenceContainer()?.EnumReferences()).MaybeEnumerate()) {
-                    string absPath;
+                    string url;
                     try {
-                        absPath = PathUtils.GetAbsoluteFilePath(ProjectHome, r.Url);
+                        url = (r as ProjectReferenceNode)?.ReferencedProjectOutputPath ?? r.Url;
                     } catch (InvalidOperationException) {
                         continue;
                     }
+                    var absPath = PathUtils.GetAbsoluteFilePath(ProjectHome, url);
 
                     if (!string.IsNullOrEmpty(absPath)) {
                         var parentPath = PathUtils.GetParent(absPath);

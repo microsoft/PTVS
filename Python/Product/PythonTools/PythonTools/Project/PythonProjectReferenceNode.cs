@@ -18,7 +18,6 @@ using System;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -57,18 +56,27 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void EventListener_BuildCompleted(object sender, EventArgs e) {
+            if (ProjectMgr.IsClosing) {
+                return;
+            }
             InitializeFileChangeListener();
             AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
             ProjectMgr.OnInvalidateItems(Parent);
         }
 
         private void PythonProjectReferenceNode_ProjectLoaded(object sender, ProjectEventArgs e) {
+            if (ProjectMgr.IsClosing) {
+                return;
+            }
             InitializeFileChangeListener();
             AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
             ProjectMgr.OnInvalidateItems(Parent);
         }
 
         private void EventListener_AfterActiveSolutionConfigurationChange(object sender, EventArgs e) {
+            if (ProjectMgr.IsClosing) {
+                return;
+            }
             InitializeFileChangeListener();
             AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
             ProjectMgr.OnInvalidateItems(Parent);
@@ -88,6 +96,9 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void FileChangedOnDisk(object sender, FileChangedOnDiskEventArgs e) {
+            if (ProjectMgr.IsClosing) {
+                return;
+            }
             var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
             // remove the reference to whatever we are currently observing
             RemoveAnalyzedAssembly(interp);
@@ -156,13 +167,15 @@ namespace Microsoft.PythonTools.Project {
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
 
-            var solutionEvents = ProjectMgr.Site.GetSolutionEvents();
-            solutionEvents.ActiveSolutionConfigurationChanged -= EventListener_AfterActiveSolutionConfigurationChange;
-            solutionEvents.BuildCompleted -= EventListener_BuildCompleted;
-            solutionEvents.ProjectLoaded -= PythonProjectReferenceNode_ProjectLoaded;
+            if (disposing) {
+                var solutionEvents = ProjectMgr.Site.GetSolutionEvents();
+                solutionEvents.ActiveSolutionConfigurationChanged -= EventListener_AfterActiveSolutionConfigurationChange;
+                solutionEvents.BuildCompleted -= EventListener_BuildCompleted;
+                solutionEvents.ProjectLoaded -= PythonProjectReferenceNode_ProjectLoaded;
 
-            _fileChangeListener.FileChangedOnDisk -= FileChangedOnDisk;
-            _fileChangeListener.Dispose();
+                _fileChangeListener.FileChangedOnDisk -= FileChangedOnDisk;
+                _fileChangeListener.Dispose();
+            }
         }
     }
 }

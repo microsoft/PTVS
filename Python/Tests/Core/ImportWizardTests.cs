@@ -292,7 +292,7 @@ namespace PythonToolsTests {
                     Assert.AreEqual("", env.Descendant("BaseInterpreter").Value);
                     Assert.AreEqual("", env.Descendant("PathEnvironmentVariable").Value);
                 } else {
-                    Assert.AreEqual("env (Test Python)", env.Descendant("Description").Value);
+                    Assert.AreEqual("env", env.Descendant("Description").Value);
                     Assert.AreEqual("scripts\\python.exe", env.Descendant("InterpreterPath").Value, true);
                     // The mock configuration uses python.exe for both paths.
                     Assert.AreEqual("scripts\\python.exe", env.Descendant("WindowsInterpreterPath").Value, true);

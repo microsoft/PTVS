@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -95,6 +96,11 @@ namespace TestUtilities.SharedProject {
                             processors
                         );
                     });
+            } catch (ReflectionTypeLoadException ex) {
+                foreach (var e in ex.LoaderExceptions) {
+                    Trace.TraceError(e.ToString());
+                }
+                throw;
             } finally {
                 AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
             }

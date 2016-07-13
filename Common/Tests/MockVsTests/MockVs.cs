@@ -599,7 +599,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             string[] temp = new string[path.Length + 1];
             temp[0] = project;
             Array.Copy(path, 0, temp, 1, path.Length);
-            var item = WaitForItem(temp);
+            var item = WaitForItemWorker(temp);
             if (item.IsNull) {
                 return null;
             }
@@ -609,31 +609,32 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 languageName = "code";
             }
 
-            var res = CreateTextView(languageName, File.ReadAllText(item.CanonicalName), null, item.CanonicalName);
+            var res = CreateTextViewWorker(languageName, File.ReadAllText(item.CanonicalName), view => {
+                uint cookie;
+                IVsTextLines lines;
+                ErrorHandler.ThrowOnFailure(((IVsTextView)view).GetBuffer(out lines));
+                IntPtr linesPtr = Marshal.GetIUnknownForObject(lines);
+                try {
+                    ErrorHandler.ThrowOnFailure(
+                        _rdt.RegisterAndLockDocument(
+                            (uint)_VSRDTFLAGS.RDT_NoLock,
+                            item.CanonicalName,
+                            item.Hierarchy,
+                            item.ItemId,
+                            linesPtr,
+                            out cookie
+                        )
+                    );
+                } finally {
+                    Marshal.Release(linesPtr);
+                }
+            }, item.CanonicalName);
             if (_docCmdTarget != null) {
                 ((IFocusable)_docCmdTarget).LostFocus();
             }
             _docCmdTarget = res;
             ((IFocusable)res).GetFocus();
 
-            uint cookie;
-            IVsTextLines lines;
-            ErrorHandler.ThrowOnFailure(((IVsTextView)res).GetBuffer(out lines));
-            IntPtr linesPtr = Marshal.GetIUnknownForObject(lines);
-            try {
-                ErrorHandler.ThrowOnFailure(
-                    _rdt.RegisterAndLockDocument(
-                        (uint)_VSRDTFLAGS.RDT_NoLock,
-                        item.CanonicalName,
-                        item.Hierarchy,
-                        item.ItemId,
-                        linesPtr,
-                        out cookie
-                    )
-                );
-            } finally {
-                Marshal.Release(linesPtr);
-            }
             return res;
         }
 

@@ -1370,7 +1370,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         internal ObjectIdentityHandle GetConstructorDeclaringPythonType(ObjectIdentityHandle ctor) {
             return CallAndHandle(() => {
-                var method = (ConstructorInfo)Unwrap(ctor);
+                var method = (MethodBase)Unwrap(ctor);
 
                 return MakeHandle(DynamicHelpers.GetPythonTypeFromType(method.DeclaringType));
             });

@@ -34,6 +34,11 @@ namespace PythonToolsMockTests {
     public class ProjectTests : SharedProjectTest {
         public static ProjectType PythonProject = ProjectTypes.First(x => x.ProjectExtension == ".pyproj");
 
+        [ClassInitialize]
+        public static void Initialize(TestContext context) {
+            AssertListener.Initialize();
+        }
+
         [TestMethod, Priority(1)]
         public void BasicProjectTest() {
             var sln = new ProjectDefinition(
@@ -51,9 +56,9 @@ namespace PythonToolsMockTests {
 
                 view.Invoke(() => view.Type("import "));
 
-                var session = view.TopSession as ICompletionSession;
-
-                AssertUtil.Contains(session.Completions(), "sys");
+                using (var sh = view.WaitForSession<ICompletionSession>()) {
+                    AssertUtil.Contains(sh.Session.Completions(), "sys");
+                }
             }
         }
 
