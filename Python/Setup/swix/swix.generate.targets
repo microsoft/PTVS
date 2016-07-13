@@ -2,7 +2,7 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <SwrFile>$(IntermediateOutputPath)package.g.swr</SwrFile>
-    <Python>py</Python>
+    <Python>"$(PackagesPath)python\tools\python.exe"</Python>
     <GenerateCommand>$(Python) "$(MSBuildThisFileDirectory)\swix_generate.py"</GenerateCommand>
     <GenerateCommand Condition="$(Configuration) != 'Debug'">$(GenerateCommand) -x "\.pdb$"</GenerateCommand>
     <SwixPackageType Condition="$(SwixPackageType) == ''">component</SwixPackageType>
