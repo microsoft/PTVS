@@ -30,6 +30,7 @@ using EnvDTE80;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
@@ -114,19 +115,31 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestSetDefaultInterpreter() {
-            using (var app = new VisualStudioApp()) {
-                var props = app.Dte.get_Properties("Python Tools", "Interpreters");
-                Assert.IsNotNull(props);
-
-                var oldDefaultInterp = props.Item("DefaultInterpreter").Value;
+            using (var app = new PythonVisualStudioApp()) {
+                var service = app.ComponentModel.GetService<IInterpreterOptionsService>();
+                Assert.IsNotNull(service, "Failed to get IInterpreterOptionsService");
+                var registry = app.ComponentModel.GetService<IInterpreterRegistryService>();
+                Assert.IsNotNull(registry, "Failed to get IInterpreterRegistryService");
+                var oldDefaultInterp = service.DefaultInterpreterId;
 
                 app.OnDispose(() => {
-                    props.Item("DefaultInterpreter").Value = oldDefaultInterp;
+                    service.DefaultInterpreterId = oldDefaultInterp;
                 });
 
-                props.Item("DefaultInterpreter").Value = "";
-
-                Assert.AreEqual("", props.Item("DefaultInterpreter").Value);
+                using (var mre = new ManualResetEvent(false)) {
+                    EventHandler onChange = (o, e) => mre.Set();
+                    service.DefaultInterpreterChanged += onChange;
+                    try {
+                        foreach (var fact in registry.Interpreters) {
+                            service.DefaultInterpreterId = fact.Configuration.Id;
+                            Assert.IsTrue(mre.WaitOne(500));
+                            mre.Reset();
+                            Assert.AreSame(fact, service.DefaultInterpreter);
+                        }
+                    } finally {
+                        service.DefaultInterpreterChanged -= onChange;
+                    }
+                }
             }
         }
 
@@ -667,7 +680,7 @@ namespace PythonToolsUITests {
                 Assert.IsNull(project.CodeModel, "project.CodeModel");
                 AssertError<ArgumentNullException>(() => project.get_Extender(null));
                 AssertError<COMException>(() => project.get_Extender("DoesNotExist"));
-                Assert.IsNull(project.Collection, "project.Collection");
+                Assert.IsNotNull(project.Collection, "project.Collection");
 
                 foreach (ProjectItem item in project.ProjectItems) {
                     Assert.AreEqual(item.Name, project.ProjectItems.Item(1).Name);
@@ -720,7 +733,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ProjectConfiguration() {
-            Assert.Fail("Test excluded because it crashes VS");
+            //Assert.Fail("Test excluded because it crashes VS");
 
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\HelloWorld.sln");
@@ -733,7 +746,7 @@ namespace PythonToolsUITests {
                 project.ConfigurationManager.DeleteConfigurationRow("NewConfig2");
 
                 var debug = project.ConfigurationManager.Item("Debug", "Any CPU");
-                Assert.AreEqual(debug.IsBuildable, true);
+                Assert.IsFalse(debug.IsBuildable);
 
                 Assert.AreEqual("Any CPU", ((object[])project.ConfigurationManager.PlatformNames)[0]);
                 Assert.AreEqual("Any CPU", ((object[])project.ConfigurationManager.SupportedPlatforms)[0]);
@@ -1146,7 +1159,7 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddFolderCopyAndPasteFile() {
-            using (var app = new VisualStudioApp()) {
+            using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\AddFolderCopyAndPasteFile.sln");
                 var solutionExplorer = app.OpenSolutionExplorer();
 
@@ -1248,8 +1261,8 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void AddFromFileOutsideOfProject() {
-            using (var app = new VisualStudioApp()) {
-                var options = app.GetService<PythonToolsService>().GeneralOptions;
+            using (var app = new PythonVisualStudioApp()) {
+                var options = app.PythonToolsService.GeneralOptions;
                 var prevSetting = options.UpdateSearchPathsWhenAddingLinkedFiles;
                 app.OnDispose(() => options.UpdateSearchPathsWhenAddingLinkedFiles = prevSetting);
                 options.UpdateSearchPathsWhenAddingLinkedFiles = false;

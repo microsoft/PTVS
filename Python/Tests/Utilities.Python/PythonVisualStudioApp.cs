@@ -32,8 +32,10 @@ using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
@@ -45,15 +47,22 @@ namespace TestUtilities.UI.Python {
         private bool _deletePerformanceSessions;
         private PythonPerfExplorer _perfTreeView;
         private PythonPerfToolBar _perfToolBar;
+        public readonly PythonToolsService PythonToolsService;
         
         public PythonVisualStudioApp(DTE dte = null)
             : base(dte) {
 
-            var service = ServiceProvider.GetPythonToolsService_NotThreadSafe();
-            Assert.IsNotNull(service, "Failed to get PythonToolsService");
+            var shell = (IVsShell)ServiceProvider.GetService(typeof(SVsShell));
+            var pkg = new Guid("6dbd7c1e-1f1b-496d-ac7c-c55dae66c783");
+            IVsPackage pPkg;
+            ErrorHandler.ThrowOnFailure(shell.LoadPackage(ref pkg, out pPkg));
+            System.Threading.Thread.Sleep(1000);
+
+            PythonToolsService = ServiceProvider.GetPythonToolsService_NotThreadSafe();
+            Assert.IsNotNull(PythonToolsService, "Failed to get PythonToolsService");
 
             // Disable AutoListIdentifiers for tests
-            var ao = service.AdvancedOptions;
+            var ao = PythonToolsService.AdvancedOptions;
             Assert.IsNotNull(ao, "Failed to get AdvancedOptions");
             var oldALI = ao.AutoListIdentifiers;
             ao.AutoListIdentifiers = false;

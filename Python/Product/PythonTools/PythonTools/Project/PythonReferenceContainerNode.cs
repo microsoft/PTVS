@@ -27,11 +27,11 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override ProjectReferenceNode CreateProjectReferenceNode(ProjectElement element) {
-            return new PythonProjectReferenceNode(this.ProjectMgr, element);
+            return new PythonProjectReferenceNode(ProjectMgr, element);
         }
 
         protected override ProjectReferenceNode CreateProjectReferenceNode(VSCOMPONENTSELECTORDATA selectorData) {
-            return new PythonProjectReferenceNode(this.ProjectMgr, selectorData.bstrTitle, selectorData.bstrFile, selectorData.bstrProjRef);
+            return new PythonProjectReferenceNode(ProjectMgr, selectorData.bstrTitle, selectorData.bstrFile, selectorData.bstrProjRef);
         }
 
         protected override AssemblyReferenceNode CreateAssemblyReferenceNode(ProjectElement element) {

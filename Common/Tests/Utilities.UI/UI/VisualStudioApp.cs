@@ -821,7 +821,7 @@ namespace TestUtilities.UI {
                     File.Delete(suoPath);
                 }
             }
-
+            
             var solution = GetService<IVsSolution>(typeof(SVsSolution));
             var solution4 = solution as IVsSolution4;
             Assert.IsNotNull(solution, "Failed to obtain SVsSolution service");
@@ -873,7 +873,7 @@ namespace TestUtilities.UI {
             }
 
 
-            var vsProject = string.IsNullOrEmpty(projName) ?
+            var vsProject = string.IsNullOrEmpty(projectName) ?
                 projects.OfType<IVsHierarchy>().FirstOrDefault() :
                 projects.OfType<IVsHierarchy>().FirstOrDefault(p => {
                 string mk;
@@ -881,7 +881,7 @@ namespace TestUtilities.UI {
                     return false;
                 }
                 Console.WriteLine(mk);
-                return Path.GetFileNameWithoutExtension(mk) == projName;
+                return Path.GetFileNameWithoutExtension(mk) == projectName;
             });
 
             string outputText = "(unable to get Solution output)";

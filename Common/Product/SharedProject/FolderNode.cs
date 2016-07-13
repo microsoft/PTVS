@@ -490,7 +490,10 @@ namespace Microsoft.VisualStudioTools.Project {
 
             ItemNode.Rename(CommonUtils.GetRelativeDirectoryPath(ProjectMgr.ProjectHome, newPath));
             var parent = ProjectMgr.GetParentFolderForPath(newPath);
-            Debug.Assert(parent != null, "ReparentFolder called without full path to parent being created");
+            if (parent == null) {
+                Debug.Fail("ReparentFolder called without full path to parent being created");
+                throw new DirectoryNotFoundException(newPath);
+            }
             parent.AddChild(this);
         }
 
