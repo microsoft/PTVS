@@ -100,6 +100,7 @@ namespace FactoryProviderSuccess {
         }
         public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() { yield break; }
         public event EventHandler InterpreterFactoriesChanged { add { } remove { } }
+        public object GetProperty(string id, string propName) { return null; }
     }
 }", path);
             }
@@ -245,6 +246,7 @@ namespace FactoryProviderTypeLoadException {
         }
         public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() { yield break; }
         public event EventHandler InterpreterFactoriesChanged { add { } remove { } }
+        public object GetProperty(string id, string propName) { return null; }
     }
 }", path);
             }
