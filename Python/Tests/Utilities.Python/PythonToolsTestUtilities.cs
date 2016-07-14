@@ -18,8 +18,9 @@ using System;
 using System.ComponentModel.Design;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.InteractiveWindow.Commands;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
@@ -72,6 +73,10 @@ namespace TestUtilities.Python {
                 typeof(IInteractiveWindowCommandsFactory),
                 () => new MockInteractiveWindowCommandsFactory()
             );
+
+            var optService = new Lazy<MockInterpreterOptionsService>(() => new MockInterpreterOptionsService());
+            serviceProvider.ComponentModel.AddExtension<IInterpreterRegistryService>(() => optService.Value);
+            serviceProvider.ComponentModel.AddExtension<IInterpreterOptionsService>(() => optService.Value);
 
             if (suppressTaskProvider) {
                 serviceProvider.AddService(typeof(ErrorTaskProvider), null, true);

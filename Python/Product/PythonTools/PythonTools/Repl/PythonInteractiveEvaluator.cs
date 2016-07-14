@@ -359,9 +359,12 @@ namespace Microsoft.PythonTools.Repl {
                     return newerThread;
                 }
 
-                await ExecuteStartupScripts(scriptsPath);
+                if (thread != null) {
+                    await ExecuteStartupScripts(scriptsPath);
 
-                thread.AvailableScopesChanged += Thread_AvailableScopesChanged;
+                    thread.AvailableScopesChanged += Thread_AvailableScopesChanged;
+                }
+
                 return thread;
             });
         }

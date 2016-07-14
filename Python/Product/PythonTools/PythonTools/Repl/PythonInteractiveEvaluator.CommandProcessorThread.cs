@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools.Repl {
         protected virtual CommandProcessorThread Connect() {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThreadOrThrow();
 
-            var interpreterPath = Configuration.GetInterpreterPath();
+            var interpreterPath = Configuration?.GetInterpreterPath();
             if (string.IsNullOrWhiteSpace(interpreterPath)) {
                 WriteError(Strings.ReplEvaluatorInterpreterNotConfigured.FormatUI(DisplayName));
                 return null;
