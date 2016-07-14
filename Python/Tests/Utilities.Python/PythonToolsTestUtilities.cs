@@ -44,7 +44,7 @@ namespace TestUtilities.Python {
             var service = new MockContentTypeRegistryService();
             service.AddContentType(PythonCoreConstants.ContentType, new[] { "code" });
 
-            service.AddContentType("Interactive Command", new[] { "code" });
+            service.AddContentType("Python Interactive Command", new[] { "code" });
             return service;
         }
 
@@ -54,7 +54,9 @@ namespace TestUtilities.Python {
         /// This will not include many of the services which are typically available in
         /// VS but is suitable for simple test cases which need just some base functionality.
         /// </summary>
-        public static MockServiceProvider CreateMockServiceProvider() {
+        public static MockServiceProvider CreateMockServiceProvider(
+            bool suppressTaskProvider = false
+        ) {
             var serviceProvider = new MockServiceProvider();
 
             serviceProvider.ComponentModel.AddExtension(
@@ -71,8 +73,13 @@ namespace TestUtilities.Python {
                 () => new MockInteractiveWindowCommandsFactory()
             );
 
-            serviceProvider.AddService(typeof(ErrorTaskProvider), CreateTaskProviderService, true);
-            serviceProvider.AddService(typeof(CommentTaskProvider), CreateTaskProviderService, true);
+            if (suppressTaskProvider) {
+                serviceProvider.AddService(typeof(ErrorTaskProvider), null, true);
+                serviceProvider.AddService(typeof(CommentTaskProvider), null, true);
+            } else {
+                serviceProvider.AddService(typeof(ErrorTaskProvider), CreateTaskProviderService, true);
+                serviceProvider.AddService(typeof(CommentTaskProvider), CreateTaskProviderService, true);
+            }
             serviceProvider.AddService(typeof(UIThreadBase), new MockUIThread());
             var optionsService = new MockPythonToolsOptionsService();
             serviceProvider.AddService(typeof(IPythonToolsOptionsService), optionsService, true);

@@ -43,11 +43,13 @@ namespace PythonToolsMockTests {
 
         [TestInitialize]
         public void TestInit() {
+            MockPythonToolsPackage.SuppressTaskProvider = true;
             _vs = new MockVs();
         }
 
         [TestCleanup]
         public void TestCleanup() {
+            MockPythonToolsPackage.SuppressTaskProvider = false;
             _vs.Dispose();
         }
 
