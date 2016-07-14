@@ -147,9 +147,9 @@ namespace Microsoft.PythonTools.Intellisense {
         public void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
             _subjectBuffers.Add(subjectBuffer);
 
-            var analyzer = _textView.GetAnalysisEntry(subjectBuffer, _serviceProvider)?.Analyzer;
             bool isTemporaryFile = false;
-            if (analyzer == null) {
+            VsProjectAnalyzer analyzer;
+            if (!_textView.TryGetAnalyzer(subjectBuffer, _serviceProvider, out analyzer)) {
                 // there's no analyzer for this file, but we can analyze it against either
                 // the default analyzer or some other analyzer (e.g. if it's a diff view, we want
                 // to analyze against the project we're diffing from).  But in either case this

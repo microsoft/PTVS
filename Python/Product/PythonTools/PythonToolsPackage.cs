@@ -408,7 +408,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
         /// where you can put all the initilaization code that rely on services provided by VisualStudio.
         /// </summary>
         protected override void Initialize() {
-            Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
+            Trace.WriteLine("Entering Initialize() of: {0}".FormatUI(this));
             base.Initialize();
 
             var services = (IServiceContainer)this;
@@ -422,7 +422,13 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             services.AddService(typeof(IPythonToolsToolWindowService), this, promote: true);
 
             // register our PythonToolsService which provides access to core PTVS functionality
-            var pyService = _pyService = new PythonToolsService(services);
+            PythonToolsService pyService;
+            try {
+                pyService = _pyService = new PythonToolsService(services);
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                ex.ReportUnhandledException(services, GetType());
+                throw;
+            }
 
             services.AddService(typeof(PythonToolsService), pyService, promote: true);
 
@@ -511,6 +517,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             // The variable is inherited by child processes backing Test Explorer, and is used in PTVS
             // test discoverer and test executor to connect back to VS.
             Environment.SetEnvironmentVariable("_PTVS_PID", Process.GetCurrentProcess().Id.ToString());
+
+            Trace.WriteLine("Leaving Initialize() of: {0}".FormatUI(this));
         }
 
         internal static bool TryGetStartupFileAndDirectory(System.IServiceProvider serviceProvider, out string filename, out string dir, out VsProjectAnalyzer analyzer) {

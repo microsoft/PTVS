@@ -259,6 +259,47 @@ namespace Microsoft.PythonTools {
             return project.GetCommonProject() as PythonProjectNode;
         }
 
+        internal static bool TryGetAnalyzer(this ITextView view, ITextBuffer buffer, IServiceProvider provider, out VsProjectAnalyzer analyzer) {
+            analyzer = null;
+
+            IPythonInteractiveIntellisense evaluator;
+            if ((evaluator = buffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
+                analyzer = evaluator.Analyzer;
+                return analyzer != null;
+            }
+
+            string path = buffer.GetFilePath();
+            if (path != null) {
+                var docTable = (IVsRunningDocumentTable4)provider.GetService(typeof(SVsRunningDocumentTable));
+                var cookie = VSConstants.VSCOOKIE_NIL;
+                try {
+                    cookie = docTable.GetDocumentCookie(path);
+                } catch (ArgumentException) {
+                }
+                if (cookie != VSConstants.VSCOOKIE_NIL) {
+                    IVsHierarchy hierarchy;
+                    uint itemid;
+                    docTable.GetDocumentHierarchyItem(cookie, out hierarchy, out itemid);
+                    if (hierarchy != null) {
+                        var pyProject = hierarchy.GetProject()?.GetPythonProject();
+                        if (pyProject != null) {
+                            analyzer = pyProject.GetAnalyzer();
+                        }
+                    }
+                }
+
+                if (analyzer == null && view != null) {
+                    // We could spin up a new analyzer for non Python projects...
+                    analyzer = view.GetBestAnalyzer(provider);
+                }
+
+                return analyzer != null;
+            }
+
+            analyzer = null;
+            return false;
+        }
+
         /// <summary>
         /// Gets the analysis entry for the given view and buffer.
         /// 
@@ -277,48 +318,23 @@ namespace Microsoft.PythonTools {
         /// <param name="entry"></param>
         /// <returns></returns>
         internal static bool TryGetAnalysisEntry(this ITextView view, ITextBuffer buffer, IServiceProvider provider, out AnalysisEntry entry) {
-            IPythonInteractiveIntellisense evaluator;
-            if ((evaluator = buffer.GetInteractiveWindow()?.Evaluator as IPythonInteractiveIntellisense) != null) {
-                var analyzer = evaluator.Analyzer;
-                if (analyzer != null && !string.IsNullOrEmpty(evaluator.AnalysisFilename)) {
-                    entry = analyzer.GetAnalysisEntryFromPath(evaluator.AnalysisFilename);
-                } else {
-                    entry = null;
-                }
-                return entry != null;
-            }
-
-            string path = buffer.GetFilePath();
-            if (path != null) {
-                var docTable = (IVsRunningDocumentTable4)provider.GetService(typeof(SVsRunningDocumentTable));
-                var cookie = VSConstants.VSCOOKIE_NIL;
-                try {
-                    cookie = docTable.GetDocumentCookie(path);
-                } catch (ArgumentException) {
-                }
-                VsProjectAnalyzer analyzer = null;
-                if (cookie != VSConstants.VSCOOKIE_NIL) {
-                    IVsHierarchy hierarchy;
-                    uint itemid;
-                    docTable.GetDocumentHierarchyItem(cookie, out hierarchy, out itemid);
-                    if (hierarchy != null) {
-                        var pyProject = hierarchy.GetProject()?.GetPythonProject();
-                        if (pyProject != null) {
-                            analyzer = pyProject.GetAnalyzer();
-                        }
-                    }
-                }
-
-                if (analyzer == null && view != null) {
-                    // We could spin up a new analyzer for non Python projects...
-                    analyzer = view.GetBestAnalyzer(provider);
-                }
-
-                entry = analyzer?.GetAnalysisEntryFromPath(path);
-                return entry != null;
-            }
-
             entry = null;
+
+            VsProjectAnalyzer analyzer;
+            if (view.TryGetAnalyzer(buffer, provider, out analyzer)) {
+                string path = null;
+                PythonInteractiveEvaluator evaluator;
+                if ((evaluator = buffer.GetInteractiveWindow()?.GetPythonEvaluator()) != null) {
+                    path = evaluator.AnalysisFilename;
+                } else {
+                    path = buffer.GetFilePath();
+                }
+
+                if (!string.IsNullOrEmpty(path)) {
+                    entry = analyzer.GetAnalysisEntryFromPath(path);
+                }
+                return entry != null;
+            }
             return false;
         }
 
