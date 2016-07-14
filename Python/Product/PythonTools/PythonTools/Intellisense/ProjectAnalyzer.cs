@@ -108,7 +108,9 @@ namespace Microsoft.PythonTools.Intellisense {
         ) {
             _errorProvider = (ErrorTaskProvider)serviceProvider.GetService(typeof(ErrorTaskProvider));
             _commentTaskProvider = (CommentTaskProvider)serviceProvider.GetService(typeof(CommentTaskProvider));
-            _unresolvedSquiggles = new UnresolvedImportSquiggleProvider(serviceProvider, _errorProvider);
+            if (_errorProvider != null) {
+                _unresolvedSquiggles = new UnresolvedImportSquiggleProvider(serviceProvider, _errorProvider);
+            }
 
             _implicitProject = implicitProject;
             _serviceProvider = serviceProvider;
@@ -119,7 +121,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _pyService = serviceProvider.GetPythonToolsService();
 
-            _commentTaskProvider.TokensChanged += CommentTaskTokensChanged;
+            if (_commentTaskProvider != null) {
+                _commentTaskProvider.TokensChanged += CommentTaskTokensChanged;
+            }
 
             _conn = StartConnection(
                 projectFile?.FullPath ?? (implicitProject ? "Global Analysis" : "Misc. Non Project Analysis"),
@@ -255,13 +259,15 @@ namespace Microsoft.PythonTools.Intellisense {
         public void Dispose() {
             _disposing = true;
             foreach (var entry in _projectFiles.Values) {
-                _errorProvider.Clear(entry, ParserTaskMoniker);
-                _errorProvider.Clear(entry, UnresolvedImportMoniker);
-                _commentTaskProvider.Clear(entry, ParserTaskMoniker);
+                _errorProvider?.Clear(entry, ParserTaskMoniker);
+                _errorProvider?.Clear(entry, UnresolvedImportMoniker);
+                _commentTaskProvider?.Clear(entry, ParserTaskMoniker);
             }
 
             Debug.WriteLine(String.Format("Disposing of parser {0}", _analysisProcess.Id));
-            _commentTaskProvider.TokensChanged -= CommentTaskTokensChanged;
+            if (_commentTaskProvider != null) {
+                _commentTaskProvider.TokensChanged -= CommentTaskTokensChanged;
+            }
 
             foreach (var openFile in _projectFiles) {
                 var bufferParser = openFile.Value.BufferParser;
@@ -465,9 +471,9 @@ namespace Microsoft.PythonTools.Intellisense {
         internal async void ReAnalyzeTextBuffers(BufferParser oldParser) {
             ITextBuffer[] buffers = oldParser.Buffers;
             if (buffers.Length > 0) {
-                _errorProvider.ClearErrorSource(oldParser.AnalysisEntry, ParserTaskMoniker);
-                _errorProvider.ClearErrorSource(oldParser.AnalysisEntry, UnresolvedImportMoniker);
-                _commentTaskProvider.ClearErrorSource(oldParser.AnalysisEntry, ParserTaskMoniker);
+                _errorProvider?.ClearErrorSource(oldParser.AnalysisEntry, ParserTaskMoniker);
+                _errorProvider?.ClearErrorSource(oldParser.AnalysisEntry, UnresolvedImportMoniker);
+                _commentTaskProvider?.ClearErrorSource(oldParser.AnalysisEntry, ParserTaskMoniker);
 
                 foreach (var buffer in buffers) {
                     oldParser.UninitBuffer(buffer);
@@ -488,13 +494,13 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void ConnectErrorList(AnalysisEntry entry, ITextBuffer textBuffer) {
-            _errorProvider.AddBufferForErrorSource(entry, ParserTaskMoniker, textBuffer);
-            _commentTaskProvider.AddBufferForErrorSource(entry, ParserTaskMoniker, textBuffer);
+            _errorProvider?.AddBufferForErrorSource(entry, ParserTaskMoniker, textBuffer);
+            _commentTaskProvider?.AddBufferForErrorSource(entry, ParserTaskMoniker, textBuffer);
         }
 
         internal void DisconnectErrorList(AnalysisEntry entry, ITextBuffer textBuffer) {
-            _errorProvider.RemoveBufferForErrorSource(entry, ParserTaskMoniker, textBuffer);
-            _commentTaskProvider.RemoveBufferForErrorSource(entry, ParserTaskMoniker, textBuffer);
+            _errorProvider?.RemoveBufferForErrorSource(entry, ParserTaskMoniker, textBuffer);
+            _commentTaskProvider?.RemoveBufferForErrorSource(entry, ParserTaskMoniker, textBuffer);
         }
 
         internal void SwitchAnalyzers(VsProjectAnalyzer oldAnalyzer) {
@@ -529,8 +535,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 // kick off initial processing on the buffer
                 if (!textBuffer.Properties.ContainsProperty(typeof(IInteractiveEvaluator))) {
                     ConnectErrorList(entry, textBuffer);
-                    _errorProvider.AddBufferForErrorSource(entry, UnresolvedImportMoniker, textBuffer);
-                    _unresolvedSquiggles.ListenForNextNewAnalysis(entry, textBuffer);
+                    _errorProvider?.AddBufferForErrorSource(entry, UnresolvedImportMoniker, textBuffer);
+                    _unresolvedSquiggles?.ListenForNextNewAnalysis(entry, textBuffer);
                 }
 
                 entry.BufferParser = await BufferParser.CreateAsync(entry, this, textBuffer);
@@ -552,9 +558,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (attachedViews == 0) {
                     bufferParser.StopMonitoring();
 
-                    _errorProvider.ClearErrorSource(entry, ParserTaskMoniker);
-                    _errorProvider.ClearErrorSource(entry, UnresolvedImportMoniker);
-                    _commentTaskProvider.ClearErrorSource(entry, ParserTaskMoniker);
+                    _errorProvider?.ClearErrorSource(entry, ParserTaskMoniker);
+                    _errorProvider?.ClearErrorSource(entry, UnresolvedImportMoniker);
+                    _commentTaskProvider?.ClearErrorSource(entry, ParserTaskMoniker);
 
                     if (entry.IsTemporaryFile) {
                         await UnloadFileAsync(entry);
@@ -1055,49 +1061,53 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 // Update the parser warnings/errors.
                 var factory = new TaskProviderItemFactory(translator);
-                if (buffer.errors.Any() || buffer.warnings.Any()) {
-                    var warningItems = buffer.warnings.Select(er => factory.FromErrorResult(
-                        _serviceProvider,
-                        er,
-                        VSTASKPRIORITY.TP_NORMAL,
-                        VSTASKCATEGORY.CAT_BUILDCOMPILE)
-                    );
-                    var errorItems = buffer.errors.Select(er => factory.FromErrorResult(
-                        _serviceProvider,
-                        er,
-                        VSTASKPRIORITY.TP_HIGH,
-                        VSTASKCATEGORY.CAT_BUILDCOMPILE)
-                    );
+                if (_errorProvider != null) {
+                    if (buffer.errors.Any() || buffer.warnings.Any()) {
+                        var warningItems = buffer.warnings.Select(er => factory.FromErrorResult(
+                            _serviceProvider,
+                            er,
+                            VSTASKPRIORITY.TP_NORMAL,
+                            VSTASKCATEGORY.CAT_BUILDCOMPILE)
+                        );
+                        var errorItems = buffer.errors.Select(er => factory.FromErrorResult(
+                            _serviceProvider,
+                            er,
+                            VSTASKPRIORITY.TP_HIGH,
+                            VSTASKCATEGORY.CAT_BUILDCOMPILE)
+                        );
 
 
-                    _errorProvider.ReplaceItems(
-                        entry,
-                        ParserTaskMoniker,
-                        errorItems.Concat(warningItems).ToList()
-                    );
-                } else {
-                    _errorProvider.Clear(entry, ParserTaskMoniker);
+                        _errorProvider.ReplaceItems(
+                            entry,
+                            ParserTaskMoniker,
+                            errorItems.Concat(warningItems).ToList()
+                        );
+                    } else {
+                        _errorProvider.Clear(entry, ParserTaskMoniker);
+                    }
                 }
 
-                if (buffer.tasks.Any()) {
-                    var taskItems = buffer.tasks.Select(x => new TaskProviderItem(
-                           _serviceProvider,
-                           x.message,
-                           TaskProviderItemFactory.GetSpan(x),
-                           GetPriority(x.priority),
-                           GetCategory(x.category),
-                           x.squiggle,
-                           translator
-                       )
-                   );
+                if (_commentTaskProvider != null) {
+                    if (buffer.tasks.Any()) {
+                        var taskItems = buffer.tasks.Select(x => new TaskProviderItem(
+                               _serviceProvider,
+                               x.message,
+                               TaskProviderItemFactory.GetSpan(x),
+                               GetPriority(x.priority),
+                               GetCategory(x.category),
+                               x.squiggle,
+                               translator
+                           )
+                       );
 
-                    _commentTaskProvider.ReplaceItems(
-                        entry,
-                        ParserTaskMoniker,
-                        taskItems.ToList()
-                    );
-                } else {
-                    _commentTaskProvider.Clear(entry, ParserTaskMoniker);
+                        _commentTaskProvider.ReplaceItems(
+                            entry,
+                            ParserTaskMoniker,
+                            taskItems.ToList()
+                        );
+                    } else {
+                        _commentTaskProvider.Clear(entry, ParserTaskMoniker);
+                    }
                 }
             }
 
@@ -1343,16 +1353,16 @@ namespace Microsoft.PythonTools.Intellisense {
             _projectFiles.TryRemove(entry.Path, out removed);
             _projectFilesById.TryRemove(entry.FileId, out removed);
 
-            _errorProvider.Clear(entry, ParserTaskMoniker);
-            _errorProvider.Clear(entry, UnresolvedImportMoniker);
-            _commentTaskProvider.Clear(entry, ParserTaskMoniker);
+            _errorProvider?.Clear(entry, ParserTaskMoniker);
+            _errorProvider?.Clear(entry, UnresolvedImportMoniker);
+            _commentTaskProvider?.Clear(entry, ParserTaskMoniker);
 
             await SendRequestAsync(new AP.UnloadFileRequest() { fileId = entry.FileId }).ConfigureAwait(false);
         }
 
         internal void ClearAllTasks() {
-            _errorProvider.ClearAll();
-            _commentTaskProvider.ClearAll();
+            _errorProvider?.ClearAll();
+            _commentTaskProvider?.ClearAll();
 
             lock (_hasParseErrorsLock) {
                 _hasParseErrors.Clear();
@@ -1747,6 +1757,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void CommentTaskTokensChanged(object sender, EventArgs e) {
+            if (_commentTaskProvider == null) {
+                return;
+            }
+
             Dictionary<string, AP.TaskPriority> priorities = new Dictionary<string, AP.TaskPriority>();
             foreach (var keyValue in _commentTaskProvider.Tokens) {
                 priorities[keyValue.Key] = GetPriority(keyValue.Value);

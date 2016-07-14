@@ -77,7 +77,7 @@ namespace PythonToolsMockTests {
                     }
                 }
 
-                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
                 using (var mre = new ManualResetEventSlim()) {
                     EventHandler evt = (s, e) => mre.Set();
                     analyzer.AnalysisStarted += evt;

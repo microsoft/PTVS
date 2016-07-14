@@ -30,6 +30,9 @@ namespace Microsoft.PythonTools.Intellisense {
         private bool _enabled;
 
         public UnresolvedImportSquiggleProvider(IServiceProvider serviceProvider, TaskProvider taskProvider) {
+            if (taskProvider == null) {
+                throw new ArgumentNullException("taskProvider");
+            }
             _serviceProvider = serviceProvider;
             _taskProvider = taskProvider;
             var options = _serviceProvider.GetPythonToolsService()?.GeneralOptions;

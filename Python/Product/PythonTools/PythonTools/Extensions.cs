@@ -271,19 +271,21 @@ namespace Microsoft.PythonTools {
             string path = buffer.GetFilePath();
             if (path != null) {
                 var docTable = (IVsRunningDocumentTable4)provider.GetService(typeof(SVsRunningDocumentTable));
-                var cookie = VSConstants.VSCOOKIE_NIL;
-                try {
-                    cookie = docTable.GetDocumentCookie(path);
-                } catch (ArgumentException) {
-                }
-                if (cookie != VSConstants.VSCOOKIE_NIL) {
-                    IVsHierarchy hierarchy;
-                    uint itemid;
-                    docTable.GetDocumentHierarchyItem(cookie, out hierarchy, out itemid);
-                    if (hierarchy != null) {
-                        var pyProject = hierarchy.GetProject()?.GetPythonProject();
-                        if (pyProject != null) {
-                            analyzer = pyProject.GetAnalyzer();
+                if (docTable != null) {
+                    var cookie = VSConstants.VSCOOKIE_NIL;
+                    try {
+                        cookie = docTable.GetDocumentCookie(path);
+                    } catch (ArgumentException) {
+                    }
+                    if (cookie != VSConstants.VSCOOKIE_NIL) {
+                        IVsHierarchy hierarchy;
+                        uint itemid;
+                        docTable.GetDocumentHierarchyItem(cookie, out hierarchy, out itemid);
+                        if (hierarchy != null) {
+                            var pyProject = hierarchy.GetProject()?.GetPythonProject();
+                            if (pyProject != null) {
+                                analyzer = pyProject.GetAnalyzer();
+                            }
                         }
                     }
                 }
