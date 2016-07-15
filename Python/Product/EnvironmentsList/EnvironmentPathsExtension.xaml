@@ -312,7 +312,7 @@
                         <StackPanel Orientation="Vertical">
                             <Label x:Name="Vendor">
                                 <TextBlock>
-                                    <Run xml:space="preserve">By</Run>
+                                    <Run>By</Run>
                                     <Run Text="{Binding Vendor,Mode=OneWay}" />
                                 </TextBlock>
                             </Label> 
