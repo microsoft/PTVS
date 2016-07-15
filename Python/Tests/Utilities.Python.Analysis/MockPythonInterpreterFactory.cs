@@ -28,6 +28,7 @@ namespace TestUtilities.Python {
         private AnalyzerStatusUpdater _updater;
         private bool _isCurrent;
         internal bool? _success;
+        public Dictionary<string, object> _properties;
 
         public const string UpToDateReason = "Database is up to date";
         public const string NoDatabaseReason = "Database has never been generated";
@@ -166,6 +167,21 @@ namespace TestUtilities.Python {
         public void NotifyCorruptDatabase() {
             IsCurrentReason = InvalidReason;
             _isCurrent = false;
+        }
+
+        public Dictionary<string, object> Properties {
+            get {
+                if (_properties == null) {
+                    _properties = new Dictionary<string, object>();
+                }
+                return _properties;
+            }
+        }
+
+        public object GetProperty(string propName) {
+            object value = null;
+            _properties?.TryGetValue(propName, out value);
+            return value;
         }
     }
 }

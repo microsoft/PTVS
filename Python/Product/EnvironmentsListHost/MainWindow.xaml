@@ -26,6 +26,10 @@
         <CommandBinding Command="{x:Static el:EnvironmentView.DisableIPythonInteractive}"
                         CanExecute="DisableIPythonInteractive_CanExecute"
                         Executed="DisableIPythonInteractive_Executed" />
+
+        <CommandBinding Command="{x:Static el:EnvironmentPathsExtension.OpenInBrowser}"
+                        CanExecute="OpenInBrowser_CanExecute"
+                        Executed="OpenInBrowser_Executed" />
     </Window.CommandBindings>
     <Grid>
         <el:ToolWindow x:Name="EnvironmentsToolWindow" />

@@ -161,13 +161,27 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             foreach (var key in subKeyNames) {
+                if (key == "PyLauncher") {
+                    continue;
+                }
                 TryRegisterInterpreter(factories, registeredPaths, ignoreRegisteredPaths, vendorKey, key, arch);
             }
         }
 
-        private static void TryRegisterInterpreter(Dictionary<string, InterpreterInformation> factories, HashSet<string> registeredPaths, bool ignoreRegisteredPaths, RegistryKey vendorKey, string key, ProcessorArchitecture? arch) {
+        private static void TryRegisterInterpreter(
+            Dictionary<string, InterpreterInformation> factories,
+            HashSet<string> registeredPaths,
+            bool ignoreRegisteredPaths,
+            RegistryKey vendorKey,
+            string key,
+            ProcessorArchitecture? arch
+        ) {
             Version version = null;
             ProcessorArchitecture? arch2 = null;
+
+            var vendorName = GetVendorName(vendorKey);
+            var vendorDescription = (vendorKey.GetValue("DisplayName") as string) ?? vendorName;
+            var vendorSupport = vendorKey.GetValue("SupportUrl") as string;
 
             using (var interpKey = vendorKey.OpenSubKey(key)) {
                 if (interpKey == null) {
@@ -223,9 +237,18 @@ namespace Microsoft.PythonTools.Interpreter {
                         actualArch = NativeMethods.GetBinaryType(Path.Combine(basePath, CPythonInterpreterFactoryConstants.ConsoleExecutable));
                     }
 
-                    string description = interpKey.GetValue("Description") as string;
-                    if (description == null) {
+                    string description, supportUrl;
+                    if (vendorName == "PythonCore") {
+                        vendorDescription = "Python Software Foundation";
                         description = "Python";
+                        supportUrl = "https://www.python.org/";
+                    } else {
+                        description = interpKey.GetValue("DisplayName") as string;
+                        if (string.IsNullOrEmpty(description)) {
+                            description = "{0} {1}".FormatInvariant(GetVendorName(vendorKey), key);
+                        }
+
+                        supportUrl = interpKey.GetValue("SupportUrl") as string ?? vendorSupport;
                     }
 
                     string newId = CPythonInterpreterFactoryConstants.GetInterpreterId(GetVendorName(vendorKey), actualArch, id);
@@ -247,7 +270,7 @@ namespace Microsoft.PythonTools.Interpreter {
                             actualArch ?? ProcessorArchitecture.None,
                             version
                         );
-                        factories[newId] = new InterpreterInformation(newConfig);
+                        factories[newId] = new InterpreterInformation(newConfig, vendorDescription, supportUrl);
                     } catch (ArgumentException) {
                     }
                 }
@@ -361,16 +384,45 @@ namespace Microsoft.PythonTools.Interpreter {
             _interpFactoriesChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public object GetProperty(string id, string propName) => null;
+        public object GetProperty(string id, string propName) {
+            InterpreterInformation info;
+
+            switch (propName) {
+                case "Vendor":
+                    lock (_factories) {
+                        if (_factories.TryGetValue(id, out info)) {
+                            return info.Vendor;
+                        }
+                    }
+                    break;
+                case "SupportUrl":
+                    lock (_factories) {
+                        if (_factories.TryGetValue(id, out info)) {
+                            return info.SupportUrl;
+                        }
+                    }
+                    break;
+            }
+
+            return null;
+        }
 
         #endregion
 
         class InterpreterInformation {
             IPythonInterpreterFactory Factory;
             public readonly InterpreterConfiguration Configuration;
+            public readonly string Vendor;
+            public readonly string SupportUrl;
 
-            public InterpreterInformation(InterpreterConfiguration configuration) {
+            public InterpreterInformation(
+                InterpreterConfiguration configuration,
+                string vendor,
+                string supportUrl
+            ) {
                 Configuration = configuration;
+                Vendor = vendor;
+                SupportUrl = supportUrl;
             }
 
             public IPythonInterpreterFactory EnsureFactory() {

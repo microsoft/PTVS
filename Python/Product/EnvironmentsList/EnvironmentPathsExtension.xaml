@@ -307,6 +307,37 @@
                             </Button>
                         </StackPanel>
                     </DataTemplate>
+
+                    <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="VendorInformation">
+                        <StackPanel Orientation="Vertical">
+                            <Label x:Name="Vendor">
+                                <TextBlock>
+                                    <Run xml:space="preserve">By</Run>
+                                    <Run Text="{Binding Vendor,Mode=OneWay}" />
+                                </TextBlock>
+                            </Label> 
+                            <Button x:Name="SupportUrl"
+                                    Command="{x:Static l:EnvironmentPathsExtension.OpenInBrowser}"
+                                    CommandParameter="{Binding SupportUrl,Mode=OneWay}"
+                                    ToolTip="{Binding SupportUrl,Mode=OneWay}"
+                                    Style="{StaticResource NavigationButton}"
+                                    Margin="6 1"
+                                    HorizontalAlignment="Left">
+                                Online support
+                            </Button>
+                            <Rectangle Height="1" Margin="6 1"
+                                       Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                        </StackPanel>
+
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Vendor,Mode=OneWay}" Value="">
+                                <Setter TargetName="Vendor" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding SupportUrl,Mode=OneWay}" Value="">
+                                <Setter TargetName="SupportUrl" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -320,6 +351,7 @@
                     <Setter Property="Focusable" Value="False"/>
                 </Style>
             </StackPanel.Resources>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource VendorInformation}" Margin="0 3" />
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource EnvironmentIsDefault}" Margin="0 3" />
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource InteractiveLinks}" Margin="0 3" />
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource EnvironmentLinks}" Margin="0 3" />
