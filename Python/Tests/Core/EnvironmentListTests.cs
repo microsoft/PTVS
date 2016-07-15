@@ -657,6 +657,47 @@ namespace PythonToolsUITests {
         }
 
         [TestMethod, Priority(1)]
+        [TestCategory("10s")]
+        public void VendorInfo() {
+            var sp = new MockServiceProvider();
+            var mockService = new MockInterpreterOptionsService();
+
+            var v = new Version(3, 5);
+            var noInfo = new MockPythonInterpreterFactory(MockInterpreterConfiguration("1 No Info", v));
+            var vendor = new MockPythonInterpreterFactory(MockInterpreterConfiguration("2 Vendor", v));
+            var supportUrl = new MockPythonInterpreterFactory(MockInterpreterConfiguration("3 SupportUrl", v));
+            var bothInfo = new MockPythonInterpreterFactory(MockInterpreterConfiguration("4 Both Info", v));
+
+            bothInfo.Properties[EnvironmentView.VendorKey] = vendor.Properties[EnvironmentView.VendorKey] = "Vendor Name";
+            bothInfo.Properties[EnvironmentView.SupportUrlKey] = supportUrl.Properties[EnvironmentView.SupportUrlKey] = "http://example.com";
+
+            mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider", noInfo, vendor, supportUrl, bothInfo));
+
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
+                list.Service = mockService;
+                list.Interpreters = mockService;
+                var environments = list.Environments;
+
+                Assert.AreEqual(4, environments.Count);
+                AssertUtil.AreEqual(
+                    wpf.Invoke(() => environments.Select(ev => ev.Vendor).ToList()),
+                    null,
+                    "Vendor Name",
+                    null,
+                    "Vendor Name"
+                );
+                AssertUtil.AreEqual(
+                    wpf.Invoke(() => environments.Select(ev => ev.SupportUrl).ToList()),
+                    null,
+                    null,
+                    "http://example.com",
+                    "http://example.com"
+                );
+            }
+        }
+
+        [TestMethod, Priority(1)]
         public void FileNameEllipsis() {
             TestFileNameEllipsis("C:\\Python\\python.exe", "C:\\", "Python", "\\python.exe");
             TestFileNameEllipsis("C:\\Python\\lib\\", "C:\\", "Python", "\\lib\\");

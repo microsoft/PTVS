@@ -90,7 +90,9 @@ namespace TestUtilities.Python {
                 .FirstOrDefault();
         }
 
-        public object GetProperty(string id, string propName) => null;
+        public object GetProperty(string id, string propName) {
+            return (GetInterpreterFactory(id) as MockPythonInterpreterFactory)?.GetProperty(propName);
+        }
 
         public event EventHandler InterpreterFactoriesChanged;
     }

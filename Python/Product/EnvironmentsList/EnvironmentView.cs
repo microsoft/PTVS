@@ -47,6 +47,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly Lazy<IEnumerable<EnvironmentView>> OnlineHelpViewOnce =
             new Lazy<IEnumerable<EnvironmentView>>(() => new[] { OnlineHelpView.Value });
 
+        // Names of properties that will be requested from interpreter configurations
+        internal const string VendorKey = "Vendor";
+        internal const string SupportUrlKey = "SupportUrl";
+
         /// <summary>
         /// Used with <see cref="CommonUtils.FindFile"/> to more efficiently
         /// find interpreter executables.
@@ -60,6 +64,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private static readonly string[] _likelyLibraryPaths = new[] { "Lib" };
 
         private readonly IInterpreterOptionsService _service;
+        private readonly IInterpreterRegistryService _registry;
         private readonly IPythonInterpreterFactoryWithDatabase _withDb;
 
         public IPythonInterpreterFactory Factory { get; private set; }
@@ -68,17 +73,22 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         internal EnvironmentView(
             IInterpreterOptionsService service,
+            IInterpreterRegistryService registry,
             IPythonInterpreterFactory factory,
             Redirector redirector
         ) {
             if (service == null) {
                 throw new ArgumentNullException(nameof(service));
             }
+            if (registry == null) {
+                throw new ArgumentNullException(nameof(registry));
+            }
             if (factory == null) {
                 throw new ArgumentNullException(nameof(factory));
             }
 
             _service = service;
+            _registry = registry;
             Factory = factory;
 
             _withDb = factory as IPythonInterpreterFactoryWithDatabase;
@@ -108,6 +118,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
 
             CanBeDefault = Factory.CanBeDefault();
+
+            Vendor = _registry.GetProperty(Factory.Configuration.Id, "Vendor") as string;
+            SupportUrl = _registry.GetProperty(Factory.Configuration.Id, "SupportUrl") as string;
         }
 
         public override string ToString() {
@@ -244,6 +257,26 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public string PathEnvironmentVariable {
             get { return Factory == null ? string.Empty : (string)GetValue(PathEnvironmentVariableProperty); }
             set { if (Factory != null) { SetValue(PathEnvironmentVariablePropertyKey, value); } }
+        }
+
+        #endregion
+
+        #region Extra Information Dependency Properties
+
+        private static readonly DependencyPropertyKey VendorPropertyKey = DependencyProperty.RegisterReadOnly("Vendor", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
+        private static readonly DependencyPropertyKey SupportUrlPropertyKey = DependencyProperty.RegisterReadOnly("SupportUrl", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
+
+        public static readonly DependencyProperty VendorProperty = VendorPropertyKey.DependencyProperty;
+        public static readonly DependencyProperty SupportUrlProperty = SupportUrlPropertyKey.DependencyProperty;
+
+        public string Vendor {
+            get { return Factory == null ? string.Empty : (string)GetValue(VendorProperty); }
+            set { if (Factory != null) { SetValue(VendorPropertyKey, value); } }
+        }
+
+        public string SupportUrl {
+            get { return Factory == null ? string.Empty : (string)GetValue(SupportUrlProperty); }
+            set { if (Factory != null) { SetValue(SupportUrlPropertyKey, value); } }
         }
 
         #endregion
