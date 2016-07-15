@@ -15,23 +15,18 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Profiling {
@@ -187,32 +182,36 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         internal SessionNode ProfileTarget(ProfilingTarget target, bool openReport = true) {
-            bool save;
-            string name = target.GetProfilingName(this, out save);
-            var session = ShowPerformanceExplorer().Sessions.AddTarget(target, name, save);
+            return ThreadHelper.Generic.Invoke(() => {
+                bool save;
+                string name = target.GetProfilingName(this, out save);
+                var session = ShowPerformanceExplorer().Sessions.AddTarget(target, name, save);
 
-            StartProfiling(target, session, openReport);
-            return session;
+                StartProfiling(target, session, openReport);
+                return session;
+            });
         }
 
         internal void StartProfiling(ProfilingTarget target, SessionNode session, bool openReport = true) {
-            if (!Utilities.SaveDirtyFiles()) {
-                // Abort
-                return;
-            }
+            ThreadHelper.Generic.Invoke(() => {
+                if (!Utilities.SaveDirtyFiles()) {
+                    // Abort
+                    return;
+                }
 
-            if (target.ProjectTarget != null) {
-                ProfileProjectTarget(session, target.ProjectTarget, openReport);
-            } else if (target.StandaloneTarget != null) {
-                ProfileStandaloneTarget(session, target.StandaloneTarget, openReport);
-            } else {
-                if (MessageBox.Show("Profiling session is not configured - would you like to configure now and then launch?", "No Profiling Target", MessageBoxButton.YesNo) == MessageBoxResult.Yes) {
-                    var newTarget = session.OpenTargetProperties();
-                    if (newTarget != null && (newTarget.ProjectTarget != null || newTarget.StandaloneTarget != null)) {
-                        StartProfiling(newTarget, session, openReport);
+                if (target.ProjectTarget != null) {
+                    ProfileProjectTarget(session, target.ProjectTarget, openReport);
+                } else if (target.StandaloneTarget != null) {
+                    ProfileStandaloneTarget(session, target.StandaloneTarget, openReport);
+                } else {
+                    if (MessageBox.Show("Profiling session is not configured - would you like to configure now and then launch?", "No Profiling Target", MessageBoxButton.YesNo) == MessageBoxResult.Yes) {
+                        var newTarget = session.OpenTargetProperties();
+                        if (newTarget != null && (newTarget.ProjectTarget != null || newTarget.StandaloneTarget != null)) {
+                            StartProfiling(newTarget, session, openReport);
+                        }
                     }
                 }
-            }
+            });
         }
 
         private void ProfileProjectTarget(SessionNode session, ProjectTarget projectTarget, bool openReport) {
@@ -241,102 +240,59 @@ namespace Microsoft.PythonTools.Profiling {
             }
         }
 
-        internal static void ProfileProject(SessionNode session, EnvDTE.Project projectToProfile, bool openReport) {
-            var model = (IComponentModel)(session._serviceProvider.GetService(typeof(SComponentModel)));
-
-            var projectHome = PathUtils.GetAbsoluteDirectoryPath(
-                Path.GetDirectoryName(projectToProfile.FullName),
-                (string)projectToProfile.Properties.Item("ProjectHome").Value
-            );
-
-            var args = (string)projectToProfile.Properties.Item("CommandLineArguments").Value;
-            var interpreterPath = (string)projectToProfile.Properties.Item("InterpreterPath").Value;
-            var searchPath = (string)projectToProfile.Properties.Item("SearchPath").Value;
+        private static void ProfileProject(SessionNode session, EnvDTE.Project projectToProfile, bool openReport) {
             var project = projectToProfile.AsPythonProject();
 
-            var interpreter = project != null ? project.GetInterpreterFactory() : null;
-            if (interpreter == null /*|| interpreter == interpreterService.NoInterpretersValue*/) {
-                MessageBox.Show(String.Format("Could not find interpreter for project {0}", projectToProfile.Name), "Python Tools for Visual Studio");
+            var config = project?.GetLaunchConfigurationOrThrow();
+            if (config == null) {
+                MessageBox.Show("Could not find interpreter for project {0}".FormatUI(projectToProfile.Name), "Python Tools for Visual Studio");
                 return;
             }
 
-            var arch = interpreter.Configuration.Architecture;
-            var pathEnvVarName = interpreter.Configuration.PathEnvironmentVariable;
-
-            if (String.IsNullOrWhiteSpace(interpreterPath)) {
-                interpreterPath = interpreter.Configuration.InterpreterPath;
-            }
-
-            string startupFile = (string)projectToProfile.Properties.Item("StartupFile").Value;
-            if (String.IsNullOrEmpty(startupFile)) {
+            if (string.IsNullOrEmpty(config.ScriptName)) {
                 MessageBox.Show("Project has no configured startup file, cannot start profiling.", "Python Tools for Visual Studio");
                 return;
             }
 
-            string workingDir = projectToProfile.Properties.Item("WorkingDirectory").Value as string;
-            if (String.IsNullOrEmpty(workingDir) || workingDir == ".") {
-                workingDir = projectToProfile.Properties.Item("ProjectHome").Value as string;
-                if (String.IsNullOrEmpty(workingDir)) {
-                    workingDir = Path.GetDirectoryName(projectToProfile.FullName);
+            if (string.IsNullOrEmpty(config.WorkingDirectory) || config.WorkingDirectory == ".") {
+                config.WorkingDirectory = project.ProjectHome;
+                if (string.IsNullOrEmpty(config.WorkingDirectory)) {
+                    config.WorkingDirectory = Path.GetDirectoryName(config.ScriptName);
                 }
             }
 
-            var env = new Dictionary<string, string>();
-            if (!String.IsNullOrWhiteSpace(pathEnvVarName) && !String.IsNullOrEmpty(searchPath)) {
-                var searchPaths = searchPath.Split(';').ToList();
-                var pyService = (PythonToolsService)session._serviceProvider.GetService(typeof(PythonToolsService));
-                if (!pyService.GeneralOptions.ClearGlobalPythonPath) {
-                    searchPaths.AddRange(Environment.GetEnvironmentVariable(pathEnvVarName).Split(';'));
-                }
-
-                env[pathEnvVarName] = string.Join(";", searchPaths
-                    .Where(PathUtils.IsValidPath)
-                    .Select(p => PathUtils.GetAbsoluteDirectoryPath(projectHome, p))
-                    .Where(Directory.Exists)
-                    .Distinct(StringComparer.OrdinalIgnoreCase)
-                );
-            }
-
-            var userEnv = projectToProfile.Properties.Item("Environment").Value as string;
-            if (userEnv != null) {
-                foreach (var envVar in userEnv.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)) {
-                    var nameValue = envVar.Split(new[] { '=' }, 2);
-                    if (nameValue.Length == 2) {
-                        env[nameValue[0]] = nameValue[1];
-                    }
-                }
-            }
-
-            RunProfiler(session, interpreterPath, startupFile, args, workingDir, env, openReport, arch);
+            RunProfiler(session, config, openReport);
         }
 
         private static void ProfileStandaloneTarget(SessionNode session, StandaloneTarget runTarget, bool openReport) {
-            var model = (IComponentModel)(session._serviceProvider.GetService(typeof(SComponentModel)));
-            var registry = model.DefaultExportProvider.GetExportedValue<IInterpreterRegistryService>();
-
-            var interpreterPath = runTarget.InterpreterPath;
-            var arch = ProcessorArchitecture.X86;
+            LaunchConfiguration config;
             if (runTarget.PythonInterpreter != null) {
-                var interpreter = registry.FindInterpreter(runTarget.PythonInterpreter.Id);
+                var registry = session._serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                var interpreter = registry.FindConfiguration(runTarget.PythonInterpreter.Id);
                 if (interpreter == null) {
                     return;
                 }
-                interpreterPath = interpreter.Configuration.InterpreterPath;
-                arch = interpreter.Configuration.Architecture;
+                config = new LaunchConfiguration(interpreter);
+            } else {
+                config = new LaunchConfiguration(null);
             }
 
-            RunProfiler(session, interpreterPath, runTarget.Script, runTarget.Arguments, runTarget.WorkingDirectory, null, openReport, arch);
+            config.InterpreterPath = runTarget.InterpreterPath;
+            config.ScriptName = runTarget.Script;
+            config.ScriptArguments = runTarget.Arguments;
+            config.WorkingDirectory = runTarget.WorkingDirectory;
+
+            RunProfiler(session, config, openReport);
         }
 
 
-        private static void RunProfiler(SessionNode session, string interpreter, string script, string arguments, string workingDir, Dictionary<string, string> env, bool openReport, ProcessorArchitecture arch) {
+        private static void RunProfiler(SessionNode session, LaunchConfiguration config, bool openReport) {
             var process = new ProfiledProcess(
                 (PythonToolsService)session._serviceProvider.GetService(typeof(PythonToolsService)),
-                interpreter,
-                String.Format("\"{0}\" {1}", script, arguments ?? string.Empty),
-                workingDir,
-                env,
-                arch
+                config.GetInterpreterPath(),
+                string.Join(" ", ProcessOutput.QuoteSingleArgument(config.ScriptName), config.ScriptArguments),
+                config.WorkingDirectory,
+                session._serviceProvider.GetPythonToolsService().GetFullEnvironment(config)
             );
 
             string baseName = Path.GetFileNameWithoutExtension(session.Filename);

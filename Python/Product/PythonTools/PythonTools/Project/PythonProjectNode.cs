@@ -1356,8 +1356,15 @@ namespace Microsoft.PythonTools.Project {
         public LaunchConfiguration GetLaunchConfigurationOrThrow() {
             var fact = GetInterpreterFactoryOrThrow();
 
+            var intPath = GetProjectProperty(PythonConstants.InterpreterPathSetting, resetCache: false);
+            if (string.IsNullOrEmpty(intPath)) {
+                intPath = null;
+            } else if (!Path.IsPathRooted(intPath)) {
+                intPath = PathUtils.GetAbsoluteFilePath(ProjectHome, intPath);
+            }
+
             var config = new LaunchConfiguration(fact.Configuration) {
-                InterpreterPath = GetProjectProperty(PythonConstants.InterpreterPathSetting, resetCache: false),
+                InterpreterPath = intPath,
                 InterpreterArguments = GetProjectProperty(PythonConstants.InterpreterArgumentsSetting, resetCache: false),
                 ScriptName = GetStartupFile(),
                 ScriptArguments = GetProjectProperty(PythonConstants.CommandLineArgumentsSetting, resetCache: false),

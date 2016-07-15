@@ -799,8 +799,28 @@ namespace Microsoft.PythonTools {
             return (EnvDTE.DTE)provider.GetService(typeof(EnvDTE.DTE));
         }
 
-        internal static SVsShellDebugger GetShellDebugger(this IServiceProvider provider) {
-            return (SVsShellDebugger)provider.GetService(typeof(SVsShellDebugger));
+        internal static IVsShell GetShell(this IServiceProvider provider) {
+            return (IVsShell)provider.GetService(typeof(SVsShell));
+        }
+
+        internal static bool TryGetShellProperty<T>(this IServiceProvider provider, __VSSPROPID propId, out T value) {
+            object obj;
+            if (ErrorHandler.Failed(provider.GetShell().GetProperty((int)propId, out obj))) {
+                value = default(T);
+                return false;
+            }
+            try {
+                value = (T)obj;
+                return true;
+            } catch (InvalidCastException) {
+                Debug.Fail("Expected property of type {0} but got value of type {1}".FormatUI(typeof(T).FullName, obj.GetType().FullName));
+                value = default(T);
+                return false;
+            }
+        }
+
+        internal static IVsDebugger GetShellDebugger(this IServiceProvider provider) {
+            return (IVsDebugger)provider.GetService(typeof(SVsShellDebugger));
         }
 
         internal static async System.Threading.Tasks.Task RefreshVariableViews(this IServiceProvider serviceProvider) {
@@ -808,7 +828,7 @@ namespace Microsoft.PythonTools {
             AD7Engine engine = AD7Engine.GetEngineForProcess(debugger.CurrentProcess);
             if (engine != null) {
                 await engine.RefreshThreadFrames(debugger.CurrentThread.ID);
-                var vsDebugger = (IDebugRefreshNotification140)serviceProvider.GetShellDebugger();
+                var vsDebugger = serviceProvider.GetShellDebugger() as IDebugRefreshNotification140;
                 if (vsDebugger != null) {
                     // Passing fCallstackFormattingAffected = TRUE to OnExpressionEvaluationRefreshRequested to force refresh
                     vsDebugger.OnExpressionEvaluationRefreshRequested(1);

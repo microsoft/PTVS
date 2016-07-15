@@ -17,8 +17,8 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.PythonTools.Interpreter {
-    internal static class NativeMethods {
+namespace Microsoft.PythonTools.Infrastructure {
+    public static partial class NativeMethods {
         [DllImport("kernel32", EntryPoint = "GetBinaryTypeW", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Winapi)]
         private static extern bool _GetBinaryType(string lpApplicationName, out GetBinaryTypeResult lpBinaryType);
 

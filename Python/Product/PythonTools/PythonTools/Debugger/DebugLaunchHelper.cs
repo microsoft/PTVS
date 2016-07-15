@@ -117,7 +117,7 @@ namespace Microsoft.PythonTools.Debugger {
                 // null-terminated block of null-terminated strings. 
                 // Each string is in the following form:name=value\0
                 var buf = new StringBuilder();
-                foreach (var kv in GetEnvironment(provider, config)) {
+                foreach (var kv in provider.GetPythonToolsService().GetFullEnvironment(config)) {
                     buf.AppendFormat("{0}={1}\0", kv.Key, kv.Value);
                 }
                 if (buf.Length > 0) {
@@ -159,30 +159,6 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        private static Dictionary<string, string> GetEnvironment(IServiceProvider provider, LaunchConfiguration config) {
-            // Start with global environment, add configured environment,
-            // then add search paths.
-            var baseEnv = Environment.GetEnvironmentVariables();
-            if (provider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath) {
-                // Clear search paths from the global environment
-                baseEnv[config.Interpreter.PathEnvironmentVariable] = string.Empty;
-            }
-            var env = PathUtils.MergeEnvironments(
-                baseEnv.AsEnumerable<string, string>(),
-                config.GetEnvironmentVariables(),
-                "Path", config.Interpreter.PathEnvironmentVariable
-            );
-            env = PathUtils.MergeEnvironments(
-                env,
-                new[] { new KeyValuePair<string, string>(
-                        config.Interpreter.PathEnvironmentVariable,
-                        PathUtils.JoinPathList(config.SearchPaths)
-                    ) },
-                config.Interpreter.PathEnvironmentVariable
-            );
-            return env;
-        }
-
         public static ProcessStartInfo CreateProcessStartInfo(IServiceProvider provider, LaunchConfiguration config) {
             var psi = new ProcessStartInfo {
                 FileName = config.GetInterpreterPath(),
@@ -211,7 +187,7 @@ namespace Microsoft.PythonTools.Debugger {
                 throw new DirectoryNotFoundException(Strings.DebugLaunchWorkingDirectoryMissing_Path.FormatUI(psi.FileName));
             }
 
-            foreach (var kv in GetEnvironment(provider, config)) {
+            foreach (var kv in provider.GetPythonToolsService().GetFullEnvironment(config)) {
                 psi.Environment[kv.Key] = kv.Value;
             }
 

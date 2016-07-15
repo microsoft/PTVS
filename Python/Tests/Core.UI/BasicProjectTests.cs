@@ -1359,7 +1359,7 @@ namespace PythonToolsUITests {
                 Keyboard.PressAndRelease(System.Windows.Input.Key.I, System.Windows.Input.Key.LeftAlt);
 
                 Keyboard.Type("print('hi')\r");
-                using (var interactive = app.GetInteractiveWindow(interpreterName + " Interactive")) {
+                using (var interactive = app.WaitForInteractiveWindow(interpreterName + " Interactive")) {
                     Assert.IsNotNull(interactive, "Unable to find " + interpreterName + " Interactive");
                     interactive.WaitForTextEnd("hi", ">");
                 }

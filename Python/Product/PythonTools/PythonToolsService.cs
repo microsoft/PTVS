@@ -576,6 +576,8 @@ namespace Microsoft.PythonTools {
             }
         }
 
+        internal System.IServiceProvider Site => _container;
+
         internal LanguagePreferences LangPrefs {
             get {
                 return _langPrefs;
@@ -729,6 +731,35 @@ namespace Microsoft.PythonTools {
         }
 
         #endregion
+
+        public Dictionary<string, string> GetFullEnvironment(LaunchConfiguration config) {
+            // Start with global environment, add configured environment,
+            // then add search paths.
+            var baseEnv = Environment.GetEnvironmentVariables();
+            if (GeneralOptions.ClearGlobalPythonPath) {
+                // Clear search paths from the global environment
+                baseEnv[config.Interpreter.PathEnvironmentVariable] = string.Empty;
+            }
+            var env = PathUtils.MergeEnvironments(
+                baseEnv.AsEnumerable<string, string>(),
+                config.GetEnvironmentVariables(),
+                "Path", config.Interpreter.PathEnvironmentVariable
+            );
+            if (config.SearchPaths != null && config.SearchPaths.Any()) {
+                env = PathUtils.MergeEnvironments(
+                    env,
+                    new[] {
+                        new KeyValuePair<string, string>(
+                            config.Interpreter.PathEnvironmentVariable,
+                            PathUtils.JoinPathList(config.SearchPaths)
+                        )
+                    },
+                    config.Interpreter.PathEnvironmentVariable
+                );
+            }
+            return env;
+        }
+
 
     }
 }

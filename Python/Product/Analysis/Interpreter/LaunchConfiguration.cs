@@ -53,6 +53,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 return InterpreterPath;
             }
 
+            if (_config == null) {
+                return null;
+            }
+
             if (PreferWindowedInterpreter && !string.IsNullOrEmpty(_config.WindowsInterpreterPath)) {
                 return _config.WindowsInterpreterPath;
             }
