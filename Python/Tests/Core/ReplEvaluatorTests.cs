@@ -302,15 +302,15 @@ g()",
         }
 
         [TestMethod, Priority(1)]
-        public void NoInterpreterPath() {
+        public async Task NoInterpreterPath() {
             // http://pytools.codeplex.com/workitem/662
 
             var replEval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
                 DisplayName = "Test Interpreter"
             };
             var replWindow = new MockReplWindow(replEval);
-            replEval._Initialize(replWindow);
-            var execute = replEval.ExecuteText("42");
+            await replEval._Initialize(replWindow);
+            await replEval.ExecuteText("42");
             Console.WriteLine(replWindow.Error);
             Assert.IsTrue(
                 replWindow.Error.Contains("Test Interpreter cannot be started"),

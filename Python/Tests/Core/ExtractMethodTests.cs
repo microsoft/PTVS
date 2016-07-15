@@ -1703,7 +1703,7 @@ async def f():
             using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact)) {
                 var buffer = new MockTextBuffer(input, "Python", "C:\\fob.py");
                 var view = new MockTextView(buffer);
-                view.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                buffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 analyzer.MonitorTextBufferAsync(buffer).Wait();
                 var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
 

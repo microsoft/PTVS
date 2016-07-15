@@ -29,7 +29,7 @@
       <FriendlyName>Python 2.7</FriendlyName>
     </WebPiReference>
   </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Flask.targets" />
+  <Import Project="$(VSToolsPath)\Python Tools\Microsoft.PythonTools.Flask.targets" />
   <ProjectExtensions>
     <VisualStudio>
       <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
