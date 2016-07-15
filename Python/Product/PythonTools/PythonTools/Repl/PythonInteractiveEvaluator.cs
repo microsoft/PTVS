@@ -258,7 +258,14 @@ namespace Microsoft.PythonTools.Repl {
         public event EventHandler<EventArgs> AvailableScopesChanged;
         public event EventHandler<EventArgs> MultipleScopeSupportChanged;
 
-        public bool SupportsMultipleStatements { get; set; }
+        public async Task<bool> GetSupportsMultipleStatementsAsync() {
+            var thread = await EnsureConnectedAsync();
+            if (thread == null) {
+                return false;
+            }
+
+            return await thread.GetSupportsMultipleStatementsAsync();
+        }
 
         private async void Thread_AvailableScopesChanged(object sender, EventArgs e) {
             _availableScopes = (await ((CommandProcessorThread)sender).GetAvailableUserScopesAsync(10000))?.ToArray();
@@ -352,9 +359,12 @@ namespace Microsoft.PythonTools.Repl {
                     return newerThread;
                 }
 
-                await ExecuteStartupScripts(scriptsPath);
+                if (thread != null) {
+                    await ExecuteStartupScripts(scriptsPath);
 
-                thread.AvailableScopesChanged += Thread_AvailableScopesChanged;
+                    thread.AvailableScopesChanged += Thread_AvailableScopesChanged;
+                }
+
                 return thread;
             });
         }
@@ -420,7 +430,6 @@ namespace Microsoft.PythonTools.Repl {
 
             return null;
         }
-
 
         public async Task<ExecutionResult> ExecuteCodeAsync(string text) {
             var cmdRes = _commands.TryExecuteCommand();
@@ -858,6 +867,14 @@ namespace Microsoft.PythonTools.Repl {
 
             pie = (window?.Evaluator as SelectableReplEvaluator)?.Evaluator as PythonInteractiveEvaluator;
             return pie;
+        }
+
+        public static async Task<bool> GetSupportsMultipleStatements(this IInteractiveWindow window) {
+            var pie = window.GetPythonEvaluator();
+            if (pie == null) {
+                return false;
+            }
+            return await pie.GetSupportsMultipleStatementsAsync();
         }
     }
 }

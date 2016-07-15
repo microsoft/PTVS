@@ -467,7 +467,7 @@ namespace Microsoft.PythonTools.Repl {
             var splitCode = JoinToCompleteStatements(SplitAndDedent(startText + pasting + endText), version).ToList();
             curBuffer.Delete(new Span(0, curBuffer.CurrentSnapshot.Length));
 
-            bool supportMultiple = window.GetPythonEvaluator()?.SupportsMultipleStatements ?? false;
+            bool supportMultiple = await window.GetSupportsMultipleStatements();
 
             if (supportMultiple) {
                 await window.SubmitAsync(new[] { string.Join(Environment.NewLine, splitCode) });
@@ -492,7 +492,7 @@ namespace Microsoft.PythonTools.Repl {
                     splitCode.RemoveAt(0);
                     await window.SubmitAsync(new[] { code });
 
-                    supportMultiple = window.GetPythonEvaluator()?.SupportsMultipleStatements ?? false;
+                    supportMultiple = await window.GetSupportsMultipleStatements();
                     if (supportMultiple) {
                         // Might have changed while we were executing
                         break;

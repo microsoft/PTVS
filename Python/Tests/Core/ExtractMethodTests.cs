@@ -1699,11 +1699,11 @@ async def f():
 
         private void ExtractMethodTest(string input, Func<Span> extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 7));
-            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
+            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider(suppressTaskProvider: true);
             using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact)) {
                 var buffer = new MockTextBuffer(input, "Python", "C:\\fob.py");
                 var view = new MockTextView(buffer);
-                buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                buffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 analyzer.MonitorTextBufferAsync(buffer).Wait();
                 var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
 

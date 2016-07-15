@@ -61,6 +61,16 @@ namespace Microsoft.PythonTools.Intellisense {
                 return res.ToString();
             }
 
+            public byte[] ReadBytes(int size) {
+                byte[] bytes = new byte[size];
+
+                int read = _stream.Read(bytes, 0, size);
+                if (read != size) {
+                    throw new EndOfStreamException("end of stream while reading");
+                }
+                return bytes;
+            }
+
             public string ReadLine() {
                 StringBuilder res = new StringBuilder();
                 int curByte;
@@ -92,10 +102,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public int ReadInt() {
-                return (int)ReadChar() |
-                       ((int)ReadChar()) << 8 |
-                       ((int)ReadChar()) << 16 |
-                       ((int)ReadChar()) << 24;
+                var c = ReadBytes(4);
+                return (int)c[0] |
+                       ((int)c[1]) << 8 |
+                       ((int)c[2]) << 16 |
+                       ((int)c[3]) << 24;
             }
         }
 
@@ -240,10 +251,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             private double ReadFloat64() {
-                byte[] bytes = new byte[8];
-                for (int i = 0; i < bytes.Length; i++) {
-                    bytes[i] = _file.ReadChar();
-                }
+                var bytes = _file.ReadBytes(8);
                 return BitConverter.ToDouble(bytes, 0);
             }
 
@@ -267,10 +275,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             private object ReadLong(int size) {
-                byte[] bytes = new byte[size];
-                for (int i = 0; i < size; i++) {
-                    bytes[i] = _file.ReadChar();
-                }
+                var bytes = _file.ReadBytes(size);
                 return new BigInteger(bytes);
             }
 
@@ -279,10 +284,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             private ushort ReadUInt16() {
-                byte[] bytes = new byte[2];
-                for (int i = 0; i < bytes.Length; i++) {
-                    bytes[i] = _file.ReadChar();
-                }
+                var bytes = _file.ReadBytes(2);
                 return BitConverter.ToUInt16(bytes, 0);
             }
 
@@ -352,11 +354,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             private void LoadBinUnicode() {
-                byte[] bytes = new byte[ReadInt32()];
-                for (int i = 0; i < bytes.Length; i++) {
-                    bytes[i] = _file.ReadChar();
-                }
-
+                var bytes = _file.ReadBytes(ReadInt32());
                 _stack.Add(Encoding.UTF8.GetString(bytes));
             }
 

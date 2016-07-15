@@ -18,8 +18,9 @@ using System;
 using System.ComponentModel.Design;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.InteractiveWindow.Commands;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Options;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
@@ -44,7 +45,7 @@ namespace TestUtilities.Python {
             var service = new MockContentTypeRegistryService();
             service.AddContentType(PythonCoreConstants.ContentType, new[] { "code" });
 
-            service.AddContentType("Interactive Command", new[] { "code" });
+            service.AddContentType("Python Interactive Command", new[] { "code" });
             return service;
         }
 
@@ -54,7 +55,9 @@ namespace TestUtilities.Python {
         /// This will not include many of the services which are typically available in
         /// VS but is suitable for simple test cases which need just some base functionality.
         /// </summary>
-        public static MockServiceProvider CreateMockServiceProvider() {
+        public static MockServiceProvider CreateMockServiceProvider(
+            bool suppressTaskProvider = false
+        ) {
             var serviceProvider = new MockServiceProvider();
 
             serviceProvider.ComponentModel.AddExtension(
@@ -71,8 +74,17 @@ namespace TestUtilities.Python {
                 () => new MockInteractiveWindowCommandsFactory()
             );
 
-            serviceProvider.AddService(typeof(ErrorTaskProvider), CreateTaskProviderService, true);
-            serviceProvider.AddService(typeof(CommentTaskProvider), CreateTaskProviderService, true);
+            var optService = new Lazy<MockInterpreterOptionsService>(() => new MockInterpreterOptionsService());
+            serviceProvider.ComponentModel.AddExtension<IInterpreterRegistryService>(() => optService.Value);
+            serviceProvider.ComponentModel.AddExtension<IInterpreterOptionsService>(() => optService.Value);
+
+            if (suppressTaskProvider) {
+                serviceProvider.AddService(typeof(ErrorTaskProvider), null, true);
+                serviceProvider.AddService(typeof(CommentTaskProvider), null, true);
+            } else {
+                serviceProvider.AddService(typeof(ErrorTaskProvider), CreateTaskProviderService, true);
+                serviceProvider.AddService(typeof(CommentTaskProvider), CreateTaskProviderService, true);
+            }
             serviceProvider.AddService(typeof(UIThreadBase), new MockUIThread());
             var optionsService = new MockPythonToolsOptionsService();
             serviceProvider.AddService(typeof(IPythonToolsOptionsService), optionsService, true);

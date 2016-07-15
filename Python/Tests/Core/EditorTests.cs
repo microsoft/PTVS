@@ -89,7 +89,8 @@ pass
 
 pass
 
-#%% lastcell
+# Preceding comment
+# In[7]: IPython tag
 pass
 
 ";
@@ -97,7 +98,7 @@ pass
             SnapshotCellTest(content,
                 new ExpectedTag(16, 22, "\r\npass"),
                 new ExpectedTag(50, 58, "\r\n\r\npass"),
-                new ExpectedTag(74, 80, "\r\npass")
+                new ExpectedTag(81, 109, "\r\n# In[7]: IPython tag\r\npass")
             );
         }
 

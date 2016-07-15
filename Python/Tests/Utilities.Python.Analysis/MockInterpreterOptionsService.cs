@@ -159,7 +159,14 @@ namespace TestUtilities.Python {
         }
 
         public InterpreterConfiguration FindConfiguration(string id) {
-            throw new NotImplementedException();
+            foreach (var interp in _providers) {
+                foreach (var config in interp.GetInterpreterConfigurations()) {
+                    if (config.Id == id) {
+                        return config;
+                    }
+                }
+            }
+            return null;
         }
 
         public string AddConfigurableInterpreter(string name, InterpreterConfiguration config) {
@@ -167,7 +174,14 @@ namespace TestUtilities.Python {
         }
 
         public object GetProperty(string id, string propName) {
-            throw new NotImplementedException();
+            foreach (var interp in _providers) {
+                foreach (var config in interp.GetInterpreterConfigurations()) {
+                    if (config.Id == id) {
+                        return interp.GetProperty(id, propName);
+                    }
+                }
+            }
+            return null;
         }
     }
 }

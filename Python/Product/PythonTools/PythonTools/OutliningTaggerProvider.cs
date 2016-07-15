@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Shell;
@@ -59,7 +60,6 @@ namespace Microsoft.PythonTools {
             private bool _enabled;
             private static readonly Regex _openingRegionRegex = new Regex(@"^\s*#\s*region($|\s+.*$)");
             private static readonly Regex _closingRegionRegex = new Regex(@"^\s*#\s*endregion($|\s+.*$)");
-            internal static readonly Regex _codeCellRegex = new Regex(@"^\s*#%%(.*)$");
 
             public OutliningTagger(PythonToolsService pyService, ITextBuffer buffer) {
                 _pyService = pyService;
@@ -133,23 +133,33 @@ namespace Microsoft.PythonTools {
             }
 
             internal static IEnumerable<TagSpan> ProcessCellTags(ITextSnapshot snapshot) {
-                ITextSnapshotLine region = null, lastNonBlankLine = null;
-                // Walk lines and attempt to find '#%%' tags
-                foreach (var line in snapshot.Lines) {
-                    var lineText = line.GetText();
-                    if (_codeCellRegex.IsMatch(lineText)) {
-                        if (region != null && lastNonBlankLine != null && lastNonBlankLine.LineNumber > region.LineNumber) {
-                            yield return GetTagSpan(snapshot, region.Start, lastNonBlankLine.End);
-                        }
-                        region = line;
-                    }
-                    if (!string.IsNullOrWhiteSpace(lineText) || lastNonBlankLine == null) {
-                        lastNonBlankLine = line;
-                    }
+                if (snapshot.LineCount == 0) {
+                    yield break;
                 }
 
-                if (region != null && lastNonBlankLine != null && lastNonBlankLine.LineNumber > region.LineNumber) {
-                    yield return GetTagSpan(snapshot, region.Start, lastNonBlankLine.End);
+                // Walk lines and attempt to find code cell tags
+                var line = snapshot.GetLineFromLineNumber(0);
+                int previousCellStart = -1;
+                while (line != null) {
+                    var cellStart = CodeCellAnalysis.FindStartOfCell(line);
+                    if (cellStart == null || cellStart.LineNumber == previousCellStart) {
+                        if (line.LineNumber + 1 < snapshot.LineCount) {
+                            line = snapshot.GetLineFromLineNumber(line.LineNumber + 1);
+                        } else {
+                            break;
+                        }
+                    } else {
+                        var cellEnd = CodeCellAnalysis.FindEndOfCell(cellStart, line);
+                        if (cellEnd.LineNumber > cellStart.LineNumber) {
+                            previousCellStart = cellStart.LineNumber;
+                            yield return GetTagSpan(snapshot, cellStart.Start, cellEnd.End);
+                        }
+                        if (cellEnd.LineNumber + 1 < snapshot.LineCount) {
+                            line = snapshot.GetLineFromLineNumber(cellEnd.LineNumber + 1);
+                        } else {
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -182,6 +192,7 @@ namespace Microsoft.PythonTools {
                     Debug.Assert(false, "bad argument when making span/tag");
                 }
 
+                Debug.Assert(tagSpan != null, "failed to create tag span with start={0} and end={0}".FormatUI(start, end));
                 return tagSpan;
             }
 

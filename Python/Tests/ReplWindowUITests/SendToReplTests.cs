@@ -64,7 +64,7 @@ namespace ReplWindowUITests {
         }
 
         /// <summary>
-        /// Simple line-by-line tests which verify we submit when we get to
+        /// Simple cell-by-cell tests which verify we submit when we get to
         /// the next statement.
         /// </summary>
         [TestMethod, Priority(1)]
@@ -77,13 +77,14 @@ namespace ReplWindowUITests {
 >>> y = 2").Complete,
 
                 MoveCaretRelative(1, 0),
-                Input(@"#%% cell 2
+                Input(@"# In[2]:
 ... x = 3
 ... 
 >>> y = 4").Complete,
 
                 MoveCaretRelative(2, 8),
-                Input(@"#%% cell 3
+                Input(@"# Preceding comment
+... #%% cell 3
 ... if x > y:
 ...     print(x ** y)
 ... else:
