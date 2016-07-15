@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -53,7 +54,7 @@ namespace ProfilingUITests {
         public void TestInitialize() {
             PythonToolsService pyService;
             try {
-                pyService = (PythonToolsService)VSTestContext.ServiceProvider.GetService(typeof(PythonToolsService));
+                pyService = VSTestContext.ServiceProvider.GetPythonToolsService_NotThreadSafe();
             } catch (InvalidOperationException) {
                 // Nothing to initialize
                 return;
@@ -79,7 +80,7 @@ namespace ProfilingUITests {
 
             PythonToolsService pyService;
             try {
-                pyService = (PythonToolsService)VSTestContext.ServiceProvider.GetService(typeof(PythonToolsService));
+                pyService = VSTestContext.ServiceProvider.GetPythonToolsService_NotThreadSafe();
             } catch (InvalidOperationException) {
                 // Nothing to uninitialize
                 return;
@@ -147,8 +148,13 @@ namespace ProfilingUITests {
             app.OpenPythonPerformance();
 
             IPythonProfileSession session = null;
+            ExceptionDispatchInfo edi = null;
             var task = Task.Factory.StartNew(() => {
-                session = creator();
+                try {
+                    session = creator();
+                } catch (Exception ex) {
+                    edi = ExceptionDispatchInfo.Capture(ex);
+                }
                 // Must fault the task to abort the wait
                 throw new Exception();
             });
@@ -179,6 +185,7 @@ namespace ProfilingUITests {
                 // Ensure the exception is observed
                 var ex = task.Exception;
             }
+            edi?.Throw();
             Assert.IsNotNull(session, "Session was not correctly initialized");
             return session;
         }
@@ -554,10 +561,10 @@ namespace ProfilingUITests {
             using (var app = OpenProfileTestProject(out project, out profiling, @"TestData\ProfileTestSysPath.sln")) {
                 IPythonProfileSession session = null;
                 var oldPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH");
-                var oldClearPythonPath = app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath;
+                var oldClearPythonPath = app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath;
                 try {
                     Environment.SetEnvironmentVariable("PYTHONPATH", TestData.GetPath(@"TestData\ProfileTestSysPath\B"));
-                    app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = false;
+                    app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath = false;
                     session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTestSysPath"), false);
 
                     while (profiling.IsProfiling) {
@@ -574,7 +581,7 @@ namespace ProfilingUITests {
 
                     VerifyReport(report, true, "B.mod2.func");
                 } finally {
-                    app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = oldClearPythonPath;
+                    app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath = oldClearPythonPath;
                     Environment.SetEnvironmentVariable("PYTHONPATH", oldPythonPath);
                     if (session != null) {
                         profiling.RemoveSession(session, true);
@@ -591,10 +598,10 @@ namespace ProfilingUITests {
             using (var app = OpenProfileTestProject(out project, out profiling, @"TestData\ProfileTestSysPath.sln")) {
                 IPythonProfileSession session = null;
                 var oldPythonPath = Environment.GetEnvironmentVariable("PYTHONPATH");
-                var oldClearPythonPath = app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath;
+                var oldClearPythonPath = app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath;
                 try {
                     Environment.SetEnvironmentVariable("PYTHONPATH", TestData.GetPath(@"TestData\ProfileTestSysPath\B"));
-                    app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = true;
+                    app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath = true;
                     session = LaunchProject(app, profiling, project, TestData.GetPath(@"TestData\ProfileTestSysPath"), false);
 
                     while (profiling.IsProfiling) {
@@ -611,7 +618,7 @@ namespace ProfilingUITests {
 
                     VerifyReport(report, true, "A.mod.func");
                 } finally {
-                    app.ServiceProvider.GetPythonToolsService().GeneralOptions.ClearGlobalPythonPath = oldClearPythonPath;
+                    app.PythonToolsService.GeneralOptions.ClearGlobalPythonPath = oldClearPythonPath;
                     Environment.SetEnvironmentVariable("PYTHONPATH", oldPythonPath);
                     if (session != null) {
                         profiling.RemoveSession(session, true);
@@ -1389,7 +1396,7 @@ namespace ProfilingUITests {
             EnvDTE.Project project;
             IPythonProfiling profiling;
             using (var app = OpenProfileTestProject(out project, out profiling, null)) {
-                var session = LaunchProcess(app, profiling, interp.Id.ToString() + ";" + interp.Version.ToVersion().ToString(),
+                var session = LaunchProcess(app, profiling, interp.Id,
                     TestData.GetPath(@"TestData\ProfileTest\BuiltinsProfile.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
                     "",
@@ -1597,7 +1604,7 @@ namespace ProfilingUITests {
             IPythonProfiling profiling;
             using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app, profiling,
-                    string.Format("{0:B};{1}", PythonPaths.Python27.Id, PythonPaths.Python27.Version.ToVersion()),
+                    PythonPaths.Python27.Id,
                     TestData.GetPath(@"TestData\ProfileTest\Program.py"),
                     TestData.GetPath(@"TestData\ProfileTest"),
                     "",
