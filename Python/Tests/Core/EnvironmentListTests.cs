@@ -663,10 +663,10 @@ namespace PythonToolsUITests {
             var mockService = new MockInterpreterOptionsService();
 
             var v = new Version(3, 5);
-            var noInfo = new MockPythonInterpreterFactory(MockInterpreterConfiguration("No Info", v));
-            var vendor = new MockPythonInterpreterFactory(MockInterpreterConfiguration("Vendor", v));
-            var supportUrl = new MockPythonInterpreterFactory(MockInterpreterConfiguration("SupportUrl", v));
-            var bothInfo = new MockPythonInterpreterFactory(MockInterpreterConfiguration("Both Info", v));
+            var noInfo = new MockPythonInterpreterFactory(MockInterpreterConfiguration("1 No Info", v));
+            var vendor = new MockPythonInterpreterFactory(MockInterpreterConfiguration("2 Vendor", v));
+            var supportUrl = new MockPythonInterpreterFactory(MockInterpreterConfiguration("3 SupportUrl", v));
+            var bothInfo = new MockPythonInterpreterFactory(MockInterpreterConfiguration("4 Both Info", v));
 
             bothInfo.Properties[EnvironmentView.VendorKey] = vendor.Properties[EnvironmentView.VendorKey] = "Vendor Name";
             bothInfo.Properties[EnvironmentView.SupportUrlKey] = supportUrl.Properties[EnvironmentView.SupportUrlKey] = "http://example.com";
