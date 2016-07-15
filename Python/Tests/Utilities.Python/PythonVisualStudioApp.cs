@@ -27,6 +27,7 @@ using System.Windows.Interop;
 using EnvDTE;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
@@ -213,6 +214,24 @@ namespace TestUtilities.UI.Python {
             ExecuteCommand("Python.SendSelectionToInteractive");
         }
 
+
+        public ReplWindowProxy WaitForInteractiveWindow(string title, PythonReplWindowProxySettings settings = null) {
+            var iwp = GetService<IComponentModel>(typeof(SComponentModel))?.GetService<InteractiveWindowProvider>();
+            IVsInteractiveWindow window = null;
+            for (int retries = 20; retries > 0 && window == null; --retries) {
+                System.Threading.Thread.Sleep(100);
+                window = iwp?.AllOpenWindows.FirstOrDefault(w => ((ToolWindowPane)w).Caption == title);
+            }
+            if (window == null) {
+                Trace.TraceWarning(
+                    "Failed to find {0} in {1}",
+                    title,
+                    string.Join(", ", iwp?.AllOpenWindows.Select(w => ((ToolWindowPane)w).Caption) ?? Enumerable.Empty<string>())
+                );
+                return null;
+            }
+            return new ReplWindowProxy(this, window.InteractiveWindow, (ToolWindowPane)window, settings ?? new PythonReplWindowProxySettings());
+        }
 
         public ReplWindowProxy GetInteractiveWindow(Project project, PythonReplWindowProxySettings settings = null) {
             return GetInteractiveWindow(project.Name + " Interactive", settings);
