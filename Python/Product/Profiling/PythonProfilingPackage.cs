@@ -15,23 +15,18 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Profiling {
@@ -246,13 +241,6 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         private static void ProfileProject(SessionNode session, EnvDTE.Project projectToProfile, bool openReport) {
-            var model = (IComponentModel)(session._serviceProvider.GetService(typeof(SComponentModel)));
-
-            var projectHome = PathUtils.GetAbsoluteDirectoryPath(
-                Path.GetDirectoryName(projectToProfile.FullName),
-                (string)projectToProfile.Properties.Item("ProjectHome").Value
-            );
-
             var project = projectToProfile.AsPythonProject();
 
             var config = project?.GetLaunchConfigurationOrThrow();
@@ -279,8 +267,7 @@ namespace Microsoft.PythonTools.Profiling {
         private static void ProfileStandaloneTarget(SessionNode session, StandaloneTarget runTarget, bool openReport) {
             LaunchConfiguration config;
             if (runTarget.PythonInterpreter != null) {
-                var model = (IComponentModel)(session._serviceProvider.GetService(typeof(SComponentModel)));
-                var registry = model.DefaultExportProvider.GetExportedValue<IInterpreterRegistryService>();
+                var registry = session._serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
                 var interpreter = registry.FindConfiguration(runTarget.PythonInterpreter.Id);
                 if (interpreter == null) {
                     return;
