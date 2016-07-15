@@ -22,6 +22,7 @@ using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Refactoring {
     using AP = AnalysisProtocol;
+
     class MethodExtractor {
         private readonly ITextView _view;
         private readonly IServiceProvider _serviceProvider;
@@ -47,9 +48,16 @@ namespace Microsoft.PythonTools.Refactoring {
 
         public async Task<bool> ExtractMethod(IExtractMethodInput input) {
             var analyzer = _view.GetAnalyzerAtCaret(_serviceProvider);
+            if (analyzer == null) {
+                return false;
+            }
+
             var buffer = _view.GetPythonBufferAtCaret();
             var snapshot = buffer.CurrentSnapshot;
             var projectFile = _view.GetAnalysisAtCaret(_serviceProvider);
+            if (projectFile == null) {
+                return false;
+            }
             
             // extract once to validate the selection
             var extractInfo = await analyzer.ExtractMethodAsync(

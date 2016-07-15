@@ -17,7 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Windows.Documents;
+using System.Linq;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Projection;
 
@@ -65,6 +65,36 @@ namespace TestUtilities.Mocks {
             }
         }
 
+        private static List<SnapshotSpan> MapDownOneLevel(
+            List<SnapshotSpan> inputSpans,
+            Predicate<ITextSnapshot> match,
+            ref ITextSnapshot chosenSnapshot,
+            ref List<Span> targetSpans
+        ) {
+            var downSpans = new List<SnapshotSpan>();
+            foreach (var inputSpan in inputSpans) {
+                var snapshot = ((IProjectionBufferBase)inputSpan.Snapshot.TextBuffer).CurrentSnapshot;
+                if (!snapshot.SourceSnapshots.Any()) {
+                    continue;
+                }
+
+                foreach(var mapped in snapshot.MapToSourceSnapshots(inputSpan)) {
+                    var buffer = mapped.Snapshot.TextBuffer;
+                    if (buffer.CurrentSnapshot == chosenSnapshot) {
+                        targetSpans.Add(mapped.Span);
+                    } else if (chosenSnapshot == null && match(buffer.CurrentSnapshot)) {
+                        chosenSnapshot = buffer.CurrentSnapshot;
+                        targetSpans.Add(mapped.Span);
+                    } else {
+                        if (buffer is IProjectionBufferBase) {
+                            downSpans.Add(mapped);
+                        }
+                    }
+                }
+            }
+            return downSpans;
+        }
+
         public NormalizedSnapshotSpanCollection MapDownToBuffer(SnapshotSpan span, SpanTrackingMode trackingMode, ITextBuffer targetBuffer) {
             throw new NotImplementedException();
         }
@@ -74,6 +104,9 @@ namespace TestUtilities.Mocks {
         }
 
         public NormalizedSnapshotSpanCollection MapDownToFirstMatch(SnapshotSpan span, SpanTrackingMode trackingMode, Predicate<ITextSnapshot> match) {
+            if (_buffers.Count == 1 && _buffers[0] == span.Snapshot.TextBuffer) {
+                return new NormalizedSnapshotSpanCollection(span.TranslateTo(span.Snapshot.TextBuffer.CurrentSnapshot, trackingMode));
+            }
             throw new NotImplementedException();
         }
 
@@ -111,6 +144,9 @@ namespace TestUtilities.Mocks {
         }
 
         public NormalizedSnapshotSpanCollection MapUpToBuffer(SnapshotSpan span, SpanTrackingMode trackingMode, ITextBuffer targetBuffer) {
+            if (_buffers.Count == 1 && _buffers[0] == span.Snapshot.TextBuffer) {
+                return new NormalizedSnapshotSpanCollection(span.TranslateTo(span.Snapshot.TextBuffer.CurrentSnapshot, trackingMode));
+            }
             throw new NotImplementedException();
         }
 

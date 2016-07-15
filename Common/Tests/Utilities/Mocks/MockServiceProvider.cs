@@ -36,11 +36,11 @@ namespace TestUtilities.Mocks {
         }
 
         public void AddService(Type serviceType, ServiceCreatorCallback callback, bool promote) {
-            Services[serviceType.GUID] = callback(this, serviceType);
+            Services[serviceType.GUID] = callback != null ? callback(this, serviceType) : null;
         }
 
         public void AddService(Type serviceType, ServiceCreatorCallback callback) {
-            Services[serviceType.GUID] = callback(this, serviceType);
+            Services[serviceType.GUID] = callback != null ? callback(this, serviceType) : null;
         }
 
         public void AddService(Type serviceType, object serviceInstance, bool promote) {
