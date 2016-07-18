@@ -4,12 +4,14 @@
 
   <PropertyGroup>
     <BaseInstall>InstallDir:\Common7\IDE\Extensions\Microsoft\Python\Uwp</BaseInstall>
-    <TargetsBaseInstall>InstallDir:\MSBuild\Microsoft\VisualStudio\v$(VSTarget)\Python Tools</TargetsBaseInstall>
     <SourcePath>$(LayoutOutputPath)Microsoft.PythonTools.Uwp</SourcePath>
+
+    <ExtraOptions>-x "\.targets$"</ExtraOptions>
   </PropertyGroup>
 
   <ItemGroup>
     <Dependency Include="Microsoft.PythonTools.Core.Vsix" />
+    <Package Include="targets.uwp.swr" />
   </ItemGroup>
 
   <Import Project="SetupProjectAfter.settings" />
