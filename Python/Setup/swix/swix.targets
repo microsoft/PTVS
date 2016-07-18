@@ -6,7 +6,7 @@
     <OutputType Condition="$(OutputType) == ''">vsix</OutputType>
     <IsPackage>true</IsPackage>
     <OutputName Condition="$(OutputName) == ''">$(MSBuildProjectName)</OutputName>
-    <OutputPath>$(OutputPath)swix\</OutputPath>
+    <PackagePreprocessorDefinitions>$(PackagePreprocessorDefinitions);LayoutOutputPath=$(LayoutOutputPath.TrimEnd(`\`));VSTarget=$(VSTarget)</PackagePreprocessorDefinitions>
   </PropertyGroup>
 
   <Import Project="$(TargetsPath)\Common.Shim.targets" />
