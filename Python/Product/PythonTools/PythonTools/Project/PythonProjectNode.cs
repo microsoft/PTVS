@@ -393,7 +393,10 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            Site.GetPythonToolsService().SurveyNews.CheckSurveyNews(false);
+            var service = Site.GetPythonToolsService();
+            if (service != null) {
+                service.SurveyNews.CheckSurveyNews(false);
+            }
         }
 
         private void RefreshCurrentWorkingDirectory() {
