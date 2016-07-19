@@ -425,7 +425,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             try {
                 pyService = _pyService = new PythonToolsService(services);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                ex.ReportUnhandledException(services, GetType());
+                ex.ReportUnhandledException(services, GetType(), allowUI: false);
                 throw;
             }
 
