@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Logging {
                 case PythonLogEvent.AnalysisOperationCancelled:
                     _analysisAbnormalities.Add(DateTime.Now + " Operation Cancelled");
                     break;
-                case PythonLogEvent.AnalysisOpertionFailed:
+                case PythonLogEvent.AnalysisOperationFailed:
                     _analysisAbnormalities.Add(DateTime.Now + " Operation Failed " + argument);
                     break;
             }

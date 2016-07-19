@@ -113,7 +113,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 var quickInfo = await VsProjectAnalyzer.GetQuickInfoAsync(
                     _serviceProvider,
                     _textView,
-                    pt.Value
+                    pt.Value,
+                    TimeSpan.FromSeconds(1.0)
                 );
 
                 QuickInfoSource.AddQuickInfo(_textView, quickInfo);

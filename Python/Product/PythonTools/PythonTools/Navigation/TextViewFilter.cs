@@ -122,7 +122,12 @@ namespace Microsoft.PythonTools.Language {
             if (exprSpan != null) {
                 SnapshotPointToLineAndColumnNumber(exprSpan.Value.Start, out pSpan[0].iStartLine, out pSpan[0].iStartIndex);
                 SnapshotPointToLineAndColumnNumber(exprSpan.Value.End, out pSpan[0].iEndLine, out pSpan[0].iEndIndex);
-                expr = VsProjectAnalyzer.ExpressionForDataTipAsync(_serviceProvider, _wpfTextView, exprSpan.Value).WaitAndUnwrapExceptions(Dispatcher.CurrentDispatcher);
+                expr = VsProjectAnalyzer.ExpressionForDataTipAsync(
+                    _serviceProvider,
+                    _wpfTextView,
+                    exprSpan.Value,
+                    TimeSpan.FromSeconds(1.0)
+                ).WaitAndUnwrapExceptions(Dispatcher.CurrentDispatcher);
             } else {
                 // If it's not an expression, suppress the tip.
                 pbstrText = null;

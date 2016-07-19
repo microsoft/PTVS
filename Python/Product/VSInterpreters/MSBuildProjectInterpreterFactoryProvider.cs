@@ -49,6 +49,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public const string MSBuildProviderName = "MSBuild";
         private const string InterpreterFactoryIdMetadata = "InterpreterFactoryId";
         private bool _initialized;
+        private bool _skipMSBuild;
 
         [ImportingConstructor]
         public MSBuildProjectInterpreterFactoryProvider(
@@ -145,6 +146,30 @@ namespace Microsoft.PythonTools.Interpreter {
             return interpreterId.Split(new[] { '|' }, 3)[1];
         }
 
+        private void HandleMSBuildProject(
+            object context,
+            IProjectContextProvider contextProvider,
+            HashSet<ProjectInfo> added,
+            HashSet<string> seen
+        ) {
+            var projContext = context as MSBuild.Project;
+            if (projContext == null) {
+                var projectFile = context as string;
+                if (projectFile != null && projectFile.EndsWith(".pyproj", StringComparison.OrdinalIgnoreCase)) {
+                    projContext = new MSBuild.Project(projectFile);
+                }
+            }
+
+            if (projContext != null) {
+                if (!_projects.ContainsKey(projContext.FullPath)) {
+                    var projInfo = new MSBuildProjectInfo(projContext, projContext.FullPath, contextProvider);
+                    _projects[projContext.FullPath] = projInfo;
+                    added.Add(projInfo);
+                }
+                seen.Add(projContext.FullPath);
+            }
+        }
+
         private void Provider_ProjectContextsChanged(object sender, EventArgs e) {
             var contextProvider = (IProjectContextProvider)sender;
             bool discovered = false;
@@ -156,21 +181,12 @@ namespace Microsoft.PythonTools.Interpreter {
                 var contexts = contextProvider.Projects;
                 lock (_projects) {
                     foreach (var context in contextProvider.Projects) {
-                        var projContext = context as MSBuild.Project;
-                        if (projContext == null) {
-                            var projectFile = context as string;
-                            if (projectFile != null && projectFile.EndsWith(".pyproj", StringComparison.OrdinalIgnoreCase)) {
-                                projContext = new MSBuild.Project(projectFile);
+                        if (!_skipMSBuild) {
+                            try {
+                                HandleMSBuildProject(context, contextProvider, added, seen);
+                            } catch (FileNotFoundException) {
+                                _skipMSBuild = true;
                             }
-                        }
-
-                        if (projContext != null) {
-                            if (!_projects.ContainsKey(projContext.FullPath)) {
-                                var projInfo = new MSBuildProjectInfo(projContext, projContext.FullPath, contextProvider);
-                                _projects[projContext.FullPath] = projInfo;
-                                added.Add(projInfo);
-                            }
-                            seen.Add(projContext.FullPath);
                         }
 
                         var inMemory = context as InMemoryProject;

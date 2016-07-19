@@ -353,6 +353,8 @@ permissions and limitations under the License.
         <Parent guid="guidPythonToolsCmdSet" id="EnvironmentCommandsGroup"/>
         <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>AllowParams</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>DefaultInvisible</CommandFlag>
         <Strings>
           <ButtonText>Open I&amp;nteractive Window</ButtonText>
           <ToolTipText>Opens an Interactive Window for this environment.</ToolTipText>
