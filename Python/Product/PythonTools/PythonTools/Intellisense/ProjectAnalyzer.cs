@@ -172,8 +172,10 @@ namespace Microsoft.PythonTools.Intellisense {
             SendRequestAsync(initialize).ContinueWith(
                 task => {
                     var result = task.Result;
-                    if (!String.IsNullOrWhiteSpace(result.error)) {
-                        _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOpertionFailed, "Initialization: " + result.error);
+                    if (result == null) {
+                        _conn = null;
+                    } else if (!String.IsNullOrWhiteSpace(result.error)) {
+                        _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, "Initialization: " + result.error);
                         _conn = null;
                     } else {
                         SendEventAsync(
@@ -1418,7 +1420,7 @@ namespace Microsoft.PythonTools.Intellisense {
             } catch (IOException) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
             } catch (FailedRequestException e) {
-                _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOpertionFailed, e.Message);
+                _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, e.Message);
             } finally {
                 linkedSource?.Dispose();
                 timeoutSource?.Dispose();
@@ -1440,7 +1442,7 @@ namespace Microsoft.PythonTools.Intellisense {
             } catch (IOException) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
             } catch (FailedRequestException e) {
-                _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOpertionFailed, e.Message);
+                _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, e.Message);
             }
             Debug.WriteLine(String.Format("{1} Done sending event {0}", eventValue.name, DateTime.Now));
         }
@@ -1723,7 +1725,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 } catch (OperationCanceledException) {
                     _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
                 } catch (FailedRequestException e) {
-                    _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOpertionFailed, e.Message);
+                    _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, e.Message);
                 }
                 return Enumerable.Empty<ExportedMemberInfo>();
             } finally {
