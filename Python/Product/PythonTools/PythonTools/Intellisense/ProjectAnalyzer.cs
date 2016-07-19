@@ -1386,21 +1386,42 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #endregion
 
-        internal async Task<T> SendRequestAsync<T>(Request<T> request, T defaultValue = default(T)) where T : Response, new() {
+        internal async Task<T> SendRequestAsync<T>(
+            Request<T> request,
+            T defaultValue = default(T),
+            TimeSpan? timeout = null
+        ) where T : Response, new() {
             var conn = _conn;
             if (conn == null) {
                 return default(T);
             }
             Debug.WriteLine(String.Format("{1} Sending request {0}", request, DateTime.Now));
             T res = defaultValue;
+            CancellationToken cancel;
+            CancellationTokenSource linkedSource = null, timeoutSource = null;
+
+            if (timeout.HasValue) {
+                timeoutSource = new CancellationTokenSource(timeout.Value);
+                linkedSource = CancellationTokenSource.CreateLinkedTokenSource(
+                    _processExitedCancelSource.Token,
+                    timeoutSource.Token
+                );
+                cancel = linkedSource.Token;
+            } else {
+                cancel = _processExitedCancelSource.Token;
+            }
+
             try {
-                res = await conn.SendRequestAsync(request, _processExitedCancelSource.Token).ConfigureAwait(false);
+                res = await conn.SendRequestAsync(request, cancel).ConfigureAwait(false);
             } catch (OperationCanceledException) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
             } catch (IOException) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
             } catch (FailedRequestException e) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOpertionFailed, e.Message);
+            } finally {
+                linkedSource?.Dispose();
+                timeoutSource?.Dispose();
             }
             Debug.WriteLine(String.Format("{1} Done sending request {0}", request, DateTime.Now));
             return res;
@@ -1949,7 +1970,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal static async Task<QuickInfo> GetQuickInfoAsync(IServiceProvider serviceProvider, ITextView view, SnapshotPoint point) {
+        internal static async Task<QuickInfo> GetQuickInfoAsync(
+            IServiceProvider serviceProvider,
+            ITextView view,
+            SnapshotPoint point,
+            TimeSpan? timeout = null
+        ) {
             var analysis = GetApplicableExpression(
                 view.GetAnalysisEntry(point.Snapshot.TextBuffer, serviceProvider),
                 point
@@ -1965,7 +1991,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     fileId = analysis.Entry.FileId
                 };
 
-                var quickInfo = await analysis.Entry.Analyzer.SendRequestAsync(req).ConfigureAwait(false);
+                var quickInfo = await analysis.Entry.Analyzer.SendRequestAsync(req, timeout: timeout).ConfigureAwait(false);
 
                 if (quickInfo != null) {
                     return new QuickInfo(quickInfo.text, analysis.Span);
@@ -1991,7 +2017,12 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AnalysisVariable(type, location);
         }
 
-        internal static async Task<string> ExpressionForDataTipAsync(IServiceProvider serviceProvider, ITextView view, SnapshotSpan span) {
+        internal static async Task<string> ExpressionForDataTipAsync(
+            IServiceProvider serviceProvider,
+            ITextView view,
+            SnapshotSpan span,
+            TimeSpan? timeout = null
+        ) {
             var analysis = GetApplicableExpression(
                 view.GetAnalysisEntry(span.Start.Snapshot.TextBuffer, serviceProvider),
                 span.Start
@@ -2008,7 +2039,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     fileId = analysis.Entry.FileId,
                 };
 
-                var resp = await analysis.Entry.Analyzer.SendRequestAsync(req).ConfigureAwait(false);
+                var resp = await analysis.Entry.Analyzer.SendRequestAsync(req, timeout: timeout).ConfigureAwait(false);
 
                 if (resp != null) {
                     result = resp.expression;
