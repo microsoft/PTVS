@@ -7,7 +7,7 @@
   </PropertyGroup>
   
   <Target Name="PtvsUwpImportCheck">
-	<Error Text="Could not find CPython UWP SDK.  Please download from http://go.microsoft.com/fwlink/?LinkID=613495&amp;clcid=0x409 and reload the project after install." Condition="!Exists($(CPythonTargetsFile))" />
+    <Error Text="Could not find CPython UWP SDK.  Please download from http://go.microsoft.com/fwlink/?LinkID=613495&amp;clcid=0x409 and reload the project after install." Condition="!Exists($(CPythonTargetsFile))" />
   </Target>
 
   <Target Name="CoreCompile" />
@@ -62,6 +62,14 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="PythonSitePackageCopy" BeforeTargets="CustomOutputGroupForPackaging">
+    <ItemGroup>
+      <PythonHost Include="$(MSBuildProjectDirectory)\PythonHome\lib\site-packages\**\*">
+        <RootFolder>$(MSBuildProjectDirectory)\PythonHome\lib\\</RootFolder>
+      </PythonHost>
+    </ItemGroup>
+  </Target>
+
   <ItemGroup>
     <PythonHost Include="$(StartupInfoFile)" />
   </ItemGroup>
@@ -87,44 +95,8 @@
     </Task>
   </UsingTask>
 
-  <UsingTask TaskName="UnZip" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
-    <ParameterGroup>
-      <InputFileName ParameterType="System.String" Required="true" />
-      <OutputDirectory ParameterType="System.String" Required="true" />
-    </ParameterGroup>
-    <Task>
-      <Reference Include="System.IO.Compression" />
-      <Reference Include="System.IO.Compression.FileSystem" />
-      <Using Namespace="System.IO.Compression" />
-      <Using Namespace="System.IO" />
-      <Code Type="Fragment" Language="cs">
-        <![CDATA[
-        var outputDirectory = new DirectoryInfo(OutputDirectory);
-        var lastZipChangeTime = DateTime.MinValue;
-        
-        if (File.Exists(InputFileName))
-        {
-            lastZipChangeTime = new FileInfo(InputFileName).LastWriteTimeUtc;
-            
-            // Directory is older than the ZIP, so let's go ahead and delete it to force an unzip again
-            if (outputDirectory.Exists && outputDirectory.LastWriteTimeUtc < lastZipChangeTime)
-            {
-                outputDirectory.Delete(true);
-            }
-            
-            if (!outputDirectory.Exists)
-            {
-                ZipFile.ExtractToDirectory(InputFileName, OutputDirectory);
-            }
-        }
-      ]]>
-      </Code>
-    </Task>
-  </UsingTask>
-
   <Target Name="BuildStartupInfo" BeforeTargets="CoreCompile">
     <CreateStartupInfo Arguments="$(PythonArguments)" StartupInfoFile="$(StartupInfoFile)" />
-    <UnZip InputFileName="$(CPythonSDKPath)\References\CommonConfiguration\Neutral\PythonHome\lib.zip" OutputDirectory="$(ProjectDir)\lib.zip" />
   </Target>
 
   <PropertyGroup>
