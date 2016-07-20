@@ -3,7 +3,7 @@
   <Identifier Id="394d1b85-f4a7-4af2-9078-e4aab7673b22">
     <Name>SccPackage</Name>
     <Author>Microsoft</Author>
-    <Version>2.2</Version>
+    <Version>1.0</Version>
     <Description xml:space="preserve">Information about my package</Description>
     <Locale>1033</Locale>
     <InstalledByMsi>false</InstalledByMsi>

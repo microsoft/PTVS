@@ -1,1 +1,1 @@
-﻿#CutRenamePaste.py
+#CutRenamePaste.py

@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using IronPython.Runtime.Types;
@@ -30,7 +32,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IPythonType Type {
             get {
                 if (_propertyType == null) {
-                    _propertyType = (IPythonType)Interpreter.MakeObject(Interpreter.Remote.GetPropertyType(Value));
+                    var ri = RemoteInterpreter;
+                    _propertyType = ri != null ? (IPythonType)Interpreter.MakeObject(ri.GetPropertyType(Value)) : null;
                 }
                 return _propertyType;
             }
@@ -39,7 +42,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public bool IsStatic {
             get {
                 if (_isStatic == null) {
-                    _isStatic = Interpreter.Remote.IsPropertyStatic(Value);
+                    var ri = RemoteInterpreter;
+                    _isStatic = ri != null ? ri.IsPropertyStatic(Value) : false;
                 }
                 return _isStatic.Value;
             }
@@ -47,7 +51,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public string Documentation {
             get {
-                return Interpreter.Remote.GetPropertyDocumentation(Value);
+                var ri = RemoteInterpreter;
+                return ri != null ? ri.GetPropertyDocumentation(Value) : string.Empty;
             }
         }
 

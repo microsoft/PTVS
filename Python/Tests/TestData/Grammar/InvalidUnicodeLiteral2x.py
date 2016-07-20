@@ -1,1 +1,1 @@
-﻿u'\uTEST'
+u'\uTEST'

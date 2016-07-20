@@ -1,0 +1,24 @@
+<VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Web Role</Name>
+    <Description>A project for creating a generic Python web project</Description>
+    <Hidden>true</Hidden>
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="406" />
+    <ProjectType>Python</ProjectType>
+    <SortOrder>60</SortOrder>
+    <NumberOfParentCategoriesToRollUp>2</NumberOfParentCategoriesToRollUp>
+    <CreateNewFolder>true</CreateNewFolder>
+    <DefaultName>WebProject</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="EmptyWebRole.pyproj" ReplaceParameters="true">
+      <ProjectItem>requirements.txt</ProjectItem>
+      <Folder Name="Bin">
+        <ProjectItem OpenInWebBrowser="true" TargetFileName="Readme.mht">WebRoleConfiguration.mht</ProjectItem>
+        <ProjectItem>ConfigureCloudService.ps1</ProjectItem>
+        <ProjectItem>ps.cmd</ProjectItem>
+      </Folder>
+    </Project>
+  </TemplateContent>
+</VSTemplate>

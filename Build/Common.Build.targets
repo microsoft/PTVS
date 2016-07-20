@@ -1,8 +1,9 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="Common.Build.CSharp.targets" Condition="'$(Language)' == 'C#'" />
-  <Import Project="Common.Build.VSSDK.targets" Condition="$(UseVSSDK) or $(UseVSSDKTemplateOnly)" />
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" Condition="'$(Language)' == 'C++'" />
-  <Import Project="Common.Build.Wix.targets" Condition="'$(Language)' == 'WiX'" />
+  <Import Project="$(TargetsPath)\Common.Build.CSharp.targets" Condition="'$(Language)' == 'C#'" />
+  <Import Project="$(TargetsPath)\Common.Build.VSSDK.targets" Condition="$(UseVSSDK) or $(UseVSSDKTemplateOnly)" />
+  <Import Project="$(TargetsPath)\Common.Build.Cpp.targets" Condition="'$(Language)' == 'C++'" />
+  <Import Project="$(TargetsPath)\Common.Build.Wix.targets" Condition="'$(Language)' == 'WiX'" />
+  <Import Project="$(TargetsPath)\MicroBuild.targets" />
 
   <!--
   Transforms ProjectReference2 items into references that will be built
@@ -29,7 +30,7 @@
   -->
   <Target Name="_GetVSIXSourceProjects">
     <ItemGroup>
-      <_VSIXSourceProjects Include="@(ProjectReference2)" />
+      <_VSIXSourceProjects Include="@(ProjectReference2)" Condition="'%(ProjectReference2.IncludeInVSIX)' == 'true'" />
       <_VSIXSourceProjects Include="@(ProjectReference)" Condition="'%(ProjectReference.IncludeInVSIX)' == 'true'" />
     </ItemGroup>
   </Target>
@@ -43,7 +44,7 @@
       <Output TaskParameter="TargetOutputs" ItemName="_VSIXSourceItem"/>
     </MSBuild>
 
-    <CallTarget Targets="$(IncludeVSIXItemsFromTargets)" UseResultsCache="true">
+    <CallTarget Targets="$(IncludeVSIXItemsFromTargets)" UseResultsCache="true" Condition="'$(IncludeVSIXItemsFromTargets)' != ''">
       <Output TaskParameter="TargetOutputs" ItemName="_VSIXSourceItem"/>
     </CallTarget>
 
@@ -120,29 +121,5 @@
     <ItemGroup>
       <_DebugSymbolsFinalOutputProjectOutputGroupOutput Include="@(DebugSymbolsProjectOutputGroupOutput->'%(FinalOutputPath)'" />
     </ItemGroup>
-  </Target>
-
-  <!--
-  Copies certain outputs from the project to the specified path.
-  
-  This is used when building releases.
-  -->
-  <Target Name="_CopyOutputsToPath"
-          AfterTargets="AfterBuild"
-          DependsOnTargets="BuiltProjectOutputGroup;DebugSymbolsFinalOutputProjectOutputGroup"
-          Condition="'$(CopyOutputsToPath)' != '' and $(MSBuildProjectExtension) != '.wixproj' and Exists($(TargetPath))">
-    <PropertyGroup>
-      <CopyOutputsToPath Condition="!HasTrailingSlash($(CopyOutputsToPath))">$(CopyOutputsToPath)\</CopyOutputsToPath>
-    </PropertyGroup>
-
-    <MakeDir Directories="$(CopyOutputsToPath)UnsignedBinaries;$(CopyOutputsToPath)Symbols"
-             ContinueOnError="true" />
-
-    <Copy SourceFiles="$(TargetPath)"
-          DestinationFiles="$(CopyOutputsToPath)UnsignedBinaries\$(TargetName)$(TargetExt)"
-          SkipUnchangedFiles="true" />
-
-    <Copy SourceFiles="@(DebugSymbolsProjectOutputGroupOutput->'%(FinalOutputPath)')"
-          DestinationFolder="$(CopyOutputsToPath)Symbols" />
   </Target>
 </Project>

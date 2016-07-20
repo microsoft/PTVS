@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,6 +25,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         private ListParameterVariableDef _seqParameters;
         private DictParameterVariableDef _dictParameters;
         public readonly VariableDef ReturnValue;
+        public readonly CoroutineInfo Coroutine;
         public readonly GeneratorInfo Generator;
 
         public FunctionScope(
@@ -33,14 +36,19 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         )
             : base(function, node, declScope) {
             ReturnValue = new VariableDef();
-            if (Function.FunctionDefinition.IsGenerator) {
+            if (Function.FunctionDefinition.IsCoroutine) {
+                Coroutine = new CoroutineInfo(function.ProjectState, declModule);
+                ReturnValue.AddTypes(function.ProjectEntry, Coroutine.SelfSet, false, declModule);
+            } else if (Function.FunctionDefinition.IsGenerator) {
                 Generator = new GeneratorInfo(function.ProjectState, declModule);
-                ReturnValue.AddTypes(function.ProjectEntry, Generator.SelfSet, false);
+                ReturnValue.AddTypes(function.ProjectEntry, Generator.SelfSet, false, declModule);
             }
         }
 
         internal void AddReturnTypes(Node node, AnalysisUnit unit, IAnalysisSet types, bool enqueue = true) {
-            if (Generator != null) {
+            if (Coroutine != null) {
+                Coroutine.AddReturn(node, unit, types, enqueue);
+            } else if (Generator != null) {
                 Generator.AddReturn(node, unit, types, enqueue);
             } else {
                 ReturnValue.MakeUnionStrongerIfMoreThan(unit.ProjectState.Limits.ReturnTypes, types);
@@ -52,7 +60,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             var astParams = Function.FunctionDefinition.Parameters;
             for (int i = 0; i < astParams.Count; ++i) {
                 VariableDef param;
-                if (!Variables.TryGetValue(astParams[i].Name, out param)) {
+                if (!TryGetVariable(astParams[i].Name, out param)) {
                     if (astParams[i].Kind == ParameterKind.List) {
                         param = _seqParameters = _seqParameters ?? new ListParameterVariableDef(unit, astParams[i]);
                     } else if (astParams[i].Kind == ParameterKind.Dictionary) {
@@ -68,7 +76,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         internal void AddParameterReferences(AnalysisUnit caller, NameExpression[] names) {
             foreach (var name in names) {
                 VariableDef param;
-                if (name != null && Variables.TryGetValue(name.Name, out param)) {
+                if (name != null && TryGetVariable(name.Name, out param)) {
                     param.AddReference(name, caller);
                 }
             }
@@ -79,18 +87,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             var astParams = Function.FunctionDefinition.Parameters;
             bool added = false;
-            var entry = unit.ProjectEntry;
+            var entry = unit.DependencyProject;
             var state = unit.ProjectState;
             var limits = state.Limits;
 
             for (int i = 0; i < others.Args.Length && i < astParams.Count; ++i) {
                 VariableDef param;
-                if (!Variables.TryGetValue(astParams[i].Name, out param)) {
+                if (!TryGetVariable(astParams[i].Name, out param)) {
                     Debug.Assert(false, "Parameter " + astParams[i].Name + " has no variable in this scope");
                     param = AddVariable(astParams[i].Name);
                 }
                 param.MakeUnionStrongerIfMoreThan(limits.NormalArgumentTypes, others.Args[i]);
-                added |= param.AddTypes(entry, others.Args[i], false);
+                added |= param.AddTypes(entry, others.Args[i], false, unit.ProjectEntry);
             }
             if (_seqParameters != null) {
                 _seqParameters.List.MakeUnionStrongerIfMoreThan(limits.ListArgumentTypes, others.SequenceArgs);
@@ -104,11 +112,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             if (scopeWithDefaultParameters != null) {
                 for (int i = 0; i < others.Args.Length && i < astParams.Count; ++i) {
                     VariableDef defParam, param;
-                    if (Variables.TryGetValue(astParams[i].Name, out param) &&
-                        !param.TypesNoCopy.Any() &&
-                        scopeWithDefaultParameters.Variables.TryGetValue(astParams[i].Name, out defParam)) {
-                        param.MakeUnionStrongerIfMoreThan(limits.NormalArgumentTypes, defParam.TypesNoCopy);
-                        added |= param.AddTypes(entry, defParam.TypesNoCopy, false);
+                    if (TryGetVariable(astParams[i].Name, out param) &&
+                        !param.HasTypes &&
+                        scopeWithDefaultParameters.TryGetVariable(astParams[i].Name, out defParam)) {
+                        param.MakeUnionStrongerIfMoreThan(
+                            limits.NormalArgumentTypes, 
+                            defParam.GetTypesNoCopy(unit, AnalysisValue.DeclaringModule)
+                        );
+                        added |= param.AddTypes(entry, defParam.GetTypesNoCopy(unit, AnalysisValue.DeclaringModule), false, unit.ProjectEntry);
                     }
                 }
             }
@@ -132,11 +143,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 // FunctionAnalysisUnit which references one scope. Since we
                 // are not that scope, we won't look at _allCalls for other
                 // variables.
-                return Variables;
+                return AllVariables;
             }
             
             var scopes = new HashSet<InterpreterScope>();
-            var result = Variables.AsEnumerable();
+            var result = AllVariables;
             if (Function._allCalls != null) {
                 foreach (var callUnit in Function._allCalls.Values) {
                     scopes.Add(callUnit.Scope);
@@ -164,7 +175,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     continue;
                 }
 
-                if (scope.Node == Node && scope.Variables.TryGetValue(name, out res)) {
+                if (scope.Node == Node && scope.TryGetVariable(name, out res)) {
                     yield return res;
                 }
 
@@ -177,7 +188,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
                 }
 
-                foreach (var keyValue in scope.NodeScopes.Where(kv => nodes.Contains(kv.Key))) {
+                foreach (var keyValue in scope.AllNodeScopes.Where(kv => nodes.Contains(kv.Key))) {
                     if ((fnScope = keyValue.Value as FunctionScope) != null) {
                         queue.Enqueue(fnScope);
                     }

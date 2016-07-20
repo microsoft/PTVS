@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Linq;
@@ -18,6 +20,7 @@ using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Debugger.DebugEngine;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -36,26 +39,15 @@ namespace Microsoft.PythonTools.Navigation {
     [Guid(GuidList.guidPythonLanguageService)]
     internal sealed class PythonLanguageInfo : IVsLanguageInfo, IVsLanguageDebugInfo {
         private readonly IServiceProvider _serviceProvider;
-        private readonly IComponentModel _componentModel;
 
         public PythonLanguageInfo(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
-            _componentModel = serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
         }
 
         public int GetCodeWindowManager(IVsCodeWindow pCodeWin, out IVsCodeWindowManager ppCodeWinMgr) {
-            var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-            var service = model.GetService<IVsEditorAdaptersFactoryService>();
-            
-            IVsTextView textView;
-            if (ErrorHandler.Succeeded(pCodeWin.GetPrimaryView(out textView))) {
-                ppCodeWinMgr = new CodeWindowManager(_serviceProvider, pCodeWin, service.GetWpfTextView(textView));
-
-                return VSConstants.S_OK;
-            }
-
-            ppCodeWinMgr = null;
-            return VSConstants.E_FAIL;
+            var ptvsService = _serviceProvider.GetPythonToolsService();
+            ppCodeWinMgr = ptvsService.GetOrCreateCodeWindowManager(pCodeWin);
+            return VSConstants.S_OK;
         }
 
         public int GetFileExtensions(out string pbstrExtensions) {
@@ -102,55 +94,21 @@ namespace Microsoft.PythonTools.Navigation {
             var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
             var service = model.GetService<IVsEditorAdaptersFactoryService>();
             var buffer = service.GetDataBuffer(pBuffer);
-            IPythonProjectEntry projEntry;
-            if (buffer.TryGetPythonProjectEntry(out projEntry)) {
-                var tree = projEntry.Tree;
-                var name = FindNodeInTree(tree, tree.Body as SuiteStatement, iLine);
-                if (name != null) {
-                    pbstrName = projEntry.Analysis.ModuleName + "." + name;
-                    piLineOffset = iCol;
-                } else {
-                    pbstrName = projEntry.Analysis.ModuleName;
-                    piLineOffset = iCol;
-                }
-                return VSConstants.S_OK;
-            }
-            
-            pbstrName = "";
-            piLineOffset = iCol;
-            return VSConstants.S_OK;
-        }
 
-        private static string FindNodeInTree(PythonAst tree, SuiteStatement statement, int line) {
-            if (statement != null) {
-                foreach (var node in statement.Statements) {
-                    FunctionDefinition funcDef = node as FunctionDefinition;
-                    if (funcDef != null) {
-                        var span = funcDef.GetSpan(tree);
-                        if (span.Start.Line <= line && line <= span.End.Line) {
-                            var res = FindNodeInTree(tree, funcDef.Body as SuiteStatement, line);
-                            if (res != null) {
-                                return funcDef.Name + "." + res;
-                            }
-                            return funcDef.Name;
-                        }
-                        continue;
-                    }
+            var projFile = buffer.GetAnalysisEntry(_serviceProvider);
+            if (projFile != null) {
+                var location = projFile.Analyzer.GetNameOfLocationAsync(projFile, buffer, iLine, iCol).WaitOrDefault(1000);
+                if (location != null) {
+                    pbstrName = location.name;
+                    piLineOffset = location.lineOffset;
 
-                    ClassDefinition classDef = node as ClassDefinition;
-                    if (classDef != null) {
-                        var span = classDef.GetSpan(tree);
-                        if (span.Start.Line <= line && line <= span.End.Line) {
-                            var res = FindNodeInTree(tree, classDef.Body as SuiteStatement, line);
-                            if (res != null) {
-                                return classDef.Name + "." + res;
-                            }
-                            return classDef.Name;
-                        }
-                    }
+                    return VSConstants.S_OK;
                 }
             }
-            return null;
+
+            pbstrName = null;
+            piLineOffset = 0;
+            return VSConstants.E_FAIL;
         }
 
         /// <summary>
@@ -164,21 +122,16 @@ namespace Microsoft.PythonTools.Navigation {
             var model = _serviceProvider.GetService(typeof(SComponentModel)) as IComponentModel;
             var service = model.GetService<IVsEditorAdaptersFactoryService>();
             var buffer = service.GetDataBuffer(pBuffer);
-            IPythonProjectEntry projEntry;
-            if (buffer.TryGetPythonProjectEntry(out projEntry)) {
-                int startLine = Math.Max(iLine - cLines + 1, 0);
-                if (startLine <= iLine) {
-                    var ast = projEntry.Tree;
-                    var walker = new ProximityExpressionWalker(ast, startLine, iLine);
-                    ast.Walk(walker);
-                    var exprs = walker.GetExpressions();
-                    ppEnum = new EnumBSTR(exprs.ToArray());
-                    return VSConstants.S_OK;
-                }
-            }
 
-            ppEnum = null;
-            return VSConstants.E_FAIL;
+
+            var projFile = buffer.GetAnalysisEntry(_serviceProvider);
+            if (projFile != null) {
+                var names = projFile.Analyzer.GetProximityExpressionsAsync(projFile, buffer, iLine, iCol, cLines).WaitOrDefault(1000);
+                ppEnum = new EnumBSTR(names);
+            } else {
+                ppEnum = new EnumBSTR(Enumerable.Empty<string>());
+            }
+            return VSConstants.S_OK;
         }
 
         public int IsMappedLocation(IVsTextBuffer pBuffer, int iLine, int iCol) {
@@ -217,6 +170,6 @@ namespace Microsoft.PythonTools.Navigation {
             return VSConstants.E_NOTIMPL;
         }
 
-        #endregion
+#endregion
     }
 }

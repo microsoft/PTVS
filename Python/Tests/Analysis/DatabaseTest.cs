@@ -1,23 +1,24 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -35,7 +36,7 @@ namespace AnalysisTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void Invalid2xDatabase() {
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27,
                 // __bad_builtin__ is missing str
@@ -53,27 +54,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        public void InvalidIronPythonDatabase() {
-            using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27,
-                // __bad_builtin__ is missing str
-                Tuple.Create("__bad_builtin__", "__builtin__")
-                )) {
-                var ptd = db.Database;
-
-                Assert.IsNotNull(ptd.GetModule("__builtin__"));
-
-                var factory = new IronPythonInterpreterFactory();
-                // Explicitly create an IronPythonInterpreter from factory that
-                // will use the database in db.Factory.
-                using (var analyzer = PythonAnalyzer.CreateSynchronously(factory, factory.MakeInterpreter(db.Factory))) {
-                    // String type should have been loaded anyway
-                    Assert.IsNotNull(analyzer.ClassInfos[BuiltinTypeId.Str]);
-                }
-            }
-        }
-
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void Invalid3xDatabase() {
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V33,
                 // bad_builtins is missing str
@@ -97,7 +78,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void LayeredDatabase() {
             using (var db1 = MockCompletionDB.Create(PythonLanguageVersion.V27, "os"))
             using (var db2 = MockCompletionDB.Create(PythonLanguageVersion.V27, "posixpath")) {
@@ -158,7 +139,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void PropertyOfUnknownType() {
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V34, "property_of_unknown_type")) {
                 var ptd = db.Database;
@@ -197,7 +178,7 @@ namespace AnalysisTests {
             get { return PythonPaths.Python27 ?? PythonPaths.Python27_x64; }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public async Task GetSearchPaths() {
             Python.AssertInstalled();
 
@@ -240,7 +221,7 @@ namespace AnalysisTests {
             });
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public async Task GetExpectedDatabaseModules() {
             Python.AssertInstalled();
 

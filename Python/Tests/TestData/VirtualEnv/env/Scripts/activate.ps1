@@ -1,4 +1,4 @@
-﻿# This file must be dot sourced from PoSh; you cannot run it
+# This file must be dot sourced from PoSh; you cannot run it
 # directly. Do this: . ./activate.ps1
 
 # FIXME: clean up unused vars.

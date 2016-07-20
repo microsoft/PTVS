@@ -1,51 +1,49 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
+using Microsoft.PythonTools.Repl;
+using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
-#if INTERACTIVE_WINDOW
-    using IReplEvaluator = IInteractiveEngine;
-#endif
-
     internal class NormalCompletionAnalysis : CompletionAnalysis {
         private readonly ITextSnapshot _snapshot;
         private readonly VsProjectAnalyzer _analyzer;
         private readonly IServiceProvider _serviceProvider;
 
-        internal NormalCompletionAnalysis(VsProjectAnalyzer analyzer, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options, IServiceProvider serviceProvider)
-            : base(span, textBuffer, options) {
+        internal NormalCompletionAnalysis(VsProjectAnalyzer analyzer, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options, IServiceProvider serviceProvider)
+            : base(analyzer._serviceProvider, view, span, textBuffer, options) {
             _snapshot = snapshot;
             _analyzer = analyzer;
             _serviceProvider = serviceProvider;
         }
 
-        internal bool GetPrecedingExpression(out string text, out SnapshotSpan statementExtent) {
+        internal bool GetPrecedingExpression(out string text, out SnapshotSpan expressionExtent) {
             text = string.Empty;
-            statementExtent = default(SnapshotSpan);
+            expressionExtent = default(SnapshotSpan);
 
             var startSpan = _snapshot.CreateTrackingSpan(Span.GetSpan(_snapshot).Start.Position, 0, SpanTrackingMode.EdgeInclusive);
             var parser = new ReverseExpressionParser(_snapshot, _snapshot.TextBuffer, startSpan);
@@ -77,7 +75,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
 
-            statementExtent = parser.GetStatementRange() ?? default(SnapshotSpan);
+            expressionExtent = sourceSpan ?? new SnapshotSpan(Span.GetStartPoint(_snapshot), 0);
 
             return true;
         }
@@ -85,15 +83,11 @@ namespace Microsoft.PythonTools.Intellisense {
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var start1 = _stopwatch.ElapsedMilliseconds;
 
-            IEnumerable<MemberResult> members = null;
-            IEnumerable<MemberResult> replMembers = null;
+            IEnumerable<CompletionResult> members = null;
+            IEnumerable<CompletionResult> replMembers = null;
 
-            IReplEvaluator eval;
-            IPythonReplIntellisense pyReplEval = null;
-
-            if (_snapshot.TextBuffer.Properties.TryGetProperty<IReplEvaluator>(typeof(IReplEvaluator), out eval)) {
-                pyReplEval = eval as IPythonReplIntellisense;
-            }
+            var interactiveWindow = _snapshot.TextBuffer.GetInteractiveWindow();
+            var pyReplEval = interactiveWindow?.Evaluator as IPythonInteractiveIntellisense;
 
             var analysis = GetAnalysisEntry();
 
@@ -109,16 +103,16 @@ namespace Microsoft.PythonTools.Intellisense {
                             statementRange.Snapshot,
                             analysis
                         );
-                        var parameters = Enumerable.Empty<MemberResult>();
-                        var sigs = VsProjectAnalyzer.GetSignatures(_serviceProvider, _snapshot, Span);
-                        if (sigs.Signatures.Any()) {
+                        var parameters = Enumerable.Empty<CompletionResult>();
+                        var sigs = VsProjectAnalyzer.GetSignaturesAsync(_serviceProvider, View, _snapshot, Span).WaitOrDefault(1000);
+                        if (sigs != null && sigs.Signatures.Any()) {
                             parameters = sigs.Signatures
                                 .SelectMany(s => s.Parameters)
                                 .Select(p => p.Name)
                                 .Distinct()
-                                .Select(n => new MemberResult(n, PythonMemberType.Field));
+                                .Select(n => new CompletionResult(n, PythonMemberType.Field));
                         }
-                        members = analysis.GetAllAvailableMembers(location, _options.MemberOptions)
+                        members = (analysis.Analyzer.GetAllAvailableMembersAsync(analysis, location, _options.MemberOptions).WaitOrDefault(1000) ?? new CompletionResult[0])
                             .Union(parameters, CompletionComparer.MemberEquality);
                     }
                 }
@@ -135,11 +129,12 @@ namespace Microsoft.PythonTools.Intellisense {
                             analysis
                         );
 
-                        members = analysis.GetMembers(text, location, _options.MemberOptions);
+                        members = analysis.Analyzer.GetMembersAsync(analysis, text, location, _options.MemberOptions).WaitOrDefault(1000);
                     }
                 }
 
-                if (pyReplEval != null && _snapshot.TextBuffer.GetAnalyzer(_serviceProvider).ShouldEvaluateForCompletion(text)) {
+                if (pyReplEval != null && _analyzer.ShouldEvaluateForCompletion(text)) {
+                    Debug.Assert(pyReplEval.Analyzer == _analyzer);
                     replMembers = pyReplEval.GetMemberNames(text);
                 }
             }

@@ -1,0 +1,18 @@
+<VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>IronPython Silverlight Web Page</Name>
+    <Description>A project for creating a web page scripted on the client side with IronPython via Silverlight</Description>
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="401" />
+    <ProjectType>Python</ProjectType>
+    <CreateNewFolder>false</CreateNewFolder>
+    <SortOrder>150</SortOrder>
+    <DefaultName>SilverlightPage</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+  </TemplateData>
+  <TemplateContent>
+    <Project TargetFileName="$safeprojectname$.pyproj" File="SilverlightProject.pyproj" ReplaceParameters="true">
+      <ProjectItem ReplaceParameters="true" OpenInEditor="true" TargetFileName="$safeprojectname$.html">Program.html</ProjectItem>
+      <ProjectItem ReplaceParameters="true" OpenInEditor="true" TargetFileName="$safeprojectname$.py">Program.py</ProjectItem>
+    </Project>
+  </TemplateContent>
+</VSTemplate>

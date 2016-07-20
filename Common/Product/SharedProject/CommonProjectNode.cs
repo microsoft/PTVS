@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -29,6 +31,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Infrastructure;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project.Automation;
 using MSBuild = Microsoft.Build.Evaluation;
@@ -61,7 +64,6 @@ namespace Microsoft.VisualStudioTools.Project {
         private readonly Dictionary<string, FileSystemEventHandler> _fileChangedHandlers = new Dictionary<string, FileSystemEventHandler>();
         private Queue<FileSystemChange> _fileSystemChanges = new Queue<FileSystemChange>();
         private object _fileSystemChangesLock = new object();
-        private MSBuild.Project _userBuildProject;
         private readonly Dictionary<string, FileSystemWatcher> _symlinkWatchers = new Dictionary<string, FileSystemWatcher>();
         private DiskMerger _currentMerger;
         private IdleManager _idleManager;
@@ -73,18 +75,24 @@ namespace Microsoft.VisualStudioTools.Project {
 #endif
         private int _idleTriggered;
 
-        public CommonProjectNode(IServiceProvider serviceProvider, ImageList/*!*/ imageList)
+        public CommonProjectNode(IServiceProvider serviceProvider, ImageList imageList)
             : base(serviceProvider) {
+#if !DEV14_OR_LATER
             Contract.Assert(imageList != null);
+#endif
 
             CanFileNodesHaveChilds = true;
             SupportsProjectDesigner = true;
-            _imageList = imageList;
+            if (imageList != null) {
+                _imageList = imageList;
 
-            //Store the number of images in ProjectNode so we know the offset of the language icons.
-            _imageOffset = ImageHandler.ImageList.Images.Count;
-            foreach (Image img in ImageList.Images) {
-                ImageHandler.AddImage(img);
+                //Store the number of images in ProjectNode so we know the offset of the language icons.
+#pragma warning disable 0618
+                _imageOffset = ImageHandler.ImageList.Images.Count;
+                foreach (Image img in ImageList.Images) {
+                    ImageHandler.AddImage(img);
+                }
+#pragma warning restore 0618
             }
 
             //Initialize a new object to track project document changes so that we can update the StartupFile Property accordingly
@@ -108,7 +116,7 @@ namespace Microsoft.VisualStudioTools.Project {
             return base.QueryService(ref guidService, out result);
         }
 
-        #region abstract methods
+#region abstract methods
 
         public abstract Type GetProjectFactoryType();
         public abstract Type GetEditorFactoryType();
@@ -124,9 +132,9 @@ namespace Microsoft.VisualStudioTools.Project {
         public abstract Type GetGeneralPropertyPageType();
         public abstract Type GetLibraryManagerType();
 
-        #endregion
+#endregion
 
-        #region Properties
+#region Properties
 
         public int ImageOffset {
             get { return _imageOffset; }
@@ -149,8 +157,12 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (IntPtr.Zero == unknownPtr) {
                     return null;
                 }
-                IVsHierarchy hier = Marshal.GetObjectForIUnknown(unknownPtr) as IVsHierarchy;
-                return hier;
+                try {
+                    IVsHierarchy hier = Marshal.GetObjectForIUnknown(unknownPtr) as IVsHierarchy;
+                    return hier;
+                } finally {
+                    Marshal.Release(unknownPtr);
+                }
             }
         }
 
@@ -179,22 +191,9 @@ namespace Microsoft.VisualStudioTools.Project {
             set { _propPage = value; }
         }
 
-        protected internal MSBuild.Project UserBuildProject {
-            get {
-                return _userBuildProject;
-            }
-        }
+#endregion
 
-        protected bool IsUserProjectFileDirty {
-            get {
-                return _userBuildProject != null &&
-                    _userBuildProject.Xml.HasUnsavedChanges;
-            }
-        }
-
-        #endregion
-
-        #region overridden properties
+#region overridden properties
 
         public override bool CanShowAllFiles {
             get {
@@ -212,6 +211,9 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Since we appended the language images to the base image list in the constructor,
         /// this should be the offset in the ImageList of the langauge project icon.
         /// </summary>
+#if DEV14_OR_LATER
+        [Obsolete("Use GetIconMoniker() to specify the icon and GetIconHandle() for back-compat")]
+#endif
         public override int ImageIndex {
             get {
                 return _imageOffset + (int)CommonImageName.Project;
@@ -233,9 +235,9 @@ namespace Microsoft.VisualStudioTools.Project {
                 return VSProject;
             }
         }
-        #endregion
+#endregion
 
-        #region overridden methods
+#region overridden methods
 
         public override object GetAutomationObject() {
             if (_automationObject == null) {
@@ -403,14 +405,9 @@ namespace Microsoft.VisualStudioTools.Project {
                 _watcher.Dispose();
             }
 
-            string userProjectFilename = FileName + PerUserFileExtension;
-            if (File.Exists(userProjectFilename)) {
-                _userBuildProject = BuildProject.ProjectCollection.LoadProject(userProjectFilename);
-            }
-
             bool? showAllFiles = null;
-            if (_userBuildProject != null) {
-                showAllFiles = GetShowAllFilesSetting(_userBuildProject.GetPropertyValue(CommonConstants.ProjectView));
+            if (UserBuildProject != null) {
+                showAllFiles = GetShowAllFilesSetting(UserBuildProject.GetPropertyValue(CommonConstants.ProjectView));
             }
 
             _showingAllFiles = showAllFiles ??
@@ -436,7 +433,7 @@ namespace Microsoft.VisualStudioTools.Project {
             _currentMerger = null;
         }
 
-        private void BoldStartupItem() {
+        internal void BoldStartupItem() {
             var startupPath = GetStartupFile();
             if (!string.IsNullOrEmpty(startupPath)) {
                 var startup = FindNodeByFullPath(startupPath);
@@ -498,22 +495,6 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        protected override void SaveMSBuildProjectFileAs(string newFileName) {
-            base.SaveMSBuildProjectFileAs(newFileName);
-
-            if (_userBuildProject != null) {
-                _userBuildProject.Save(FileName + PerUserFileExtension);
-            }
-        }
-
-        protected override void SaveMSBuildProjectFile(string filename) {
-            base.SaveMSBuildProjectFile(filename);
-
-            if (_userBuildProject != null) {
-                _userBuildProject.Save(filename + PerUserFileExtension);
-            }
-        }
-
         protected override void Dispose(bool disposing) {
             if (disposing) {
 #if DEV11_OR_LATER
@@ -524,10 +505,6 @@ namespace Microsoft.VisualStudioTools.Project {
                 _projectDocListenerForStartupFileUpdates = null;
                 if (pdl != null) {
                     pdl.Dispose();
-                }
-
-                if (this._userBuildProject != null) {
-                    _userBuildProject.ProjectCollection.UnloadProject(_userBuildProject);
                 }
                 if (_idleManager != null) {
                     _idleManager.OnIdle -= OnIdle;
@@ -1172,7 +1149,7 @@ namespace Microsoft.VisualStudioTools.Project {
                         _project.AddAllFilesFile(parent, _path);
                         if (String.Equals(_project.GetStartupFile(), _path, StringComparison.OrdinalIgnoreCase)) {
                             _project.BoldStartupItem();
-                    }
+                        }
                     }
 
                     parent.ExpandItem(wasExpanded ? EXPANDFLAGS.EXPF_ExpandFolder : EXPANDFLAGS.EXPF_CollapseFolder);
@@ -1514,9 +1491,9 @@ namespace Microsoft.VisualStudioTools.Project {
         protected override ConfigProvider CreateConfigProvider() {
             return new CommonConfigProvider(this);
         }
-        #endregion
+#endregion
 
-        #region Methods
+#region Methods
 
         /// <summary>
         /// This method retrieves an instance of a service that 
@@ -1528,7 +1505,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Returns resolved value of the current working directory property.
         /// </summary>
         public string GetWorkingDirectory() {
-            string workDir = GetProjectProperty(CommonConstants.WorkingDirectory, true);
+            string workDir = GetProjectProperty(CommonConstants.WorkingDirectory, resetCache: false);
 
             return CommonUtils.GetAbsoluteDirectoryPath(ProjectHome, workDir);
         }
@@ -1537,7 +1514,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Returns resolved value of the startup file property.
         /// </summary>
         internal string GetStartupFile() {
-            string startupFile = GetProjectProperty(CommonConstants.StartupFile, true);
+            string startupFile = GetProjectProperty(CommonConstants.StartupFile, resetCache: false);
 
             if (string.IsNullOrEmpty(startupFile)) {
                 //No startup file is assigned
@@ -1635,42 +1612,9 @@ namespace Microsoft.VisualStudioTools.Project {
             return service;
         }
 
-        /// <summary>
-        /// Set value of user project property
-        /// </summary>
-        /// <param name="propertyName">Name of property</param>
-        /// <param name="propertyValue">Value of property</param>
-        public virtual void SetUserProjectProperty(string propertyName, string propertyValue) {
-            Utilities.ArgumentNotNull("propertyName", propertyName);
+#endregion
 
-            if (_userBuildProject == null) {
-                // user project file doesn't exist yet, create it.
-                // We set the content of user file explictly so VS2013 won't add ToolsVersion="12" which would result in incompatibility with VS2010,2012   
-                var root = Microsoft.Build.Construction.ProjectRootElement.Create(BuildProject.ProjectCollection);
-                root.ToolsVersion = "4.0";
-                _userBuildProject = new MSBuild.Project(root, null, null, BuildProject.ProjectCollection);
-                _userBuildProject.FullPath = FileName + PerUserFileExtension;
-            }
-            _userBuildProject.SetProperty(propertyName, propertyValue ?? String.Empty);
-        }
-
-        /// <summary>
-        /// Get value of user project property
-        /// </summary>
-        /// <param name="propertyName">Name of property</param>
-        public virtual string GetUserProjectProperty(string propertyName) {
-            Utilities.ArgumentNotNull("propertyName", propertyName);
-
-            if (_userBuildProject == null)
-                return null;
-
-            // If user project file exists during project load/reload userBuildProject is initiated 
-            return _userBuildProject.GetPropertyValue(propertyName);
-        }
-
-        #endregion
-
-        #region IVsProjectSpecificEditorMap2 Members
+#region IVsProjectSpecificEditorMap2 Members
 
         public int GetSpecificEditorProperty(string mkDocument, int propid, out object result) {
             // initialize output params
@@ -1722,9 +1666,9 @@ namespace Microsoft.VisualStudioTools.Project {
             return VSConstants.E_NOTIMPL;
         }
 
-        #endregion
+#endregion
 
-        #region IVsDeferredSaveProject Members
+#region IVsDeferredSaveProject Members
 
         /// <summary>
         /// Implements deferred save support.  Enabled by unchecking Tools->Options->Solutions and Projects->Save New Projects Created.
@@ -1820,7 +1764,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        #endregion
+#endregion
 
         internal void SuppressFileChangeNotifications() {
             _watcher.EnableRaisingEvents = false;

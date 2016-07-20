@@ -1,0 +1,37 @@
+doctype html
+html
+  head
+    meta(charset='utf-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1.0')
+    title #{title} - My Flask/Jade Application
+    link(rel='stylesheet', type='text/css', href='/static/content/bootstrap.min.css')
+    link(rel='stylesheet', type='text/css', href='/static/content/site.css')
+    script(src='/static/scripts/modernizr-2.6.2.js')
+  body
+    .navbar.navbar-inverse.navbar-fixed-top
+      .container
+        .navbar-header
+          button.navbar-toggle(type='button', data-toggle='collapse', data-target='.navbar-collapse')
+            span.icon-bar
+            span.icon-bar
+            span.icon-bar
+          a.navbar-brand(href='/') Application name
+        .navbar-collapse.collapse
+          ul.nav.navbar-nav
+            li
+              a(href='/') Home
+            li
+              a(href='/about') About
+            li
+              a(href='/contact') Contact
+    .container.body-content
+      block content
+      hr
+      footer
+        p &copy; #{year} - My Flask/Jade Application
+
+    script(src='/static/scripts/jquery-1.10.2.js')
+    script(src='/static/scripts/bootstrap.js')
+    script(src='/static/scripts/respond.js')
+
+    block scripts

@@ -1,0 +1,30 @@
+<VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Worker Project</Name>
+    <Description>A project for creating a worker role for an Azure Cloud Service.</Description>
+    <Hidden>true</Hidden>
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="408" />
+    <ProjectType>Python</ProjectType>
+    <SortOrder>60</SortOrder>
+    <NumberOfParentCategoriesToRollUp>1</NumberOfParentCategoriesToRollUp>
+    <CreateNewFolder>true</CreateNewFolder>
+    <DefaultName>WorkerProject</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="WorkerRoleProject.pyproj" ReplaceParameters="true">
+      <ProjectItem>worker.py</ProjectItem>
+      <ProjectItem>requirements.txt</ProjectItem>
+      <Folder Name="Bin">
+        <ProjectItem OpenInWebBrowser="true" TargetFileName="Readme.mht">WorkerRoleConfiguration.mht</ProjectItem>
+        <ProjectItem>ConfigureCloudService.ps1</ProjectItem>
+        <ProjectItem>LaunchWorker.ps1</ProjectItem>
+        <ProjectItem>ps.cmd</ProjectItem>
+      </Folder>
+    </Project>
+  </TemplateContent>
+  <WizardExtension>
+    <Assembly>Microsoft.PythonTools.ProjectWizards, Version=2.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <FullClassName>Microsoft.PythonTools.ProjectWizards.InstallRequirementsWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

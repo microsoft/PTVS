@@ -1,6 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>14.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
     <When Condition=" '$(VisualStudioVersion)'=='14.0'  Or '$(TargetVisualStudioVersion)'=='VS140' ">
       <PropertyGroup>
         <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -8,27 +18,7 @@
         </FileUpgradeFlags>
         <UpgradeBackupLocation>
         </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='12.0'  Or '$(TargetVisualStudioVersion)'=='VS120' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
+        <OldToolsVersion>14.0</OldToolsVersion>
       </PropertyGroup>
     </When>
   </Choose>
@@ -46,6 +36,7 @@
     <AssemblyName>Microsoft.PythonTools.Analysis</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <SuppressCommonAssemblyVersion>true</SuppressCommonAssemblyVersion>
     <!--<DefineConstants>$(DefineConstants);FULL_VALIDATION</DefineConstants>-->
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
@@ -65,19 +56,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
-      <Link>CommonUtils.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Product\SharedProject\ExceptionExtensions.cs">
-      <Link>ExceptionExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Product\SharedProject\TaskExtensions.cs">
-      <Link>TaskExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
-      <Link>PythonToolsInstallPath.cs</Link>
-    </Compile>
+    <Compile Include="AggregateProjectEntry.cs" />
+    <Compile Include="AnalysisDictionary.cs" />
+    <Compile Include="Projects\AnalysisExtensionNameAttribute.cs" />
     <Compile Include="AnalysisExtensions.cs" />
+    <Compile Include="AnalysisHashSet.cs" />
     <Compile Include="AnalysisLimits.cs" />
     <Compile Include="AnalysisLog.cs" />
     <Compile Include="AnalysisValue.cs" />
@@ -89,19 +72,30 @@
     <Compile Include="Analyzer\IsInstanceScope.cs" />
     <Compile Include="Analyzer\StatementScope.cs" />
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="IEnumerableExtensions.cs" />
+    <Compile Include="IAggregateableProjectEntry.cs" />
+    <Compile Include="Projects\IAnalysisExtension.cs" />
     <Compile Include="Interpreter\Default\AnalysisOnlyInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonInterpreterFactory.cs" />
     <Compile Include="Interpreter\Default\CPythonSequenceType.cs" />
+    <Compile Include="Interpreter\IInterpreterLog.cs" />
+    <Compile Include="Interpreter\IInterpreterRegistryService.cs" />
+    <Compile Include="Interpreter\InMemoryProject.cs" />
+    <Compile Include="Interpreter\InterpreterFactoryIdAttribute.cs" />
+    <Compile Include="Interpreter\InterpreterRegistryConstants.cs" />
+    <Compile Include="Interpreter\InterpreterRegistryService.cs" />
+    <Compile Include="Interpreter\InterpreterUIMode.cs" />
     <Compile Include="Interpreter\InterpreterFactoryCreator.cs" />
     <Compile Include="Interpreter\InterpreterFactoryCreationOptions.cs" />
     <Compile Include="Interpreter\IPythonInterpreterWithProjectReferences.cs" />
-    <Compile Include="..\..\..\Common\Product\SharedProject\ProcessOutput.cs" />
     <Compile Include="Interpreter\IPythonSequenceType.cs" />
+    <Compile Include="Interpreter\LaunchConfiguration.cs" />
     <Compile Include="Interpreter\NewDatabaseEventArgs.cs" />
     <Compile Include="Interpreter\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="Interpreter\PythonLibraryPath.cs" />
+    <Compile Include="Interpreter\IProjectContextProvider.cs" />
+    <Compile Include="LockedEnumerable.cs" />
     <Compile Include="ModulePath.cs" />
+    <Compile Include="Parsing\Ast\AwaitExpression.cs" />
     <Compile Include="Parsing\CodeFormattingCategoryAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingDefaultSettingAttribute.cs" />
     <Compile Include="Parsing\CodeFormattingDescriptionAttribute.cs" />
@@ -118,6 +112,10 @@
     <Compile Include="AnalysisSet.cs" />
     <Compile Include="Parsing\Ast\YieldFromExpression.cs" />
     <Compile Include="ProjectEntryExtensions.cs" />
+    <Compile Include="Projects\AnalysisCompleteEventArgs.cs" />
+    <Compile Include="Projects\IPythonProjectProvider.cs" />
+    <Compile Include="Projects\ProjectAnalyzer.cs" />
+    <Compile Include="Projects\PythonProject.cs" />
     <Compile Include="PythonAnalyzer.Specializations.cs" />
     <Compile Include="PythonKeywords.cs" />
     <Compile Include="Resources.Designer.cs">
@@ -126,7 +124,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="ReadOnlyWrapper.cs" />
-    <Compile Include="SourceLocationResolver.cs" />
     <Compile Include="ExportedMemberInfo.cs" />
     <Compile Include="EmptyBuiltinModule.cs" />
     <Compile Include="GetMemberOptions.cs" />
@@ -146,7 +143,6 @@
     <Compile Include="Parsing\TokenizerOptions.cs" />
     <Compile Include="SetOfOne.cs" />
     <Compile Include="Deque.cs" />
-    <Compile Include="FileCookie.cs" />
     <Compile Include="Interpreter\Default\CPythonMultipleMembers.cs" />
     <Compile Include="Interpreter\IDotNetPythonInterpreter.cs" />
     <Compile Include="Interpreter\IPythonMultipleMembers.cs" />
@@ -162,7 +158,10 @@
     <Compile Include="Analyzer\ModuleScope.cs" />
     <Compile Include="Analyzer\OverviewWalker.cs" />
     <Compile Include="SingleDict.cs" />
+    <Compile Include="Values\CoroutineInfo.cs" />
+    <Compile Include="Values\DictBuiltinClassInfo.cs" />
     <Compile Include="Values\PartialFunctionInfo.cs" />
+    <Compile Include="Values\SpecializedInstanceInfo.cs" />
     <Compile Include="Values\SysModuleInfo.cs" />
     <Compile Include="VariableDef.cs" />
     <Compile Include="Interpreter\Default\CPythonFunctionOverload.cs" />
@@ -350,6 +349,7 @@
     <Compile Include="Parsing\Ast\AndExpression.cs" />
     <Compile Include="Interpreter\BuiltinTypeId.cs" />
     <Compile Include="Interpreter\Default\CPythonFunction.cs" />
+    <Compile Include="VariablesResult.cs" />
     <Compile Include="VariableType.cs" />
     <Compile Include="XamlAnalysis.cs" />
     <Compile Include="XamlProjectEntry.cs" />
@@ -359,6 +359,12 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Microsoft.PythonTools.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

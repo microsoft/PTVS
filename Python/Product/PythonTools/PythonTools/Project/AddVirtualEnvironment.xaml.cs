@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -28,6 +30,7 @@ using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
 using WpfCommands = Microsoft.VisualStudioTools.Wpf.Commands;
@@ -38,11 +41,13 @@ namespace Microsoft.PythonTools.Project {
     /// </summary>
     partial class AddVirtualEnvironment : DialogWindowVersioningWorkaround {
         public static readonly ICommand WebChooseInterpreter = new RoutedCommand();
-        
+
+        private readonly IServiceProvider _site;
         private readonly AddVirtualEnvironmentView _view;
         private Task _currentOperation;
 
-        private AddVirtualEnvironment(AddVirtualEnvironmentView view) {
+        private AddVirtualEnvironment(IServiceProvider site, AddVirtualEnvironmentView view) {
+            _site = site;
             _view = view;
             _view.PropertyChanged += View_PropertyChanged;
             DataContext = _view;
@@ -52,11 +57,11 @@ namespace Microsoft.PythonTools.Project {
 
         public static async Task ShowDialog(
             PythonProjectNode project,
-            IInterpreterOptionsService service,
+            IInterpreterRegistryService service,
             bool browseForExisting = false
         ) {
-            using (var view = new AddVirtualEnvironmentView(project, service, project.Interpreters.ActiveInterpreter)) {
-                var wnd = new AddVirtualEnvironment(view);
+            using (var view = new AddVirtualEnvironmentView(project, service, project.ActiveInterpreter)) {
+                var wnd = new AddVirtualEnvironment(project.Site, view);
 
                 if (browseForExisting) {
                     var path = project.Site.BrowseForDirectory(IntPtr.Zero, project.ProjectHome);
@@ -67,12 +72,12 @@ namespace Microsoft.PythonTools.Project {
                     view.WillInstallRequirementsTxt = false;
                     await view.WaitForReady();
                     if (view.WillAddVirtualEnv) {
-                        await view.Create();
+                        await view.Create().HandleAllExceptions(project.Site, typeof(AddVirtualEnvironment));
                         return;
                     }
 
                     view.ShowBrowsePathError = true;
-                    view.BrowseOrigPrefix = VirtualEnv.GetOrigPrefixPath(path);
+                    view.BrowseOrigPrefix = DerivedInterpreterFactory.GetOrigPrefixPath(path);
                 }
 
                 wnd.VirtualEnvPathTextBox.ScrollToEnd();
@@ -119,7 +124,7 @@ namespace Microsoft.PythonTools.Project {
 
         private async void Save_Executed(object sender, ExecutedRoutedEventArgs e) {
             Debug.Assert(_currentOperation == null);
-            _currentOperation = _view.Create().HandleAllExceptions(SR.ProductName);
+            _currentOperation = _view.Create().HandleAllExceptions(_site, GetType());
             
             await _currentOperation;
 

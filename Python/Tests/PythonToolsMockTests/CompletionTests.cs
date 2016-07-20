@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -47,7 +49,7 @@ namespace PythonToolsMockTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void GetApplicableSpanTest() {
             var text = "if fob.oar(eggs, spam<=ham) :";
 
@@ -80,7 +82,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void CtrlSpaceCompletions() {
             using (var view = new PythonEditor()) {
                 view.Text = @"def f(param1, param2):
@@ -113,23 +115,24 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void KeywordCompletions() {
-            using (var view = new PythonEditor()) {
+            using (var view = new PythonEditor(version: PythonLanguageVersion.V35)) {
                 var completionList = new HashSet<string>(view.GetCompletions(0));
 
                 // not in a function
                 AssertUtil.DoesntContain(completionList, "yield");
                 AssertUtil.DoesntContain(completionList, "return");
+                AssertUtil.DoesntContain(completionList, "await");
 
-                AssertUtil.ContainsAtLeast(completionList, "assert", "and");
+                AssertUtil.ContainsAtLeast(completionList, "assert", "and", "async");
 
                 var code = @"def f():
     |
     pass";
 
                 view.Text = code.Replace("|", "");
-                AssertUtil.ContainsAtLeast(view.GetCompletions(code.IndexOf("|")), "yield", "return");
+                AssertUtil.ContainsAtLeast(view.GetCompletions(code.IndexOf("|")), "yield", "return", "async", "await");
 
 
                 view.Text = "x = (abc, oar, )";
@@ -140,7 +143,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void KeywordOrIdentifierCompletions() {
             // http://pytools.codeplex.com/workitem/560
             string code = @"
@@ -173,7 +176,22 @@ yield_expression = 42
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        public void LambdaCompletions() {
+            // https://github.com/Microsoft/PTVS/issues/1000
+            string code = @"
+l = (lambda b:b)
+l(42)
+
+";
+            using (var view = new PythonEditor(code)) {
+                var completionList = view.GetCompletionsAfter(":");
+
+                AssertUtil.Contains(completionList, "b");
+            }
+        }
+
+        [TestMethod, Priority(1)]
         public void TrueFalseNoneCompletions() {
             // http://pytools.codeplex.com/workitem/1905
             foreach (var version in new[] { PythonLanguageVersion.V27, PythonLanguageVersion.V33 }) {
@@ -198,7 +216,7 @@ yield_expression = 42
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void CtrlSpaceAfterKeyword() {
             // http://pytools.codeplex.com/workitem/560
             string code = @"
@@ -215,7 +233,7 @@ print
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void CtrlSpaceAfterNumber() {
             // http://pytools.codeplex.com/workitem/2323
             string code = @"
@@ -233,7 +251,7 @@ print
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ExceptionCompletions() {
             using (var vs = new MockVs()) {
                 foreach (string code in new[] { 
@@ -293,7 +311,7 @@ except (sys."}) {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void MemberCompletions() {
             using (var view = new PythonEditor("x = 2\r\nx.")) {
                 // TODO: Negative tests
@@ -327,7 +345,7 @@ except (sys."}) {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void SignatureHelp() {
             var prefixes = new[] { "", "(", "a = ", "f(", "l[", "{", "if " };
             var sigs = new[] { 
@@ -373,10 +391,16 @@ except (sys."}) {
                         view.Text = test;
                         var snapshot = view.CurrentSnapshot;
 
-                        var res = snapshot.GetSignatures(
-                            view.VS.ServiceProvider,
-                            snapshot.CreateTrackingSpan(snapshot.Length, 0, SpanTrackingMode.EdgeInclusive)
-                        );
+                        SignatureAnalysis res = null;
+                        view.VS.InvokeSync(() => {
+                            res = view.VS.GetPyService().GetSignatures(
+                                view.View.TextView,
+                                snapshot,
+                                snapshot.CreateTrackingSpan(snapshot.Length, 0, SpanTrackingMode.EdgeInclusive)
+                            );
+                        });
+
+                        Assert.IsNotNull(res);
                         Assert.AreEqual(sig.Function, res.Text, test);
                         Assert.AreEqual(sig.Param, res.ParameterIndex, test);
                     }
@@ -384,18 +408,26 @@ except (sys."}) {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void SignatureHelpStarArgs() {
-            SignatureAnalysis sigResult;
-            using (var vs = new MockVs()) {
-                TestSignature(vs, -1, @"def f(a, *b, c=None): pass
-f(1, 2, 3, 4,", "f", 4, PythonLanguageVersion.V27, true, out sigResult);
-                Assert.IsTrue(sigResult.Signatures.Count >= 1, "No signature analysis results");
+            SignatureAnalysis sigResult = null;
+            using (var view = new PythonEditor(@"def f(a, *b, c=None): pass
+f(1, 2, 3, 4,")) {
+                for (int retries = 3; retries >= 0; --retries) {
+                    TestSignature(view, -1, "f", 4, out sigResult);
+                    if (retries == 0) {
+                        Assert.IsTrue(sigResult.Signatures.Count >= 1, "No signature analysis results");
+                    } else if (sigResult.Signatures.Count >= 1) {
+                        break;
+                    }
+                    Console.WriteLine("Retry {0}", retries);
+                    view.Text = view.Text;
+                }
                 Assert.AreEqual("*b", sigResult.Signatures[0].CurrentParameter.Name);
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ImportCompletions() {
             using (var view = new PythonEditor()) {
                 view.Text ="import ";
@@ -421,7 +453,7 @@ f(1, 2, 3, 4,", "f", 4, PythonLanguageVersion.V27, true, out sigResult);
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void FromImportCompletions() {
             using (var view = new PythonEditor()) {
                 view.Text = "from ";
@@ -482,7 +514,7 @@ f(1, 2, 3, 4,", "f", 4, PythonLanguageVersion.V27, true, out sigResult);
         }
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void FromOSPathImportCompletions2x() {
             using (var vs = new MockVs())
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27, "os", "ntpath", "posixpath", "os2emxpath")) {
@@ -490,7 +522,7 @@ f(1, 2, 3, 4,", "f", 4, PythonLanguageVersion.V27, true, out sigResult);
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void FromOSPathImportCompletions3x() {
             using (var vs = new MockVs())
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V33, "os", "ntpath", "posixpath", "os2emxpath")) {
@@ -530,7 +562,7 @@ f(1, 2, 3, 4,", "f", 4, PythonLanguageVersion.V27, true, out sigResult);
             AssertUtil.ContainsAtLeast(GetCompletions(vs, -1, code, db.Factory), allNames);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void FromImportMultilineCompletions() {
             using (var vs = new MockVs()) {
                 var code = "from sys import (";
@@ -564,7 +596,8 @@ f(1, 2, 3, 4,", "f", 4, PythonLanguageVersion.V27, true, out sigResult);
             return GetCompletionNames(analysis.GetCompletions(new MockGlyphService()));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void Scenario_CompletionInTripleQuotedString() {
             string code = @"
 '''
@@ -583,7 +616,7 @@ sys.
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void GotoDefinition() {
             using (var vs = new MockVs()) {
                 string code = @"
@@ -608,7 +641,7 @@ C().fff";
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void QuickInfo() {
             string code = @"
 x = ""ABCDEFGHIJKLMNOPQRSTUVWYXZ""
@@ -632,37 +665,37 @@ while True:
 lambda larg1, larg2: None";
 
 
-            using (var vs = new MockVs()) {
+            using (var view = new PythonEditor(code)) {
                 // we get the appropriate subexpression
-                TestQuickInfo(vs, code, code.IndexOf("cls."), code.IndexOf("cls.") + 4, "cls: <unknown type>");
-                TestQuickInfo(vs, code, code.IndexOf("cls.") + 4 + 1, code.IndexOf("cls.") + 4 + 1 + 11, "cls._parse_block: <unknown type>");
-                TestQuickInfo(vs, code, code.IndexOf("cls.") + 4 + 1 + 11 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4, "ast: <unknown type>");
-                TestQuickInfo(vs, code, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1 + 3, "ast.expr: <unknown type>");
-                TestQuickInfo(vs, code, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1 + 3 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 5 + 3 + 1 + 1, "cls._parse_block(ast.expr): <unknown type>");
+                TestQuickInfo(view, code.IndexOf("cls."), code.IndexOf("cls.") + 4, "cls: <unknown type>");
+                TestQuickInfo(view, code.IndexOf("cls.") + 4 + 1, code.IndexOf("cls.") + 4 + 1 + 11, "cls._parse_block: <unknown type>");
+                TestQuickInfo(view, code.IndexOf("cls.") + 4 + 1 + 11 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4, "ast: <unknown type>");
+                TestQuickInfo(view, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1 + 3, "ast.expr: <unknown type>");
+                TestQuickInfo(view, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 4 + 1 + 3 + 1, code.IndexOf("cls.") + 4 + 1 + 11 + 1 + 5 + 3 + 1 + 1, "cls._parse_block(ast.expr): <unknown type>");
 
                 // the whole string shows up in quick info
-                TestQuickInfo(vs, code, code.IndexOf("x = ") + 4, code.IndexOf("x = ") + 4 + 28, "\"ABCDEFGHIJKLMNOPQRSTUVWYXZ\": str");
+                TestQuickInfo(view, code.IndexOf("x = ") + 4, code.IndexOf("x = ") + 4 + 28, "\"ABCDEFGHIJKLMNOPQRSTUVWYXZ\": str");
 
                 // trailing new lines don't show up in quick info
-                TestQuickInfo(vs, code, code.IndexOf("def f") + 4, code.IndexOf("def f") + 5, "f: def f()\r\nhelpful information");
+                TestQuickInfo(view, code.IndexOf("def f") + 4, code.IndexOf("def f") + 5, "f: def f()\r\nhelpful information");
 
                 // keywords don't show up in quick info
-                TestQuickInfo(vs, code, code.IndexOf("while True:"), code.IndexOf("while True:") + 5);
+                TestQuickInfo(view, code.IndexOf("while True:"), code.IndexOf("while True:") + 5);
 
                 // 'lambda' keyword doesn't show up in quick info
-                TestQuickInfo(vs, code, code.IndexOf("lambda"), code.IndexOf("lambda") + 6);
+                TestQuickInfo(view, code.IndexOf("lambda"), code.IndexOf("lambda") + 6);
                 // but its arguments do
-                TestQuickInfo(vs, code, code.IndexOf("larg1"), code.IndexOf("larg1") + 5, "larg1: <unknown type>");
-                TestQuickInfo(vs, code, code.IndexOf("larg2"), code.IndexOf("larg2") + 5, "larg2: <unknown type>");
+                TestQuickInfo(view, code.IndexOf("larg1"), code.IndexOf("larg1") + 5, "larg1: <unknown type>");
+                TestQuickInfo(view, code.IndexOf("larg2"), code.IndexOf("larg2") + 5, "larg2: <unknown type>");
 
                 // multiline function, hover at the close paren
-                TestQuickInfo(vs, code, code.IndexOf("e)") + 1, code.IndexOf("e)") + 2, @"f(a,
+                TestQuickInfo(view, code.IndexOf("e)") + 1, code.IndexOf("e)") + 2, @"f(a,
 (b, c, d),
 e): <unknown type>");
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void NormalOverrideCompletions() {
             using (var view2 = new PythonEditor(version: PythonLanguageVersion.V27))
             using (var view3 = new PythonEditor(version: PythonLanguageVersion.V33)) {
@@ -747,7 +780,7 @@ class Baz(Fob, Oar):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void BuiltinOverrideCompletions() {
             using (var view2 = new PythonEditor(version: PythonLanguageVersion.V27))
             using (var view3 = new PythonEditor(version: PythonLanguageVersion.V33)) {
@@ -800,7 +833,7 @@ class Baz(Fob, Oar):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void OverridesWithMismatchedAnalysis() {
             // Here we create a buffer and analyze. We then add some newlines
             // and a def, expecting completions from A (int). Because the def
@@ -833,7 +866,7 @@ class B(dict):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void HideAdvancedMembers() {
             using (var view = new PythonEditor()) {
                 // No text - expect all non-advanced members
@@ -887,7 +920,7 @@ class B(dict):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void CompletionWithLongDocString() {
             using (var vs = new MockVs()) {
                 var docString = GenerateText(100, 72, "    ").ToArray();
@@ -904,13 +937,16 @@ def func(a):
                 var expected1 = string.Join(Environment.NewLine, docString.Take(29)) + Environment.NewLine + "...";
                 var expected2 = string.Join(Environment.NewLine, docString.Take(15)).TrimStart() + Environment.NewLine + "...";
 
-                TestQuickInfo(vs, code, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(a)\r\n" + expected1);
+                using (var view = new PythonEditor(code)) {
+                    TestQuickInfo(view, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(a)\r\n" + expected1);
 
-                SignatureAnalysis sigs;
-                TestSignature(vs, -1, code + "func(", "func", 0, PythonLanguageVersion.V27, true, out sigs);
-                Assert.AreEqual(1, sigs.Signatures.Count);
-                Assert.AreEqual(1, sigs.Signatures[0].Parameters.Count);
-                Assert.AreEqual(expected2, sigs.Signatures[0].Documentation);
+                    SignatureAnalysis sigs;
+                    view.Text += "func(";
+                    TestSignature(view, -1, "func", 0, out sigs);
+                    Assert.AreEqual(1, sigs.Signatures.Count);
+                    Assert.AreEqual(1, sigs.Signatures[0].Parameters.Count);
+                    Assert.AreEqual(expected2, sigs.Signatures[0].Documentation);
+                }
 
                 docString = GenerateText(100, 250, "    ").ToArray();
                 code = @"
@@ -920,20 +956,24 @@ def func(a):
 
 ";
 
-                // The long lines cause us to truncate sooner.
-                expected1 = string.Join(Environment.NewLine, docString.Take(15)) + Environment.NewLine + "...";
-                expected2 = string.Join(Environment.NewLine, docString.Take(8)).TrimStart() + Environment.NewLine + "...";
+                using (var view = new PythonEditor(code)) {
+                    // The long lines cause us to truncate sooner.
+                    expected1 = string.Join(Environment.NewLine, docString.Take(15)) + Environment.NewLine + "...";
+                    expected2 = string.Join(Environment.NewLine, docString.Take(8)).TrimStart() + Environment.NewLine + "...";
 
-                TestQuickInfo(vs, code, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(a)\r\n" + expected1);
+                    TestQuickInfo(view, code.IndexOf("func"), code.IndexOf("func") + 4, "func: def func(a)\r\n" + expected1);
 
-                TestSignature(vs, -1, code + "func(", "func", 0, PythonLanguageVersion.V27, true, out sigs);
-                Assert.AreEqual(1, sigs.Signatures.Count);
-                Assert.AreEqual(1, sigs.Signatures[0].Parameters.Count);
-                Assert.AreEqual(expected2, sigs.Signatures[0].Documentation);
+                    SignatureAnalysis sigs;
+                    view.Text += "func(";
+                    TestSignature(view, -1, "func", 0, out sigs);
+                    Assert.AreEqual(1, sigs.Signatures.Count);
+                    Assert.AreEqual(1, sigs.Signatures[0].Parameters.Count);
+                    Assert.AreEqual(expected2, sigs.Signatures[0].Documentation);
+                }
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ClassCompletionOutsideFunction() {
             // Note that "eggs_and_spam" is longer than the indentation of each
             // scope.
@@ -966,7 +1006,7 @@ class Spam(object):
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ArgumentNameCompletion() {
             const string code = @"
 def f(param1 = 123, param2 : int = 234):
@@ -975,12 +1015,13 @@ def f(param1 = 123, param2 : int = 234):
 x = f(";
 
             using (var view = new PythonEditor(code)) {
+                view.Text = view.Text;
                 AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "param1", "param2");
                 AssertUtil.DoesntContain(view.GetCompletions(0), "param1");
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void MethodArgumentNameCompletion() {
             const string code = @"
 class MyClass:
@@ -991,8 +1032,72 @@ m = MyClass()
 x = m.f(";
 
             using (var view = new PythonEditor(code)) {
+                for (int retries = 3; retries >= 0; --retries) {
+                    var sigs = GetSignatureAnalysis(view, code.Length - 1);
+                    if (sigs.Signatures.Count > 0) {
+                        break;
+                    }
+                    Console.WriteLine("Retry {0}", retries);
+                    view.Text = view.Text;
+                }
                 AssertUtil.ContainsAtLeast(view.GetCompletions(-1), "param1", "param2");
                 AssertUtil.DoesntContain(view.GetCompletions(0), "param1");
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        public void YieldFromExpressionCompletion() {
+            const string code = @"
+def f():
+    yield 1
+    return 1
+
+def g():
+    f().
+    yield from f().
+    (yield from f()).
+";
+
+            using (var view = new PythonEditor(code, PythonLanguageVersion.V35)) {
+                AssertUtil.CheckCollection(view.GetCompletionsAfter("f()."),
+                    new[] { "next", "send", "throw" },
+                    new[] { "real", "imag" }
+                );
+                AssertUtil.CheckCollection(view.GetCompletionsAfter("yield from f()."),
+                    new[] { "next", "send", "throw" },
+                    new[] { "real", "imag" }
+                );
+                AssertUtil.CheckCollection(view.GetCompletionsAfter("(yield from f())."),
+                    new[] { "real", "imag" },
+                    new[] { "next", "send", "throw" }
+                );
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        public void AwaitExpressionCompletion() {
+            const string code = @"
+async def f():
+    return 1
+
+async def g():
+    f().
+    await f().
+    (await f()).";
+
+            using (var view = new PythonEditor(code, PythonLanguageVersion.V35)) {
+                AssertUtil.CheckCollection(view.GetCompletionsAfter("f()."),
+                    new[] { "next", "send", "throw" },
+                    new[] { "real", "imag" }
+                );
+                AssertUtil.CheckCollection(view.GetCompletionsAfter("await f()."),
+                    new[] { "next", "send", "throw" },
+                    new[] { "real", "imag" }
+                );
+                AssertUtil.CheckCollection(view.GetCompletionsAfter("(await f())."),
+                    new[] { "real", "imag" },
+                    new[] { "next", "send", "throw" }
+                );
             }
         }
 
@@ -1008,9 +1113,21 @@ x = m.f(";
                 view.AdvancedOptions.HideAdvancedMembers = false;
 
                 var snapshot = view.CurrentSnapshot;
+                ITextVersion afterEditVersion = null;
+                ManualResetEvent mre = new ManualResetEvent(false);
+                view.View.TextView.TextBuffer.RegisterForNewAnalysis(entry => {
+                    if (afterEditVersion != null &&
+                    entry.BufferParser.GetAnalysisVersion(snapshot.TextBuffer).VersionNumber >= afterEditVersion.VersionNumber) {
+                        mre.Set();
+                    }
+                });
                 view.View.MoveCaret(new SnapshotPoint(snapshot, editInsert));
                 view.Type(editText);
+                afterEditVersion = view.CurrentSnapshot.Version;
 
+                if (!mre.WaitOne(10000)) {
+                    Assert.Fail("Failed to wait for new analysis");
+                }
                 var newSnapshot = view.CurrentSnapshot;
                 Assert.AreNotSame(snapshot, newSnapshot);
 
@@ -1018,29 +1135,25 @@ x = m.f(";
             }
         }
 
-        private static void TestQuickInfo(MockVs vs, string code, int start, int end, params string[] expected) {
-            using (var view = new PythonEditor(code, vs: vs)) {
-                var snapshot = view.CurrentSnapshot;
+        private static void TestQuickInfo(PythonEditor view, int start, int end, params string[] expected) {
+            var snapshot = view.CurrentSnapshot;
 
-                for (int i = start; i < end; i++) {
-                    var analysis = snapshot.AnalyzeExpression(
-                        vs.ServiceProvider,
-                        snapshot.CreateTrackingSpan(i, i == snapshot.Length ? 0 : 1, SpanTrackingMode.EdgeInclusive),
-                        false
-                    );
+            for (int i = start; i < end; i++) {
+                List<object> quickInfo = new List<object>();
+                ITrackingSpan span;
+                QuickInfoSource.AugmentQuickInfoWorker(
+                    quickInfo,
+                    VsProjectAnalyzer.GetQuickInfoAsync(
+                        view.VS.ServiceProvider,
+                        view.View.TextView,
+                        new SnapshotPoint(snapshot, start)
+                    ).Result,
+                    out span
+                );
 
-                    List<object> quickInfo = new List<object>();
-                    ITrackingSpan span;
-                    QuickInfoSource.AugmentQuickInfoWorker(
-                        analysis,
-                        quickInfo,
-                        out span
-                    );
-
-                    Assert.AreEqual(expected.Length, quickInfo.Count);
-                    for (int j = 0; j < expected.Length; j++) {
-                        Assert.AreEqual(expected[j], quickInfo[j]);
-                    }
+                Assert.AreEqual(expected.Length, quickInfo.Count);
+                for (int j = 0; j < expected.Length; j++) {
+                    Assert.AreEqual(expected[j], quickInfo[j]);
                 }
             }
         }
@@ -1052,11 +1165,16 @@ x = m.f(";
 
             using (var view = new PythonEditor(code, version, vs)) {
                 var snapshot = view.CurrentSnapshot;
-                return snapshot.AnalyzeExpression(
-                    vs.ServiceProvider,
-                    snapshot.CreateTrackingSpan(location, location < snapshot.Length ? 1 : 0, SpanTrackingMode.EdgeInclusive),
-                    false
-                );
+                ExpressionAnalysis expr = null;
+                vs.InvokeSync(() => {
+                    expr = vs.GetPyService().AnalyzeExpression(
+                        view.View.TextView,
+                        snapshot,
+                        snapshot.CreateTrackingSpan(location, location < snapshot.Length ? 1 : 0, SpanTrackingMode.EdgeInclusive),
+                        false
+                    );
+                });
+                return expr;
             }
         }
 
@@ -1066,12 +1184,16 @@ x = m.f(";
                 index += snapshot.Length + 1;
             }
 
-            var context = snapshot.GetCompletions(
-                view.VS.ServiceProvider,
-                snapshot.GetApplicableSpan(index) ?? snapshot.CreateTrackingSpan(index, 0, SpanTrackingMode.EdgeInclusive),
-                snapshot.CreateTrackingPoint(index, PointTrackingMode.Negative),
-                new CompletionOptions()
-            );
+            CompletionAnalysis context = null;
+            view.VS.InvokeSync(() => {
+                context = view.VS.GetPyService().GetCompletions(
+                    view.View.TextView,
+                    snapshot,
+                    snapshot.GetApplicableSpan(index) ?? snapshot.CreateTrackingSpan(index, 0, SpanTrackingMode.EdgeInclusive),
+                    snapshot.CreateTrackingPoint(index, PointTrackingMode.Negative),
+                    new CompletionOptions()
+                );
+            });
 
             Assert.IsInstanceOfType(context, typeof(NormalCompletionAnalysis));
             var normalContext = (NormalCompletionAnalysis)context;
@@ -1082,26 +1204,29 @@ x = m.f(";
             Assert.AreEqual(expectedExpression, text);
         }
 
-        private static SignatureAnalysis GetSignatureAnalysis(MockVs vs, int index, string code, PythonLanguageVersion version = PythonLanguageVersion.V27) {
-            using (var view = new PythonEditor(code, version, vs)) {
-                var snapshot = view.CurrentSnapshot;
+        private static SignatureAnalysis GetSignatureAnalysis(PythonEditor view, int index) {
+            var snapshot = view.CurrentSnapshot;
 
-                return snapshot.GetSignatures(
-                    vs.ServiceProvider,
+            SignatureAnalysis sigs = null;
+            view.VS.InvokeSync(() => {
+                sigs = view.VS.GetPyService().GetSignatures(
+                    view.View.TextView,
+                    snapshot,
                     snapshot.CreateTrackingSpan(index, 1, SpanTrackingMode.EdgeInclusive)
                 );
-            }
+            });
+            return sigs;
         }
 
 
-        private static void TestSignature(MockVs vs, int location, string sourceCode, string expectedExpression, int paramIndex, PythonLanguageVersion version, bool analyze, out SignatureAnalysis sigs) {
+        private static void TestSignature(PythonEditor view, int location, string expectedExpression, int paramIndex, out SignatureAnalysis sigs) {
             if (location < 0) {
-                location = sourceCode.Length + location;
+                location = view.CurrentSnapshot.Length + location;
             }
             
-            sigs = GetSignatureAnalysis(vs, location, sourceCode, version);
-            Assert.AreEqual(expectedExpression, sigs.Text, sourceCode);
-            Assert.AreEqual(paramIndex, sigs.ParameterIndex, sourceCode);
+            sigs = GetSignatureAnalysis(view, location);
+            Assert.AreEqual(expectedExpression, sigs.Text, view.Text);
+            Assert.AreEqual(paramIndex, sigs.ParameterIndex, view.Text);
         }
 
         private static List<Completion> GetCompletionList(MockVs vs, int index, string code, PythonLanguageVersion version = PythonLanguageVersion.V27) {

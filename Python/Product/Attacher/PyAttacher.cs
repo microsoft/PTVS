@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.ComponentModel;
@@ -18,12 +20,11 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Microsoft.Win32;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Debugger {
     /// <summary>
@@ -71,18 +72,25 @@ namespace Microsoft.PythonTools.Debugger {
                 case "ATTACH_AD7": {
                         int pid, portNum;
                         Guid debugId;
-                        if (args.Length != 5 || !Int32.TryParse(args[1], out pid) || !Int32.TryParse(args[2], out portNum) || !Guid.TryParse(args[3], out debugId)) {
+                        if (args.Length != 6 ||
+                            !Int32.TryParse(args[1], out pid) ||
+                            !Int32.TryParse(args[2], out portNum) ||
+                            !Guid.TryParse(args[3], out debugId)
+                        ) {
                             return Help();
                         }
 
+                        string debugOptions = args[4];
+
                         EventWaitHandle doneEvent;
                         try {
-                            doneEvent = AutoResetEvent.OpenExisting(args[4]);
+                            doneEvent = AutoResetEvent.OpenExisting(args[5]);
                         } catch {
+                            Console.Error.WriteLine("Could not open event " + args[5]);
                             return Help(-2);
                         }
 
-                        var res = AttachAD7Worker(pid, portNum, debugId, doneEvent);
+                        var res = AttachAD7Worker(pid, portNum, debugId, debugOptions, doneEvent);
                         return ((int)res._error) | (res._langVersion << 16);
                     };
 
@@ -120,7 +128,7 @@ namespace Microsoft.PythonTools.Debugger {
             return HasPython(id);
         }
 
-        public static DebugAttach AttachAD7(int pid, int portNum, Guid debugId) {
+        public static DebugAttach AttachAD7(int pid, int portNum, Guid debugId, string debugOptions) {
             bool isTarget64Bit = NativeMethods.Is64BitProcess(pid);
             bool isAttacher64Bit = Environment.Is64BitProcess;
 
@@ -137,7 +145,7 @@ namespace Microsoft.PythonTools.Debugger {
                 } while (eventHandle == IntPtr.Zero);
 
                 try {
-                    string args = String.Format("ATTACH_AD7 {0} {1} {2} {3}", pid, portNum, debugId, name);
+                    string args = String.Format("ATTACH_AD7 {0} {1} {2} \"{3}\" {4}", pid, portNum, debugId, debugOptions, name);
                     var process = isTarget64Bit ? Create64BitProcess(args) : Create32BitProcess(args);
 
                     var attachDoneEvent = AutoResetEvent.OpenExisting(name);
@@ -149,7 +157,7 @@ namespace Microsoft.PythonTools.Debugger {
                 }
             }
 
-            return AttachAD7Worker(pid, portNum, debugId);
+            return AttachAD7Worker(pid, portNum, debugId, debugOptions);
         }
 
         public static ConnErrorMessages AttachDkm(int pid) {
@@ -195,10 +203,10 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private static int Help(int exitCode = -1) {
-            Console.WriteLine("Usage: {0} {{CHECK | ATTACH_AD7 | ATTACH_DKM}} [<parameters>]", Assembly.GetEntryAssembly().ManifestModule.Name);
-            Console.WriteLine("Parameters for:");
-            Console.WriteLine("\tATTACH_AD7:\t<target pid> <port num> <debug id> <event name>");
-            Console.WriteLine("\tATTACH_DKM:\t<target pid>");
+            Console.Error.WriteLine("Usage: {0} {{CHECK | ATTACH_AD7 | ATTACH_DKM}} [<parameters>]", Assembly.GetEntryAssembly().ManifestModule.Name);
+            Console.Error.WriteLine("Parameters for:");
+            Console.Error.WriteLine("\tATTACH_AD7:\t<target pid> <port num> <debug id> <debug options> <event name>");
+            Console.Error.WriteLine("\tATTACH_DKM:\t<target pid>");
             return exitCode;
         }
 
@@ -288,7 +296,7 @@ namespace Microsoft.PythonTools.Debugger {
         /// <summary>
         /// Attaches to the specified PID and returns a DebugAttach object indicating the result.
         /// </summary>
-        internal static DebugAttach AttachAD7Worker(int pid, int portNum, Guid debugId, EventWaitHandle attachDoneEvent = null) {
+        internal static DebugAttach AttachAD7Worker(int pid, int portNum, Guid debugId, string debugOptions, EventWaitHandle attachDoneEvent = null) {
             var hProcess = NativeMethods.OpenProcess(ProcessAccessFlags.All, false, pid);
             if (hProcess != IntPtr.Zero) {
                 string dllPath;
@@ -314,7 +322,7 @@ namespace Microsoft.PythonTools.Debugger {
                 for (int i = 0; i < 5; i++) {
                     IntPtr hKernel32;
                     if ((error = FindKernel32(hProcess, out hKernel32)) == ConnErrorMessages.None) {
-                        return InjectDebugger(dllPath, hProcess, hKernel32, portNum, pid, debugId, attachDoneEvent);
+                        return InjectDebugger(dllPath, hProcess, hKernel32, portNum, pid, debugId, debugOptions, attachDoneEvent);
                     }
                 }
 
@@ -425,7 +433,7 @@ namespace Microsoft.PythonTools.Debugger {
             return ConnErrorMessages.None;
         }
 
-        private static DebugAttach InjectDebugger(string dllPath, IntPtr hProcess, IntPtr hKernel32, int portNum, int pid, Guid debugId, EventWaitHandle attachDoneEvent) {
+        private static DebugAttach InjectDebugger(string dllPath, IntPtr hProcess, IntPtr hKernel32, int portNum, int pid, Guid debugId, string debugOptions, EventWaitHandle attachDoneEvent) {
             // create our our shared memory region so that we can read the port number from the other side and we can indicate when
             // the attach has completed
             try {
@@ -433,16 +441,15 @@ namespace Microsoft.PythonTools.Debugger {
                     using (var viewStream = sharedMemoryComm.CreateViewStream()) {
                         // write the information the process needs to communicate with us.  This includes:
                         //      the port number it should connect to for communicating with us
+                        //      debug options flags
                         //      two auto reset events.  
                         //          The first signals with the attach is ready to start (the port is open)
                         //          The second signals when the attach is completely finished
                         //      space for reporting back an error and the version of the Python interpreter attached to.
 
                         viewStream.Write(BitConverter.GetBytes(portNum), 0, 4);
-                        viewStream.WriteByte(0);
-                        viewStream.WriteByte(0);
-                        viewStream.WriteByte(0);
-                        viewStream.WriteByte(0);
+                        viewStream.Write(new byte[4], 0, 4); // padding
+
 
                         // write a handle for shared process communication
                         AutoResetEvent attachStarting = new AutoResetEvent(false);
@@ -466,12 +473,13 @@ namespace Microsoft.PythonTools.Debugger {
                             viewStream.Write(BitConverter.GetBytes(attachDoneTargetHandle.ToInt64()), 0, 8);
 
                             var errorCodePosition = viewStream.Position;
-
                             viewStream.Write(new byte[8], 0, 8); // write null bytes for error code and version
-                            string guid = debugId.ToString();
-                            for (int i = 0; i < guid.Length; i++) {
-                                viewStream.WriteByte((byte)guid[i]);
-                            }
+
+                            byte[] szDebugId = Encoding.ASCII.GetBytes(debugId.ToString().PadRight(64, '\0'));
+                            viewStream.Write(szDebugId, 0, szDebugId.Length);
+
+                            byte[] szDebugOptions = Encoding.ASCII.GetBytes(debugOptions + '\0');
+                            viewStream.Write(szDebugOptions, 0, szDebugOptions.Length);
 
                             var injectDllError = InjectDll(dllPath, hProcess, hKernel32);
                             if (injectDllError != ConnErrorMessages.None) {

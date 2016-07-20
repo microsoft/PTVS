@@ -1,4 +1,4 @@
-﻿if True:
+if True:
         print('hello')
 	# "Matched"
         print('goodbye')

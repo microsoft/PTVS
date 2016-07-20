@@ -1,0 +1,38 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="SetupProjectBefore.settings" />
+
+  <Import Project="$(TargetsPath)\Common.Shim.targets" />
+
+  <PropertyGroup>
+    <_CBI Condition="$(CustomBuildIdentifier) != ''"> $(CustomBuildIdentifier)</_CBI>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ReleaseFile Include="$(SetupOutputPath)en-us\PythonToolsInstaller.msi" Condition="Exists('$(SetupOutputPath)en-us\PythonToolsInstaller.msi')">
+      <Name>PTVS$(_CBI) VS $(VSTargetName).msi</Name>
+    </ReleaseFile>
+    <ReleaseFile Include="$(SetupOutputPath)en-us\PythonToolsInstaller.msi" Condition="Exists('$(SetupOutputPath)en-us\PythonToolsInstaller.msi')">
+      <Name>PTVS$(_CBI.Replace(` `, `_`).Replace(`.`, `_`).Replace(`-`, `_`))_VS_$(VSTargetName).msi</Name>
+    </ReleaseFile>
+
+    <ReleaseFile Include="$(SetupOutputPath)swix\*.vsix;$(SetupOutputPath)swix\*.vsman;$(SetupOutputPath)swix\*.ps1">
+      <Name>%(Filename)%(Extension)</Name>
+    </ReleaseFile>
+  </ItemGroup>
+
+  <Target Name="ListFiles">
+    <Message Importance="high" Text="Release Folder:
+  $(ReleaseOutputPath)
+
+Release Files:
+@(ReleaseFile->'%(FullPath)
+ -> %(Name)','
+')" />
+  </Target>
+
+  <Target Name="CopyToRelease" AfterTargets="AfterBuild" Inputs="@(ReleaseFile)" Outputs="$(ReleaseOutputPath)%(ReleaseFile.Name)'">
+    <Copy SourceFiles="%(ReleaseFile.FullPath)"
+          DestinationFiles="$(ReleaseOutputPath)%(Name)"
+          OverwriteReadOnlyFiles="true" />
+  </Target>
+</Project>

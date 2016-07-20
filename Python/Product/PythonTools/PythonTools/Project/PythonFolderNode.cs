@@ -1,25 +1,24 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
-using System.Drawing;
-using System.IO;
-using System.Reflection;
-using System.Windows.Forms;
+using System.Linq;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
@@ -30,34 +29,16 @@ namespace Microsoft.PythonTools.Project {
     /// Currently we just provide a specialized icon for the different folder.
     /// </summary>
     class PythonFolderNode : CommonFolderNode {
-        private ImageList _imageList;
-
         public PythonFolderNode(CommonProjectNode root, ProjectElement element)
             : base(root, element) {
         }
 
-        public override object GetIconHandle(bool open) {
-            if (ItemNode.IsExcluded) {
-                return base.GetIconHandle(open);
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            if (!ItemNode.IsExcluded && AllChildren.Any(n => ModulePath.IsInitPyFile(n.Url))) {
+                return open ? KnownMonikers.PackageFolderOpened : KnownMonikers.PackageFolderClosed;
             }
 
-            for (HierarchyNode child = this.FirstChild; child != null; child = child.NextSibling) {
-                if (ModulePath.IsInitPyFile(child.Url)) {
-                    if (_imageList == null) {
-#if DEV11_OR_LATER
-                        _imageList = Utilities.GetImageList(Assembly.GetExecutingAssembly().GetManifestResourceStream("Microsoft.Resources.PythonPackageIcons.png"));
-#else
-                        _imageList = Utilities.GetImageList(Assembly.GetExecutingAssembly().GetManifestResourceStream("Microsoft.Resources.PythonPackageIcons.bmp"));
-#endif
-                    }
-
-                    return open ?
-                        ((Bitmap)_imageList.Images[0]).GetHicon() :
-                        ((Bitmap)_imageList.Images[1]).GetHicon();
-                }
-            }
-
-            return base.GetIconHandle(open);
+            return base.GetIconMoniker(open);
         }
 
         internal override int ExecCommandOnNode(Guid cmdGroup, uint cmd, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {

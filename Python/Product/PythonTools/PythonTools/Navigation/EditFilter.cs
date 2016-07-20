@@ -1,21 +1,24 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Editor;
@@ -30,7 +33,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
-using Microsoft.VisualStudio.Repl;
+using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -40,13 +43,10 @@ using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
+using IServiceProvider = System.IServiceProvider;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Language {
-    using IServiceProvider = System.IServiceProvider;    
-
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
-#endif
     /// <summary>
     /// IOleCommandTarget implementation for interacting with various editor commands.  This enables
     /// wiring up most of our features to the VisualStudio editor.  We currently support:
@@ -62,28 +62,70 @@ namespace Microsoft.PythonTools.Language {
     /// to be registered in our .vsct file so that VS knows about them.
     /// </summary>
     internal sealed class EditFilter : IOleCommandTarget {
+        private readonly IVsTextView _vsTextView;
         private readonly ITextView _textView;
-        private readonly IEditorOperations _editorOps;
         private readonly IServiceProvider _serviceProvider;
         private readonly IComponentModel _componentModel;
+        private readonly IEditorOperations _editorOps;
         private readonly PythonToolsService _pyService;
-        private IOleCommandTarget _next;
+        private readonly IOleCommandTarget _next;
 
-        public EditFilter(ITextView textView, IEditorOperations editorOps, IServiceProvider serviceProvider) {
+        private EditFilter(
+            IVsTextView vsTextView,
+            ITextView textView,
+            IEditorOperations editorOps,
+            IServiceProvider serviceProvider,
+            IOleCommandTarget next
+        ) {
+            _vsTextView = vsTextView;
             _textView = textView;
-            _textView.Properties[typeof(EditFilter)] = this;
             _editorOps = editorOps;
             _serviceProvider = serviceProvider;
             _componentModel = _serviceProvider.GetComponentModel();
             _pyService = _serviceProvider.GetPythonToolsService();
+            _next = next;
 
             BraceMatcher.WatchBraceHighlights(textView, _componentModel);
-        }
 
-        internal void AttachKeyboardFilter(IVsTextView vsTextView) {
             if (_next == null) {
                 ErrorHandler.ThrowOnFailure(vsTextView.AddCommandFilter(this, out _next));
             }
+        }
+
+        public static EditFilter GetOrCreate(
+            IServiceProvider serviceProvider,
+            IComponentModel componentModel,
+            ITextView textView,
+            IOleCommandTarget next = null
+        ) {
+            var editorFactory = componentModel.GetService<IVsEditorAdaptersFactoryService>();
+            var opsFactory = componentModel.GetService<IEditorOperationsFactoryService>();
+            var vsTextView = editorFactory.GetViewAdapter(textView);
+            return textView.Properties.GetOrCreateSingletonProperty(() => new EditFilter(
+                vsTextView,
+                textView,
+                opsFactory.GetEditorOperations(textView),
+                serviceProvider,
+                next
+            ));
+        }
+
+        public static EditFilter GetOrCreate(
+            IServiceProvider serviceProvider,
+            IComponentModel componentModel,
+            IVsTextView vsTextView,
+            IOleCommandTarget next = null
+        ) {
+            var editorFactory = componentModel.GetService<IVsEditorAdaptersFactoryService>();
+            var opsFactory = componentModel.GetService<IEditorOperationsFactoryService>();
+            var textView = editorFactory.GetWpfTextView(vsTextView);
+            return textView.Properties.GetOrCreateSingletonProperty(() => new EditFilter(
+                vsTextView,
+                textView,
+                opsFactory.GetEditorOperations(textView),
+                serviceProvider,
+                next
+            ));
         }
 
         /// <summary>
@@ -94,46 +136,50 @@ namespace Microsoft.PythonTools.Language {
         /// no references displays a dialog box to the user.  Otherwise it opens the find
         /// symbols dialog with the list of results.
         /// </summary>
-        private int GotoDefinition() {
+        private async void GotoDefinition() {
             UpdateStatusForIncompleteAnalysis();
 
-            var analysis = _textView.GetExpressionAnalysis(_serviceProvider);
+            var caret = _textView.GetPythonCaret();
+            if (caret != null) {
 
-            Dictionary<LocationInfo, SimpleLocationInfo> references, definitions, values;
-            GetDefsRefsAndValues(_serviceProvider, analysis, out definitions, out references, out values);
+                var defs = await VsProjectAnalyzer.AnalyzeExpressionAsync(_serviceProvider, _textView, caret.Value);
+                if (defs == null) {
+                    return;
+                }
+                Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
+                GetDefsRefsAndValues(_textView.GetAnalyzerAtCaret(_serviceProvider), _serviceProvider, defs.Expression, defs.Variables, out definitions, out references, out values);
 
-            if ((values.Count + definitions.Count) == 1) {
-                if (values.Count != 0) {
-                    foreach (var location in values.Keys) {
-                        GotoLocation(location);
-                        break;
+                if ((values.Count + definitions.Count) == 1) {
+                    if (values.Count != 0) {
+                        foreach (var location in values.Keys) {
+                            GotoLocation(location);
+                            break;
+                        }
+                    } else {
+                        foreach (var location in definitions.Keys) {
+                            GotoLocation(location);
+                            break;
+                        }
                     }
-                } else {
-                    foreach (var location in definitions.Keys) {
-                        GotoLocation(location);
-                        break;
+                } else if (values.Count + definitions.Count == 0) {
+                    if (String.IsNullOrWhiteSpace(defs.Expression)) {
+                        MessageBox.Show(String.Format("Cannot go to definition.  The cursor is not on a symbol."), "Python Tools for Visual Studio");
+                    } else {
+                        MessageBox.Show(String.Format("Cannot go to definition \"{0}\"", defs.Expression), "Python Tools for Visual Studio");
                     }
-                }
-            } else if (values.Count + definitions.Count == 0) {
-                if (String.IsNullOrWhiteSpace(analysis.Expression)) {
-                    MessageBox.Show(String.Format("Cannot go to definition.  The cursor is not on a symbol."), "Python Tools for Visual Studio");
+                } else if (definitions.Count == 0) {
+                    ShowFindSymbolsDialog(defs.Expression, new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values));
+                } else if (values.Count == 0) {
+                    ShowFindSymbolsDialog(defs.Expression, new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values));
                 } else {
-                    MessageBox.Show(String.Format("Cannot go to definition \"{0}\"", analysis.Expression), "Python Tools for Visual Studio");
+                    ShowFindSymbolsDialog(defs.Expression,
+                        new LocationCategory("Goto Definition",
+                            new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values),
+                            new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values)
+                        )
+                    );
                 }
-            } else if (definitions.Count == 0) {
-                ShowFindSymbolsDialog(analysis, new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values));
-            } else if (values.Count == 0) {
-                ShowFindSymbolsDialog(analysis, new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values));
-            } else {
-                ShowFindSymbolsDialog(analysis,
-                    new LocationCategory("Goto Definition", 
-                        new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values),
-                        new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values)
-                    )
-                );
             }
-
-            return VSConstants.S_OK;
         }
 
         /// <summary>
@@ -142,24 +188,18 @@ namespace Microsoft.PythonTools.Language {
         /// 
         /// https://pytools.codeplex.com/workitem/1649
         /// </summary>
-        private void GotoLocation(LocationInfo location) {
+        private void GotoLocation(AnalysisLocation location) {
             Debug.Assert(location != null);
             Debug.Assert(location.Line > 0);
             Debug.Assert(location.Column > 0);
 
-            if (CommonUtils.IsSamePath(location.FilePath, _textView.GetFilePath())) {
-                var viewAdapter = GetViewAdapter();
+            if (PathUtils.IsSamePath(location.FilePath, _textView.GetFilePath())) {
+                var viewAdapter = _vsTextView;
                 viewAdapter.SetCaretPos(location.Line - 1, location.Column - 1);
                 viewAdapter.CenterLines(location.Line - 1, 1);
             } else {
                 location.GotoSource(_serviceProvider);
             }
-        }
-
-        private IVsTextView GetViewAdapter() {
-            var adapterFactory = _componentModel.GetService<IVsEditorAdaptersFactoryService>();
-            var viewAdapter = adapterFactory.GetViewAdapter(_textView);
-            return viewAdapter;
         }
 
         /// <summary>
@@ -168,21 +208,25 @@ namespace Microsoft.PythonTools.Language {
         /// 
         /// Always opens the Find Symbol Results box to display the results.
         /// </summary>
-        private int FindAllReferences() {
+        private async void FindAllReferences() {
             UpdateStatusForIncompleteAnalysis();
 
-            var analysis = _textView.GetExpressionAnalysis(_serviceProvider);
+            var caret = _textView.GetPythonCaret();
+            if (caret != null) {
+                var references = await VsProjectAnalyzer.AnalyzeExpressionAsync(_serviceProvider, _textView, caret.Value);
+                if (references == null) {
+                    return;
+                }
 
-            var locations = GetFindRefLocations(_serviceProvider, analysis);
+                var locations = GetFindRefLocations(_textView.GetAnalyzerAtCaret(_serviceProvider), _serviceProvider, references.Expression, references.Variables);
 
-            ShowFindSymbolsDialog(analysis, locations);
-
-            return VSConstants.S_OK;
+                ShowFindSymbolsDialog(references.Expression, locations);
+            }
         }
 
-        internal static LocationCategory GetFindRefLocations(IServiceProvider serviceProvider, ExpressionAnalysis analysis) {
-            Dictionary<LocationInfo, SimpleLocationInfo> references, definitions, values;
-            GetDefsRefsAndValues(serviceProvider, analysis, out definitions, out references, out values);
+        internal static LocationCategory GetFindRefLocations(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, AnalysisVariable[] analysis) {
+            Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
+            GetDefsRefsAndValues(analyzer, serviceProvider, expr, analysis, out definitions, out references, out values);
 
             var locations = new LocationCategory("Find All References",
                     new SymbolList("Definitions", StandardGlyphGroup.GlyphLibrary, definitions.Values),
@@ -192,12 +236,12 @@ namespace Microsoft.PythonTools.Language {
             return locations;
         }
 
-        private static void GetDefsRefsAndValues(IServiceProvider serviceProvider, ExpressionAnalysis provider, out Dictionary<LocationInfo, SimpleLocationInfo> definitions, out Dictionary<LocationInfo, SimpleLocationInfo> references, out Dictionary<LocationInfo, SimpleLocationInfo> values) {
-            references = new Dictionary<LocationInfo, SimpleLocationInfo>();
-            definitions = new Dictionary<LocationInfo, SimpleLocationInfo>();
-            values = new Dictionary<LocationInfo,SimpleLocationInfo>();
+        private static void GetDefsRefsAndValues(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, AnalysisVariable[] variables, out Dictionary<AnalysisLocation, SimpleLocationInfo> definitions, out Dictionary<AnalysisLocation, SimpleLocationInfo> references, out Dictionary<AnalysisLocation, SimpleLocationInfo> values) {
+            references = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
+            definitions = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
+            values = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
 
-            foreach (var v in provider.Variables) {
+            foreach (var v in variables) {
                 if (v.Location.FilePath == null) {
                     // ignore references in the REPL
                     continue;
@@ -206,14 +250,14 @@ namespace Microsoft.PythonTools.Language {
                 switch (v.Type) {
                     case VariableType.Definition:
                         values.Remove(v.Location);
-                        definitions[v.Location] = new SimpleLocationInfo(serviceProvider, provider.Expression, v.Location, StandardGlyphGroup.GlyphGroupField);
+                        definitions[v.Location] = new SimpleLocationInfo(analyzer, serviceProvider, expr, v.Location, StandardGlyphGroup.GlyphGroupField);
                         break;
                     case VariableType.Reference:
-                        references[v.Location] = new SimpleLocationInfo(serviceProvider, provider.Expression, v.Location, StandardGlyphGroup.GlyphGroupField);
+                        references[v.Location] = new SimpleLocationInfo(analyzer, serviceProvider, expr, v.Location, StandardGlyphGroup.GlyphGroupField);
                         break;
                     case VariableType.Value:
                         if (!definitions.ContainsKey(v.Location)) {
-                            values[v.Location] = new SimpleLocationInfo(serviceProvider, provider.Expression, v.Location, StandardGlyphGroup.GlyphGroupField);
+                            values[v.Location] = new SimpleLocationInfo(analyzer, serviceProvider, expr, v.Location, StandardGlyphGroup.GlyphGroupField);
                         }
                         break;
                 }
@@ -226,17 +270,17 @@ namespace Microsoft.PythonTools.Language {
         /// that request by extracting the prvoided symbol list out and using that for the
         /// search results.
         /// </summary>
-        private void ShowFindSymbolsDialog(ExpressionAnalysis provider, IVsNavInfo symbols) {
+        private void ShowFindSymbolsDialog(string expr, IVsNavInfo symbols) {
             // ensure our library is loaded so find all references will go to our library
             _serviceProvider.GetService(typeof(IPythonLibraryManager));
 
-            if (!string.IsNullOrEmpty(provider.Expression)) {
+            if (!string.IsNullOrEmpty(expr)) {
                 var findSym = (IVsFindSymbol)_serviceProvider.GetService(typeof(SVsObjectSearch));
                 VSOBSEARCHCRITERIA2 searchCriteria = new VSOBSEARCHCRITERIA2();
                 searchCriteria.eSrchType = VSOBSEARCHTYPE.SO_ENTIREWORD;
                 searchCriteria.pIVsNavInfo = symbols;
                 searchCriteria.grfOptions = (uint)_VSOBSEARCHOPTIONS2.VSOBSO_LISTREFERENCES;
-                searchCriteria.szName = provider.Expression;
+                searchCriteria.szName = expr;
 
                 Guid guid = Guid.Empty;
                 //  new Guid("{a5a527ea-cf0a-4abf-b501-eafe6b3ba5c6}")
@@ -298,17 +342,22 @@ namespace Microsoft.PythonTools.Language {
         }
 
         internal class SimpleLocationInfo : SimpleObject, IVsNavInfoNode {
-            private readonly LocationInfo _locationInfo;
+            private readonly AnalysisLocation _locationInfo;
             private readonly StandardGlyphGroup _glyphType;
             private readonly string _pathText, _lineText;
             private readonly IServiceProvider _serviceProvider;
 
-            public SimpleLocationInfo(IServiceProvider serviceProvider, string searchText, LocationInfo locInfo, StandardGlyphGroup glyphType) {
+            public SimpleLocationInfo(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string searchText, AnalysisLocation locInfo, StandardGlyphGroup glyphType) {
                 _serviceProvider = serviceProvider;
                 _locationInfo = locInfo;
                 _glyphType = glyphType;
                 _pathText = GetSearchDisplayText();
-                _lineText = _locationInfo.ProjectEntry.GetLine(_locationInfo.Line);
+                AnalysisEntry entry = analyzer.GetAnalysisEntryFromPath(_locationInfo.FilePath);
+                if (entry != null) {
+                    _lineText = entry.GetLine(_locationInfo.Line);
+                } else {
+                    _lineText = "";
+                }
             }
 
             public override string Name {
@@ -384,7 +433,9 @@ namespace Microsoft.PythonTools.Language {
             internal SymbolList(string description, StandardGlyphGroup glyphGroup, IEnumerable<SimpleLocationInfo> locations) {
                 _name = description;
                 _glyphGroup = glyphGroup;
-                Children.AddRange(locations);
+                foreach (var location in locations) {
+                    Children.Add(location);
+                }
             }
 
             public override uint CategoryField(LIB_CATEGORY lIB_CATEGORY) {
@@ -526,10 +577,10 @@ namespace Microsoft.PythonTools.Language {
         }
 
         class NodeEnumerator<T> : IVsEnumNavInfoNodes where T : IVsNavInfoNode {
-            private readonly List<T> _locations;
+            private readonly IList<T> _locations;
             private IEnumerator<T> _locationEnum;
 
-            public NodeEnumerator(List<T> locations) {
+            public NodeEnumerator(IList<T> locations) {
                 _locations = locations;
                 Reset();
             }
@@ -566,7 +617,7 @@ namespace Microsoft.PythonTools.Language {
 
         private void UpdateStatusForIncompleteAnalysis() {
             var statusBar = (IVsStatusbar)_serviceProvider.GetService(typeof(SVsStatusbar));
-            var analyzer = _textView.GetAnalyzer(_serviceProvider);
+            var analyzer = _textView.GetAnalyzerAtCaret(_serviceProvider);
             if (analyzer != null && analyzer.IsAnalyzing) {
                 statusBar.SetText("Python source analysis is not up to date");
             }
@@ -582,38 +633,44 @@ namespace Microsoft.PythonTools.Language {
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
                 switch ((VSConstants.VSStd97CmdID)nCmdID) {
                     case VSConstants.VSStd97CmdID.Paste:
-                        PythonReplEvaluator eval;
-                        if (_textView.Properties.TryGetProperty(typeof(PythonReplEvaluator), out eval)) {
-                            string pasting = eval.FormatClipboard() ?? Clipboard.GetText();
-                            if (pasting != null) {
-                                PasteReplCode(eval, pasting);
-                                
-                                return VSConstants.S_OK;
-                            }
-                        } else {
-                            string updated = RemoveReplPrompts(_pyService, _textView.Options.GetNewLineCharacter());
-                            if (updated != null) {
-                                _editorOps.ReplaceSelection(updated);
-                                return VSConstants.S_OK;
-                            }
+                        if (Clipboard.ContainsData("VisualStudioEditorOperationsLineCutCopyClipboardTag")) {
+                            // Copying a full line, so we won't strip prompts.
+                            // Deferring to VS paste also inserts the entire
+                            // line rather than breaking up the current one.
+                            break;
+                        }
+                        string updated = RemoveReplPrompts(_pyService, Clipboard.GetText(), _textView.Options.GetNewLineCharacter());
+                        if (updated != null) {
+                            _editorOps.ReplaceSelection(updated);
+                            return VSConstants.S_OK;
                         }
                         break;
-                    case VSConstants.VSStd97CmdID.GotoDefn: return GotoDefinition();
-                    case VSConstants.VSStd97CmdID.FindReferences: return FindAllReferences();
+                    case VSConstants.VSStd97CmdID.GotoDefn: GotoDefinition(); return VSConstants.S_OK;
+                    case VSConstants.VSStd97CmdID.FindReferences: FindAllReferences(); return VSConstants.S_OK;
                 }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
                 OutliningTaggerProvider.OutliningTagger tagger;
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
-                    case (VSConstants.VSStd2KCmdID)147: // ECMD_SMARTTASKS  defined in stdidcmd.h, but not in MPF
-                        // if the user is typing to fast for us to update the smart tags on the idle event
-                        // then we want to update them before VS pops them up.
-                        UpdateSmartTags();
-                        break;
                     case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
-                        FormatCode(new SnapshotSpan(_textView.TextBuffer.CurrentSnapshot, 0, _textView.TextBuffer.CurrentSnapshot.Length), false);
+                        var pyPoint = _textView.BufferGraph.MapDownToFirstMatch(
+                            _textView.Caret.Position.BufferPosition,
+                            PointTrackingMode.Positive,
+                            EditorExtensions.IsPythonContent,
+                            PositionAffinity.Successor
+                        );
+
+                        if (pyPoint != null) {
+                            FormatCode(new SnapshotSpan(pyPoint.Value.Snapshot, 0, pyPoint.Value.Snapshot.Length), false);
+                        }
                         return VSConstants.S_OK;
                     case VSConstants.VSStd2KCmdID.FORMATSELECTION:
-                        FormatCode(_textView.Selection.StreamSelectionSpan.SnapshotSpan, true);
+                        foreach (var span in _textView.BufferGraph.MapDownToFirstMatch(
+                            _textView.Selection.StreamSelectionSpan.SnapshotSpan,
+                            SpanTrackingMode.EdgeInclusive,
+                            EditorExtensions.IsPythonContent
+                        )) {
+                            FormatCode(span, true);
+                        }
                         return VSConstants.S_OK;
                     case VSConstants.VSStd2KCmdID.SHOWMEMBERLIST:
                     case VSConstants.VSStd2KCmdID.COMPLETEWORD:
@@ -621,7 +678,10 @@ namespace Microsoft.PythonTools.Language {
                         if (controller != null) {
                             IntellisenseController.ForceCompletions = true;
                             try {
-                                controller.TriggerCompletionSession((VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.COMPLETEWORD);
+                                controller.TriggerCompletionSession(
+                                    (VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.COMPLETEWORD,
+                                    true
+                                );
                             } finally {
                                 IntellisenseController.ForceCompletions = false;
                             }
@@ -644,7 +704,6 @@ namespace Microsoft.PythonTools.Language {
                             return VSConstants.S_OK;
                         }
                         break;
-
                     case VSConstants.VSStd2KCmdID.OUTLN_STOP_HIDING_ALL:
                         tagger = _textView.GetOutliningTagger();
                         if (tagger != null) {
@@ -660,7 +719,6 @@ namespace Microsoft.PythonTools.Language {
                         }
                         // let VS get the event as well
                         break;
-
                     case VSConstants.VSStd2KCmdID.COMMENT_BLOCK:
                     case VSConstants.VSStd2KCmdID.COMMENTBLOCK:
                         if (_textView.CommentOrUncommentBlock(comment: true)) {
@@ -689,16 +747,6 @@ namespace Microsoft.PythonTools.Language {
                     case PkgCmdIDList.cmdidExtractMethodIntegratedShell:
                         ExtractMethod();
                         return VSConstants.S_OK;
-                    default:
-                        lock (PythonToolsPackage.CommandsLock) {
-                            foreach (var command in PythonToolsPackage.Commands.Keys) {
-                                if (command.CommandId == nCmdID) {
-                                    command.DoCommand(this, EventArgs.Empty);
-                                    return VSConstants.S_OK;
-                                }
-                            }
-                        }
-                        break;
                 }
 
             }
@@ -706,18 +754,23 @@ namespace Microsoft.PythonTools.Language {
             return _next.Exec(pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         }
 
-        private bool ExtractMethod() {
-            return new MethodExtractor(_serviceProvider, _textView).ExtractMethod(new ExtractMethodUserInput(_serviceProvider));
+
+        private void ExtractMethod() {
+            new MethodExtractor(_serviceProvider, _textView).ExtractMethod(new ExtractMethodUserInput(_serviceProvider)).DoNotWait();
         }
 
-        private void FormatCode(SnapshotSpan span, bool selectResult) {
-            var options = _pyService.GetCodeFormattingOptions();
-            options.NewLineFormat = _textView.Options.GetNewLineCharacter();
-            new CodeFormatter(_serviceProvider, _textView, options).FormatCode(span, selectResult);
+        private async void FormatCode(SnapshotSpan span, bool selectResult) {
+            var analysis = _textView.GetAnalysisEntry(span.Snapshot.TextBuffer, _serviceProvider);
+            if (analysis != null) {
+                var options = _pyService.GetCodeFormattingOptions();
+                options.NewLineFormat = _textView.Options.GetNewLineCharacter();
+
+                await analysis.Analyzer.FormatCodeAsync(span, _textView, options, selectResult);
+            }
         }
 
         internal void RefactorRename() {
-            var analyzer = _textView.GetAnalyzer(_serviceProvider);
+            var analyzer = _textView.GetAnalyzerAtCaret(_serviceProvider);
             if (analyzer.IsAnalyzing) {
                 var dialog = new WaitForCompleteAnalysisDialog(analyzer);
 
@@ -731,104 +784,11 @@ namespace Microsoft.PythonTools.Language {
             new VariableRenamer(_textView, _serviceProvider).RenameVariable(
                 new RenameVariableUserInput(_serviceProvider),
                 (IVsPreviewChangesService)_serviceProvider.GetService(typeof(SVsPreviewChangesService))
-            );
-        }
-
-        private static void PasteReplCode(PythonReplEvaluator eval, string pasting) {
-            // there's some text in the buffer...
-            var view = eval.Window.TextView;
-            var caret = view.Caret;
-
-            if (view.Selection.IsActive && !view.Selection.IsEmpty) {
-                foreach (var span in view.Selection.SelectedSpans) {
-                    foreach (var normalizedSpan in view.BufferGraph.MapDownToBuffer(span, SpanTrackingMode.EdgeInclusive, eval.Window.CurrentLanguageBuffer)) {
-                        normalizedSpan.Snapshot.TextBuffer.Delete(normalizedSpan);
-                    }
-                }
-            }
-
-            var curBuffer = eval.Window.CurrentLanguageBuffer;
-            var inputPoint = view.BufferGraph.MapDownToBuffer(
-                caret.Position.BufferPosition,
-                PointTrackingMode.Positive,
-                curBuffer,
-                PositionAffinity.Successor
-            );
-
-
-            // if we didn't find a location then see if we're in a prompt, and if so, then we want
-            // to insert after the prompt.
-            if (caret.Position.BufferPosition != eval.Window.TextView.TextBuffer.CurrentSnapshot.Length) {
-                for (int i = caret.Position.BufferPosition + 1;
-                    inputPoint == null && i <= eval.Window.TextView.TextBuffer.CurrentSnapshot.Length;
-                    i++) {
-                    inputPoint = view.BufferGraph.MapDownToBuffer(
-                        new SnapshotPoint(eval.Window.TextView.TextBuffer.CurrentSnapshot, i),
-                        PointTrackingMode.Positive,
-                        curBuffer,
-                        PositionAffinity.Successor
-                    );
-                }
-            }
-
-            if (inputPoint == null) {
-                // we didn't find a point to insert, insert at the beginning.
-                inputPoint = new SnapshotPoint(curBuffer.CurrentSnapshot, 0);
-            }
-            
-            // we want to insert the pasted code at the caret, but we also want to
-            // respect the stepping.  So first grab the code before and after the caret.
-            string startText = curBuffer.CurrentSnapshot.GetText(0, inputPoint.Value);
-
-            string endText = curBuffer.CurrentSnapshot.GetText(
-                inputPoint.Value,
-                curBuffer.CurrentSnapshot.Length - inputPoint.Value);
-
-
-            var splitCode = eval.JoinCode(eval.SplitCode(startText + pasting + endText)).ToList();
-            curBuffer.Delete(new Span(0, curBuffer.CurrentSnapshot.Length));
-
-            if (splitCode.Count == 1) {
-                curBuffer.Insert(0, splitCode[0]);
-                var viewPoint = view.BufferGraph.MapUpToBuffer(
-                    new SnapshotPoint(curBuffer.CurrentSnapshot, Math.Min(inputPoint.Value.Position + pasting.Length, curBuffer.CurrentSnapshot.Length)),
-                    PointTrackingMode.Positive,
-                    PositionAffinity.Successor,
-                    view.TextBuffer
-                );
-
-                if (viewPoint != null) {
-                    view.Caret.MoveTo(viewPoint.Value);
-                }
-            } else if (splitCode.Count != 0) {
-                var lastCode = splitCode[splitCode.Count - 1];
-                splitCode.RemoveAt(splitCode.Count - 1);
-
-                eval.Window.ReadyForInput += new PendLastSplitCode(eval.Window, lastCode).AppendCode;
-                eval.Window.Submit(splitCode);
-            } else {
-                eval.Window.CurrentLanguageBuffer.Insert(0, startText + pasting + endText);
-            }
-        }
-
-        class PendLastSplitCode {
-            public readonly IReplWindow Window;
-            public readonly string Text;
-
-            public PendLastSplitCode(IReplWindow window, string text) {
-                Window = window;
-                Text = text;
-            }
-
-            public void AppendCode() {
-                if (((PythonReplEvaluator)Window.Evaluator)._lastExecutionResult.Result.IsSuccessful) {
-                    Window.CurrentLanguageBuffer.Insert(0, Text);
-                }
-                Window.ReadyForInput -= AppendCode;
-            }
+            ).DoNotWait();
         }
 
         private const uint CommandDisabledAndHidden = (uint)(OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU);
+
         /// <summary>
         /// Called from VS to see what commands we support.  
         /// </summary>
@@ -851,11 +811,6 @@ namespace Microsoft.PythonTools.Language {
                             // C# provides the refactor context menu for the main VS command outside
                             // of the integrated shell.  In the integrated shell we provide our own
                             // command for it so these still show up.
-#if DEV10
-                            if (!IsCSharpInstalled()) {
-                                QueryStatusRename(prgCmds, i);
-                            } else 
-#endif
                             {
                                 prgCmds[i].cmdf = CommandDisabledAndHidden;
                             }
@@ -864,11 +819,6 @@ namespace Microsoft.PythonTools.Language {
                             // C# provides the refactor context menu for the main VS command outside
                             // of the integrated shell.  In the integrated shell we provide our own
                             // command for it so these still show up.
-#if DEV10
-                            if (!IsCSharpInstalled()) {
-                                QueryStatusExtractMethod(prgCmds, i);
-                            } else 
-#endif
                             {
                                 prgCmds[i].cmdf = CommandDisabledAndHidden;
                             }
@@ -930,87 +880,75 @@ namespace Microsoft.PythonTools.Language {
                     }
                 }
             }
+
+
             return _next.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
 
-#if DEV10
-        private bool IsCSharpInstalled() {
-            IVsShell shell = (IVsShell)_serviceProvider.GetService(typeof(IVsShell));
-            Guid csharpPacakge = GuidList.guidCSharpProjectPacakge;
-            int installed;
-            ErrorHandler.ThrowOnFailure(
-                shell.IsPackageInstalled(ref csharpPacakge, out installed)
-            );
-            return installed != 0;
-        }
-#endif
-
         private void QueryStatusExtractMethod(OLECMD[] prgCmds, int i) {
-            var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
-
-            if (_textView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
-                if (_textView.Selection.IsEmpty || 
-                    _textView.Selection.Mode == TextSelectionMode.Box ||
-                    String.IsNullOrWhiteSpace(_textView.Selection.StreamSelectionSpan.GetText())) {
-                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
-                } else {
+            switch (MethodExtractor.CanExtract(_textView)) {
+                case true:
                     prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
-                }
-            } else {
-                prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
+                    break;
+                case false:
+                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_SUPPORTED);
+                    break;
+                case null:
+                    prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
+                    break;
             }
         }
 
         private void QueryStatusRename(OLECMD[] prgCmds, int i) {
-            IWpfTextView activeView = CommonPackage.GetActiveTextView(_serviceProvider);
-            if (_textView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {
+            var analyzer = _textView.GetAnalyzerAtCaret(_serviceProvider);
+            if (analyzer != null && _textView.GetPythonBufferAtCaret() != null) {
                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
             } else {
                 prgCmds[i].cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
             }
         }
 
-        #endregion
+#endregion
 
-        internal static string RemoveReplPrompts(PythonToolsService pyService, string newline) {
-            if (pyService.AdvancedOptions.PasteRemovesReplPrompts) {
-                string text = Clipboard.GetText();
-                if (text != null) {
-                    string[] lines = text.Replace("\r\n", "\n").Split('\n');
+        internal static string RemoveReplPrompts(
+            PythonToolsService pyService,
+            string text,
+            string newline
+        ) {
+            if (string.IsNullOrEmpty(text)) {
+                return text;
+            }
 
-                    bool allPrompts = true;
-                    foreach (var line in lines) {
-                        if (!(line.StartsWith("... ") || line.StartsWith(">>> "))) {
-                            if (!String.IsNullOrWhiteSpace(line)) {
-                                allPrompts = false;
-                                break;
-                            }
-                        }
-                    }
+            if (!pyService.AdvancedOptions.PasteRemovesReplPrompts) {
+                return null;
+            }
 
-                    if (allPrompts) {
-                        for (int i = 0; i < lines.Length; i++) {
-                            if (!String.IsNullOrWhiteSpace(lines[i])) {
-                                lines[i] = lines[i].Substring(4);
-                            }
-                        }
+            string[] lines = text.Replace("\r\n", "\n").Split('\n');
 
-                        return String.Join(newline, lines);
+            bool allPrompts = true;
+            foreach (var line in lines) {
+                if (!(line.StartsWith("... ") || line.StartsWith(">>> "))) {
+                    if (!string.IsNullOrWhiteSpace(line)) {
+                        allPrompts = false;
+                        break;
                     }
                 }
             }
-            return null;
+
+            if (!allPrompts) {
+                return text;
+            }
+
+            for (int i = 0; i < lines.Length; i++) {
+                if (!string.IsNullOrWhiteSpace(lines[i])) {
+                    lines[i] = lines[i].Substring(4);
+                }
+            }
+
+            return string.Join(newline, lines);
         }
 
         internal void DoIdle(IOleComponentManager compMgr) {
-            UpdateSmartTags();
-        }
-
-        private void UpdateSmartTags() {
-            SmartTagController controller;
-            if (_textView.Properties.TryGetProperty<SmartTagController>(typeof(SmartTagController), out controller)) {
-                controller.ShowSmartTag();
-            }
         }
     }
 }

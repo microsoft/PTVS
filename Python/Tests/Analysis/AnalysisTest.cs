@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -21,7 +23,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using IronPython.Runtime;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
@@ -620,7 +621,7 @@ x = a()
             var func = entry.GetValuesByIndex("a", 0).OfType<FunctionInfo>().FirstOrDefault();
             Assert.IsNotNull(func);
             var sb = new StringBuilder();
-            func.AddReturnTypeString(sb);
+            FunctionInfo.AddReturnTypeString((text, type) => sb.Append(text), func.GetReturnValue);
             Assert.AreEqual(" -> tuple", sb.ToString());
         }
 
@@ -733,11 +734,120 @@ class D(object):
                 Prepare(mod2, GetSourceUnit(text2, "mod1"));
                 mod2.Analyze(CancellationToken.None);
 
-                VerifyReferences(UniqifyVariables(mod1.Analysis.GetVariablesByIndex("SomeMethod", text1.IndexOf("SomeMethod"))),
-                    new VariableLocation(6, 9, VariableType.Definition), new VariableLocation(6, 20, VariableType.Reference));
+                var vars = mod1.Analysis.GetVariablesByIndex("SomeMethod", text1.IndexOf("SomeMethod"));
+                VerifyReferences(
+                    UniqifyVariables(vars),
+                    new VariableLocation(6, 9, VariableType.Definition), 
+                    new VariableLocation(6, 20, VariableType.Reference)
+                );
             }
 
         }
+
+        [TestMethod, Priority(0)]
+        public void MutatingCalls() {
+            using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
+
+                var text1 = @"
+def f(abc):
+    return abc
+";
+
+                var text2 = @"
+import mod1
+z = mod1.f(42)
+";
+
+                var mod1 = state.AddModule("mod1", "mod1", null);
+                Prepare(mod1, GetSourceUnit(text1, "mod1"));
+                var mod2 = state.AddModule("mod2", "mod2", null);
+                Prepare(mod2, GetSourceUnit(text2, "mod2"));
+
+                mod1.Analyze(CancellationToken.None);
+                mod2.Analyze(CancellationToken.None);
+
+                AssertUtil.ContainsExactly(
+                    mod2.Analysis.GetDescriptionsByIndex("z", text2.IndexOf("z = ")), 
+                    "int"
+                );
+                AssertUtil.ContainsExactly(
+                    mod1.Analysis.GetDescriptionsByIndex("abc", text1.IndexOf("return abc")),
+                    "int"
+                );
+                // change caller in text2
+                text2 = @"
+import mod1
+z = mod1.f('abc')
+";
+                Prepare(mod2, GetSourceUnit(text2, "mod2"));
+                mod2.Analyze(CancellationToken.None);
+
+                AssertUtil.ContainsExactly(
+                    mod2.Analysis.GetDescriptionsByIndex("z", text2.IndexOf("z = ")),
+                    "str"
+                );
+                AssertUtil.ContainsExactly(
+                    mod1.Analysis.GetDescriptionsByIndex("abc", text1.IndexOf("return abc")),
+                    "str"
+                );
+
+            }
+        }
+
+        /* Doesn't pass, we don't have a way to clear the assignments across modules...
+        [TestMethod, Priority(0)]
+        public void MutatingVariables() {
+            using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
+
+                var text1 = @"
+print(x)
+";
+
+                var text2 = @"
+import mod1
+mod1.x = x
+";
+
+
+                var text3 = @"
+import mod2
+mod2.x = 42
+";
+                var mod1 = state.AddModule("mod1", "mod1", null);
+                Prepare(mod1, GetSourceUnit(text1, "mod1"));
+                var mod2 = state.AddModule("mod2", "mod2", null);
+                Prepare(mod2, GetSourceUnit(text2, "mod2"));
+                var mod3 = state.AddModule("mod3", "mod3", null);
+                Prepare(mod3, GetSourceUnit(text3, "mod3"));
+
+                mod3.Analyze(CancellationToken.None);
+                mod2.Analyze(CancellationToken.None);
+                mod1.Analyze(CancellationToken.None);
+
+                state.AnalyzeQueuedEntries(CancellationToken.None);
+
+                AssertUtil.ContainsExactly(
+                    mod1.Analysis.GetDescriptionsByIndex("x", text1.IndexOf("x")),
+                    "int"
+                );
+                
+                text3 = @"
+import mod2
+mod2.x = 'abc'
+";
+
+                Prepare(mod3, GetSourceUnit(text3, "mod3"));
+                mod3.Analyze(CancellationToken.None);
+                state.AnalyzeQueuedEntries(CancellationToken.None);
+                state.AnalyzeQueuedEntries(CancellationToken.None);
+
+                AssertUtil.ContainsExactly(
+                    mod1.Analysis.GetDescriptionsByIndex("x", text1.IndexOf("x")),
+                    "str"
+                );
+            }
+        }
+        */
 
         [TestMethod, Priority(0)]
         public void PrivateMembers() {
@@ -1022,7 +1132,7 @@ c = _next(iC)
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", 1), BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("c", 1), BuiltinTypeId.Int, BuiltinTypeId_Str, BuiltinTypeId.Float);
 
-            if (!(this is IronPythonAnalysisTest)) {
+            if (SupportsPython3) {
                 entry = ProcessText(@"
 A = [1, 2, 3]
 B = 'abc'
@@ -1054,7 +1164,7 @@ c = next(iC)
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("b", 1), BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("c", 1), BuiltinTypeId.Int);
 
-            if (!(this is IronPythonAnalysisTest)) {
+            if (SupportsPython3) {
                 entry = ProcessText(@"
 iA = iter(lambda: 1, 2)
 iB = iter(lambda: 'abc', None)
@@ -1132,8 +1242,7 @@ d = a.__next__()";
 
         [TestMethod, Priority(0)]
         public void Generator3x() {
-            if (this is IronPythonAnalysisTest) {
-                // IronPython does not yet support __next__() method
+            if (!SupportsPython3) {
                 return;
             }
 
@@ -1198,7 +1307,7 @@ d = a.next()";
 
         [TestMethod, Priority(0)]
         public void GeneratorDelegation() {
-            if (this is IronPythonAnalysisTest) {
+            if (!SupportsPython3) {
                 // IronPython does not yet support yield from.
                 return;
             }
@@ -1462,6 +1571,24 @@ for some_str, some_int, some_bool in x:
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("some_str", 1), BuiltinTypeId_Str);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("some_int", 1), BuiltinTypeId.Int);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("some_bool", 1), BuiltinTypeId.Bool);
+        }
+
+        [TestMethod, Priority(0)]
+        public void ForIterator() {
+            var code = @"
+class X(object):
+    def __iter__(self): return self
+    def __next__(self): return 123
+
+class Y(object):
+    def __iter__(self): return X()
+
+for i in Y():
+    pass
+";
+            var entry = ProcessText(code, PythonLanguageVersion.V34);
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("i", code.IndexOf("pass")), BuiltinTypeId.Int);
         }
 
         [TestMethod, Priority(0)]
@@ -2110,6 +2237,25 @@ b = {1}{1}C()
         }
 
         [TestMethod, Priority(0)]
+        public void TrueDividePython3x() {
+            var text = @"
+class C:
+    def __truediv__(self, other):
+        return 42
+    def __rtruediv__(self, other):
+        return 3.0
+
+a = C()
+b = a / 'abc'
+c = 'abc' / a
+";
+
+            var entry = ProcessText(text, PythonLanguageVersion.V35);
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("b", text.IndexOf("b =")), "int");
+            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("c", text.IndexOf("c =")), "float");
+        }
+
+        [TestMethod, Priority(0)]
         public void BinaryOperators() {
             var operators = new[] {
                 new { Method = "add", Operator = "+", Version = PythonLanguageVersion.V27 },
@@ -2159,7 +2305,8 @@ m {1}= m
 
             foreach (var test in operators) {
                 Console.WriteLine(test.Operator);
-                var entry = ProcessText(String.Format(text, test.Method, test.Operator), test.Version);
+                var code = String.Format(text, test.Method, test.Operator);
+                var entry = ProcessText(code, test.Version);
 
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("a", text.IndexOf("a =")), "ForwardResult instance");
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("b", text.IndexOf("b =")), "ReverseResult instance");
@@ -2174,7 +2321,7 @@ m {1}= m
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("k", text.IndexOf("k =")), "ForwardResult instance");
                 AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("l", text.IndexOf("l =")), "ReverseResult instance");
                 // We assume that augmented assignments keep their type
-                AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("m", text.IndexOf("m " + test.Operator)), "C instance");
+                AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("m", code.IndexOf("m " + test.Operator)), "C instance");
             }
         }
 
@@ -2542,9 +2689,6 @@ def f(abc):
                 new VariableLocation(19, 21, VariableType.Definition),
                 new VariableLocation(20, 28, VariableType.Definition),
 
-                new VariableLocation(19, 21, VariableType.Reference),
-                new VariableLocation(20, 28, VariableType.Reference),
-
                 new VariableLocation(22, 8, VariableType.Reference),
                 new VariableLocation(23, 10, VariableType.Reference),
                 new VariableLocation(24, 11, VariableType.Reference),
@@ -2691,8 +2835,8 @@ def f(a):
                     for (int i = 0; i < vars.Count; i++) {
                         var have = vars[i];
 
-                        if (have.Location.Line == expected.StartLine &&
-                            have.Location.Column == expected.StartCol &&
+                        if (have.Location.StartLine == expected.StartLine &&
+                            have.Location.StartColumn == expected.StartCol &&
                             have.Type == expected.Type &&
                             (expected.FilePath == null || have.Location.FilePath == expected.FilePath)) {
                             vars.RemoveAt(i);
@@ -2806,9 +2950,9 @@ from baz import abc2 as abc";
             bool careAboutNames = (vars.Select(v => v.Location.FilePath).Distinct().Count() > 1);
             foreach (var var in vars) { //.OrderBy(v => v.Location.Line).ThenBy(v => v.Location.Column)) {
                 if (careAboutNames) {
-                    error.AppendFormat("   new VariableLocation({0}, {1}, VariableType.{2}, \"{3}\"),", var.Location.Line, var.Location.Column, var.Type, var.Location.FilePath);
+                    error.AppendFormat("   new VariableLocation({0}, {1}, VariableType.{2}, \"{3}\"),", var.Location.StartLine, var.Location.StartColumn, var.Type, var.Location.FilePath);
                 } else {
-                    error.AppendFormat("   new VariableLocation({0}, {1}, VariableType.{2}),", var.Location.Line, var.Location.Column, var.Type);
+                    error.AppendFormat("   new VariableLocation({0}, {1}, VariableType.{2}),", var.Location.StartLine, var.Location.StartColumn, var.Type);
                 }
                 error.AppendLine();
             }
@@ -3289,8 +3433,7 @@ class cls(cls):
             AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("cls().abc", 1), _intMembers);
             AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("cls.abc", 1), _intMembers);
             var sigs = entry.GetSignaturesByIndex("cls", 1).ToArray();
-            Assert.AreEqual(2, sigs.Length);    // 1 for object, one for cls
-            Assert.AreEqual(null, sigs.First().Documentation);
+            AssertUtil.ContainsExactly(sigs.Select(s => s.Documentation), null, "The most base type");
         }
 
         [TestMethod, Priority(0)]
@@ -3604,19 +3747,28 @@ if not Method(42, 'abc', []):
         [TestMethod, Priority(0)]
         public void WithStatement() {
             var text = @"
-class x(object):
-    def x_method(self):
-        pass
-        
-with x() as fob:
-    print fob
+class X(object):
+    def x_method(self): pass
+    def __enter__(self): return self
+    def __exit__(self, exc_type, exc_value, traceback): return False
+       
+class Y(object):
+    def y_method(self): pass
+    def __enter__(self): return 123
+    def __exit__(self, exc_type, exc_value, traceback): return False
+ 
+with X() as x:
+    pass #x
+
+with Y() as y:
+    pass #y
     
-with x():
+with X():
     pass
 ";
             var entry = ProcessText(text);
-            var fob = entry.GetMemberNamesByIndex("fob", text.IndexOf("print fob"));
-            AssertUtil.ContainsExactly(fob, GetUnion(_objectMembers, "x_method"));
+            AssertUtil.ContainsAtLeast(entry.GetMemberNamesByIndex("x", text.IndexOf("pass #x")), "x_method");
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", text.IndexOf("pass #y")), BuiltinTypeId.Int);
         }
 
         [TestMethod, Priority(0)]
@@ -3703,6 +3855,10 @@ f('a', 'b', 1)
         }
 
 
+        protected virtual string ListInitParameterName {
+            get { return "sequence"; }
+        }
+
         /// <summary>
         /// http://pytools.codeplex.com/workitem/799
         /// </summary>
@@ -3714,10 +3870,7 @@ class oar(list):
 ";
             var entry = ProcessText(text);
             var init = entry.GetOverrideableByIndex(text.IndexOf("pass")).Single(r => r.Name == "__init__");
-            AssertUtil.AreEqual(
-                init.Parameters.Select(GetSafeParameterName), 
-                "self", this is IronPythonAnalysisTest ? "enumerable" : "sequence"
-            );
+            AssertUtil.AreEqual(init.Parameters.Select(GetSafeParameterName), "self", ListInitParameterName);
 
             // Ensure that nested classes are correctly resolved.
             text = @"
@@ -3736,6 +3889,141 @@ class oar(int):
             AssertUtil.DoesntContain(fobItems, "bit_length");
         }
 
+        /// <summary>
+        /// https://github.com/Microsoft/PTVS/issues/995
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void DictCtor() {
+            var text = @"
+d1 = dict({2:3})
+x1 = d1[2]
+
+d2 = dict(x = 2)
+x2 = d2['x']
+
+d3 = dict(**{2:3})
+x3 = d3[2]
+
+pass
+";
+            var entry = ProcessText(text);
+            var items = entry.GetMemberNamesByIndex("x1", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "bit_length");
+
+            entry = ProcessText(text);
+            items = entry.GetMemberNamesByIndex("x2", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "bit_length");
+
+            entry = ProcessText(text);
+            items = entry.GetMemberNamesByIndex("x3", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "bit_length");
+        }
+
+        /// <summary>
+        /// https://github.com/Microsoft/PTVS/issues/995
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void SpecializedOverride() {
+            var text = @"
+class simpledict(dict): pass
+
+class getdict(dict):
+    def __getitem__(self, index):
+        return 'abc'
+
+
+d1 = simpledict({2:3})
+x1 = d1[2]
+
+d2 = simpledict(x = 2)
+x2 = d2['x']
+
+d3 = simpledict(**{2:3})
+x3 = d3[2]
+
+d4 = getdict({2:3})
+x4 = d4[2]
+
+d5 = simpledict(**{2:'blah'})
+x5 = d5[2]
+
+pass
+";
+            var entry = ProcessText(text);
+            var items = entry.GetMemberNamesByIndex("x1", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "bit_length");
+
+            entry = ProcessText(text);
+            items = entry.GetMemberNamesByIndex("x2", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "bit_length");
+
+            entry = ProcessText(text);
+            items = entry.GetMemberNamesByIndex("x3", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "bit_length");
+
+            entry = ProcessText(text);
+            items = entry.GetMemberNamesByIndex("x4", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "upper");
+
+            entry = ProcessText(text);
+            items = entry.GetMemberNamesByIndex("x5", text.IndexOf("pass"));
+            AssertUtil.ContainsAtLeast(items, "upper");
+        }
+
+        /// <summary>
+        /// https://github.com/Microsoft/PTVS/issues/995
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void SpecializedOverride2() {
+            var text = @"
+class setdict(dict):
+    def __setitem__(self, index):
+        pass
+
+a = setdict()
+a[42] = 100
+b = a[42]
+
+pass
+";
+            var entry = ProcessText(text);
+            var items = entry.GetTypesByIndex("b", text.IndexOf("pass"));
+            AssertUtil.ContainsExactly(items);
+        }
+
+        /// <summary>
+        /// We shouldn't use instance members when invoking special methods
+        /// </summary>
+        [TestMethod, Priority(0)]
+        public void IterNoInstance() {
+            var text = @"
+class me(object):
+    pass
+
+
+a = me()
+a.__getitem__ = lambda x: 42
+
+for v in a: pass
+";
+            var entry = ProcessText(text);
+            var items = entry.GetTypesByIndex("v", text.IndexOf("pass"));
+            AssertUtil.ContainsExactly(items);
+
+            text = @"
+class me(object):
+    pass
+
+
+a = me()
+a.__iter__ = lambda: (yield 42)
+
+for v in a: pass
+";
+            entry = ProcessText(text);
+            items = entry.GetTypesByIndex("v", text.IndexOf("pass"));
+            AssertUtil.ContainsExactly(items);
+        }
 
         [TestMethod, Priority(0)]
         public void SimpleMethodCall() {
@@ -4352,7 +4640,7 @@ t.x, t. =
             Assert.AreEqual((double)memory1, (double)memory2, memory2 * 0.1, string.Format("Memory increased by {0}", delta));
         }
 
-        //[TestMethod, Timeout(5 * 60 * 1000), Priority(2)]
+        //[TestMethod, Priority(2), Timeout(5 * 60 * 1000)]
         public void MemLeak() {
             using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
 
@@ -4402,7 +4690,7 @@ min(a, D())
             }
         }
 
-        //[TestMethod, Timeout(15 * 60 * 1000), Priority(2)]
+        //[TestMethod, Priority(2), Timeout(15 * 60 * 1000)]
         public void MemLeak2() {
             bool anyTested = false;
 
@@ -4497,7 +4785,7 @@ min(a, D())
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(0)]
         public void CancelAnalysis() {
             var ver = PythonPaths.Versions.LastOrDefault(v => v != null);
             if (ver == null) {
@@ -4507,14 +4795,18 @@ min(a, D())
             var cancelSource = new CancellationTokenSource();
             var task = Task.Run(() => {
                 new AnalysisTest().AnalyzeDir(ver.LibPath, ver.Version, cancel: cancelSource.Token);
-            });
+            }, cancelSource.Token);
 
             // Allow 10 seconds for parsing to complete and analysis to start
             cancelSource.CancelAfter(TimeSpan.FromSeconds(10));
 
-            if (!task.Wait(TimeSpan.FromSeconds(15))) {
-                task.Dispose();
-                Assert.Fail("Analysis did not abort within 5 seconds");
+            // Allow 20 seconds after cancellation to abort
+            if (!task.Wait(TimeSpan.FromSeconds(30))) {
+                try {
+                    task.Dispose();
+                } catch (InvalidOperationException) {
+                }
+                Assert.Fail("Analysis did not abort within 20 seconds");
             }
         }
 
@@ -4927,10 +5219,68 @@ def decorator_b(fn):
 
             PermutedTest("mod", new[] { text1, text2 }, (pe) => {
                 // Neither decorator is callable, but at least analysis completed
-                Assert.AreEqual(0, pe[0].Analysis.GetValuesByIndex("decorator_a", 1).Count());
-                Assert.AreEqual(0, pe[1].Analysis.GetValuesByIndex("decorator_b", 1).Count());
+                AssertUtil.ContainsExactly(pe[0].Analysis.GetTypeIdsByIndex("decorator_a", 1));
+                AssertUtil.ContainsExactly(pe[1].Analysis.GetTypeIdsByIndex("decorator_b", 1));
             });
         }
+
+        [TestMethod, Priority(0)]
+        public void ProcessDecorators() {
+            var text = @"
+def d(fn):
+    return []
+
+@d
+def my_fn():
+    return None
+";
+
+            var sourceUnit = GetSourceUnit(text, "fob");
+            var state = CreateAnalyzer();
+            state.Limits.ProcessCustomDecorators = true;
+            var entry = state.AddModule("fob", "fob", null);
+            Prepare(entry, sourceUnit);
+            entry.Analyze(CancellationToken.None);
+
+            AssertUtil.ContainsExactly(
+                entry.Analysis.GetTypeIdsByIndex("my_fn", 0),
+                BuiltinTypeId.List
+            );
+            AssertUtil.ContainsExactly(
+                entry.Analysis.GetTypeIdsByIndex("fn", text.IndexOf("return")),
+                BuiltinTypeId.Function
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void NoProcessDecorators() {
+            var text = @"
+def d(fn):
+    return []
+
+@d
+def my_fn():
+    return None
+";
+
+            var sourceUnit = GetSourceUnit(text, "fob");
+            var state = CreateAnalyzer();
+            state.Limits.ProcessCustomDecorators = false;
+            var entry = state.AddModule("fob", "fob", null);
+            Prepare(entry, sourceUnit);
+            entry.Analyze(CancellationToken.None);
+            state.Limits.ProcessCustomDecorators = true;
+
+            AssertUtil.ContainsExactly(
+                entry.Analysis.GetTypeIdsByIndex("my_fn", 0),
+                BuiltinTypeId.Function
+            );
+            AssertUtil.ContainsExactly(
+                entry.Analysis.GetTypeIdsByIndex("fn", text.IndexOf("return")),
+                BuiltinTypeId.Function
+            );
+        }
+
 
         [TestMethod, Priority(0)]
         public void ClassInit() {
@@ -4957,7 +5307,7 @@ x = X()
 a = x(2)
 ";
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", -1), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("a", 0), BuiltinTypeId.Int);
         }
 
         /// <summary>
@@ -5890,7 +6240,7 @@ class D(object):
             //Assert.AreEqual(entry.GetSignaturesByIndex("cls.x", text.IndexOf("print cls.g")).First().Parameters.Length, 1);
             //Assert.AreEqual(entry.GetSignaturesByIndex("cls.inst_method", text.IndexOf("print cls.g")).First().Parameters.Length, 1);
 
-            if (!(this is IronPythonAnalysisTest)) {
+            if (SupportsPython3) {
                 text = @"class C(type):
     def f(self):
         print('C.f')
@@ -6437,6 +6787,120 @@ x = A().wg");
             Assert.IsNotNull(entry);
         }
 
+        [TestMethod, Priority(0)]
+        public void Coroutine() {
+            var code = @"
+async def g():
+    return 123
+
+async def f():
+    x = await g()
+    g2 = g()
+    y = await g2
+";
+            var entry = ProcessText(code, PythonLanguageVersion.V35);
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("x", code.IndexOf("x =")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", code.IndexOf("y =")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("g2", code.IndexOf("g2 =")), BuiltinTypeId.Generator);
+        }
+
+        [TestMethod, Priority(0)]
+        public void AsyncWithStatement() {
+            var text = @"
+class X(object):
+    def x_method(self): pass
+    async def __aenter__(self): return self
+    async def __aexit__(self, exc_type, exc_value, traceback): return False
+
+class Y(object):
+    def y_method(self): pass
+    async def __aenter__(self): return 123
+    async def __aexit__(self, exc_type, exc_value, traceback): return False
+
+async def f():
+    async with X() as x:
+        pass #x
+
+    async with Y() as y:
+        pass #y
+";
+            var entry = ProcessText(text, PythonLanguageVersion.V35);
+            AssertUtil.ContainsAtLeast(entry.GetMemberNamesByIndex("x", text.IndexOf("pass #x")), "x_method");
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", text.IndexOf("pass #y")), BuiltinTypeId.Int);
+        }
+
+        [TestMethod, Priority(0)]
+        public void AsyncForIterator() {
+            var code = @"
+class X:
+    async def __aiter__(self): return self
+    async def __anext__(self): return 123
+
+class Y:
+    async def __aiter__(self): return X()
+
+async def f():
+    async for i in Y():
+        pass
+";
+            var entry = ProcessText(code, PythonLanguageVersion.V35);
+
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("i", code.IndexOf("pass")), BuiltinTypeId.Int);
+        }
+
+
+        [TestMethod, Priority(0)]
+        public void RecursiveDecorators() {
+            // See https://github.com/Microsoft/PTVS/issues/542
+            // Should not crash/OOM
+            var code = @"
+def f():
+    def d(fn):
+        @f()
+        def g(): pass
+
+    return d
+";
+
+            var cancelAt = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            try {
+                var entry = ProcessText(code, cancel: cancelAt.Token);
+            } catch (OperationCanceledException) {
+            }
+            if (cancelAt.IsCancellationRequested) {
+                Assert.Fail("Failed to complete within 10 seconds");
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void NullNamedArgument() {
+            CallDelegate callable = (node, unit, args, keywordArgNames) => {
+                bool anyNull = false;
+                Console.WriteLine("fn({0})", string.Join(", ", keywordArgNames.Select(n => {
+                    if (n == null) {
+                        anyNull = true;
+                        return "(null)";
+                    } else {
+                        return n.Name + "=(value)";
+                    }
+                })));
+                Assert.IsFalse(anyNull, "Some arguments were null");
+                return AnalysisSet.Empty;
+            };
+
+            using (var state = CreateAnalyzer(PythonLanguageVersion.V27)) {
+                state.SpecializeFunction("NullNamedArgument", "fn", callable);
+
+                var entry1 = state.AddModule("NullNamedArgument", "NullNamedArgument.py");
+                Prepare(entry1, GetSourceUnit("def fn(**kwargs): pass", "NullNamedArgument"), state.LanguageVersion);
+                entry1.Analyze(CancellationToken.None);
+                var entry2 = state.AddModule("test", "test.py");
+                Prepare(entry2, GetSourceUnit("import NullNamedArgument; NullNamedArgument.fn(a=0, ]]])", "test"), state.LanguageVersion);
+                entry2.Analyze(CancellationToken.None);
+            }
+        }
+
         #endregion
 
         #region Helpers
@@ -6451,17 +6915,6 @@ x = A().wg");
 
             return res.Values;
 
-        }
-
-        private static string[] GetMembers(object obj, bool showClr) {
-            var dir = showClr ? ClrModule.DirClr(obj) : ClrModule.Dir(obj);
-            int len = dir.__len__();
-            string[] result = new string[len];
-            for (int i = 0; i < len; i++) {
-                Assert.IsTrue(dir[i] is string);
-                result[i] = dir[i] as string;
-            }
-            return result;
         }
 
 
@@ -6489,6 +6942,8 @@ x = A().wg");
             foreach (var p in Permutations(code.Length)) {
                 var result = new IPythonProjectEntry[code.Length];
                 using (var state = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
+                    state.Limits = GetLimits();
+
                     for (int i = 0; i < code.Length; i++) {
                         result[p[i]] = state.AddModule(prefix + (p[i] + 1).ToString(), "fob", null);
                     }
@@ -6560,7 +7015,7 @@ x = A().wg");
         }
     }
 
-    static class ModuleAnalysisExtensions {
+    public static class ModuleAnalysisExtensions {
         public static IEnumerable<string> GetMemberNamesByIndex(this ModuleAnalysis analysis, string exprText, int index, GetMemberOptions options = GetMemberOptions.IntersectMultipleResults) {
             return analysis.GetMembersByIndex(exprText, index, options).Select(m => m.Name);
         }

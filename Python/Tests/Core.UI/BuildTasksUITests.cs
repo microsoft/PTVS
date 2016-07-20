@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -23,7 +25,6 @@ using System.Windows.Automation;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
@@ -62,14 +63,14 @@ namespace PythonToolsUITests {
 
             dteProject = app.OpenProject("TestData\\Targets\\" + slnName);
             projectNode = dteProject.GetPythonProject();
-            var fact = projectNode.Interpreters.FindInterpreter(PythonVersion.Id, PythonVersion.Configuration.Version);
+            var fact = projectNode.InterpreterFactories.Where(x => x.Configuration.Id == PythonVersion.Id).FirstOrDefault();
             Assert.IsNotNull(fact, "Project does not contain expected interpreter");
-            projectNode.Interpreters.ActiveInterpreter = fact;
+            projectNode.ActiveInterpreter = fact;
             dteProject.Save();
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsAdded() {
             using (var app = new VisualStudioApp()) {
                 PythonProjectNode node;
@@ -84,11 +85,9 @@ namespace PythonToolsUITests {
 
                 app.OpenSolutionExplorer().FindItem("Solution 'Commands1' (1 project)", "Commands1").Select();
 
-                AutomationWrapper projectMenu = null;
-                for (int retries = 10; retries > 0 && projectMenu == null; --retries) {
-                    Thread.Sleep(100);
-                    projectMenu = app.FindByAutomationId("MenuBar").AsWrapper().FindByName("Project").AsWrapper();
-                }
+                var menuBar = app.FindByAutomationId("MenuBar").AsWrapper();
+                Assert.IsNotNull(menuBar, "Unable to find menu bar");
+                var projectMenu = menuBar.FindByName("Project").AsWrapper();
                 Assert.IsNotNull(projectMenu, "Unable to find Project menu");
                 projectMenu.Element.EnsureExpanded();
 
@@ -112,8 +111,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsWithResourceLabel() {
             using (var app = new VisualStudioApp()) {
                 PythonProjectNode node;
@@ -132,8 +131,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsReplWithResourceLabel() {
             using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
@@ -142,19 +141,22 @@ namespace PythonToolsUITests {
 
                 Execute(node, "Command from Resource");
 
-                var repl = app.GetInteractiveWindow("Repl from Resource");
-                Assert.IsNotNull(repl, "Could not find repl window");
-                repl.WaitForTextEnd(
-                    "Program.py completed",
-                    (string)repl.ReplWindow.GetOptionValue(ReplOptions.CurrentPrimaryPrompt)
-                );
+                using (var repl = app.GetInteractiveWindow("Repl from Resource")) {
+                    Assert.IsNotNull(repl, "Could not find repl window");
+                    repl.WaitForTextEnd(
+                        "Program.py completed",
+                        ">"
+                    );
+                }
 
-                Assert.IsNull(app.GetInteractiveWindow("resource:PythonToolsUITests;PythonToolsUITests.Resources;ReplName"));
+                using (var repl = app.GetInteractiveWindow("resource:PythonToolsUITests;PythonToolsUITests.Resources;ReplName")) {
+                    Assert.IsNull(repl);
+                }
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRunInRepl() {
             using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
@@ -163,21 +165,24 @@ namespace PythonToolsUITests {
 
                 Execute(node, "Test Command 2");
 
-                var repl = app.GetInteractiveWindow("Test Repl");
-                Assert.IsNotNull(repl, "Could not find repl window");
-                repl.WaitForTextEnd(
-                    "Program.py completed",
-                    (string)repl.ReplWindow.GetOptionValue(ReplOptions.CurrentPrimaryPrompt)
-                );
+                using (var repl = app.GetInteractiveWindow("Test Repl")) {
+                    Assert.IsNotNull(repl, "Could not find repl window");
+                    repl.WaitForTextEnd(
+                        "Program.py completed",
+                        ">"
+                    );
+                }
 
                 app.Dte.Solution.Close();
 
-                Assert.IsNull(app.GetInteractiveWindow("Test Repl"), "Repl window was not closed");
+                using (var repl = app.GetInteractiveWindow("Test Repl")) {
+                    Assert.IsNull(repl, "Repl window was not closed");
+                }
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRunProcessInRepl() {
             using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
@@ -186,12 +191,13 @@ namespace PythonToolsUITests {
 
                 Execute(node, "Write to Repl");
 
-                var repl = app.GetInteractiveWindow("Test Repl");
-                Assert.IsNotNull(repl, "Could not find repl window");
-                repl.WaitForTextEnd(
-                    string.Format("({0}, {1})", PythonVersion.Configuration.Version.Major, PythonVersion.Configuration.Version.Minor),
-                    (string)repl.ReplWindow.GetOptionValue(ReplOptions.CurrentPrimaryPrompt)
-                );
+                using (var repl = app.GetInteractiveWindow("Test Repl")) {
+                    Assert.IsNotNull(repl, "Could not find repl window");
+                    repl.WaitForTextEnd(
+                        string.Format("({0}, {1})", PythonVersion.Configuration.Version.Major, PythonVersion.Configuration.Version.Minor),
+                        ">"
+                    );
+                }
             }
         }
 
@@ -216,8 +222,8 @@ namespace PythonToolsUITests {
             Assert.IsTrue(outputText.Contains(expected), string.Format("Expected to see:\r\n\r\n{0}\r\n\r\nActual content:\r\n\r\n{1}", expected, outputText));
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRunProcessInOutput() {
             using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
@@ -238,8 +244,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRunProcessInConsole() {
             using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
@@ -270,8 +276,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsErrorList() {
             using (var app = new PythonVisualStudioApp()) {
                 PythonProjectNode node;
@@ -334,8 +340,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsRequiredPackages() {
             using (var app = new PythonVisualStudioApp())
             using (var dis = app.SelectDefaultInterpreter(PythonVersion, "virtualenv")) {
@@ -352,7 +358,8 @@ namespace PythonToolsUITests {
                 app.WaitForNoDialog(TimeSpan.FromSeconds(5.0));
 
                 // First, execute the command and cancel it.
-                using (var task = ExecuteAsync(node, "Require Packages")) {
+                var task = ExecuteAsync(node, "Require Packages");
+                try {
                     var dialogHandle = app.WaitForDialog(task);
                     if (dialogHandle == IntPtr.Zero) {
                         if (task.IsFaulted && task.Exception != null) {
@@ -363,17 +370,15 @@ namespace PythonToolsUITests {
                     }
 
                     using (var dialog = new AutomationDialog(app, AutomationElement.FromHandle(dialogHandle))) {
-                        var label = dialog.FindByAutomationId("65535");
+                        var label = dialog.FindByAutomationId("CommandLink_1000");
                         Assert.IsNotNull(label);
 
                         string expectedLabel =
-                            "The following packages will be installed from PyPI in order to run this command:\r\n" +
+                            "The following packages will be installed using pip:\r\n" +
                             "\r\n" +
                             "ptvsd\r\n" +
-                            "azure==0.1\r\n" +
-                            "\r\n" +
-                            "Do you want to continue?";
-                        Assert.AreEqual(expectedLabel, label.Current.Name);
+                            "azure==0.1"; ;
+                        Assert.AreEqual(expectedLabel, label.Current.HelpText);
 
                         dialog.Cancel();
                         try {
@@ -385,10 +390,19 @@ namespace PythonToolsUITests {
                             }
                         }
                     }
+                } finally {
+                    if (!task.IsCanceled && !task.IsCompleted && !task.IsFaulted) {
+                        if (task.Wait(10000)) {
+                            task.Dispose();
+                        }
+                    } else {
+                        task.Dispose();
+                    }
                 }
 
                 // Then, execute command and allow it to proceed.
-                using (var task = ExecuteAsync(node, "Require Packages")) {
+                task = ExecuteAsync(node, "Require Packages");
+                try {
                     var dialogHandle = app.WaitForDialog(task);
                     if (dialogHandle == IntPtr.Zero) {
                         if (task.IsFaulted && task.Exception != null) {
@@ -399,19 +413,27 @@ namespace PythonToolsUITests {
                     }
 
                     using (var dialog = new AutomationDialog(app, AutomationElement.FromHandle(dialogHandle))) {
-                        dialog.OK();
+                        dialog.ClickButtonAndClose("CommandLink_1000", nameIsAutomationId: true);
                     }
                     task.Wait();
 
                     var ver = PythonVersion.Version.ToVersion();
                     ExpectOutputWindowText(app, string.Format("pass {0}.{1}", ver.Major, ver.Minor));
+                } finally {
+                    if (!task.IsCanceled && !task.IsCompleted && !task.IsFaulted) {
+                        if (task.Wait(10000)) {
+                            task.Dispose();
+                        }
+                    } else {
+                        task.Dispose();
+                    }
                 }
             }
         }
 
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsSearchPath() {
             var expectedSearchPath = string.Format("['{0}', '{1}']",
                 TestData.GetPath(@"TestData\Targets").Replace("\\", "\\\\"),
@@ -439,19 +461,19 @@ namespace PythonToolsUITests {
     }
 
     [TestClass]
-    public class BuildTasksUI25Tests : BuildTasksUI27Tests {
+    public class BuildTasksUI26Tests : BuildTasksUI27Tests {
         internal override PythonVersion PythonVersion {
             get {
-                return PythonPaths.Python25 ?? PythonPaths.Python25_x64;
+                return PythonPaths.Python26 ?? PythonPaths.Python26_x64;
             }
         }
     }
 
     [TestClass]
-    public class BuildTasksUI33Tests : BuildTasksUI27Tests {
+    public class BuildTasksUI35Tests : BuildTasksUI27Tests {
         internal override PythonVersion PythonVersion {
             get {
-                return PythonPaths.Python33 ?? PythonPaths.Python33_x64;
+                return PythonPaths.Python35 ?? PythonPaths.Python35_x64;
             }
         }
     }

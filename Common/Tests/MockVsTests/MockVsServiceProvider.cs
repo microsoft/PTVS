@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -27,10 +29,13 @@ using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 namespace Microsoft.VisualStudioTools.MockVsTests {
     [Export(typeof(SVsServiceProvider))]
     [Export(typeof(MockVsServiceProvider))]
-    public class MockVsServiceProvider : SVsServiceProvider, IOleServiceProvider, IServiceContainer {
+    public class MockVsServiceProvider : SVsServiceProvider, IOleServiceProvider, IServiceContainer, IDisposable {
         private readonly MockVs _vs;
-        private Dictionary<Type, object> _servicesByType = new Dictionary<Type, object>();
-        private Dictionary<Guid, object> _servicesByGuid = new Dictionary<Guid, object>();
+        private readonly Dictionary<Type, object> _servicesByType = new Dictionary<Type, object>();
+        private readonly Dictionary<Guid, object> _servicesByGuid = new Dictionary<Guid, object>();
+        private readonly Dictionary<Type, ServiceCreatorCallback> _serviceCreatorByType = new Dictionary<Type, ServiceCreatorCallback>();
+        private readonly List<IDisposable> _disposeAtEnd = new List<IDisposable>();
+        private bool _isDisposed;
 
         [ImportingConstructor]
         public MockVsServiceProvider(MockVs mockVs) {
@@ -66,6 +71,17 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 return res;
             }
 
+            ServiceCreatorCallback creator;
+            if (_serviceCreatorByType.TryGetValue(serviceType, out creator)) {
+                _servicesByType[serviceType] = res = creator(this, serviceType);
+                _serviceCreatorByType.Remove(serviceType);
+                var disposable = res as IDisposable;
+                if (disposable != null) {
+                    _disposeAtEnd.Add(disposable);
+                }
+                return res;
+            }
+
             Console.WriteLine("Unknown service: " + serviceType.FullName);
             return null;
         }
@@ -87,21 +103,35 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public void AddService(Type serviceType, ServiceCreatorCallback callback, bool promote) {
-            AddService(serviceType, callback(this, serviceType), promote);
+            _serviceCreatorByType[serviceType] = callback;
         }
 
         public void AddService(Type serviceType, ServiceCreatorCallback callback) {
-            AddService(serviceType, callback(this, serviceType));
+            _serviceCreatorByType[serviceType] = callback;
         }
 
         public void RemoveService(Type serviceType, bool promote) {
             _servicesByType.Remove(serviceType);
             _servicesByGuid.Remove(serviceType.GUID);
+            _serviceCreatorByType.Remove(serviceType);
         }
 
         public void RemoveService(Type serviceType) {
             _servicesByType.Remove(serviceType);
-            _servicesByGuid.Remove(serviceType.GUID);
+            _serviceCreatorByType.Remove(serviceType);
+        }
+
+        public void Dispose() {
+            if (!_isDisposed) {
+                _isDisposed = true;
+                foreach (var d in _disposeAtEnd) {
+                    d.Dispose();
+                }
+                _disposeAtEnd.Clear();
+                _servicesByType.Clear();
+                _servicesByGuid.Clear();
+                _serviceCreatorByType.Clear();
+            }
         }
     }
 }

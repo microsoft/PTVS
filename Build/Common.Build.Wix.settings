@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <!-- Ensures that if this file changes it forces a rebuild -->
   <PropertyGroup>
@@ -8,16 +8,15 @@
     </MSBuildAllProjects>
   </PropertyGroup>
 
+  <Import Project="$(PackagesPath)WiX\build\wix.props" Condition="Exists('$(PackagesPath)WiX\build\wix.props')" />
+  <Import Project="$(TargetsPath)\Common.Shim.targets" Condition="!Exists('$(PackagesPath)WiX\build\wix.props')" />
+  <Target Name="_EnsureWix" BeforeTargets="Build" Condition="!Exists('$(PackagesPath)WiX\build\wix.props')">
+    <Exec Command='powershell.exe -ExecutionPolicy Bypass -File "$(TargetsPath)\PreBuild.ps1" -VsTarget $(VSTarget) -Full' />
+    <Error Text="WiX was not installed. If the above task succeeded, it now is, so please retry the build." />
+  </Target>
 
   <PropertyGroup>
     <Language>WiX</Language>
-    <WixToolsVersion Condition="'$(WixToolsVersion)'==''">3.7</WixToolsVersion>
-    <WixToolPath Condition="'$(WixToolPath)'==''">$(BuildRoot)\Tools\Wix\$(WixToolsVersion)</WixToolPath>
-    <WixExtDir Condition="'$(WixExtDir)'==''">$(BuildRoot)\Tools\Wix\$(WixToolsVersion)</WixExtDir>
-    <WixTargetsPath>$(WixToolPath)\Wix.targets</WixTargetsPath>
-    <WixTasksPath>$(WixToolPath)\WixTasks.dll</WixTasksPath>
-    <LuxTargetsPath>$(WixToolPath)\Lux.targets</LuxTargetsPath>
-    <LuxTasksPath>$(WixToolPath)\LuxTasks.dll</LuxTasksPath>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <!-- Suppressed warnings:
     
@@ -33,16 +32,19 @@
     <LinkerSuppressSpecificWarnings>1056</LinkerSuppressSpecificWarnings>
     <DefineConstants>
         VSTargetVersion=$(VSTarget);
-        MsiVersion=$(MsiVersion);
-        ReleaseVersion=$(ReleaseVersion)
+        MsiVersion=$(FileVersion);
+        ReleaseVersion=$(FileVersionPrefix);
     </DefineConstants>
     <DefineConstants Condition="'$(CustomBuildIdentifier)' != ''">
-      $(DefineConstants);
-      CustomBuildIdentifier=$(CustomBuildIdentifier)
+      $(DefineConstants);CustomBuildIdentifier=$(CustomBuildIdentifier);
     </DefineConstants>
-    <!-- If SignedBinariesPath has been provided, don't build references. -->
-    <BuildProjectReferences Condition="'$(BuildProjectReferences)' == '' and '$(SignedBinariesPath)' != ''">false</BuildProjectReferences>
+    <BuildProjectReferences Condition="'$(BuildProjectReferences)' == ''">false</BuildProjectReferences>
+    <SignOutput>true</SignOutput>
   </PropertyGroup>
+  
+  <Target Name="Show">
+    <Message Text="$(DefineConstants)" Importance="high" />
+  </Target>
   
   <ItemDefinitionGroup>
     <BindInputPaths>

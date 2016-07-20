@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -23,38 +25,46 @@ namespace TestUtilities.Mocks {
         private readonly List<Tuple<string, string, object>> Settings = new List<Tuple<string, string, object>>();
 
         public void AddSetting(string path, string name, object value) {
-            if (string.IsNullOrEmpty(path)) {
-                path = Settings.Last().Item1;
-            } else if (path.StartsWith(" ")) {
-                path = Settings.Last().Item1 + "\\" + path.TrimStart();
-            }
+            lock (Settings) {
+                if (string.IsNullOrEmpty(path)) {
+                    path = Settings.Last().Item1;
+                } else if (path.StartsWith(" ")) {
+                    path = Settings.Last().Item1 + "\\" + path.TrimStart();
+                }
 
-            Settings.Add(Tuple.Create(path, name, value));
+                Settings.Add(Tuple.Create(path, name, value));
+            }
         }
 
         public void Clear() {
-            Settings.Clear();
+            lock (Settings) {
+                Settings.Clear();
+            }
         }
 
         private int FindValue<T>(string collectionPath, string propertyName, ref T value) {
-            var tuple = Settings.FirstOrDefault(t => t.Item1 == collectionPath && t.Item2 == propertyName);
-            if (tuple == null) {
-                return VSConstants.S_FALSE;
+            lock (Settings) {
+                var tuple = Settings.FirstOrDefault(t => t.Item1 == collectionPath && t.Item2 == propertyName);
+                if (tuple == null) {
+                    return VSConstants.S_FALSE;
+                }
+                if (!(tuple.Item3 is T)) {
+                    return VSConstants.E_INVALIDARG;
+                }
+                value = (T)tuple.Item3;
+                return VSConstants.S_OK;
             }
-            if (!(tuple.Item3 is T)) {
-                return VSConstants.E_INVALIDARG;
-            }
-            value = (T)tuple.Item3;
-            return VSConstants.S_OK;
         }
 
         public int CollectionExists(string collectionPath, out int pfExists) {
-            var collectionSeq = collectionPath.Split('\\');
-            pfExists = Settings
-                .Select(t => t.Item1.Split('\\'))
-                .Where(seq => seq.Length >= collectionSeq.Length)
-                .Any(seq => seq.Take(collectionSeq.Length).SequenceEqual(collectionSeq)) ? 1 : 0;
-            return VSConstants.S_OK;
+            lock (Settings) {
+                var collectionSeq = collectionPath.Split('\\');
+                pfExists = Settings
+                    .Select(t => t.Item1.Split('\\'))
+                    .Where(seq => seq.Length >= collectionSeq.Length)
+                    .Any(seq => seq.Take(collectionSeq.Length).SequenceEqual(collectionSeq)) ? 1 : 0;
+                return VSConstants.S_OK;
+            }
         }
 
         public int GetBinary(string collectionPath, string propertyName, uint byteLength, byte[] pBytes = null, uint[] actualByteLength = null) {
@@ -97,13 +107,17 @@ namespace TestUtilities.Mocks {
         }
 
         public int GetPropertyCount(string collectionPath, out uint propertyCount) {
-            propertyCount = (uint)Settings.Count(t => t.Item1 == collectionPath);
+            lock (Settings) {
+                propertyCount = (uint)Settings.Count(t => t.Item1 == collectionPath);
+            }
             return VSConstants.S_OK;
         }
 
         public int GetPropertyName(string collectionPath, uint index, out string propertyName) {
             try {
-                propertyName = Settings.Where(t => t.Item1 == collectionPath).ElementAt((int)index).Item2;
+                lock (Settings) {
+                    propertyName = Settings.Where(t => t.Item1 == collectionPath).ElementAt((int)index).Item2;
+                }
                 return VSConstants.S_OK;
             } catch (InvalidOperationException) {
                 propertyName = null;
@@ -127,44 +141,48 @@ namespace TestUtilities.Mocks {
 
         public int GetSubCollectionCount(string collectionPath, out uint subCollectionCount) {
             var collectionSeq = collectionPath.Split('\\');
-            if (!Settings
-                .Select(t => t.Item1.Split('\\'))
-                .Where(seq => seq.Length >= collectionSeq.Length)
-                .Where(seq => seq.Take(collectionSeq.Length).SequenceEqual(collectionSeq))
-                .Any()) {
-                subCollectionCount = 0;
-                return VSConstants.E_INVALIDARG;
+            lock (Settings) {
+                if (!Settings
+                    .Select(t => t.Item1.Split('\\'))
+                    .Where(seq => seq.Length >= collectionSeq.Length)
+                    .Where(seq => seq.Take(collectionSeq.Length).SequenceEqual(collectionSeq))
+                    .Any()) {
+                    subCollectionCount = 0;
+                    return VSConstants.E_INVALIDARG;
+                }
+
+                subCollectionCount = (uint)Settings
+                    .Select(t => t.Item1.Split('\\'))
+                    .Where(seq => seq.Length > collectionSeq.Length)
+                    .Where(seq => seq.Take(collectionSeq.Length).SequenceEqual(collectionSeq))
+                    .Select(seq => seq[collectionSeq.Length])
+                    .Distinct()
+                    .Count();
+                return VSConstants.S_OK;
             }
-            
-            subCollectionCount = (uint)Settings
-                .Select(t => t.Item1.Split('\\'))
-                .Where(seq => seq.Length > collectionSeq.Length)
-                .Where(seq => seq.Take(collectionSeq.Length).SequenceEqual(collectionSeq))
-                .Select(seq => seq[collectionSeq.Length])
-                .Distinct()
-                .Count();
-            return VSConstants.S_OK;
         }
 
         public int GetSubCollectionName(string collectionPath, uint index, out string subCollectionName) {
             var collectionSeq = collectionPath.Split('\\');
-            if (!Settings
-                .Select(t => t.Item1.Split('\\'))
-                .Where(seq => seq.Length >= collectionSeq.Length)
-                .Where(seq => seq.Take(collectionSeq.Length).SequenceEqual(collectionSeq))
-                .Any()) {
-                subCollectionName = null;
-                return VSConstants.E_INVALIDARG;
-            }
+            lock (Settings) {
+                if (!Settings
+                    .Select(t => t.Item1.Split('\\'))
+                    .Where(seq => seq.Length >= collectionSeq.Length)
+                    .Where(seq => seq.Take(collectionSeq.Length).SequenceEqual(collectionSeq))
+                    .Any()) {
+                    subCollectionName = null;
+                    return VSConstants.E_INVALIDARG;
+                }
 
-            subCollectionName = Settings
-                .Select(t => t.Item1.Split('\\'))
-                .Where(seq => seq.Length > collectionSeq.Length)
-                .Where(seq => seq.Take(collectionSeq.Length).SequenceEqual(collectionSeq))
-                .Select(seq => seq[collectionSeq.Length])
-                .Distinct()
-                .ElementAt((int)index);
-            return VSConstants.S_OK;
+                subCollectionName = Settings
+                    .Select(t => t.Item1.Split('\\'))
+                    .Where(seq => seq.Length > collectionSeq.Length)
+                    .Where(seq => seq.Take(collectionSeq.Length).SequenceEqual(collectionSeq))
+                    .Select(seq => seq[collectionSeq.Length])
+                    .Distinct()
+                    .ElementAt((int)index);
+                return VSConstants.S_OK;
+            }
         }
 
         public int GetUnsignedInt(string collectionPath, string propertyName, out uint value) {
@@ -188,7 +206,9 @@ namespace TestUtilities.Mocks {
         }
 
         public int PropertyExists(string collectionPath, string propertyName, out int pfExists) {
-            pfExists = Settings.Any(t => t.Item1 == collectionPath && t.Item2 == propertyName) ? 1 : 0;
+            lock (Settings) {
+                pfExists = Settings.Any(t => t.Item1 == collectionPath && t.Item2 == propertyName) ? 1 : 0;
+            }
             return VSConstants.S_OK;
         }
 
@@ -211,11 +231,13 @@ namespace TestUtilities.Mocks {
             }
 
             var collectionSeq = collectionPath.Split('\\');
-            return Settings.RemoveAll(t => {
-                var seq = t.Item1.Split('\\');
-                return seq.Length >= collectionSeq.Length &&
-                    seq.Take(collectionSeq.Length).SequenceEqual(collectionSeq);
-            }) > 0 ? VSConstants.S_OK : VSConstants.S_FALSE;
+            lock (Settings) {
+                return Settings.RemoveAll(t => {
+                    var seq = t.Item1.Split('\\');
+                    return seq.Length >= collectionSeq.Length &&
+                        seq.Take(collectionSeq.Length).SequenceEqual(collectionSeq);
+                }) > 0 ? VSConstants.S_OK : VSConstants.S_FALSE;
+            }
         }
 
         public int DeleteProperty(string collectionPath, string propertyName) {
@@ -224,9 +246,11 @@ namespace TestUtilities.Mocks {
             }
 
             var collectionSeq = collectionPath.Split('\\');
-            return Settings.RemoveAll(t => t.Item1 == collectionPath && t.Item2 == propertyName) > 0 ?
-                VSConstants.S_OK :
-                VSConstants.S_FALSE;
+            lock (Settings) {
+                return Settings.RemoveAll(t => t.Item1 == collectionPath && t.Item2 == propertyName) > 0 ?
+                    VSConstants.S_OK :
+                    VSConstants.S_FALSE;
+            }
         }
 
         public int SetBinary(string collectionPath, string propertyName, uint byteLength, byte[] pBytes) {
@@ -236,7 +260,9 @@ namespace TestUtilities.Mocks {
                     return VSConstants.E_INVALIDARG;
                 }
             }
-            Settings.Add(Tuple.Create(collectionPath, propertyName, (object)pBytes));
+            lock (Settings) {
+                Settings.Add(Tuple.Create(collectionPath, propertyName, (object)pBytes));
+            }
             return VSConstants.S_OK;
         }
 
@@ -247,7 +273,9 @@ namespace TestUtilities.Mocks {
                     return VSConstants.E_INVALIDARG;
                 }
             }
-            Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            lock (Settings) {
+                Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            }
             return VSConstants.S_OK;
         }
 
@@ -258,7 +286,9 @@ namespace TestUtilities.Mocks {
                     return VSConstants.E_INVALIDARG;
                 }
             }
-            Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            lock (Settings) {
+                Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            }
             return VSConstants.S_OK;
         }
 
@@ -269,7 +299,9 @@ namespace TestUtilities.Mocks {
                     return VSConstants.E_INVALIDARG;
                 }
             }
-            Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            lock (Settings) {
+                Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            }
             return VSConstants.S_OK;
         }
 
@@ -280,7 +312,9 @@ namespace TestUtilities.Mocks {
                     return VSConstants.E_INVALIDARG;
                 }
             }
-            Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            lock (Settings) {
+                Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            }
             return VSConstants.S_OK;
         }
 
@@ -291,7 +325,9 @@ namespace TestUtilities.Mocks {
                     return VSConstants.E_INVALIDARG;
                 }
             }
-            Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            lock (Settings) {
+                Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            }
             return VSConstants.S_OK;
         }
 
@@ -302,7 +338,9 @@ namespace TestUtilities.Mocks {
                     return VSConstants.E_INVALIDARG;
                 }
             }
-            Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            lock (Settings) {
+                Settings.Add(Tuple.Create(collectionPath, propertyName, (object)value));
+            }
             return VSConstants.S_OK;
         }
     }

@@ -1,30 +1,39 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
+using TestUtilities.Python;
 
 namespace DebuggerTests {
     public class BaseDebuggerTests {
+        static BaseDebuggerTests() {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
         protected const int DefaultWaitForExitTimeout = 20000;
 
         internal virtual string DebuggerTestPath {
@@ -32,6 +41,13 @@ namespace DebuggerTests {
                 return TestData.GetPath(@"TestData\DebuggerProject\");
             }
         }
+
+        internal static void ForEachLine(TextReader reader, Action<string> action) {
+            for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
+                action(line);
+            }
+        }
+
 
         internal class EvalResult {
             private readonly string _typeName, _repr;
@@ -261,7 +277,7 @@ namespace DebuggerTests {
                             thread = newthread;
                             processLoaded.SetResult(true);
                         } catch (Exception ex) {
-                            backgroundException.SetException(ex);
+                            backgroundException.TrySetException(ex);
                         }
                     },
                     interpreterOptions: InterpreterOptions
@@ -289,7 +305,7 @@ namespace DebuggerTests {
                                 allBreakpointBindResults.SetResult(true);
                             }
                         } catch (Exception ex) {
-                            backgroundException.SetException(ex);
+                            backgroundException.TrySetException(ex);
                         }
                     };
 
@@ -303,7 +319,7 @@ namespace DebuggerTests {
                                 allBreakpointBindResults.SetResult(true);
                             }
                         } catch (Exception ex) {
-                            backgroundException.SetException(ex);
+                            backgroundException.TrySetException(ex);
                         }
                     };
 
@@ -311,6 +327,7 @@ namespace DebuggerTests {
                         try {
                             if (nextExpectedHit < ExpectedHits.Count) {
                                 var bp = Breakpoints[ExpectedHits[nextExpectedHit]];
+                                Trace.TraceInformation("Hit {0}:{1}", args.Breakpoint.Filename, args.Breakpoint.LineNo);
                                 Assert.AreSame(bp, bps[args.Breakpoint]);
 
                                 if (bp.RemoveWhenHit) {
@@ -331,22 +348,22 @@ namespace DebuggerTests {
                             }
                             process.Continue();
                         } catch (Exception ex) {
-                            backgroundException.SetException(ex);
+                            backgroundException.TrySetException(ex);
                         }
                     };
 
                     process.Start();
-                    WaitForAny(10000, processLoaded.Task, backgroundException.Task);
+                    Assert.IsTrue(WaitForAny(10000, processLoaded.Task, backgroundException.Task), "Timed out waiting for process load");
 
                     process.AutoResumeThread(thread.Id);
                     if (breakpointsToBeBound > 0) {
-                        WaitForAny(10000, allBreakpointBindResults.Task, backgroundException.Task);
+                        Assert.IsTrue(WaitForAny(10000, allBreakpointBindResults.Task, backgroundException.Task), "Timed out waiting for breakpoints to bind");
                     }
                 } finally {
                     if (WaitForExit) {
                         _tests.WaitForExit(process);
                     } else {
-                        WaitForAny(10000, allBreakpointsHit.Task, backgroundException.Task);
+                        Assert.IsTrue(WaitForAny(20000, allBreakpointsHit.Task, backgroundException.Task), "Timed out waiting for breakpoints to hit");
                         process.Terminate();
                     }
                 }
@@ -359,12 +376,17 @@ namespace DebuggerTests {
                 Assert.IsTrue(unboundBps.All(bp => bp.IsBindFailureExpected ?? IsBindFailureExpected));
             }
 
-            private static void WaitForAny(int timeout, params Task[] tasks) {
-                Task.WhenAny(tasks.Concat(new[] { Task.Delay(Timeout.Infinite, new CancellationTokenSource(timeout).Token) }))
-                    .GetAwaiter().GetResult()
-                    // At this point we have the task that ran to completion first. Now we need to
-                    // get its result to get an exception if that task failed or got canceled.
-                    .GetAwaiter().GetResult();
+            private static bool WaitForAny(int timeout, params Task[] tasks) {
+                try {
+                    Task.WhenAny(tasks.Concat(new[] { Task.Delay(Timeout.Infinite, new CancellationTokenSource(timeout).Token) }))
+                        .GetAwaiter().GetResult()
+                        // At this point we have the task that ran to completion first. Now we need to
+                        // get its result to get an exception if that task failed or got canceled.
+                        .GetAwaiter().GetResult();
+                    return true;
+                } catch (OperationCanceledException) {
+                    return false;
+                }
             }
         }
 
@@ -474,7 +496,7 @@ namespace DebuggerTests {
         }
 
         internal static void AssertWaited(EventWaitHandle eventObj) {
-            if (!eventObj.WaitOne(10000)) {
+            if (!eventObj.WaitOne(20000)) {
                 Assert.Fail("Failed to wait on event");
             }
         }
@@ -550,13 +572,24 @@ namespace DebuggerTests {
                 };
 
                 int breakHits = 0;
+                ExceptionDispatchInfo edi = null;
                 process.BreakpointHit += (sender, args) => {
-                    Console.WriteLine("Breakpoint hit");
-                    if (breakAction != null) {
-                        breakAction[breakHits++](process);
+                    try {
+                        Console.WriteLine("Breakpoint hit");
+                        if (breakAction != null) {
+                            if (breakHits >= breakAction.Length) {
+                                Assert.Fail("Unexpected breakpoint hit at {0}:{1}", args.Breakpoint.Filename, args.Breakpoint.LineNo);
+                            }
+                            breakAction[breakHits++](process);
+                        }
+                        stepComplete = true;
+                        processEvent.Set();
+                    } catch (Exception ex) {
+                        edi = ExceptionDispatchInfo.Capture(ex);
+                        try {
+                            processEvent.Set();
+                        } catch { }
                     }
-                    stepComplete = true;
-                    processEvent.Set();
                 };
 
                 process.Start();
@@ -566,6 +599,7 @@ namespace DebuggerTests {
                     // event because the notificaiton happens on the debugger thread and we 
                     // need to callback to get the frames.
                     AssertWaited(processEvent);
+                    edi?.Throw();
 
                     // first time through we hit process load, each additional time we should hit step complete.
                     Debug.Assert((processLoad == true && stepComplete == false && curStep == 0) ||
@@ -645,6 +679,12 @@ namespace DebuggerTests {
             try {
                 if (!p.HasExited) {
                     p.Kill();
+                }
+                if (p.StartInfo.RedirectStandardOutput) {
+                    ForEachLine(p.StandardOutput, s => Trace.TraceInformation("STDOUT: {0}", s));
+                }
+                if (p.StartInfo.RedirectStandardError) {
+                    ForEachLine(p.StandardError, s => Trace.TraceWarning("STDERR: {0}", s));
                 }
             } catch (Exception ex) {
                 Console.WriteLine("Failed to kill process");

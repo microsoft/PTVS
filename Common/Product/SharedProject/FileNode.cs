@@ -1,16 +1,18 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -36,7 +38,9 @@ namespace Microsoft.VisualStudioTools.Project {
         private string _caption;
 
         #region static fields
+#if !DEV14_OR_LATER
         private static Dictionary<string, int> extensionIcons;
+#endif
         #endregion
 
         #region overriden Properties
@@ -109,6 +113,7 @@ namespace Microsoft.VisualStudioTools.Project {
             return Caption;
         }
 
+#if !DEV14_OR_LATER
         public override int ImageIndex {
             get {
                 // Check if the file is there.
@@ -128,6 +133,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 return imageIndex;
             }
         }
+#endif
 
         public uint DocCookie {
             get {
@@ -171,9 +177,10 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        #endregion
+#endregion
 
-        #region ctor
+#region ctor
+#if !DEV14_OR_LATER
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline")]
         static FileNode() {
             // Build the dictionary with the mapping between some well known extensions
@@ -216,7 +223,7 @@ namespace Microsoft.VisualStudioTools.Project {
             extensionIcons.Add(".pfx", (int)ProjectNode.ImageName.PFX);
             extensionIcons.Add(".snk", (int)ProjectNode.ImageName.SNK);
         }
-
+#endif
         /// <summary>
         /// Constructor for the FileNode
         /// </summary>
@@ -237,16 +244,6 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             return new IncludedFileNodeProperties(this);
-        }
-
-        public override object GetIconHandle(bool open) {
-            int index = this.ImageIndex;
-            if (NoImage == index) {
-                // There is no image for this file; let the base class handle this case.
-                return base.GetIconHandle(open);
-            }
-            // Return the handle for the image.
-            return this.ProjectMgr.ImageHandler.GetIconHandle(index);
         }
 
         /// <summary>
@@ -293,9 +290,32 @@ namespace Microsoft.VisualStudioTools.Project {
             for (HierarchyNode n = this.Parent.FirstChild; n != null; n = n.NextSibling) {
                 // TODO: Distinguish between real Urls and fake ones (eg. "References")
                 if (n != this && String.Equals(n.Caption, label, StringComparison.OrdinalIgnoreCase)) {
-                    //A file or folder with the name '{0}' already exists on disk at this location. Please choose another name.
-                    //If this file or folder does not appear in the Solution Explorer, then it is not currently part of your project. To view files which exist on disk, but are not in the project, select Show All Files from the Project menu.
-                    throw new InvalidOperationException(SR.GetString(SR.FileOrFolderAlreadyExists, label));
+                    if (File.Exists(n.Url)) {
+                        //A file or folder with the name '{0}' already exists on disk at this location. Please choose another name.
+                        //If this file or folder does not appear in the Solution Explorer, then it is not currently part of your project. To view files which exist on disk, but are not in the project, select Show All Files from the Project menu.
+                        throw new InvalidOperationException(SR.GetString(SR.FileOrFolderAlreadyExists, label));
+                    } else {
+                        // Check if the file is open in the editor, if so, we need to close it, and if it's dirty
+                        // let the user save it.
+                        DocumentManager manager = n.GetDocumentManager();
+                        if (manager != null) {
+                            int close = manager.Close(__FRAMECLOSE.FRAMECLOSE_PromptSave);
+                            if (close == VSConstants.E_ABORT || close == VSConstants.S_FALSE) {
+                                // User cancelled operation in message box.
+                                throw new InvalidOperationException(SR.GetString(SR.FileOpenDoesNotExist, label));
+                            }
+                        }
+
+                        if (File.Exists(n.Url)) {
+                            // The file was dirty and the user saved it.
+                            throw new InvalidOperationException(SR.GetString(SR.FileOrFolderAlreadyExists, label));
+                        }
+
+                        // The file is no longer open in the editor and isn't on disk.  We can try removing it now.
+                        if (!n.Remove(false)) {
+                            throw new InvalidOperationException(SR.GetString(SR.UnableToRemoveFile, label));
+                        }
+                    }
                 }
             }
 
@@ -602,9 +622,9 @@ namespace Microsoft.VisualStudioTools.Project {
             return File.Exists(moniker);
         }
 
-        #endregion
+#endregion
 
-        #region virtual methods
+#region virtual methods
 
         public override object GetProperty(int propId) {
             switch ((__VSHPROPID)propId) {
@@ -673,7 +693,7 @@ namespace Microsoft.VisualStudioTools.Project {
             //If we are included in the project and our parent isn't then
             //we need to bring our parent into the project
             if (!this.IsNonMemberItem && newParent.IsNonMemberItem) {
-                ErrorHandler.ThrowOnFailure(newParent.IncludeInProject(false));
+                ErrorHandler.ThrowOnFailure(newParent.IncludeInProjectWithRefresh(false));
             }
 
             // Retrieve child nodes to add later.
@@ -803,9 +823,9 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        #endregion
+#endregion
 
-        #region Helper methods
+#region Helper methods
         /// <summary>
         /// Gets called to rename the eventually running document this hierarchyitem points to
         /// </summary>
@@ -852,6 +872,17 @@ namespace Microsoft.VisualStudioTools.Project {
                     RenameInStorage(oldName, newName);
                 }
 
+                // For some reason when ignoreFileChanges is called in Resume, we get an ArgumentException because
+                // Somewhere a required fileWatcher is null.  This issue only occurs when you copy and rename a typescript file,
+                // Calling Resume here prevents said fileWatcher from being null. Don't know why it works, but it does.
+                // Also fun! This is the only location it can go (between RenameInStorage and RenameFileNode)
+                // So presumably there is some condition that is no longer met once both of these methods are called with a ts file.
+                // https://nodejstools.codeplex.com/workitem/1510
+                if (sfc != null) {
+                    sfc.Resume();
+                    sfc.Suspend();
+                }
+
                 if (!CommonUtils.IsSamePath(oldName, newName)) {
                     // Check out the project file if necessary.
                     if (!this.ProjectMgr.QueryEditProjectFile(false)) {
@@ -884,7 +915,10 @@ namespace Microsoft.VisualStudioTools.Project {
             string newFolder = Path.GetDirectoryName(newFileName) + Path.DirectorySeparatorChar;
             var parentFolder = ProjectMgr.FindNodeByFullPath(newFolder);
             if (parentFolder == null) {
-                Debug.Assert(newFolder == ProjectMgr.ProjectHome);
+                Debug.Assert(
+                    CommonUtils.IsSameDirectory(newFolder, ProjectMgr.ProjectHome),
+                    string.Format("Expected {0} == {1}", newFolder, ProjectMgr.ProjectHome)
+                );
                 parentFolder = ProjectMgr;
             }
 
@@ -918,9 +952,9 @@ namespace Microsoft.VisualStudioTools.Project {
             ExpandItem(EXPANDFLAGS.EXPF_SelectItem);
         }
 
-        #endregion
+#endregion
 
-        #region helpers
+#region helpers
 
 
         /// <summary>
@@ -942,7 +976,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
             return childNodes;
         }
-        #endregion
+#endregion
 
         void IDiskBasedNode.RenameForDeferredSave(string basePath, string baseNewPath) {
             string oldLoc = CommonUtils.GetAbsoluteFilePath(basePath, ItemNode.GetMetadata(ProjectFileConstants.Include));

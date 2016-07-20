@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
   <!--  This is the file that defines the actual layout and type of the commands.
@@ -19,6 +19,9 @@
 
   <!--This header contains the command ids for the menus provided by the shell. -->
   <Extern href="vsshlids.h"/>
+
+  <Include href="KnownImageIds.vsct"/>
+  
   <!--The Commands section is where we the commands, menus and menu groups are defined.
       This section uses a Guid to identify the package that provides the command defined inside it. -->
   <Commands package="guidPythonProfilingPkg">
@@ -109,7 +112,8 @@
       <!-- Toolbar Buttons -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidAddPerfSession" priority="0x0000" type="Button">
         <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
-        <Icon guid="guidCmdBarImages" id="newSessionIcon"/>
+        <Icon guid="ImageCatalogGuid" id="NewPerformanceReport"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Add Performance Session</ButtonText>
           <LocCanonicalName>.Python.AddPerformanceSession</LocCanonicalName>
@@ -117,8 +121,9 @@
       </Button>
       <Button guid="guidPythonProfilingCmdSet" id="cmdidStartProfiling" priority="0x0000" type="Button">
         <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
-        <Icon guid="guidCmdBarImages" id="startIcon"/>
+        <Icon guid="ImageCatalogGuid" id="RunPerformance"/>
         <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Start Profiling</ButtonText>
           <LocCanonicalName>.Python.StartProfiling</LocCanonicalName>
@@ -126,8 +131,9 @@
       </Button>
       <Button guid="guidPythonProfilingCmdSet" id="cmdidStopProfiling" priority="0x0000" type="Button">
         <Parent guid="guidPythonProfilingCmdSet" id="perfToolbarGroup"/>
-        <Icon guid="guidCmdBarImages" id="stopIcon"/>
+        <Icon guid="ImageCatalogGuid" id="StopFilter"/>
         <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Stop Profiling</ButtonText>
           <LocCanonicalName>.Python.StopProfiling</LocCanonicalName>
@@ -137,7 +143,8 @@
       <!-- Context menu items for session node -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidPerfCtxStartProfiling" priority="0x0000" type="Button">
         <Parent guid="guidPythonProfilingCmdSet" id="perfCtxMenuGroup"/>
-        <Icon guid="guidCmdBarImages" id="startIcon"/>
+        <Icon guid="ImageCatalogGuid" id="RunPerformance"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>&amp;Start Profiling</ButtonText>
         </Strings>
@@ -159,7 +166,8 @@
       </Button>
       <Button guid="guidPythonProfilingCmdSet" id="cmdidReportsCompareReports" priority="0x0000" type="Button">
         <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
-        <Icon guid="guidCmdBarImages" id="compareReports"/>
+        <Icon guid="ImageCatalogGuid" id="PerformanceReport"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>&amp;Compare Performance Reports...</ButtonText>
           <LocCanonicalName>.Python.ComparePerformanceReports</LocCanonicalName>
@@ -175,22 +183,6 @@
         </Strings>
       </Button>
     </Buttons>
-   
-    <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
-    <Bitmaps>
-      <Bitmaps Condition="Defined(DEV14)">
-        <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev14.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"/>
-      </Bitmaps>
-      <Bitmaps Condition="Defined(DEV12)">
-        <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev12.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"/>
-      </Bitmaps>
-      <Bitmaps Condition="Defined(DEV11)">
-        <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev11.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"/>
-      </Bitmaps>
-      <Bitmaps Condition="Defined(DEV10)">
-        <Bitmap guid="guidCmdBarImages" href="..\Icons\Dev10.0\ProfilingCmdBar.bmp" usedList="startIcon, newSessionIcon, stopIcon, compareReports"/>
-      </Bitmaps>
-    </Bitmaps>
   </Commands>
 
   <CommandPlacements>
@@ -254,13 +246,6 @@
       <IDSymbol name="perfToolbarGroup" value="0x3003"/>
 
 
-    </GuidSymbol>
-
-    <GuidSymbol name="guidCmdBarImages" value="{D0023B39-E866-4995-9C8A-50BB0D72E074}">
-      <IDSymbol name="startIcon" value="1"/>
-      <IDSymbol name="newSessionIcon" value="2"/>
-      <IDSymbol name="stopIcon" value="3"/>
-      <IDSymbol name="compareReports" value="4"/>
     </GuidSymbol>
 
     <!-- External Guids and IDs which we need to hook into -->

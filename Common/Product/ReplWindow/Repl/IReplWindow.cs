@@ -18,27 +18,19 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Utilities;
 
 #if NTVS_FEATURE_INTERACTIVEWINDOW
 namespace Microsoft.NodejsTools.Repl {
 #else
 namespace Microsoft.VisualStudio.Repl {
 #endif
-#if INTERACTIVE_WINDOW
-    using IReplCommand = IInteractiveWindowCommand;
-    using IReplEvaluator = IInteractiveEngine;
-#endif
-
     /// <summary>
     /// An implementation of a Read Eval Print Loop Window for iteratively developing code.
     /// 
     /// Instances of the repl window can be created by using MEF to import the IReplWindowProvider interface.
     /// </summary>
-#if INTERACTIVE_WINDOW
-    public interface IInteractiveWindow {
-#else
     public interface IReplWindow {
-#endif
         /// <summary>
         /// Gets the IWpfTextView in which the REPL window is executing.
         /// </summary>
@@ -178,5 +170,13 @@ namespace Microsoft.VisualStudio.Repl {
         /// This method can only execute special (prefixed) commands. To evaluate code snippers, use <see cref="Evaluator"/>.
         /// </remarks>
         Task<ExecutionResult> ExecuteCommand(string text);
+    }
+
+    public interface IReplWindow3 : IReplWindow2 {
+
+        /// <summary>
+        /// Storage
+        /// </summary>
+        PropertyCollection Properties { get; }
     }
 }

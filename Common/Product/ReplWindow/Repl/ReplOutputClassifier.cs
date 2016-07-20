@@ -54,6 +54,9 @@ namespace Microsoft.VisualStudio.Repl {
             if (startIndex < 0) {
                 startIndex = ~startIndex - 1;
             }
+            if (startIndex < 0) {
+                startIndex = 0;
+            }
 
             int spanEnd = span.End.Position;
             for (int i = startIndex; i < coloredSpans.Count && coloredSpans[i].Span.Start < spanEnd; i++) {

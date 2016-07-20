@@ -1,4 +1,4 @@
-﻿while 1:
+while 1:
     pass
 
 while 1:

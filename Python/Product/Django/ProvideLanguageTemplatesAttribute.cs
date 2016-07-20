@@ -1,32 +1,24 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Globalization;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.Django {
-
-    /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute"]' />
-    /// <devdoc>
-    ///     This attribute associates a file extension to a given editor factory.  
-    ///     The editor factory may be specified as either a GUID or a type and 
-    ///     is placed on a package.
-    ///     
-    /// This differs from the normal one in that more than one extension can be supplied and
-    /// a linked editor GUID can be supplied.
-    /// </devdoc>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = true)]
     internal sealed class ProvideLanguageTemplatesAttribute : RegistrationAttribute {
         private readonly string _projectFactory, _languageName, _package, _languageGuid, _description, _templateGroup,
@@ -45,8 +37,6 @@ namespace Microsoft.PythonTools.Django {
             _webProjectGuid = webProjectGuid;
         }
 
-
-        /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="Register"]' />
         /// <devdoc>
         ///     Called to register this attribute with the given context.  The context
         ///     contains the location where the registration inforomation should be placed.

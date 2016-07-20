@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -130,7 +132,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             var res = base.GetMember(node, unit, name);
             if (res.Count > 0) {
                 _referencedMembers.AddReference(node, unit, name);
-                return res.GetStaticDescriptor(unit);
+                return res.GetDescriptor(node, unit.ProjectState._noneInst, this, unit);
             }
             return res;
         }
@@ -243,7 +245,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 if (_doc == null) {
                     try {
-                        var doc = _type.Documentation;
+                        var doc = _type.Documentation ?? string.Empty;
                         _doc = Utils.StripDocumentation(doc.ToString());
                     } catch {
                         _doc = String.Empty;
@@ -296,7 +298,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
                 var ci = ns as ClassInfo;
                 if (ci != null && TypeId != BuiltinTypeId.Object) {
-                    return ci.Mro.AnyContains(this);
+                    return ci.Mro.Any(m => m.Contains(this));
                 }
             }
 
@@ -328,7 +330,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_references == null) {
                     _references = new ReferenceDict();
                 }
-                _references.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new EncodedLocation(unit.Tree, node));
+                _references.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new EncodedLocation(unit, node));
             }
         }
 

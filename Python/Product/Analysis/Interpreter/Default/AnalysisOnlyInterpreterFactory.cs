@@ -1,23 +1,23 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class AnalysisOnlyInterpreterFactory : PythonInterpreterFactoryWithDatabase {
@@ -26,20 +26,37 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         public AnalysisOnlyInterpreterFactory(Version version, string description = null)
             : base(
-                Guid.NewGuid(),
-                description ?? string.Format("Python {0} Analyzer", version),
-                new InterpreterConfiguration(version),
+                GetConfiguration(version),
                 false
         ) { }
 
         public AnalysisOnlyInterpreterFactory(Version version, IEnumerable<string> databasePaths, string description = null)
-            : this(version, description) {
-            _actualDatabasePaths = databasePaths.ToList();
+            : base(GetConfiguration(version, databasePaths?.ToArray() ?? Array.Empty<string>()), false) {
+            _actualDatabasePaths = databasePaths?.ToList();
         }
 
         public AnalysisOnlyInterpreterFactory(Version version, PythonTypeDatabase database, string description = null)
-            : this(version, description) {
+            : base(GetConfiguration(version, database.DatabaseDirectory), false) {
             _actualDatabase = database;
+        }
+
+        private static InterpreterConfiguration GetConfiguration(Version version, params string[] databasePaths) {
+            return new InterpreterConfiguration(
+                "AnalysisOnly;" + version.ToString() + ";" + String.Join(";", databasePaths.ToArray()), 
+                "Analysis", 
+                null,
+                null,
+                null,
+                null,
+                null,
+                ProcessorArchitecture.None,
+                version,
+                InterpreterUIMode.SupportsDatabase
+            );
+        }
+
+        private static string GetDescription(Version version, string description) {
+            return description ?? string.Format("Python {0} Analyzer", version);
         }
 
         public override PythonTypeDatabase MakeTypeDatabase(string databasePath, bool includeSitePackages = true) {

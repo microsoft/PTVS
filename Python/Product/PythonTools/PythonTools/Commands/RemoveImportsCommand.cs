@@ -1,19 +1,21 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Refactoring;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -25,19 +27,25 @@ namespace Microsoft.PythonTools.Commands {
     /// </summary>
     class RemoveImportsCommand : Command {
         private readonly System.IServiceProvider _serviceProvider;
+        private readonly bool _allScopes;
         
-        public RemoveImportsCommand(System.IServiceProvider serviceProvider) {
+        public RemoveImportsCommand(System.IServiceProvider serviceProvider, bool allScopes) {
             _serviceProvider = serviceProvider;
+            _allScopes = allScopes;
         }
 
-        public override void DoCommand(object sender, EventArgs args) {
-            new ImportRemover(_serviceProvider, CommonPackage.GetActiveTextView(_serviceProvider), true).RemoveImports();
+        public override async void DoCommand(object sender, EventArgs args) {
+            var view = CommonPackage.GetActiveTextView(_serviceProvider);
+            var analyzer = view.GetAnalyzerAtCaret(_serviceProvider);
+            var pythonCaret = view.GetPythonCaret().Value; // QueryStatus guarantees we have a valid caret
+
+            await analyzer.RemoveImportsAsync(view, pythonCaret.Snapshot.TextBuffer, pythonCaret.Position, _allScopes);
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
             var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
-            if (activeView != null && activeView.TextBuffer.ContentType.IsOfType(PythonCoreConstants.ContentType)) {                
-                cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);                
+            if (activeView != null && activeView.GetPythonBufferAtCaret() != null) {                
+                cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
             } else {
                 cmd.cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
             }
@@ -55,7 +63,9 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         public override int CommandId {
-            get { return (int)PkgCmdIDList.cmdidRemoveImports; }
+            get {
+                return _allScopes ? (int)PkgCmdIDList.cmdidRemoveImports : (int)PkgCmdIDList.cmdidRemoveImportsCurrentScope;
+            }
         }
     }
 }

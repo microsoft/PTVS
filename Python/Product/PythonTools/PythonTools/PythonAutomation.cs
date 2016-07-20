@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -32,6 +34,7 @@ namespace Microsoft.PythonTools {
     public sealed class PythonAutomation : IVsPython, IPythonOptions, IPythonIntellisenseOptions {
         private readonly IServiceProvider _serviceProvider;
         private readonly PythonToolsService _pyService;
+        private AutomationInteractiveOptions _interactiveOptions;
 
         internal PythonAutomation(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
@@ -45,11 +48,13 @@ namespace Microsoft.PythonTools {
             get { return this; }
         }
 
-        IPythonInteractiveOptions IPythonOptions.GetInteractiveOptions(string interpreterName) {
-            var interpreters = _pyService.ComponentModel.GetService<IInterpreterOptionsService>().Interpreters;
-            var factory = interpreters.FirstOrDefault(i => i.Description == interpreterName);
-
-            return factory == null ? null : new AutomationInterpreterOptions(_serviceProvider, factory);
+        IPythonInteractiveOptions IPythonOptions.Interactive {
+            get {
+                if (_interactiveOptions == null) {
+                    _interactiveOptions = new AutomationInteractiveOptions(_serviceProvider);
+                }
+                return _interactiveOptions;
+            }
         }
 
         bool IPythonOptions.PromptBeforeRunningWithBuildErrorSetting {
@@ -132,7 +137,7 @@ namespace Microsoft.PythonTools {
             }
             set {
                 _pyService.AdvancedOptions.EnterCommitsIntellisense = value;
-                _pyService.AdvancedOptions.Save();                
+                _pyService.AdvancedOptions.Save();
             }
         }
 
@@ -170,112 +175,70 @@ namespace Microsoft.PythonTools {
         #endregion
 
         void IVsPython.OpenInteractive(string description) {
-            int? commandId = null;
-            lock (PythonToolsPackage.CommandsLock) {
-                foreach (var command in PythonToolsPackage.Commands) {
-                    OpenReplCommand replCommand = command.Key as OpenReplCommand;
-                    if (replCommand != null && replCommand.Description == description) {
-                        commandId = replCommand.CommandId;
-                        break;
-                    }
-                }
+            var compModel = _pyService.ComponentModel;
+            if (compModel == null) {
+                throw new InvalidOperationException("Could not activate component model");
             }
 
-            if (commandId.HasValue) {
-                var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
-                object inObj = null, outObj = null;
-                dte.Commands.Raise(GuidList.guidPythonToolsCmdSet.ToString("B"), commandId.Value, ref inObj, ref outObj);
-            } else {
-                throw new KeyNotFoundException("Could not find interactive window with name: " + description);
+            var provider = compModel.GetService<InteractiveWindowProvider>();
+            var interpreters = compModel.GetService<IInterpreterRegistryService>();
+
+            var factory = interpreters.Configurations.FirstOrDefault(
+                f => f.FullDescription.Equals(description, StringComparison.CurrentCultureIgnoreCase)
+            );
+            if (factory == null) {
+                throw new KeyNotFoundException("Could not create interactive window with name: " + description);
             }
+
+            var window = provider.OpenOrCreate(
+                PythonReplEvaluatorProvider.GetEvaluatorId(factory)
+            );
+
+            if (window == null) {
+                throw new InvalidOperationException("Could not create interactive window");
+            }
+
+            window.Show(true);
         }
     }
 
     [ComVisible(true)]
-    public sealed class AutomationInterpreterOptions : IPythonInteractiveOptions {
-        private readonly IPythonInterpreterFactory _interpreterFactory;
+    public sealed class AutomationInteractiveOptions : IPythonInteractiveOptions {
         private readonly IServiceProvider _serviceProvider;
 
-        [Obsolete("A IServiceProvider should be provided")]
-        public AutomationInterpreterOptions(IPythonInterpreterFactory interpreterFactory) {
-            _interpreterFactory = interpreterFactory;
-        }
-
-        public AutomationInterpreterOptions(IServiceProvider serviceProvider, IPythonInterpreterFactory interpreterFactory) {
+        public AutomationInteractiveOptions(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
-            _interpreterFactory = interpreterFactory;
         }
 
         internal PythonInteractiveOptions CurrentOptions {
             get {
-                return _serviceProvider.GetPythonToolsService().GetInteractiveOptions(_interpreterFactory);
+                return _serviceProvider.GetPythonToolsService().InteractiveOptions;
             }
         }
 
         private void SaveSettingsToStorage() {
-            CurrentOptions.Save(_interpreterFactory);
+            CurrentOptions.Save();
         }
 
-        string IPythonInteractiveOptions.PrimaryPrompt {
+        bool IPythonInteractiveOptions.UseSmartHistory {
             get {
-                return CurrentOptions.PrimaryPrompt;
+                return CurrentOptions.UseSmartHistory;
+
             }
             set {
-                CurrentOptions.PrimaryPrompt = value;
+                CurrentOptions.UseSmartHistory = value;
                 SaveSettingsToStorage();
             }
         }
 
-        string IPythonInteractiveOptions.SecondaryPrompt {
+        string IPythonInteractiveOptions.CompletionMode {
             get {
-                return CurrentOptions.SecondaryPrompt;
-            }
-            set {
-                CurrentOptions.SecondaryPrompt = value;
-                SaveSettingsToStorage();
-            }
-        }
-
-        bool IPythonInteractiveOptions.UseInterpreterPrompts {
-            get {
-                return CurrentOptions.UseInterpreterPrompts;
-
-            }
-            set {
-                CurrentOptions.UseInterpreterPrompts = value;
-                SaveSettingsToStorage();
-            }
-        }
-
-        bool IPythonInteractiveOptions.InlinePrompts {
-            get {
-                return CurrentOptions.InlinePrompts;
-            }
-            set {
-                CurrentOptions.InlinePrompts = value;
-                SaveSettingsToStorage();
-            }
-        }
-
-        bool IPythonInteractiveOptions.ReplSmartHistory {
-            get {
-                return CurrentOptions.ReplSmartHistory;
-
-            }
-            set {
-                CurrentOptions.ReplSmartHistory = value;
-                SaveSettingsToStorage();
-            }
-        }
-
-        string IPythonInteractiveOptions.ReplIntellisenseMode {
-            get {
-                return CurrentOptions.ReplIntellisenseMode.ToString();
+                return CurrentOptions.CompletionMode.ToString();
             }
             set {
                 ReplIntellisenseMode mode;
-                if (Enum.TryParse<ReplIntellisenseMode>(value, out mode)) {
-                    CurrentOptions.ReplIntellisenseMode = mode;
+                if (Enum.TryParse(value, out mode)) {
+                    CurrentOptions.CompletionMode = mode;
                     SaveSettingsToStorage();
                 } else {
                     throw new InvalidOperationException(
@@ -288,49 +251,12 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        string IPythonInteractiveOptions.StartupScript {
+        string IPythonInteractiveOptions.StartupScripts {
             get {
-                return CurrentOptions.StartupScript;
+                return CurrentOptions.Scripts;
             }
             set {
-                CurrentOptions.StartupScript = value;
-                SaveSettingsToStorage();
-            }
-        }
-
-        string IPythonInteractiveOptions.ExecutionMode {
-            get {
-                return CurrentOptions.ExecutionMode;
-            }
-            set {
-                foreach (var mode in ExecutionMode.GetRegisteredModes(_serviceProvider)) {
-                    if (mode.FriendlyName.Equals(value, StringComparison.OrdinalIgnoreCase)) {
-                        value = mode.Id;
-                        break;
-                    }
-                }
-
-                CurrentOptions.ExecutionMode = value;
-                SaveSettingsToStorage();
-            }
-        }
-
-        string IPythonInteractiveOptions.InterpreterArguments {
-            get {
-                return CurrentOptions.InterpreterOptions;
-            }
-            set {
-                CurrentOptions.InterpreterOptions = value;
-                SaveSettingsToStorage();
-            }
-        }
-
-        bool IPythonInteractiveOptions.EnableAttach {
-            get {
-                return CurrentOptions.EnableAttach;
-            }
-            set {
-                CurrentOptions.EnableAttach = value;
+                CurrentOptions.Scripts = value;
                 SaveSettingsToStorage();
             }
         }

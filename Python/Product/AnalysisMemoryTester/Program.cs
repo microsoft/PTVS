@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -21,9 +23,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Analysis.MemoryTester {
     class Program {
@@ -115,13 +117,15 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
             using (var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version, "Test Factory", dbPath))
             using (var analyzer = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions()) {
                 var modules = new Dictionary<string, IPythonProjectEntry>();
+                var state = new State();
 
                 foreach (var tuple in SplitCommands(commands)) {
                     RunCommand(
                         tuple.Item1,
                         tuple.Item2,
                         analyzer,
-                        modules
+                        modules,
+                        state
                     );
                 }
             }
@@ -187,11 +191,16 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
             }
         }
 
+        private class State {
+            public long LastDumpSize;
+        }
+
         private static void RunCommand(
             string cmd,
             string args,
             PythonAnalyzer analyzer,
-            Dictionary<string, IPythonProjectEntry> modules
+            Dictionary<string, IPythonProjectEntry> modules,
+            State state
         ) {
             switch (cmd.ToLower()) {
                 case "print":
@@ -259,8 +268,24 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                     break;
                 case "dump": {
                         var fullPath = Path.GetFullPath(args);
-                        WriteDump(Process.GetCurrentProcess(), fullPath, MiniDumpType.FullDump);
-                        Console.WriteLine("Dump written to {0}", fullPath);
+                        var length = WriteDump(Process.GetCurrentProcess(), fullPath, MiniDumpType.FullDump);
+                        Console.WriteLine(
+                            "Dump written to {0} at {1:F1}MB ({2} bytes)",
+                            fullPath,
+                            length / (1024.0 * 1024.0),
+                            length
+                        );
+                        if (state.LastDumpSize > 0 && state.LastDumpSize != length) {
+                            var delta = Math.Abs(length - state.LastDumpSize);
+                            var direction = (length > state.LastDumpSize) ? "larger" : "smaller";
+                            Console.WriteLine(
+                                "Dump is {0:F1}MB ({1} bytes) {2} than previous",
+                                delta / (1024.0 * 1024.0),
+                                delta,
+                                direction
+                            );
+                        }
+                        state.LastDumpSize = length;
                         break;
                     }
                 default:
@@ -328,7 +353,7 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool MiniDumpWriteDump(IntPtr hProcess, uint ProcessId, IntPtr hFile, MiniDumpType DumpType, IntPtr ExceptionParam, IntPtr UserStreamParam, IntPtr CallbackParam);
 
-        public static void WriteDump(Process proc, string dump, MiniDumpType type) {
+        public static long WriteDump(Process proc, string dump, MiniDumpType type) {
             Directory.CreateDirectory(Path.GetDirectoryName(dump));
 
             FileStream stream = null;
@@ -367,6 +392,7 @@ namespace Microsoft.PythonTools.Analysis.MemoryTester {
                 if (!MiniDumpWriteDump(proc.Handle, (uint)proc.Id, stream.SafeFileHandle.DangerousGetHandle(), type, IntPtr.Zero, IntPtr.Zero, IntPtr.Zero)) {
                     throw new Win32Exception();
                 }
+                return stream.Length;
             }
         }
 

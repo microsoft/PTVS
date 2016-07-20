@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -19,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -44,7 +47,7 @@ namespace Microsoft.PythonTools.Analysis {
                 if ((moduleInfo = modKeyValue.Value.Module as ModuleInfo) != null) {
                     _curModule = moduleInfo;
                     var info = SerializeModule(moduleInfo);
-                    WriteModule(outDir, name, info, moduleInfo.Scope.Variables.Keys);
+                    WriteModule(outDir, name, info, moduleInfo.Scope.AllVariables.Keys());
                 }
             }
 
@@ -130,7 +133,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private Dictionary<string, object> GenerateMembers(ModuleInfo moduleInfo, IEnumerable<object> children) {
             Dictionary<string, object> res = new Dictionary<string, object>();
-            foreach (var keyValue in moduleInfo.Scope.Variables) {
+            foreach (var keyValue in moduleInfo.Scope.AllVariables) {
                 if (keyValue.Value.IsEphemeral) {
                     // Never got a value, so leave it out.
                     continue;
@@ -342,6 +345,9 @@ namespace Microsoft.PythonTools.Analysis {
         private object GetMemberValueInternal(AnalysisValue type, ModuleInfo declModule, bool isRef) {
             SpecializedNamespace specialCallable = type as SpecializedNamespace;
             if (specialCallable != null) {
+                if (specialCallable.Original == null) {
+                    return null;
+                }
                 return GetMemberValueInternal(specialCallable.Original, declModule, isRef);
             }
 
@@ -456,6 +462,9 @@ namespace Microsoft.PythonTools.Analysis {
         private static string GetMemberKind(AnalysisValue type, ModuleInfo declModule, bool isRef) {
             SpecializedNamespace specialCallable = type as SpecializedNamespace;
             if (specialCallable != null) {
+                if (specialCallable.Original == null) {
+                    return "data";
+                }
                 return GetMemberKind(specialCallable.Original, declModule, isRef);
             }
 
@@ -475,7 +484,8 @@ namespace Microsoft.PythonTools.Analysis {
                 case PythonMemberType.Module:
                     return "moduleref";
                 case PythonMemberType.Instance:
-                default: return "data";
+                default:
+                    return "data";
             }
         }
 
@@ -540,7 +550,7 @@ namespace Microsoft.PythonTools.Analysis {
 
         private object GetClassMembers(ClassInfo ci, ModuleInfo declModule) {
             Dictionary<string, object> memTable = new Dictionary<string, object>();
-            foreach (var keyValue in ci.Scope.Variables) {
+            foreach (var keyValue in ci.Scope.AllVariables) {
                 if (keyValue.Value.IsEphemeral) {
                     continue;
                 }
@@ -592,7 +602,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return GenerateTypeName(bci._type);
             }
 
-            IterableInfo iteri = baseClass as IterableInfo;
+            IterableValue iteri = baseClass as IterableValue;
             if (iteri != null) {
                 return GenerateTypeName(iteri.PythonType, isRef, iteri.IndexTypes);
             }
@@ -665,13 +675,19 @@ namespace Microsoft.PythonTools.Analysis {
 
         private Dictionary<string, object> GenerateFunction(FunctionInfo fi) {
             // TODO: Include inner classes/functions
-            return new Dictionary<string, object>() {
+            var res = new Dictionary<string, object>() {
                 { "doc", fi.Documentation },
                 { "builtin", false },
-                { "static", fi.IsStatic },
                 { "location", GenerateLocation(fi.Locations) },
                 { "overloads", GenerateOverloads(fi) }
             };
+            if (fi.IsStatic) {
+                res["static"] = fi.IsStatic;
+            }
+            if (fi.IsClassMethod) {
+                res["classmethod"] = true;
+            }
+            return res;
         }
 
         private Dictionary<string, object> GenerateMethod(BoundMethodInfo bmi) {
@@ -683,7 +699,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private static object[] GenerateLocation(LocationInfo location) {
-            return new object[] { location.Line, location.Column };
+            return new object[] { location.StartLine, location.StartColumn };
         }
 
         private static object[] GenerateLocation(IEnumerable<LocationInfo> locations) {

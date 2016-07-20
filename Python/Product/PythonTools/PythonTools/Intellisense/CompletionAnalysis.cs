@@ -1,49 +1,53 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Repl;
+using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
-#if INTERACTIVE_WINDOW
-    using IReplEvaluator = IInteractiveEngine;
-#endif
-
     /// <summary>
     /// Provides various completion services after the text around the current location has been
     /// processed. The completion services are specific to the current context
     /// </summary>
     public class CompletionAnalysis {
+        private readonly ITextView _view;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ITrackingSpan _span;
         private readonly ITextBuffer _textBuffer;
         internal readonly CompletionOptions _options;
         internal const Int64 TooMuchTime = 50;
         protected static Stopwatch _stopwatch = MakeStopWatch();
 
-        internal static CompletionAnalysis EmptyCompletionContext = new CompletionAnalysis(null, null, null);
+        internal static CompletionAnalysis EmptyCompletionContext = new CompletionAnalysis(null, null, null, null, null);
 
-        internal CompletionAnalysis(ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
+        internal CompletionAnalysis(IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
+            _view = view;
             _span = span;
+            _serviceProvider = serviceProvider;
             _textBuffer = textBuffer;
             _options = (options == null) ? new CompletionOptions() : options.Clone();
         }
@@ -60,6 +64,12 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        public ITextView View {
+            get {
+                return _view;
+            }
+        }
+
         public virtual CompletionSet GetCompletions(IGlyphService glyphService) {
             return null;
         }
@@ -68,7 +78,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return token.ClassificationType.Classification == PredefinedClassificationTypeNames.Keyword && token.Span.GetText() == keyword;
         }
 
-        internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, MemberResult memberResult) {
+        internal static DynamicallyVisibleCompletion PythonCompletion(IGlyphService service, CompletionResult memberResult) {
             return new DynamicallyVisibleCompletion(memberResult.Name, 
                 memberResult.Completion, 
                 () => memberResult.Documentation, 
@@ -101,11 +111,17 @@ namespace Microsoft.PythonTools.Intellisense {
             return result;
         }
 
-        internal ModuleAnalysis GetAnalysisEntry() {
-            IPythonProjectEntry entry;
-            return TextBuffer.TryGetPythonProjectEntry(out entry) && entry != null ?
-                entry.Analysis :
-                null;
+        internal AnalysisEntry GetAnalysisEntry() {
+            AnalysisEntry entry;
+            if (_view.TryGetAnalysisEntry(TextBuffer, _serviceProvider, out entry) && entry != null) {
+                //Debug.Assert(
+                //    entry.Analysis != null,
+                //    string.Format("Failed to get analysis for buffer {0} with file {1}", TextBuffer, entry.FilePath)
+                //);
+                return entry;
+            }
+            Debug.Fail("Failed to get project entry for buffer " + TextBuffer.ToString());
+            return null;
         }
 
         private static Stopwatch MakeStopWatch() {
@@ -114,13 +130,16 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
-        protected IEnumerable<MemberResult> GetModules(string[] package, bool modulesOnly = true) {
+        protected IEnumerable<CompletionResult> GetModules(string[] package, bool modulesOnly = true) {
             var analysis = GetAnalysisEntry();
+            if (analysis == null) {
+                return Enumerable.Empty<CompletionResult>();
+            }
 
-            IPythonReplIntellisense pyReplEval = null;
-            IReplEvaluator eval;
-            if (TextBuffer.Properties.TryGetProperty<IReplEvaluator>(typeof(IReplEvaluator), out eval)) {
-                pyReplEval = eval as IPythonReplIntellisense;
+            IPythonInteractiveIntellisense pyReplEval = null;
+            IInteractiveEvaluator eval;
+            if (TextBuffer.Properties.TryGetProperty(typeof(IInteractiveEvaluator), out eval)) {
+                pyReplEval = eval as IPythonInteractiveIntellisense;
             }
             IEnumerable<KeyValuePair<string, bool>> replScopes = null;
             if (pyReplEval != null) {
@@ -131,11 +150,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 package = new string[0];
             }
 
-            var modules = Enumerable.Empty<MemberResult>();
+            var modules = Enumerable.Empty<CompletionResult>();
             if (analysis != null && (pyReplEval == null || !pyReplEval.LiveCompletionsOnly)) {
                 modules = modules.Concat(package.Length > 0 ? 
-                    analysis.GetModuleMembers(package, !modulesOnly) :
-                    analysis.GetModules(true).Distinct(CompletionComparer.MemberEquality)
+                    analysis.Analyzer.GetModuleMembersAsync(analysis, package, !modulesOnly).WaitOrDefault(1000) ?? modules:
+                    (analysis.Analyzer.GetModulesResult(true).WaitOrDefault(1000) ?? modules).Distinct(CompletionComparer.MemberEquality)
                 );
             }
             if (replScopes != null) {
@@ -147,14 +166,14 @@ namespace Microsoft.PythonTools.Intellisense {
             return modules;
         }
 
-        private static IEnumerable<MemberResult> GetModulesFromReplScope(
+        private static IEnumerable<CompletionResult> GetModulesFromReplScope(
             IEnumerable<KeyValuePair<string, bool>> scopes,
             string[] package
         ) {
             if (package == null || package.Length == 0) {
                 foreach (var scope in scopes) {
                     if (scope.Key.IndexOf('.') < 0) {
-                        yield return new MemberResult(
+                        yield return new CompletionResult(
                             scope.Key,
                             scope.Value ? PythonMemberType.Module : PythonMemberType.Namespace
                         );
@@ -165,7 +184,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     var parts = scope.Key.Split('.');
                     if (parts.Length - 1 == package.Length &&
                         parts.Take(parts.Length - 1).SequenceEqual(package, StringComparer.Ordinal)) {
-                        yield return new MemberResult(
+                        yield return new CompletionResult(
                             parts[parts.Length - 1],
                             scope.Value ? PythonMemberType.Module : PythonMemberType.Namespace
                         );

@@ -1,0 +1,8 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <OutputPathSuffix Condition="$(OutputPathSuffix) == ''">setup\swix</OutputPathSuffix>
+    <IntermediateOutputPathSuffix Condition="$(IntermediateOutputPathSuffix) == ''">setup_$(MSBuildProjectName)\</IntermediateOutputPathSuffix>
+    <ValidateManifestExclude Condition="$(SignType) != 'Real' and $(SignType) != 'Test'">PayloadUrlIsValid</ValidateManifestExclude>
+  </PropertyGroup>
+  <Import Project="..\SetupProjectBefore.settings" />
+</Project>

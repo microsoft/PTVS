@@ -1,19 +1,22 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -22,7 +25,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// <summary>
     /// Specialized built-in instance for sequences (lists, tuples)
     /// </summary>
-    internal class SequenceInfo : IterableInfo {
+    internal class SequenceInfo : IterableValue {
         private readonly ProjectEntry _declaringModule;
         private readonly int _declaringVersion;
         
@@ -60,13 +63,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     
                     foreach (var type in rhs.Where(t => t.IsOfType(ClassInfo))) {
                         if (seq == null) {
-                            seq = (SequenceInfo)unit.Scope.GetOrMakeNodeValue(node, _ =>
-                                new SequenceInfo(new[] { new VariableDef() }, ClassInfo, node, unit.ProjectEntry)
+                            seq = (SequenceInfo)unit.Scope.GetOrMakeNodeValue(node,
+                                NodeValueKind.Sequence,
+                                _ => new SequenceInfo(new[] { new VariableDef() }, ClassInfo, node, unit.ProjectEntry)
                             );
                             idx = seq.IndexTypes[0];
-                            idx.AddTypes(unit, GetEnumeratorTypes(node, unit));
+                            idx.AddTypes(unit, GetEnumeratorTypes(node, unit), true, DeclaringModule);
                         }
-                        idx.AddTypes(unit, type.GetEnumeratorTypes(node, unit));
+                        idx.AddTypes(unit, type.GetEnumeratorTypes(node, unit), true, DeclaringModule);
                     }
 
                     if (seq != null) {
@@ -187,7 +191,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 IndexTypes = newTypes;
             }
-            IndexTypes[index].AddTypes(unit, value);
+            IndexTypes[index].AddTypes(unit, value, true, DeclaringModule);
         }
 
         public override void SetIndex(Node node, AnalysisUnit unit, IAnalysisSet index, IAnalysisSet value) {
@@ -199,7 +203,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (IndexTypes.Length == 0) {
                     IndexTypes = new[] { new VariableDef() };
                 }
-                IndexTypes[0].AddTypes(unit, value);
+                IndexTypes[0].AddTypes(unit, value, true, DeclaringModule);
             }
         }
 
@@ -212,15 +216,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override string ToString() {
             return "*" + base.ToString();
-        }
-
-        internal int TypesCount {
-            get {
-                if (IndexTypes == null) {
-                    return 0;
-                }
-                return IndexTypes.Aggregate(0, (total, it) => total + it.TypesNoCopy.Count);
-            }
         }
 
         internal void MakeUnionStronger() {
@@ -257,7 +252,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 location,
                 unit.ProjectEntry
             );
-            base.AddTypes(unit, List);
+            base.AddTypes(unit, List, false, unit.DeclaringModule.ProjectEntry);
         }
 
         public ListParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
@@ -268,7 +263,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 location,
                 unit.ProjectEntry
             );
-            base.AddTypes(unit, List);
+            base.AddTypes(unit, List, false, unit.DeclaringModule.ProjectEntry);
         }
     }
 

@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -30,6 +32,8 @@ using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsTests {
+    using AP = AnalysisProtocol;
+
     [TestClass]
     public class ExtractMethodTests {
         private const string ErrorReturn = "When the selection contains a return statement, all code paths must be terminated by a return statement too.";
@@ -46,7 +50,7 @@ namespace PythonToolsTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestGlobalNonLocalVars() {
             SuccessTest("ABC = 42",
 @"def f():
@@ -98,7 +102,7 @@ def f():
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestDefinitions() {
             SuccessTest("x = .. = h()",
 @"def f():
@@ -157,7 +161,7 @@ def f(): pass",
 f = g()");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestLeadingComment() {
             SuccessTest("x = 41",
 @"# fob
@@ -170,7 +174,7 @@ def g():
 x = g()");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void AssignInIfStatementReadAfter() {
             ExtractMethodTest(@"class C:
     def fob(self):
@@ -234,7 +238,7 @@ x = g()");
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ExtractMethodIndexExpr() {
             ExtractMethodTest(@"class C:
     def process_kinect_event(self, e):
@@ -252,7 +256,7 @@ x = g()");
  ), scopeName: "C");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestExtractLambda() {
             // lambda is present in the code
             ExtractMethodTest(
@@ -281,7 +285,7 @@ def f():
     abc = g()"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestExtractGenerator() {
             var code = @"def f(imp = imp):
     yield 42";
@@ -295,7 +299,7 @@ def f(imp = g()):
     yield 42"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestExtractDefaultValue() {
             var code = @"def f(imp = imp):
     pass";
@@ -309,14 +313,14 @@ def f(imp = g()):
     pass"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestFromImportStar() {
             ExtractMethodTest(
 @"def f():
     from sys import *", "from sys import *", TestResult.Error(ErrorImportStar));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestExtractDefiniteAssignmentAfter() {
             SuccessTest("x = 42",
 @"def f():
@@ -334,7 +338,7 @@ def f():
         print x, y");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestExtractDefiniteAssignmentAfterStmtList() {
             SuccessTest("x = 42",
 @"def f():
@@ -355,7 +359,7 @@ def f():
 
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestExtractDefiniteAssignmentAfterStmtListRead() {
             SuccessTest("x = 100",
 @"def f():
@@ -374,7 +378,8 @@ def f():
         print (x, y)");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestAllNodes() {
             var prefixes = new string[] { " # fob\r\n", "" };
             var suffixes = new string[] { " # oar", "" };
@@ -493,7 +498,7 @@ def f():
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestExtractDefiniteAssignmentAfterStmtListMultipleAssign() {
             SuccessTest("x = 100; x = 200",
 @"def f():
@@ -514,7 +519,7 @@ def f():
 
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestExtractFromClass() {
             ExtractMethodTest(
 @"class C:
@@ -522,7 +527,7 @@ def f():
     oar = 100", "abc .. 100", TestResult.Error(ErrorExtractFromClass));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestExtractSuiteWhiteSpace() {
             SuccessTest("x .. 200",
 @"def f():
@@ -558,7 +563,7 @@ def f():
         /// <summary>
         /// Test cases that verify we correctly identify when not all paths contain return statements.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestNotAllCodePathsReturn() {            
             TestMissingReturn("for i .. 23", @"def f(x):
     for i in xrange(100):
@@ -618,7 +623,7 @@ def f():
         }
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestReturnWithOutputVars() {
             TestReturnWithOutputs("if x .. 100", @"def f(x):
     if x:
@@ -630,7 +635,7 @@ def f():
 ");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCannotRefactorYield() {
             TestBadYield("yield 42", @"def f(x):
     yield 42
@@ -642,7 +647,7 @@ def f():
 ");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestContinueWithoutLoop() {
             TestBadContinue("continue", @"def f(x):
     for i in xrange(100):
@@ -650,7 +655,7 @@ def f():
 ");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestBreakWithoutLoop() {
             TestBadBreak("break", @"def f(x):
     for i in xrange(100):
@@ -662,7 +667,7 @@ def f():
         /// Test cases which make sure we have the right ranges for each statement when doing extract method
         /// and that we don't mess up the code before/after the statement.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void StatementTests() {
             SuccessTest("b",
 @"def f():
@@ -1101,7 +1106,7 @@ class C:
         g()");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ClassTests() {
             SuccessTest("x = fob",
 @"class C(object):
@@ -1211,7 +1216,7 @@ class C:
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestComprehensions() {
             SuccessTest("i % 2 == 0", @"def f():
     x = [i for i in range(100) if i % 2 == 0]", @"def g(i):
@@ -1242,7 +1247,7 @@ def f():
     x = {k:v for k,v in range(100) if g(k, v)}", version: new Version(3, 2));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void SuccessfulTests() {
             SuccessTest("x .. 100",
 @"def f():
@@ -1596,6 +1601,30 @@ def f(x):
     return (g())");
         }
 
+        [TestMethod, Priority(1)]
+        public void ExtractAsyncFunction() {
+            // Ensure extracted bodies that use await generate async functions
+
+            var V35 = new Version(3, 5);
+            SuccessTest("x",
+@"async def f():
+    return await x",
+@"def g():
+    return x
+
+async def f():
+    return await g()", version: V35);
+
+            SuccessTest("await x",
+@"async def f():
+    return await x",
+@"async def g():
+    return await x
+
+async def f():
+    return await g()", version: V35);
+        }
+
         private void SuccessTest(Span extract, string input, string result, string scopeName = null, Version version = null, string[] parameters = null) {
             ExtractMethodTest(input, extract, TestResult.Success(result), scopeName: scopeName, version: version, parameters: parameters);
         }
@@ -1670,11 +1699,12 @@ def f(x):
 
         private void ExtractMethodTest(string input, Func<Span> extract, TestResult expected, string scopeName = null, string targetName = "g", Version version = null, params string[] parameters) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version ?? new Version(2, 7));
-            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
-            using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact })) {
+            var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider(suppressTaskProvider: true);
+            using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact)) {
                 var buffer = new MockTextBuffer(input, "Python", "C:\\fob.py");
                 var view = new MockTextView(buffer);
-                buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                buffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                analyzer.MonitorTextBufferAsync(buffer).Wait();
                 var extractInput = new ExtractMethodTestInput(true, scopeName, targetName, parameters ?? new string[0]);
 
                 view.Selection.Select(
@@ -1682,7 +1712,7 @@ def f(x):
                     false
                 );
 
-                new MethodExtractor(serviceProvider, view).ExtractMethod(extractInput);
+                new MethodExtractor(serviceProvider, view).ExtractMethod(extractInput).Wait();
 
                 if (expected.IsError) {
                     Assert.AreEqual(expected.Text, extractInput.FailureReason);
@@ -1712,12 +1742,12 @@ def f(x):
             }
 
             public ExtractMethodRequest GetExtractionInfo(ExtractedMethodCreator previewer) {
-                ScopeStatement scope = null;
+                AP.ScopeInfo scope = null;
                 if (_scopeName == null) {
-                    scope = previewer.Scopes[0];
+                    scope = previewer.LastExtraction.scopes[0];
                 } else {
-                    foreach (var foundScope in previewer.Scopes) {
-                        if (foundScope.Name == _scopeName) {
+                    foreach (var foundScope in previewer.LastExtraction.scopes) {
+                        if (foundScope.name == _scopeName) {
                             scope = foundScope;
                             break;
                         }
@@ -1726,7 +1756,7 @@ def f(x):
 
                 Assert.AreNotEqual(null, scope);
                 var requestView = new ExtractMethodRequestView(PythonToolsTestUtilities.CreateMockServiceProvider(), previewer);
-                requestView.TargetScope = requestView.TargetScopes.Single(s => s == scope);
+                requestView.TargetScope = requestView.TargetScopes.Single(s => s.Scope == scope);
                 requestView.Name = _targetName;
                 foreach (var cv in requestView.ClosureVariables) {
                     cv.IsClosure = !_parameters.Contains(cv.Name);

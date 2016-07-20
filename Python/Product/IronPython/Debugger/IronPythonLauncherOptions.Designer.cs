@@ -1,4 +1,4 @@
-﻿namespace Microsoft.IronPythonTools.Debugger {
+namespace Microsoft.IronPythonTools.Debugger {
     partial class IronPythonLauncherOptions {
         /// <summary> 
         /// Required designer variable.

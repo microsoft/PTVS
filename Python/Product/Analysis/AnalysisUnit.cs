@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -33,7 +35,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// AnalysisUnit which is dependent upon the variable.  If the value of a variable changes then all of the dependent
     /// AnalysisUnit's will be re-enqueued.  This proceeds until we reach a fixed point.
     /// </summary>
-    public class AnalysisUnit : ISet<AnalysisUnit> {
+    public class AnalysisUnit : ISet<AnalysisUnit>, ILocationResolver {
         internal InterpreterScope _scope;
         private ModuleInfo _declaringModule;
 #if DEBUG
@@ -101,6 +103,12 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        public virtual IVersioned DependencyProject {
+            get {
+                return ProjectEntry;
+            }
+        }
+
         internal ProjectEntry ProjectEntry {
             get { return DeclaringModule.ProjectEntry; }
         }
@@ -120,8 +128,6 @@ namespace Microsoft.PythonTools.Analysis {
                 this.IsInQueue = true;
             }
         }
-
-
 
         /// <summary>
         /// The AST which will be analyzed when this node is analyzed
@@ -160,10 +166,10 @@ namespace Microsoft.PythonTools.Analysis {
 
             List<KeyValuePair<string, VariableDef>> toRemove = null;
 
-            foreach (var variableInfo in DeclaringModule.Scope.Variables) {
+            foreach (var variableInfo in DeclaringModule.Scope.AllVariables) {
                 variableInfo.Value.ClearOldValues(ProjectEntry);
                 if (variableInfo.Value._dependencies.Count == 0 &&
-                    variableInfo.Value.TypesNoCopy.Count == 0) {
+                    !variableInfo.Value.HasTypes) {
                     if (toRemove == null) {
                         toRemove = new List<KeyValuePair<string, VariableDef>>();
                     }
@@ -329,18 +335,26 @@ namespace Microsoft.PythonTools.Analysis {
                 if (scope == Scope || scope.VisibleToChildren) {
                     var refs = scope.GetVariable(node, this, name, true);
                     if (refs != null) {
-                        var linkedVars = scope.GetLinkedVariablesNoCreate(name);
-                        if (linkedVars != null) {
-                            foreach (var linkedVar in linkedVars) {
-                                linkedVar.AddReference(node, this);
-                            }
-                        }
+                        scope.AddReferenceToLinkedVariables(node, this, name);
                         return refs.Types;
                     }
                 }
             }
 
             return ProjectState.BuiltinModule.GetMember(node, this, name);
+        }
+
+        public LocationInfo ResolveLocation(object location) {
+            Node node = (Node)location;
+            MemberExpression me = node as MemberExpression;
+            SourceSpan span;
+            if (me != null) {
+                span = me.GetNameSpan(Tree);
+            } else {
+                span = node.GetSpan(Tree);
+            }
+
+            return new LocationInfo(ProjectEntry.FilePath, span.Start.Line, span.Start.Column);
         }
     }
 
@@ -469,7 +483,7 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var baseValue in bases) {
                 ClassInfo ci = baseValue as ClassInfo;
                 if (ci != null) {
-                    ci.SubClasses.AddTypes(newClass.AnalysisUnit, new[] { newClass });
+                    ci.SubClasses.AddTypes(newClass.AnalysisUnit, newClass);
                 }
             }
 

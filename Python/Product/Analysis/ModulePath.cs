@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -19,8 +21,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Analysis {
     public struct ModulePath {
@@ -149,8 +151,8 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (!skipFiles) {
-                foreach (var file in Directory.EnumerateFiles(path)) {
-                    var filename = Path.GetFileName(file);
+                foreach (var file in PathUtils.EnumerateFiles(path, recurse: false)) {
+                    var filename = PathUtils.GetFileOrDirectoryName(file);
                     var match = PythonFileRegex.Match(filename);
                     if (!match.Success) {
                         match = PythonBinaryRegex.Match(filename);
@@ -166,8 +168,8 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (recurse) {
-                foreach (var dir in Directory.EnumerateDirectories(path)) {
-                    var dirname = Path.GetFileName(dir);
+                foreach (var dir in PathUtils.EnumerateDirectories(path, recurse: false)) {
+                    var dirname = PathUtils.GetFileOrDirectoryName(dir);
                     var match = PythonPackageRegex.Match(dirname);
                     if (match.Success && (!requireInitPy || File.Exists(Path.Combine(dir, "__init__.py")))) {
                         foreach (var entry in GetModuleNamesFromPathHelper(
@@ -236,18 +238,18 @@ namespace Microsoft.PythonTools.Analysis {
         public static IEnumerable<string> ExpandPathFiles(IEnumerable<string> paths) {
             foreach (var path in paths) {
                 if (Directory.Exists(path)) {
-                    foreach (var file in Directory.EnumerateFiles(path, "*.pth")) {
+                    foreach (var file in PathUtils.EnumerateFiles(path, "*.pth", recurse: false)) {
                         using (var reader = new StreamReader(file)) {
                             string line;
                             while ((line = reader.ReadLine()) != null) {
                                 line = line.Trim();
                                 if (line.StartsWith("import ", StringComparison.Ordinal) ||
-                                    !CommonUtils.IsValidPath(line)) {
+                                    !PathUtils.IsValidPath(line)) {
                                     continue;
                                 }
                                 line = line.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
                                 if (!Path.IsPathRooted(line)) {
-                                    line = CommonUtils.GetAbsoluteDirectoryPath(path, line);
+                                    line = PathUtils.GetAbsoluteDirectoryPath(path, line);
                                 }
                                 if (Directory.Exists(line)) {
                                     yield return line;
@@ -323,7 +325,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             // Get directories referenced by pth files
             var modulesInPath = GetModulesInPath(
-                pthDirs.Where(p1 => excludedPthDirs.All(p2 => !CommonUtils.IsSameDirectory(p1, p2))),
+                pthDirs.Where(p1 => excludedPthDirs.All(p2 => !PathUtils.IsSameDirectory(p1, p2))),
                 true,
                 true,
                 requireInitPy: requireInitPyFiles
@@ -396,7 +398,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             string name;
             try {
-                name = CommonUtils.GetFileOrDirectoryName(path);
+                name = PathUtils.GetFileOrDirectoryName(path);
             } catch (ArgumentException) {
                 return false;
             }
@@ -504,7 +506,7 @@ namespace Microsoft.PythonTools.Analysis {
             string topLevelPath = null,
             Func<string, bool> isPackage = null
         ) {
-            var name = CommonUtils.GetFileOrDirectoryName(path);
+            var name = PathUtils.GetFileOrDirectoryName(path);
             var nameMatch = PythonFileRegex.Match(name);
             if (nameMatch == null || !nameMatch.Success) {
                 nameMatch = PythonBinaryRegex.Match(name);
@@ -514,7 +516,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             var fullName = nameMatch.Groups["name"].Value;
-            var remainder = CommonUtils.GetParent(path);
+            var remainder = PathUtils.GetParent(path);
             if (isPackage == null) {
                 // We know that f will be the result of GetParent() and always
                 // ends with a directory separator, so just concatenate to avoid
@@ -523,14 +525,14 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             while (
-                CommonUtils.IsValidPath(remainder) &&
+                PathUtils.IsValidPath(remainder) &&
                 isPackage(remainder) &&
                 (string.IsNullOrEmpty(topLevelPath) ||
-                 (CommonUtils.IsSubpathOf(topLevelPath, remainder) &&
-                  !CommonUtils.IsSameDirectory(topLevelPath, remainder)))
+                 (PathUtils.IsSubpathOf(topLevelPath, remainder) &&
+                  !PathUtils.IsSameDirectory(topLevelPath, remainder)))
             ) {
-                fullName = CommonUtils.GetFileOrDirectoryName(remainder) + "." + fullName;
-                remainder = CommonUtils.GetParent(remainder);
+                fullName = PathUtils.GetFileOrDirectoryName(remainder) + "." + fullName;
+                remainder = PathUtils.GetParent(remainder);
             }
 
             return new ModulePath(fullName, path, remainder);

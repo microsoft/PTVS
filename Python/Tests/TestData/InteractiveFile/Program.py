@@ -1,1 +1,1 @@
-﻿print(__file__ + 'abcdef')
+print(__file__ + 'abcdef')

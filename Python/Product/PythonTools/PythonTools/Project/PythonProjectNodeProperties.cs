@@ -1,20 +1,23 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project.Automation;
 using Microsoft.VisualStudioTools;
@@ -50,6 +53,9 @@ namespace Microsoft.PythonTools.Project {
             get {
                 return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.CommandLineArguments, true);
             }
+            set {
+                this.Node.ProjectMgr.SetProjectProperty(CommonConstants.CommandLineArguments, value);
+            }
         }
 
         /// <summary>
@@ -62,7 +68,7 @@ namespace Microsoft.PythonTools.Project {
                 if (!string.IsNullOrEmpty(res)) {
                     var proj = Node.ProjectMgr as CommonProjectNode;
                     if (proj != null) {
-                        res = CommonUtils.GetAbsoluteFilePath(proj.GetWorkingDirectory(), res);
+                        res = PathUtils.GetAbsoluteFilePath(proj.GetWorkingDirectory(), res);
                     }
                 }
                 return res;
@@ -72,30 +78,23 @@ namespace Microsoft.PythonTools.Project {
         [Browsable(false)]
         public string InterpreterId {
             get {
-                var interpreter = ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter;
-                return interpreter.IsRunnable() ? interpreter.Id.ToString() : null;
+                var interpreter = ((PythonProjectNode)this.Node).ActiveInterpreter;
+                return interpreter.IsRunnable() ? interpreter.Configuration.Id : null;
             }
         }
 
         [Browsable(false)]
         public string InterpreterDescription {
             get {
-                var interpreter = ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter;
-                return interpreter.IsRunnable() ? interpreter.Description : null;
-            }
-        }
-
-        [Browsable(false)]
-        public MSBuildProjectInterpreterFactoryProvider InterpreterFactoryProvider {
-            get {
-                return ((PythonProjectNode)this.Node).Interpreters;
+                var interpreter = ((PythonProjectNode)this.Node).ActiveInterpreter;
+                return interpreter.IsRunnable() ? interpreter.Configuration.FullDescription : null;
             }
         }
 
         [Browsable(false)]
         public string InterpreterVersion {
             get {
-                var interpreter = ((PythonProjectNode)this.Node).Interpreters.ActiveInterpreter;
+                var interpreter = ((PythonProjectNode)this.Node).ActiveInterpreter;
                 return interpreter.IsRunnable() ? interpreter.Configuration.Version.ToString() : null;
             }
         }

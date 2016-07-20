@@ -1,17 +1,21 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
+using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Automation;
 using EnvDTE;
@@ -39,23 +43,45 @@ namespace PythonToolsUITests {
         }
 
         private static void AssertNodes(ObjectBrowser objectBrowser, params NodeInfo[] expectedNodes) {
-            int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-            Assert.AreEqual(expectedNodes.Length, nodeCount, "Node count: " + nodeCount.ToString());
+            AssertNodes(objectBrowser, true, expectedNodes);
+        }
+
+        private static void AssertNodes(ObjectBrowser objectBrowser, bool expand, params NodeInfo[] expectedNodes) {
 
             for (int i = 0; i < expectedNodes.Length; ++i) {
                 // Check node name
+                for (int j = 0; j < 100; j++) {
+                    if (i < objectBrowser.TypeBrowserPane.Nodes.Count) {
+                        break;
+                    }
+                    System.Threading.Thread.Sleep(250);
+                }
+
                 string str = objectBrowser.TypeBrowserPane.Nodes[i].Value.Trim();
+                Console.WriteLine("Found node: {0}", str);
                 Assert.AreEqual(expectedNodes[i].Name, str, "");
 
                 objectBrowser.TypeBrowserPane.Nodes[i].Select();
+                if (expand) {
+                    try {
+                        objectBrowser.TypeBrowserPane.Nodes[i].ExpandCollapse();
+                    } catch (InvalidOperationException) {
+                    }
+                }
+
                 System.Threading.Thread.Sleep(1000);
 
                 // Check detailed node description.
                 str = objectBrowser.DetailPane.Value.Trim();
+                if(expectedNodes[i].Description != str) {
+                    for (int j = 0; j < str.Length; j++) {
+                        Console.WriteLine("{0} {1}", (int)str[j], (int)expectedNodes[i].Description[j]);
+                    }
+                }
                 Assert.AreEqual(expectedNodes[i].Description, str, "");
 
                 // Check dependent nodes in member pane
-                nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
+                int nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
                 var expectedMembers = expectedNodes[i].Members;
                 if (expectedMembers == null) {
                     Assert.AreEqual(0, nodeCount, "Node Count: " + nodeCount.ToString());
@@ -75,8 +101,8 @@ namespace PythonToolsUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserBasicTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Outlining.sln");
@@ -89,17 +115,11 @@ namespace PythonToolsUITests {
                 int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
                 Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
 
-                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-                System.Threading.Thread.Sleep(1000);
-
-                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-                Assert.AreEqual(4, nodeCount, "Node count: " + nodeCount.ToString());
-
                 AssertNodes(objectBrowser,
                     new NodeInfo("Outlining", "Outlining"),
                     new NodeInfo("BadForStatement.py", "BadForStatement.py"),
-                    new NodeInfo("NestedFuncDef.py", "NestedFuncDef.py", new[] { "f()" }),
-                    new NodeInfo("Program.py", "Program.py", new[] { "f()" }));
+                    new NodeInfo("NestedFuncDef.py", "NestedFuncDef.py", new[] { "def f()" }),
+                    new NodeInfo("Program.py", "Program.py", new[] { "def f()", "i" }));
 
                 app.Dte.Solution.Close(false);
 
@@ -109,8 +129,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserSearchTextTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\ObjectBrowser.sln");
@@ -125,26 +145,16 @@ namespace PythonToolsUITests {
                 int nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
                 Assert.AreEqual(1, nodeCount, "Node count: " + nodeCount.ToString());
 
-                objectBrowser.TypeBrowserPane.Nodes[0].ExpandCollapse();
-                System.Threading.Thread.Sleep(1000);
-
-                // Now that it is expanded, we should also get a node for Program.py
-
-                nodeCount = objectBrowser.TypeBrowserPane.Nodes.Count;
-                Assert.AreEqual(2, nodeCount, "Node count: " + nodeCount.ToString());
-
-                objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
-                System.Threading.Thread.Sleep(1000);
-
                 // Sanity-check the starting view with all nodes expanded.
 
                 var expectedNodesBeforeSearch = new[] {
-                new NodeInfo("ObjectBrowser", "ObjectBrowser"),
-                new NodeInfo("Program.py", "Program.py", new[] { "frob()" }),
-                new NodeInfo("Oar", "class Oar", new[] { "oar(self)" }),
-                new NodeInfo("Fob", "class Fob"),
-                new NodeInfo("FobOarBaz", "class FobOarBaz", new[] { "frob(self)" }),
-            };
+                    new NodeInfo("ObjectBrowser", "ObjectBrowser"),
+                    new NodeInfo("Program.py", "Program.py", new[] { "def frob()" }),
+                    new NodeInfo("class Fob", "class Fob"),
+                    new NodeInfo("class FobOarBaz", "class FobOarBaz", new[] { "def frob(self)" }),
+                    new NodeInfo("class Oar", "class Oar", new[] { "def oar(self)" }),
+                };
+
                 AssertNodes(objectBrowser, expectedNodesBeforeSearch);
 
                 // Do the search and check results
@@ -156,10 +166,11 @@ namespace PythonToolsUITests {
                 System.Threading.Thread.Sleep(1000);
 
                 var expectedNodesAfterSearch = new[] {
-                new NodeInfo("oar", "def oar(self)"),
-                new NodeInfo("Oar", "class Oar", new[] { "oar(self)" }),
-                new NodeInfo("FobOarBaz", "class FobOarBaz", new[] { "frob(self)" }),
-            };
+                     new NodeInfo("oar", "def oar(self)\rdeclared in Oar"),
+                     new NodeInfo("Oar", "class Oar", new[] { "def oar(self)" }),
+                     new NodeInfo("FobOarBaz", "class FobOarBaz", new[] { "def frob(self)" }),
+                };
+
                 AssertNodes(objectBrowser, expectedNodesAfterSearch);
 
                 // Clear the search and check that we get back to the starting view.
@@ -167,12 +178,12 @@ namespace PythonToolsUITests {
                 objectBrowser.ClearSearchButton.Click();
                 System.Threading.Thread.Sleep(1000);
 
-                AssertNodes(objectBrowser, expectedNodesBeforeSearch);
+                AssertNodes(objectBrowser, false, expectedNodesBeforeSearch);
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserExpandTypeBrowserTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Inheritance.sln");
@@ -209,8 +220,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserCommentsTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Inheritance.sln");
@@ -230,12 +241,14 @@ namespace PythonToolsUITests {
                 Assert.AreEqual("Program.py", str, "");
                 objectBrowser.TypeBrowserPane.Nodes[1].Select();
                 nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
-                Assert.AreEqual(3, nodeCount, "Node Count: " + nodeCount.ToString());
+                Assert.AreEqual(4, nodeCount, "Node Count: " + nodeCount.ToString());
                 str = objectBrowser.TypeNavigatorPane.Nodes[0].Value;
-                Assert.AreEqual("members", str.Trim(), "");
+                Assert.AreEqual("member", str.Trim(), "");
                 str = objectBrowser.TypeNavigatorPane.Nodes[1].Value;
-                Assert.AreEqual("s", str.Trim(), "");
+                Assert.AreEqual("members", str.Trim(), "");
                 str = objectBrowser.TypeNavigatorPane.Nodes[2].Value;
+                Assert.AreEqual("s", str.Trim(), "");
+                str = objectBrowser.TypeNavigatorPane.Nodes[3].Value;
                 Assert.AreEqual("t", str.Trim(), "");
 
                 objectBrowser.TypeBrowserPane.Nodes[1].ExpandCollapse();
@@ -250,9 +263,9 @@ namespace PythonToolsUITests {
                 nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
                 Assert.AreEqual(2, nodeCount, "Node Count: " + nodeCount.ToString());
                 str = objectBrowser.TypeNavigatorPane.Nodes[0].Value;
-                Assert.IsTrue(str.Trim().StartsWith("__init__(self"), str);
+                Assert.IsTrue(str.Trim().StartsWith("def __init__(self"), str);
                 str = objectBrowser.TypeNavigatorPane.Nodes[1].Value;
-                Assert.AreEqual("tell(self)", str.Trim(), "");
+                Assert.AreEqual("def tell(self)", str.Trim(), "");
 
                 str = objectBrowser.DetailPane.Value;
                 Assert.IsTrue(str.Trim().Contains("SchoolMember"), str);
@@ -270,8 +283,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserInheritanceRelationshipTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Inheritance.sln");
@@ -304,9 +317,9 @@ namespace PythonToolsUITests {
                 nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
                 Assert.AreEqual(2, nodeCount, "Node Count: " + nodeCount.ToString());
                 str = objectBrowser.TypeNavigatorPane.Nodes[0].Value;
-                Assert.IsTrue(str.Trim().StartsWith("__init__(self"), str);
+                Assert.IsTrue(str.Trim().StartsWith("def __init__(self"), str);
                 str = objectBrowser.TypeNavigatorPane.Nodes[1].Value;
-                Assert.AreEqual("tell(self)", str.Trim(), "");
+                Assert.AreEqual("def tell(self)", str.Trim(), "");
 
                 str = objectBrowser.DetailPane.Value;
                 Assert.IsTrue(str.Trim().Contains("Student(SchoolMember)"), str);
@@ -323,8 +336,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserNavigationTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -358,7 +371,7 @@ namespace PythonToolsUITests {
 
                 objectBrowser.TypeBrowserPane.Nodes[4].Select();
                 System.Threading.Thread.Sleep(1000);
-                objectBrowser.TypeBrowserPane.Nodes[4].DoubleClick();
+                app.ExecuteCommand("Edit.GoToDefinition");
                 System.Threading.Thread.Sleep(1000);
 
                 str = app.Dte.ActiveDocument.Name;
@@ -370,7 +383,7 @@ namespace PythonToolsUITests {
                 app.OpenObjectBrowser();
                 objectBrowser.TypeBrowserPane.Nodes[2].Select();
                 System.Threading.Thread.Sleep(1000);
-                objectBrowser.TypeBrowserPane.Nodes[2].DoubleClick();
+                app.ExecuteCommand("Edit.GoToDefinition");
                 System.Threading.Thread.Sleep(1000);
 
                 str = app.Dte.ActiveDocument.Name;
@@ -386,8 +399,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserContextMenuBasicTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -463,8 +476,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserTypeBrowserViewTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -521,8 +534,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserTypeBrowserSortTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -601,18 +614,18 @@ namespace PythonToolsUITests {
                 str = objectBrowser.TypeBrowserPane.Nodes[1].Value;
                 Assert.AreEqual("MyModule.py", str, "");
                 str = objectBrowser.TypeBrowserPane.Nodes[2].Value;
-                Assert.AreEqual("SchoolMember", str, "");
+                Assert.AreEqual("class SchoolMember\n", str, "");
                 str = objectBrowser.TypeBrowserPane.Nodes[3].Value;
                 Assert.AreEqual("Program.py", str, "");
                 str = objectBrowser.TypeBrowserPane.Nodes[4].Value;
-                Assert.AreEqual("Student", str, "");
+                Assert.AreEqual("class Student(MyModule.SchoolMember)\n", str, "");
                 str = objectBrowser.TypeBrowserPane.Nodes[5].Value;
-                Assert.AreEqual("Teacher", str, "");
+                Assert.AreEqual("class Teacher(MyModule.SchoolMember)\n", str, "");
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserNavigateVarContextMenuTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -678,8 +691,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ObjectBrowserFindAllReferencesTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\MultiModule.sln");
@@ -742,12 +755,12 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void NavigateTo() {
             using (var app = new VisualStudioApp()) {
                 app.OpenProject(@"TestData\Navigation.sln");
-                
+
                 using (var dialog = app.OpenNavigateTo()) {
                     dialog.SearchTerm = "Class";
                     Assert.AreEqual(4, dialog.WaitForNumberOfResults(4));
@@ -770,8 +783,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ResourceViewIsDisabledTest() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\Outlining.sln");

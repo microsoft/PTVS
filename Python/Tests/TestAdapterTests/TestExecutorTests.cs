@@ -1,22 +1,27 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -33,7 +38,7 @@ namespace TestAdapterTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void FromCommandLineArgsRaceCondition() {
             // https://pytools.codeplex.com/workitem/1429
 
@@ -43,8 +48,8 @@ namespace TestAdapterTests {
                 for (int i = 0; i < tasks.Length; i += 1) {
                     tasks[i] = Task.Run(() => {
                         mre.WaitOne();
-                        using (var arg = VisualStudioApp.FromCommandLineArgs(new[] { "/parentProcessId", "123" })) {
-                            return arg is VisualStudioApp;
+                        using (var arg = VisualStudioProxy.FromProcessId(123)) {
+                            return arg is VisualStudioProxy;
                         }
                     });
                 }
@@ -57,58 +62,150 @@ namespace TestAdapterTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod]
+        public void TestBestFile() {
+            var file1 = "C:\\Some\\Path\\file1.py";
+            var file2 = "C:\\Some\\Path\\file2.py";
+            var best = TestExecutor.UpdateBestFile(null, file1);
+            Assert.AreEqual(best, file1);
+
+            best = TestExecutor.UpdateBestFile(null, file1);
+            Assert.AreEqual(best, file1);
+
+            best = TestExecutor.UpdateBestFile(best, file2);
+            Assert.AreEqual("C:\\Some\\Path", best);
+        }
+
+        // {0} is the test results directory
+        // {1} is one or more formatted _runSettingProject lines
+        private const string _runSettings = @"<?xml version=""1.0""?><RunSettings><DataCollectionRunSettings><DataCollectors /></DataCollectionRunSettings><RunConfiguration><ResultsDirectory>{0}</ResultsDirectory><TargetPlatform>X86</TargetPlatform><TargetFrameworkVersion>Framework45</TargetFrameworkVersion></RunConfiguration><Python><TestCases>
+{1}
+</TestCases></Python></RunSettings>";
+
+        // {0} is the project home directory, ending with a backslash
+        // {1} is the project filename, including extension
+        // {2} is the interpreter path
+        // {3} is one or more formatted _runSettingTest lines
+        // {4} is one or more formatten _runSettingEnvironment lines
+        private const string _runSettingProject = @"<Project path=""{0}{1}"" home=""{0}"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""{0}"" interpreter=""{2}"" pathEnv=""PYTHONPATH""><Environment>{4}</Environment><SearchPaths><Search value=""{0}"" /></SearchPaths>
+{3}
+</Project>";
+
+        // {0} is the variable name
+        // {1} is the variable value
+        private const string _runSettingEnvironment = @"<Variable name=""{0}"" value=""{1}"" />";
+
+        // {0} is the full path to the file
+        // {1} is the class name
+        // {2} is the method name
+        // {3} is the line number (1-indexed)
+        // {4} is the column number (1-indexed)
+        private const string _runSettingTest = @"<Test className=""{1}"" file=""{0}"" line=""{3}"" column=""{4}"" method=""{2}"" />";
+
+        private static string GetInterpreterPath(string projectFile) {
+            var doc = new XmlDocument();
+            doc.Load(projectFile);
+            var ns = new XmlNamespaceManager(doc.NameTable);
+            ns.AddNamespace("m", "http://schemas.microsoft.com/developer/msbuild/2003");
+            var id = doc.SelectSingleNode("/m:Project/m:PropertyGroup/m:InterpreterId", ns).FirstChild.Value;
+            return PythonPaths.Versions.First(p => p.Id == id).InterpreterPath;
+        }
+
+        private static IEnumerable<string> GetEnvironmentVariables(string projectFile) {
+            var doc = new XmlDocument();
+            doc.Load(projectFile);
+            var ns = new XmlNamespaceManager(doc.NameTable);
+            ns.AddNamespace("m", "http://schemas.microsoft.com/developer/msbuild/2003");
+            var env = doc.SelectSingleNode("/m:Project/m:PropertyGroup/m:Environment", ns)?.FirstChild.Value;
+            if (env == null) {
+                return Enumerable.Empty<string>();
+            }
+            return PathUtils.ParseEnvironment(env).Select(kv => string.Format(_runSettingEnvironment, kv.Key, kv.Value));
+        }
+
+        private static MockRunContext CreateRunContext(IEnumerable<TestInfo> expected, string interpreter = null, string testResults = null) {
+            var projects = new List<string>();
+
+            foreach (var proj in expected.GroupBy(e => e.ProjectFilePath)) {
+                var projName = Path.GetDirectoryName(proj.Key);
+                if (!projName.EndsWith("\\")) {
+                    projName += "\\";
+                }
+                projects.Add(string.Format(_runSettingProject,
+                    projName,
+                    proj.Key,
+                    interpreter ?? GetInterpreterPath(proj.Key),
+                    string.Join(Environment.NewLine, proj.Select(e =>string.Format(_runSettingTest,
+                        e.SourceCodeFilePath,
+                        e.ClassName,
+                        e.MethodName,
+                        e.SourceCodeLineNumber,
+                        8
+                    ))),
+                    string.Join(Environment.NewLine, GetEnvironmentVariables(proj.Key))
+                ));
+            }
+
+            return new MockRunContext(new MockRunSettings(string.Format(_runSettings,
+                testResults ?? TestData.GetTempPath(),
+                string.Join(Environment.NewLine, projects)
+            )));
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestRun() {
             PythonPaths.Python27_x64.AssertInstalled();
             PythonPaths.Python33_x64.AssertInstalled();
 
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
-            var runContext = new MockRunContext();
             var expectedTests = TestInfo.TestAdapterATests.Concat(TestInfo.TestAdapterBTests).ToArray();
+            var runContext = CreateRunContext(expectedTests);
             var testCases = expectedTests.Select(tr => tr.TestCase);
 
             executor.RunTests(testCases, runContext, recorder);
-            PrintTestResults(recorder.Results);
+            PrintTestResults(recorder);
 
+            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
             foreach (var expectedResult in expectedTests) {
+                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
                 var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-
-                Assert.IsNotNull(actualResult);
                 Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestRunAll() {
             PythonPaths.Python27_x64.AssertInstalled();
             PythonPaths.Python33_x64.AssertInstalled();
 
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
-            var runContext = new MockRunContext();
             var expectedTests = TestInfo.TestAdapterATests.Concat(TestInfo.TestAdapterBTests).ToArray();
+            var runContext = CreateRunContext(expectedTests);
 
-            executor.RunTests(new[] { TestInfo.TestAdapterLibProjectFilePath, TestInfo.TestAdapterAProjectFilePath, TestInfo.TestAdapterBProjectFilePath }, runContext, recorder);
-            PrintTestResults(recorder.Results);
+            executor.RunTests(expectedTests.Select(ti => ti.SourceCodeFilePath), runContext, recorder);
+            PrintTestResults(recorder);
 
+            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
             foreach (var expectedResult in expectedTests) {
+                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
                 var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-
-                Assert.IsNotNull(actualResult, expectedResult.TestCase.FullyQualifiedName + " not found in results");
                 Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCancel() {
             PythonPaths.Python27_x64.AssertInstalled();
             PythonPaths.Python33_x64.AssertInstalled();
 
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
-            var runContext = new MockRunContext();
             var expectedTests = TestInfo.TestAdapterATests.Union(TestInfo.TestAdapterBTests).ToArray();
+            var runContext = CreateRunContext(expectedTests);
             var testCases = expectedTests.Select(tr => tr.TestCase);
 
             var thread = new System.Threading.Thread(o => {
@@ -137,67 +234,73 @@ namespace TestAdapterTests {
             Assert.IsTrue(recorder.Results.Count < expectedTests.Length);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestMultiprocessing() {
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
-            var runContext = new MockRunContext();
             var expectedTests = TestInfo.TestAdapterMultiprocessingTests;
+            var runContext = CreateRunContext(expectedTests);
             var testCases = expectedTests.Select(tr => tr.TestCase);
 
-            executor.RunTests(new[] { TestInfo.TestAdapterMultiprocessingProjectFilePath }, runContext, recorder);
-            PrintTestResults(recorder.Results);
+            executor.RunTests(testCases, runContext, recorder);
+            PrintTestResults(recorder);
 
+            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
             foreach (var expectedResult in expectedTests) {
+                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
                 var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-
-                Assert.IsNotNull(actualResult, expectedResult.TestCase.FullyQualifiedName + " not found in results");
                 Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestEnvironment() {
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
-            var runContext = new MockRunContext();
             var expectedTests = new[] { TestInfo.EnvironmentTestSuccess };
+            var runContext = CreateRunContext(expectedTests);
             var testCases = expectedTests.Select(tr => tr.TestCase);
 
-            executor.RunTests(new[] { TestInfo.TestAdapterEnvironmentProject }, runContext, recorder);
-            PrintTestResults(recorder.Results);
+            executor.RunTests(testCases, runContext, recorder);
+            PrintTestResults(recorder);
 
+            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
             foreach (var expectedResult in expectedTests) {
+                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
                 var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-
-                Assert.IsNotNull(actualResult, expectedResult.TestCase.FullyQualifiedName + " not found in results");
                 Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestExtensionReference() {
             PythonPaths.Python27.AssertInstalled();
 
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
-            var runContext = new MockRunContext();
             var expectedTests = new[] { TestInfo.ExtensionReferenceTestSuccess };
+            var runContext = CreateRunContext(expectedTests);
             var testCases = expectedTests.Select(tr => tr.TestCase);
 
-            executor.RunTests(new[] { TestInfo.TestAdapterExtensionReferenceProject }, runContext, recorder);
-            PrintTestResults(recorder.Results);
+            executor.RunTests(testCases, runContext, recorder);
+            PrintTestResults(recorder);
 
+            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
             foreach (var expectedResult in expectedTests) {
+                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
                 var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
-
-                Assert.IsNotNull(actualResult, expectedResult.TestCase.FullyQualifiedName + " not found in results");
                 Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
             }
         }
 
-        private static void PrintTestResults(IEnumerable<TestResult> results) {
-            foreach (var result in results) {
+        private static void PrintTestResults(MockTestExecutionRecorder recorder) {
+            foreach (var message in recorder.Messages) {
+                Console.WriteLine(message);
+            }
+            foreach (var result in recorder.Results) {
                 Console.WriteLine("Test: " + result.TestCase.FullyQualifiedName);
                 Console.WriteLine("Result: " + result.Outcome);
                 foreach(var msg in result.Messages) {

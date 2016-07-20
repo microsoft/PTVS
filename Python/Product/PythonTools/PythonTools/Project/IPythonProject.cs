@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -117,14 +119,7 @@ namespace Microsoft.PythonTools.Project {
         /// New in 2.0.
         /// </summary>
         event EventHandler ProjectAnalyzerChanged;
-    }
 
-    /// <summary>
-    /// Extends <see cref="IPythonProject"/>
-    /// 
-    /// New in 2.1
-    /// </summary>
-    public interface IPythonProject2 : IPythonProject {
         /// <summary>
         /// Returns a command with the provided name if one is available. The
         /// name matches the target name in the associated MSBuild project.
@@ -171,14 +166,7 @@ namespace Microsoft.PythonTools.Project {
         /// (which will be resolved later).
         /// </summary>
         event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging;
-    }
 
-    /// <summary>
-    /// Extends <see cref="IPythonProject2"/>
-    /// 
-    /// New in 2.2
-    /// </summary>
-    public interface IPythonProject3 : IPythonProject2 {
         /// <summary>
         /// Gets the interpreter factory for this project and throws if it is
         /// unusable.
@@ -188,14 +176,22 @@ namespace Microsoft.PythonTools.Project {
         /// <exception cref="MissingInterpreterException">The active interpreter
         /// is not available.</exception>
         IPythonInterpreterFactory GetInterpreterFactoryOrThrow();
-    }
 
-    public static class IPythonProjectExtensions {
         /// <summary>
-        /// Returns a sequence of absolute search paths for the provided project.
+        /// Returns the current launch configuration or throws an appropriate
+        /// exception. These exceptions have localized strings that may be
+        /// shown to the user.
         /// </summary>
-        public static IEnumerable<string> GetSearchPaths(this IPythonProject project) {
-            return PythonProjectLaunchProperties.EnumerateSearchPaths(project);
-        }
+        /// <returns>The active interpreter factory.</returns>
+        /// <exception cref="NoInterpretersException">
+        /// No interpreters are available at all.
+        /// </exception>
+        /// <exception cref="MissingInterpreterException">
+        /// The specified interpreter is not suitable for use.
+        /// </exception>
+        /// <exception cref="DirectoryNotFoundException">
+        /// The working directory specified by the project does not exist.
+        /// </exception>
+        LaunchConfiguration GetLaunchConfigurationOrThrow();
     }
 }

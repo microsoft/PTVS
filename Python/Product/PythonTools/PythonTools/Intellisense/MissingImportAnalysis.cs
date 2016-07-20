@@ -1,18 +1,23 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Text;
 
@@ -24,13 +29,20 @@ namespace Microsoft.PythonTools.Intellisense {
     /// New in 1.1.
     /// </summary>
     public sealed class MissingImportAnalysis {
-        internal static MissingImportAnalysis Empty = new MissingImportAnalysis(new ExportedMemberInfo[0], null);
+        internal static MissingImportAnalysis Empty = new MissingImportAnalysis();
         private readonly ITrackingSpan _span;
-        private readonly IEnumerable<ExportedMemberInfo> _names;
+        private readonly string _name;
+        private readonly VsProjectAnalyzer _analyzer;
+        private IEnumerable<ExportedMemberInfo> _imports;
 
-        internal MissingImportAnalysis(IEnumerable<ExportedMemberInfo> names, ITrackingSpan span) {
+        private MissingImportAnalysis() {
+            _imports = Enumerable.Empty<ExportedMemberInfo>();
+        }
+
+        internal MissingImportAnalysis(string name, VsProjectAnalyzer state, ITrackingSpan span) {
             _span = span;
-            _names = names;
+            _name = name;
+            _analyzer = state;
         }
 
         /// <summary>
@@ -39,10 +51,15 @@ namespace Microsoft.PythonTools.Intellisense {
         ///  module the name here is oar.fob.  This list is lazily calculated (including loading of cached intellisense data) 
         ///  so that you can break from the enumeration early and save significant work.
         /// </summary>
-        public IEnumerable<ExportedMemberInfo> AvailableImports {
-            get {
-                return _names;
+        /// <remarks>New in 2.2</remarks>
+        public async Task<IEnumerable<ExportedMemberInfo>> GetAvailableImportsAsync(CancellationToken cancellationToken) {
+            if (_imports != null) {
+                return _imports;
             }
+
+            var imports = await _analyzer.FindNameInAllModulesAsync(_name, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            return Interlocked.CompareExchange(ref _imports, imports, null) ?? imports;
         }
 
         /// <summary>

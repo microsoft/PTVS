@@ -1,19 +1,20 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -22,27 +23,26 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools;
-using SR = Microsoft.PythonTools.Project.SR;
 
 namespace Microsoft.PythonTools.Intellisense {
+    using AP = AnalysisProtocol;
+
     class TaskProviderItem {
         private readonly string _message;
-        private readonly ITrackingSpan _span;
         private readonly SourceSpan _rawSpan;
         private readonly VSTASKPRIORITY _priority;
         private readonly VSTASKCATEGORY _category;
         private readonly bool _squiggle;
-        private readonly ITextSnapshot _snapshot;
+        private readonly LocationTracker _spanTranslator;
         private readonly IServiceProvider _serviceProvider;
 
         internal TaskProviderItem(
@@ -52,13 +52,12 @@ namespace Microsoft.PythonTools.Intellisense {
             VSTASKPRIORITY priority,
             VSTASKCATEGORY category,
             bool squiggle,
-            ITextSnapshot snapshot
+            LocationTracker spanTranslator
         ) {
             _serviceProvider = serviceProvider;
             _message = message;
             _rawSpan = rawSpan;
-            _snapshot = snapshot;
-            _span = snapshot != null ? CreateSpan(snapshot, rawSpan) : null;
+            _spanTranslator = spanTranslator;
             _rawSpan = rawSpan;
             _priority = priority;
             _category = category;
@@ -84,7 +83,7 @@ namespace Microsoft.PythonTools.Intellisense {
         
         public bool IsValid {
             get {
-                if (!_squiggle || _snapshot == null || _span == null || string.IsNullOrEmpty(ErrorType)) {
+                if (!_squiggle || _spanTranslator == null || string.IsNullOrEmpty(ErrorType)) {
                     return false;
                 }
                 return true;
@@ -92,12 +91,25 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public void CreateSquiggleSpan(SimpleTagger<ErrorTag> tagger) {
-            tagger.CreateTagSpan(_span, new ErrorTag(ErrorType, _message));
+            SnapshotSpan target = _spanTranslator.TranslateForward(
+                new Span(_rawSpan.Start.Index, _rawSpan.Length)
+            );
+
+            var tagSpan = _spanTranslator.TextBuffer.CurrentSnapshot.CreateTrackingSpan(
+                target.Start,
+                target.Length,
+                SpanTrackingMode.EdgeInclusive
+            );
+
+            tagger.CreateTagSpan(tagSpan, new ErrorTag(ErrorType, _message));
         }
 
-        public ITextSnapshot Snapshot {
+        public ITextBuffer TextBuffer {
             get {
-                return _snapshot;
+                if (_spanTranslator != null) {
+                    return _spanTranslator.TextBuffer;
+                }
+                return null;
             }
         }
 
@@ -106,7 +118,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _serviceProvider,
                 _rawSpan,
                 _message,
-                (key.Entry != null ? key.Entry.FilePath : null) ?? string.Empty
+                (key.Entry != null ? key.Entry.Path : null) ?? string.Empty
             ) {
                 Priority = _priority,
                 Category = _category
@@ -127,25 +139,31 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     sealed class TaskProviderItemFactory {
-        private readonly ITextSnapshot _snapshot;
+        private readonly LocationTracker _spanTranslator;
 
-        public TaskProviderItemFactory(
-            ITextSnapshot snapshot
-        ) {
-            _snapshot = snapshot;
+        public TaskProviderItemFactory(LocationTracker spanTranslator) {
+            _spanTranslator = spanTranslator;
         }
 
         #region Factory Functions
 
-        public TaskProviderItem FromErrorResult(IServiceProvider serviceProvider, ErrorResult result, VSTASKPRIORITY priority, VSTASKCATEGORY category) {
+        public TaskProviderItem FromErrorResult(IServiceProvider serviceProvider, AP.Error result, VSTASKPRIORITY priority, VSTASKCATEGORY category) {
             return new TaskProviderItem(
                 serviceProvider,
-                result.Message,
-                result.Span,
+                result.message,
+                GetSpan
+                (result),
                 priority,
                 category,
                 true,
-                _snapshot
+                _spanTranslator
+            );
+        }
+
+        internal static SourceSpan GetSpan(AP.Error result) {
+            return new SourceSpan(
+                new SourceLocation(result.startIndex, result.startLine, result.startColumn),
+                new SourceLocation(result.startIndex + result.length, result.endLine, result.endColumn)
             );
         }
 
@@ -157,9 +175,9 @@ namespace Microsoft.PythonTools.Intellisense {
         ) {
             string message;
             if (factory != null && !factory.IsCurrent) {
-                message = SR.GetString(SR.UnresolvedModuleTooltipRefreshing, importName);
+                message = Strings.UnresolvedModuleTooltipRefreshing.FormatUI(importName);
             } else {
-                message = SR.GetString(SR.UnresolvedModuleTooltip, importName);
+                message = Strings.UnresolvedModuleTooltip.FormatUI(importName);
             }
 
             return new TaskProviderItem(
@@ -169,7 +187,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 VSTASKPRIORITY.TP_NORMAL,
                 VSTASKCATEGORY.CAT_BUILDCOMPILE,
                 true,
-                _snapshot
+                _spanTranslator
             );
         }
 
@@ -177,12 +195,12 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     struct EntryKey : IEquatable<EntryKey> {
-        public IProjectEntry Entry;
+        public AnalysisEntry Entry;
         public string Moniker;
 
         public static readonly EntryKey Empty = new EntryKey(null, null);
 
-        public EntryKey(IProjectEntry entry, string moniker) {
+        public EntryKey(AnalysisEntry entry, string moniker) {
             Entry = entry;
             Moniker = moniker;
         }
@@ -220,20 +238,24 @@ namespace Microsoft.PythonTools.Intellisense {
             return new ClearMessage(EntryKey.Empty);
         }
 
-        public static WorkerMessage Clear(IProjectEntry entry, string moniker) {
+        public static WorkerMessage Clear(AnalysisEntry entry, string moniker) {
             return new ClearMessage(new EntryKey(entry, moniker));
         }
 
-        public static WorkerMessage Replace(IProjectEntry entry, string moniker, List<TaskProviderItem> items) {
+        public static WorkerMessage Replace(AnalysisEntry entry, string moniker, List<TaskProviderItem> items) {
             return new ReplaceMessage(new EntryKey(entry, moniker), items);
         }
 
-        public static WorkerMessage Append(IProjectEntry entry, string moniker, List<TaskProviderItem> items) {
+        public static WorkerMessage Append(AnalysisEntry entry, string moniker, List<TaskProviderItem> items) {
             return new AppendMessage(new EntryKey(entry, moniker), items);
         }
 
         public static WorkerMessage Flush(TaskCompletionSource<TimeSpan> taskSource) {
             return new FlushMessage(taskSource, DateTime.Now);
+        }
+
+        public static WorkerMessage Abort() {
+            return new AbortMessage();
         }
 
         // Message implementations
@@ -246,6 +268,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     items[_key] = _items;
                     return true;
                 }
+            }
+
+            public override string ToString() {
+                return "Replace " + _key.Moniker + " " + _items.Count + " " + _key.Entry?.Path;
             }
         }
 
@@ -264,6 +290,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     return true;
                 }
             }
+
+            public override string ToString() {
+                return "Append " + _key.Moniker + " " + _key.Entry?.Path;
+            }
         }
 
         sealed class ClearMessage : WorkerMessage {
@@ -280,6 +310,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     // Always return true to ensure the refresh occurs
                     return true;
                 }
+            }
+
+            public override string ToString() {
+                return "Clear " + _key.Moniker + " " + _key.Entry?.Path;
             }
         }
 
@@ -298,19 +332,28 @@ namespace Microsoft.PythonTools.Intellisense {
                 return false;
             }
         }
+
+        internal sealed class AbortMessage : WorkerMessage {
+            public AbortMessage() : base() { }
+
+            public override bool Apply(Dictionary<EntryKey, List<TaskProviderItem>> items, object itemsLock) {
+                throw new OperationCanceledException();
+            }
+        }
     }
 
-    abstract class TaskProvider : IVsTaskProvider, IDisposable {
+    class TaskProvider : IVsTaskProvider, IDisposable {
         private readonly Dictionary<EntryKey, List<TaskProviderItem>> _items;
         private readonly Dictionary<EntryKey, HashSet<ITextBuffer>> _errorSources;
         private readonly object _itemsLock = new object();
         private uint _cookie;
         private readonly IVsTaskList _taskList;
-        internal readonly IErrorProviderFactory _errorProvider;
+        private readonly IErrorProviderFactory _errorProvider;
         protected readonly IServiceProvider _serviceProvider;
 
-        private bool _hasWorker;
-        private readonly BlockingCollection<WorkerMessage> _workerQueue;
+        private Thread _worker;
+        private readonly Queue<WorkerMessage> _workerQueue = new Queue<WorkerMessage>();
+        private readonly ManualResetEventSlim _workerQueueChanged = new ManualResetEventSlim();
 
         public TaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider) {
             _serviceProvider = serviceProvider;
@@ -319,7 +362,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _taskList = taskList;
             _errorProvider = errorProvider;
-            _workerQueue = new BlockingCollection<WorkerMessage>();
         }
 
         public void Dispose() {
@@ -327,24 +369,35 @@ namespace Microsoft.PythonTools.Intellisense {
             GC.SuppressFinalize(this);
         }
 
-        protected virtual void Dispose(bool disposing) {
+        private void Dispose(bool disposing) {
             if (disposing) {
-                lock (_workerQueue) {
-                    if (_hasWorker) {
-                        _hasWorker = false;
-                        _workerQueue.CompleteAdding();
-                    } else {
-                        _workerQueue.Dispose();
+                var worker = _worker;
+                if (worker != null) {
+                    Debug.WriteLine(String.Format("Sending abort... {0}", DateTime.Now));
+                    lock (_workerQueue) {
+                        _workerQueue.Clear();
+                        _workerQueue.Enqueue(WorkerMessage.Abort());
+                        _workerQueueChanged.Set();
                     }
+                    Debug.WriteLine(String.Format("Waiting for abort... {0}", DateTime.Now));
+                    bool stopped = worker.Join(10000);
+                    Debug.WriteLine(String.Format("Done Waiting for abort... {0} {1}", DateTime.Now, stopped));
+                    Debug.Assert(stopped, "Failed to terminate TaskProvider worker thread");
                 }
+
                 lock (_itemsLock) {
                     _items.Clear();
                 }
-                RefreshAsync().DoNotWait();
                 if (_taskList != null) {
                     _taskList.UnregisterTaskProvider(_cookie);
                 }
+
+                _workerQueueChanged.Dispose();
             }
+        }
+
+        ~TaskProvider() {
+            Dispose(false);
         }
 
         public uint Cookie {
@@ -356,14 +409,14 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Replaces the items for the specified entry.
         /// </summary>
-        public void ReplaceItems(IProjectEntry entry, string moniker, List<TaskProviderItem> items) {
+        public void ReplaceItems(AnalysisEntry entry, string moniker, List<TaskProviderItem> items) {
             SendMessage(WorkerMessage.Replace(entry, moniker, items));
         }
 
         /// <summary>
         /// Adds items to the specified entry's existing items.
         /// </summary>
-        public void AddItems(IProjectEntry entry, string moniker, List<TaskProviderItem> items) {
+        public void AddItems(AnalysisEntry entry, string moniker, List<TaskProviderItem> items) {
             SendMessage(WorkerMessage.Append(entry, moniker, items));
         }
 
@@ -377,7 +430,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// <summary>
         /// Removes all items for the specified entry.
         /// </summary>
-        public void Clear(IProjectEntry entry, string moniker) {
+        public void Clear(AnalysisEntry entry, string moniker) {
             SendMessage(WorkerMessage.Clear(entry, moniker));
         }
 
@@ -398,7 +451,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Adds the buffer to be tracked for reporting squiggles and error list entries
         /// for the given project entry and moniker for the error source.
         /// </summary>
-        public void AddBufferForErrorSource(IProjectEntry entry, string moniker, ITextBuffer buffer) {
+        public void AddBufferForErrorSource(AnalysisEntry entry, string moniker, ITextBuffer buffer) {
             lock (_errorSources) {
                 var key = new EntryKey(entry, moniker);
                 HashSet<ITextBuffer> buffers;
@@ -413,7 +466,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Removes the buffer from tracking for reporting squiggles and error list entries
         /// for the given project entry and moniker for the error source.
         /// </summary>
-        public void RemoveBufferForErrorSource(IProjectEntry entry, string moniker, ITextBuffer buffer) {
+        public void RemoveBufferForErrorSource(AnalysisEntry entry, string moniker, ITextBuffer buffer) {
             lock (_errorSources) {
                 var key = new EntryKey(entry, moniker);
                 HashSet<ITextBuffer> buffers;
@@ -427,7 +480,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// Clears all tracked buffers for the given project entry and moniker for
         /// the error source.
         /// </summary>
-        public void ClearErrorSource(IProjectEntry entry, string moniker) {
+        public void ClearErrorSource(AnalysisEntry entry, string moniker) {
             lock (_errorSources) {
                 _errorSources.Remove(new EntryKey(entry, moniker));
             }
@@ -435,20 +488,76 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #region Internal Worker Thread
 
-        private void Worker() {
+        private void StartWorker() {
+            if (_worker != null) {
+                // Already running
+                Debug.Assert(_worker.IsAlive, "Worker has died without clearing itself");
+                return;
+            }
+
+            var t = new Thread(Worker);
+            t.IsBackground = true;
+            t.Name = GetType().Name + " Worker";
+            t.Start(t);
+        }
+
+        private void Worker(object param) {
+            for (;;) {
+                var self = (Thread)param;
+                if (Interlocked.CompareExchange(ref _worker, self, null) != null) {
+                    // Not us, so abort
+                    return;
+                }
+
+                try {
+                    WorkerWorker();
+                } catch (OperationCanceledException) {
+                    Debug.WriteLine(string.Format("Operation cancellled... {0}", DateTime.Now));
+
+                } catch (ObjectDisposedException ex) {
+                    Trace.TraceError(ex.ToString());
+                    break;
+                } catch (Exception ex) {
+                    if (ex.IsCriticalException()) {
+                        throw;
+                    }
+                    ex.ReportUnhandledException(_serviceProvider, GetType());
+                } finally {
+                    var oldWorker = Interlocked.CompareExchange(ref _worker, null, self);
+                    Debug.WriteLine(string.Format("Checking worker... {0}", DateTime.Now));
+                    Debug.Assert(oldWorker == self, "Worker was changed while running");
+                    Debug.WriteLine(string.Format("Worker exiting... {0}", DateTime.Now));
+                }
+
+                // check for work after clearing out _worker so that we don't race with
+                // StartWorker and end up with no worker.
+                lock (_workerQueue) {
+                    if (_workerQueue.Count == 0) {
+                        break;
+                    }
+                    Debug.WriteLine("Spinning to try and become worker again...");
+                }
+            }
+        }
+
+        private void WorkerWorker() {
             var flushMessages = new Queue<WorkerMessage>();
-            var cts = new CancellationTokenSource();
             bool changed = false;
             var lastUpdateTime = DateTime.Now;
 
-            try {
-                // First time through, we don't want to abort the queue. There
-                // should be at least one message or the worker would not have
-                // been started.
+            while (_workerQueueChanged.Wait(1000)) {
+                // Reset event and handle all messages in the queue
+                _workerQueueChanged.Reset();
 
-                foreach (var msg in _workerQueue.GetConsumingEnumerable(cts.Token)) {
-                    // Prevent timeouts while processing the message
-                    cts.CancelAfter(-1);
+                while (true) {
+                    WorkerMessage msg;
+                    lock (_workerQueue) {
+                        if (_workerQueue.Count == 0) {
+                            break;
+                        }
+                        msg = _workerQueue.Dequeue();
+                        Debug.WriteLine(string.Format("{2} Processing msg... {0} {1}", DateTime.Now, msg, GetType()));
+                    }
 
                     if (msg is WorkerMessage.FlushMessage) {
                         // Keep flush messages until we've exited the loop
@@ -457,7 +566,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         // Apply the message to our collection
                         changed |= msg.Apply(_items, _itemsLock);
                     }
-
+                    Debug.WriteLine(string.Format("{2} Done processing msg... {0} {1}", DateTime.Now, msg, GetType()));
                     // Every second, we want to force another update
                     if (changed) {
                         var currentTime = DateTime.Now;
@@ -467,48 +576,29 @@ namespace Microsoft.PythonTools.Intellisense {
                             changed = false;
                         }
                     }
-
-                    // Reset the timeout back to 1 second
-                    cts.CancelAfter(1000);
                 }
-            } catch (OperationCanceledException) {
-                // Expected when the timeout expires
-            } catch (ObjectDisposedException ex) {
-                // We have been disposed.
-                Debug.Assert(
-                    ex.ObjectName == "BlockingCollection",
-                    "Handled ObjectDisposedException for the wrong type"
-                );
-                return;
-            } finally {
-                lock (_workerQueue) {
-                    _hasWorker = false;
-                }
+                Debug.WriteLine(string.Format("Looping to wait... {0}", DateTime.Now));
             }
 
             // Handle any changes that weren't handled in the loop
             if (changed) {
+                Debug.WriteLine(string.Format("Refreshing... {0}", DateTime.Now));
                 Refresh();
             }
 
             // Notify all the flush messages we received
+            Debug.WriteLine(string.Format("Flushing... {0}", DateTime.Now));
             while (flushMessages.Any()) {
                 var msg = flushMessages.Dequeue();
                 msg.Apply(_items, _itemsLock);
             }
-
-            try {
-                if (_workerQueue.IsCompleted) {
-                    _workerQueue.Dispose();
-                }
-            } catch (ObjectDisposedException) {
-            }
+            Debug.WriteLine(string.Format("Done flushing... {0}", DateTime.Now));
         }
 
         private void Refresh() {
             if (_taskList != null || _errorProvider != null) {
                 _serviceProvider.GetUIThread().MustNotBeCalledFromUIThread();
-                RefreshAsync().WaitAndHandleAllExceptions(SR.ProductName, GetType());
+                RefreshAsync().WaitAndHandleAllExceptions(_serviceProvider, GetType());
             }
         }
 
@@ -530,8 +620,8 @@ namespace Microsoft.PythonTools.Intellisense {
                             foreach (var item in items) {
                                 if (item.IsValid) {
                                     List<TaskProviderItem> itemList;
-                                    if (!bufferToErrorList.TryGetValue(item.Snapshot.TextBuffer, out itemList)) {
-                                        bufferToErrorList[item.Snapshot.TextBuffer] = itemList = new List<TaskProviderItem>();
+                                    if (!bufferToErrorList.TryGetValue(item.TextBuffer, out itemList)) {
+                                        bufferToErrorList[item.TextBuffer] = itemList = new List<TaskProviderItem>();
                                     }
 
                                     itemList.Add(item);
@@ -583,18 +673,11 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private void SendMessage(WorkerMessage message) {
             lock (_workerQueue) {
-                try {
-                    _workerQueue.Add(message);
-                } catch (InvalidOperationException) {
-                    return;
-                }
-                if (!_hasWorker) {
-                    _hasWorker = true;
-                    Task.Run(() => Worker())
-                        .HandleAllExceptions(SR.ProductName, GetType())
-                        .DoNotWait();
-                }
+                _workerQueue.Enqueue(message);
+                _workerQueueChanged.Set();
             }
+
+            StartWorker();
         }
 
         #endregion
@@ -604,7 +687,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public int EnumTaskItems(out IVsEnumTaskItems ppenum) {
             lock (_itemsLock) {
                 ppenum = new TaskEnum(_items
-                    .Where(x => x.Key.Entry.FilePath != null)   // don't report REPL window errors in the error list, you can't naviagate to them
+                    .Where(x => x.Key.Entry.Path != null)   // don't report REPL window errors in the error list, you can't naviagate to them
                     .SelectMany(kv => kv.Value.Select(i => i.ToErrorTaskItem(kv.Key)))
                     .ToArray()
                 );
@@ -796,7 +879,7 @@ namespace Microsoft.PythonTools.Intellisense {
             } catch (DirectoryNotFoundException) {
                 // This may happen when the error was in a file that's located inside a .zip archive.
                 // Let's walk the path and see if it is indeed the case.
-                for (var path = SourceFile; CommonUtils.IsValidPath(path); path = Path.GetDirectoryName(path)) {
+                for (var path = SourceFile; PathUtils.IsValidPath(path); path = Path.GetDirectoryName(path)) {
                     if (!File.Exists(path)) {
                         continue;
                     }
@@ -874,8 +957,6 @@ namespace Microsoft.PythonTools.Intellisense {
         }
     }
 
-    // Two distinct types are used to distinguish the two in the VS service registry.
-
     sealed class ErrorTaskProvider : TaskProvider {
         public ErrorTaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider)
             : base(serviceProvider, taskList, errorProvider) {
@@ -905,6 +986,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void RefreshTokens() {
             var taskInfo = (IVsCommentTaskInfo)_serviceProvider.GetService(typeof(SVsTaskList));
             if (taskInfo == null) {
+                _tokens = new Dictionary<string, VSTASKPRIORITY>();
                 return;
             }
 

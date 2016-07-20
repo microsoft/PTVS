@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System.Collections.Generic;
 using System.Linq;
@@ -63,7 +65,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         public override string DisplayName {
             get {
-                return SR.GetString(SR.ImportWizardDefaultProjectCustomization);
+                return Strings.ImportWizardDefaultProjectCustomization;
             }
         }
 
@@ -89,7 +91,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         public override string DisplayName {
             get {
-                return SR.GetString(SR.ImportWizardBottleProjectCustomization);
+                return Strings.ImportWizardBottleProjectCustomization;
             }
         }
 
@@ -118,7 +120,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         public override string DisplayName {
             get {
-                return SR.GetString(SR.ImportWizardDjangoProjectCustomization);
+                return Strings.ImportWizardDjangoProjectCustomization;
             }
         }
 
@@ -146,7 +148,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         public override string DisplayName {
             get {
-                return SR.GetString(SR.ImportWizardFlaskProjectCustomization);
+                return Strings.ImportWizardFlaskProjectCustomization;
             }
         }
 
@@ -174,7 +176,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
 
         public override string DisplayName {
             get {
-                return SR.GetString(SR.ImportWizardGenericWebProjectCustomization);
+                return Strings.ImportWizardGenericWebProjectCustomization;
             }
         }
 
@@ -191,6 +193,30 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             AddOrSetProperty(globals, "LaunchProvider", PythonConstants.WebLauncherName);
 
             project.AddImport(@"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets");
+        }
+    }
+
+    class UwpProjectCustomization : ProjectCustomization {
+        public static readonly ProjectCustomization Instance = new UwpProjectCustomization();
+
+        private UwpProjectCustomization() { }
+
+        public override string DisplayName {
+            get {
+                return Strings.ImportWizardUwpProjectCustomization;
+            }
+        }
+
+        public override void Process(
+            ProjectRootElement project,
+            Dictionary<string, ProjectPropertyGroupElement> groups
+        ) {
+            ProjectPropertyGroupElement globals;
+            if (!groups.TryGetValue("Globals", out globals)) {
+                globals = project.AddPropertyGroup();
+            }
+
+            AddOrSetProperty(globals, "ProjectTypeGuids", "{2b557614-1a2b-4903-b9df-ed20d7b63f3a};{888888A0-9F3D-457C-B088-3A5042F75D52}");
         }
     }
 }

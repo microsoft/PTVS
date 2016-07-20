@@ -1,22 +1,26 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.IO;
 using System.Reflection;
-using System.Threading;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -48,31 +52,42 @@ namespace Microsoft.PythonTools.Project {
             _fileChangeListener.FileChangedOnDisk += FileChangedOnDisk;
             solutionEvents.ProjectLoaded += PythonProjectReferenceNode_ProjectLoaded;
             InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences).DoNotWait();
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
         }
 
         private void EventListener_BuildCompleted(object sender, EventArgs e) {
+            if (ProjectMgr.IsClosing) {
+                return;
+            }
             InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences).DoNotWait();
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
             ProjectMgr.OnInvalidateItems(Parent);
         }
 
         private void PythonProjectReferenceNode_ProjectLoaded(object sender, ProjectEventArgs e) {
+            if (ProjectMgr.IsClosing) {
+                return;
+            }
             InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences).DoNotWait();
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
             ProjectMgr.OnInvalidateItems(Parent);
         }
 
         private void EventListener_AfterActiveSolutionConfigurationChange(object sender, EventArgs e) {
+            if (ProjectMgr.IsClosing) {
+                return;
+            }
             InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences).DoNotWait();
+            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
             ProjectMgr.OnInvalidateItems(Parent);
         }
 
-        private void InitializeFileChangeListener() {
+        private async void InitializeFileChangeListener() {
             if (_observing != null) {
                 _fileChangeListener.StopObservingItem(_observing);
             }
+
+            await Task.Delay(500).ConfigureAwait(true);
 
             _observing = ReferencedProjectOutputPath;
             if (_observing != null) {
@@ -81,7 +96,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void FileChangedOnDisk(object sender, FileChangedOnDiskEventArgs e) {
-            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences;
+            if (ProjectMgr.IsClosing) {
+                return;
+            }
+            var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
             // remove the reference to whatever we are currently observing
             RemoveAnalyzedAssembly(interp);
 
@@ -91,19 +109,25 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private void RemoveAnalyzedAssembly(IPythonInterpreterWithProjectReferences interp) {
+        private void RemoveAnalyzedAssembly(VsProjectAnalyzer interp) {
             if (interp != null) {
                 if (_curReference != null) {
-                    interp.RemoveReference(_curReference);
+                    interp.RemoveReferenceAsync(_curReference).Wait();
                     _curReference = null;
                 }
             }
         }
 
-        internal async Task AddAnalyzedAssembly(IPythonInterpreterWithProjectReferences interp) {
+        internal async Task AddAnalyzedAssembly(VsProjectAnalyzer interp) {
             if (interp != null) {
                 var asmName = AssemblyName;
-                var outFile = ReferencedProjectOutputPath;
+                string outFile;
+                try {
+                    outFile = ReferencedProjectOutputPath;
+                } catch (COMException) {
+                    _failedToAnalyze = true;
+                    return;
+                }
                 _failedToAnalyze = false;
                 _curReference = null;
 
@@ -143,13 +167,15 @@ namespace Microsoft.PythonTools.Project {
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
 
-            var solutionEvents = ProjectMgr.Site.GetSolutionEvents();
-            solutionEvents.ActiveSolutionConfigurationChanged -= EventListener_AfterActiveSolutionConfigurationChange;
-            solutionEvents.BuildCompleted -= EventListener_BuildCompleted;
-            solutionEvents.ProjectLoaded -= PythonProjectReferenceNode_ProjectLoaded;
+            if (disposing) {
+                var solutionEvents = ProjectMgr.Site.GetSolutionEvents();
+                solutionEvents.ActiveSolutionConfigurationChanged -= EventListener_AfterActiveSolutionConfigurationChange;
+                solutionEvents.BuildCompleted -= EventListener_BuildCompleted;
+                solutionEvents.ProjectLoaded -= PythonProjectReferenceNode_ProjectLoaded;
 
-            _fileChangeListener.FileChangedOnDisk -= FileChangedOnDisk;
-            _fileChangeListener.Dispose();
+                _fileChangeListener.FileChangedOnDisk -= FileChangedOnDisk;
+                _fileChangeListener.Dispose();
+            }
         }
     }
 }

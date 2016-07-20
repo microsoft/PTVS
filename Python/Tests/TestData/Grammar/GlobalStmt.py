@@ -1,3 +1,3 @@
-﻿def f():
+def f():
     global a
     global a, b

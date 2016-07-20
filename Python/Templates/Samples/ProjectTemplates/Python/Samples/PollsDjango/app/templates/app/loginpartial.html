@@ -1,0 +1,22 @@
+<ul class="nav navbar-nav navbar-right">
+    <li><a href="/admin">Administration</a></li>
+</ul>
+
+{% if user.is_authenticated %}
+<form id="logoutForm" action="/logout" method="post" class="navbar-right">
+    {% csrf_token %}
+    <ul class="nav navbar-nav navbar-right">
+        <li><span class="navbar-brand">Hello {{ user.username }}!</span></li>
+        <li><a href="javascript:document.getElementById('logoutForm').submit()">Log off</a></li>
+    </ul>
+
+</form>
+
+{% else %}
+
+<ul class="nav navbar-nav navbar-right">
+    <li><a href="{% url 'login' %}">Log in</a></li>
+</ul>
+
+{% endif %}
+

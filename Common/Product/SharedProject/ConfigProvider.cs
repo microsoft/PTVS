@@ -1,16 +1,18 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections;
@@ -37,8 +39,11 @@ namespace Microsoft.VisualStudioTools.Project {
     [ComVisible(true)]
     internal abstract class ConfigProvider : IVsCfgProvider2 {
         internal const string configString = " '$(Configuration)' == '{0}' ";
+        internal const string configPlatformString = " '$(Configuration)|$(Platform)' == '{0}|{1}' ";
         internal const string AnyCPUPlatform = "Any CPU";
         internal const string x86Platform = "x86";
+        internal const string x64Platform = "x64";
+        internal const string ARMPlatform = "ARM";
 
         private ProjectNode project;
         private EventSinkCollection cfgEventSinks = new EventSinkCollection();
@@ -473,7 +478,7 @@ namespace Microsoft.VisualStudioTools.Project {
             string[] platforms = GetPropertiesConditionedOn(ProjectFileConstants.Platform);
 
             if (platforms == null || platforms.Length == 0) {
-                return new string[] { x86Platform, AnyCPUPlatform };
+                return new string[] { x86Platform, AnyCPUPlatform, x64Platform, ARMPlatform };
             }
 
             for (int i = 0; i < platforms.Length; i++) {
@@ -487,7 +492,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Return the supported platform names.
         /// </summary>
         /// <returns>An array of supported platform names.</returns>
-        private string[] GetSupportedPlatformsFromProject() {
+        internal string[] GetSupportedPlatformsFromProject() {
             string platforms = this.ProjectMgr.BuildProject.GetPropertyValue(ProjectFileConstants.AvailablePlatforms);
 
             if (platforms == null) {
@@ -523,7 +528,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <param name="platforms">An array of available platform names</param>
         /// <returns>A count of the actual number of platform names returned.</returns>
         /// <devremark>The platforms array is never null. It is assured by the callers.</devremark>
-        private static int GetPlatforms(uint celt, string[] names, uint[] actual, string[] platforms) {
+        internal static int GetPlatforms(uint celt, string[] names, uint[] actual, string[] platforms) {
             Utilities.ArgumentNotNull("platforms", platforms);
             if (names == null) {
                 if (actual == null || actual.Length == 0) {
@@ -564,7 +569,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// <summary>
         /// Get all the configurations in the project.
         /// </summary>
-        private string[] GetPropertiesConditionedOn(string constant) {
+        internal string[] GetPropertiesConditionedOn(string constant) {
             List<string> configurations = null;
             this.project.BuildProject.ReevaluateIfNecessary();
             this.project.BuildProject.ConditionedProperties.TryGetValue(constant, out configurations);

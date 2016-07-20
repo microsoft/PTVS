@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -96,6 +98,20 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         /// <summary>
+        /// Performs a get iterator operation propagating any iterator types
+        /// into the value and returns the associated types associated with the
+        /// object.
+        /// </summary>
+        public static IAnalysisSet GetAsyncIterator(this IAnalysisSet self, Node node, AnalysisUnit unit) {
+            var res = AnalysisSet.Empty;
+            foreach (var ns in self) {
+                res = res.Union(ns.GetAsyncIterator(node, unit));
+            }
+
+            return res;
+        }
+
+        /// <summary>
         /// Performs a get index operation propagating any index types into the
         /// value and returns the associated types associated with the object.
         /// </summary>
@@ -148,6 +164,19 @@ namespace Microsoft.PythonTools.Analysis {
 
             return res;
         }
+        /// <summary>
+        /// Returns the set of types which are accessible when code enumerates
+        /// over the object
+        /// in a for statement.
+        /// </summary>
+        public static IAnalysisSet GetAsyncEnumeratorTypes(this IAnalysisSet self, Node node, AnalysisUnit unit) {
+            var res = AnalysisSet.Empty;
+            foreach (var ns in self) {
+                res = res.Union(ns.GetAsyncEnumeratorTypes(node, unit));
+            }
+
+            return res;
+        }
 
         /// <summary>
         /// Performs a __get__ on the object.
@@ -156,19 +185,6 @@ namespace Microsoft.PythonTools.Analysis {
             var res = AnalysisSet.Empty;
             foreach (var ns in self) {
                 res = res.Union(ns.GetDescriptor(node, instance, context, unit));
-            }
-
-            return res;
-        }
-
-        /// <summary>
-        /// Performs a __get__ on the object when accessed from a class instead
-        /// of an instance.
-        /// </summary>
-        public static IAnalysisSet GetStaticDescriptor(this IAnalysisSet self, AnalysisUnit unit) {
-            var res = AnalysisSet.Empty;
-            foreach (var ns in self) {
-                res = res.Union(ns.GetStaticDescriptor(unit));
             }
 
             return res;
@@ -228,6 +244,18 @@ namespace Microsoft.PythonTools.Analysis {
             return values
                 .Select(v => v.GetConstantValueAsString())
                 .Where(s => !string.IsNullOrEmpty(s));
+        }
+
+        /// <summary>
+        /// Performs an await operation.
+        /// </summary>
+        public static IAnalysisSet Await(this IAnalysisSet self, Node node, AnalysisUnit unit) {
+            var res = AnalysisSet.Empty;
+            foreach (var ns in self) {
+                res = res.Union(ns.Await(node, unit));
+            }
+
+            return res;
         }
 
     }

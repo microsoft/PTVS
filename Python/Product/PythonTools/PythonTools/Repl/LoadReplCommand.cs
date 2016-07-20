@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -18,44 +20,42 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.PythonTools;
-using Microsoft.PythonTools.Repl;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.InteractiveWindow;
+using Microsoft.PythonTools.InteractiveWindow.Commands;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
+using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 
-namespace Microsoft.VisualStudio.Repl {
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
-    using IReplCommand = IInteractiveWindowCommand;
-#endif
-
-    [Export(typeof(IReplCommand))]
-    class LoadReplCommand : IReplCommand {
+namespace Microsoft.PythonTools.Repl {
+    [Export(typeof(IInteractiveWindowCommand))]
+    [ContentType(PythonCoreConstants.ContentType)]
+    class LoadReplCommand : IInteractiveWindowCommand {
         const string _commentPrefix = "%%";
 
-        #region IReplCommand Members
-
-        public Task<ExecutionResult> Execute(IReplWindow window, string arguments) {
+        public Task<ExecutionResult> Execute(IInteractiveWindow window, string arguments) {
             var finder = new FileFinder(arguments);
-            
-            var eval = window.Evaluator as BasePythonReplEvaluator;
-            if (eval != null && eval.CurrentOptions != null) {
-                finder.Search(eval.CurrentOptions.WorkingDirectory);
-                finder.SearchAll(eval.CurrentOptions.SearchPaths, ';');
+
+            var eval = window.GetPythonEvaluator();
+            if (eval != null) {
+                finder.Search(eval.Configuration.WorkingDirectory);
+                foreach (var p in eval.Configuration.SearchPaths) {
+                    finder.Search(p);
+                }
             }
 
             finder.ThrowIfNotFound();
-
-            string commandPrefix = (string)window.GetOptionValue(ReplOptions.CommandPrefix);
+            string commandPrefix = "$";
             string lineBreak = window.TextView.Options.GetNewLineCharacter();
 
             IEnumerable<string> lines = File.ReadLines(finder.Filename);
             IEnumerable<string> submissions;
 
             if (eval != null) {
-                submissions = eval.JoinCode(lines).Where(CommentPrefixPredicate);
+                submissions = ReplEditFilter.JoinToCompleteStatements(lines, eval.LanguageVersion).Where(CommentPrefixPredicate);
             } else {
                 // v1 behavior, will probably never be hit, but if someone was developing their own IReplEvaluator
                 // and using this class it would be hit.
@@ -82,7 +82,7 @@ namespace Microsoft.VisualStudio.Repl {
                 submissions = submissionList;
             }
 
-            window.Submit(submissions);
+            window.SubmitAsync(submissions);
             return ExecutionResult.Succeeded;
         }
 
@@ -107,13 +107,33 @@ namespace Microsoft.VisualStudio.Repl {
             get { return "load"; }
         }
 
-        public object ButtonContent {
+        public IEnumerable<ClassificationSpan> ClassifyArguments(ITextSnapshot snapshot, Span argumentsSpan, Span spanToClassify) {
+            yield break;
+        }
+
+        public string CommandLine {
             get {
-                return null;
+                return "";
             }
         }
 
-        #endregion
+        public IEnumerable<string> DetailedDescription {
+            get {
+                yield return Description;
+            }
+        }
+
+        public IEnumerable<KeyValuePair<string, string>> ParametersDescription {
+            get {
+                yield break;
+            }
+        }
+
+        public IEnumerable<string> Names {
+            get {
+                yield return Command;
+            }
+        }
 
         class FileFinder {
             private readonly string _baseName;
@@ -121,7 +141,7 @@ namespace Microsoft.VisualStudio.Repl {
             public FileFinder(string baseName) {
                 _baseName = (baseName ?? "").Trim(' ', '\"');
 
-                if (CommonUtils.IsValidPath(_baseName) && Path.IsPathRooted(_baseName) && File.Exists(_baseName)) {
+                if (PathUtils.IsValidPath(_baseName) && Path.IsPathRooted(_baseName) && File.Exists(_baseName)) {
                     Found = true;
                     Filename = _baseName;
                 }
@@ -138,11 +158,11 @@ namespace Microsoft.VisualStudio.Repl {
                     return false;
                 }
 
-                if (!CommonUtils.IsValidPath(path) || !Path.IsPathRooted(path)) {
+                if (!PathUtils.IsValidPath(path) || !Path.IsPathRooted(path)) {
                     return false;
                 }
 
-                var fullPath = CommonUtils.GetAbsoluteFilePath(path, _baseName);
+                var fullPath = PathUtils.GetAbsoluteFilePath(path, _baseName);
                 if (File.Exists(fullPath)) {
                     Found = true;
                     Filename = fullPath;

@@ -1,58 +1,32 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(WixTargetsPath)" />
+  <Import Project="$(WixTargetsPath)" Condition="Exists($(WixTargetsPath))" />
 
+  <!-- Identifies the files that need signing. -->
+  <Target Name="SignMsi">
+    <ItemGroup>
+      <FilesToSign Include="@(SignMsi)">
+        <Authenticode>Microsoft400</Authenticode>
+      </FilesToSign>
+    </ItemGroup>
+  </Target>
+
+  <!-- Generates .wxs files from our file projects. -->
   <Target Name="CompileFilesProj"
           BeforeTargets="BeforeBuild"
           Condition="'@(FilesProj)' != ''">
     <MSBuild Projects="%(FilesProj.FullPath)"
-             Properties="VSTarget=$(VSTarget);Configuration=$(Configuration);TargetPath=$(IntermediateOutputPath)%(FilesProj.FileName).wxs" />
+             Properties="VSTarget=$(VSTarget);Configuration=$(Configuration);TargetPath=$(IntermediateOutputPath)%(FilesProj.FileName).wxs;%(FilesProj.Properties)" />
     <ItemGroup>
       <Compile Include="@(FilesProj->'$(IntermediateOutputPath)%(FileName).wxs')" />
     </ItemGroup>
   </Target>
-  
-  <!--
-  Set the bind paths in this order
-  
-    1. Signed binaries (if any)
-    2. Output directory (for explicit project references)
-    3. Each project output directory (for implicit project references)
-    4. Setup output directory (for merge modules)
-  -->
+
   <Target Name="_SetBindInputPaths" BeforeTargets="Link">
-    <PropertyGroup>
-      <CopyOutputsToPath Condition="'$(CopyOutputsToPath)' != '' and !HasTrailingSlash($(CopyOutputsToPath))">$(CopyOutputsToPath)\</CopyOutputsToPath>
-    </PropertyGroup>
     <ItemGroup>
-      <LinkerBindInputPaths Include="$(SignedBinariesPath)" Condition="'$(SignedBinariesPath)' != ''">
+      <LinkerBindInputPaths Include="$(BinariesOutputPath)">
         <BindName>bin</BindName>
       </LinkerBindInputPaths>
-      <LinkerBindInputPaths Include="$(CopyOutputsToPath)UnsignedBinaries" Condition="'$(SignedBinariesPath)' == '' and '$(CopyOutputsToPath)' != ''">
-        <BindName>bin</BindName>
-      </LinkerBindInputPaths>
-      <LinkerBindInputPaths Include="$([System.IO.Directory]::GetDirectories(`$(BuildOutputRoot)\Binaries`))" Condition="'$(ReleaseBuild)' != 'true' and Exists('$(BuildOutputRoot)\Binaries') and '$(SignedBinariesPath)$(CopyOutputsToPath)' == ''">
-        <BindName>bin</BindName>
-      </LinkerBindInputPaths>
-      <LinkerBindInputPaths Include="$(BuildOutputRoot)Binaries\" />
-      <LinkerBindInputPaths Include="$([System.IO.Directory]::GetDirectories(`$(BuildOutputRoot)\Binaries`))" Condition="Exists('$(BuildOutputRoot)\Binaries')" />
-      <LinkerBindInputPaths Include="$(BuildOutputRoot)Setup\" />
+      <LinkerBindInputPaths Include="$(OutputPath)" />
     </ItemGroup>
-  </Target>
-
-  <Target Name="_CopyWixOutputsToPath"
-          AfterTargets="AfterBuild"
-          Condition="'$(CopyOutputsToPath)' != '' and $(OutputType) == 'Package'">
-    <PropertyGroup>
-      <CopyOutputsToPath Condition="!HasTrailingSlash($(CopyOutputsToPath))">$(CopyOutputsToPath)\</CopyOutputsToPath>
-      <_PathSuffix Condition="'$(SignedBinariesPath)' != ''">SignedBinariesUnsignedMsi\</_PathSuffix>
-      <_PathSuffix Condition="'$(SignedBinariesPath)' == ''">UnsignedMsi\</_PathSuffix>
-    </PropertyGroup>
-
-    <MakeDir Directories="$(CopyOutputsToPath)$(_PathSuffix)"
-             ContinueOnError="true" />
-
-    <Copy SourceFiles="$(TargetPath)"
-          DestinationFiles="$(CopyOutputsToPath)$(_PathSuffix)$(TargetName)$(TargetExt)"
-          SkipUnchangedFiles="true" />
   </Target>
 </Project>

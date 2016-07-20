@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -30,8 +32,8 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Imports get added after a doc string
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DocString() {
             string expectedText = @"'''fob'''
 import itertools
@@ -44,8 +46,8 @@ itertools";
         /// <summary>
         /// Imports get added after a unicode doc string
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void UnicodeDocString() {
             string expectedText = @"u'''fob'''
 import itertools
@@ -58,8 +60,8 @@ itertools";
         /// <summary>
         /// Future import gets added after doc string, but before other imports.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DocStringFuture() {
             string expectedText = @"'''fob'''
 from __future__ import with_statement
@@ -74,8 +76,8 @@ with_statement";
         /// <summary>
         /// Add a from .. import for a function in another module
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportFunctionFrom() {
             string expectedText = @"from test_module import module_func
 module_func()";
@@ -86,8 +88,8 @@ module_func()";
         /// <summary>
         /// Add a from .. import for a function in a subpackage
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportFunctionFromSubpackage() {
             string expectedText = @"from test_package.sub_package import subpackage_method
 subpackage_method()";
@@ -98,8 +100,8 @@ subpackage_method()";
         /// <summary>
         /// We should understand assignment from import statements even in the face of errors
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportWithErrors() {
             // http://pytools.codeplex.com/workitem/547
             AddSmartTagTest("ImportWithError.py", 1, 9, _NoSmartTags);
@@ -109,8 +111,8 @@ subpackage_method()";
         /// <summary>
         /// Add a from .. import for a function in a built-in module
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportBuiltinFunction() {
             string expectedText = @"from sys import getrecursionlimit
 getrecursionlimit()";
@@ -121,8 +123,8 @@ getrecursionlimit()";
         /// <summary>
         /// Add a from ... import for a function in another module when a from import already exists for the same module.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImport() {
             string expectedText = @"from test_module import module_func_2, module_func
 module_func()";
@@ -134,8 +136,8 @@ module_func()";
         /// Add a from ... import for a function in another module when a from import already exists for the same module and
         /// the existing import is an "from ... import oar as baz" import.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportAsName() {
             string expectedText = @"from test_module import module_func_2 as oar, module_func
 module_func()";
@@ -147,8 +149,8 @@ module_func()";
         /// Add a from ... import for a function in another module when a from import already exists for the same module and
         /// the existing import contains parens around the imported items list.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportParens() {
             string expectedText = @"from test_module import (module_func_2, module_func)
 module_func()";
@@ -160,8 +162,8 @@ module_func()";
         /// Add a from ... import for a function in another module when a from import already exists for the same module and
         /// the existing import contains parens around the imported items list and the existing import contains an "as" import.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportParensAsName() {
             string expectedText = @"from test_module import (module_func_2 as oar, module_func)
 module_func()";
@@ -174,8 +176,8 @@ module_func()";
         /// the existing import contains parens around the imported items list and the existing import contains an "as" import
         /// and there's a trailing comma at the end.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportParensAsNameTrailingComma() {
             string expectedText = @"from test_module import (module_func_2 as oar, module_func)
 module_func()";
@@ -187,8 +189,8 @@ module_func()";
         /// Add a from ... import for a function in another module when a from import already exists for the same module and
         /// the existing import contains parens around the imported items list and there's a trailing comma at the end.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportFunctionFromExistingFromImportParensTrailingComma() {
             string expectedText = @"from test_module import (module_func_2, module_func)
 module_func()";
@@ -199,20 +201,20 @@ module_func()";
         /// <summary>
         /// Adds an import statement for a package.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportPackage() {
             string expectedText = @"import test_package
 test_package";
 
-            AddSmartTagTest("ImportPackage.py", 1, 1, new[] { "import test_package" }, 0, expectedText);
+            AddSmartTagTest("ImportPackage.py", 1, 1, new[] { "*", "import test_package" }, 1, expectedText);
         }
 
         /// <summary>
         /// Adds an import statement for a package.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportSubPackage() {
             string expectedText = @"from test_package import sub_package
 sub_package";
@@ -225,8 +227,8 @@ sub_package";
         /// <summary>
         /// Adds an import statement for a package.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Parameters() {
             var getreclimit = new[] { "from sys import getrecursionlimit" };
 
@@ -271,37 +273,44 @@ sub_package";
         /// <summary>
         /// Adds an import statement for a package.
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void AssignedWithoutTypeInfo() {
             AddSmartTagTest("Assignments.py", 1, 2, _NoSmartTags);
             AddSmartTagTest("Assignments.py", 1, 8, _NoSmartTags);
         }
 
         private static void AddSmartTagTest(EditorWindow doc, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {
-                doc.Invoke(() => {
-                    var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
-                    doc.TextView.Caret.MoveTo(point);
-                });
+            doc.Invoke(() => {
+                var point = doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(line - 1).Start.Add(column - 1);
+                doc.TextView.Caret.MoveTo(point);
+            });
 
-                if (expectedActions.Length > 0) {
-                    using (var sh = doc.StartSmartTagSession()) {
-                        Assert.AreEqual(1, sh.Session.ActionSets.Count);
-                        var set = sh.Session.ActionSets.First();
-
-                        Assert.AreEqual(set.Actions.Count, expectedActions.Length);
-                        for (int i = 0; i < set.Actions.Count; i++) {
-                            Assert.AreEqual(set.Actions[i].DisplayText, expectedActions[i].Replace("_", "__"));
-                        }
-
-                        if (invokeAction != -1) {
-                            doc.Invoke(() => set.Actions[invokeAction].Invoke());
-                            Assert.AreEqual(expectedText, doc.Text);
-                        }
+            if (expectedActions.Length > 0) {
+                using (var sh = doc.StartSmartTagSession()) {
+                    var actions = sh.Session.Actions.ToList();
+                    if (expectedActions[0] == "*") {
+                        AssertUtil.ContainsAtLeast(
+                            actions.Select(a => a.DisplayText.Replace("__", "_")),
+                            expectedActions.Skip(1)
+                        );
+                    } else {
+                        AssertUtil.AreEqual(
+                            actions.Select(a => a.DisplayText.Replace("__", "_")).ToArray(),
+                            expectedActions
+                        );
                     }
-                } else {
-                    doc.StartSmartTagSessionNoSession();
+
+                    if (invokeAction >= 0) {
+                        var action = actions.FirstOrDefault(a => a.DisplayText.Replace("__", "_") == expectedActions[invokeAction]);
+                        Assert.IsNotNull(action, "No action named " + expectedActions[invokeAction]);
+                        doc.Invoke(() => action.Invoke());
+                        doc.WaitForText(expectedText);
+                    }
                 }
+            } else {
+                doc.StartSmartTagSessionNoSession();
+            }
         }
 
         private static void AddSmartTagTest(string filename, int line, int column, string[] expectedActions, int invokeAction = -1, string expectedText = null) {

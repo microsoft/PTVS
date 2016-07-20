@@ -1,34 +1,44 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
+using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
+using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
+using IServiceProvider = System.IServiceProvider;
 
 namespace Microsoft.PythonTools.Intellisense {
     [Export(typeof(IIntellisenseControllerProvider)), ContentType(PythonCoreConstants.ContentType), Order]
+    [TextViewRole(PredefinedTextViewRoles.Analyzable)]
+    [TextViewRole(PredefinedTextViewRoles.Editable)]
     class IntellisenseControllerProvider : IIntellisenseControllerProvider {
         [Import]
         internal ICompletionBroker _CompletionBroker = null; // Set via MEF
@@ -56,43 +66,21 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public IIntellisenseController TryCreateIntellisenseController(ITextView textView, IList<ITextBuffer> subjectBuffers) {
             IntellisenseController controller;
-            if (!textView.Properties.TryGetProperty<IntellisenseController>(typeof(IntellisenseController), out controller)) {
+            if (!textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller)) {
                 controller = new IntellisenseController(this, textView, _ServiceProvider);
             }
 
-            var analyzer = textView.GetAnalyzer(_ServiceProvider);
-            if (analyzer != null) {
-                var buffer = subjectBuffers[0];
-
-                foreach (var subjBuf in subjectBuffers) {
-                    controller.PropagateAnalyzer(subjBuf);
-                }
-
-                var entry = analyzer.MonitorTextBuffer(textView, buffer);
-                _hookedCloseEvents[textView] = Tuple.Create(entry.BufferParser, analyzer);
-                textView.Closed += TextView_Closed;
-
-                for (int i = 1; i < subjectBuffers.Count; i++) {
-                    entry.BufferParser.AddBuffer(subjectBuffers[i]);
-                }
-                controller.SetBufferParser(entry.BufferParser);
+            foreach (var subjectBuffer in subjectBuffers) {
+                controller.ConnectSubjectBuffer(subjectBuffer);
             }
+
             return controller;
         }
 
-        private void TextView_Closed(object sender, EventArgs e) {
-            var textView = sender as ITextView;
-            Tuple<BufferParser, VsProjectAnalyzer> tuple;
-            if (textView == null || !_hookedCloseEvents.TryGetValue(textView, out tuple)) {
-                return;
-            }
-
-            textView.Closed -= TextView_Closed;
-            _hookedCloseEvents.Remove(textView);
-
-            if (tuple.Item1.AttachedViews == 0) {
-                tuple.Item2.StopMonitoringTextBuffer(tuple.Item1, textView);
-            }
+        internal static IntellisenseController GetController(ITextView textView) {
+            IntellisenseController controller;
+            textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller);
+            return controller;
         }
 
         internal static IntellisenseController GetOrCreateController(
@@ -101,7 +89,7 @@ namespace Microsoft.PythonTools.Intellisense {
             ITextView textView
         ) {
             IntellisenseController controller;
-            if (!textView.Properties.TryGetProperty<IntellisenseController>(typeof(IntellisenseController), out controller)) {
+            if (!textView.Properties.TryGetProperty(typeof(IntellisenseController), out controller)) {
                 var intellisenseControllerProvider = (
                    from export in model.DefaultExportProvider.GetExports<IIntellisenseControllerProvider, IContentTypeMetadata>()
                    from exportedContentType in export.Metadata.ContentTypes
@@ -140,9 +128,37 @@ namespace Microsoft.PythonTools.Intellisense {
             if (textView.Properties.TryGetProperty<IntellisenseController>(typeof(IntellisenseController), out controller)) {
                 controller.AttachKeyboardFilter();
             }
+            InitKeyBindings(textViewAdapter);
         }
 
         #endregion
-    }
 
+        public void InitKeyBindings(IVsTextView vsTextView) {
+            var os = vsTextView as IObjectWithSite;
+            if (os == null) {
+                return;
+            }
+
+            IntPtr unkSite = IntPtr.Zero;
+            IntPtr unkFrame = IntPtr.Zero;
+
+            try {
+                os.GetSite(typeof(VisualStudio.OLE.Interop.IServiceProvider).GUID, out unkSite);
+                var sp = Marshal.GetObjectForIUnknown(unkSite) as VisualStudio.OLE.Interop.IServiceProvider;
+
+                sp.QueryService(typeof(SVsWindowFrame).GUID, typeof(IVsWindowFrame).GUID, out unkFrame);
+
+                var frame = Marshal.GetObjectForIUnknown(unkFrame) as IVsWindowFrame;
+                frame.SetGuidProperty((int)__VSFPROPID.VSFPROPID_InheritKeyBindings, VSConstants.GUID_TextEditorFactory);
+            } finally {
+                if (unkSite != IntPtr.Zero) {
+                    Marshal.Release(unkSite);
+                }
+                if (unkFrame != IntPtr.Zero) {
+                    Marshal.Release(unkFrame);
+                }
+            }
+        }
+
+    }
 }

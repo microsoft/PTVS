@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 extern alias analysis;
 using System;
@@ -22,12 +24,12 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.Python;
 using Assert = Microsoft.VisualStudio.TestTools.UnitTesting.Assert;
@@ -108,52 +110,52 @@ namespace PythonToolsTests {
             Console.WriteLine("Passed: {0}", path.InterpreterPath);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen25() {
             TestOpen(PythonPaths.Python25 ?? PythonPaths.Python25_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen26() {
             TestOpen(PythonPaths.Python26 ?? PythonPaths.Python26_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen27() {
             TestOpen(PythonPaths.Python27 ?? PythonPaths.Python27_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen30() {
             TestOpen(PythonPaths.Python30 ?? PythonPaths.Python30_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen31() {
             TestOpen(PythonPaths.Python31 ?? PythonPaths.Python31_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen32() {
             TestOpen(PythonPaths.Python32 ?? PythonPaths.Python32_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen33() {
             TestOpen(PythonPaths.Python33 ?? PythonPaths.Python33_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen34() {
             TestOpen(PythonPaths.Python34 ?? PythonPaths.Python34_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestOpen35() {
             TestOpen(PythonPaths.Python35 ?? PythonPaths.Python35_x64);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestPthFiles() {
             var outputPath = TestData.GetTempPath(randomSubPath: true);
             Console.WriteLine("Writing to: " + outputPath);
@@ -194,7 +196,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(PythonMemberType.Class, cClass.MemberType);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void PydInPackage() {
             PythonPaths.Python27.AssertInstalled();
 
@@ -267,7 +269,7 @@ namespace PythonToolsTests {
         /// Checks that members removed or introduced in later versions show up or don't in
         /// earlier versions as appropriate.
         /// </summary>
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void VersionedSharedDatabase() {
             var twoFive = PythonTypeDatabase.CreateDefaultTypeDatabase(new Version(2, 5));
             var twoSix = PythonTypeDatabase.CreateDefaultTypeDatabase(new Version(2, 6));
@@ -328,21 +330,27 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(1)]
+        [TestMethod, Priority(2)]
         public void CheckObsoleteGenerateFunction() {
             var path = PythonPaths.Versions.LastOrDefault(p => p != null && p.IsCPython);
             path.AssertInstalled();
 
-            var factory = InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
-                Id = path.Id,
-                LanguageVersion = path.Version.ToVersion(),
-                Description = "Test Interpreter",
-                Architecture = path.Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
-                LibraryPath = path.LibPath,
-                PrefixPath = path.PrefixPath,
-                InterpreterPath = path.InterpreterPath,
-                WatchLibraryForNewModules = false
-            });
+            var factory = InterpreterFactoryCreator.CreateInterpreterFactory(
+                new InterpreterConfiguration(
+                    path.Id,
+                    "Test Interpreter",
+                    path.PrefixPath,
+                    path.InterpreterPath,
+                    path.InterpreterPath,
+                    path.LibPath,
+                    "PYTHONPATH",
+                    path.Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
+                    path.Version.ToVersion()
+                ),
+                new InterpreterFactoryCreationOptions {
+                    WatchLibraryForNewModules = false
+                }
+            );
 
             var tcs = new TaskCompletionSource<int>();
             var beforeProc = Process.GetProcessesByName("Microsoft.PythonTools.Analyzer");

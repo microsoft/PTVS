@@ -1,6 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>14.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
     <When Condition=" '$(VisualStudioVersion)'=='14.0'  Or '$(TargetVisualStudioVersion)'=='VS140' ">
       <PropertyGroup>
         <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -8,27 +18,7 @@
         </FileUpgradeFlags>
         <UpgradeBackupLocation>
         </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='12.0'  Or '$(TargetVisualStudioVersion)'=='VS120' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
+        <OldToolsVersion>14.0</OldToolsVersion>
       </PropertyGroup>
     </When>
   </Choose>
@@ -82,19 +72,16 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="Microsoft.VisualStudio.Settings.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
+    <Reference Include="Microsoft.VisualStudio.ImageCatalog, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Imaging, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Utilities, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
   </ItemGroup>
-  <Choose>
-    <When Condition="'$(VSTarget)' == '10.0'">
-      <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.Settings, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
-      </ItemGroup>
-    </When>
-    <Otherwise>
-      <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.Settings.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86" />
-      </ItemGroup>
-    </Otherwise>
-  </Choose>
+  <ItemGroup>
+    <Page Include="images\images.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
   <ItemGroup>
     <Page Include="..\..\..\Common\Product\SharedProject\Wpf\Controls.xaml">
       <Link>Wpf\Controls.xaml</Link>
@@ -106,6 +93,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="DBExtension.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="FileNameLabel.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -125,27 +116,6 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Compile Include="..\..\..\Common\Product\SharedProject\CommonUtils.cs">
-      <Link>CommonUtils.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Product\SharedProject\ExceptionExtensions.cs">
-      <Link>ExceptionExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Product\SharedProject\ObservableCollectionExtensions.cs">
-      <Link>ObservableCollectionExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Product\SharedProject\ProcessOutput.cs">
-      <Link>ProcessOutput.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Product\SharedProject\ProjectResources.cs">
-      <Link>ProjectResources.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Product\SharedProject\TaskExtensions.cs">
-      <Link>TaskExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Product\SharedProject\VsTaskExtensions.cs">
-      <Link>VsTaskExtensions.cs</Link>
-    </Compile>
     <Compile Include="..\..\..\Common\Product\SharedProject\Wpf\Commands.cs">
       <Link>Wpf\Commands.cs</Link>
     </Compile>
@@ -179,12 +149,6 @@
     <Compile Include="..\..\..\Common\Product\SharedProject\Wpf\NativeMethods.cs">
       <Link>Wpf\NativeMethods.cs</Link>
     </Compile>
-    <Compile Include="..\Analysis\IEnumerableExtensions.cs">
-      <Link>IEnumerableExtensions.cs</Link>
-    </Compile>
-    <Compile Include="..\PythonTools\PythonToolsInstallPath.cs">
-      <Link>PythonToolsInstallPath.cs</Link>
-    </Compile>
     <Compile Include="..\PythonTools\PythonTools\Intellisense\FuzzyStringMatcher.cs">
       <Link>FuzzyStringMatcher.cs</Link>
     </Compile>
@@ -194,6 +158,8 @@
     <Compile Include="DBExtension.xaml.cs">
       <DependentUpon>DBExtension.xaml</DependentUpon>
     </Compile>
+    <Compile Include="FileNameEllipsisConverter.cs" />
+    <Compile Include="IEnvironmentViewExtensionProvider.cs" />
     <Compile Include="Pep440Version.cs" />
     <Compile Include="PipExtension.xaml.cs">
       <DependentUpon>PipExtension.xaml</DependentUpon>
@@ -220,10 +186,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="..\..\..\Common\Product\SharedProject\ProjectResources.resx">
-      <Link>ProjectResources.resx</Link>
-      <ManifestResourceName>Microsoft.VisualStudio.Project</ManifestResourceName>
-    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -234,6 +196,14 @@
     <ProjectReference Include="..\Analysis\Analysis.csproj">
       <Project>{a85d479d-67a9-4bdb-904a-7d86daf68a6f}</Project>
       <Name>Microsoft.PythonTools.Analysis</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Microsoft.PythonTools.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\VSCommon\VSCommon.csproj">
+      <Project>{a52ac77f-6df9-4387-bb08-8ded3fd95a0f}</Project>
+      <Name>Microsoft.PythonTools.VSCommon</Name>
     </ProjectReference>
     <ProjectReference Include="..\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>

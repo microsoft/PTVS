@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -500,6 +502,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 return ObjectKind.Module;
             } else if (obj is PythonType) {
                 return ObjectKind.Type;
+            } else if (obj is ConstructorFunction) {
+                return ObjectKind.ConstructorFunction;
             } else if (obj is BuiltinFunction) {
                 return ObjectKind.BuiltinFunction;
             } else if (obj is BuiltinMethodDescriptor) {
@@ -873,6 +877,26 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }, () => new ObjectIdentityHandle[0]);
         }
 
+        internal ObjectIdentityHandle[] GetConstructorFunctionTargets(ObjectIdentityHandle function) {
+            return CallAndHandle(() => {
+                return ((ConstructorFunction)Unwrap(function)).Overloads.Targets
+                .Select(x => MakeHandle(x))
+                .ToArray();
+            }, () => Array.Empty<ObjectIdentityHandle>());
+        }
+
+        internal ObjectIdentityHandle GetConstructorFunctionDeclaringType(ObjectIdentityHandle function) {
+            return CallAndHandle(() => 
+                MakeHandle(
+                    GetTypeFromType(
+                        ((ConstructorFunction)Unwrap(function)).Overloads.Targets
+                        .First()
+                        .DeclaringType
+                    )
+                )
+            );
+        }
+
         #endregion
 
         #region ReflectedProperty Helpers
@@ -1055,9 +1079,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 if (genType != null) {
                     Type[] genTypes = new Type[types.Length];
                     for (int i = 0; i < types.Length; i++) {
-                        genTypes[i] = (Type)Unwrap(types[i]);
+                        var o = Unwrap(types[i]);
+                        genTypes[i] = o as Type ?? (PythonType)o;
                     }
-                    return MakeHandle(genType.Type.MakeGenericType(genTypes));
+                    return MakeHandle(DynamicHelpers.GetPythonTypeFromType(genType.Type.MakeGenericType(genTypes)));
                 }
                 return new ObjectIdentityHandle();
             });
@@ -1215,6 +1240,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     case BuiltinTypeId.Unknown: return MakeHandle(GetTypeFromType(typeof(DynamicNull)));
                     case BuiltinTypeId.Object: return MakeHandle(GetTypeFromType(typeof(object)));
                     case BuiltinTypeId.Set: return MakeHandle(GetTypeFromType(typeof(SetCollection)));
+                    case BuiltinTypeId.FrozenSet: return MakeHandle(GetTypeFromType(typeof(FrozenSetCollection)));
                     case BuiltinTypeId.Str: return MakeHandle(GetTypeFromType(typeof(string)));
                     case BuiltinTypeId.Unicode: return MakeHandle(GetTypeFromType(typeof(string)));
                     case BuiltinTypeId.Bytes: return MakeHandle(GetTypeFromType(typeof(string)));   // keep strings and bytes the same on Ipy because '' and u'abc' create the same type
@@ -1344,7 +1370,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         internal ObjectIdentityHandle GetConstructorDeclaringPythonType(ObjectIdentityHandle ctor) {
             return CallAndHandle(() => {
-                var method = (ConstructorInfo)Unwrap(ctor);
+                var method = (MethodBase)Unwrap(ctor);
 
                 return MakeHandle(DynamicHelpers.GetPythonTypeFromType(method.DeclaringType));
             });
@@ -1466,7 +1492,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         PythonTypeSlot,
         TypeGroup,
         Constant,
-        Unknown
+        ConstructorFunction,
+        Unknown,
     }
 
     enum SetAnalysisDirectoriesResult {

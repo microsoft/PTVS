@@ -13,7 +13,7 @@
   </system.diagnostics>
 
   <appSettings>
-    <add key="WSGI_HANDLER" value="django.core.handlers.wsgi.WSGIHandler()"/>
+    <add key="WSGI_HANDLER" value="django.core.wsgi.get_wsgi_application()"/>
     <add key="DJANGO_SETTINGS_MODULE" value="DjangoApplication.settings" />
     <add key="PYTHONPATH" value="[SITEPATH]" />
   </appSettings>

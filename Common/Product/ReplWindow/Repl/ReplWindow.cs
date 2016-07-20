@@ -48,13 +48,6 @@ namespace Microsoft.NodejsTools.Repl {
 #else
 namespace Microsoft.VisualStudio.Repl {
 #endif
-#if INTERACTIVE_WINDOW
-    using IReplCommand = IInteractiveWindowCommand;
-    using IReplWindow = IInteractiveWindow;
-    using IReplEvaluator = IInteractiveEngine;
-    using IReplWindowCreationListener = IInteractiveWindowCreationListener;
-#endif
-
     /// <summary>
     /// Provides implementation of a Repl Window built on top of the VS editor using projection buffers.
     /// 
@@ -63,7 +56,7 @@ namespace Microsoft.VisualStudio.Repl {
     /// starts having problems w/ a large number of inputs.
     /// </summary>
     [Guid(ReplWindow.TypeGuid)]
-    class ReplWindow : ToolWindowPane, IOleCommandTarget, IReplWindow2, IVsFindTarget {
+    class ReplWindow : ToolWindowPane, IOleCommandTarget, IReplWindow3, IVsFindTarget {
 #if NTVS_FEATURE_INTERACTIVEWINDOW
         public const string TypeGuid = "2153A414-267E-4731-B891-E875ADBA1993";
 #else
@@ -84,6 +77,7 @@ namespace Microsoft.VisualStudio.Repl {
         private IEditorOperations _editorOperations;
         private readonly History/*!*/ _history;
         private TaskScheduler _uiScheduler;
+        private PropertyCollection _properties;
 
         //
         // Services
@@ -179,6 +173,8 @@ namespace Microsoft.VisualStudio.Repl {
             Contract.Assert(title != null);
             Contract.Assert(model != null);
             
+            _properties = new PropertyCollection();
+
             _replId = replId;
             _langSvcGuid = languageServiceGuid;
             _buffer = new OutputBuffer(this);
@@ -2091,15 +2087,11 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         public void WriteOutput(object output) {
-            UIThread(() => {
-                Write(output);
-            });
+            Write(output);
         }
 
         public void WriteError(object output) {
-            UIThread(() => {
-                Write(output, error: true);
-            });
+            Write(output, error: true);
         }
 
         private void Write(object text, bool error = false) {
@@ -2114,7 +2106,7 @@ namespace Microsoft.VisualStudio.Repl {
         /// <summary>
         /// Appends text to the output buffer and updates projection buffer to include it.
         /// </summary>
-        internal void AppendOutput(ConsoleColor color, string text, bool lastOutput) {
+        internal void AppendOutput(IEnumerable<ColoredSpan> colors, string text) {
             int oldBufferLength = _outputBuffer.CurrentSnapshot.Length;
             int oldLineCount = _outputBuffer.CurrentSnapshot.LineCount;
 
@@ -2133,7 +2125,7 @@ namespace Microsoft.VisualStudio.Repl {
                 }
 
                 edit.Insert(oldBufferLength, text);
-                if (lastOutput && !_readingStdIn && !EndsWithLineBreak(text)) {
+                if (!_readingStdIn && !EndsWithLineBreak(text)) {
                     var lineBreak = GetLineBreak();
                     edit.Insert(oldBufferLength, lineBreak);
                     newOutputLength += lineBreak.Length;
@@ -2158,7 +2150,10 @@ namespace Microsoft.VisualStudio.Repl {
             );
 
             var outputSpan = new ReplSpan(trackingSpan, ReplSpanKind.Output);
-            _outputColors.Add(new ColoredSpan(span, color));
+            _outputColors.AddRange(colors.Select(cs => new ColoredSpan(
+                new Span(cs.Span.Start + oldBufferLength, cs.Span.Length),
+                cs.Color
+            )));
 
             bool appended = false;
 
@@ -2214,7 +2209,11 @@ namespace Microsoft.VisualStudio.Repl {
 
         private bool TryShowObject(object obj) {
             UIElement element = obj as UIElement;
-            if (element != null) {
+            if (element == null) {
+                return false;
+            }
+
+            UIThread(() => {
                 _buffer.Flush();
 
                 // figure out where we're inserting the image
@@ -2248,10 +2247,8 @@ namespace Microsoft.VisualStudio.Repl {
                 OnInlineAdornmentAdded();
                 WriteLine(String.Empty);
                 WriteLine(String.Empty);
-                return true;
-            }
-
-            return false;
+            });
+            return true;
         }
 
         private void OnAdornmentLoaded(object source, EventArgs e) {
@@ -2452,6 +2449,11 @@ namespace Microsoft.VisualStudio.Repl {
 
         #endregion
         
+        public PropertyCollection Properties {
+            get { return _properties; }
+        }
+
+
         #region Scopes
 
         private void InitializeScopeList() {
@@ -3290,5 +3292,6 @@ namespace Microsoft.VisualStudio.Repl {
         }
 
         #endregion
+
     }
 }

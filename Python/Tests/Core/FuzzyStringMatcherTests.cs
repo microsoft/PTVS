@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 extern alias pythontools;
 using System;
@@ -99,7 +101,7 @@ namespace PythonToolsTests {
         }
 
 
-        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1)]
         public void SortKey_Prefix() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.Prefix);
             Assert.AreEqual(11, cmp.GetSortKey("hello", "hello"));
@@ -108,7 +110,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(0, cmp.GetSortKey("hello", "helloThere"));
         }
 
-        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1)]
         public void SortKey_PrefixIgnoreCase() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.PrefixIgnoreCase);
             Assert.AreEqual(11, cmp.GetSortKey("hello", "hello"));
@@ -118,7 +120,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(0, cmp.GetSortKey("hello", "helloThere"));
         }
 
-        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1)]
         public void SortOrder_Prefix() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.Prefix);
             TestSortOrder("hello", cmp, "hello", "hello_world", "helloWorld");
@@ -127,7 +129,7 @@ namespace PythonToolsTests {
             TestSortOrder("world", cmp, "world_hello");
         }
 
-        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1)]
         public void SortOrder_PrefixIgnoreCase() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.PrefixIgnoreCase);
             TestSortOrder("hello", cmp, "hello", "hello_world", "helloWorld", "HelloWorld", "Hello_World", "hElLoWoRlD");
@@ -138,7 +140,7 @@ namespace PythonToolsTests {
         }
 
 
-        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1)]
         public void SortKey_Substring() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.Substring);
             Assert.AreEqual(11, cmp.GetSortKey("hello", "hello"));
@@ -150,7 +152,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(0, cmp.GetSortKey("hello", "helloThere"));
         }
 
-        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1)]
         public void SortKey_SubstringIgnoreCase() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.SubstringIgnoreCase);
             Assert.AreEqual(11, cmp.GetSortKey("hello", "hello"));
@@ -164,7 +166,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(0, cmp.GetSortKey("hello", "helloThere"));
         }
 
-        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1)]
         public void SortOrder_Substring() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.Substring);
             TestSortOrder("hello", cmp, "hello", "hello_world", "helloWorld", "world_hello");
@@ -173,7 +175,7 @@ namespace PythonToolsTests {
             TestSortOrder("world", cmp, "world_hello", "hello_world");
         }
 
-        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1)]
         public void SortOrder_SubstringIgnoreCase() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.SubstringIgnoreCase);
             TestSortOrder("hello", cmp, "hello", "hello_world", "helloWorld", "world_hello", "HelloWorld", "Hello_World", "hElLoWoRlD");
@@ -183,7 +185,7 @@ namespace PythonToolsTests {
             TestSortOrder("world", cmp, "world_hello", "hello_world", "helloWorld", "HelloWorld", "Hello_World", "hElLoWoRlD");
         }
 
-        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1)]
         public void SortKey_Fuzzy() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.Fuzzy);
             Assert.AreEqual(35, cmp.GetSortKey("hello", "hello"));
@@ -195,7 +197,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(0, cmp.GetSortKey("hello", "helloThere"));
         }
 
-        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1)]
         public void SortKey_FuzzyIgnoreCase() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.FuzzyIgnoreCase);
             Assert.AreEqual(35, cmp.GetSortKey("hello", "hello"));
@@ -209,7 +211,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(0, cmp.GetSortKey("hello", "helloThere"));
         }
 
-        [TestMethod, Priority(0), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
         public void SortOrder_Fuzzy() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.Fuzzy);
             TestSortOrder("hello", cmp, "hello", "hello_world", "helloWorld", "world_hello");
@@ -218,7 +220,7 @@ namespace PythonToolsTests {
             TestSortOrder("world", cmp, "world_hello", "hello_world");
         }
 
-        [TestMethod, Priority(0), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
         public void SortOrder_FuzzyIgnoreCase() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.FuzzyIgnoreCase);
             TestSortOrder("hello", cmp, "hello", "hello_world", "helloWorld", "HelloWorld", "Hello_World", "hElLoWoRlD", "world_hello");
@@ -228,7 +230,7 @@ namespace PythonToolsTests {
             TestSortOrder("world", cmp, "world_hello", "hello_world", "Hello_World", "helloWorld", "HelloWorld", "hElLoWoRlD");
         }
 
-        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1)]
         public void SortKey_FuzzyIgnoreLowerCase() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.FuzzyIgnoreLowerCase);
             Assert.AreEqual(35, cmp.GetSortKey("hello", "hello"));
@@ -242,7 +244,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(0, cmp.GetSortKey("hello", "helloThere"));
         }
 
-        [TestMethod, Priority(0), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
         public void SortOrder_FuzzyIgnoreLowerCase() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.FuzzyIgnoreLowerCase);
             TestSortOrder("hello", cmp, "hello", "hello_world", "helloWorld", "HelloWorld", "Hello_World", "hElLoWoRlD", "world_hello");
@@ -253,7 +255,7 @@ namespace PythonToolsTests {
         }
 
 
-        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1)]
         public void SortKey_Regex() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.Regex);
             Assert.AreEqual(11, cmp.GetSortKey("hello", "he..o"));
@@ -265,7 +267,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(0, cmp.GetSortKey("hello", "h[elo]+There"));
         }
 
-        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1)]
         public void SortKey_RegexIgnoreCase() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.RegexIgnoreCase);
             Assert.AreEqual(11, cmp.GetSortKey("hello", "he..o"));
@@ -279,7 +281,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(0, cmp.GetSortKey("hello", "h[elo]+There"));
         }
 
-        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1)]
         public void SortOrder_Regex() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.Regex);
             TestSortOrder("h.+o", cmp, "hello_world", "helloWorld", "hElLoWoRlD", "hello", "world_hello");
@@ -288,7 +290,7 @@ namespace PythonToolsTests {
             TestSortOrder("w.+d", cmp, "world_hello", "hello_world");
         }
 
-        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1)]
         public void SortOrder_RegexIgnoreCase() {
             var cmp = new FuzzyStringMatcher(FuzzyMatchMode.RegexIgnoreCase);
             TestSortOrder("h.+o", cmp, "hello_world", "helloWorld", "hElLoWoRlD", "hello", "world_hello", "Hello_World", "HelloWorld");
@@ -299,7 +301,7 @@ namespace PythonToolsTests {
         }
 
 
-        [TestMethod, Priority(0), TestCategory("FuzzyStringMatcher")]
+        [TestMethod, Priority(1), TestCategory("FuzzyStringMatcher")]
         public void FuzzyAcronymCompletions() {
             var cmp1 = new FuzzyStringMatcher(FuzzyMatchMode.FuzzyIgnoreLowerCase);
             var cmp2 = new FuzzyStringMatcher(FuzzyMatchMode.FuzzyIgnoreCase);

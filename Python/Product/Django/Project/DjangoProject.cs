@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -19,6 +21,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Django.Analysis;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -43,8 +49,8 @@ namespace Microsoft.PythonTools.Django.Project {
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
         private static Guid PythonProjectGuid = new Guid(PythonConstants.ProjectFactoryGuid);
         private OleMenuCommandService _menuService;
-        private List<OleMenuCommand> _commands = new List<OleMenuCommand>();
-        private DjangoAnalyzer _analyzer;
+        private readonly List<OleMenuCommand> _commands = new List<OleMenuCommand>();
+        private bool _disposed;
 
 #if HAVE_ICONS
         private static ImageList _images;
@@ -53,12 +59,29 @@ namespace Microsoft.PythonTools.Django.Project {
         public DjangoProject() {
         }
 
-        public DjangoAnalyzer Analyzer {
-            get {
-                if (_analyzer == null) {
-                    _analyzer = new DjangoAnalyzer(this);
+        public void Dispose() {
+            Dispose(true);
+        }
+
+        protected void Dispose(bool disposing) {
+            if (_disposed) {
+                return;
+            }
+            _disposed = true;
+
+            if (disposing) {
+                if (_menuService != null) {
+                    foreach (var command in _commands) {
+                        _menuService.RemoveCommand(command);
+                    }
                 }
-                return _analyzer;
+                _commands.Clear();
+            }
+        }
+
+        public VsProjectAnalyzer Analyzer {
+            get {
+                return _innerVsHierarchy.GetProject().GetPythonProject().GetProjectAnalyzer();
             }
         }
 
@@ -93,7 +116,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
             var pyProj = _innerVsHierarchy.GetProject().GetPythonProject();
             if (pyProj != null) {
-                Analyzer.OnNewAnalyzer(pyProj.GetProjectAnalyzer().Project);
+                RegisterExtension(pyProj.GetProjectAnalyzer());
                 pyProj.ProjectAnalyzerChanging += OnProjectAnalyzerChanging;
             }
 
@@ -124,10 +147,13 @@ namespace Microsoft.PythonTools.Django.Project {
         private void OnProjectAnalyzerChanging(object sender, AnalyzerChangingEventArgs e) {
             var pyProj = sender as IPythonProject;
             if (pyProj != null) {
-                _analyzer.OnNewAnalyzer(e.New);
+                RegisterExtension(e.New);
             }
         }
 
+        private static void RegisterExtension(PythonTools.Intellisense.VsProjectAnalyzer newAnalyzer) {
+            newAnalyzer.RegisterExtension(typeof(DjangoAnalyzer).Assembly.CodeBase);
+        }
 
         private void AddCommand(OleMenuCommand menuItem) {
             _menuService.AddCommand(menuItem);
@@ -135,13 +161,7 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         protected override void Close() {
-            if (_menuService != null) {
-                foreach (var command in _commands) {
-                    _menuService.RemoveCommand(command);
-                }
-            }
-            _commands.Clear();
-            _analyzer.Dispose();
+            Dispose();
             base.Close();
         }
 
@@ -468,11 +488,7 @@ namespace Microsoft.PythonTools.Django.Project {
 
                     // TODO: Use the actual Django version
                     var sln = (EnvDTE80.Solution2)project.DTE.Solution;
-#if DEV10
-                    var newAppTemplate = sln.GetProjectItemTemplate("DjangoNewAppFiles14.zip", "{888888a0-9f3d-457c-b088-3a5042f75d52}");
-#else
-                    var newAppTemplate = sln.GetProjectItemTemplate("DjangoNewAppFiles14.zip", "Python");
-#endif
+                    var newAppTemplate = sln.GetProjectItemTemplate("DjangoNewAppFiles19.zip", "Python");
 
                     bool cancel;
                     name = ResolveAppNameCollisionWithUser(parentItems, name, out cancel);
@@ -622,6 +638,13 @@ namespace Microsoft.PythonTools.Django.Project {
                     }
                     return res;
                 }
+            }
+
+            var id8 = (__VSHPROPID8)propId;
+            switch (id8) {
+                case __VSHPROPID8.VSHPROPID_SupportsIconMonikers:
+                    property = true;
+                    return VSConstants.S_OK;
             }
 
             return base.GetProperty(itemId, propId, out property);
@@ -935,13 +958,6 @@ namespace Microsoft.PythonTools.Django.Project {
         }
 
         #endregion
-    }
-
-    class TagInfo {
-        public readonly string Documentation;
-        public TagInfo(string doc) {
-            Documentation = doc;
-        }
     }
 
 }

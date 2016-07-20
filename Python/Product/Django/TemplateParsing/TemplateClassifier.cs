@@ -1,18 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
-
-#if DEV12_OR_LATER
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -21,12 +21,7 @@ using System.Threading;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Projection;
-
-#if DEV14_OR_LATER
 using Microsoft.Html.Editor.Document;
-#else
-using Microsoft.Html.Editor;
-#endif
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
     internal class TemplateClassifier : TemplateClassifierBase {
@@ -39,10 +34,28 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
 
         public override event EventHandler<ClassificationChangedEventArgs> ClassificationChanged;
 
+        internal static HtmlEditorDocument HtmlEditorDocumentFromTextBuffer(ITextBuffer buffer) {
+            var doc = HtmlEditorDocument.FromTextBuffer(buffer);
+#if DEV14_OR_LATER
+            if (doc == null) {
+                var projBuffer = buffer as IProjectionBuffer;
+                if (projBuffer != null) {
+                    foreach (var b in projBuffer.SourceBuffers) {
+                        if (b.ContentType.IsOfType(TemplateHtmlContentType.ContentTypeName) &&
+                            (doc = HtmlEditorDocument.TryFromTextBuffer(b)) != null) {
+                            return doc;
+                        }
+                    }
+                }
+            }
+#endif
+            return doc;
+        }
+
         public override IList<ClassificationSpan> GetClassificationSpans(SnapshotSpan span) {
             var spans = new List<ClassificationSpan>();
 
-            var htmlDoc = HtmlEditorDocument.TryFromTextBuffer(span.Snapshot.TextBuffer);
+            var htmlDoc = HtmlEditorDocumentFromTextBuffer(span.Snapshot.TextBuffer);
             if (htmlDoc == null) {
                 return spans;
             }
@@ -64,35 +77,49 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 return spans;
             }
 
-            var projSnapshot = _htmlDoc.PrimaryView.TextSnapshot as IProjectionSnapshot;
-            if (projSnapshot == null) {
+            // The provided span may be in a projection snapshot, so we need to
+            // map back to the source snapshot to find the correct
+            // classification. If projSnapshot is null, we are already in the
+            // correct snapshot.
+            var projSnapshot = span.Snapshot as IProjectionSnapshot;
+            var sourceSnapshot = span.Snapshot;
+
+            var sourceStartIndex = span.Start.Position;
+            if (projSnapshot != null) {
+                var pt = projSnapshot.MapToSourceSnapshot(sourceStartIndex);
+                sourceStartIndex = pt.Position;
+                sourceSnapshot = pt.Snapshot;
+                if (HtmlEditorDocument.TryFromTextBuffer(sourceSnapshot.TextBuffer) != _htmlDoc) {
+                    return spans;
+                }
+            }
+
+            var index = _htmlDoc.HtmlEditorTree.ArtifactCollection.GetItemContaining(sourceStartIndex);
+            if (index < 0) {
                 return spans;
             }
 
-            var primarySpans = projSnapshot.MapFromSourceSnapshot(span);
-            foreach (var primarySpan in primarySpans) {
-                var index = _htmlDoc.HtmlEditorTree.ArtifactCollection.GetItemContaining(primarySpan.Start);
-                if (index < 0) {
-                    continue;
-                }
+            var artifact = _htmlDoc.HtmlEditorTree.ArtifactCollection[index] as TemplateArtifact;
+            if (artifact == null) {
+                return spans;
+            }
 
-                var artifact = _htmlDoc.HtmlEditorTree.ArtifactCollection[index] as TemplateArtifact;
-                if (artifact == null) {
-                    continue;
-                }
+            int artifactStart = artifact.InnerRange.Start;
+            var artifactText = _htmlDoc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange);
+            artifact.Parse(artifactText);
 
-                var artifactStart = projSnapshot.MapToSourceSnapshot(artifact.InnerRange.Start);
-                if (artifactStart.Snapshot != span.Snapshot) {
-                    continue;
-                }
-
-                var artifactText = _htmlDoc.HtmlEditorTree.ParseTree.Text.GetText(artifact.InnerRange);
-                artifact.Parse(artifactText);
-
-                var classifications = artifact.GetClassifications();
-                foreach (var classification in classifications) {
-                    var classificationSpan = ToClassificationSpan(classification, span.Snapshot, artifactStart.Position);
-                    spans.Add(classificationSpan);
+            var classifications = artifact.GetClassifications();
+            foreach (var classification in classifications) {
+                var cls = GetClassification(classification.Classification);
+                int clsStart = artifactStart + classification.Span.Start;
+                int clsLen = Math.Min(sourceSnapshot.Length - clsStart, classification.Span.Length);
+                var clsSpan = new SnapshotSpan(sourceSnapshot, clsStart, clsLen);
+                if (projSnapshot != null) {
+                    foreach (var sp in projSnapshot.MapFromSourceSnapshot(clsSpan)) {
+                        spans.Add(new ClassificationSpan(new SnapshotSpan(span.Snapshot, sp), cls));
+                    }
+                } else {
+                    spans.Add(new ClassificationSpan(clsSpan, cls));
                 }
             }
 
@@ -116,5 +143,3 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
     }
 }
-
-#endif

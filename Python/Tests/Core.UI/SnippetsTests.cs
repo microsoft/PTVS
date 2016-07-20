@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -103,8 +105,8 @@ namespace PythonToolsUITests {
             )
         };
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestBasicSnippetsTab() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 foreach (var snippet in BasicSnippets) {
@@ -177,8 +179,8 @@ namespace PythonToolsUITests {
             return app;
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPassSelected() {
             var snippet = new Snippet(
                 "class",
@@ -197,8 +199,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestPassSelectedIndented() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 var app = solution.OpenItem("SnippetsTest", "indented.py");
@@ -216,8 +218,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestSurroundWith() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 foreach (var snippet in BasicSnippets) {
@@ -228,8 +230,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestSurroundWithMultiline() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 foreach (var snippet in BasicSnippets) {
@@ -245,8 +247,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestInsertSnippet() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 foreach (var snippet in BasicSnippets) {
@@ -257,8 +259,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestInsertSnippetEmptySelectionNonEmptyLine() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 foreach (var snippet in BasicSnippets) {
@@ -279,8 +281,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestTestClassSnippet() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 var snippet = new Snippet(
@@ -296,8 +298,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestTestClassSnippetBadImport() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 var snippet = new Snippet(
@@ -313,8 +315,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestTestClassSnippetImportAs() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 var snippet = new Snippet(
@@ -330,8 +332,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestTestClassSnippetUnitTestImported() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 var snippet = new Snippet(
@@ -350,8 +352,8 @@ namespace PythonToolsUITests {
         /// <summary>
         /// Starting a nested session should dismiss the initial session
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void TestNestedSession() {
             using (var solution = BasicProject.Generate().ToVs()) {
                 var app = solution.OpenItem("SnippetsTest", "app.py");

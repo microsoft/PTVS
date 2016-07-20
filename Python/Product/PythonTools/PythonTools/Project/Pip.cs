@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -19,10 +21,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     static class Pip {
@@ -81,12 +82,18 @@ namespace Microsoft.PythonTools.Project {
 
             // Pip failed, so return a directory listing
             var packagesPath = Path.Combine(factory.Configuration.LibraryPath, "site-packages");
-            var result = await Task.Run(() => new HashSet<string>(Directory.EnumerateDirectories(packagesPath)
-                .Select(path => Path.GetFileName(path))
-                .Select(name => PackageNameRegex.Match(name))
-                .Where(match => match.Success)
-                .Select(match => match.Groups["name"].Value)
-            )).HandleAllExceptions(SR.ProductName, typeof(Pip));
+            HashSet<string> result = null;
+            if (Directory.Exists(packagesPath)) {
+                result = await Task.Run(() => new HashSet<string>(
+                    PathUtils.EnumerateDirectories(packagesPath, recurse: false)
+                        .Select(path => Path.GetFileName(path))
+                        .Select(name => PackageNameRegex.Match(name))
+                        .Where(match => match.Success)
+                        .Select(match => match.Groups["name"].Value)
+                    )
+                )
+                    .HandleAllExceptions(null, typeof(Pip));
+            }
 
             return result ?? new HashSet<string>();
         }
@@ -159,7 +166,7 @@ namespace Microsoft.PythonTools.Project {
             if (!(await factory.FindModulesAsync("pip")).Any()) {
                 if (site != null) {
                     try {
-                        await QueryInstallPip(factory, site, SR.GetString(SR.InstallPip), elevate, output);
+                        await QueryInstallPip(factory, site, Strings.InstallPip, elevate, output);
                     } catch (OperationCanceledException) {
                         return false;
                     }
@@ -169,7 +176,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (output != null) {
-                output.WriteLine(SR.GetString(SR.PackageInstalling, package));
+                output.WriteLine(Strings.PackageInstalling.FormatUI(package));
                 if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                     output.ShowAndActivate();
                 } else {
@@ -182,9 +189,9 @@ namespace Microsoft.PythonTools.Project {
 
                 if (output != null) {
                     if (exitCode == 0) {
-                        output.WriteLine(SR.GetString(SR.PackageInstallSucceeded, package));
+                        output.WriteLine(Strings.PackageInstallSucceeded.FormatUI(package));
                     } else {
-                        output.WriteLine(SR.GetString(SR.PackageInstallFailedExitCode, package, exitCode));
+                        output.WriteLine(Strings.PackageInstallFailedExitCode.FormatUI(package, exitCode));
                     }
                     if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                         output.ShowAndActivate();
@@ -206,7 +213,7 @@ namespace Microsoft.PythonTools.Project {
             factory.ThrowIfNotRunnable("factory");
 
             if (output != null) {
-                output.WriteLine(SR.GetString(SR.PackageUninstalling, package));
+                output.WriteLine(Strings.PackageUninstalling.FormatUI(package));
                 if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                     output.ShowAndActivate();
                 } else {
@@ -219,9 +226,9 @@ namespace Microsoft.PythonTools.Project {
 
                 if (output != null) {
                     if (exitCode == 0) {
-                        output.WriteLine(SR.GetString(SR.PackageUninstallSucceeded, package));
+                        output.WriteLine(Strings.PackageUninstallSucceeded.FormatUI(package));
                     } else {
-                        output.WriteLine(SR.GetString(SR.PackageUninstallFailedExitCode, package, exitCode));
+                        output.WriteLine(Strings.PackageUninstallFailedExitCode.FormatUI(package, exitCode));
                     }
                     if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                         output.ShowAndActivate();
@@ -239,7 +246,7 @@ namespace Microsoft.PythonTools.Project {
             var pipDownloaderPath = PythonToolsInstallPath.GetFile("pip_downloader.py");
 
             if (output != null) {
-                output.WriteLine(SR.GetString(SR.PipInstalling));
+                output.WriteLine(Strings.PipInstalling);
                 if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                     output.ShowAndActivate();
                 } else {
@@ -258,9 +265,9 @@ namespace Microsoft.PythonTools.Project {
                 var exitCode = await proc;
                 if (output != null) {
                     if (exitCode == 0) {
-                        output.WriteLine(SR.GetString(SR.PipInstallSucceeded));
+                        output.WriteLine(Strings.PipInstallSucceeded);
                     } else {
-                        output.WriteLine(SR.GetString(SR.PipInstallFailedExitCode, exitCode));
+                        output.WriteLine(Strings.PipInstallFailedExitCode.FormatUI(exitCode));
                     }
                     if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForPackageInstallation) {
                         output.ShowAndActivate();

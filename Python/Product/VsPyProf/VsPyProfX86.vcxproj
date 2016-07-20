@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" TreatAsLocalProperty="Platform">
   <PropertyGroup>
     <Platform>Win32</Platform>
@@ -20,19 +20,14 @@
     <RootNamespace>VsPyProf</RootNamespace>
   </PropertyGroup>
   <Choose>
-    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
-      <PropertyGroup>
-        <VCTargetsPath Condition="'$(VCTargetsPath11)' != '' and '$(VSVersion)' == '' and $(VisualStudioVersion) == ''">$(VCTargetsPath11)</VCTargetsPath>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='12.0'  Or '$(TargetVisualStudioVersion)'=='VS120' ">
-      <PropertyGroup>
-        <VCTargetsPath Condition="'$(VCTargetsPath12)' != '' and '$(VSVersion)' == '' and $(VisualStudioVersion) == ''">$(VCTargetsPath12)</VCTargetsPath>
-      </PropertyGroup>
-    </When>
     <When Condition=" '$(VisualStudioVersion)'=='14.0'  Or '$(TargetVisualStudioVersion)'=='VS140' ">
       <PropertyGroup>
         <VCTargetsPath Condition="'$(VCTargetsPath14)' != '' and '$(VSVersion)' == '' and $(VisualStudioVersion) == ''">$(VCTargetsPath14)</VCTargetsPath>
+      </PropertyGroup>
+    </When>
+    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
+      <PropertyGroup>
+        <VCTargetsPath Condition="'$(VCTargetsPath15)' != '' and '$(VSVersion)' == '' and $(VisualStudioVersion) == ''">$(VCTargetsPath15)</VCTargetsPath>
       </PropertyGroup>
     </When>
   </Choose>
@@ -50,13 +45,10 @@
     <CharacterSet>Unicode</CharacterSet>
     <TargetPath>$(OutDir)$(ProjectName).dll</TargetPath>
   </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
-    <PlatformToolset>v110</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Label="Configuration" Condition=" '$(VisualStudioVersion)'=='12.0'  Or '$(TargetVisualStudioVersion)'=='VS120' ">
-    <PlatformToolset>v120</PlatformToolset>
-  </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition=" '$(VisualStudioVersion)'=='14.0'  Or '$(TargetVisualStudioVersion)'=='VS140' ">
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration" Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
@@ -67,8 +59,10 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath>$(VSInstallDir)\Team Tools\Performance Tools\PerfSDK;$(IncludePath)</IncludePath>
-    <LibraryPath>$(VSInstallDir)\Team Tools\Performance Tools\PerfSDK;$(LibraryPath)</LibraryPath>
+    <IncludePath Condition="Exists('$(VsInstallRoot)\Team Tools\Performance Tools\PerfSDK')">$(VsInstallRoot)\Team Tools\Performance Tools\PerfSDK;$(IncludePath)</IncludePath>
+    <IncludePath Condition="Exists('$(VSInstallDir)\Team Tools\Performance Tools\PerfSDK')">$(VSInstallDir)\Team Tools\Performance Tools\PerfSDK;$(IncludePath)</IncludePath>
+    <LibraryPath Condition="Exists('$(VsInstallRoot)\Team Tools\Performance Tools\PerfSDK')">$(VsInstallRoot)\Team Tools\Performance Tools\PerfSDK;$(LibraryPath)</LibraryPath>
+    <LibraryPath Condition="Exists('$(VSInstallDir)\Team Tools\Performance Tools\PerfSDK')">$(VSInstallDir)\Team Tools\Performance Tools\PerfSDK;$(LibraryPath)</LibraryPath>
     <IntDir>$(IntDir)$(Platform)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>

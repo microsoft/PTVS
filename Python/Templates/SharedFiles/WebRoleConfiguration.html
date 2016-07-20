@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<!--
+Python Tools for Visual Studio
+Copyright(c) Microsoft Corporation
+All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the License); you may not use
+this file except in compliance with the License. You may obtain a copy of the
+License at http://www.apache.org/licenses/LICENSE-2.0
+
+THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+MERCHANTABLITY OR NON-INFRINGEMENT.
+
+See the Apache Version 2.0 License for specific language governing
+permissions and limitations under the License.
+-->
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Python Web Role Configuration</title>
+    <link rel="stylesheet" href="../../Product/PythonTools/ReadmeStyle.css" type="text/css" />
+</head>
+<body>
+    <h1 class="top">Configuring Deployment</h1>
+
+    <p>
+        While the included PowerShell scripts may be edited freely, it is
+        possible to set most configuration options through your Python project.
+    </p>
+
+    <p>
+        To specify the version of Python your web should run with, make it
+        the active environment for your project. (Ensure that you have a WebPI
+        reference or startup task to install this version on the instance - see
+        the documentation in <code>ConfigureCloudService.ps1</code> for more
+        details.)
+    </p>
+
+    <p>
+        If your version of Python cannot be detected using the CPython registry
+        keys after it has been installed, you can add the
+        <code>DeployedPythonInterpreterPath</code> property to your Python
+        project by editing the .pyproj file. This path will take precedence over
+        the active environment.
+    </p>
+
+    <p>
+        To install packages using pip, update the <code>requirements.txt</code>
+        file in the root directory of your project.
+    </p>
+
+    <p>
+        To set <code>PYTHONPATH</code> (or equivalent) before running the
+        web, add the necessary Search Paths to your project.
+    </p>
+
+    <p>
+        To specify your main handler script, make it the startup file in your
+        project. Alternatively, you can set the full importable name of your
+        WSGI app in Project Properties\Web\WSGI Handler.
+    </p>
+
+    <h1>Troubleshooting Deployment</h1>
+
+    <p>If your web role does not behave correctly after deployment, check the following:</p>
+
+    <ol>
+        <li>
+            <p>Your Python project includes a bin\ folder with (at least):</p>
+            <ul>
+                <li><code>ConfigureCloudService.ps1</code></li>
+                <li><code>ps.cmd</code></li>
+            </ul>
+        </li>
+        <li>Your Cloud project references those files from the service definition.</li>
+        <li><p>Your Python project includes either:</p>
+        <ul>
+            <li>a <code>requirements.txt</code> file listing all dependencies, OR</li>
+            <li>a virtual environment containing all dependencies.</li>
+        </ul>
+        </li>
+        <li>
+            <p>Enable Remote Desktop on your Cloud Service and investigate the log files.</p>
+            <p>Logs for ConfigureCloudService.ps1 are stored in the following path on the machine instance:</p>
+            <ul>
+                <li><code>C:\Resources\Directory\%RoleId%.DiagnosticStore\LogFiles</code></li>
+            </ul>
+        </li>
+        <li>
+            Start a discussion at
+            <a href="http://go.microsoft.com/fwlink/?LinkId=293415">our discussion forum</a>
+            for further help.
+        </li>
+    </ol>
+    
+    <hr/>
+    <p class="hint">This readme file may be deleted when you no longer need it.</p>
+</body>
+</html>

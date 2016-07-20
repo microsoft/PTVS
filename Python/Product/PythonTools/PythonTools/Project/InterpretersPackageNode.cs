@@ -1,33 +1,33 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
-using Task = System.Threading.Tasks.Task;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsMenus = Microsoft.VisualStudioTools.Project.VsMenus;
 
@@ -93,17 +93,15 @@ namespace Microsoft.PythonTools.Project {
                 nodes.Cast<InterpretersPackageNode>().All(n => n.Parent == Parent)) {
                 string message;
                 if (nodes.Count == 1) {
-                    message = SR.GetString(
-                        SR.UninstallPackage,
+                    message = Strings.UninstallPackage.FormatUI(
                         Caption,
-                        Parent._factory.Description,
+                        Parent._factory.Configuration.FullDescription,
                         Parent._factory.Configuration.PrefixPath
                     );
                 } else {
-                    message = SR.GetString(
-                        SR.UninstallPackages,
+                    message = Strings.UninstallPackages.FormatUI(
                         string.Join(Environment.NewLine, nodes.Select(n => n.Caption)),
-                        Parent._factory.Description,
+                        Parent._factory.Configuration.FullDescription,
                         Parent._factory.Configuration.PrefixPath
                     );
                 }
@@ -122,8 +120,9 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public override void Remove(bool removeFromStorage) {
+        public override bool Remove(bool removeFromStorage) {
             PythonProjectNode.BeginUninstallPackage(Parent._factory, ProjectMgr.Site, Url, Parent);
+            return true;
         }
 
         public new InterpretersNode Parent {
@@ -148,9 +147,14 @@ namespace Microsoft.PythonTools.Project {
             return null;
         }
 
-        public override object GetIconHandle(bool open) {
-            return ProjectMgr.GetIconHandleByName(PythonProjectImageName.InterpretersPackage);
+        protected override bool SupportsIconMonikers {
+            get { return true; }
         }
+
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            return KnownMonikers.PythonPackage;
+        }
+
         /// <summary>
         /// Package node cannot be dragged.
         /// </summary>

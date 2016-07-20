@@ -1,34 +1,33 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
-using System.IO;
-using System.Runtime.InteropServices;
 using System.Windows.Input;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text.Editor;
 using TestUtilities;
-using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
-    class MockTreeNode : ITreeNode, IFocusable, IOleCommandTarget {
+    class MockTreeNode : ITreeNode {
         private readonly MockVs _mockVs;
         internal HierarchyItem _item;
-        private string _editLabel;
-        private int _selectionStart, _selectionLength;
+
+        private const uint MK_CONTROL = 0x0008; //winuser.h
+        private const uint MK_SHIFT = 0x0004;
 
         public MockTreeNode(MockVs mockVs, HierarchyItem res) {
             _mockVs = mockVs;
@@ -36,97 +35,16 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public void Select() {
-            _mockVs.SetFocus(this);
+            _mockVs.InvokeSync(() => {
+                _mockVs._uiHierarchy.ClearSelectedItems();
+                _mockVs._uiHierarchy.AddSelectedItem(_item);
+            });
         }
-
 
         public void AddToSelection() {
-            throw new NotImplementedException();
-        }
-
-        public void GetFocus() {
-        }
-
-        public void LostFocus() {
-        }
-
-        public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
-                switch((VSConstants.VSStd97CmdID)nCmdID) {
-                    case VSConstants.VSStd97CmdID.Rename:
-                        if ((_editLabel = _item.EditLabel) != null) {
-                            _selectionLength = 0;
-                            _selectionLength = _editLabel.Length - Path.GetExtension(_editLabel).Length;
-                            return VSConstants.S_OK;
-                        }
-                        break;
-                }
-            } else if (pguidCmdGroup == VSConstants.VSStd2K) {
-                switch((VSConstants.VSStd2KCmdID)nCmdID) {
-                    case VSConstants.VSStd2KCmdID.TYPECHAR:
-                        if (_editLabel != null) {
-                            if (_selectionLength != 0) {
-                                _editLabel = _editLabel.Remove(_selectionStart, _selectionLength);
-                                _selectionLength = 0;
-                            }
-                            var ch = (char)(ushort)Marshal.GetObjectForNativeVariant(pvaIn);
-                            _editLabel = _editLabel.Insert(_selectionStart, ch.ToString());
-                            _selectionStart++;
-                        }
-                        return VSConstants.S_OK;
-                    case VSConstants.VSStd2KCmdID.RETURN:
-                        if (_editLabel != null) {
-                            _item.EditLabel = _editLabel;
-                            _editLabel = null;
-                            return VSConstants.S_OK;
-                        }
-                        break;
-                }
-            }
-
-            IOleCommandTarget target = _item.Hierarchy as IOleCommandTarget;
-            if (target != null) {
-                int hr = target.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-                if (hr != (int)OleConstants.OLECMDERR_E_NOTSUPPORTED) {
-                    return hr;
-                }
-            }
-
-            IVsUIHierarchy uiHier = _item.Hierarchy as IVsUIHierarchy;
-            if (uiHier != null) {
-                return uiHier.ExecCommand(
-                    _item.ItemId,
-                    ref pguidCmdGroup,
-                    nCmdID,
-                    nCmdexecopt,
-                    pvaIn,
-                    pvaOut
-                );
-            }
-            return VSConstants.E_FAIL;
-        }
-
-        public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
-            IOleCommandTarget target = _item.Hierarchy as IOleCommandTarget;
-            if (target != null) {
-                int hr = target.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
-                if (hr != (int)OleConstants.OLECMDERR_E_NOTSUPPORTED) {
-                    return hr;
-                }
-            }
-
-            IVsUIHierarchy uiHier = _item.Hierarchy as IVsUIHierarchy;
-            if (uiHier != null) {
-                return uiHier.QueryStatusCommand(
-                    _item.ItemId,
-                    ref pguidCmdGroup,
-                    cCmds,
-                    prgCmds,
-                    pCmdText                    
-                );
-            }
-
-            return VSConstants.E_FAIL;
+            _mockVs.InvokeSync(() => {
+                _mockVs._uiHierarchy.AddSelectedItem(_item);
+            });
         }
 
         public void DragOntoThis(params ITreeNode[] source) {
@@ -134,7 +52,83 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public void DragOntoThis(Key modifier, params ITreeNode[] source) {
+            _mockVs.Invoke(() => DragOntoThisUIThread(modifier, source));
+        }
+
+        private void DragOntoThisUIThread(Key modifier, ITreeNode[] source) {
+            var target = _item.Hierarchy as IVsHierarchyDropDataTarget;
+            if (target != null) {
+                uint effect = 0;
+                uint keyState = GetKeyState(modifier);
+
+                source[0].Select();
+                for (int i = 1; i < source.Length; i++) {
+                    source[i].AddToSelection();
+                }
+
+                MockTreeNode sourceNode = (MockTreeNode)source[0];
+                var dropDataSource = (IVsHierarchyDropDataSource2)sourceNode._item.Hierarchy;
+                uint okEffects;
+                IDataObject data;
+                IDropSource dropSource;
+                ErrorHandler.ThrowOnFailure(dropDataSource.GetDropInfo(out okEffects, out data, out dropSource));
+
+                int hr = hr = target.DragEnter(
+                    data,
+                    keyState,
+                    _item.ItemId,
+                    ref effect
+                );
+
+                if (ErrorHandler.Succeeded(hr)) {
+                    if (effect == 0) {
+                        return;
+                    }
+
+                    hr = target.DragOver(keyState, _item.ItemId, ref effect);
+
+                    if (ErrorHandler.Succeeded(hr)) {
+                        int cancel;
+                        ErrorHandler.ThrowOnFailure(
+                            dropDataSource.OnBeforeDropNotify(
+                                data,
+                                effect,
+                                out cancel
+                            )
+                        );
+
+                        if (cancel == 0) {
+                            hr = target.Drop(
+                                data,
+                                keyState,
+                                _item.ItemId,
+                                ref effect
+                            );
+                        }
+
+                        int dropped = 0;
+                        if (cancel == 0 && ErrorHandler.Succeeded(hr)) {
+                            dropped = 1;
+                        }
+                        ErrorHandler.ThrowOnFailure(dropDataSource.OnDropNotify(dropped, effect));
+                    }
+                }
+                return;
+            }
             throw new NotImplementedException();
+        }
+
+        private uint GetKeyState(Key modifier) {
+            switch (modifier) {
+                case Key.LeftShift:
+                    return MK_SHIFT;
+                case Key.LeftCtrl:
+                    return MK_CONTROL;
+                case Key.None:
+                    return 0;
+                default:
+                    throw new NotImplementedException();
+            }
         }
     }
 }

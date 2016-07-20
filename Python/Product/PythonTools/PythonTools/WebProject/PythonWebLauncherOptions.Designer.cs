@@ -1,4 +1,4 @@
-﻿namespace Microsoft.PythonTools.Project.Web {
+namespace Microsoft.PythonTools.Project.Web {
     partial class PythonWebLauncherOptions {
         /// <summary> 
         /// Required designer variable.

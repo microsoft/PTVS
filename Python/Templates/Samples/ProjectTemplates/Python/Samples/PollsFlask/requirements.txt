@@ -1,0 +1,3 @@
+Flask<1
+azure<1
+pymongo<3

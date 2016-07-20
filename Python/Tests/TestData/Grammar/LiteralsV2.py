@@ -1,4 +1,4 @@
-﻿1000L
+1000L
 u"unicode string"
 U"unicode string"
 ur"raw unicode"

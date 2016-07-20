@@ -1,4 +1,4 @@
-﻿import wpf
+import wpf
 
 from System.Windows import Application, Window
 from System.Windows import Annotations

@@ -1,4 +1,4 @@
-﻿try:
+try:
     from urllib.request import Request, urlopen
 except ImportError:
     from urllib2 import Request, urlopen

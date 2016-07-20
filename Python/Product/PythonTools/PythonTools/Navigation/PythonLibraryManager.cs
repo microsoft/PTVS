@@ -1,20 +1,25 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
@@ -44,35 +49,37 @@ namespace Microsoft.PythonTools.Navigation {
             _package = package;
         }
 
-        protected override LibraryNode CreateLibraryNode(LibraryNode parent, IScopeNode subItem, string namePrefix, IVsHierarchy hierarchy, uint itemid) {
-            return new PythonLibraryNode(parent, subItem, namePrefix, hierarchy, itemid);            
-        }
-
-        public override LibraryNode CreateFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename, LibraryNodeType libraryNodeType) {
-            return new PythonFileLibraryNode(parent, hierarchy, hierarchy.Caption, filename, libraryNodeType);
+        public override LibraryNode CreateFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename) {
+            return new PythonFileLibraryNode(parent, hierarchy, hierarchy.Caption, filename);
         }
 
         protected override void OnNewFile(LibraryTask task) {
             if (IsNonMemberItem(task.ModuleID.Hierarchy, task.ModuleID.ItemID)) {
                 return;
             }
-            IPythonProjectEntry item;
-            if (task.TextBuffer == null || !task.TextBuffer.TryGetPythonProjectEntry(out item)) {
-                item = task.ModuleID.Hierarchy
+
+            var analyzer = task.ModuleID.Hierarchy
                     .GetProject()
                     .GetPythonProject()
-                    .GetAnalyzer()
-                    .AnalyzeFile(task.FileName) as IPythonProjectEntry;
-            }
+                    .GetAnalyzer();
 
-            if (item != null) {
-                // We subscribe to OnNewAnalysis here instead of OnNewParseTree so that 
-                // in the future we can use the analysis to include type information in the
-                // object browser (for example we could include base type information with
-                // links elsewhere in the object browser).
-                item.OnNewAnalysis += (sender, args) => {
-                    _package.GetUIThread().Invoke(() => FileParsed(task, new AstScopeNode(item.Tree, item)));
-                };
+            AnalysisEntry item;
+            if (analyzer.GetAnalysisEntryFromPath(task.FileName) == null) {
+                analyzer.AnalyzeFileAsync(task.FileName).ContinueWith(x => {
+                    item = x.Result;
+
+                    if (item != null) {
+                        // We subscribe to OnNewAnalysis here instead of OnNewParseTree so that 
+                        // in the future we can use the analysis to include type information in the
+                        // object browser (for example we could include base type information with
+                        // links elsewhere in the object browser).
+                        item.AnalysisComplete += (sender, args) => {
+                            _package.GetUIThread().InvokeAsync(() => FileParsed(task))
+                                .HandleAllExceptions(_package, GetType())
+                                .DoNotWait();
+                        };
+                    }
+                });
             }
         }
     }

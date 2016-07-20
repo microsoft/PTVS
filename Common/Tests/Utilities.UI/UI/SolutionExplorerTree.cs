@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.IO;
@@ -121,11 +123,12 @@ namespace TestUtilities.UI {
 
         private AutomationElement FindChildOfProjectHelper(EnvDTE.Project project, string[] path, bool assertOnFailure) {
             var sln = project.DTE.Solution;
+            int count = sln.Projects.OfType<EnvDTE.Project>().Count(p => !string.IsNullOrEmpty(p.FullName));
             var slnLabel = string.Format(
                 "Solution '{0}' ({1} project{2})",
                 Path.GetFileNameWithoutExtension(sln.FullName),
-                sln.Count,
-                sln.Count == 1 ? "" : "s"
+                count,
+                count == 1 ? "" : "s"
             );
 
             var slnElements = Element.FindAll(TreeScope.Children, new PropertyCondition(
@@ -151,11 +154,11 @@ namespace TestUtilities.UI {
             }
             var projElement = projElements.Cast<AutomationElement>().Single();
 
-            var itemElement = FindNode(
+            var itemElement = path.Any() ? FindNode(
                 projElement.FindAll(TreeScope.Children, Condition.TrueCondition),
                 path,
                 0
-            );
+            ) : projElement;
 
             if (assertOnFailure) {
                 AutomationWrapper.DumpElement(Element);

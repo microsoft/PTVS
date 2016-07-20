@@ -1,21 +1,23 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Windows.Documents;
+using System.Linq;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Projection;
 
@@ -63,6 +65,36 @@ namespace TestUtilities.Mocks {
             }
         }
 
+        private static List<SnapshotSpan> MapDownOneLevel(
+            List<SnapshotSpan> inputSpans,
+            Predicate<ITextSnapshot> match,
+            ref ITextSnapshot chosenSnapshot,
+            ref List<Span> targetSpans
+        ) {
+            var downSpans = new List<SnapshotSpan>();
+            foreach (var inputSpan in inputSpans) {
+                var snapshot = ((IProjectionBufferBase)inputSpan.Snapshot.TextBuffer).CurrentSnapshot;
+                if (!snapshot.SourceSnapshots.Any()) {
+                    continue;
+                }
+
+                foreach(var mapped in snapshot.MapToSourceSnapshots(inputSpan)) {
+                    var buffer = mapped.Snapshot.TextBuffer;
+                    if (buffer.CurrentSnapshot == chosenSnapshot) {
+                        targetSpans.Add(mapped.Span);
+                    } else if (chosenSnapshot == null && match(buffer.CurrentSnapshot)) {
+                        chosenSnapshot = buffer.CurrentSnapshot;
+                        targetSpans.Add(mapped.Span);
+                    } else {
+                        if (buffer is IProjectionBufferBase) {
+                            downSpans.Add(mapped);
+                        }
+                    }
+                }
+            }
+            return downSpans;
+        }
+
         public NormalizedSnapshotSpanCollection MapDownToBuffer(SnapshotSpan span, SpanTrackingMode trackingMode, ITextBuffer targetBuffer) {
             throw new NotImplementedException();
         }
@@ -72,6 +104,9 @@ namespace TestUtilities.Mocks {
         }
 
         public NormalizedSnapshotSpanCollection MapDownToFirstMatch(SnapshotSpan span, SpanTrackingMode trackingMode, Predicate<ITextSnapshot> match) {
+            if (_buffers.Count == 1 && _buffers[0] == span.Snapshot.TextBuffer) {
+                return new NormalizedSnapshotSpanCollection(span.TranslateTo(span.Snapshot.TextBuffer.CurrentSnapshot, trackingMode));
+            }
             throw new NotImplementedException();
         }
 
@@ -109,6 +144,9 @@ namespace TestUtilities.Mocks {
         }
 
         public NormalizedSnapshotSpanCollection MapUpToBuffer(SnapshotSpan span, SpanTrackingMode trackingMode, ITextBuffer targetBuffer) {
+            if (_buffers.Count == 1 && _buffers[0] == span.Snapshot.TextBuffer) {
+                return new NormalizedSnapshotSpanCollection(span.TranslateTo(span.Snapshot.TextBuffer.CurrentSnapshot, trackingMode));
+            }
             throw new NotImplementedException();
         }
 

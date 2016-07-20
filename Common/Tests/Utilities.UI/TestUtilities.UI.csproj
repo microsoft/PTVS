@@ -37,7 +37,7 @@
     <Reference Include="envdte90a, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Microsoft.VisualStudioTools.VSTestHost.$(VSTarget), Version=$(VSTarget).1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudioTools.VSTestHost.$(VSTarget)" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Editor, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -127,6 +127,7 @@
     <Compile Include="UI\SaveProjectDialog.cs" />
     <Compile Include="UI\SelectCodeTypeDialog.cs" />
     <Compile Include="UI\SelectFolderDialog.cs" />
+    <Compile Include="UI\SmartTagSessionWrapper.cs" />
     <Compile Include="UI\SolutionExplorerTree.cs" />
     <Compile Include="UI\Table.cs" />
     <Compile Include="UI\TestExtensions.cs" />

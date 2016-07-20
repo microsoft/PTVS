@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -34,7 +36,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private AnalysisValue _getMethod, _itemsMethod, _keysMethod, _valuesMethod, _iterKeysMethod, _iterValuesMethod, _popMethod, _popItemMethod, _iterItemsMethod, _updateMethod;
 
         private ListInfo _keysList, _valuesList, _itemsList;
-        private IteratorInfo _keysIter, _valuesIter, _itemsIter;
+        private SingleIteratorValue _keysIter, _valuesIter, _itemsIter;
 
         private AnalysisUnit _unit;
 
@@ -84,10 +86,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             if (_keysAndValues.AddTypes(unit, key, value, enqueue)) {
                 if (_keysVariable != null) {
                     _keysVariable.MakeUnionStrongerIfMoreThan(ProjectState.Limits.DictKeyTypes, value);
-                    if (_keysVariable.AddTypes(unit, key, enqueue)) {
-                        if (_keysIter != null) {
-                            _keysIter.UnionType = null;
-                        }
+                    if (_keysVariable.AddTypes(unit, key, enqueue, DeclaringModule)) {
                         if (_keysList != null) {
                             _keysList.UnionType = null;
                         }
@@ -95,10 +94,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
                 if (_valuesVariable != null) {
                     _valuesVariable.MakeUnionStrongerIfMoreThan(ProjectState.Limits.DictValueTypes, value);
-                    if (_valuesVariable.AddTypes(unit, value, enqueue)) {
-                        if (_valuesIter != null) {
-                            _valuesIter.UnionType = null;
-                        }
+                    if (_valuesVariable.AddTypes(unit, value, enqueue, DeclaringModule)) {
                         if (_valuesList != null) {
                             _valuesList.UnionType = null;
                         }
@@ -107,17 +103,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_keyValueTuple != null) {
                     _keyValueTuple.IndexTypes[0].MakeUnionStrongerIfMoreThan(ProjectState.Limits.DictKeyTypes, key);
                     _keyValueTuple.IndexTypes[1].MakeUnionStrongerIfMoreThan(ProjectState.Limits.DictValueTypes, value);
-                    _keyValueTuple.IndexTypes[0].AddTypes(unit, key, enqueue);
-                    _keyValueTuple.IndexTypes[1].AddTypes(unit, value, enqueue);
+                    _keyValueTuple.IndexTypes[0].AddTypes(unit, key, enqueue, DeclaringModule);
+                    _keyValueTuple.IndexTypes[1].AddTypes(unit, value, enqueue, DeclaringModule);
                 }
                 return true;
             }
             return false;
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
             // Must unconditionally call the base implementation of GetMember
-            var res = base.GetMember(node, unit, name);
+            var res = base.GetTypeMember(node, unit, name);
 
             switch (name) {
                 case "get":
@@ -303,18 +299,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
 
                 if (updatedKeys) {
-                    if (_dictInfo._keysIter != null) {
-                        _dictInfo._keysIter.UnionType = null;
-                    }
                     if (_dictInfo._keysList != null) {
                         _dictInfo._keysList.UnionType = null;
                     }
                 }
 
                 if (updatedValues) {
-                    if (_dictInfo._valuesIter != null) {
-                        _dictInfo._valuesIter.UnionType = null;
-                    }
                     if (_dictInfo._valuesList != null) {
                         _dictInfo._valuesList.UnionType = null;
                     }
@@ -424,10 +414,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _keysAndValues.AddDependency(unit);
 
             if (_itemsIter == null) {
-                _itemsIter = new IteratorInfo(
-                    new[] { KeyValueTupleVariable },
+                _itemsIter = new SingleIteratorValue(
+                    KeyValueTupleVariable,
                     unit.ProjectState.ClassInfos[BuiltinTypeId.DictItems],
-                    node
+                    DeclaringModule
                 );
             }
             return _itemsIter;
@@ -451,10 +441,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _keysAndValues.AddDependency(unit);
 
             if (_keysIter == null) {
-                _keysIter = new IteratorInfo(
-                    new[] { KeysVariable },
+                _keysIter = new SingleIteratorValue(
+                    KeysVariable,
                     unit.ProjectState.ClassInfos[BuiltinTypeId.DictKeys],
-                    node
+                    DeclaringModule
                 );
             }
             return _keysIter;
@@ -478,10 +468,10 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _keysAndValues.AddDependency(unit);
 
             if (_valuesIter == null) {
-                _valuesIter = new IteratorInfo(
-                    new[] { ValuesVariable },
+                _valuesIter = new SingleIteratorValue(
+                    ValuesVariable,
                     unit.ProjectState.ClassInfos[BuiltinTypeId.DictValues],
-                    node
+                    DeclaringModule
                 );
             }
             return _valuesIter;
@@ -578,13 +568,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public DictParameterVariableDef(AnalysisUnit unit, Node location)
             : base(unit.DeclaringModule.ProjectEntry, location) {
             Dict = new StarArgsDictionaryInfo(unit.ProjectEntry, location);
-            AddTypes(unit, Dict);
+            AddTypes(unit, Dict, false, Entry);
         }
 
         public DictParameterVariableDef(AnalysisUnit unit, Node location, VariableDef copy)
             : base(unit.DeclaringModule.ProjectEntry, location, copy) {
             Dict = new StarArgsDictionaryInfo(unit.ProjectEntry, location);
-            AddTypes(unit, Dict);
+            AddTypes(unit, Dict, false, Entry);
         }
     }
 }

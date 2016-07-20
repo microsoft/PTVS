@@ -31,3 +31,11 @@ def test_filter_function(f):
 @register.tag('test_tag_2')
 def test_tag_function(*a, **kw):
     pass
+
+@register.assignment_tag('test_assignment_tag')
+def test_assignment_tag(*a, **kw):
+    pass
+
+@register.simple_tag('test_simple_tag')
+def test_simple_tag(*a, **kw):
+    pass

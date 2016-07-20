@@ -1,141 +1,118 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Interpreter;
+using System.Xml.XPath;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 using Microsoft.VisualStudioTools;
-using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.TestAdapter {
-    [FileExtension(".pyproj")]
+    [FileExtension(".py")]
     [DefaultExecutorUri(TestExecutor.ExecutorUriString)]
     class TestDiscoverer : ITestDiscoverer {
-        private readonly VisualStudioApp _app;
-        private readonly IInterpreterOptionsService _interpreterService;
-
-        public TestDiscoverer() {
-            _app = VisualStudioApp.FromCommandLineArgs(Environment.GetCommandLineArgs());
-            _interpreterService = InterpreterOptionsServiceProvider.GetService(_app);
-        }
-
-        internal TestDiscoverer(VisualStudioApp app, IInterpreterOptionsService interpreterService) {
-            _app = app;
-            _interpreterService = interpreterService;
-        }
-
         public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
             ValidateArg.NotNull(sources, "sources");
             ValidateArg.NotNull(discoverySink, "discoverySink");
 
-            var buildEngine = new MSBuild.ProjectCollection();
-            try {
-                // Load all the test containers passed in (.pyproj msbuild files)
-                foreach (string source in sources) {
-                    buildEngine.LoadProject(source);
+            var settings = discoveryContext.RunSettings;
+            
+            DiscoverTests(sources, logger, discoverySink, settings);
+        }
+
+        public static void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IRunSettings settings) {
+            HashSet<string> sourcesSet = new HashSet<string>(sources);
+
+            // Test list is sent to us via our run settings which we use to smuggle the
+            // data we have in our analysis process.
+            var doc = new XPathDocument(new StringReader(settings.SettingsXml));
+            XPathNodeIterator nodes = doc.CreateNavigator().Select("/RunSettings/Python/TestCases/Project/Test");
+            foreach (XPathNavigator test in nodes) {
+                var className = test.GetAttribute("className", "");
+                var file = test.GetAttribute("file", "");
+
+                if (!sources.Contains(file)) {
+                    continue;
                 }
 
-                foreach (var proj in buildEngine.LoadedProjects) {
-                    using (var provider = new MSBuildProjectInterpreterFactoryProvider(_interpreterService, proj)) {
-                        try {
-                            provider.DiscoverInterpreters();
-                        } catch (InvalidDataException) {
-                            // This exception can be safely ignored here.
-                        }
-                        var factory = provider.ActiveInterpreter;
-                        if (factory == _interpreterService.NoInterpretersValue) {
-                            if (logger != null) {
-                                logger.SendMessage(TestMessageLevel.Warning, "No interpreters available for project " + proj.FullPath);
-                            }
-                            continue;
-                        }
-
-                        var projectHome = Path.GetFullPath(Path.Combine(proj.DirectoryPath, proj.GetPropertyValue(PythonConstants.ProjectHomeSetting) ?? "."));
-
-                        // Do the analysis even if the database is not up to date. At
-                        // worst, we'll get no results.
-                        using (var analyzer = new TestAnalyzer(
-                            factory,
-                            proj.FullPath,
-                            projectHome,
-                            TestExecutor.ExecutorUri
-                        )) {
-                            // Provide all files to the test analyzer
-                            foreach (var item in proj.GetItems("Compile")) {
-                                string fileAbsolutePath = CommonUtils.GetAbsoluteFilePath(projectHome, item.EvaluatedInclude);
-                                string fullName;
-
-                                try {
-                                    fullName = ModulePath.FromFullPath(fileAbsolutePath).ModuleName;
-                                } catch (ArgumentException) {
-                                    if (logger != null) {
-                                        logger.SendMessage(TestMessageLevel.Warning, "File has an invalid module name: " + fileAbsolutePath);
-                                    }
-                                    continue;
-                                }
-
-                                try {
-                                    using (var reader = new StreamReader(fileAbsolutePath)) {
-                                        analyzer.AddModule(fullName, fileAbsolutePath, reader);
-                                    }
-                                } catch (FileNotFoundException) {
-                                    // user deleted file, we send the test update, but the project
-                                    // isn't saved.
-#if DEBUG
-                                } catch (Exception ex) {
-                                    if (logger != null) {
-                                        logger.SendMessage(TestMessageLevel.Warning, "Failed to discover tests in " + fileAbsolutePath);
-                                        logger.SendMessage(TestMessageLevel.Informational, ex.ToString());
-                                    }
-                                }
-#else
-                                } catch (Exception) {
-                                    if (logger != null) {
-                                        logger.SendMessage(TestMessageLevel.Warning, "Failed to discover tests in " + fileAbsolutePath);
-                                    }
-                                }
-#endif
-                            }
-
-                            // Send each discovered test case
-                            foreach (var testCase in analyzer.GetTestCases()) {
-                                discoverySink.SendTestCase(testCase);
-                            }
-                        }
-                    }
+                var line = test.GetAttribute("line", "");
+                var column = test.GetAttribute("column", "");
+                var methodName = test.GetAttribute("method", "");
+                string projectHome = null;
+                if (!test.MoveToParent()) {
+                    continue;
                 }
-            } finally {
-                // Disposing buildEngine does not clear the document cache in
-                // VS 2013, so manually unload all projects before disposing.
-                buildEngine.UnloadAllProjects();
-                buildEngine.Dispose();
+
+                projectHome = test.GetAttribute("home", "");
+
+                int lineNo, columnNo;
+                if (Int32.TryParse(line, out lineNo) &&
+                    Int32.TryParse(column, out columnNo) &&
+                    !String.IsNullOrWhiteSpace(className) &&
+                    !String.IsNullOrWhiteSpace(methodName) &&
+                    !String.IsNullOrWhiteSpace(file)) {
+                    var moduleName = CommonUtils.CreateFriendlyFilePath(projectHome, file);
+                    var fullyQualifiedName = MakeFullyQualifiedTestName(moduleName, className, methodName);
+
+                    // If this is a runTest test we should provide a useful display name
+                    var displayName = methodName == "runTest" ? className : methodName;
+
+                    var tc = new TestCase(fullyQualifiedName, new Uri(TestExecutor.ExecutorUriString), file) {
+                        DisplayName = displayName,
+                        LineNumber = lineNo,
+                        CodeFilePath = CommonUtils.GetAbsoluteFilePath(projectHome, file)
+                    };
+
+                    discoverySink.SendTestCase(tc);
+                } else if (logger != null) {
+                    logger.SendMessage(
+                        TestMessageLevel.Warning,
+                        String.Format(
+                            "Bad test case: {0} {1} {2} {3} {4}",
+                            className,
+                            methodName,
+                            file,
+                            line,
+                            column
+                        )
+                    );
+                }
             }
         }
 
-        internal static MSBuild.Project LoadProject(MSBuild.ProjectCollection buildEngine, string fullProjectPath) {
-            var buildProject = buildEngine.GetLoadedProjects(fullProjectPath).FirstOrDefault();
+        internal static string MakeFullyQualifiedTestName(string modulePath, string className, string methodName) {
+            return modulePath + "::" + className + "::" + methodName;
+        }
 
-            if (buildProject != null) {
-                buildEngine.UnloadProject(buildProject);
-            }
-            return buildEngine.LoadProject(fullProjectPath);
+        internal static void ParseFullyQualifiedTestName(
+            string fullyQualifiedName,
+            out string modulePath,
+            out string className,
+            out string methodName
+        ) {
+            string[] parts = fullyQualifiedName.Split(new string[] { "::" }, StringSplitOptions.None);
+            Debug.Assert(parts.Length == 3);
+            modulePath = parts[0];
+            className = parts[1];
+            methodName = parts[2];
         }
     }
 }

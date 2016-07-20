@@ -1,17 +1,20 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -20,6 +23,7 @@ using Microsoft.PythonTools.Interpreter;
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonConstructorFunctionTarget : IPythonFunctionOverload {
         private readonly IronPythonInterpreter _interpreter;
+        private RemoteInterpreterProxy _remote;
         private readonly ObjectIdentityHandle _overload;
         private readonly IronPythonType _declaringType;
         private IParameterInfo[] _params;
@@ -28,8 +32,15 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IronPythonConstructorFunctionTarget(IronPythonInterpreter interpreter, ObjectIdentityHandle overload, IronPythonType declType) {
             Debug.Assert(interpreter.Remote.TypeIs<MethodBase>(overload));
             _interpreter = interpreter;
+            _interpreter.UnloadingDomain += Interpreter_UnloadingDomain;
+            _remote = _interpreter.Remote;
             _overload = overload;
             _declaringType = declType;
+        }
+
+        private void Interpreter_UnloadingDomain(object sender, EventArgs e) {
+            _remote = null;
+            _interpreter.UnloadingDomain -= Interpreter_UnloadingDomain;
         }
 
         #region IBuiltinFunctionTarget Members
@@ -44,9 +55,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IParameterInfo[] GetParameters() {
             if (_params == null) {
-                bool isInstanceExtensionMethod = _interpreter.Remote.IsInstanceExtensionMethod(_overload, _declaringType.Value);
+                var ri = _remote;
+                bool isInstanceExtensionMethod = ri != null ? ri.IsInstanceExtensionMethod(_overload, _declaringType.Value) : false;
 
-                var parameters = _interpreter.Remote.GetParametersNoCodeContext(_overload);
+                var parameters = ri != null ? ri.GetParametersNoCodeContext(_overload) : new ObjectIdentityHandle[0];
                 var res = new List<IParameterInfo>(parameters.Length + 1);
                 res.Add(new IronPythonNewClsParameterInfo(_declaringType));
                 foreach (var param in parameters) {
@@ -68,7 +80,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
             get {
                 if (_returnType == null) {
                     _returnType = new List<IPythonType>();
-                    _returnType.Add(_interpreter.GetTypeFromType(_interpreter.Remote.GetBuiltinFunctionOverloadReturnType(_overload)));
+                    var ri = _remote;
+                    if (ri != null) {
+                        _returnType.Add(_interpreter.GetTypeFromType(ri.GetBuiltinFunctionOverloadReturnType(_overload)));
+                    }
                 }
                 return _returnType;
             }

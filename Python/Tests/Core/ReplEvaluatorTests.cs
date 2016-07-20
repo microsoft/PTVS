@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -29,12 +31,6 @@ using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsTests {
-#if INTERACTIVE_WINDOW
-    using IReplEvaluator = IInteractiveEngine;
-    using IReplWindow = IInteractiveWindow;
-    using IReplWindowProvider = IInteractiveWindowProvider;
-#endif
-
     [TestClass]
     public class ReplEvaluatorTests {
         [ClassInitialize]
@@ -43,11 +39,11 @@ namespace PythonToolsTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ExecuteTest() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow(evaluator);
-                evaluator.Initialize(window);
+                evaluator._Initialize(window);
 
                 TestOutput(window, evaluator, "print 'hello'", true, "hello");
                 TestOutput(window, evaluator, "42", true, "42");
@@ -62,11 +58,11 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(3)]
         public void TestAbort() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow(evaluator);
-                evaluator.Initialize(window);
+                evaluator._Initialize(window);
 
                 TestOutput(
                     window,
@@ -77,7 +73,7 @@ namespace PythonToolsTests {
                         Assert.IsTrue(!completed);
                         Thread.Sleep(1000);
 
-                        evaluator.AbortCommand();
+                        evaluator.AbortExecution();
                     }, 
                     false, 
                     20000, 
@@ -86,35 +82,46 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCanExecute() {
             using (var evaluator = MakeEvaluator()) {
-                Assert.IsTrue(evaluator.CanExecuteText("print 'hello'"));
-                Assert.IsTrue(evaluator.CanExecuteText("42"));
-                Assert.IsTrue(evaluator.CanExecuteText("for i in xrange(2):  print i\r\n\r\n"));
-                Assert.IsTrue(evaluator.CanExecuteText("raise Exception()\n"));
+                Assert.IsTrue(evaluator.CanExecuteCode("print 'hello'"));
+                Assert.IsTrue(evaluator.CanExecuteCode("42"));
+                Assert.IsTrue(evaluator.CanExecuteCode("for i in xrange(2):  print i\r\n\r\n"));
+                Assert.IsTrue(evaluator.CanExecuteCode("raise Exception()\n"));
 
-                Assert.IsTrue(evaluator.CanExecuteText("try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    \r\n    "));
-                Assert.IsTrue(evaluator.CanExecuteText("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    \r\n    "));
-                Assert.IsFalse(evaluator.CanExecuteText("x = \\"));
-                Assert.IsTrue(evaluator.CanExecuteText("x = \\\r\n42\r\n\r\n"));
+                Assert.IsFalse(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    "));
+                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nexcept:\r\n    print 'goodbye'\r\n    \r\n"));
+                Assert.IsFalse(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    "));
+                Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    \r\n"));
+                Assert.IsFalse(evaluator.CanExecuteCode("x = \\"));
+                Assert.IsTrue(evaluator.CanExecuteCode("x = \\\r\n42\r\n\r\n"));
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(3)]
         public async Task TestGetAllMembers() {
             using (var evaluator = MakeEvaluator()) {
                 var window = new MockReplWindow(evaluator);
-                await evaluator.Initialize(window);
+                await evaluator._Initialize(window);
 
-                await evaluator.ExecuteText("globals()['my_new_value'] = 123");
+                // Run the ExecuteText on another thread so that we don't continue
+                // onto the REPL evaluation thread, which leads to GetMemberNames being
+                // blocked as it's hogging the event loop.
+                AutoResetEvent are = new AutoResetEvent(false);
+                ThreadPool.QueueUserWorkItem(async (x) => {
+                        await evaluator.ExecuteText("globals()['my_new_value'] = 123");
+                        are.Set();
+                    }
+                );
+                are.WaitOne();
                 var names = evaluator.GetMemberNames("");
                 Assert.IsNotNull(names);
                 AssertUtil.ContainsAtLeast(names.Select(m => m.Name), "my_new_value");
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ReplSplitCodeTest() {
             // http://pytools.codeplex.com/workitem/606
 
@@ -174,17 +181,23 @@ g()",
             };
 
             using (var evaluator = MakeEvaluator()) {
+                int counter = 0;
                 foreach (var testCase in testCases) {
-                    AssertUtil.AreEqual(evaluator.JoinCode(evaluator.SplitCode(testCase.Code)), testCase.Expected);
+                    Console.WriteLine("Test case {0}", ++counter);
+                    AssertUtil.AreEqual(ReplEditFilter.JoinToCompleteStatements(ReplEditFilter.SplitAndDedent(testCase.Code), Microsoft.PythonTools.Parsing.PythonLanguageVersion.V35), testCase.Expected);
                 }
             }
         }
 
-        private static PythonReplEvaluator MakeEvaluator() {
+        private static PythonInteractiveEvaluator MakeEvaluator() {
             var python = PythonPaths.Python27 ?? PythonPaths.Python27_x64 ?? PythonPaths.Python26 ?? PythonPaths.Python26_x64;
             python.AssertInstalled();
             var provider = new SimpleFactoryProvider(python.InterpreterPath, python.InterpreterPath);
-            return new PythonReplEvaluator(provider.GetInterpreterFactories().First(), PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
+            var eval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
+                Configuration = new LaunchConfiguration(python.Configuration)
+            };
+            Assert.IsTrue(eval._Initialize(new MockReplWindow(eval)).Result.IsSuccessful);
+            return eval;
         }
 
         class SimpleFactoryProvider : IPythonInterpreterFactoryProvider {
@@ -200,6 +213,7 @@ g()",
 
             public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
                 yield return InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
+                    Id = "Test Interpreter",
                     LanguageVersion = new Version(2, 6),
                     Description = "Python",
                     InterpreterPath = _pythonExe,
@@ -211,14 +225,26 @@ g()",
                 });
             }
 
+            public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
+                return GetInterpreterFactories().Select(x => x.Configuration);
+            }
+
+            public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+                return GetInterpreterFactories()
+                    .Where(x => x.Configuration.Id == id)
+                    .FirstOrDefault();
+            }
+
+            public object GetProperty(string id, string propName) => null;
+
             public event EventHandler InterpreterFactoriesChanged { add { } remove { } }
         }
 
-        private static void TestOutput(MockReplWindow window, PythonReplEvaluator evaluator, string code, bool success, params string[] expectedOutput) {
+        private static void TestOutput(MockReplWindow window, PythonInteractiveEvaluator evaluator, string code, bool success, params string[] expectedOutput) {
             TestOutput(window, evaluator, code, success, null, true, 3000, expectedOutput);
         }
 
-        private static void TestOutput(MockReplWindow window, PythonReplEvaluator evaluator, string code, bool success, Action<bool> afterExecute, bool equalOutput, int timeout = 3000, params string[] expectedOutput) {
+        private static void TestOutput(MockReplWindow window, PythonInteractiveEvaluator evaluator, string code, bool success, Action<bool> afterExecute, bool equalOutput, int timeout = 3000, params string[] expectedOutput) {
             window.ClearScreen();
 
             bool completed = false;
@@ -275,19 +301,16 @@ g()",
             }
         }
 
-        [TestMethod, Priority(0)]
-        public void NoInterpreterPath() {
+        [TestMethod, Priority(1)]
+        public async Task NoInterpreterPath() {
             // http://pytools.codeplex.com/workitem/662
 
-            var emptyFact = InterpreterFactoryCreator.CreateInterpreterFactory(
-                new InterpreterFactoryCreationOptions() {
-                    Description = "Test Interpreter"
-                }
-            );
-            var replEval = new PythonReplEvaluator(emptyFact, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
+            var replEval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
+                DisplayName = "Test Interpreter"
+            };
             var replWindow = new MockReplWindow(replEval);
-            replEval.Initialize(replWindow);
-            var execute = replEval.ExecuteText("42");
+            await replEval._Initialize(replWindow);
+            await replEval.ExecuteText("42");
             Console.WriteLine(replWindow.Error);
             Assert.IsTrue(
                 replWindow.Error.Contains("Test Interpreter cannot be started"),
@@ -295,25 +318,19 @@ g()",
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void BadInterpreterPath() {
             // http://pytools.codeplex.com/workitem/662
 
-            var emptyFact = InterpreterFactoryCreator.CreateInterpreterFactory(
-                new InterpreterFactoryCreationOptions() {
-                    Description = "Test Interpreter",
-                    InterpreterPath = "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe"
-                }
-            );
-            var replEval = new PythonReplEvaluator(emptyFact, PythonToolsTestUtilities.CreateMockServiceProvider(), new ReplTestReplOptions());
+            var replEval = new PythonInteractiveEvaluator(PythonToolsTestUtilities.CreateMockServiceProvider()) {
+                DisplayName = "Test Interpreter",
+                Configuration = new LaunchConfiguration(new InterpreterConfiguration("InvalidInterpreter", "Test Interpreter", path: "C:\\Does\\Not\\Exist\\Some\\Interpreter.exe"))
+            };
             var replWindow = new MockReplWindow(replEval);
-            replEval.Initialize(replWindow);
+            replEval._Initialize(replWindow);
             var execute = replEval.ExecuteText("42");
             var errorText = replWindow.Error;
-            const string expected = 
-                "The interactive window could not be started because the associated Python environment could not be found.\r\n" +
-                "If this version of Python has recently been uninstalled, you can close this window.\r\n" +
-                "Current interactive window is disconnected.";
+            const string expected = "the associated Python environment could not be found.";
 
             if (!errorText.Contains(expected)) {
                 Assert.Fail(string.Format(

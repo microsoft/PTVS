@@ -1,22 +1,25 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Django;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -38,8 +41,8 @@ namespace DjangoUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void NewDjangoProject() {
             using (var app = new VisualStudioApp()) {
                 var project = app.CreateProject(
@@ -57,8 +60,8 @@ namespace DjangoUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void NewDjangoProjectSafeProjectName() {
             using (var app = new VisualStudioApp()) {
                 var project = app.CreateProject(
@@ -79,11 +82,11 @@ namespace DjangoUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DjangoCollectStaticFilesCommand() {
             using (var app = new PythonVisualStudioApp()) {
-                var service = app.GetService<IComponentModel>(typeof(SComponentModel)).GetService<IInterpreterOptionsService>();
+                var service = app.GetService<IComponentModel>(typeof(SComponentModel)).GetService<IInterpreterRegistryService>();
 
                 var envWithDjango = service.Interpreters.LastOrDefault(env => env.FindModulesAsync("django").WaitAndUnwrapExceptions().Contains("django"));
                 if (envWithDjango == null) {
@@ -96,12 +99,13 @@ namespace DjangoUITests {
 
                     app.Dte.ExecuteCommand("Project.CollectStaticFiles");
 
-                    var console = app.GetInteractiveWindow("Django Management Console - " + project.Name);
-                    Assert.IsNotNull(console);
+                    using (var console = app.GetInteractiveWindow("Django Management Console - " + project.Name)) {
+                        Assert.IsNotNull(console);
 
-                    console.WaitForTextEnd("The Python REPL process has exited", ">>> ");
+                        console.WaitForTextEnd("The Python REPL process has exited", ">");
 
-                    Assert.IsTrue(console.Text.Contains("0 static files copied"));
+                        Assert.IsTrue(console.TextView.TextSnapshot.GetText().Contains("0 static files copied"));
+                    }
                 }
             }
         }
@@ -110,8 +114,8 @@ namespace DjangoUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/778
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DjangoCommandsNonDjangoApp() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.CreateProject(
@@ -140,8 +144,8 @@ namespace DjangoUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartNewApp() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.CreateProject(
@@ -173,9 +177,15 @@ namespace DjangoUITests {
                 app.SolutionExplorerTreeView.SelectProject(project);
                 app.Dte.ExecuteCommand("Project.ValidateDjangoApp");
 
-                var console = app.GetInteractiveWindow("Django Management Console - " + project.Name);
-                Assert.IsNotNull(console);
-                console.WaitForTextEnd("Executing manage.py validate", "0 errors found", "The Python REPL process has exited", ">>> ");
+                using (var console = app.GetInteractiveWindow("Django Management Console - " + project.Name)) {
+                    Assert.IsNotNull(console);
+                    console.WaitForTextEnd(
+                        "Executing manage.py validate",
+                        "0 errors found",
+                        "The Python REPL process has exited",
+                        ">"
+                    );
+                }
 
                 app.SolutionExplorerTreeView.SelectProject(project);
 
@@ -191,8 +201,8 @@ namespace DjangoUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartNewAppDuplicateName() {
             using (var app = new VisualStudioApp()) {
                 var project = app.CreateProject(
@@ -230,8 +240,8 @@ namespace DjangoUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/748
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void StartNewAppSameAsProjectName() {
             using (var app = new VisualStudioApp()) {
                 var project = app.CreateProject(
@@ -251,8 +261,8 @@ namespace DjangoUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DebugProjectProperties() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.CreateProject(
@@ -280,13 +290,13 @@ namespace DjangoUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DjangoProjectWithSubdirectory() {
             using (var app = new VisualStudioApp()) {
                 var project = app.OpenProject("TestData\\DjangoProjectWithSubDirectory.sln");
 
-                var pyProj = (IPythonProject2)project.GetPythonProject();
+                var pyProj = project.GetPythonProject();
                 var dsm = pyProj.Site.GetUIThread().Invoke(() => pyProj.GetProperty("DjangoSettingsModule"));
                 Assert.AreEqual("config.settings", dsm);
                 var workDir = pyProj.Site.GetUIThread().Invoke(() => pyProj.GetWorkingDirectory()).TrimEnd('\\');

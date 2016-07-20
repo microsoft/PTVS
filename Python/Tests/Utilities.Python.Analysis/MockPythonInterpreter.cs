@@ -1,19 +1,22 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
@@ -21,13 +24,32 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
     public class MockPythonInterpreter : IPythonInterpreter {
-        public readonly List<string> _modules;
+        public readonly Dictionary<string, IPythonModule> _modules;
+        public readonly HashSet<string> _moduleNames;
         public bool IsDatabaseInvalid;
 
         public MockPythonInterpreter(IPythonInterpreterFactory factory) {
-            _modules = new List<string>();
+            _modules = new Dictionary<string, IPythonModule>();
+            _moduleNames = new HashSet<string>(StringComparer.Ordinal);
         }
 
+        public void AddModule(string name, IPythonModule module) {
+            _modules[name] = module;
+            ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
+        }
+        
+        /// <summary>
+        /// Removes a module. If <c>retainName</c> is true, keeps returning
+        /// the module name from <see cref="GetModuleNames"/>.
+        /// </summary>
+        public void RemoveModule(string name, bool retainName = false) {
+            if (retainName) {
+                _moduleNames.Add(name);
+            }
+            if (_modules.Remove(name)) {
+                ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
 
         public void Initialize(PythonAnalyzer state) { }
 
@@ -36,16 +58,15 @@ namespace TestUtilities.Python {
         }
 
         public IList<string> GetModuleNames() {
-            return _modules;
+            return _modules.Keys.Concat(_moduleNames).ToArray();
         }
 
-        public event EventHandler ModuleNamesChanged { add { } remove { } }
+        public event EventHandler ModuleNamesChanged;
 
         public IPythonModule ImportModule(string name) {
-            if (_modules.Contains(name)) {
-                return null;
-            }
-            return null;
+            IPythonModule res;
+            _modules.TryGetValue(name, out res);
+            return res;
         }
 
         public IModuleContext CreateModuleContext() {

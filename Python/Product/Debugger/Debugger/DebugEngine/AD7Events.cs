@@ -1,17 +1,21 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
+using System;
+using Microsoft.PythonTools.DkmDebugger;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
@@ -71,7 +75,6 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         int IDebugEngineCreateEvent2.GetEngine(out IDebugEngine2 engine) {
             engine = m_engine;
-
             return VSConstants.S_OK;
         }
     }
@@ -281,6 +284,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         public int GetException(EXCEPTION_INFO[] pExceptionInfo) {
+            pExceptionInfo[0].guidType = AD7Engine.DebugEngineGuid;
             pExceptionInfo[0].bstrExceptionName = _exception;
             if (_isUnhandled) {
                 pExceptionInfo[0].dwState = enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
@@ -320,5 +324,29 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         #endregion
+    }
+
+    sealed class AD7CustomEvent : IDebugEvent2, IDebugCustomEvent110 {
+        public const string IID = "2615D9BC-1948-4D21-81EE-7A963F20CF59";
+        private readonly VsComponentMessage _message;
+
+        public AD7CustomEvent(VsComponentMessage message) {
+            _message = message;
+        }
+
+        public AD7CustomEvent(VsPackageMessage message, object param1 = null, object param2 = null)
+            : this(new VsComponentMessage { MessageCode = (uint)message, Parameter1 = param1, Parameter2 = param2 }) {
+        }
+
+        int IDebugEvent2.GetAttributes(out uint eventAttributes) {
+            eventAttributes = (uint)(enum_EVENTATTRIBUTES.EVENT_SYNCHRONOUS | enum_EVENTATTRIBUTES.EVENT_IMMEDIATE);
+            return VSConstants.S_OK;
+        }
+
+        int IDebugCustomEvent110.GetCustomEventInfo(out Guid guidVSService, VsComponentMessage[] message) {
+            guidVSService = Guids.CustomDebuggerEventHandlerGuid;
+            message[0] = _message;
+            return VSConstants.S_OK;
+        }
     }
 }

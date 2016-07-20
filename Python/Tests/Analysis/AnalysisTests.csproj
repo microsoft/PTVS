@@ -1,6 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>14.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
     <When Condition=" '$(VisualStudioVersion)'=='14.0'  Or '$(TargetVisualStudioVersion)'=='VS140' ">
       <PropertyGroup>
         <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -8,27 +18,7 @@
         </FileUpgradeFlags>
         <UpgradeBackupLocation>
         </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='12.0'  Or '$(TargetVisualStudioVersion)'=='VS120' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
+        <OldToolsVersion>14.0</OldToolsVersion>
       </PropertyGroup>
     </When>
   </Choose>
@@ -40,33 +30,29 @@
     </ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{C2C1C6A1-3C1E-45E4-9EE2-1181DB641818}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AnalysisTests</RootNamespace>
     <AssemblyName>AnalysisTests</AssemblyName>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="IronPython">
-      <HintPath>$(BuildRoot)Python\Product\IronPython\IronPython.dll</HintPath>
-    </Reference>
-    <Reference Include="IronPython.Modules">
-      <HintPath>$(BuildRoot)Python\Product\IronPython\IronPython.Modules.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Dynamic">
       <HintPath>$(BuildRoot)Python\Product\IronPython\Microsoft.Dynamic.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="Microsoft.Scripting">
       <HintPath>$(BuildRoot)Python\Product\IronPython\Microsoft.Scripting.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="Microsoft.Scripting.Metadata">
       <HintPath>$(BuildRoot)Python\Product\IronPython\Microsoft.Scripting.Metadata.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />
@@ -87,39 +73,36 @@
     <Compile Include="DeserializationTests.cs" />
     <Compile Include="DotNetAnalysis\Generics.cs" />
     <Compile Include="ModulePathTests.cs" />
+    <Compile Include="ModuleTableTests.cs" />
     <Compile Include="ProcessOutputTests.cs" />
-    <Compile Include="IronPythonAnalysisTest.cs" />
     <Compile Include="MutateStdLibTest.cs" />
     <Compile Include="TestExpressions.cs" />
     <Compile Include="TestRunner.cs" />
-    <Compile Include="NamespaceSetTest.cs" />
+    <Compile Include="AnalysisSetTest.cs" />
     <Compile Include="ParserRoundTripTest.cs" />
     <Compile Include="ParserTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ThreadingTest.cs" />
     <Compile Include="TokenizerRoundTripTest.cs" />
     <Compile Include="UpdaterTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(BuildRoot)Python\Product\Analysis\Analysis.csproj">
+    <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
       <Aliases>global,analysis</Aliases>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Product\Analyzer\Analyzer.csproj">
+    <ProjectReference Include="..\..\Product\Analyzer\Analyzer.csproj">
       <Project>{29a4fa1f-a562-4ed1-86fb-5850ef5da92c}</Project>
       <Name>Analyzer</Name>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Common\Tests\Utilities\TestUtilities.csproj">
+    <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Product\IronPythonResolver\IronPythonResolver.csproj">
-      <Project>{31f224b1-68da-4524-9a1c-95f22492775b}</Project>
-      <Name>IronPythonResolver</Name>
-    </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Product\IronPython\IronPython.Interpreter.csproj">
-      <Project>{012293b1-168a-4c48-a678-db8361b50ba7}</Project>
-      <Name>Microsoft.PythonTools.IronPython.Interpreter</Name>
+    <ProjectReference Include="..\..\Product\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
       <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>

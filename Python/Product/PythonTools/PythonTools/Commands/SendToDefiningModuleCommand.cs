@@ -1,20 +1,22 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
@@ -26,21 +28,22 @@ namespace Microsoft.PythonTools.Commands {
         public override void DoCommand(object sender, EventArgs args) {
             var activeView = PythonToolsPackage.GetActiveTextView(_serviceProvider);
             var pyProj = activeView.TextBuffer.GetProject(_serviceProvider);
-            var analyzer = activeView.GetAnalyzer(_serviceProvider);
+            var analyzer = activeView.GetAnalyzerAtCaret(_serviceProvider);
             var window = ExecuteInReplCommand.EnsureReplWindow(_serviceProvider, analyzer, pyProj);
-            var eval = window.Evaluator as PythonReplEvaluator;
+            var eval = window.InteractiveWindow.Evaluator as PythonReplEvaluator;
 
             string path = activeView.GetFilePath();
             string scope;
             if (path != null && (scope = eval.GetScopeByFilename(path)) != null) {
                 // we're now in the correct module, execute the code
-                window.Cancel();
-                window.WriteLine(window.GetOptionValue(ReplOptions.PrimaryPrompt) + " $module " + scope);
+                window.InteractiveWindow.Operations.Cancel();
+                // TODO: get correct prompt
+                window.InteractiveWindow.WriteLine(">>>" + " $module " + scope);
                 eval.SetScope(scope);
 
                 base.DoCommand(sender, args);
             } else {
-                window.WriteLine("Could not find defining module.");
+                window.InteractiveWindow.WriteLine("Could not find defining module.");
             }
         }
 

@@ -1,22 +1,28 @@
-﻿ # ############################################################################
- #
- # Copyright (c) Microsoft Corporation. 
- #
- # This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- # copy of the license can be found in the License.html file at the root of this distribution. If 
- # you cannot locate the Apache License, Version 2.0, please send an email to 
- # vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- # by the terms of the Apache License, Version 2.0.
- #
- # You must not remove this notice, or any other, from this software.
- #
- # ###########################################################################
+# Python Tools for Visual Studio
+# Copyright(c) Microsoft Corporation
+# All rights reserved.
+# 
+# Licensed under the Apache License, Version 2.0 (the License); you may not use
+# this file except in compliance with the License. You may obtain a copy of the
+# License at http://www.apache.org/licenses/LICENSE-2.0
+# 
+# THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+# OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+# IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+# MERCHANTABLITY OR NON-INFRINGEMENT.
+# 
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
 
 """Implements REPL support over IPython/ZMQ for VisualStudio"""
+
+__author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
+__version__ = "3.0.0.0"
 
 import re
 import sys
 from visualstudio_py_repl import BasicReplBackend, ReplBackend, UnsupportedReplException, _command_line_to_args_list
+from visualstudio_py_util import to_bytes
 try:
     import thread
 except:
@@ -42,11 +48,15 @@ def is_ipython_versionorgreater(major, minor):
 
     return False
 
-if is_ipython_versionorgreater(3, 0):
-    raise UnsupportedReplException('IPython 3.0 is not yet supported. See http://pytools.codeplex.com/workitem/2961')
+remove_escapes = re.compile(r'\x1b[^m]*m')
 
 try:
-    if is_ipython_versionorgreater(1, 0):
+    if is_ipython_versionorgreater(3, 0):
+        from IPython.kernel import KernelManager
+        from IPython.kernel.channels import HBChannel
+        from IPython.kernel.threaded import (ThreadedZMQSocketChannel, ThreadedKernelClient as KernelClient)
+        ShellChannel = StdInChannel = IOPubChannel = ThreadedZMQSocketChannel
+    elif is_ipython_versionorgreater(1, 0):
         from IPython.kernel import KernelManager, KernelClient
         from IPython.kernel.channels import ShellChannel, HBChannel, StdInChannel, IOPubChannel
     else:
@@ -72,17 +82,19 @@ except ImportError:
 # Description of the messaging protocol
 # http://ipython.scipy.org/doc/manual/html/development/messaging.html 
 
-def unknown_command(content): 
-    import pprint
-    pprint.pprint(content)
 
 class DefaultHandler(object):
+    def unknown_command(self, content): 
+        import pprint
+        print('unknown command ' + str(type(self)))
+        pprint.pprint(content)
+
     def call_handlers(self, msg):
         # msg_type:
         #   execute_reply
         msg_type = 'handle_' + msg['msg_type']
         
-        getattr(self, msg_type, unknown_command)(msg['content'])
+        getattr(self, msg_type, self.unknown_command)(msg['content'])
     
 class VsShellChannel(DefaultHandler, ShellChannel):
     
@@ -91,11 +103,26 @@ class VsShellChannel(DefaultHandler, ShellChannel):
         payload = content['payload']
         
         for item in payload:
+            data = item.get('data')
+            if data is not None:
+                try:
+                    # Could be named km.sub_channel for very old IPython, but
+                    # those versions should not put 'data' in this payload
+                    write_data = self._vs_backend.km.iopub_channel.write_data
+                except AttributeError:
+                    pass
+                else:
+                    write_data(data)
+                    continue
+
             output = item.get('text', None)
             if output is not None:
                 self._vs_backend.write_stdout(output)
         self._vs_backend.send_command_executed()
         
+    def handle_inspect_reply(self, content):
+        self.handle_object_info_reply(content)
+
     def handle_object_info_reply(self, content):
         self._vs_backend.object_info_reply = content
         self._vs_backend.members_lock.release()
@@ -104,6 +131,10 @@ class VsShellChannel(DefaultHandler, ShellChannel):
         self._vs_backend.complete_reply = content
         self._vs_backend.members_lock.release()
 
+    def handle_kernel_info_reply(self, content):
+        self._vs_backend.write_stdout(content['banner'])
+
+
 class VsIOPubChannel(DefaultHandler, IOPubChannel):
     def call_handlers(self, msg):
         # only output events from our session or no sessions
@@ -111,7 +142,7 @@ class VsIOPubChannel(DefaultHandler, IOPubChannel):
         parent = msg.get('parent_header')
         if not parent or parent.get('session') == self.session.session:
             msg_type = 'handle_' + msg['msg_type']
-            getattr(self, msg_type, unknown_command)(msg['content'])
+            getattr(self, msg_type, self.unknown_command)(msg['content'])
         
     def handle_display_data(self, content):
         # called when user calls display()
@@ -122,27 +153,47 @@ class VsIOPubChannel(DefaultHandler, IOPubChannel):
     
     def handle_stream(self, content):
         stream_name = content['name']
-        output = content['data']
+        if is_ipython_versionorgreater(3, 0):
+            output = content['text']
+        else:
+            output = content['data']
         if stream_name == 'stdout':
             self._vs_backend.write_stdout(output)
         elif stream_name == 'stderr':
             self._vs_backend.write_stderr(output)
         # TODO: stdin can show up here, do we echo that?
     
+    def handle_execute_result(self, content):
+        self.handle_execute_output(content)
+
     def handle_execute_output(self, content):
         # called when an expression statement is printed, we treat 
         # identical to stream output but it always goes to stdout
         output = content['data']
         execution_count = content['execution_count']
         self._vs_backend.execution_count = execution_count + 1
-        self._vs_backend.send_prompt('\r\nIn [%d]: ' % (execution_count + 1), '   ' + ('.' * (len(str(execution_count + 1)) + 2)) + ': ', False)
+        self._vs_backend.send_prompt(
+            '\r\nIn [%d]: ' % (execution_count + 1),
+            '   ' + ('.' * (len(str(execution_count + 1)) + 2)) + ': ',
+            allow_multiple_statements=True
+        )
         self.write_data(output, execution_count)
         
     def write_data(self, data, execution_count = None):
+        output_xaml = data.get('application/xaml+xml', None)
+        if output_xaml is not None:
+            try:
+                if isinstance(output_xaml, str) and sys.version_info[0] >= 3:
+                    output_xaml = output_xaml.encode('ascii')
+                self._vs_backend.write_xaml(decodestring(output_xaml))
+                self._vs_backend.write_stdout('\n') 
+                return
+            except:
+                pass
         
         output_png = data.get('image/png', None)
         if output_png is not None:
-            try:            
+            try:
                 if isinstance(output_png, str) and sys.version_info[0] >= 3:
                     output_png = output_png.encode('ascii')
                 self._vs_backend.write_png(decodestring(output_png))
@@ -173,7 +224,11 @@ class VsIOPubChannel(DefaultHandler, IOPubChannel):
     def handle_execute_input(self, content):
         # just a rebroadcast of the command to be executed, can be ignored
         self._vs_backend.execution_count += 1
-        self._vs_backend.send_prompt('\r\nIn [%d]: ' % (self._vs_backend.execution_count), '   ' + ('.' * (len(str(self._vs_backend.execution_count)) + 2)) + ': ', False)
+        self._vs_backend.send_prompt(
+            '\r\nIn [%d]: ' % (self._vs_backend.execution_count),
+            '   ' + ('.' * (len(str(self._vs_backend.execution_count)) + 2)) + ': ',
+            allow_multiple_statements=True
+        )
         pass
         
     def handle_status(self, content):
@@ -247,7 +302,7 @@ class IPythonBackend(ReplBackend):
     def execute_file_as_main(self, filename, arg_string):
         f = open(filename, 'rb')
         try:
-            contents = f.read().replace("\r\n", "\n")
+            contents = f.read().replace(to_bytes("\r\n"), to_bytes("\n"))
         finally:
             f.close()
         args = [filename] + _command_line_to_args_list(arg_string)
@@ -262,28 +317,33 @@ exec(compile(%(contents)r, %(filename)r, 'exec'))
         self.run_command(code, True)
 
     def execution_loop(self):
-        # launch the startup script if one has been specified
-        if self.launch_file:
-            self.execute_file_as_main(self.launch_file, None)
-
         # we've got a bunch of threads setup for communication, we just block
         # here until we're requested to exit.  
-        self.send_prompt('\r\nIn [1]: ', '   ...: ', False)
+        self.send_prompt('\r\nIn [1]: ', '   ...: ', allow_multiple_statements=True)
         self.exit_lock.acquire()
     
     def run_command(self, command, silent = False):
-        self.km.shell_channel.execute(command, silent)
-        
-    def execute_file(self, filename, args):
-        self.execute_file_as_main(filename, args)
+        if is_ipython_versionorgreater(3, 0):
+            self.km.execute(command, silent)
+        else:
+            self.km.shell_channel.execute(command, silent)
+
+    def execute_file_ex(self, filetype, filename, args):
+        if filetype == 'script':
+            self.execute_file_as_main(filename, args)
+        else:
+            raise NotImplementedError("Cannot execute %s file" % filetype)
 
     def exit_process(self):
         self.exit_lock.release()
 
     def get_members(self, expression):
-        """returns a tuple of the type name, instance members, and type members"""      
+        """returns a tuple of the type name, instance members, and type members"""
         text = expression + '.'
-        self.km.shell_channel.complete(text, text, 1)
+        if is_ipython_versionorgreater(3, 0):
+            self.km.complete(text)
+        else:
+            self.km.shell_channel.complete(text, text, 1)
                 
         self.members_lock.acquire()
         
@@ -299,18 +359,27 @@ exec(compile(%(contents)r, %(filename)r, 'exec'))
     def get_signatures(self, expression):
         """returns doc, args, vargs, varkw, defaults."""
         
-        self.km.shell_channel.object_info(expression)
+        if is_ipython_versionorgreater(3, 0):
+            self.km.inspect(expression, None, 2)
+        else:
+            self.km.shell_channel.object_info(expression)
         
         self.members_lock.acquire()
         
         reply = self.object_info_reply 
-        argspec = reply['argspec']
-        defaults = argspec['defaults']
-        if defaults is not None:
-            defaults = [repr(default) for default in defaults]
+        if is_ipython_versionorgreater(3, 0):
+            data = reply['data']
+            text = data['text/plain']
+            text = remove_escapes.sub('', text)
+            return [(text, (), None, None, [])]
         else:
-            defaults = []
-        return [(reply['docstring'], argspec['args'], argspec['varargs'], argspec['varkw'], defaults)]
+            argspec = reply['argspec']
+            defaults = argspec['defaults']
+            if defaults is not None:
+                defaults = [repr(default) for default in defaults]
+            else:
+                defaults = []
+            return [(reply['docstring'], argspec['args'], argspec['varargs'], argspec['varkw'], defaults)]
 
     def interrupt_main(self):
         """aborts the current running command"""

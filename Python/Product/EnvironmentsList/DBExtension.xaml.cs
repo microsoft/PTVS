@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -29,8 +31,8 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudioTools;
 using Resources = Microsoft.PythonTools.EnvironmentsList.Properties.Resources;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
@@ -38,12 +40,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly RoutedCommand StartRefreshDB = new RoutedCommand();
 
         private readonly DBExtensionProvider _provider;
-        private readonly DBEnvironmentView _view;
         private readonly CollectionViewSource _sortedPackages;
 
         public DBExtension(DBExtensionProvider provider) {
             _provider = provider;
-            _view = new DBEnvironmentView(null, _provider);
             DataContextChanged += DBExtension_DataContextChanged;
             InitializeComponent();
 
@@ -164,21 +164,26 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public bool Equals(DBPackageView x, DBPackageView y) {
             if (x != null && y != null) {
-                return StringComparer.OrdinalIgnoreCase.Equals(x.FullName, y.FullName);
+                return StringComparer.OrdinalIgnoreCase.Equals(x.FullName, y.FullName) &&
+                    x.IsUpToDate == y.IsUpToDate;
             }
             return x == y;
         }
 
         public int GetHashCode(DBPackageView obj) {
             if (obj != null) {
-                return StringComparer.OrdinalIgnoreCase.GetHashCode(obj.FullName);
+                return StringComparer.OrdinalIgnoreCase.GetHashCode(obj.FullName) ^ obj.IsUpToDate.GetHashCode();
             }
             return 0;
         }
 
         public int Compare(DBPackageView x, DBPackageView y) {
             if (x != null && y != null) {
-                return StringComparer.CurrentCultureIgnoreCase.Compare(x.FullName, y.FullName);
+                int cmp = StringComparer.CurrentCultureIgnoreCase.Compare(x.FullName, y.FullName);
+                if (cmp != 0) {
+                    return cmp;
+                }
+                return x.IsUpToDate.CompareTo(y.IsUpToDate);
             } else if (x == null && y == null) {
                 return 0;
             } else {
@@ -231,7 +236,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             for (int i = 0; i < modules.Count; ) {
                 if (stdLib.Contains(modules[i])) {
                     stdLibPackage._isUpToDate = knownModules == null ||
-                        knownModules.Contains(modules[i]) == areKnownModulesUpToDate; ;
+                        knownModules.Contains(modules[i]) == areKnownModulesUpToDate;
                     stdLibPackage._moduleCount += 1;
                     i += 1;
                     continue;
@@ -277,14 +282,17 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public DBExtensionProvider(PythonInterpreterFactoryWithDatabase factory) {
             _factory = factory;
             _factory.IsCurrentChanged += Factory_IsCurrentChanged;
+            _factory.NewDatabaseAvailable += Factory_NewDatabaseAvailable;
+        }
+
+        private void Factory_NewDatabaseAvailable(object sender, EventArgs e) {
+            _modules = null;
+            ModulesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void Factory_IsCurrentChanged(object sender, EventArgs e) {
             _modules = null;
-            var evt = ModulesChanged;
-            if (evt != null) {
-                evt(this, EventArgs.Empty);
-            }
+            ModulesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public int SortPriority {

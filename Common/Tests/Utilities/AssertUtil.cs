@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections;
@@ -154,7 +156,7 @@ namespace TestUtilities
         public static void Contains(string source, params string[] values) {
             foreach (var v in values) {
                 if (!source.Contains(v)) {
-                    Assert.Fail(String.Format("{0} does not contain {1}", source, v));
+                    Assert.Fail(String.Format("<{0}> does not contain <{1}>", source, v));
                 }
             }
         }
@@ -167,7 +169,7 @@ namespace TestUtilities
                 }
             }
 
-            Assert.Fail(String.Format("{0} does not contain {1}", MakeText(source), value));
+            Assert.Fail(String.Format("<{0}> does not contain <{1}>", MakeText(source), value));
         }
 
         [System.Diagnostics.DebuggerStepThrough]
@@ -239,6 +241,52 @@ namespace TestUtilities
             Assert.Fail(String.Format("Expected at least {0}, didn't find {1}. All: {2}",
                 MakeText(values),
                 MakeText(missing),
+                MakeText(set)
+            ));
+        }
+
+        [System.Diagnostics.DebuggerStepThrough]
+        public static void CheckCollection<T>(
+            IEnumerable<T> source,
+            IEnumerable<T> expectedSubset,
+            IEnumerable<T> unexpectedSubset,
+            IEqualityComparer<T> comparer = null
+        ) {
+            var set = new HashSet<T>(source, comparer);
+            var expected = new HashSet<T>(expectedSubset, comparer);
+
+            var missing = new HashSet<T>(expected, comparer);
+            missing.ExceptWith(set);        // should be empty
+
+            expected.IntersectWith(set);    // should be unchanged
+
+            var unexpectedPresent = new HashSet<T>(unexpectedSubset, comparer);
+            var unexpectedAbsent = new HashSet<T>(unexpectedPresent, comparer);
+            unexpectedPresent.IntersectWith(set);  // should be empty
+            unexpectedAbsent.ExceptWith(unexpectedPresent); // should be unchanged
+
+            if (!missing.Any() && !unexpectedPresent.Any()) {
+                return;
+            }
+
+            Assert.Fail(String.Format(@"Values that should have been present but weren't (ideally none)
+{0}
+
+Values that were present but shouldn't have been (ideally none)
+{1}
+
+Expected values that were present
+{2}
+
+Unexpected values that were not present
+{3}
+
+All values in set
+{4}",
+                MakeText(missing),
+                MakeText(unexpectedPresent),
+                MakeText(expected),
+                MakeText(unexpectedAbsent),
                 MakeText(set)
             ));
         }

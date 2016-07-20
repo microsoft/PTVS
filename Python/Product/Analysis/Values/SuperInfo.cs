@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -59,13 +61,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             var mro = ClassInfo._mro;
             if (!mro.IsValid) {
                 return new Dictionary<string, IAnalysisSet>();
             }
+
+            if (options.HasFlag(GetMemberOptions.DeclaredOnly)) {
+                return Values.Mro.GetAllMembersOfMro(mro.Skip(1).Take(1), moduleContext, options);
+            }
+
             // First item in MRO list is always the class itself.
-            return Values.Mro.GetAllMembersOfMro(mro.Skip(1), moduleContext);
+            return Values.Mro.GetAllMembersOfMro(mro.Skip(1), moduleContext, options);
         }
 
         private AnalysisValue GetObjectMember(IModuleContext moduleContext, string name) {
@@ -73,9 +80,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var ignored = base.GetMember(node, unit, name);
-
             var mro = ClassInfo._mro;
             if (!mro.IsValid) {
                 return AnalysisSet.Empty;

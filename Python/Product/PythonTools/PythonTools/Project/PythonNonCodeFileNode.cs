@@ -1,20 +1,26 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.IO;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
@@ -25,37 +31,85 @@ namespace Microsoft.PythonTools.Project {
             : base(root, e) {
         }
 
-        protected internal object DesignerContext {
-            get {
-                if (_designerContext == null) {
-                    _designerContext = XamlDesignerSupport.CreateDesignerContext();
-                    //Set the EventBindingProvider for this XAML file so the designer will call it
-                    //when event handlers need to be generated
-                    var dirName = Path.GetDirectoryName(Url);
-                    var fileName = Path.GetFileNameWithoutExtension(Url);
-                    var filenameWithoutExt = Path.Combine(dirName, fileName);
+        class XamlCallback : IXamlDesignerCallback {
+            private readonly PythonFileNode _node;
 
-                    // look for fob.py
-                    var child = ProjectMgr.FindNodeByFullPath(filenameWithoutExt + PythonConstants.FileExtension);
-                    if (child == null) {
-                        // then look for fob.pyw
-                        child = ProjectMgr.FindNodeByFullPath(filenameWithoutExt + PythonConstants.WindowsFileExtension);
-                    }
+            public XamlCallback(PythonFileNode node) {
+                _node = node;
+            }
 
-                    if (child != null) {
-                        XamlDesignerSupport.InitializeEventBindingProvider(_designerContext, child as PythonFileNode);
-                    }
+            public ITextBuffer Buffer {
+                get {
+                    return _node.GetTextBuffer();
                 }
-                return _designerContext;
+            }
+
+            public ITextView TextView {
+                get {
+                    return _node.GetTextView();
+                }
+            }
+
+            public string[] FindMethods(string className, int? paramCount) {
+                var fileInfo = _node.GetAnalysisEntry();
+                return fileInfo.Analyzer.FindMethodsAsync(
+                    fileInfo,
+                    _node.GetTextBuffer(),
+                    className,
+                    paramCount
+                ).WaitOrDefault(1000);
+            }
+
+            public InsertionPoint GetInsertionPoint(string className) {
+                var fileInfo = _node.GetAnalysisEntry();
+                return fileInfo.Analyzer.GetInsertionPointAsync(
+                    fileInfo,
+                    _node.GetTextBuffer(),
+                    className
+                ).WaitOrDefault(1000);
+            }
+
+            public MethodInformation GetMethodInfo(string className, string methodName) {
+                var fileInfo = _node.GetAnalysisEntry();
+                var info = fileInfo.Analyzer.GetMethodInfoAsync(fileInfo, _node.GetTextBuffer(), className, methodName).WaitOrDefault(1000);
+                if (info != null) {
+                    return new MethodInformation(
+                        info.start,
+                        info.end,
+                        info.found
+                    );
+                }
+                return null;
             }
         }
 
         public override int QueryService(ref Guid guidService, out object result) {
-            if (XamlDesignerSupport.DesignerContextType != null &&
-                guidService == XamlDesignerSupport.DesignerContextType.GUID &&
+            var model = ProjectMgr.GetService(typeof(SComponentModel)) as IComponentModel;
+            var designerSupport = model?.GetService<IXamlDesignerSupport>();
+            if (designerSupport != null &&
+                guidService == designerSupport.DesignerContextTypeGuid &&
                 Path.GetExtension(Url).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
                 // Create a DesignerContext for the XAML designer for this file
-                result = DesignerContext;
+                if (_designerContext == null) {
+                    _designerContext = designerSupport.CreateDesignerContext();
+                    var child = (
+                        // look for spam.py
+                        ProjectMgr.FindNodeByFullPath(Path.ChangeExtension(Url, PythonConstants.FileExtension)) ??
+                        // then look for spam.pyw
+                        ProjectMgr.FindNodeByFullPath(Path.ChangeExtension(Url, PythonConstants.WindowsFileExtension))
+                    ) as CommonFileNode;
+
+                    if (child != null) {
+                        PythonFileNode pythonNode = child as PythonFileNode;
+                        if (pythonNode != null) {
+                            designerSupport.InitializeEventBindingProvider(
+                                _designerContext,
+                                new XamlCallback(pythonNode)
+                            );
+                        }
+                    }
+                }
+                result = _designerContext;
                 return VSConstants.S_OK;
             }
 

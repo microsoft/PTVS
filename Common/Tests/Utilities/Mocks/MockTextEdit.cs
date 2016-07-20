@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -82,13 +84,8 @@ namespace TestUtilities.Mocks {
             StringBuilder text = new StringBuilder(_snapshot.GetText());
             var deletes = new NormalizedSnapshotSpanCollection(
                 _snapshot,
-                _edits.Where(edit => edit is DeletionEdit)
-                .Select(edit =>
-                    new Span(
-                        ((DeletionEdit)edit).Position,
-                        ((DeletionEdit)edit).Length
-                    )
-                )
+                _edits.OfType<DeletionEdit>()
+                .Select(edit => new Span(edit.Position, edit.Length))
             );
 
             // apply the deletes
@@ -99,7 +96,7 @@ namespace TestUtilities.Mocks {
             // now apply the inserts
             int curDelete = 0, adjust = 0;
             int deletesBorrowed = 0;
-            foreach (InsertionEdit insert in _edits.Where(edit => edit is InsertionEdit)) {
+            foreach (var insert in _edits.OfType<InsertionEdit>()) {
                 while (curDelete < deletes.Count && deletes[curDelete].Start < insert.Position) {
                     if (deletes[curDelete].Start + deletes[curDelete].Length < insert.Position) {
                         adjust -= deletes[curDelete].Length - deletesBorrowed;
@@ -118,34 +115,28 @@ namespace TestUtilities.Mocks {
             }
 
             List<MockTextChange> changes = new List<MockTextChange>();
-            for (int i = 0; i < _edits.Count; i++) {
-                var curEdit = _edits[i];
+            adjust = 0;
+            foreach(var curEdit in _edits.OrderBy(e => e.Position)) {
                 InsertionEdit insert = curEdit as InsertionEdit;
                 if (insert != null) {
                     changes.Add(
                         new MockTextChange(
-                            new SnapshotSpan(
-                                _snapshot,
-                                insert.Position,
-                                0
-                            ),
-                            insert.Position,
+                            new SnapshotSpan(_snapshot, insert.Position, 0),
+                            insert.Position + adjust,
                             insert.Text
                         )
                     );
+                    adjust += insert.Text.Length;
                 } else {
-                    DeletionEdit delete = curEdit as DeletionEdit;
+                    DeletionEdit delete = (DeletionEdit)curEdit;
                     changes.Add(
                         new MockTextChange(
-                            new SnapshotSpan(
-                                _snapshot,
-                                delete.Position,
-                                delete.Length
-                            ),
+                            new SnapshotSpan(_snapshot, delete.Position, delete.Length),
                             delete.Position + adjust,
                             ""
                         )
                     );
+                    adjust -= delete.Length;
                 }
             }
 

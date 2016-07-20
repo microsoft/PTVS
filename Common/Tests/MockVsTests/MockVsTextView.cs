@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Runtime.InteropServices;
@@ -38,6 +40,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         private readonly IServiceProvider _serviceProvider;
         private readonly MockVs _vs;
         private IOleCommandTarget _commandTarget;
+        private IClassifier _classifier;
         private bool _isDisposed;
 
         public MockVsTextView(IServiceProvider serviceProvier, MockVs vs, MockTextView view) {
@@ -104,6 +107,10 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public void Close() {
             var rdt = (IVsRunningDocumentTable)_serviceProvider.GetService(typeof(SVsRunningDocumentTable));
             rdt.UnlockDocument(0, ((MockVsTextLines)GetBuffer())._docCookie);
+            var disposable = _classifier as IDisposable;
+            if (disposable != null) {
+                disposable.Dispose();
+            }
             _view.Close();
         }
 
@@ -267,7 +274,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                             return VSConstants.S_OK;
                     }
                 }
-                return VSConstants.E_FAIL;
+                return NativeMethods.OLECMDERR_E_NOTSUPPORTED;
             }
 
             public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
@@ -338,10 +345,13 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         public IClassifier Classifier {
             get {
-                var compModel = (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
+                if (_classifier == null) {
+                    var compModel = (IComponentModel)_serviceProvider.GetService(typeof(SComponentModel));
 
-                var provider = compModel.GetService<IClassifierAggregatorService>();
-                return provider.GetClassifier(TextView.TextBuffer);
+                    var provider = compModel.GetService<IClassifierAggregatorService>();
+                    _classifier = provider.GetClassifier(TextView.TextBuffer);
+                }
+                return _classifier;
             }
         }
 

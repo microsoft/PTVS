@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -80,18 +82,23 @@ namespace CanopyInterpreter {
                 description += " 32-bit)";
             }
 
-            return InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
-                PrefixPath = basePath,
-                InterpreterPath = interpPath,
-                WindowInterpreterPath = winInterpPath,
-                LibraryPath = libPath,
-                LanguageVersion = languageVersion,
-                Id = id,
-                Description = description,
-                Architecture = arch,
-                PathEnvironmentVariableName = CanopyInterpreterFactoryConstants.PathEnvironmentVariableName,
-                WatchLibraryForNewModules = true
-            });
+            return InterpreterFactoryCreator.CreateInterpreterFactory(
+                new InterpreterConfiguration(
+                    basePath,
+                    description,
+                    basePath,
+                    interpPath,
+                    winInterpPath,
+                    libPath,
+                    CanopyInterpreterFactoryConstants.PathEnvironmentVariableName,
+                    arch,
+                    languageVersion,
+                    InterpreterUIMode.SupportsDatabase
+                ),
+                new InterpreterFactoryCreationOptions {
+                    WatchLibraryForNewModules = true
+                }
+            );
         }
 
         /// <summary>
@@ -122,10 +129,6 @@ namespace CanopyInterpreter {
                 throw new DirectoryNotFoundException(libPath);
             }
 
-            var id = (baseFactory.Configuration.Architecture == ProcessorArchitecture.Amd64) ?
-                CanopyInterpreterFactoryConstants.UserGuid64 :
-                CanopyInterpreterFactoryConstants.UserGuid32;
-
             // Make the description string look like "Canopy 1.1.0.46 (2.7 32-bit)"
             var description = "Canopy ";
             if (!string.IsNullOrEmpty(canopyVersion)) {
@@ -140,24 +143,25 @@ namespace CanopyInterpreter {
 
             var config = new InterpreterConfiguration(
                 userPath,
+                description,
+                userPath,
                 interpPath,
                 winInterpPath,
                 libPath,
                 CanopyInterpreterFactoryConstants.PathEnvironmentVariableName,
                 baseFactory.Configuration.Architecture,
-                baseFactory.Configuration.Version
+                baseFactory.Configuration.Version,
+                InterpreterUIMode.SupportsDatabase
             );
 
-            return new CanopyInterpreterFactory(id, description, baseFactory, config);
+            return new CanopyInterpreterFactory(baseFactory, config);
         }
 
         private CanopyInterpreterFactory(
-            Guid id,
-            string description,
             PythonInterpreterFactoryWithDatabase baseFactory,
             InterpreterConfiguration config
         )
-            : base(id, description, config, true) {
+            : base(config, true) {
             if (baseFactory == null) {
                 throw new ArgumentNullException("baseFactory");
             }
@@ -303,7 +307,7 @@ namespace CanopyInterpreter {
             } else if (!_base.IsCurrent) {
                 return string.Format(culture,
                     "{0} is out of date:{1}{2}",
-                    _base.Description,
+                    _base.Configuration.FullDescription,
                     Environment.NewLine,
                     _base.GetIsCurrentReason(culture));
             }

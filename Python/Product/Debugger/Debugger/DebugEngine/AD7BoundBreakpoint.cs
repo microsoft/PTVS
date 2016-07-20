@@ -1,18 +1,24 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
+using System;
 using System.Diagnostics;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Debugger.Interop;
 
@@ -108,7 +114,30 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         int IDebugBoundBreakpoint2.GetHitCount(out uint pdwHitCount) {
-            pdwHitCount = (uint)_breakpoint.GetHitCountAsync().GetAwaiter().GetResult();
+            var remoteProcess = _engine.Process as PythonRemoteProcess;
+            if (remoteProcess != null && remoteProcess.TargetHostType == AD7Engine.TargetUwp) {
+                // Target is UWP host and we will just assume breakpoint hit count is 1 from this
+                // remote debug type due to issues with communicating this command
+                pdwHitCount = 1;
+            } else {
+                var task = _breakpoint.GetHitCountAsync();
+                try {
+                    if (!task.Wait(remoteProcess != null ? 5000 : 1000)) {
+                        pdwHitCount = 0;
+                        return VSConstants.E_FAIL;
+                    }
+                    pdwHitCount = (uint)task.Result;
+                } catch (AggregateException ae) {
+                    if (ae.InnerExceptions.OfType<OperationCanceledException>().Any()) {
+                        pdwHitCount = 1;
+                    } else if (ae.InnerExceptions.Count == 1) {
+                        throw ae.InnerException;
+                    } else {
+                        throw;
+                    }
+                }
+            }
+
             return VSConstants.S_OK;
         }
 

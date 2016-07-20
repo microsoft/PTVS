@@ -1,23 +1,23 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using IronPython.Runtime.Types;
-using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
@@ -54,6 +54,10 @@ namespace AnalysisTests {
             : this(factory, factory.CreateInterpreter()) {
         }
 
+        protected virtual IModuleContext DefaultContext {
+            get { return null; }
+        }
+
         public BaseAnalysisTest(IPythonInterpreterFactory factory, IPythonInterpreter interpreter) {
             InterpreterFactory = factory;
             Interpreter = interpreter;
@@ -64,11 +68,11 @@ namespace AnalysisTests {
             var listType = Interpreter.GetBuiltinType(BuiltinTypeId.List);
             var functionType = Interpreter.GetBuiltinType(BuiltinTypeId.Function);
 
-            _objectMembers = objectType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
-            _strMembers = bytesType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
-            _listMembers = listType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
-            _intMembers = intType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
-            _functionMembers = functionType.GetMemberNames(IronPythonModuleContext.DontShowClrInstance).ToArray();
+            _objectMembers = objectType.GetMemberNames(DefaultContext).ToArray();
+            _strMembers = bytesType.GetMemberNames(DefaultContext).ToArray();
+            _listMembers = listType.GetMemberNames(DefaultContext).ToArray();
+            _intMembers = intType.GetMemberNames(DefaultContext).ToArray();
+            _functionMembers = functionType.GetMemberNames(DefaultContext).ToArray();
         }
 
         public static TextReader GetSourceUnit(string text, string name) {
@@ -81,6 +85,14 @@ namespace AnalysisTests {
 
         protected virtual AnalysisLimits GetLimits() {
             return AnalysisLimits.GetDefaultLimits();
+        }
+
+        protected virtual bool SupportsPython3 {
+            get { return true; }
+        }
+
+        protected virtual bool ShouldUseUnicodeLiterals(PythonLanguageVersion version) {
+            return version.Is3x();
         }
 
         public PythonAnalyzer CreateAnalyzer(PythonLanguageVersion version = PythonLanguageVersion.V27, string[] analysisDirs = null) {
@@ -96,7 +108,7 @@ namespace AnalysisTests {
             }
             var state = PythonAnalyzer.CreateSynchronously(fact, interp, builtinsName);
 
-            if (version.Is3x() || this is IronPythonAnalysisTest) {
+            if (ShouldUseUnicodeLiterals(version)) {
                 var types = (KnownTypes)state.Types;
                 types._types[(int)BuiltinTypeId.Str] = state.Types[BuiltinTypeId.Unicode];
                 types._types[(int)BuiltinTypeId.StrIterator] = state.Types[BuiltinTypeId.UnicodeIterator];
@@ -114,12 +126,17 @@ namespace AnalysisTests {
             return state;
         }
 
-        public ModuleAnalysis ProcessText(string text, PythonLanguageVersion version = PythonLanguageVersion.V27, string[] analysisDirs = null) {
+        public ModuleAnalysis ProcessText(
+            string text,
+            PythonLanguageVersion version = PythonLanguageVersion.V27,
+            string[] analysisDirs = null,
+            CancellationToken cancel = default(CancellationToken)
+        ) {
             var sourceUnit = GetSourceUnit(text, "fob");
             var state = CreateAnalyzer(version, analysisDirs);
             var entry = state.AddModule("fob", "fob", null);
             Prepare(entry, sourceUnit, version);
-            entry.Analyze(CancellationToken.None);
+            entry.Analyze(cancel);
 
             return entry.Analysis;
         }

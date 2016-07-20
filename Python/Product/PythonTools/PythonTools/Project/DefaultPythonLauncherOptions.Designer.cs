@@ -1,4 +1,4 @@
-﻿namespace Microsoft.PythonTools.Project {
+namespace Microsoft.PythonTools.Project {
     partial class DefaultPythonLauncherOptions {
         /// <summary> 
         /// Required designer variable.

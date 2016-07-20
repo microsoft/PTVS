@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.IO;
@@ -23,6 +25,8 @@ namespace Microsoft.PythonTools.Interpreter {
     /// executable file and cached completion database.
     /// </summary>
     public static class InterpreterFactoryCreator {
+        public static readonly Guid AnalysisOnlyFactoryGuid = new Guid("{3E2D2684-58F3-47E2-B121-58A602EA2382}");
+
         /// <summary>
         /// Creates a new interpreter factory with the specified options. This
         /// interpreter always includes a cached completion database.
@@ -37,7 +41,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             return new CPythonInterpreterFactory(
                 ver,
-                (options.Id == default(Guid)) ? Guid.NewGuid() : options.Id,
+                options.Id,
                 description,
                 prefixPath ?? string.Empty,
                 options.InterpreterPath ?? string.Empty,
@@ -47,6 +51,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 options.Architecture,
                 options.WatchLibraryForNewModules
             );
+        }
+
+        public static PythonInterpreterFactoryWithDatabase CreateInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options) {
+            return new CPythonInterpreterFactory(configuration, options);
         }
 
         /// <summary>

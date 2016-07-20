@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -27,25 +29,20 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         private readonly AnalysisValue _av;
         private readonly Node _node;
-        private readonly Dictionary<Node, InterpreterScope> _nodeScopes;
-        private readonly Dictionary<Node, IAnalysisSet> _nodeValues;
-        private readonly Dictionary<string, VariableDef> _variables;
-        private Dictionary<string, HashSet<VariableDef>> _linkedVariables;
+        private readonly AnalysisDictionary<Node, InterpreterScope> _nodeScopes;
+        private readonly AnalysisDictionary<Node, NodeValue> _nodeValues;
+        private readonly AnalysisDictionary<string, VariableDef> _variables;
+        private readonly AnalysisDictionary<string, HashSet<VariableDef>> _linkedVariables;
 
         public InterpreterScope(AnalysisValue av, Node ast, InterpreterScope outerScope) {
             _av = av;
             _node = ast;
             OuterScope = outerScope;
 
-            _nodeScopes = new Dictionary<Node, InterpreterScope>();
-            _nodeValues = new Dictionary<Node, IAnalysisSet>();
-            _variables = new Dictionary<string, VariableDef>();
-
-#if DEBUG
-            NodeScopes = new ReadOnlyDictionary<Node, InterpreterScope>(_nodeScopes);
-            NodeValues = new ReadOnlyDictionary<Node, IAnalysisSet>(_nodeValues);
-            Variables = new ReadOnlyDictionary<string, VariableDef>(_variables);
-#endif
+            _nodeScopes = new AnalysisDictionary<Node, InterpreterScope>();
+            _nodeValues = new AnalysisDictionary<Node, NodeValue>();
+            _variables = new AnalysisDictionary<string, VariableDef>();
+            _linkedVariables = new AnalysisDictionary<string, HashSet<VariableDef>>();
         }
 
         public InterpreterScope(AnalysisValue av, InterpreterScope outerScope)
@@ -58,16 +55,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _nodeScopes = cloned._nodeScopes;
             _nodeValues = cloned._nodeValues;
             _variables = cloned._variables;
-            if (cloned._linkedVariables == null) {
-                // linkedVariables could be created later, and we need to share them if it.
-                cloned._linkedVariables = new Dictionary<string, HashSet<VariableDef>>();
-            }
             _linkedVariables = cloned._linkedVariables;
-#if DEBUG
-            NodeScopes = new ReadOnlyDictionary<Node, InterpreterScope>(_nodeScopes);
-            NodeValues = new ReadOnlyDictionary<Node, IAnalysisSet>(_nodeValues);
-            Variables = new ReadOnlyDictionary<string, VariableDef>(_variables);
-#endif
         }
 
         public InterpreterScope GlobalScope {
@@ -134,34 +122,31 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
-#if DEBUG
-        public ReadOnlyDictionary<string, VariableDef> Variables {
-            get;
-            private set;
-        }
-
-        public ReadOnlyDictionary<Node, InterpreterScope> NodeScopes {
-            get;
-            private set;
-        }
-
-        public ReadOnlyDictionary<Node, IAnalysisSet> NodeValues {
-            get;
-            private set;
-        }
-#else
-        public IDictionary<string, VariableDef> Variables {
+        internal IEnumerable<KeyValuePair<string, VariableDef>> AllVariables {
             get { return _variables; }
         }
 
-        public IDictionary<Node, InterpreterScope> NodeScopes {
+        internal IEnumerable<KeyValuePair<Node, InterpreterScope>> AllNodeScopes {
             get { return _nodeScopes; }
         }
 
-        public IDictionary<Node, IAnalysisSet> NodeValues {
-            get { return _nodeValues; }
+        internal bool ContainsVariable(string name) {
+            return _variables.ContainsKey(name);
         }
-#endif
+
+        internal VariableDef GetVariable(string name) {
+            return _variables[name];
+        }
+
+        internal bool TryGetVariable(string name, out VariableDef value) {
+            return _variables.TryGetValue(name, out value);
+        }
+
+        internal int VariableCount {
+            get {
+                return _variables.Count;
+            }
+        }
 
         /// <summary>
         /// Assigns a variable in the given scope, creating the variable if necessary, and performing
@@ -188,7 +173,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public VariableDef AddLocatedVariable(string name, Node location, AnalysisUnit unit, ParameterKind paramKind = ParameterKind.Normal) {
             VariableDef value;
-            if (!Variables.TryGetValue(name, out value)) {
+            if (!TryGetVariable(name, out value)) {
                 VariableDef def;
                 switch (paramKind) {
                     case ParameterKind.List: def = new ListParameterVariableDef(unit, location); break;
@@ -222,13 +207,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public virtual VariableDef GetVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
             VariableDef res;
-            if (_variables.TryGetValue(name, out res)) {
-                if (addRef) {
-                    res.AddReference(node, unit);
-                }
-                return res;
+            if (!_variables.TryGetValue(name, out res)) {
+                return null;
             }
-            return null;
+            if (addRef) {
+                res.AddReference(node, unit);
+            }
+            return res;
         }
 
         public virtual IEnumerable<KeyValuePair<string, VariableDef>> GetAllMergedVariables() {
@@ -237,7 +222,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public virtual IEnumerable<VariableDef> GetMergedVariables(string name) {
             VariableDef res;
-            if (_variables.TryGetValue(name, out res)) {
+            if (_variables.TryGetValue(name, out res) && res != null) {
                 yield return res;
             }
         }
@@ -278,7 +263,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public virtual VariableDef AddVariable(string name, VariableDef variable = null) {
-            return _variables[name] = (variable ?? new VariableDef());
+            return _variables[name] = variable ?? new VariableDef();
         }
 
         internal virtual bool RemoveVariable(string name) {
@@ -286,11 +271,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal bool RemoveVariable(string name, out VariableDef value) {
-            if (_variables.TryGetValue(name, out value)) {
-                return _variables.Remove(name);
-            }
-            value = null;
-            return false;
+            return _variables.TryGetValue(name, out value) && _variables.Remove(name);
         }
 
         internal virtual void ClearVariables() {
@@ -309,8 +290,18 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             _nodeScopes.Clear();
         }
 
-        public virtual IAnalysisSet AddNodeValue(Node node, IAnalysisSet variable) {
-            return _nodeValues[node] = variable;
+        public virtual IAnalysisSet AddNodeValue(Node node, NodeValueKind kind, IAnalysisSet variable) {
+            NodeValue next;
+            _nodeValues.TryGetValue(node, out next);
+#if DEBUG
+            var tmp = next;
+            while (tmp != null) {
+                Debug.Assert(tmp.Kind != kind);
+                tmp = tmp.Next;
+            }
+#endif
+            _nodeValues[node] = new NodeValue(kind, variable, next);
+            return variable;
         }
 
         internal virtual bool RemoveNodeValue(Node node) {
@@ -334,34 +325,46 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public void ClearLinkedVariables() {
-            if (_linkedVariables != null) {
-                _linkedVariables.Clear();
-            }
+            _linkedVariables.Clear();
         }
 
-        internal HashSet<VariableDef> GetLinkedVariables(string saveName) {
-            if (_linkedVariables == null) {
-                _linkedVariables = new Dictionary<string, HashSet<VariableDef>>();
-            }
+        internal bool AddLinkedVariable(string name, VariableDef variable) {
             HashSet<VariableDef> links;
-            if (!_linkedVariables.TryGetValue(saveName, out links)) {
-                _linkedVariables[saveName] = links = new HashSet<VariableDef>();
+            if (!_linkedVariables.TryGetValue(name, out links) || links == null) {
+                _linkedVariables[name] = links = new HashSet<VariableDef>();
             }
-            return links;
+            lock (links) {
+                return links.Add(variable);
+            }
         }
 
-        internal HashSet<VariableDef> GetLinkedVariablesNoCreate(string saveName) {
-            HashSet<VariableDef> linkedVars;
-            if (_linkedVariables == null || !_linkedVariables.TryGetValue(saveName, out linkedVars)) {
-                return null;
+        internal IEnumerable<VariableDef> GetLinkedVariables(string name) {
+            HashSet<VariableDef> links;
+            _linkedVariables.TryGetValue(name, out links);
+
+            if (links == null) {
+                return Enumerable.Empty<VariableDef>();
             }
-            return linkedVars;
+            return links.AsLockedEnumerable();
         }
 
-        internal bool TryGetNodeValue(Node node, out IAnalysisSet variable) {
+        internal void AddReferenceToLinkedVariables(Node node, AnalysisUnit unit, string name) {
+            foreach (var linkedVar in GetLinkedVariables(name)) {
+                linkedVar.AddReference(node, unit);
+            }
+        }
+
+        internal bool TryGetNodeValue(Node node, NodeValueKind kind, out IAnalysisSet variable) {
             foreach (var s in EnumerateTowardsGlobal) {
-                if (s._nodeValues.TryGetValue(node, out variable)) {
-                    return true;
+                NodeValue value;
+                if (s._nodeValues.TryGetValue(node, out value)) {
+                    while (value != null) {
+                        if (value.Kind == kind) {
+                            variable = value.Variable;
+                            return true;
+                        }
+                        value = value.Next;
+                    }
                 }
             }
             variable = null;
@@ -382,13 +385,44 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// Cached node variables so that we don't continually create new entries for basic nodes such
         /// as sequences, lambdas, etc...
         /// </summary>
-        public IAnalysisSet GetOrMakeNodeValue(Node node, Func<Node, IAnalysisSet> maker) {
+        public IAnalysisSet GetOrMakeNodeValue(Node node, NodeValueKind kind, Func<Node, IAnalysisSet> maker) {
             IAnalysisSet result;
-            if (!TryGetNodeValue(node, out result)) {
+            if (!TryGetNodeValue(node, kind, out result)) {
                 result = maker(node);
-                AddNodeValue(node, result);
+                AddNodeValue(node, kind, result);
             }
             return result;
         }
     }
+
+    class NodeValue {
+        public readonly IAnalysisSet Variable;
+        public readonly NodeValueKind Kind;
+        public NodeValue Next;
+
+        public NodeValue(NodeValueKind kind, IAnalysisSet variable, NodeValue value) {
+            Kind = kind;
+            Variable = variable;
+            Next = value;
+        }
+    }
+
+    enum NodeValueKind {
+        None,
+        Set,
+        DictLiteral,
+        ListComprehension,
+        LambdaFunction,
+        Sequence,
+        Range,
+        ListOfString,
+        StrDict,
+        Iterator,
+        Super,
+        PartialFunction,
+        Wraps,
+        SpecializedInstance,
+        Dictionary,
+    }
+
 }

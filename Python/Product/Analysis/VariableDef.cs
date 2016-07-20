@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -21,7 +23,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
     abstract class DependentData<TStorageType> where TStorageType : DependencyInfo {
-        internal SingleDict<IProjectEntry, TStorageType> _dependencies;
+        internal SingleDict<IVersioned, TStorageType> _dependencies;
 
         /// <summary>
         /// Clears old values from old modules.  These old values are values which were assigned from
@@ -38,7 +40,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// an out of data analysis.
         /// </summary>
         /// <param name="fromModule"></param>
-        public void ClearOldValues(IProjectEntry fromModule) {
+        public void ClearOldValues(IVersioned fromModule) {
             TStorageType deps;
             if (_dependencies.TryGetValue(fromModule, out deps)) {
                 if (deps.Version != fromModule.AnalysisVersion) {
@@ -47,7 +49,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        protected TStorageType GetDependentItems(IProjectEntry module) {
+        protected TStorageType GetDependentItems(IVersioned module) {
             TStorageType result;
             if (!_dependencies.TryGetValue(module, out result) || result.Version != module.AnalysisVersion) {
                 _dependencies[module] = result = NewDefinition(module.AnalysisVersion);
@@ -61,14 +63,16 @@ namespace Microsoft.PythonTools.Analysis {
         /// Enqueues any nodes which depend upon this type into the provided analysis queue for
         /// further analysis.
         /// </summary>
-        public void EnqueueDependents() {
+        public virtual void EnqueueDependents(IVersioned assigner = null, IProjectEntry declaringScope = null) {
             bool hasOldValues = false;
             foreach (var keyValue in _dependencies) {
                 if (keyValue.Key.AnalysisVersion == keyValue.Value.Version) {
-                    var val = keyValue.Value;
-                    if (val.DependentUnits != null) {
-                        foreach (var analysisUnit in val.DependentUnits) {
-                            analysisUnit.Enqueue();
+                    if (assigner == null || IsVisible(keyValue.Key, declaringScope, assigner)) {
+                        var val = keyValue.Value;
+                        if (val.DependentUnits != null) {
+                            foreach (var analysisUnit in val.DependentUnits) {
+                                analysisUnit.Enqueue();
+                            }
                         }
                     }
                 } else {
@@ -83,10 +87,23 @@ namespace Microsoft.PythonTools.Analysis {
 
         public bool AddDependency(AnalysisUnit unit) {
             if (!unit.ForEval) {
-                return GetDependentItems(unit.DeclaringModule.ProjectEntry).AddDependentUnit(unit);
+                return GetDependentItems(unit.DependencyProject).AddDependentUnit(unit);
             }
             return false;
         }
+
+        protected static bool IsVisible(IVersioned accessor, IVersioned declaringScope, IVersioned assigningScope) {
+            return true;
+            /*
+            if (accessor != null && accessor.IsVisible(assigningScope)) {
+                return true;
+            }
+            if (declaringScope != null && declaringScope.IsVisible(assigningScope)) {
+                return true;
+            }
+            return false;*/
+        }
+
     }
 
     class DependentData : DependentData<DependencyInfo> {
@@ -126,21 +143,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// 
     /// TODO: We should store built-in types not keyed off of the ModuleInfo.
     /// </summary>
-    class VariableDef : DependentData<TypedDependencyInfo<AnalysisValue>>, IReferenceable {
-        internal static VariableDef[] EmptyArray = new VariableDef[0];
-
-        /// <summary>
-        /// Returns an infinite sequence of VariableDef instances. This can be
-        /// used with .Take(x).ToArray() to create an array of x instances.
-        /// </summary>
-        internal static IEnumerable<VariableDef> Generator {
-            get {
-                while (true) {
-                    yield return new VariableDef();
-                }
-            }
-        }
-
+    abstract class TypedDef<T> : DependentData<T> where T : TypedDependencyInfo {
         /// <summary>
         /// This limit is used to prevent analysis from continuing forever due
         /// to bugs or unanalyzable code. It is tested in Types and
@@ -151,10 +154,10 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         internal const int HARD_TYPE_LIMIT = 1000;
 
-        static readonly ConditionalWeakTable<VariableDef, object> LockedVariableDefs = new ConditionalWeakTable<VariableDef, object>();
+        static readonly ConditionalWeakTable<TypedDef<T>, object> LockedVariableDefs = new ConditionalWeakTable<TypedDef<T>, object>();
         static readonly object LockedVariableDefsValue = new object();
 
-        private IAnalysisSet _emptySet = AnalysisSet.Empty;
+        protected IAnalysisSet _emptySet = AnalysisSet.Empty;
 
         /// <summary>
         /// Marks the current VariableDef as exceeding the limit and not to be
@@ -242,10 +245,6 @@ namespace Microsoft.PythonTools.Analysis {
         }
 #endif
 
-        protected override TypedDependencyInfo<AnalysisValue> NewDefinition(int version) {
-            return new TypedDependencyInfo<AnalysisValue>(version, _emptySet);
-        }
-
         protected int EstimateTypeCount(IAnalysisSet extraTypes = null) {
             // Use a fast estimate of the number of types we have, since this
             // function will be called very often.
@@ -259,8 +258,8 @@ namespace Microsoft.PythonTools.Analysis {
             return roughSet.Count;
         }
 
-        public bool AddTypes(AnalysisUnit unit, IEnumerable<AnalysisValue> newTypes, bool enqueue = true) {
-            return AddTypes(unit.ProjectEntry, newTypes, enqueue);
+        public bool AddTypes(AnalysisUnit unit, IAnalysisSet newTypes, bool enqueue = true, IProjectEntry declaringScope = null) {
+            return AddTypes(unit.DependencyProject, newTypes, enqueue, declaringScope);
         }
 
         // Set checks ensure that the wasChanged result is correct. The checks
@@ -271,19 +270,17 @@ namespace Microsoft.PythonTools.Analysis {
         private static bool ENABLE_SET_CHECK = false;
 #endif
 
-        public bool AddTypes(IProjectEntry projectEntry, IEnumerable<AnalysisValue> newTypes, bool enqueue = true) {
+        public bool AddTypes(IVersioned projectEntry, IAnalysisSet newTypes, bool enqueue = true, IProjectEntry declaringScope = null) {
             object dummy;
             if (LockedVariableDefs.TryGetValue(this, out dummy)) {
                 return false;
             }
             
             bool added = false;
-            foreach (var value in newTypes) {
-                var declaringModule = value.DeclaringModule;
-                if (declaringModule == null || declaringModule.AnalysisVersion == value.DeclaringVersion) {
-                    var newTypesEntry = value.DeclaringModule ?? projectEntry;
+            if (newTypes.Count > 0) {
+                var dependencies = GetDependentItems(projectEntry);
 
-                    var dependencies = GetDependentItems(newTypesEntry);
+                foreach (var value in newTypes) {
 
 #if DEBUG || FULL_VALIDATION
                     if (ENABLE_SET_CHECK) {
@@ -307,10 +304,76 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (added && enqueue) {
-                EnqueueDependents();
+                EnqueueDependents(projectEntry, declaringScope);
             }
 
             return added;
+        }
+
+        public IAnalysisSet GetTypes(AnalysisUnit accessor, ProjectEntry declaringScope = null) {
+            bool needsCopy;
+            var res = GetTypesWorker(accessor.ProjectEntry, declaringScope, out needsCopy);
+            if (needsCopy) {
+                res = res.Clone();
+            }
+            return res;
+        }
+
+        public IAnalysisSet GetTypesNoCopy(AnalysisUnit accessor, IProjectEntry declaringScope = null) {
+            return GetTypesNoCopy(accessor.ProjectEntry, declaringScope);
+        }
+
+        public IAnalysisSet GetTypesNoCopy(IProjectEntry accessor = null, IProjectEntry declaringScope = null) {
+            bool needsCopy;
+            return GetTypesWorker(accessor, declaringScope, out needsCopy);
+        }
+
+        private IAnalysisSet GetTypesWorker(IProjectEntry accessor, IProjectEntry declaringScope, out bool needsCopy) {
+            needsCopy = false;
+            var res = _emptySet;
+            if (_dependencies.Count != 0) {
+                SingleDict<IVersioned, T>.SingleDependency oneDependency;
+                if (_dependencies.TryGetSingleDependency(out oneDependency)) {
+                    if (oneDependency.Value.Types.Count > 0 && IsVisible(accessor, declaringScope, oneDependency.Key)) {
+                        var types = oneDependency.Value.Types;
+                        if (types != null) {
+                            needsCopy = !(types is IImmutableAnalysisSet);
+                            res = types;
+                        }
+                    }
+                } else {
+                    foreach (var kvp in (AnalysisDictionary<IVersioned, T>)_dependencies._data) {
+                        if (kvp.Value.Types.Count > 0 && IsVisible(accessor, declaringScope, kvp.Key)) {
+                            res = res.Union(kvp.Value.Types);
+                        }
+                    }
+                }
+            }
+
+            if (res.Count > HARD_TYPE_LIMIT) {
+                ExceedsTypeLimit();
+            }
+
+            return res;
+        }
+
+        public bool HasTypes {
+            get {
+                if (_dependencies.Count == 0) {
+                    return false;
+                }
+                T oneDependency;
+                if (_dependencies.TryGetSingleValue(out oneDependency)) {
+                    return oneDependency.Types.Count > 0;
+                } else {
+                    foreach (var mod in ((AnalysisDictionary<IVersioned, T>)_dependencies._data)) {
+                        if (mod.Value.Types.Count > 0) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
         }
 
         /// <summary>
@@ -323,13 +386,15 @@ namespace Microsoft.PythonTools.Analysis {
             get {
                 var res = _emptySet;
                 if (_dependencies.Count != 0) {
-                    TypedDependencyInfo<AnalysisValue> oneDependency;
+                    T oneDependency;
                     if (_dependencies.TryGetSingleValue(out oneDependency)) {
                         res = oneDependency.Types ?? AnalysisSet.Empty;
                     } else {
 
                         foreach (var mod in _dependencies.DictValues) {
-                            res = res.Union(mod.Types);
+                            if (mod.Types.Count > 0) {
+                                res = res.Union(mod.Types);
+                            }
                         }
                     }
                 }
@@ -353,100 +418,11 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public bool AddReference(Node node, AnalysisUnit unit) {
-            if (!unit.ForEval) {
-                var deps = GetDependentItems(unit.DeclaringModule.ProjectEntry);
-                return deps.AddReference(new EncodedLocation(unit.Tree, node)) && deps.AddDependentUnit(unit);
-            }
-            return false;
-        }
-
-        public bool AddReference(EncodedLocation location, IProjectEntry module) {
-            return GetDependentItems(module).AddReference(location);
-        }
-
-        public bool AddAssignment(EncodedLocation location, IProjectEntry entry) {
-            return GetDependentItems(entry).AddAssignment(location);
-        }
-
-        public bool AddAssignment(Node node, AnalysisUnit unit) {
-            if (!unit.ForEval) {
-                return AddAssignment(new EncodedLocation(unit.Tree, node), unit.DeclaringModule.ProjectEntry);
-            }
-            return false;
-        }
-
-        public IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> References {
-            get {
-                if (_dependencies.Count != 0) {
-                    foreach (var keyValue in _dependencies) {
-                        if (keyValue.Value.References != null && keyValue.Key.AnalysisVersion == keyValue.Value.Version) {
-                            foreach (var reference in keyValue.Value.References) {
-                                yield return new KeyValuePair<IProjectEntry, EncodedLocation>(keyValue.Key, reference);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        public IEnumerable<KeyValuePair<IProjectEntry, EncodedLocation>> Definitions {
-            get {
-                if (_dependencies.Count != 0) {
-                    foreach (var keyValue in _dependencies) {
-                        if (keyValue.Value.Assignments != null && keyValue.Key.AnalysisVersion == keyValue.Value.Version) {
-                            foreach (var reference in keyValue.Value.Assignments) {
-                                yield return new KeyValuePair<IProjectEntry, EncodedLocation>(keyValue.Key, reference);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         public virtual bool IsEphemeral {
             get {
                 return false;
             }
-        }
-
-        internal bool CopyTo(VariableDef to) {
-            bool anyChange = false;
-            Debug.Assert(this != to);
-            foreach (var keyValue in _dependencies) {
-                var projEntry = keyValue.Key;
-                var dependencies = keyValue.Value;
-
-                anyChange |= to.AddTypes(projEntry, dependencies.Types, false);
-                if (dependencies.DependentUnits != null) {
-                    foreach (var unit in dependencies.DependentUnits) {
-                        anyChange |= to.AddDependency(unit);
-                    }
-                }
-                if (dependencies._references != null) {
-                    foreach (var encodedLoc in dependencies._references) {
-                        anyChange |= to.AddReference(encodedLoc, projEntry);
-                    }
-                }
-                if (dependencies._assignments != null) {
-                    foreach (var assignment in dependencies._assignments) {
-                        anyChange |= to.AddAssignment(assignment, projEntry);
-                    }
-                }
-            }
-            return anyChange;
-        }
-
-
-        /// <summary>
-        /// Checks to see if a variable still exists.  This depends upon the variable not
-        /// being ephemeral and that we still have valid type information for dependents.
-        /// </summary>
-        public bool VariableStillExists {
-            get {
-                return !IsEphemeral && (_dependencies.Count > 0 || TypesNoCopy.Count > 0);
-            }
-        }
+        }    
 
         /// <summary>
         /// If the number of types associated with this variable exceeds a
@@ -498,6 +474,155 @@ namespace Microsoft.PythonTools.Analysis {
         }
     }
 
+    class TypedDef : TypedDef<TypedDependencyInfo> {
+        internal static TypedDef[] EmptyArray = new TypedDef[0];
+
+        public TypedDef() {
+        }
+
+        protected override TypedDependencyInfo NewDefinition(int version) {
+            return new TypedDependencyInfo(version, _emptySet);
+        }
+
+        /// <summary>
+        /// Returns an infinite sequence of VariableDef instances. This can be
+        /// used with .Take(x).ToArray() to create an array of x instances.
+        /// </summary>
+        internal static IEnumerable<TypedDef> Generator {
+            get {
+                while (true) {
+                    yield return new TypedDef();
+                }
+            }
+        }
+
+    }
+
+    class VariableDef : TypedDef<ReferenceableDependencyInfo>, IReferenceable {
+        internal static VariableDef[] EmptyArray = new VariableDef[0];
+
+#if VARDEF_STATS
+        ~VariableDef() {
+            IncStat(String.Format("References_{0:D3}", References.Count()));
+            IncStat(String.Format("Assignments_{0:D3}", Definitions.Count()));
+        }
+#endif
+
+        internal static IEnumerable<VariableDef> Generator {
+            get {
+                while (true) {
+                    yield return new VariableDef();
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Checks to see if a variable still exists.  This depends upon the variable not
+        /// being ephemeral and that we still have valid type information for dependents.
+        /// </summary>
+        public bool VariableStillExists {
+            get {
+                if (!IsEphemeral) {
+                    if (HasTypes) {
+                        return true;
+                    }
+
+                    foreach (var dep in _dependencies) {
+                        if (dep.Value.Assignments != null) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        }
+
+        internal bool CopyTo(VariableDef to) {
+            bool anyChange = false;
+            Debug.Assert(this != to);
+            foreach (var keyValue in _dependencies) {
+                var projEntry = keyValue.Key;
+                var dependencies = keyValue.Value;
+
+                anyChange |= to.AddTypes(projEntry, dependencies.Types, false);
+                if (dependencies.DependentUnits != null) {
+                    foreach (var unit in dependencies.DependentUnits) {
+                        anyChange |= to.AddDependency(unit);
+                    }
+                }
+                if (dependencies._references != null) {
+                    foreach (var encodedLoc in dependencies._references) {
+                        anyChange |= to.AddReference(encodedLoc, projEntry);
+                    }
+                }
+                if (dependencies._assignments != null) {
+                    foreach (var assignment in dependencies._assignments) {
+                        anyChange |= to.AddAssignment(assignment, projEntry);
+                    }
+                }
+            }
+            return anyChange;
+        }
+
+        protected override ReferenceableDependencyInfo NewDefinition(int version) {
+            return new ReferenceableDependencyInfo(version, _emptySet);
+        }
+
+        public bool AddReference(Node node, AnalysisUnit unit) {
+            if (!unit.ForEval) {
+                var deps = GetDependentItems(unit.DependencyProject);
+                return deps.AddReference(new EncodedLocation(unit, node)) && deps.AddDependentUnit(unit);
+            }
+            return false;
+        }
+
+        public bool AddReference(EncodedLocation location, IVersioned module) {
+            return GetDependentItems(module).AddReference(location);
+        }
+
+        public bool AddAssignment(EncodedLocation location, IVersioned entry) {
+            return GetDependentItems(entry).AddAssignment(location);
+        }
+
+        public bool AddAssignment(Node node, AnalysisUnit unit) {
+            if (!unit.ForEval) {
+                return AddAssignment(new EncodedLocation(unit, node), unit.DependencyProject);
+            }
+            return false;
+        }
+
+        public IEnumerable<EncodedLocation> References {
+            get {
+                if (_dependencies.Count != 0) {
+                    foreach (var keyValue in _dependencies) {
+                        if (keyValue.Value.References != null && keyValue.Key.AnalysisVersion == keyValue.Value.Version) {
+                            foreach (var reference in keyValue.Value.References) {
+                                yield return reference;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public IEnumerable<EncodedLocation> Definitions {
+            get {
+                if (_dependencies.Count != 0) {
+                    foreach (var keyValue in _dependencies) {
+                        if (keyValue.Value.Assignments != null && keyValue.Key.AnalysisVersion == keyValue.Value.Version) {
+                            foreach (var reference in keyValue.Value.Assignments) {
+                                yield return reference;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+    }
+
+
     /// <summary>
     /// A variable def which was created on a read.  We need to create a variable def when
     /// we read from a class/instance where the member isn't defined yet - that lets us successfully
@@ -507,7 +632,7 @@ namespace Microsoft.PythonTools.Analysis {
     sealed class EphemeralVariableDef : VariableDef {
         public override bool IsEphemeral {
             get {
-                return TypesNoCopy.Count == 0;
+                return !HasTypes;
             }
         }
     }

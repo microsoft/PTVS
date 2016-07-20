@@ -1,6 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>14.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
     <When Condition=" '$(VisualStudioVersion)'=='14.0'  Or '$(TargetVisualStudioVersion)'=='VS140' ">
       <PropertyGroup>
         <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -8,27 +18,7 @@
         </FileUpgradeFlags>
         <UpgradeBackupLocation>
         </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='12.0'  Or '$(TargetVisualStudioVersion)'=='VS120' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
+        <OldToolsVersion>14.0</OldToolsVersion>
       </PropertyGroup>
     </When>
   </Choose>
@@ -60,7 +50,20 @@
     </Reference>
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="Microsoft.VisualStudioTools.VSTestHost.$(VSTarget), Version=$(VSTarget).1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.PythonTools.InteractiveWindow" />
+    <Reference Include="Microsoft.PythonTools.VsInteractiveWindow" />
+    <Reference Include="Microsoft.VisualStudio.TextManager.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.TextManager.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TextManager.Interop.12.0, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TextManager.Interop.12.1.DesignTime, Version=12.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TextManager.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudioTools.VSTestHost.$(VSTarget)" />
     <Reference Include="Microsoft.VisualStudio.ComponentModelHost, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.CoreUtility, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Debugger.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -129,45 +132,45 @@
     <Compile Include="WebProjectTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(BuildRoot)Python\Product\ReplWindow\ReplWindow.csproj">
-      <Project>{20bb6fac-44d2-4d76-abfe-0c1e163a1a4f}</Project>
-      <Name>ReplWindow</Name>
-    </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Product\Analysis\Analysis.csproj">
+    <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
       <Aliases>global,analysis</Aliases>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Product\VSInterpreters\VSInterpreters.csproj">
+    <ProjectReference Include="..\..\Product\VSInterpreters\VSInterpreters.csproj">
       <Project>{815db0cd-c0dd-4997-b43c-abee4dbeffe7}</Project>
       <Name>VSInterpreters</Name>
       <Aliases>global,vsinterpreters</Aliases>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Product\PythonTools\PythonTools.csproj">
+    <ProjectReference Include="..\..\Product\PythonTools\PythonTools.csproj">
       <Project>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</Project>
       <Name>PythonTools</Name>
       <Aliases>global,pythontools</Aliases>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Common\Tests\Utilities.UI\TestUtilities.UI.csproj">
+    <ProjectReference Include="..\..\..\Common\Tests\Utilities.UI\TestUtilities.UI.csproj">
       <Project>{E8150EBC-6B62-40BF-BF91-1DC60149B530}</Project>
       <Name>TestUtilities.UI</Name>
       <Aliases>global,util</Aliases>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Common\Tests\Utilities\TestUtilities.csproj">
+    <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Common\Tests\SccPackage\TestSccPackage.csproj">
+    <ProjectReference Include="..\..\..\Common\Tests\SccPackage\TestSccPackage.csproj">
       <Project>{E75E5DB1-0EA0-4247-A830-FE467C016816}</Project>
       <Name>TestSccPackage</Name>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Tests\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
+    <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
       <Project>{A731C4C3-3741-4080-A946-C47574C1F3BF}</Project>
       <Name>TestUtilities.Python.Analysis</Name>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Tests\Utilities.Python\TestUtilities.Python.csproj">
+    <ProjectReference Include="..\Utilities.Python\TestUtilities.Python.csproj">
       <Project>{62641B47-1ABB-4638-A3D5-2A834D089667}</Project>
       <Name>TestUtilities.Python</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Common</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Product\EnvironmentsList\EnvironmentsList.csproj">
       <Project>{b20e082b-4d3c-457d-b2bd-60420b434573}</Project>
@@ -184,6 +187,10 @@
     <ProjectReference Include="..\..\Product\IronPython\IronPython.Interpreter.csproj">
       <Project>{012293b1-168a-4c48-a678-db8361b50ba7}</Project>
       <Name>IronPython.Interpreter</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\VSCommon\VSCommon.csproj">
+      <Project>{A52AC77F-6DF9-4387-BB08-8DED3FD95A0F}</Project>
+      <Name>VSCommon</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

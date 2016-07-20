@@ -1,20 +1,23 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -23,11 +26,17 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using EnvDTE;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Repl;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Shell;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
@@ -39,15 +48,22 @@ namespace TestUtilities.UI.Python {
         private bool _deletePerformanceSessions;
         private PythonPerfExplorer _perfTreeView;
         private PythonPerfToolBar _perfToolBar;
+        public readonly PythonToolsService PythonToolsService;
         
         public PythonVisualStudioApp(DTE dte = null)
             : base(dte) {
 
-            var service = ServiceProvider.GetPythonToolsService();
-            Assert.IsNotNull(service, "Failed to get PythonToolsService");
-            
+            var shell = (IVsShell)ServiceProvider.GetService(typeof(SVsShell));
+            var pkg = new Guid("6dbd7c1e-1f1b-496d-ac7c-c55dae66c783");
+            IVsPackage pPkg;
+            ErrorHandler.ThrowOnFailure(shell.LoadPackage(ref pkg, out pPkg));
+            System.Threading.Thread.Sleep(1000);
+
+            PythonToolsService = ServiceProvider.GetPythonToolsService_NotThreadSafe();
+            Assert.IsNotNull(PythonToolsService, "Failed to get PythonToolsService");
+
             // Disable AutoListIdentifiers for tests
-            var ao = service.AdvancedOptions;
+            var ao = PythonToolsService.AdvancedOptions;
             Assert.IsNotNull(ao, "Failed to get AdvancedOptions");
             var oldALI = ao.AutoListIdentifiers;
             ao.AutoListIdentifiers = false;
@@ -66,7 +82,14 @@ namespace TestUtilities.UI.Python {
         protected override void Dispose(bool disposing) {
             if (!IsDisposed) {
                 try {
-                    InteractiveWindow.CloseAll(this);
+                    ServiceProvider.GetUIThread().Invoke(() => {
+                        var iwp = ComponentModel.GetService<InteractiveWindowProvider>();
+                        if (iwp != null) {
+                            foreach (var w in iwp.AllOpenWindows) {
+                                w.InteractiveWindow.Close();
+                            }
+                        }
+                    });
                 } catch (Exception ex) {
                     Console.WriteLine("Error while closing all interactive windows");
                     Console.WriteLine(ex);
@@ -94,28 +117,20 @@ namespace TestUtilities.UI.Python {
         private const string _templateLanguageName = "Python";
         public static string TemplateLanguageName {
             get {
-#if DEV10
-                // VS 2010 looks up language names as if they are progids, which means
-                // passing "Python" may fail, whereas passing the GUID will always
-                // succeed.
-                using (var progid = Registry.ClassesRoot.OpenSubKey(_templateLanguageName)) {
-                    Assert.IsNull(progid, "Python is a registered progid. Templates cannot be created in VS 2010");
-                }
-#endif
                 return _templateLanguageName;
             }
         }
 
-        public const string PythonApplicationTemplate = "ConsoleAppProject.zip";
-        public const string EmptyWebProjectTemplate = "EmptyWebProject.zip";
-        public const string BottleWebProjectTemplate = "WebProjectBottle.zip";
-        public const string FlaskWebProjectTemplate = "WebProjectFlask.zip";
-        public const string DjangoWebProjectTemplate = "DjangoProject.zip";
-        public const string WorkerRoleProjectTemplate = "WorkerRoleProject.zip";
+        public const string PythonApplicationTemplate = "ConsoleAppProject";
+        public const string EmptyWebProjectTemplate = "WebProjectEmpty";
+        public const string BottleWebProjectTemplate = "WebProjectBottle";
+        public const string FlaskWebProjectTemplate = "WebProjectFlask";
+        public const string DjangoWebProjectTemplate = "DjangoProject";
+        public const string WorkerRoleProjectTemplate = "WorkerRoleProject";
         
-        public const string EmptyFileTemplate = "EmptyPyFile.zip";
-        public const string WebRoleSupportTemplate = "AzureCSWebRole.zip";
-        public const string WorkerRoleSupportTemplate = "AzureCSWorkerRole.zip";
+        public const string EmptyFileTemplate = "EmptyPyFile";
+        public const string WebRoleSupportTemplate = "AzureCSWebRole";
+        public const string WorkerRoleSupportTemplate = "AzureCSWorkerRole";
 
         /// <summary>
         /// Opens and activates the solution explorer window.
@@ -189,44 +204,51 @@ namespace TestUtilities.UI.Python {
             }
         }
 
-        public InteractiveWindow GetInteractiveWindow(string title) {
-            string autoId = GetName(title);
-            AutomationElement element = null;
-            for (int i = 0; i < 5 && element == null; i++) {
-                element = Element.FindFirst(TreeScope.Descendants,
-                    new AndCondition(
-                        new PropertyCondition(
-                            AutomationElement.AutomationIdProperty,
-                            autoId
-                        ),
-                        new PropertyCondition(
-                            AutomationElement.ClassNameProperty,
-                            ""
-                        )
-                    )
-                );
-                if (element == null) {
-                    System.Threading.Thread.Sleep(100);
-                }
-            }
+        public ReplWindowProxy ExecuteInInteractive(Project project, PythonReplWindowProxySettings settings = null) {
+            OpenSolutionExplorer().SelectProject(project);
+            ExecuteCommand("Python.ExecuteInInteractive");
+            return GetInteractiveWindow(project);
+        }
 
-            if (element == null) {
-                DumpVS();
+        public void SendToInteractive() {
+            ExecuteCommand("Python.SendSelectionToInteractive");
+        }
+
+
+        public ReplWindowProxy WaitForInteractiveWindow(string title, PythonReplWindowProxySettings settings = null) {
+            var iwp = GetService<IComponentModel>(typeof(SComponentModel))?.GetService<InteractiveWindowProvider>();
+            IVsInteractiveWindow window = null;
+            for (int retries = 20; retries > 0 && window == null; --retries) {
+                System.Threading.Thread.Sleep(100);
+                window = iwp?.AllOpenWindows.FirstOrDefault(w => ((ToolWindowPane)w).Caption == title);
+            }
+            if (window == null) {
+                Trace.TraceWarning(
+                    "Failed to find {0} in {1}",
+                    title,
+                    string.Join(", ", iwp?.AllOpenWindows.Select(w => ((ToolWindowPane)w).Caption) ?? Enumerable.Empty<string>())
+                );
                 return null;
             }
+            return new ReplWindowProxy(this, window.InteractiveWindow, (ToolWindowPane)window, settings ?? new PythonReplWindowProxySettings());
+        }
 
-            return new InteractiveWindow(
-                title,
-                element.FindFirst(
-                    TreeScope.Descendants,
-                    new PropertyCondition(
-                        AutomationElement.AutomationIdProperty,
-                        "WpfTextView"
-                    )
-                ),
-                this
-            );
+        public ReplWindowProxy GetInteractiveWindow(Project project, PythonReplWindowProxySettings settings = null) {
+            return GetInteractiveWindow(project.Name + " Interactive", settings);
+        }
 
+        public ReplWindowProxy GetInteractiveWindow(string title, PythonReplWindowProxySettings settings = null) {
+            var iwp = GetService<IComponentModel>(typeof(SComponentModel))?.GetService<InteractiveWindowProvider>();
+            var window = iwp?.AllOpenWindows.FirstOrDefault(w => ((ToolWindowPane)w).Caption == title);
+            if (window == null) {
+                Trace.TraceWarning(
+                    "Failed to find {0} in {1}",
+                    title,
+                    string.Join(", ", iwp?.AllOpenWindows.Select(w => ((ToolWindowPane)w).Caption) ?? Enumerable.Empty<string>())
+                );
+                return null;
+            }
+            return new ReplWindowProxy(this, window.InteractiveWindow, (ToolWindowPane)window, settings ?? new PythonReplWindowProxySettings());
         }
 
         internal Document WaitForDocument(string docName) {
@@ -248,7 +270,7 @@ namespace TestUtilities.UI.Python {
         /// </remarks>
         public DefaultInterpreterSetter SelectDefaultInterpreter(PythonVersion python) {
             return new DefaultInterpreterSetter(
-                InterpreterService.FindInterpreter(python.Id, python.Version.ToVersion()),
+                InterpreterService.FindInterpreter(python.Id),
                 ServiceProvider
             );
         }
@@ -260,7 +282,7 @@ namespace TestUtilities.UI.Python {
             }
 
             var interpreterService = InterpreterService;
-            var factory = interpreterService.FindInterpreter(interp.Id, interp.Configuration.Version);
+            var factory = interpreterService.FindInterpreter(interp.Id);
             var defaultInterpreterSetter = new DefaultInterpreterSetter(factory);
 
             try {
@@ -282,7 +304,16 @@ namespace TestUtilities.UI.Python {
         }
 
 
-        public IInterpreterOptionsService InterpreterService {
+        public IInterpreterRegistryService InterpreterService {
+            get {
+                var model = GetService<IComponentModel>(typeof(SComponentModel));
+                var service = model.GetService<IInterpreterRegistryService>();
+                Assert.IsNotNull(service, "Unable to get IInterpreterRegistryService");
+                return service;
+            }
+        }
+
+        public IInterpreterOptionsService OptionsService {
             get {
                 var model = GetService<IComponentModel>(typeof(SComponentModel));
                 var service = model.GetService<IInterpreterOptionsService>();
@@ -297,10 +328,7 @@ namespace TestUtilities.UI.Python {
         }
 
         public TreeNode CreateVirtualEnvironment(EnvDTE.Project project, out string envName, out string envPath) {
-            var environmentsNode = OpenSolutionExplorer().FindChildOfProject(
-                project,
-                SR.GetString(SR.Environments)
-            );
+            var environmentsNode = OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
             environmentsNode.Select();
 
             using (var pss = new ProcessScope("python")) {
@@ -308,7 +336,19 @@ namespace TestUtilities.UI.Python {
                     envPath = new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).GetValue();
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
 
-                    envName = string.Format("{0} ({1})", envPath, baseInterp);
+                    var baseConfig = ComponentModel.GetService<IInterpreterRegistryService>().Configurations
+                        .FirstOrDefault(c => c.FullDescription == baseInterp);
+
+                    if (baseConfig == null) {
+                        envName = "{0} ({1})".FormatUI(envPath, baseInterp);
+                    } else {
+                        envName = "{0} {1} {2} ({3})".FormatUI(
+                            envPath,
+                            baseConfig.Architecture == System.Reflection.ProcessorArchitecture.Amd64 ? "64-bit" : "32-bit",
+                            baseConfig.Version,
+                            baseInterp
+                        );
+                    }
 
                     Console.WriteLine("Expecting environment named: {0}", envName);
 
@@ -342,11 +382,7 @@ namespace TestUtilities.UI.Python {
             }
 
             try {
-                return OpenSolutionExplorer().WaitForChildOfProject(
-                    project,
-                    SR.GetString(SR.Environments),
-                    envName
-                );
+                return OpenSolutionExplorer().WaitForChildOfProject(project, Strings.Environments, envName);
             } finally {
                 var text = GetOutputWindowText("General");
                 if (!string.IsNullOrEmpty(text)) {
@@ -359,10 +395,7 @@ namespace TestUtilities.UI.Python {
         }
 
         public TreeNode AddExistingVirtualEnvironment(EnvDTE.Project project, string envPath, out string envName) {
-            var environmentsNode = OpenSolutionExplorer().FindChildOfProject(
-                project,
-                SR.GetString(SR.Environments)
-            );
+            var environmentsNode = OpenSolutionExplorer().FindChildOfProject(project, Strings.Environments);
             environmentsNode.Select();
 
             using (var createVenv = AutomationDialog.FromDte(this, "Python.AddVirtualEnvironment")) {
@@ -376,11 +409,7 @@ namespace TestUtilities.UI.Python {
                 createVenv.ClickButtonAndClose("Add", nameIsAutomationId: true);
             }
 
-            return OpenSolutionExplorer().WaitForChildOfProject(
-                project,
-                SR.GetString(SR.Environments),
-                envName
-            );
+            return OpenSolutionExplorer().WaitForChildOfProject(project, Strings.Environments, envName);
         }
 
         public IPythonOptions Options {

@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -24,18 +26,16 @@ using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
+using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Differencing;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.VisualStudioTools.Project;
 using IServiceProvider = System.IServiceProvider;
-using SR = Microsoft.PythonTools.Project.SR;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -47,12 +47,12 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ExpansionClient _expansionClient;
         private readonly IServiceProvider _serviceProvider;
         private readonly IVsExpansionManager _expansionMgr;
-        private BufferParser _bufferParser;
         private ICompletionSession _activeSession;
         private ISignatureHelpSession _sigHelpSession;
         private IQuickInfoSession _quickInfoSession;
-        private IOleCommandTarget _oldTarget;
+        internal IOleCommandTarget _oldTarget;
         private IEditorOperations _editOps;
+        private readonly HashSet<ITextBuffer> _subjectBuffers = new HashSet<ITextBuffer>();
         private static string[] _allStandardSnippetTypes = { ExpansionClient.Expansion, ExpansionClient.SurroundsWith };
         private static string[] _surroundsWithSnippetTypes = { ExpansionClient.SurroundsWith, ExpansionClient.SurroundsWithStatement };
 
@@ -72,30 +72,67 @@ namespace Microsoft.PythonTools.Intellisense {
                     _expansionClient = new ExpansionClient(textView, provider._adaptersFactory, provider._ServiceProvider);
                     var textMgr = (IVsTextManager2)_serviceProvider.GetService(typeof(SVsTextManager));
                     textMgr.GetExpansionManager(out _expansionMgr);
-                } catch (ArgumentException ex) {
+                } catch (ArgumentException) {
                     // No expansion client for this buffer, but we can continue without it
-                    Debug.Fail(ex.ToString());
                 }
             }
 
             textView.Properties.AddProperty(typeof(IntellisenseController), this);  // added so our key processors can get back to us
+            _textView.Closed += TextView_Closed;
         }
 
-        internal void SetBufferParser(BufferParser bufferParser) {
-            Utilities.CheckNotNull(bufferParser, "Cannot set buffer parser multiple times");
-            _bufferParser = bufferParser;
+        private void TextView_Closed(object sender, EventArgs e) {
+            Close();
         }
 
-        private void TextViewMouseHover(object sender, MouseHoverEventArgs e) {
+        internal void Close() {
+            _textView.MouseHover -= TextViewMouseHover;
+            _textView.Closed -= TextView_Closed;
+            _textView.Properties.RemoveProperty(typeof(IntellisenseController));
+
+            foreach (var buffer in _subjectBuffers.ToArray()) {
+                DisconnectSubjectBuffer(buffer);
+            }
+        }
+
+        private async void TextViewMouseHover(object sender, MouseHoverEventArgs e) {
             if (_quickInfoSession != null && !_quickInfoSession.IsDismissed) {
                 _quickInfoSession.Dismiss();
             }
+
             var pt = e.TextPosition.GetPoint(EditorExtensions.IsPythonContent, PositionAffinity.Successor);
             if (pt != null) {
-                _quickInfoSession = _provider._QuickInfoBroker.TriggerQuickInfo(
+                if (_textView.TextBuffer.GetInteractiveWindow() != null &&
+                    pt.Value.Snapshot.Length > 1 &&
+                    pt.Value.Snapshot[0] == '$') {
+                    // don't provide quick info on help, the content type doesn't switch until we have
+                    // a complete command otherwise we shouldn't need to do this.
+                    return;
+                }
+
+                var quickInfo = await VsProjectAnalyzer.GetQuickInfoAsync(
+                    _serviceProvider,
                     _textView,
-                    pt.Value.Snapshot.CreateTrackingPoint(pt.Value.Position, PointTrackingMode.Positive),
-                    true);
+                    pt.Value,
+                    TimeSpan.FromSeconds(1.0)
+                );
+
+                QuickInfoSource.AddQuickInfo(_textView, quickInfo);
+
+                var viewPoint = _textView.BufferGraph.MapUpToBuffer(
+                    pt.Value,
+                    PointTrackingMode.Positive,
+                    PositionAffinity.Successor,
+                    _textView.TextBuffer
+                );
+
+                if (viewPoint != null) {
+                    _quickInfoSession = _provider._QuickInfoBroker.TriggerQuickInfo(
+                        _textView,
+                        viewPoint.Value.Snapshot.CreateTrackingPoint(viewPoint.Value, PointTrackingMode.Positive),
+                        true
+                    );
+                }
             }
         }
 
@@ -106,33 +143,46 @@ namespace Microsoft.PythonTools.Intellisense {
             _quickInfoSession = _provider._QuickInfoBroker.TriggerQuickInfo(_textView);
         }
 
+        private static object _intellisenseAnalysisEntry = new object();
+
         public void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
-            PropagateAnalyzer(subjectBuffer);
+            _subjectBuffers.Add(subjectBuffer);
 
-            Debug.Assert(_bufferParser != null, "SetBufferParser has not been called");
-            BufferParser existingParser;
-            if (!subjectBuffer.Properties.TryGetProperty(typeof(BufferParser), out existingParser)) {
-                _bufferParser.AddBuffer(subjectBuffer);
-            } else {
-                // already connected to a buffer parser, we should have the same project entry
-                Debug.Assert(_bufferParser._currentProjEntry == existingParser._currentProjEntry);
+            bool isTemporaryFile = false;
+            VsProjectAnalyzer analyzer;
+            if (!_textView.TryGetAnalyzer(subjectBuffer, _serviceProvider, out analyzer)) {
+                // there's no analyzer for this file, but we can analyze it against either
+                // the default analyzer or some other analyzer (e.g. if it's a diff view, we want
+                // to analyze against the project we're diffing from).  But in either case this
+                // is just a temporary file which should be closed when the view is closed.
+                analyzer = _textView.GetBestAnalyzer(_serviceProvider);
+                isTemporaryFile = true;
             }
-        }
 
-        public void PropagateAnalyzer(ITextBuffer subjectBuffer) {
-            PythonReplEvaluator replEvaluator;
-            if (_textView.Properties.TryGetProperty<PythonReplEvaluator>(typeof(PythonReplEvaluator), out replEvaluator)) {
-                subjectBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), replEvaluator.ReplAnalyzer);
+            if (analyzer != null) {
+                analyzer.MonitorTextBufferAsync(subjectBuffer, isTemporaryFile).ContinueWith(task => {
+                    var newParser = task.Result;
+
+                    if (newParser != null) {
+                        // store the analysis entry so that we can detach it (the file path is lost
+                        // when we close the view)
+                        subjectBuffer.Properties[_intellisenseAnalysisEntry] = newParser.AnalysisEntry;
+
+                        lock(newParser) {
+                            newParser.AttachedViews++;
+                        }
+                    }
+                });
             }
         }
 
         public void DisconnectSubjectBuffer(ITextBuffer subjectBuffer) {
-            // only disconnect if we own the buffer parser
-            Debug.Assert(_bufferParser != null, "SetBufferParser has not been called");
-            BufferParser existingParser;
-            if (subjectBuffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out existingParser) &&
-                --existingParser.AttachedViews == 0) {
-                _bufferParser.RemoveBuffer(subjectBuffer);
+            if (_subjectBuffers.Remove(subjectBuffer)) {
+                AnalysisEntry analysis;
+                if (subjectBuffer.Properties.TryGetProperty(_intellisenseAnalysisEntry, out analysis)) {
+                    analysis.Analyzer.BufferDetached(analysis, subjectBuffer);
+                    subjectBuffer.Properties.RemoveProperty(_intellisenseAnalysisEntry);
+                }
             }
         }
 
@@ -152,8 +202,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _textView.Properties.RemoveProperty(typeof(IntellisenseController));
 
             DetachKeyboardFilter();
-
-            _bufferParser = null;
         }
 
         /// <summary>
@@ -232,16 +280,20 @@ namespace Microsoft.PythonTools.Intellisense {
                         break;
                     default:
                         if (IsIdentifierFirstChar(ch) &&
-                            (_activeSession == null || _activeSession.CompletionSets.Count == 0) &&
-                            ShouldTriggerIdentifierCompletionSession()) {
-                            TriggerCompletionSession(false);
+                            (_activeSession == null || _activeSession.CompletionSets.Count == 0)) {
+                            bool commitByDefault;
+                            if (ShouldTriggerIdentifierCompletionSession(out commitByDefault)) {
+                                TriggerCompletionSession(false, commitByDefault);
+                            }
                         }
                         break;
                 }
             }
         }
 
-        private bool ShouldTriggerIdentifierCompletionSession() {
+        private bool ShouldTriggerIdentifierCompletionSession(out bool commitByDefault) {
+            commitByDefault = true;
+
             if (!_provider.PythonService.AdvancedOptions.AutoListIdentifiers ||
                 !_provider.PythonService.AdvancedOptions.AutoListMembers) {
                 return false;
@@ -264,23 +316,35 @@ namespace Microsoft.PythonTools.Intellisense {
                 snapshot.TextBuffer,
                 snapshot.CreateTrackingSpan(caretPoint.Value.Position, 0, SpanTrackingMode.EdgeNegative)
             ).GetStatementRange();
-            if (!statement.HasValue) {
+            if (!statement.HasValue || caretPoint.Value <= statement.Value.Start) {
                 return false;
             }
 
-            var languageVersion = _bufferParser._parser.InterpreterFactory.Configuration.Version.ToLanguageVersion();
+            var text = new SnapshotSpan(statement.Value.Start, caretPoint.Value).GetText();
+            if (string.IsNullOrEmpty(text)) {
+                return false;
+            }
+
+            var analysis = _textView.GetAnalysisEntry(snapshot.TextBuffer, _serviceProvider);
+            if (analysis == null) {
+                return false;
+            }
+
+            var languageVersion = analysis.Analyzer.InterpreterFactory.Configuration.Version.ToLanguageVersion();
             PythonAst ast;
-            using (var parser = Parser.CreateParser(new StringReader(statement.Value.GetText()), languageVersion, new ParserOptions())) {
+            using (var parser = Parser.CreateParser(new StringReader(text), languageVersion, new ParserOptions())) {
                 ast = parser.ParseSingleStatement();
             }
 
             var walker = new ExpressionCompletionWalker(caretPoint.Value.Position - statement.Value.Start.Position);
             ast.Walk(walker);
+            commitByDefault = walker.CommitByDefault;
             return walker.CanComplete;
         }
 
         private class ExpressionCompletionWalker : PythonWalker {
             public bool CanComplete = false;
+            public bool CommitByDefault = true;
             private readonly int _caretIndex;
 
             public ExpressionCompletionWalker(int caretIndex) {
@@ -301,17 +365,26 @@ namespace Microsoft.PythonTools.Intellisense {
                     !(expressions[0] is ErrorExpression);
             }
 
+            private bool HasCaret(Node node) {
+                return node.StartIndex <= _caretIndex && _caretIndex <= node.EndIndex;
+            }
+
             public override bool Walk(ErrorExpression node) {
                 return false;
             }
 
             public override bool Walk(AssignmentStatement node) {
                 CanComplete = true;
-                return base.Walk(node);
+                CommitByDefault = true;
+                if (node.Right != null) {
+                    node.Right.Walk(this);
+                }
+                return false;
             }
 
             public override bool Walk(Arg node) {
                 CanComplete = true;
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
@@ -321,6 +394,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool Walk(FunctionDefinition node) {
+                CommitByDefault = true;
                 if (node.Parameters != null) {
                     CanComplete = false;
                     foreach (var p in node.Parameters) {
@@ -343,103 +417,162 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool Walk(Parameter node) {
+                CommitByDefault = true;
                 var afterName = node.Annotation ?? node.DefaultValue;
                 CanComplete = afterName != null && afterName.StartIndex <= _caretIndex;
                 return base.Walk(node);
             }
 
             public override bool Walk(ComprehensionFor node) {
-                CanComplete = IsActualExpression(node.List);
-                return base.Walk(node);
+                if (!IsActualExpression(node.Left) || HasCaret(node.Left)) {
+                    CanComplete = false;
+                    CommitByDefault = false;
+                } else if (IsActualExpression(node.List)) {
+                    CanComplete = true;
+                    CommitByDefault = true;
+                    node.List.Walk(this);
+                }
+                return false;
             }
 
             public override bool Walk(ComprehensionIf node) {
                 CanComplete = true;
+                CommitByDefault = true;
                 return base.Walk(node);
+            }
+
+            private bool WalkCollection(Expression node, IEnumerable<Expression> items) {
+                CanComplete = HasCaret(node);
+                int count = 0;
+                Expression last = null;
+                foreach (var e in items) {
+                    count += 1;
+                    last = e;
+                }
+                if (count == 0) {
+                    CommitByDefault = false;
+                } else if (count == 1) {
+                    last.Walk(this);
+                    CommitByDefault = false;
+                } else {
+                    CommitByDefault = true;
+                    last.Walk(this);
+                }
+                return false;
             }
 
             public override bool Walk(ListExpression node) {
-                CanComplete = true;
-                return base.Walk(node);
+                return WalkCollection(node, node.Items);
             }
 
             public override bool Walk(DictionaryExpression node) {
-                CanComplete = true;
-                return base.Walk(node);
+                return WalkCollection(node, node.Items);
             }
 
             public override bool Walk(SetExpression node) {
-                CanComplete = true;
-                return base.Walk(node);
+                return WalkCollection(node, node.Items);
             }
 
             public override bool Walk(TupleExpression node) {
-                CanComplete = true;
-                return base.Walk(node);
+                return WalkCollection(node, node.Items);
             }
 
             public override bool Walk(ParenthesisExpression node) {
-                CanComplete = true;
+                CanComplete = HasCaret(node);
+                CommitByDefault = false;
                 return base.Walk(node);
             }
 
             public override bool Walk(AssertStatement node) {
                 CanComplete = IsActualExpression(node.Test);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(AugmentedAssignStatement node) {
                 CanComplete = IsActualExpression(node.Right);
+                CommitByDefault = true;
+                return base.Walk(node);
+            }
+
+            public override bool Walk(AwaitExpression node) {
+                CanComplete = IsActualExpression(node.Expression);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(DelStatement node) {
                 CanComplete = IsActualExpression(node.Expressions);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(ExecStatement node) {
                 CanComplete = IsActualExpression(node.Code);
+                CommitByDefault = true;
+                return base.Walk(node);
+            }
+
+            public override bool Walk(ExpressionStatement node) {
+                if (node.Expression is TupleExpression) {
+                    node.Expression.Walk(this);
+                    CommitByDefault = false;
+                    return false;
+                }
                 return base.Walk(node);
             }
 
             public override bool Walk(ForStatement node) {
-                CanComplete = IsActualExpression(node.List);
-                return base.Walk(node);
+                if (!IsActualExpression(node.Left) || HasCaret(node.Left)) {
+                    CanComplete = false;
+                    CommitByDefault = false;
+                } else if (IsActualExpression(node.List)) {
+                    CanComplete = true;
+                    CommitByDefault = true;
+                    node.List.Walk(this);
+                }
+                return false;
             }
 
             public override bool Walk(IfStatementTest node) {
                 CanComplete = IsActualExpression(node.Test);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(GlobalStatement node) {
                 CanComplete = IsActualExpression(node.Names);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(NonlocalStatement node) {
                 CanComplete = IsActualExpression(node.Names);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(PrintStatement node) {
                 CanComplete = IsActualExpression(node.Expressions);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(ReturnStatement node) {
                 CanComplete = IsActualExpression(node.Expression);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(WhileStatement node) {
                 CanComplete = IsActualExpression(node.Test);
+                CommitByDefault = true;
                 return base.Walk(node);
             }
 
             public override bool Walk(WithStatement node) {
                 CanComplete = true;
+                CommitByDefault = true;
                 if (node.Items != null) {
                     var item = node.Items.LastOrDefault();
                     if (item != null) {
@@ -457,6 +590,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool Walk(YieldExpression node) {
+                CommitByDefault = true;
                 if (IsActualExpression(node.Expression)) {
                     // "yield" is valid and has implied None following it
                     var ce = node.Expression as ConstantExpression;
@@ -554,7 +688,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
                 var span = targetPt.Value.Snapshot.CreateTrackingSpan(targetPt.Value.Position, 0, SpanTrackingMode.EdgeInclusive);
 
-                var sigs = targetPt.Value.Snapshot.GetSignatures(_serviceProvider, span);
+
+                var sigs = _provider.PythonService.GetSignatures(_textView, targetPt.Value.Snapshot, span);
                 bool retrigger = false;
                 if (sigs.Signatures.Count == _sigHelpSession.Signatures.Count) {
                     for (int i = 0; i < sigs.Signatures.Count && !retrigger; i++) {
@@ -633,24 +768,41 @@ namespace Microsoft.PythonTools.Intellisense {
         [ThreadStatic]
         internal static bool ForceCompletions;
 
-        internal void TriggerCompletionSession(bool completeWord) {
+        private bool SelectSingleBestCompletion(ICompletionSession session) {
+            if (session.CompletionSets.Count != 1) {
+                return false;
+            }
+            var set = session.CompletionSets[0] as FuzzyCompletionSet;
+            if (set == null) {
+                return false;
+            }
+            set.Filter();
+            if (set.SelectSingleBest()) {
+                session.Commit();
+                return true;
+            }
+            return false;
+        }
+
+        internal void TriggerCompletionSession(bool completeWord, bool? commitByDefault = null) {
             Dismiss();
 
-            _activeSession = CompletionBroker.TriggerCompletion(_textView);
+            var session = CompletionBroker.TriggerCompletion(_textView);
 
-            if (_activeSession != null) {
-                FuzzyCompletionSet set;
-                if (completeWord &&
-                    _activeSession.CompletionSets.Count == 1 &&
-                    (set = _activeSession.CompletionSets[0] as FuzzyCompletionSet) != null &&
-                    set.SelectSingleBest()) {
-                    _activeSession.Commit();
-                    _activeSession = null;
-                } else {
-                    _activeSession.Filter();
-                    _activeSession.Dismissed += OnCompletionSessionDismissedOrCommitted;
-                    _activeSession.Committed += OnCompletionSessionDismissedOrCommitted;
+            if (session == null) {
+                _activeSession = null;
+            } else if (completeWord && SelectSingleBestCompletion(session)) {
+                session.Commit();
+            } else {
+                if (commitByDefault.HasValue) {
+                    foreach (var s in session.CompletionSets.OfType<FuzzyCompletionSet>()) {
+                        s.CommitByDefault = commitByDefault.GetValueOrDefault();
+                    }
                 }
+                session.Filter();
+                session.Dismissed += OnCompletionSessionDismissedOrCommitted;
+                session.Committed += OnCompletionSessionDismissedOrCommitted;
+                _activeSession = session;
             }
         }
 
@@ -754,8 +906,8 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                int res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-                
+                int res = _oldTarget != null ? _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut) : VSConstants.S_OK;
+
                 HandleChar((char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn));
 
                 if (_activeSession != null && !_activeSession.IsDismissed) {
@@ -802,7 +954,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         case VSConstants.VSStd2KCmdID.DELETE:
                         case VSConstants.VSStd2KCmdID.DELETEWORDLEFT:
                         case VSConstants.VSStd2KCmdID.DELETEWORDRIGHT:
-                            int res = _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+                            int res = _oldTarget != null ? _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut) : VSConstants.S_OK;
                             if (_activeSession != null && !_activeSession.IsDismissed) {
                                 _activeSession.Filter();
                             }
@@ -871,7 +1023,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            return _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+            if (_oldTarget != null) {
+                return _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+            }
+            return (int)Constants.OLECMDERR_E_UNKNOWNGROUP;
         }
 
         private void TriggerSnippet(uint nCmdID) {
@@ -879,10 +1034,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 string prompt;
                 string[] snippetTypes;
                 if ((VSConstants.VSStd2KCmdID)nCmdID == VSConstants.VSStd2KCmdID.SURROUNDWITH) {
-                    prompt = SR.GetString(SR.SurroundWith);
+                    prompt = Strings.SurroundWith;
                     snippetTypes = _surroundsWithSnippetTypes;
                 } else {
-                    prompt = SR.GetString(SR.InsertSnippet);
+                    prompt = Strings.InsertSnippet;
                     snippetTypes = _allStandardSnippetTypes;
                 }
 
@@ -986,7 +1141,10 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            return _oldTarget.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+            if (_oldTarget != null) {
+                return _oldTarget.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+            }
+            return (int)Constants.OLECMDERR_E_UNKNOWNGROUP;
         }
 
         #endregion

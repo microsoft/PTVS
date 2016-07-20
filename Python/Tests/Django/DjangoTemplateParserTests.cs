@@ -1,22 +1,25 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.PythonTools.Interpreter;
@@ -28,7 +31,7 @@ namespace DjangoTests {
     public class DjangoTemplateParserTests {
         #region Filter parser tests
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void FilterRegexTests() {
             var testCases = new[] { 
                 new { Got = ("100"), Expected = DjangoVariable.Number("100", 0) },
@@ -102,7 +105,7 @@ namespace DjangoTests {
 
         #region Block parser tests
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void BlockParserTests() {
             var testCases = new[] { 
                 new { 
@@ -479,7 +482,7 @@ namespace DjangoTests {
 
         #region Template tokenizer tests
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestSimpleVariable() {
             var code = @"<html>
 <head><title></title></head>
@@ -499,7 +502,7 @@ namespace DjangoTests {
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestEmbeddedWrongClose() {
             var code = @"<html>
 <head><title></title></head>
@@ -518,7 +521,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void SingleTrailingChar() {
             foreach (var code in new[] { "{{fob}}\n", "{{fob}}a" }) {
                 TokenizerTest(code,
@@ -543,7 +546,7 @@ namespace DjangoTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestSimpleBlock() {
             var code = @"<html>
 <head><title></title></head>
@@ -563,7 +566,7 @@ namespace DjangoTests {
         }
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestSimpleComment() {
             var code = @"<html>
 <head><title></title></head>
@@ -582,7 +585,7 @@ namespace DjangoTests {
 
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestUnclosedVariable() {
             var code = @"<html>
 <head><title></title></head>
@@ -601,7 +604,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestTextStartAndEnd() {
             var code = @"<html>
 <head><title></title></head>
@@ -628,7 +631,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestUnclosedComment() {
             var code = @"<html>
 <head><title></title></head>
@@ -647,7 +650,7 @@ namespace DjangoTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestUnclosedBlock() {
             var code = @"<html>
 <head><title></title></head>
@@ -726,33 +729,32 @@ namespace DjangoTests {
     }
 
     class TestCompletionContext : IDjangoCompletionContext {
-        private readonly Dictionary<string, HashSet<AnalysisValue>> _variables;
+        private readonly string[] _variables;
         private readonly Dictionary<string, TagInfo> _filters;
         internal static TestCompletionContext Simple = new TestCompletionContext(new[] { "fob", "oar" }, new[] { "cut", "lower" });
 
         public TestCompletionContext(string[] variables, string[] filters) {
-            _variables = new Dictionary<string, HashSet<AnalysisValue>>();
+            _variables = variables;
             _filters = new Dictionary<string, TagInfo>();
-            foreach (var variable in variables) {
-                _variables[variable] = new HashSet<AnalysisValue>();
-            }
             foreach (var filter in filters) {
-                _filters[filter] = new TagInfo("");
+                _filters[filter] = new TagInfo("", null);
             }
         }
 
-        #region IDjangoCompletionContext Members
-
-        public Dictionary<string, HashSet<AnalysisValue>> Variables {
-            get { return _variables; }
-        }
+        #region IDjangoCompletionContext Members       
 
         public Dictionary<string, TagInfo> Filters {
             get { return _filters; }
         }
 
-        public IModuleContext ModuleContext {
-            get { return null; }
+        public string[] Variables {
+            get {
+                return _variables;
+            }
+        }
+
+        public Dictionary<string, PythonMemberType> GetMembers(string name) {
+            return new Dictionary<string, PythonMemberType>();
         }
 
         #endregion

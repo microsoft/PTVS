@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -24,6 +26,8 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using TestUtilities;
+using TestUtilities.UI;
+using TestUtilities.UI.Python;
 using Keyboard = TestUtilities.UI.Keyboard;
 
 namespace ReplWindowUITests {
@@ -33,8 +37,8 @@ namespace ReplWindowUITests {
     /// </summary>
     [TestClass, Ignore]
     public abstract class ReplWindowPythonTests : ReplWindowPythonSmokeTests {
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void RegressionImportSysBackspace() {
             using (var interactive = Prepare()) {
                 const string importCode = ">import sys";
@@ -54,12 +58,10 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void RegressionImportMultipleModules() {
-            using (var interactive = Prepare()) {
-                interactive.AddNewLineAtEndOfFullyTypedWord = true;
-
+            using (var interactive = Prepare(addNewLineAtEndOfFullyTypedWord: true)) {
                 Keyboard.Type("import ");
 
                 using (var sh = interactive.WaitForSession<ICompletionSession>()) {
@@ -75,24 +77,31 @@ namespace ReplWindowUITests {
         /// Type "raise Exception()", hit enter, raise Exception() should have
         /// appropriate syntax color highlighting.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void SyntaxHighlightingRaiseException() {
-            using (var interactive = Prepare()) {
+            using (var interactive = Prepare())
+            using (var newClassifications = new AutoResetEvent(false)) {
                 const string code = "raise Exception()";
+                interactive.Classifier.ClassificationChanged += (s, e) => newClassifications.Set();
+
                 interactive.SubmitCode(code);
 
                 interactive.WaitForText(
                     ">" + code,
                     "Traceback (most recent call last):",
-                    "  File \"<" + interactive.Settings.SourceFileName + ">\", line 1, in <module>",
+                    "  File \"<" + ((PythonReplWindowProxySettings)interactive.Settings).SourceFileName + ">\", line 1, in <module>",
                     "Exception",
                     ">"
                 );
 
                 var snapshot = interactive.TextView.TextBuffer.CurrentSnapshot;
                 var span = new SnapshotSpan(snapshot, new Span(0, snapshot.Length));
+                Assert.IsTrue(newClassifications.WaitOne(10000), "Timed out waiting for classification");
                 var classifications = interactive.Classifier.GetClassificationSpans(span);
+                foreach (var c in classifications) {
+                    Console.WriteLine("{0} ({1})", c.Span.GetText(), c.ClassificationType.Classification);
+                }
 
                 Assert.AreEqual(classifications[0].ClassificationType.Classification, PredefinedClassificationTypeNames.Keyword);
                 Assert.AreEqual(classifications[1].ClassificationType.Classification, PredefinedClassificationTypeNames.Identifier);
@@ -109,8 +118,8 @@ namespace ReplWindowUITests {
         /// also outputs, make sure the auto indent is gone before we do the
         /// input. (regression for http://pytools.codeplex.com/workitem/92)
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void PrintWithParens() {
             using (var interactive = Prepare()) {
                 const string inputCode = ">print ('a',";
@@ -132,8 +141,8 @@ namespace ReplWindowUITests {
         /// Make sure that we can successfully delete an autoindent inputted span
         /// (regression for http://pytools.codeplex.com/workitem/93)
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void UndeletableIndent() {
             using (var interactive = Prepare()) {
                 const string inputCode = ">print (('a',";
@@ -152,8 +161,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void InlineImage() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode(@"import sys
@@ -214,11 +223,11 @@ repl is not None");
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ImportCompletions() {
             using (var interactive = Prepare()) {
-                if (interactive.Settings.Version.IsIronPython) {
+                if (((PythonReplWindowProxySettings)interactive.Settings).Version.IsIronPython) {
                     interactive.SubmitCode("import clr");
                 }
 
@@ -243,8 +252,8 @@ repl is not None");
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void Comments() {
             using (var interactive = Prepare()) {
                 const string code = "# fob";
@@ -262,8 +271,8 @@ repl is not None");
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void NoSnippets() {
             // https://pytools.codeplex.com/workitem/2945 is the reason for
             // disabling snippets; https://pytools.codeplex.com/workitem/2947 is

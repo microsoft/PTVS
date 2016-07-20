@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -19,10 +21,9 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter.Default;
-using Microsoft.VisualStudioTools;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -35,8 +36,6 @@ namespace Microsoft.PythonTools.Interpreter {
         IPythonInterpreterFactoryWithDatabase2,
         IDisposable
     {
-        private readonly string _description;
-        private readonly Guid _id;
         private readonly InterpreterConfiguration _config;
         private PythonTypeDatabase _typeDb, _typeDbWithoutPackages;
         private bool _generating, _isValid, _isCheckingDatabase, _disposed;
@@ -59,14 +58,22 @@ namespace Microsoft.PythonTools.Interpreter {
         [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors",
             Justification = "breaking change")]
         public PythonInterpreterFactoryWithDatabase(
-            Guid id,
-            string description,
             InterpreterConfiguration config,
             bool watchLibraryForChanges
         ) {
-            _description = description;
-            _id = id;
             _config = config;
+
+            if (_config == null) {
+                throw new ArgumentNullException("config");
+            }
+
+            // Avoid creating a interpreter with an unsupported version.
+            // https://github.com/Microsoft/PTVS/issues/706
+            try {
+                var langVer = _config.Version.ToLanguageVersion();
+            } catch (InvalidOperationException ex) {
+                throw new ArgumentException(ex.Message, ex);
+            }
 
             if (watchLibraryForChanges && Directory.Exists(_config.LibraryPath)) {
                 _refreshIsCurrentTrigger = new Timer(RefreshIsCurrentTimer_Elapsed);
@@ -89,14 +96,6 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return _config;
             }
-        }
-
-        public virtual string Description {
-            get { return _description; }
-        }
-
-        public Guid Id {
-            get { return _id; }
         }
 
         /// <summary>
@@ -175,7 +174,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 var paths = new List<string>();
                 paths.Add(databasePath);
                 if (includeSitePackages) {
-                    paths.AddRange(Directory.EnumerateDirectories(databasePath));
+                    paths.AddRange(PathUtils.EnumerateDirectories(databasePath, recurse: false));
                 }
 
                 try {
@@ -271,7 +270,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private void OnDatabaseVerChanged(object sender, FileSystemEventArgs e) {
             if ((!e.Name.Equals("database.ver", StringComparison.OrdinalIgnoreCase) &&
                 !e.Name.Equals("database.pid", StringComparison.OrdinalIgnoreCase)) ||
-                !CommonUtils.IsSubpathOf(DatabasePath, e.FullPath)) {
+                !PathUtils.IsSubpathOf(DatabasePath, e.FullPath)) {
                 return;
             }
 
@@ -315,8 +314,7 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return Path.Combine(
                     PythonTypeDatabase.CompletionDatabasePath,
-                    Id.ToString(),
-                    Configuration.Version.ToString()
+                    Configuration.Id.Replace('|', '\\').ToString()
                 );
             }
         }
@@ -326,8 +324,13 @@ namespace Microsoft.PythonTools.Interpreter {
             if (File.Exists(analysisLog)) {
                 try {
                     return File.ReadAllText(analysisLog);
-                } catch (Exception e) {
-                    return string.Format(culture, "Error reading: {0}", e);
+                } catch (Exception ex) {
+                    return string.Format(
+                        culture,
+                        "Error reading {0}. Please let analysis complete and try again.\r\n{1}",
+                        analysisLog,
+                        ex
+                    );
                 }
             }
             return null;
@@ -445,8 +448,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private static HashSet<string> GetExistingDatabase(string databasePath) {
             return new HashSet<string>(
-                Directory.EnumerateFiles(databasePath, "*.idb", SearchOption.AllDirectories)
-                    .Select(f => Path.GetFileNameWithoutExtension(f)),
+                PathUtils.EnumerateFiles(databasePath, "*.idb").Select(f => Path.GetFileNameWithoutExtension(f)),
                 StringComparer.InvariantCultureIgnoreCase
             );
         }
@@ -619,7 +621,7 @@ namespace Microsoft.PythonTools.Interpreter {
             // Currently we assume that if the file exists, it's up to date.
             // PyLibAnalyzer will perform timestamp checks if the user manually
             // refreshes.
-            return Directory.EnumerateFiles(DatabasePath, "*.idb", SearchOption.AllDirectories)
+            return PathUtils.EnumerateFiles(DatabasePath, "*.idb")
                 .Select(f => Path.GetFileNameWithoutExtension(f));
         }
 
@@ -704,11 +706,11 @@ namespace Microsoft.PythonTools.Interpreter {
             FileSystemWatcher watcher = null;
 
             lock (_verWatcherLock) {
-                var dirName = CommonUtils.GetFileOrDirectoryName(DatabasePath);
+                var dirName = PathUtils.GetFileOrDirectoryName(DatabasePath);
                 var dir = Path.GetDirectoryName(DatabasePath);
 
-                while (CommonUtils.IsValidPath(dir) && !Directory.Exists(dir)) {
-                    dirName = CommonUtils.GetFileOrDirectoryName(dir);
+                while (PathUtils.IsValidPath(dir) && !Directory.Exists(dir)) {
+                    dirName = PathUtils.GetFileOrDirectoryName(dir);
                     dir = Path.GetDirectoryName(dir);
                 }
 

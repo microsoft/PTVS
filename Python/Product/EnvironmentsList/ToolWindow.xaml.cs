@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -18,6 +20,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,8 +30,9 @@ using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudioTools;
+using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
     public partial class ToolWindow : UserControl, IDisposable {
@@ -37,13 +41,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private readonly CollectionViewSource _environmentsView;
         private readonly HashSet<IPythonInterpreterFactory> _currentlyRefreshing;
+        private IInterpreterRegistryService _interpreters;
         private IInterpreterOptionsService _service;
-        
+        private IServiceProvider _site;
+
         private AnalyzerStatusListener _listener;
         private readonly object _listenerLock = new object();
         private int _listenerTimeToLive;
         const int _listenerDefaultTimeToLive = 120;
-        
+
         private bool _isDisposed;
 
         public static readonly RoutedCommand UnhandledException = new RoutedCommand();
@@ -56,6 +62,20 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             InitializeComponent();
             CreateListener();
             SizeChanged += ToolWindow_SizeChanged;
+        }
+
+        public IServiceProvider Site {
+            get {
+                return _site;
+            }
+            set {
+                _site = value;
+                if (value != null) {
+                    var compModel = _site.GetService(typeof(SComponentModel)) as IComponentModel;
+                    Service = compModel.GetService<IInterpreterOptionsService>();
+                    Interpreters = compModel.GetService<IInterpreterRegistryService>();
+                }
+            }
         }
 
         internal static async void SendUnhandledException(UIElement element, ExceptionDispatchInfo edi) {
@@ -80,8 +100,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             if (double.IsNaN(width) || double.IsNaN(height)) {
                 return;
             }
-            
-            if (width <= height * 0.9) {
+
+            if (width <= height * 0.9 || width < 400) {
                 SwitchToVerticalLayout();
             } else if (width >= height * 1.1) {
                 SwitchToHorizontalLayout();
@@ -95,8 +115,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             VerticalLayout.Visibility = Visibility.Collapsed;
             BindingOperations.ClearBinding(ContentView_Vertical, ContentControl.ContentProperty);
             BindingOperations.SetBinding(ContentView_Horizontal, ContentControl.ContentProperty, new Binding {
-                Path=new PropertyPath("CurrentItem.WpfObject"),
-                Source=FindResource("SortedExtensions")
+                Path = new PropertyPath("CurrentItem.WpfObject"),
+                Source = FindResource("SortedExtensions")
             });
             HorizontalLayout.Visibility = Visibility.Visible;
             UpdateLayout();
@@ -161,7 +181,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private void MakeGlobalDefault_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as EnvironmentView;
-            e.CanExecute = view != null && !view.IsDefault;
+            e.CanExecute = view != null && !view.IsDefault && view.Factory.CanBeDefault();
         }
 
         private void MakeGlobalDefault_Executed(object sender, ExecutedRoutedEventArgs e) {
@@ -234,7 +254,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 // Because we are currently on the listener's thread, we need to
                 // recreate on a separate thread so that this one can terminate.
                 Task.Run((Action)CreateListener)
-                    .HandleAllExceptions(Properties.Resources.PythonToolsForVisualStudio)
+                    .HandleAllExceptions(Site, GetType())
                     .DoNotWait();
             }
         }
@@ -252,13 +272,13 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             var view = (EnvironmentView)e.Parameter;
             await StartRefreshDBAsync(view)
                 .SilenceException<OperationCanceledException>()
-                .HandleAllExceptions(Properties.Resources.PythonToolsForVisualStudio);
+                .HandleAllExceptions(Site, GetType());
         }
 
         private async Task StartRefreshDBAsync(EnvironmentView view) {
             view.IsRefreshingDB = true;
             view.IsRefreshDBProgressIndeterminate = true;
-            
+
             var tcs = new TaskCompletionSource<int>();
             ((IPythonInterpreterFactoryWithDatabase)view.Factory).GenerateDatabase(
                 Keyboard.Modifiers.HasFlag(ModifierKeys.Shift) ?
@@ -278,7 +298,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-        private void UpdateEnvironments(IPythonInterpreterFactory select = null) {
+        private void UpdateEnvironments(string select = null) {
             if (_service == null) {
                 lock (_environmentsLock) {
                     _environments.Clear();
@@ -289,14 +309,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             lock (_environmentsLock) {
                 if (select == null) {
                     var selectView = _environmentsView.View.CurrentItem as EnvironmentView;
-                    if (selectView != null) {
-                        select = selectView.Factory;
-                    }
+                    select = selectView?.Factory?.Configuration.Id;
                 }
 
                 _environments.Merge(
-                    _service.Interpreters.Distinct().Select(f => {
-                        var view = new EnvironmentView(_service, f, null);
+                    _interpreters.Interpreters
+                    .Distinct()
+                    .Where(f => f.IsUIVisible())
+                    .Select(f => {
+                        var view = new EnvironmentView(_service, _interpreters, f, null);
                         OnViewCreated(view);
                         return view;
                     })
@@ -308,7 +329,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
                 if (select != null) {
                     var selectView = _environments.FirstOrDefault(v => v.Factory != null &&
-                        v.Factory.Id == select.Id && v.Factory.Configuration.Version == select.Configuration.Version);
+                        v.Factory.Configuration.Id == select);
                     if (selectView == null) {
                         select = null;
                     } else {
@@ -340,6 +361,24 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public event EventHandler<EnvironmentViewEventArgs> ViewCreated;
 
+        public IInterpreterRegistryService Interpreters {
+            get {
+                return _interpreters;
+            }
+            set {
+                if (_interpreters != null) {
+                    _interpreters.InterpretersChanged -= Service_InterpretersChanged;
+                }
+                _interpreters = value;
+                if (_service != null) {
+                    _interpreters.InterpretersChanged += Service_InterpretersChanged;
+                }
+                if (_service != null) {
+                    Dispatcher.InvokeAsync(FirstUpdateEnvironments).Task.DoNotWait();
+                }
+            }
+        }
+
         public IInterpreterOptionsService Service {
             get {
                 return _service;
@@ -347,14 +386,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             set {
                 if (_service != null) {
                     _service.DefaultInterpreterChanged -= Service_DefaultInterpreterChanged;
-                    _service.InterpretersChanged -= Service_InterpretersChanged;
                 }
                 _service = value;
                 if (_service != null) {
                     _service.DefaultInterpreterChanged += Service_DefaultInterpreterChanged;
-                    _service.InterpretersChanged += Service_InterpretersChanged;
                 }
-                Dispatcher.InvokeAsync(FirstUpdateEnvironments).Task.DoNotWait();
+                if (_interpreters != null) {
+                    Dispatcher.InvokeAsync(FirstUpdateEnvironments).Task.DoNotWait();
+                }
             }
         }
 
@@ -390,47 +429,33 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 return;
             }
 
-            var configurable = _service.KnownProviders
-                .OfType<ConfigurablePythonInterpreterFactoryProvider>()
-                .FirstOrDefault();
-
-            if (configurable == null) {
-                e.CanExecute = false;
-                e.Handled = true;
-                return;
-            }
-
             e.CanExecute = true;
             // Not handled, in case another handler wants to suppress
             return;
         }
 
         private async void AddCustomEnvironment_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var configurable = _service == null ? null : _service.KnownProviders
-                .OfType<ConfigurablePythonInterpreterFactoryProvider>()
-                .FirstOrDefault();
-            
-            if (configurable == null) {
+            if (_service == null) {
                 return;
             }
 
-            const string fmt = "New Environment {0}";
-            HashSet<string> names;
-            lock (_environmentsLock) {
-                names = new HashSet<string>(_environments
-                    .Where(view => view.Factory != null)
-                    .Select(view => view.Factory.Description)
-                );
-            }
-            var name = string.Format(fmt, 1);
-            for (int i = 2; names.Contains(name) && i < int.MaxValue; ++i) {
-                name = string.Format(fmt, i);
+            const string baseName = "New Environment";
+            string name = baseName;
+            int count = 2;
+            while (_interpreters.FindConfiguration(CPythonInterpreterFactoryConstants.GetInterpreterId("VisualStudio", ProcessorArchitecture.X86, name)) != null) {
+                name = baseName + " " + count++;
             }
 
-            var factory = configurable.SetOptions(new InterpreterFactoryCreationOptions {
-                Id = Guid.NewGuid(),
-                Description = name
-            });
+            var factory = _service.AddConfigurableInterpreter(
+                name,
+                new InterpreterConfiguration(
+                    "",
+                    name,
+                    "",
+                    "python\\python.exe",
+                    arch : ProcessorArchitecture.X86
+                )
+            );
 
             UpdateEnvironments(factory);
 
@@ -452,8 +477,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 return object.ReferenceEquals(x, y) || (
                     x.Factory != null && x.Factory.Configuration != null &&
                     y.Factory != null && y.Factory.Configuration != null &&
-                    x.Factory.Id == y.Factory.Id &&
-                    x.Factory.Configuration.Version == y.Factory.Configuration.Version
+                    x.Factory.Configuration.Id == y.Factory.Configuration.Id
                 );
             }
 

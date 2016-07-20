@@ -1,0 +1,13 @@
+<VSTemplate Version="2.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>HTML Page</Name>
+    <Description>An HTML page that can include client-side code.</Description>
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="409" />
+    <ProjectType>Python</ProjectType>
+    <DefaultName>WebPage.html</DefaultName>
+    <SortOrder>50</SortOrder>
+  </TemplateData>
+  <TemplateContent>
+    <ProjectItem TargetFileName="$fileinputname$.$fileinputextension$">HtmlFile.html</ProjectItem>
+  </TemplateContent>
+</VSTemplate>

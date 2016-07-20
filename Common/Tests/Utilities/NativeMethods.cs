@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.IO;
@@ -268,12 +270,15 @@ namespace TestUtilities {
         /// handle long file names
         /// </summary>
         /// <param name="dir"></param>
-        public static void RecursivelyDeleteDirectory(string dir) {
+        public static void RecursivelyDeleteDirectory(string dir, bool silent = false) {
             SHFILEOPSTRUCT fileOp = new SHFILEOPSTRUCT();
             fileOp.pFrom = dir + '\0';  // pFrom must be double null terminated
             fileOp.wFunc = FO_Func.FO_DELETE;
             fileOp.fFlags = FILEOP_FLAGS_ENUM.FOF_NOCONFIRMATION |
                 FILEOP_FLAGS_ENUM.FOF_NOERRORUI;
+            if (silent) {
+                fileOp.fFlags |= FILEOP_FLAGS_ENUM.FOF_SILENT;
+            }
             int res = SHFileOperation(ref fileOp);
             if (res != 0) {
                 throw new System.IO.IOException("Failed to delete dir " + res);
@@ -389,5 +394,9 @@ namespace TestUtilities {
                 }
             }
         }
+
+        public const int OLECMDERR_E_NOTSUPPORTED = unchecked((int)0x80040100);
+        public const int OLECMDERR_E_CANCELED = -2147221245;
+        public const int OLECMDERR_E_UNKNOWNGROUP = unchecked((int)0x80040104);
     }
 }

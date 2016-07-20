@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -19,41 +21,26 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     class DerivedInterpreterFactory : PythonInterpreterFactoryWithDatabase {
         readonly PythonInterpreterFactoryWithDatabase _base;
         bool _deferRefreshIsCurrent;
 
-        string _description;
-
         PythonTypeDatabase _baseDb;
         bool _baseHasRefreshed;
 
         [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors",
             Justification = "call to RefreshIsCurrent is required for back compat")]
-        public DerivedInterpreterFactory(PythonInterpreterFactoryWithDatabase baseFactory,
-                                         InterpreterFactoryCreationOptions options)
-            : base(options.Id,
-                   options.Description,
-                   new InterpreterConfiguration(options.PrefixPath,
-                                                options.InterpreterPath,
-                                                options.WindowInterpreterPath,
-                                                options.LibraryPath,
-                                                options.PathEnvironmentVariableName,
-                                                options.Architecture,
-                                                options.LanguageVersion),
-                   options.WatchLibraryForNewModules) {
-
-            if (baseFactory.Configuration.Version != options.LanguageVersion) {
-                throw new ArgumentException("Language versions do not match", "options");
-            }
-
+        public DerivedInterpreterFactory(
+            PythonInterpreterFactoryWithDatabase baseFactory,
+            InterpreterConfiguration config,
+            InterpreterFactoryCreationOptions options
+        ) : base(config, options.WatchLibraryForNewModules) {
             _base = baseFactory;
             _base.IsCurrentChanged += Base_IsCurrentChanged;
             _base.NewDatabaseAvailable += Base_NewDatabaseAvailable;
-
-            _description = options.Description;
 
             if (Volatile.Read(ref _deferRefreshIsCurrent)) {
                 // This rare race condition is due to a design flaw that is in
@@ -62,7 +49,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 RefreshIsCurrent();
             }
         }
-
+        
         private void Base_NewDatabaseAvailable(object sender, EventArgs e) {
             if (_baseDb != null) {
                 _baseDb = null;
@@ -83,16 +70,6 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return _base;
             }
-        }
-
-        public override string Description {
-            get {
-                return _description;
-            }
-        }
-
-        public void SetDescription(string value) {
-            _description = value;
         }
 
         public override IPythonInterpreter MakeInterpreter(PythonInterpreterFactoryWithDatabase factory) {
@@ -139,17 +116,12 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             if (!IsCurrent || !Directory.Exists(databasePath)) {
-                GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
                 return _baseDb;
             }
 
             var paths = new List<string> { databasePath };
             if (includeSitePackages) {
-                try {
-                    paths.AddRange(Directory.EnumerateDirectories(databasePath));
-                } catch (IOException) {
-                } catch (UnauthorizedAccessException) {
-                }
+                paths.AddRange(PathUtils.EnumerateDirectories(databasePath));
             }
             return new PythonTypeDatabase(this, paths, _baseDb);
         }
@@ -242,7 +214,7 @@ namespace Microsoft.PythonTools.Interpreter {
             } else if (!_base.IsCurrent) {
                 return string.Format(culture,
                     "Base interpreter {0} is out of date{1}{1}{2}",
-                    _base.Description,
+                    _base.Configuration.FullDescription,
                     Environment.NewLine,
                     _base.GetFriendlyIsCurrentReason(culture));
             }
@@ -255,11 +227,87 @@ namespace Microsoft.PythonTools.Interpreter {
             } else if (!_base.IsCurrent) {
                 return string.Format(culture,
                     "Base interpreter {0} is out of date{1}{1}{2}",
-                    _base.Description,
+                    _base.Configuration.FullDescription,
                     Environment.NewLine,
                     _base.GetIsCurrentReason(culture));
             }
             return base.GetIsCurrentReason(culture);
+        }
+
+        public static IPythonInterpreterFactory FindBaseInterpreterFromVirtualEnv(
+            string prefixPath,
+            string libPath,
+            IInterpreterRegistryService service
+        ) {
+            string basePath = PathUtils.TrimEndSeparator(GetOrigPrefixPath(prefixPath, libPath));
+
+            if (Directory.Exists(basePath)) {
+                return service.Interpreters.FirstOrDefault(interp =>
+                    PathUtils.IsSamePath(PathUtils.TrimEndSeparator(interp.Configuration.PrefixPath), basePath)
+                );
+            }
+            return null;
+        }
+
+        public static string GetOrigPrefixPath(string prefixPath, string libPath = null) {
+            string basePath = null;
+
+            if (!Directory.Exists(prefixPath)) {
+                return null;
+            }
+
+            var cfgFile = Path.Combine(prefixPath, "pyvenv.cfg");
+            if (File.Exists(cfgFile)) {
+                try {
+                    var lines = File.ReadAllLines(cfgFile);
+                    basePath = lines
+                        .Select(line => Regex.Match(line, @"^home\s*=\s*(?<path>.+)$", RegexOptions.IgnoreCase))
+                        .Where(m => m != null && m.Success)
+                        .Select(m => m.Groups["path"])
+                        .Where(g => g != null && g.Success)
+                        .Select(g => g.Value)
+                        .FirstOrDefault(PathUtils.IsValidPath);
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                } catch (System.Security.SecurityException) {
+                }
+            }
+
+            if (string.IsNullOrEmpty(libPath)) {
+                libPath = FindLibPath(prefixPath);
+            }
+
+            if (!Directory.Exists(libPath)) {
+                return null;
+            }
+
+            var prefixFile = Path.Combine(libPath, "orig-prefix.txt");
+            if (basePath == null && File.Exists(prefixFile)) {
+                try {
+                    var lines = File.ReadAllLines(prefixFile);
+                    basePath = lines.FirstOrDefault(PathUtils.IsValidPath);
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                } catch (System.Security.SecurityException) {
+                }
+            }
+            return basePath;
+        }
+
+        public static string FindLibPath(string prefixPath) {
+            // Find site.py to find the library
+            var libPath = PathUtils.FindFile(prefixPath, "site.py", firstCheck: new[] { "Lib" });
+            if (!File.Exists(libPath)) {
+                // Python 3.3 venv does not add site.py, but always puts the
+                // library in prefixPath\Lib
+                libPath = Path.Combine(prefixPath, "Lib");
+                if (!Directory.Exists(libPath)) {
+                    return null;
+                }
+            } else {
+                libPath = Path.GetDirectoryName(libPath);
+            }
+            return libPath;
         }
     }
 }

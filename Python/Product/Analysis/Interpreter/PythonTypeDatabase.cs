@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -18,14 +20,12 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter.Default;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -245,10 +245,9 @@ namespace Microsoft.PythonTools.Interpreter {
                         // [FileName]|interpGuid|interpVersion|DateTimeStamp|[db_file.idb]
                         // save the new entry in the DB file
                         existingModules.Add(
-                            String.Format("{0}|{1}|{2}|{3}|{4}",
+                            String.Format("{0}|{1}|{2}|{3}",
                                 extensionModuleFilename,
-                                interpreter.Id,
-                                interpreter.Configuration.Version,
+                                interpreter.Configuration.Id,
                                 new FileInfo(extensionModuleFilename).LastWriteTime.ToString("O"),
                                 dbFile
                             )
@@ -269,10 +268,9 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             const int extensionModuleFilenameIndex = 0;
-            const int interpreterGuidIndex = 1;
-            const int interpreterVersionIndex = 2;
-            const int extensionTimeStamp = 3;
-            const int dbFileIndex = 4;
+            const int interpreteIdIndex = 1;
+            const int extensionTimeStamp = 2;
+            const int dbFileIndex = 3;
 
             /// <summary>
             /// Finds the appropriate entry in our database file and returns the name of the .idb file to be loaded or null
@@ -283,10 +281,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 string line;
                 while ((line = reader.ReadLine()) != null) {
-                    // [FileName]|interpGuid|interpVersion|DateTimeStamp|[db_file.idb]
+                    // [FileName]|interpId|DateTimeStamp|[db_file.idb]
                     string[] columns = line.Split('|');
-                    Guid interpGuid;
-                    Version interpVersion;
 
                     if (columns.Length != 5) {
                         // malformed data...
@@ -298,12 +294,13 @@ namespace Microsoft.PythonTools.Interpreter {
                         DateTime lastModified;
                         if (!File.Exists(columns[extensionModuleFilenameIndex]) ||  // extension has been deleted
                             !DateTime.TryParseExact(columns[extensionTimeStamp], "O", null, System.Globalization.DateTimeStyles.RoundtripKind, out lastModified) ||
-                            lastModified != new FileInfo(extensionModuleFilename).LastWriteTime) { // extension has been modified
+                            lastModified != File.GetLastWriteTime(columns[extensionModuleFilenameIndex])) { // extension has been modified
 
                             // cleanup the stale DB files as we go...
                             try {
-                                File.Delete(columns[4]);
+                                File.Delete(columns[dbFileIndex]);
                             } catch (IOException) {
+                            } catch (UnauthorizedAccessException) {
                             }
                             continue;
                         }
@@ -312,10 +309,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
 
                     // check if this is the file we're looking for...
-                    if (!Guid.TryParse(columns[interpreterGuidIndex], out interpGuid) ||            // corrupt data
-                        interpGuid != interpreter.Id ||                         // not our interpreter
-                        !Version.TryParse(columns[interpreterVersionIndex], out interpVersion) ||     // corrupt data
-                        interpVersion != interpreter.Configuration.Version ||
+                    if (columns[interpreteIdIndex] != interpreter.Configuration.Id ||
                         String.Compare(columns[extensionModuleFilenameIndex], extensionModuleFilename, StringComparison.OrdinalIgnoreCase) != 0) {   // not our interpreter
 
                         // nope, but remember the line for when we re-write out the DB.
@@ -408,7 +402,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             using (var output = ProcessOutput.RunHiddenAndCapture(
                 analyzerPath,
-                "/id", fact.Id.ToString("B"),
+                "/id", fact.Configuration.Id,
                 "/version", fact.Configuration.Version.ToString(),
                 "/python", fact.Configuration.InterpreterPath,
                 request.DetectLibraryPath ? null : "/library",
@@ -459,9 +453,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 try {
                     var message = string.Format(
-                        "ERROR_STDLIB: {0}\\{1}{2}{3}",
-                        request.Factory.Id,
-                        request.Factory.Configuration.Version,
+                        "ERROR_STDLIB: {0}\\{1}{2}",
+                        request.Factory.Configuration.Id,
                         Environment.NewLine,
                         (exc.InnerException ?? exc).ToString()
                     );
@@ -522,7 +515,7 @@ namespace Microsoft.PythonTools.Interpreter {
 #if DEBUG
                         "Debug",
 #endif
-                        AssemblyVersionInfo.VSVersion
+                        AssemblyVersionInfo.Version
                     );
                 }
                 return _completionDatabasePath;
@@ -539,7 +532,7 @@ namespace Microsoft.PythonTools.Interpreter {
 #if DEBUG
                         "Debug",
 #endif
-                        AssemblyVersionInfo.VSVersion
+                        AssemblyVersionInfo.Version
                     );
                 }
                 return _referencesDatabasePath;

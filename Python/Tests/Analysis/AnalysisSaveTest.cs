@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -175,11 +177,15 @@ Overloaded = test.Overloaded
                 Assert.AreEqual("class doc\r\n\r\nfunction doc", allMembers.First(x => x.Name == "Aliased").Documentation);
                 Assert.AreEqual(1, newMod.Analysis.GetSignaturesByIndex("FunctionNoRetType", pos).ToArray().Length);
 
-                Assert.AreEqual("help 1\r\n\r\nhelp 2", newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First().Documentation);
+                var doc = newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First().Documentation;
+                // Out of order is okay, as long as "help 2" only appears once
+                if (doc != "help 2\r\n\r\nhelp 1") {
+                    Assert.AreEqual("help 1\r\n\r\nhelp 2", doc);
+                }
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void Inheritance() {
             string code = @"
 class WithInstanceMembers(object):
@@ -227,7 +233,7 @@ MultipleInheritance = test.MultipleInheritance
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void MultiplyDefinedClasses() {
             string code = @"
 class MultiplyDefinedClass(object): pass
@@ -459,6 +465,21 @@ sys.modules['test.imported'] = test_import_2
 
                 AssertUtil.ContainsExactly(entry.Analysis.GetTypeIdsByIndex("p.n", 0), BuiltinTypeId.Int);
                 AssertUtil.ContainsExactly(entry.Analysis.GetTypeIdsByIndex("p.f", 0), BuiltinTypeId.Float);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void SpecializedCallableWithNoOriginal() {
+            string code = @"
+import unittest
+
+# skipIf is specialized and calling it returns a callable
+# with no original value to save.
+x = unittest.skipIf(False)
+";
+            using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
+                var entry = newPs.NewModule("test2", "import test; x = test.x");
+                AssertUtil.ContainsExactly(entry.Analysis.GetTypeIdsByIndex("x", 0));
             }
         }
 

@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -19,17 +21,17 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudioTools.Project;
 using TestUtilities;
 using TestUtilities.Python;
 
 namespace AnalysisTests {
     [TestClass]
     public class ProcessOutputTests {
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ArgumentQuoting() {
             foreach (var testCase in new[] {
                 new { Source = "Abc", Expected = "Abc" },
@@ -49,7 +51,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void SplitLines() {
             foreach (var testCase in new[] {
                 new { Source = "A\nB\nC\n", Expected = new[] { "A", "B", "C" } },
@@ -81,8 +83,15 @@ namespace AnalysisTests {
         private static IEnumerable<IPythonInterpreterFactory> Factories {
             get {
                 foreach (var interp in PythonPaths.Versions.Where(p => File.Exists(p.InterpreterPath))) {
-                    yield return new MockPythonInterpreterFactory(Guid.NewGuid(), "Test Interpreter",
-                        new InterpreterConfiguration(Path.GetDirectoryName(interp.InterpreterPath), interp.InterpreterPath, "", "", "",
+                    yield return new MockPythonInterpreterFactory(
+                        new InterpreterConfiguration(
+                            "Mock;" + Guid.NewGuid().ToString(),
+                            "Test Interpreter",
+                            Path.GetDirectoryName(interp.InterpreterPath), 
+                            interp.InterpreterPath, 
+                            "", 
+                            "", 
+                            "",
                             interp.Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
                             interp.Version.ToVersion()
                         )
@@ -91,11 +100,11 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void RunInterpreterOutput() {
             foreach (var fact in Factories) {
                 using (var output = fact.Run("-c", "import sys; print(sys.version)")) {
-                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Description + " exceeded timeout");
+                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.FullDescription + " exceeded timeout");
 
                     foreach (var line in output.StandardOutputLines) {
                         Console.WriteLine(line);
@@ -113,12 +122,13 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void RunInterpreterError() {
             foreach(var fact in Factories) {
                 using (var output = fact.Run("-c", "assert False")) {
                     Console.WriteLine(output.Arguments);
-                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Description + " exceeded timeout");
+                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.FullDescription + " exceeded timeout");
 
                     Assert.AreEqual(0, output.StandardOutputLines.Count(), "Expected no standard output");
                     var error = output.StandardErrorLines.ToList();
@@ -130,7 +140,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ProcessOutputEncoding() {
             var testDataPath = TestData.GetTempPath();
             var testData = Path.Combine(testDataPath, "ProcessOutputEncoding.txt");

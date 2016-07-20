@@ -1,26 +1,29 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.VisualStudioTools.Infrastructure;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.VisualStudioTools {
-    internal class UIThread : IUIThread {
+    class UIThread : UIThreadBase {
         private readonly TaskScheduler _scheduler;
         private readonly TaskFactory _factory;
         private readonly Thread _uiThread;
@@ -32,18 +35,18 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public static void EnsureService(IServiceContainer container) {
-            if (container.GetService(typeof(IUIThread)) == null) {
-                container.AddService(typeof(IUIThread), new UIThread(), true);
+            if (container.GetService(typeof(UIThreadBase)) == null) {
+                container.AddService(typeof(UIThreadBase), new UIThread(), true);
             }
         }
 
-        public bool InvokeRequired {
+        public override bool InvokeRequired {
             get {
                 return Thread.CurrentThread != _uiThread;
             }
         }
 
-        public void MustBeCalledFromUIThreadOrThrow() {
+        public override void MustBeCalledFromUIThreadOrThrow() {
             if (InvokeRequired) {
                 const int RPC_E_WRONG_THREAD = unchecked((int)0x8001010E);
                 throw new COMException("Invalid cross-thread call", RPC_E_WRONG_THREAD);
@@ -57,7 +60,7 @@ namespace Microsoft.VisualStudioTools {
         /// <remarks>
         /// If called from the UI thread, the action is executed synchronously.
         /// </remarks>
-        public void Invoke(Action action) {
+        public override void Invoke(Action action) {
             if (InvokeRequired) {
                 _factory.StartNew(action).GetAwaiter().GetResult();
             } else {
@@ -73,7 +76,7 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public T Invoke<T>(Func<T> func) {
+        public override T Invoke<T>(Func<T> func) {
             if (InvokeRequired) {
                 return _factory.StartNew(func).GetAwaiter().GetResult();
             } else {
@@ -88,7 +91,7 @@ namespace Microsoft.VisualStudioTools {
         /// <remarks>
         /// If called from the UI thread, the action is executed synchronously.
         /// </remarks>
-        public Task InvokeAsync(Action action) {
+        public override Task InvokeAsync(Action action) {
             var tcs = new TaskCompletionSource<object>();
             if (InvokeRequired) {
                 return _factory.StartNew(action);
@@ -107,7 +110,7 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public Task<T> InvokeAsync<T>(Func<T> func) {
+        public override Task<T> InvokeAsync<T>(Func<T> func) {
             var tcs = new TaskCompletionSource<T>();
             if (InvokeRequired) {
                 return _factory.StartNew(func);
@@ -127,7 +130,7 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public Task InvokeTask(Func<Task> func) {
+        public override Task InvokeTask(Func<Task> func) {
             var tcs = new TaskCompletionSource<object>();
             if (InvokeRequired) {
                 InvokeAsync(() => InvokeTaskHelper(func, tcs));
@@ -147,7 +150,7 @@ namespace Microsoft.VisualStudioTools {
         /// If called from the UI thread, the function is evaluated 
         /// synchronously.
         /// </remarks>
-        public Task<T> InvokeTask<T>(Func<Task<T>> func) {
+        public override Task<T> InvokeTask<T>(Func<Task<T>> func) {
             var tcs = new TaskCompletionSource<T>();
             if (InvokeRequired) {
                 InvokeAsync(() => InvokeTaskHelper(func, tcs));

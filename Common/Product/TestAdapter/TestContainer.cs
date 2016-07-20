@@ -1,38 +1,61 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
-using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Projects;
+using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudio.TestWindow.Extensibility.Model;
 
 namespace Microsoft.VisualStudioTools.TestAdapter {
     internal class TestContainer : ITestContainer {
-        private readonly DateTime _timeStamp;
+        private readonly int _version;
         private readonly Architecture _architecture;
+        private readonly PythonProject _project;
+        private readonly TestCaseInfo[] _testCases;
 
-        public TestContainer(ITestContainerDiscoverer discoverer, string source, DateTime timeStamp, Architecture architecture) {
+        public TestContainer(ITestContainerDiscoverer discoverer, string source, PythonProject project, int version, Architecture architecture, TestCaseInfo[] testCases) {
             Discoverer = discoverer;
             Source = source;
-            _timeStamp = timeStamp;
+            _version = version;
+            _project = project;
             _architecture = architecture;
+            _testCases = testCases;
         }
 
-        private TestContainer(TestContainer copy)
-            : this(copy.Discoverer, copy.Source, copy._timeStamp, copy._architecture) { }
+        public TestCaseInfo[] TestCases {
+            get {
+                return _testCases;
+            }
+        }
+
+        public int Version {
+            get {
+                return _version;
+            }
+        }
+
+        public PythonProject Project {
+            get {
+                return _project;
+            }
+        }
 
         public int CompareTo(ITestContainer other) {
             var container = other as TestContainer;
@@ -45,7 +68,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
                 return result;
             }
 
-            return _timeStamp.CompareTo(container._timeStamp);
+            return _version.CompareTo(container._version);
         }
 
         public IEnumerable<Guid> DebugEngines {
@@ -71,7 +94,7 @@ namespace Microsoft.VisualStudioTools.TestAdapter {
         }
 
         public ITestContainer Snapshot() {
-            return new TestContainer(this);
+            return this;
         }
 
         public string Source { get; private set; }

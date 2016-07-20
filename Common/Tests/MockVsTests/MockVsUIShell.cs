@@ -1,31 +1,35 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
     class MockVsUIShell : IVsUIShell {
         private readonly MockVs _instance;
-        private string _title, _text;
-        private AutoResetEvent _dismiss = new AutoResetEvent(false);
-        private MessageBoxButton _buttonPressed;
+        internal Stack<MockDialog> Dialogs = new Stack<MockDialog>();
         private Dictionary<Guid, MockToolWindow> _toolWindows = new Dictionary<Guid, MockToolWindow>();
+        private const int _waitLoops = 500;
+        private const int _waitTimeout = 10;
 
         public MockVsUIShell(MockVs instance) {
             _instance = instance;
@@ -156,7 +160,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public int RefreshPropertyBrowser(int dispid) {
-            throw new NotImplementedException();
+            return VSConstants.S_OK;
         }
 
         public int RemoveAdjacentBFNavigationItem(RemoveBFDirection rdDir) {
@@ -210,13 +214,15 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         public int ShowMessageBox(uint dwCompRole, ref Guid rclsidComp, string pszTitle, string pszText, string pszHelpFile, uint dwHelpContextID, OLEMSGBUTTON msgbtn, OLEMSGDEFBUTTON msgdefbtn, OLEMSGICON msgicon, int fSysAlert, out int pnResult) {
             pnResult = (int)_instance.Invoke(
                 () => {
-                    _title = pszTitle;
-                    _text = pszText;
-                    _dismiss.WaitOne();
-                    _title = null;
-                    _text = null;
-                    _dismiss = null;
-                    return _buttonPressed;
+                    MockDialog dialog = new MockMessageBox(_instance, pszTitle, pszText);
+                    lock (Dialogs) {
+                        Dialogs.Push(dialog);
+                    }
+                    dialog.Run();
+                    lock (Dialogs) {
+                        Dialogs.Pop();
+                    }
+                    return dialog.DialogResult;
                 }
             );
             return VSConstants.S_OK;
@@ -235,17 +241,50 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         internal void CheckMessageBox(MessageBoxButton button, string[] text) {
-            string dlgText;
-            while ((dlgText = _text) == null) {
-                System.Threading.Thread.Sleep(10);
+            for (int i = 0; i < _waitLoops; i++) {
+                MockMessageBox msgBox;
+                if ((msgBox = LastDialog<MockMessageBox>()) != null) {
+                    AssertUtil.Contains(msgBox.Text, text);
+                    msgBox.Close((int)button);
+                    return;
+                }
+                Thread.Sleep(_waitTimeout);
             }
-            _buttonPressed = button;
-            AssertUtil.Contains(dlgText, text);
-            _dismiss.Set();
+            Assert.Fail("Failed to get message box");
+        }
+
+        private T LastDialog<T>() where T : MockDialog {
+            lock (Dialogs) {
+                if (Dialogs.Count == 0) {
+                    return null;
+                }
+                return Dialogs.Last() as T;
+            }
         }
 
         public void AddToolWindow(Guid id, MockToolWindow toolWindow) {
             _toolWindows[id] = toolWindow;
+        }
+
+        internal void WaitForDialogDismissed() {
+            for (int i = 0; i < _waitLoops; i++) {
+                if (Dialogs.Count == 0) {
+                    return;
+                }
+                Thread.Sleep(_waitTimeout);
+            }
+            Assert.Fail("Dialog was not dismissed");
+        }
+
+        internal IntPtr WaitForDialog() {
+            for (int i = 0; i < _waitLoops; i++) {
+                if (Dialogs.Count != 0) {
+                    return new IntPtr(IntPtr.Size * Dialogs.Count);
+                }
+                Thread.Sleep(_waitTimeout);
+            }
+            Assert.Fail("Dialog not created");
+            throw new InvalidOperationException(); // not reachable
         }
     }
 }

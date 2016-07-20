@@ -1,1 +1,1 @@
-﻿#CopiedBeforeDragPastedAfterDrop.py
+#CopiedBeforeDragPastedAfterDrop.py

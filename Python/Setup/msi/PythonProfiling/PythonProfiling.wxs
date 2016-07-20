@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Module Id="PythonProfiling" Language="1033" Version="1.0.0.0">
+    <Package Id="03D4481D-0C32-49A9-A1CA-F93504767E5F" Manufacturer="Microsoft Corporation" InstallerVersion="200" />
+
+    <?include ..\MergeModule.wxi ?>
+
+    <Component Id="PerUserInstallRegistry" Directory="Dir_VSInstallLocation" Guid="{3A0AEDAE-0D3C-415C-A586-F91CBBEC2673}">
+      <Condition>NOT ALLUSERS = 1</Condition>
+      <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\EnabledExtensions'>
+        <RegistryValue Type='string' Name='81da0100-e6db-4783-91ea-c38c3fa1b81e,$(var.ReleaseVersion)' Value='[Dir_VSInstallLocation]'/>
+      </RegistryKey>
+      <RegistryKey Root='HKCU' Key='Software\Microsoft\VisualStudio\$(var.VSTargetVersion)\ExtensionManager\ExtensionTypes'>
+        <RegistryValue Type='string' Name='81da0100-e6db-4783-91ea-c38c3fa1b81e,$(var.ReleaseVersion)' Value='Microsoft.VisualStudio.VsPackage'/>
+      </RegistryKey>
+    </Component>
+
+    <ComponentGroupRef Id="CGroup_ProfilingFiles"/>
+  </Module>
+</Wix>

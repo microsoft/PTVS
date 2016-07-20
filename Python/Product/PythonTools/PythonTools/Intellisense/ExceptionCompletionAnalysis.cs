@@ -1,37 +1,41 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Steve Dower (Zooba)
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
     /// Provides the completion context for when the user is doing an import
     /// </summary>
     internal class ExceptionCompletionAnalysis : CompletionAnalysis {
-        internal ExceptionCompletionAnalysis(ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(span, textBuffer, options) {
+        internal ExceptionCompletionAnalysis(IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(serviceProvider, view, span, textBuffer, options) {
         }
 
         private static readonly string[] KnownExceptions = new[] { "GeneratorExit", "KeyboardInterrupt", 
             "StopIteration", "SystemExit" };
 
-        private static bool IsExceptionType(MemberResult member) {
+        private static bool IsExceptionType(CompletionResult member) {
             switch (member.MemberType) {
                 case Interpreter.PythonMemberType.Class:
                     // Classes need further checking
@@ -61,13 +65,17 @@ namespace Microsoft.PythonTools.Intellisense {
             var start = _stopwatch.ElapsedMilliseconds;
 
             var analysis = GetAnalysisEntry();
+            if (analysis == null) {
+                return null;
+            }
+
             var index = VsProjectAnalyzer.TranslateIndex(
                 Span.GetEndPoint(TextBuffer.CurrentSnapshot).Position,
                 TextBuffer.CurrentSnapshot,
                 analysis
             );
 
-            var completions = analysis.GetAllAvailableMembers(index, GetMemberOptions.None)
+            var completions = (analysis.Analyzer.GetAllAvailableMembersAsync(analysis, index, GetMemberOptions.None).WaitOrDefault(1000) ?? Enumerable.Empty<CompletionResult>())
                 .Where(IsExceptionType)
                 .Select(member => PythonCompletion(glyphService, member))
                 .OrderBy(completion => completion.DisplayText);

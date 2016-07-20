@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -72,12 +74,15 @@ namespace Microsoft.PythonTools.Analysis {
         public static IEnumerable<string> Expression(PythonLanguageVersion version = PythonLanguageVersion.None) {
             yield return "and";
             yield return "as";
+            if (version.IsNone() || version >= PythonLanguageVersion.V35) {
+                yield return "await";
+            }
             yield return "else";
-            if (version.Is3x()) {
+            if (version.IsNone() || version.Is3x()) {
                 yield return "False";
             }
             yield return "for";
-            if (version >= PythonLanguageVersion.V33) {
+            if (version.IsNone() || version >= PythonLanguageVersion.V33) {
                 yield return "from";
             }
             yield return "if";
@@ -87,7 +92,7 @@ namespace Microsoft.PythonTools.Analysis {
             yield return "None";
             yield return "not";
             yield return "or";
-            if (version.Is3x()) {
+            if (version.IsNone() || version.Is3x()) {
                 yield return "True";
             }
             yield return "yield";
@@ -99,12 +104,16 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public static IEnumerable<string> Statement(PythonLanguageVersion version = PythonLanguageVersion.None) {
             yield return "assert";
+            if (version.IsNone() || version >= PythonLanguageVersion.V35) {
+                yield return "async";
+                yield return "await";
+            }
             yield return "break";
             yield return "continue";
             yield return "class";
             yield return "def";
             yield return "del";
-            if (version.Is2x()) {
+            if (version.IsNone() || version.Is2x()) {
                 yield return "exec";
             }
             yield return "if";
@@ -115,11 +124,11 @@ namespace Microsoft.PythonTools.Analysis {
             yield return "from";
             yield return "global";
             yield return "import";
-            if (version.Is3x()) {
+            if (version.IsNone() || version.Is3x()) {
                 yield return "nonlocal";
             }
             yield return "pass";
-            if (version.Is2x()) {
+            if (version.IsNone() || version.Is2x()) {
                 yield return "print";
             }
             yield return "raise";
@@ -137,8 +146,11 @@ namespace Microsoft.PythonTools.Analysis {
         public static IEnumerable<string> InvalidOutsideFunction(
             PythonLanguageVersion version = PythonLanguageVersion.None
         ) {
+            if (version.IsNone() || version >= PythonLanguageVersion.V35) {
+                yield return "await";
+            }
             yield return "return";
-            if (version == PythonLanguageVersion.None || version >= PythonLanguageVersion.V25) {
+            if (version.IsNone() || version >= PythonLanguageVersion.V25) {
                 yield return "yield";
             }
         }

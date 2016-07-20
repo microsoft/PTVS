@@ -1,1 +1,1 @@
-﻿#DraggedToOtherProject.py
+#DraggedToOtherProject.py

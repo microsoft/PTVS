@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -23,8 +25,9 @@ using Microsoft.Scripting.Generation;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonParameterInfo : IParameterInfo {
-        private IronPythonInterpreter _interpreter;
-        private ObjectIdentityHandle _parameterInfo;
+        private readonly IronPythonInterpreter _interpreter;
+        private RemoteInterpreterProxy _remote;
+        private readonly ObjectIdentityHandle _parameterInfo;
         private string _name;
         private ParameterKind _paramKind;
         private IPythonType[] _paramType;
@@ -33,7 +36,14 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IronPythonParameterInfo(IronPythonInterpreter interpreter, ObjectIdentityHandle parameterInfo) {
             _interpreter = interpreter;
+            _interpreter.UnloadingDomain += Interpreter_UnloadingDomain;
+            _remote = _interpreter.Remote;
             _parameterInfo = parameterInfo;
+        }
+
+        private void Interpreter_UnloadingDomain(object sender, EventArgs e) {
+            _remote = null;
+            _interpreter.UnloadingDomain -= Interpreter_UnloadingDomain;
         }
 
         #region IParameterInfo Members
@@ -41,7 +51,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IList<IPythonType> ParameterTypes {
             get {
                 if (_paramType == null) {
-                    _paramType = new [] { _interpreter.GetTypeFromType(_interpreter.Remote.GetParameterPythonType(_parameterInfo)) };
+                    var ri = _remote;
+                    if (ri != null) {
+                        _paramType = new[] { _interpreter.GetTypeFromType(ri.GetParameterPythonType(_parameterInfo)) };
+                    }
                 }
                 return _paramType;
             }
@@ -55,7 +68,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public string Name {
             get {
                 if (_name == null) {
-                    _name = _interpreter.Remote.GetParameterName(_parameterInfo);
+                    var ri = _remote;
+                    _name = ri != null ? ri.GetParameterName(_parameterInfo) : string.Empty;
                 }
                 return _name;
             }
@@ -64,7 +78,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public bool IsParamArray {
             get {
                 if (_paramKind == ParameterKind.Unknown) {
-                    _paramKind = _interpreter.Remote.GetParameterKind(_parameterInfo);
+                    var ri = _remote;
+                    _paramKind = ri != null ? ri.GetParameterKind(_parameterInfo) : ParameterKind.Unknown;
                 }
                 return _paramKind == ParameterKind.List;
             }
@@ -73,7 +88,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public bool IsKeywordDict {
             get {
                 if (_paramKind == ParameterKind.Unknown) {
-                    _paramKind = _interpreter.Remote.GetParameterKind(_parameterInfo);
+                    var ri = _remote;
+                    _paramKind = ri != null ? ri.GetParameterKind(_parameterInfo) : ParameterKind.Unknown;
                 }
                 return _paramKind == ParameterKind.Dictionary;
             }
@@ -82,7 +98,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public string DefaultValue {
             get {
                 if (_defaultValue == null) {
-                    _defaultValue = _interpreter.Remote.GetParameterDefaultValue(_parameterInfo) ?? _noDefaultValue;
+                    var ri = _remote;
+                    _defaultValue = (ri != null ? ri.GetParameterDefaultValue(_parameterInfo) : null) ?? _noDefaultValue;
                 }
 
                 if (Object.ReferenceEquals(_defaultValue, _noDefaultValue)) {

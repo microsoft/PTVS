@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System.Threading;
 using Microsoft.PythonTools;
@@ -18,6 +20,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 using Keyboard = TestUtilities.UI.Keyboard;
 
 namespace ReplWindowUITests {
@@ -27,12 +30,14 @@ namespace ReplWindowUITests {
     /// </summary>
     [TestClass, Ignore]
     public abstract class ReplWindowPythonIPythonTests : ReplWindowPythonTests {
-        internal virtual ReplWindowProxy PrepareIPython() {
-            return Prepare(useIPython: true);
+        internal virtual ReplWindowProxy PrepareIPython(
+            bool addNewLineAtEndOfFullyTypedWord = false
+        ) {
+            return Prepare(useIPython: true, addNewLineAtEndOfFullyTypedWord: addNewLineAtEndOfFullyTypedWord);
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void IPythonMode() {
             using (var interactive = PrepareIPython()) {
                 interactive.SubmitCode("x = 42\n?x");
@@ -40,14 +45,14 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(
                     ">x = 42",
                     ">?x",
-                    interactive.Settings.IPythonIntDocumentation,
+                    ((PythonReplWindowProxySettings)interactive.Settings).IPythonIntDocumentation,
                     ">"
                 );
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void IPythonCtrlBreakAborts() {
             using (var interactive = PrepareIPython()) {
                 var code = "while True: pass";
@@ -69,12 +74,10 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void IPythonSimpleCompletion() {
-            using (var interactive = PrepareIPython()) {
-                interactive.AddNewLineAtEndOfFullyTypedWord = false;
-
+            using (var interactive = PrepareIPython(addNewLineAtEndOfFullyTypedWord: false)) {
                 interactive.SubmitCode("x = 42");
                 interactive.WaitForText(">x = 42", ">");
                 interactive.ClearScreen();
@@ -87,7 +90,7 @@ namespace ReplWindowUITests {
                     sh.WaitForSessionDismissed();
                 }
 
-                interactive.WaitForText(">x." + interactive.Settings.IntFirstMember);
+                interactive.WaitForText(">x." + ((PythonReplWindowProxySettings)interactive.Settings).IntFirstMember);
 
                 // clear input at repl
                 interactive.ClearInput();
@@ -98,8 +101,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void IPythonSimpleSignatureHelp() {
             using (var interactive = PrepareIPython()) {
                 Assert.IsNotNull(interactive);
@@ -115,8 +118,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void IPythonInlineGraph() {
             using (var interactive = PrepareIPython()) {
                 interactive.SubmitCode(@"from pylab import *
@@ -136,11 +139,11 @@ plot(x, x)");
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void IPythonStartInInteractive() {
             using (var interactive = PrepareIPython())
-            using (new DefaultInterpreterSetter(interactive.Window.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
+            using (new DefaultInterpreterSetter(interactive.GetAnalyzer().InterpreterFactory)) {
                 var project = interactive.App.OpenProject(@"TestData\InteractiveFile.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
@@ -148,11 +151,11 @@ plot(x, x)");
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInIPythonReplSysArgv() {
             using (var interactive = PrepareIPython())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
+            using (new DefaultInterpreterSetter(interactive.GetAnalyzer().InterpreterFactory)) {
                 var project = interactive.App.OpenProject(@"TestData\SysArgvRepl.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
@@ -160,11 +163,11 @@ plot(x, x)");
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInIPythonReplSysArgvScriptArgs() {
             using (var interactive = PrepareIPython())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
+            using (new DefaultInterpreterSetter(interactive.GetAnalyzer().InterpreterFactory)) {
                 var project = interactive.App.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
                 interactive.App.ExecuteCommand("Python.ExecuteInInteractive");

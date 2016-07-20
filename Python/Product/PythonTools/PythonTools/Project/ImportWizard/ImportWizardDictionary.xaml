@@ -1,4 +1,4 @@
-﻿<ResourceDictionary
+<ResourceDictionary
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:l="clr-namespace:Microsoft.PythonTools.Project.ImportWizard"
@@ -6,6 +6,7 @@
 
     <ResourceDictionary.MergedDictionaries>
         <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/SharedProject/Wpf/Controls.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/images/images.xaml" />
 
         <ResourceDictionary>
             <Style x:Key="Title" TargetType="{x:Type TextBlock}" BasedOn="{StaticResource {x:Type TextBlock}}">

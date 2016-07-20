@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -39,7 +41,7 @@ namespace PythonToolsTests {
 
         public TestContext TestContext { get; set; }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void MergeRequirements() {
             // Comments should be preserved, only package specs should change.
             AssertUtil.AreEqual(
@@ -106,7 +108,7 @@ namespace PythonToolsTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void MergeRequirementsMismatchedCase() {
             AssertUtil.AreEqual(
                 PythonProjectNode.MergeRequirements(new[] {
@@ -146,7 +148,7 @@ namespace PythonToolsTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void FindRequirementsRegexTest() {
             var r = PythonProjectNode.FindRequirementRegex;
             AssertUtil.AreEqual(r.Matches("aaaa bbbb cccc").Cast<Match>().Select(m => m.Value),
@@ -197,7 +199,7 @@ namespace PythonToolsTests {
             );
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void UpdateWorkerRoleServiceDefinitionTest() {
             var doc = new XmlDocument();
             doc.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -235,7 +237,7 @@ namespace PythonToolsTests {
 </ServiceDefinition>", doc);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void UpdateWebRoleServiceDefinitionTest() {
             var doc = new XmlDocument();
             doc.LoadXml(@"<?xml version=""1.0"" encoding=""utf-8""?>
@@ -263,56 +265,71 @@ namespace PythonToolsTests {
 </ServiceDefinition>", doc);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void LoadAndUnloadModule() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 3)) };
-            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), factories[0], factories)) {
+            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), factories[0])) {
                 var m1Path = TestData.GetPath("TestData\\SimpleImport\\module1.py");
                 var m2Path = TestData.GetPath("TestData\\SimpleImport\\module2.py");
 
-                var entry1 = analyzer.AnalyzeFile(m1Path) as IPythonProjectEntry;
-                var entry2 = analyzer.AnalyzeFile(m2Path) as IPythonProjectEntry;
+                var entry1 = analyzer.AnalyzeFileAsync(m1Path).Result;
+                var entry2 = analyzer.AnalyzeFileAsync(m2Path).Result;
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
+                var loc = new Microsoft.PythonTools.Parsing.SourceLocation(0, 1, 1);
                 AssertUtil.ContainsExactly(
-                    analyzer.Project.GetEntriesThatImportModule("module1", true).Select(m => m.ModuleName),
+                    analyzer.GetEntriesThatImportModuleAsync("module1", true).Result.Select(m => m.moduleName),
                     "module2"
                 );
 
                 AssertUtil.ContainsExactly(
-                    entry2.Analysis.GetValuesByIndex("x", 0).Select(v => v.TypeId),
-                    BuiltinTypeId.Int
+                    analyzer.GetValueDescriptions(entry2, "x", loc),
+                    "int"
                 );
 
-                analyzer.UnloadFile(entry1);
+                analyzer.UnloadFileAsync(entry1).Wait();
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
                 // Even though module1 has been unloaded, we still know that
                 // module2 imports it.
                 AssertUtil.ContainsExactly(
-                    analyzer.Project.GetEntriesThatImportModule("module1", true).Select(m => m.ModuleName),
+                    analyzer.GetEntriesThatImportModuleAsync("module1", true).Result.Select(m => m.moduleName),
                     "module2"
                 );
 
                 AssertUtil.ContainsExactly(
-                    entry2.Analysis.GetValuesByIndex("x", 0).Select(v => v.TypeId)
+                    analyzer.GetValueDescriptions(entry2, "x", loc)
                 );
 
-                analyzer.AnalyzeFile(m1Path);
+                analyzer.AnalyzeFileAsync(m1Path).Wait();
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
                 AssertUtil.ContainsExactly(
-                    analyzer.Project.GetEntriesThatImportModule("module1", true).Select(m => m.ModuleName),
+                    analyzer.GetEntriesThatImportModuleAsync("module1", true).Result.Select(m => m.moduleName),
                     "module2"
                 );
 
                 AssertUtil.ContainsExactly(
-                    entry2.Analysis.GetValuesByIndex("x", 0).Select(v => v.TypeId),
-                    BuiltinTypeId.Int
+                    analyzer.GetValueDescriptions(entry2, "x", loc),
+                    "int"
                 );
             }
         }
 
 
+        [TestMethod, Priority(1)]
+        public void AnalyzeBadEgg() {
+            var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 4)) };
+            using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), factories[0])) {
+                analyzer.AnalyzeZipArchiveAsync(TestData.GetPath(@"TestData\BadEgg.egg")).Wait();
+                analyzer.WaitForCompleteAnalysis(_ => true);
+
+                // Analysis result must contain the module for the filename inside the egg that is a valid identifier,
+                // and no entries for the other filename which is not. 
+                var moduleNames = analyzer.GetModulesResult(true).Result.Select(x => x.Name);
+                AssertUtil.Contains(moduleNames, "module");
+                AssertUtil.DoesntContain(moduleNames, "42");
+            }
+        }
     }
 }

@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -59,6 +61,16 @@ namespace Microsoft.PythonTools.Intellisense {
                 return res.ToString();
             }
 
+            public byte[] ReadBytes(int size) {
+                byte[] bytes = new byte[size];
+
+                int read = _stream.Read(bytes, 0, size);
+                if (read != size) {
+                    throw new EndOfStreamException("end of stream while reading");
+                }
+                return bytes;
+            }
+
             public string ReadLine() {
                 StringBuilder res = new StringBuilder();
                 int curByte;
@@ -90,10 +102,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public int ReadInt() {
-                return (int)ReadChar() |
-                       ((int)ReadChar()) << 8 |
-                       ((int)ReadChar()) << 16 |
-                       ((int)ReadChar()) << 24;
+                var c = ReadBytes(4);
+                return (int)c[0] |
+                       ((int)c[1]) << 8 |
+                       ((int)c[2]) << 16 |
+                       ((int)c[3]) << 24;
             }
         }
 
@@ -238,10 +251,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             private double ReadFloat64() {
-                byte[] bytes = new byte[8];
-                for (int i = 0; i < bytes.Length; i++) {
-                    bytes[i] = _file.ReadChar();
-                }
+                var bytes = _file.ReadBytes(8);
                 return BitConverter.ToDouble(bytes, 0);
             }
 
@@ -265,10 +275,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             private object ReadLong(int size) {
-                byte[] bytes = new byte[size];
-                for (int i = 0; i < size; i++) {
-                    bytes[i] = _file.ReadChar();
-                }
+                var bytes = _file.ReadBytes(size);
                 return new BigInteger(bytes);
             }
 
@@ -277,10 +284,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             private ushort ReadUInt16() {
-                byte[] bytes = new byte[2];
-                for (int i = 0; i < bytes.Length; i++) {
-                    bytes[i] = _file.ReadChar();
-                }
+                var bytes = _file.ReadBytes(2);
                 return BitConverter.ToUInt16(bytes, 0);
             }
 
@@ -350,11 +354,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             private void LoadBinUnicode() {
-                byte[] bytes = new byte[ReadInt32()];
-                for (int i = 0; i < bytes.Length; i++) {
-                    bytes[i] = _file.ReadChar();
-                }
-
+                var bytes = _file.ReadBytes(ReadInt32());
                 _stack.Add(Encoding.UTF8.GetString(bytes));
             }
 

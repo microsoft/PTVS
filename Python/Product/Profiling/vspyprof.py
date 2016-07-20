@@ -6,8 +6,31 @@ except:
 import sys
 import ctypes
 
+if sys.version_info[0] >= 3:
+    try:
+        from tokenize import open as srcopen
+    except ImportError:
+        from io import TextIOWrapper
+        from tokenize import detect_encoding
+
+        def srcopen(filename):
+            buff = open(filename, 'rb')
+            try:
+                encoding, lines = detect_encoding(buff.readline)
+                buff.seek(0)
+                if encoding == 'utf-8':
+                    if next(iter(buff.read(1)), -1) == 0xEF:
+                        encoding = 'utf-8-sig'
+                    buff.seek(0)
+                stream = TextIOWrapper(buff, encoding, line_buffering=True)
+                stream.mode = 'r'
+                return stream
+            except:
+                buff.close()
+                raise
+
 def hidden_frame(func, posargs, kwargs):
-    """this is just an extra method for new thread so"""
+    """this is just an extra method for new thread so """
     """we have the same # of extra frames (1) as the main thread"""
     func(*posargs, **kwargs)
 
@@ -44,16 +67,22 @@ def profile(file, globals_obj, locals_obj, profdll):
     pyprofdll.CloseThread.argtypes = [ctypes.c_void_p]
     pyprofdll.CloseProfiler.argtypes = [ctypes.c_void_p]
     pyprofdll.InitProfiler.argtypes = [ctypes.c_void_p]
+    pyprofdll.InitProfiler.restype = ctypes.c_void_p
 
     profiler = pyprofdll.CreateProfiler(sys.dllhandle)
+    if not profiler:
+        raise NotImplementedError("Profiling is currently not supported for " + sys.version)
     handle = None
 
     try:
         if sys.version_info[0] >= 3:
             # execfile's not available, and we want to start profiling
             # after we've compiled the users code.
-            f = open(file, "r")
-            code = compile(f.read(), file, 'exec')
+            f = srcopen(file)
+            try:
+                code = compile(f.read(), file, 'exec')
+            finally:
+                f.close()
             handle = start_profiling()
             exec(code, globals_obj, locals_obj)
         else:

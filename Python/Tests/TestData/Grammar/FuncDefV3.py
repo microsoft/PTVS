@@ -1,4 +1,4 @@
-﻿def f(*a, x): pass
+def f(*a, x): pass
 def f(*a, x = 1): pass
 
 def f(a: 1): pass

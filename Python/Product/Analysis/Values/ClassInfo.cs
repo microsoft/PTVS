@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections;
@@ -18,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -32,7 +35,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private VariableDef _metaclass;
         private ReferenceDict _references;
         private VariableDef _subclasses;
-        private AnalysisValue _baseUserType;    // base most user defined type, used for unioning types during type explosion
+        private IAnalysisSet _baseSpecialization;
         private readonly PythonAnalyzer _projectState;
 
         internal ClassInfo(ClassDefinition klass, AnalysisUnit outerUnit) {
@@ -59,12 +62,13 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return AddCall(node, keywordArgNames, unit, args);
             }
 
+            
             return _instanceInfo.SelfSet;
         }
 
-        private IAnalysisSet AddCall(Node node, NameExpression[] keywordArgNames, AnalysisUnit unit, IAnalysisSet[] argumentVars) {
+        private IAnalysisSet AddCall(Node node, NameExpression[] keywordArgNames, AnalysisUnit unit, IAnalysisSet[] args) {
             var init = GetMemberNoReferences(node, unit, "__init__", false);
-            var initArgs = Utils.Concat(_instanceInfo.SelfSet, argumentVars);
+            var initArgs = Utils.Concat(_instanceInfo.SelfSet, args);
 
             foreach (var initFunc in init) {
                 initFunc.Call(node, unit, initArgs, keywordArgNames);
@@ -72,7 +76,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
             // TODO: If we checked for metaclass, we could pass it in as the cls arg here
             var n = GetMemberNoReferences(node, unit, "__new__", false);
-            var newArgs = Utils.Concat(SelfSet, argumentVars);
+            var newArgs = Utils.Concat(SelfSet, args);
             var newResult = AnalysisSet.Empty;
             bool anyCustom = false;
             foreach (var newFunc in n) {
@@ -86,7 +90,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 return newResult;
             }
 
+            
+
             if (newResult.Count == 0 || newResult.All(ns => ns.IsOfType(unit.ProjectState.ClassInfos[BuiltinTypeId.Object]))) {
+                if (_baseSpecialization != null && _baseSpecialization.Count != 0) {
+                    var specializedInstances = _baseSpecialization.Call(
+                        node, unit, args, keywordArgNames
+                    );
+
+                    var res = (SpecializedInstanceInfo)unit.Scope.GetOrMakeNodeValue(
+                        node,
+                        NodeValueKind.SpecializedInstance,
+                        (node_) => new SpecializedInstanceInfo(this, specializedInstances)
+                    );
+
+                    res._instances = specializedInstances;
+                    return res;
+                }
+
                 return _instanceInfo.SelfSet;
             }
             return newResult;
@@ -153,7 +174,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 if (_declVersion == DeclaringModule.AnalysisVersion) {
                     var start = ClassDefinition.NameExpression.GetStart(ClassDefinition.GlobalParent);
-                    return new[] { new LocationInfo(DeclaringModule, start.Line, start.Column) };
+                    var end = ClassDefinition.GetEnd(ClassDefinition.GlobalParent);
+                    return new[] { new LocationInfo(DeclaringModule.FilePath, start.Line, start.Column, end.Line, end.Column) };
                 }
                 return LocationInfo.Empty;
             }
@@ -191,7 +213,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get {
                 var result = new List<OverloadResult>();
                 VariableDef init;
-                if (Scope.Variables.TryGetValue("__init__", out init)) {
+                if (Scope.TryGetVariable("__init__", out init)) {
                     // this type overrides __init__, display that for it's help
                     foreach (var initFunc in init.TypesNoCopy) {
                         foreach (var overload in initFunc.Overloads) {
@@ -201,7 +223,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
 
                 VariableDef @new;
-                if (Scope.Variables.TryGetValue("__new__", out @new)) {
+                if (Scope.TryGetVariable("__new__", out @new)) {
                     foreach (var newFunc in @new.TypesNoCopy) {
                         foreach (var overload in newFunc.Overloads) {
                             result.Add(GetNewOverloadResult(overload));
@@ -274,17 +296,28 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public void ClearBases() {
-            _bases.Clear();
-            _baseUserType = null;
-            _mro.Recompute();
-        }
-
         public void SetBases(IEnumerable<IAnalysisSet> bases) {
             _bases.Clear();
             _bases.AddRange(bases);
-            _baseUserType = null;
             _mro.Recompute();
+
+            RecomputeBaseSpecialization();
+        }
+
+        private void RecomputeBaseSpecialization() {
+            IAnalysisSet builtinClassSet = AnalysisSet.Empty;
+            foreach (var classInfo in _mro) {
+                BuiltinClassInfo builtin = classInfo as BuiltinClassInfo;
+                if (builtin != null && builtin.TypeId != BuiltinTypeId.Object) {
+                    var builtinType = _projectState.GetBuiltinType(builtin.PythonType);
+
+                    if (builtinType.GetType() != typeof(BuiltinClassInfo)) {
+                        // we have a specialized built-in class, we want its behavior too...
+                        builtinClassSet = builtinClassSet.Union(builtinType.SelfSet, true);
+                    }
+                }
+            }
+            _baseSpecialization = builtinClassSet;
         }
 
         public void SetBase(int index, IAnalysisSet baseSet) {
@@ -292,8 +325,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 _bases.Add(AnalysisSet.Empty);
             }
             _bases[index] = baseSet;
-            _baseUserType = null;
             _mro.Recompute();
+            RecomputeBaseSpecialization();
         }
 
         public InstanceInfo Instance {
@@ -309,28 +342,35 @@ namespace Microsoft.PythonTools.Analysis.Values {
         /// <summary>
         /// Gets all members of this class that are not inherited from its base classes.
         /// </summary>
-        public IDictionary<string, IAnalysisSet> GetAllImmediateMembers(IModuleContext moduleContext) {
-            var result = new Dictionary<string, IAnalysisSet>(Scope.Variables.Count);
+        public IDictionary<string, IAnalysisSet> GetAllImmediateMembers(IModuleContext moduleContext, GetMemberOptions options) {
+            var result = new Dictionary<string, IAnalysisSet>(Scope.VariableCount);
 
-            foreach (var v in Scope.Variables) {
+            foreach (var v in Scope.AllVariables) {
                 v.Value.ClearOldValues();
                 if (v.Value.VariableStillExists) {
                     result[v.Key] = v.Value.Types;
                 }
             }
 
-            if (!result.ContainsKey("__doc__")) {
-                result["__doc__"] = GetObjectMember(moduleContext, "__doc__");
-            }
-            if (!result.ContainsKey("__class__")) {
-                result["__class__"] = GetObjectMember(moduleContext, "__class__");
+            if (!options.HasFlag(GetMemberOptions.DeclaredOnly)) {
+                if (!result.ContainsKey("__doc__")) {
+                    result["__doc__"] = GetObjectMember(moduleContext, "__doc__");
+                }
+                if (!result.ContainsKey("__class__")) {
+                    result["__class__"] = GetObjectMember(moduleContext, "__class__");
+                }
             }
 
             return result;
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
-            var result = _mro.GetAllMembers(moduleContext);
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
+            IDictionary<string, IAnalysisSet> result;
+            if (options.HasFlag(GetMemberOptions.DeclaredOnly)) {
+                result = GetAllImmediateMembers(moduleContext, options);
+            } else {
+                result = _mro.GetAllMembers(moduleContext, options);
+            }
 
             if (_metaclass != null) {
                 foreach (var type in _metaclass.Types) {
@@ -357,14 +397,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (_references == null) {
                     _references = new ReferenceDict();
                 }
-                _references.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new EncodedLocation(unit.Tree, node));
+                _references.GetReferences(unit.DeclaringModule.ProjectEntry).AddReference(new EncodedLocation(unit, node));
             }
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var ignored = base.GetMember(node, unit, name);
-
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
             return GetMemberNoReferences(node, unit, name).GetDescriptor(node, unit.ProjectState._noneInst, this, unit);
         }
 
@@ -450,29 +487,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        private void EnsureBaseUserType() {
-            if (_baseUserType == null) {
-                foreach (var typeList in Bases) {
-                    foreach (var type in typeList) {
-                        ClassInfo ci = type as ClassInfo;
-
-                        if (ci != null && ci.Push()) {
-                            try {
-                                ci.EnsureBaseUserType();
-                                if (ci._baseUserType != null) {
-                                    _baseUserType = ci._baseUserType;
-                                } else {
-                                    _baseUserType = ci;
-                                }
-                            } finally {
-                                ci.Pop();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         /// <summary>
         /// Provides a stable ordering of class definitions that is used solely
         /// to ensure that unioning two classes is symmetrical.
@@ -511,11 +525,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     IEnumerable<AnalysisValue> mro1;
                     AnalysisValue[] mro2;
                     if (IsFirstForMroUnion(ClassDefinition, ci.ClassDefinition)) {
-                        mro1 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro);
-                        mro2 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro).ToArray();
+                        mro1 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable());
+                        mro2 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable()).ToArray();
                     } else {
-                        mro1 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro);
-                        mro2 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro).ToArray();
+                        mro1 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable());
+                        mro2 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable()).ToArray();
                     }
                     return mro1.FirstOrDefault(cls => mro2.Contains(cls)) ?? _projectState.ClassInfos[BuiltinTypeId.Object];
                 }
@@ -540,11 +554,11 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     IEnumerable<AnalysisValue> mro1;
                     AnalysisValue[] mro2;
                     if (IsFirstForMroUnion(ClassDefinition, ci.ClassDefinition)) {
-                        mro1 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro);
-                        mro2 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro).ToArray();
+                        mro1 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable());
+                        mro2 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable()).ToArray();
                     } else {
-                        mro1 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro);
-                        mro2 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro).ToArray();
+                        mro1 = ci.Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable());
+                        mro2 = Mro.SelectMany().Except(_projectState.DoNotUnionInMro.AsEnumerable()).ToArray();
                     }
                     return mro1.Any(cls => mro2.Contains(cls));
                 }
@@ -553,7 +567,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 if (bci != null &&
                     !_projectState.DoNotUnionInMro.Contains(this) &&
                     !_projectState.DoNotUnionInMro.Contains(bci)) {
-                    return Mro.AnyContains(bci);
+                    return Mro.Any(m => m.Contains(bci));
                 }
             }
 
@@ -573,7 +587,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public IEnumerable<IReferenceable> GetDefinitions(string name) {
             var result = new List<IReferenceable>();
             VariableDef def;
-            if (_scope.Variables.TryGetValue(name, out def)) {
+            if (_scope.TryGetVariable(name, out def)) {
                 result.Add(def);
             }
 
@@ -627,12 +641,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// </remarks>
     internal class Mro : DependentData, IEnumerable<IAnalysisSet> {
         private readonly ClassInfo _classInfo;
-        private List<IAnalysisSet> _mroList;
+        private List<AnalysisValue> _mroList;
         private bool _isValid = true;
 
         public Mro(ClassInfo classInfo) {
             _classInfo = classInfo;
-            _mroList = new List<IAnalysisSet> { classInfo };
+            _mroList = new List<AnalysisValue> { classInfo };
         }
 
         public bool IsValid {
@@ -648,7 +662,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public void Recompute() {
-            var mroList = new List<IAnalysisSet> { _classInfo.SelfSet };
+            var mroList = new List<AnalysisValue> { _classInfo };
             var isValid = true;
 
             var bases = _classInfo.Bases;
@@ -722,7 +736,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             // will show all members defined in it, but nothing else.
             if (!isValid) {
                 mroList.Clear();
-                mroList.Add(_classInfo.SelfSet);
+                mroList.Add(_classInfo);
             }
 
             if (_isValid != isValid || !_mroList.SequenceEqual(mroList)) {
@@ -732,14 +746,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
-            return GetAllMembersOfMro(this, moduleContext);
+        public IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options) {
+            return GetAllMembersOfMro(this, moduleContext, options);
         }
 
         /// <summary>
         /// Compute a list of all members, given the MRO list of types, and taking override rules into account.
         /// </summary>
-        public static IDictionary<string, IAnalysisSet> GetAllMembersOfMro(IEnumerable<IAnalysisSet> mro, IModuleContext moduleContext) {
+        public static IDictionary<string, IAnalysisSet> GetAllMembersOfMro(IEnumerable<IAnalysisSet> mro, IModuleContext moduleContext, GetMemberOptions options) {
             var result = new Dictionary<string, IAnalysisSet>();
 
             // MRO is a list of namespaces corresponding to classes, but each entry can be a union of several different classes.
@@ -751,7 +765,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     // If it's another non-builtin class, we don't want its inherited members, since we'll account
                     // for them while processing our own MRO - we only want its immediate members.
                     var classInfo = ns as ClassInfo;
-                    var classMembers = classInfo != null ? classInfo.GetAllImmediateMembers(moduleContext) : ns.GetAllMembers(moduleContext);
+                    var classMembers = classInfo != null ? classInfo.GetAllImmediateMembers(moduleContext, options) : ns.GetAllMembers(moduleContext);
 
                     foreach (var kvp in classMembers) {
                         IAnalysisSet existing;

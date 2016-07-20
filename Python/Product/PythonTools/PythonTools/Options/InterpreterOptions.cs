@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Diagnostics;
@@ -25,10 +27,11 @@ namespace Microsoft.PythonTools.Options {
     /// </summary>
     class InterpreterOptions {
         private readonly PythonToolsService _pyService;
-        private readonly IPythonInterpreterFactory _interpreter;
+        internal readonly InterpreterConfiguration _config;
 
         public string Display;
-        public Guid Id;
+        public string Description;
+        public string Id;
         public string InterpreterPath;
         public string WindowsInterpreterPath;
         public string LibraryPath;
@@ -39,29 +42,27 @@ namespace Microsoft.PythonTools.Options {
         public bool Added;
         public bool IsConfigurable;
         public bool SupportsCompletionDb;
-        public IPythonInterpreterFactory Factory;
-        public PythonInteractiveOptions InteractiveOptions;
 
-        public InterpreterOptions(PythonToolsService pyService, IPythonInterpreterFactory interpreter) {
+        public InterpreterOptions(PythonToolsService pyService, InterpreterConfiguration config) {
             _pyService = pyService;
-            _interpreter = interpreter;
+            _config = config;
         }
 
         public void Load() {
-            var configurable = _pyService._interpreterOptionsService.KnownProviders.OfType<ConfigurablePythonInterpreterFactoryProvider>().FirstOrDefault();
+            var configurable = _pyService._interpreterOptionsService;
             Debug.Assert(configurable != null);
 
-            Display = _interpreter.Description;
-            Id = _interpreter.Id;
-            InterpreterPath = _interpreter.Configuration.InterpreterPath;
-            WindowsInterpreterPath = _interpreter.Configuration.WindowsInterpreterPath;
-            LibraryPath = _interpreter.Configuration.LibraryPath;
-            Version = _interpreter.Configuration.Version.ToString();
-            Architecture = FormatArchitecture(_interpreter.Configuration.Architecture);
-            PathEnvironmentVariable = _interpreter.Configuration.PathEnvironmentVariable;
-            IsConfigurable = configurable != null && configurable.IsConfigurable(_interpreter);
-            SupportsCompletionDb = _interpreter is IPythonInterpreterFactoryWithDatabase;
-            Factory = _interpreter;
+            Display = _config.FullDescription;
+            Description = _config.Description;
+            Id = _config.Id;
+            InterpreterPath = _config.InterpreterPath;
+            WindowsInterpreterPath = _config.WindowsInterpreterPath;
+            LibraryPath = _config.LibraryPath;
+            Version = _config.Version.ToString();
+            Architecture = FormatArchitecture(_config.Architecture);
+            PathEnvironmentVariable = _config.PathEnvironmentVariable;
+            IsConfigurable = configurable != null && configurable.IsConfigurable(_config.Id);
+            SupportsCompletionDb = _config.UIMode.HasFlag(InterpreterUIMode.SupportsDatabase);
         }
 
         private static string FormatArchitecture(ProcessorArchitecture arch) {

@@ -1,0 +1,18 @@
+<VSTemplate Version="3.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Worker Role Support Files</Name>
+    <Description>Support files necessary to deploy and run a Python web project on Microsoft Azure Cloud Service.
+
+These files are always added to a folder 'bin' at the root of your project.</Description>
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="408" />
+    <ProjectType>Python</ProjectType>
+    <DefaultName>bin</DefaultName>
+    <SortOrder>100</SortOrder>
+  </TemplateData>
+  <TemplateContent>
+    <ProjectItem ReplaceParameters="true" SubType="WebBrowser" OpenInWebBrowser="true" TargetFileName="\bin\Readme.mht">WorkerRoleConfiguration.mht</ProjectItem>
+    <ProjectItem ReplaceParameters="true" TargetFileName="\bin\ConfigureCloudService.ps1">ConfigureCloudService.ps1</ProjectItem>
+    <ProjectItem ReplaceParameters="true" TargetFileName="\bin\LaunchWorker.ps1">LaunchWorker.ps1</ProjectItem>
+    <ProjectItem ReplaceParameters="true" TargetFileName="\bin\ps.cmd">ps.cmd</ProjectItem>
+  </TemplateContent>
+</VSTemplate>

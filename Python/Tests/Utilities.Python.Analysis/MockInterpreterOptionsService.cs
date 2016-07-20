@@ -1,33 +1,36 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
-    public class MockInterpreterOptionsService : IInterpreterOptionsService {
+    public class MockInterpreterOptionsService : IInterpreterOptionsService, IInterpreterRegistryService {
         readonly List<IPythonInterpreterFactoryProvider> _providers;
         readonly IPythonInterpreterFactory _noInterpretersValue;
         IPythonInterpreterFactory _defaultInterpreter;
 
         public MockInterpreterOptionsService() {
             _providers = new List<IPythonInterpreterFactoryProvider>();
-            _noInterpretersValue = new MockPythonInterpreterFactory(Guid.NewGuid(), "No Interpreters", new InterpreterConfiguration(new Version(2, 7)));
+            _noInterpretersValue = new MockPythonInterpreterFactory(new InterpreterConfiguration("2.7", "No Interpreters", version: new Version(2, 7)));
         }
 
         public void AddProvider(IPythonInterpreterFactoryProvider provider) {
@@ -62,6 +65,10 @@ namespace TestUtilities.Python {
             get { return _providers.Where(p => p != null).SelectMany(p => p.GetInterpreterFactories()); }
         }
 
+        public IEnumerable<InterpreterConfiguration> Configurations {
+            get { return _providers.Where(p => p != null).SelectMany(p => p.GetInterpreterFactories()).Select(x => x.Configuration); }
+        }
+
         public IEnumerable<IPythonInterpreterFactory> InterpretersOrDefault {
             get {
                 if (Interpreters.Any()) {
@@ -73,22 +80,6 @@ namespace TestUtilities.Python {
 
         public IPythonInterpreterFactory NoInterpretersValue {
             get { return _noInterpretersValue; }
-        }
-
-        public IPythonInterpreterFactory FindInterpreter(Guid id, Version version) {
-            return InterpretersOrDefault.FirstOrDefault(f => f.Id == id && f.Configuration.Version == version);
-        }
-
-        public IPythonInterpreterFactory FindInterpreter(Guid id, string version) {
-            return FindInterpreter(id, Version.Parse(version));
-        }
-
-        public IPythonInterpreterFactory FindInterpreter(string id, string version) {
-            return FindInterpreter(Guid.Parse(id), Version.Parse(version));
-        }
-
-        public IEnumerable<IPythonInterpreterFactoryProvider> KnownProviders {
-            get { return _providers; }
         }
 
         public event EventHandler InterpretersChanged;
@@ -119,10 +110,78 @@ namespace TestUtilities.Python {
             }
         }
 
+        public string DefaultInterpreterId {
+            get {
+                return DefaultInterpreter?.Configuration?.Id;
+            }
+
+            set {
+                DefaultInterpreter = FindInterpreter(value);
+            }
+        }
+
         public event EventHandler DefaultInterpreterChanged;
 
         public bool IsInterpreterGeneratingDatabase(IPythonInterpreterFactory interpreter) {
             throw new NotImplementedException();
+        }
+
+        public void RemoveConfigurableInterpreter(string id) {
+            throw new NotImplementedException();
+        }
+
+        public bool IsConfigurable(string id) {
+            return true;
+            //throw new NotImplementedException();
+        }
+
+        public IPythonInterpreterFactory FindInterpreter(string id) {
+            foreach (var interp in _providers) {
+                foreach (var config in interp.GetInterpreterConfigurations()) {
+                    if (config.Id == id) {
+                        return interp.GetInterpreterFactory(id);
+                    }
+                }
+            }
+            return null;
+        }
+
+        public Task<object> LockInterpreterAsync(IPythonInterpreterFactory factory, object moniker, TimeSpan timeout) {
+            throw new NotImplementedException();
+        }
+
+        public bool IsInterpreterLocked(IPythonInterpreterFactory factory, object moniker) {
+            throw new NotImplementedException();
+        }
+
+        public bool UnlockInterpreter(object cookie) {
+            throw new NotImplementedException();
+        }
+
+        public InterpreterConfiguration FindConfiguration(string id) {
+            foreach (var interp in _providers) {
+                foreach (var config in interp.GetInterpreterConfigurations()) {
+                    if (config.Id == id) {
+                        return config;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public string AddConfigurableInterpreter(string name, InterpreterConfiguration config) {
+            throw new NotImplementedException();
+        }
+
+        public object GetProperty(string id, string propName) {
+            foreach (var interp in _providers) {
+                foreach (var config in interp.GetInterpreterConfigurations()) {
+                    if (config.Id == id) {
+                        return interp.GetProperty(id, propName);
+                    }
+                }
+            }
+            return null;
         }
     }
 }

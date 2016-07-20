@@ -1,69 +1,62 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.ComponentModel.Composition;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.Editor;
-using Microsoft.VisualStudio.Repl;
+using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.PythonTools.InteractiveWindow;
+using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text.Operations;
+using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
+using IOleCommandTarget = Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget;
 
 namespace Microsoft.PythonTools.Editor {
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
-    using IReplWindowCreationListener = IInteractiveWindowCreationListener;
-#endif
-
-    [Export(typeof(IReplWindowCreationListener))]
+    [Export(typeof(IVsInteractiveWindowOleCommandTargetProvider))]
     [ContentType(PythonCoreConstants.ContentType)]
-    class ReplWindowCreationListener : IReplWindowCreationListener {
-        private readonly IVsEditorAdaptersFactoryService _adapterFact;
-        private readonly IEditorOperationsFactoryService _editorOpsFactory;
+    public class PythonOleCommandTargetProvider : IVsInteractiveWindowOleCommandTargetProvider {
         private readonly IServiceProvider _serviceProvider;
+        private readonly IComponentModel _componentModel;
 
         [ImportingConstructor]
-        public ReplWindowCreationListener([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider, IVsEditorAdaptersFactoryService adapterFact, IEditorOperationsFactoryService editorOpsFactory) {
-            _adapterFact = adapterFact;
-            _editorOpsFactory = editorOpsFactory;
+        public PythonOleCommandTargetProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
+            _componentModel = _serviceProvider.GetComponentModel();
         }
 
-        #region IReplWindowCreationListener Members
+        public IOleCommandTarget GetCommandTarget(IWpfTextView textView, IOleCommandTarget nextTarget) {
+            var window = textView.TextBuffer.GetInteractiveWindow();
 
-        public void ReplWindowCreated(IReplWindow window) {
-            var model = _serviceProvider.GetComponentModel();
-            var textView = window.TextView;
-            var vsTextView = _adapterFact.GetViewAdapter(textView);
-            if (window.Evaluator is PythonReplEvaluator) {
-                textView.Properties.AddProperty(typeof(PythonReplEvaluator), (PythonReplEvaluator)window.Evaluator);
-            }
-
-            var editFilter = new EditFilter(window.TextView, _editorOpsFactory.GetEditorOperations(textView), ServiceProvider.GlobalProvider);
-            var intellisenseController = IntellisenseControllerProvider.GetOrCreateController(
+            var controller = IntellisenseControllerProvider.GetOrCreateController(
                 _serviceProvider,
-                model,
+                _componentModel,
                 textView
             );
+            controller._oldTarget = nextTarget;
 
-            editFilter.AttachKeyboardFilter(vsTextView);
-            intellisenseController.AttachKeyboardFilter();
+            var editFilter = EditFilter.GetOrCreate(_serviceProvider, _componentModel, textView, controller);
+
+            if (window == null) {
+                return editFilter;
+            }
+
+            return ReplEditFilter.GetOrCreate(_serviceProvider, _componentModel, textView, editFilter);
         }
-
-        #endregion
     }
 }

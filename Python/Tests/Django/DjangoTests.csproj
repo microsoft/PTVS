@@ -1,6 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Choose>
+    <When Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
+      <PropertyGroup>
+        <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+        <FileUpgradeFlags>
+        </FileUpgradeFlags>
+        <UpgradeBackupLocation>
+        </UpgradeBackupLocation>
+        <OldToolsVersion>14.0</OldToolsVersion>
+      </PropertyGroup>
+    </When>
     <When Condition=" '$(VisualStudioVersion)'=='14.0'  Or '$(TargetVisualStudioVersion)'=='VS140' ">
       <PropertyGroup>
         <MinimumVisualStudioVersion>14.0</MinimumVisualStudioVersion>
@@ -8,27 +18,7 @@
         </FileUpgradeFlags>
         <UpgradeBackupLocation>
         </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='12.0'  Or '$(TargetVisualStudioVersion)'=='VS120' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>12.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
-      </PropertyGroup>
-    </When>
-    <When Condition=" '$(VisualStudioVersion)'=='11.0'  Or '$(TargetVisualStudioVersion)'=='VS110' ">
-      <PropertyGroup>
-        <MinimumVisualStudioVersion>11.0</MinimumVisualStudioVersion>
-        <FileUpgradeFlags>
-        </FileUpgradeFlags>
-        <UpgradeBackupLocation>
-        </UpgradeBackupLocation>
-        <OldToolsVersion>4.0</OldToolsVersion>
+        <OldToolsVersion>14.0</OldToolsVersion>
       </PropertyGroup>
     </When>
   </Choose>
@@ -68,32 +58,14 @@
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
     <Reference Include="System.Web" />
-  </ItemGroup>
-  <PropertyGroup>
-    <WebEditorHintPath>$(DevEnvDir)\CommonExtensions\Microsoft\Web\Editor\</WebEditorHintPath>
-    <WebEditorHintPath Condition="'$(VSTarget)' == '14.0'">$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\</WebEditorHintPath>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(VSTarget)' != '10.0' And '$(VSTarget)' != '11.0'">
     <Reference Include="Microsoft.VisualStudio.Html.Package, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>$(WebEditorHintPath)Microsoft.VisualStudio.Html.Package.dll</HintPath>
+      <HintPath>$(DevEnvDir)\Extensions\Microsoft\Web Tools\Editors\Microsoft.VisualStudio.Html.Package.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Web.HTML, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' == '14.0'">
+    <Reference Include="Microsoft.VisualStudio.Web.HTML, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(DevEnvDir)Microsoft.VisualStudio.Web.Html.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <CodeAnalysisDependentAssemblyPaths Condition=" '$(VS100COMNTOOLS)' != '' " Include="$(VS100COMNTOOLS)..\IDE\PrivateAssemblies">
-      <Visible>False</Visible>
-    </CodeAnalysisDependentAssemblyPaths>
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\..\..\Common\Product\SharedProject\ProcessOutput.cs">
-      <Link>ProcessOutput.cs</Link>
-    </Compile>
-    <Compile Include="..\..\..\Common\Product\SharedProject\TaskExtensions.cs">
-      <Link>TaskExtensions.cs</Link>
-    </Compile>
-    <Compile Include="SnapshotSpanSourceCodeReaderTests.cs" />
     <Compile Include="AttributeTests.cs" />
     <Compile Include="DjangoAnalyzerTests.cs" />
     <Compile Include="DjangoDebuggerTests.cs" />
@@ -101,33 +73,41 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="$(BuildRoot)Python\Product\Analysis\Analysis.csproj">
+    <ProjectReference Include="..\..\Product\Analysis\Analysis.csproj">
       <Project>{A85D479D-67A9-4BDB-904A-7D86DAF68A6F}</Project>
       <Name>Analysis</Name>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Product\Debugger\Debugger.csproj">
+    <ProjectReference Include="..\..\Product\Debugger\Debugger.csproj">
       <Project>{DECC7971-FA58-4DB0-9561-BFFADD393BBD}</Project>
       <Name>Debugger</Name>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Product\Django\Django.csproj">
+    <ProjectReference Include="..\..\Product\Django\Django.csproj">
       <Project>{639F1EFB-5A8B-4F8B-BF49-BC73F244D38D}</Project>
       <Name>Django</Name>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Common\Tests\Utilities\TestUtilities.csproj">
+    <ProjectReference Include="..\..\..\Common\Tests\Utilities\TestUtilities.csproj">
       <Project>{D092D54E-FF29-4D32-9AEE-4EF704C92F67}</Project>
       <Name>TestUtilities</Name>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Tests\DebuggerTests\DebuggerTests.csproj">
+    <ProjectReference Include="..\DebuggerTests\DebuggerTests.csproj">
       <Project>{E50E1B02-257C-4E10-AC1C-5ED36B48EE40}</Project>
       <Name>DebuggerTests</Name>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Tests\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
+    <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
       <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>
       <Name>TestUtilities.Python.Analysis</Name>
     </ProjectReference>
-    <ProjectReference Include="$(BuildRoot)Python\Tests\Utilities.Python\TestUtilities.Python.csproj">
+    <ProjectReference Include="..\Utilities.Python\TestUtilities.Python.csproj">
       <Project>{62641b47-1abb-4638-a3d5-2a834d089667}</Project>
       <Name>TestUtilities.Python</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\Common\Common.csproj">
+      <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\Django.Analysis\Django.Analysis.csproj">
+      <Project>{74d0775f-2d1e-4685-9bd4-0658f496f8dc}</Project>
+      <Name>Django.Analysis</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="..\TestProjectAfter.settings" />

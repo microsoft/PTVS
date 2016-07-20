@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -32,6 +34,13 @@ namespace Microsoft.PythonTools.Analysis {
         private static HashSet<AnalysisValue> _processing;
 
         protected AnalysisValue() { }
+
+
+        internal bool IsAlive {
+            get {
+                return true;
+            }
+        }
 
         /// <summary>
         /// Returns an immutable set which contains just this AnalysisValue.
@@ -95,7 +104,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        public virtual IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
+        public virtual IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             return new Dictionary<string, IAnalysisSet>();
         }
 
@@ -184,6 +193,14 @@ namespace Microsoft.PythonTools.Analysis {
         /// implementation, even if the return value is ignored.
         /// </remarks>
         public virtual IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
+            return GetTypeMember(node, unit, name);
+        }
+
+        /// <summary>
+        /// Gets an attribute that's only declared in the classes dictionary, not in an instance
+        /// dictionary
+        /// </summary>
+        public virtual IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
             return AnalysisSet.Empty;
         }
 
@@ -246,12 +263,22 @@ namespace Microsoft.PythonTools.Analysis {
             return GetIndex(node, unit, unit.ProjectState.ClassInfos[BuiltinTypeId.Int].SelfSet);
         }
 
+        public virtual IAnalysisSet GetAsyncEnumeratorTypes(Node node, AnalysisUnit unit) {
+            return AnalysisSet.Empty;
+        }
+
         public virtual IAnalysisSet GetIterator(Node node, AnalysisUnit unit) {
-            return GetMember(node, unit, "__iter__").Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames);
+            return GetTypeMember(node, unit, "__iter__").Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames);
+        }
+
+        public virtual IAnalysisSet GetAsyncIterator(Node node, AnalysisUnit unit) {
+            return GetTypeMember(node, unit, "__aiter__")
+                .Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames)
+                .Await(node, unit);
         }
 
         public virtual IAnalysisSet GetIndex(Node node, AnalysisUnit unit, IAnalysisSet index) {
-            return GetMember(node, unit, "__getitem__").Call(node, unit, new[] { index }, ExpressionEvaluator.EmptyNames);
+            return GetTypeMember(node, unit, "__getitem__").Call(node, unit, new[] { index }, ExpressionEvaluator.EmptyNames);
         }
 
         /// <summary>
@@ -271,16 +298,16 @@ namespace Microsoft.PythonTools.Analysis {
             return SelfSet;
         }
 
-        public virtual IAnalysisSet GetStaticDescriptor(AnalysisUnit unit) {
-            return SelfSet;
-        }
-
         public virtual IAnalysisSet GetDescriptor(PythonAnalyzer projectState, AnalysisValue instance, AnalysisValue context) {
             return SelfSet;
         }
 
         public virtual IAnalysisSet GetInstanceType() {
             return SelfSet;
+        }
+
+        public virtual IAnalysisSet Await(Node node, AnalysisUnit unit) {
+            return AnalysisSet.Empty;
         }
 
         internal virtual bool IsOfType(IAnalysisSet klass) {

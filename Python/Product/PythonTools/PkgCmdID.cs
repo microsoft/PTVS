@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 // PkgCmdID.cs
 // MUST match PkgCmdID.h
@@ -20,7 +22,6 @@ namespace Microsoft.PythonTools {
     static class PkgCmdIDList {
         public const uint cmdidExecuteFileInRepl = 0x102;
         public const uint cmdidSendToRepl = 0x103;
-        public const uint cmdidSendToDefiningModule = 0x104;
         public const uint cmdidFillParagraph = 0x105;
         public const uint cmdidDiagnostics = 0x106;
         public const uint cmdidRemoveImports = 0x107;
@@ -29,22 +30,10 @@ namespace Microsoft.PythonTools {
         public const uint cmdidExtractMethodIntegratedShell = 0x10a;
         public const uint cmdidImportWizard = 0x10d;
         public const uint cmdidSurveyNews = 0x10e;
+        public const uint cmdidImportCoverage = 0x10f;
 
         public const uint cmdidReplWindow = 0x201;
-        public const uint cmdidReplWindow2 = 0x202;
-        public const uint cmdidReplWindow3 = 0x203;
-        public const uint cmdidReplWindow4 = 0x204;
-        public const uint cmdidReplWindow5 = 0x205;
-        public const uint cmdidReplWindow6 = 0x206;
-        public const uint cmdidReplWindow7 = 0x207;
-        public const uint cmdidReplWindow8 = 0x208;
-        public const uint cmdidReplWindow9 = 0x209;
-        public const uint cmdidReplWindowA = 0x20A;
-        public const uint cmdidReplWindowB = 0x20B;
-        public const uint cmdidReplWindowC = 0x20C;
-        public const uint cmdidReplWindowD = 0x20D;
-        public const uint cmdidReplWindowE = 0x20E;
-        public const uint cmdidReplWindowF = 0x20F;
+        public const uint cmdidNewInteractiveWindow = 0x202;
         public const uint cmdidDebugReplWindow = 0x210;
         public const uint cmdidInterpreterList = 0x220;
 
@@ -64,5 +53,10 @@ namespace Microsoft.PythonTools {
 
         public const uint cmdidInstallRequirementsTxt = 0x4033;
         public const uint cmdidGenerateRequirementsTxt = 0x4034;
+
+        public const uint comboIdReplScopes = 0x5000;
+        public const uint comboIdReplScopesGetList = 0x5001;
+        public const uint comboIdReplEvaluators = 0x5002;
+        public const uint comboIdReplEvaluatorsGetList = 0x5003;
     };
 }

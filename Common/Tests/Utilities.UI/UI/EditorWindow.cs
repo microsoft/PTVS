@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -30,6 +32,7 @@ using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Tagging;
 using Microsoft.VisualStudioTools.VSTestHost;
+using Task = System.Threading.Tasks.Task;
 
 namespace TestUtilities.UI {
     public class EditorWindow : AutomationWrapper, IEditor {
@@ -105,7 +108,7 @@ namespace TestUtilities.UI {
             for (int i = 0; i < 100; i++) {
                 string curText = Text;
 
-                if (Text.StartsWith(expected, StringComparison.CurrentCulture)) {
+                if (curText.StartsWith(expected, StringComparison.CurrentCulture)) {
                     return;
                 }
                 Thread.Sleep(100);
@@ -115,12 +118,12 @@ namespace TestUtilities.UI {
         }
 
         public void WaitForTextEnd(params string[] text) {
-            string expected = GetExpectedText(text);
+            string expected = GetExpectedText(text).TrimEnd();
 
             for (int i = 0; i < 100; i++) {
                 string curText = Text.TrimEnd();
 
-                if (Text.EndsWith(expected, StringComparison.CurrentCulture)) {
+                if (curText.EndsWith(expected, StringComparison.CurrentCulture)) {
                     return;
                 }
                 Thread.Sleep(100);
@@ -167,40 +170,44 @@ namespace TestUtilities.UI {
                 }
             }
         }
-
 #if DEV14_OR_LATER
 #pragma warning disable 0618
 #endif
-
-        // TODO: Switch from smart tags to Light Bulb: http://go.microsoft.com/fwlink/?LinkId=394601
         public void StartSmartTagSessionNoSession() {
             ShowSmartTag();
-            System.Threading.Thread.Sleep(100);
-            Assert.IsTrue(!(IntellisenseSessionStack.TopSession is ISmartTagSession));
+            Thread.Sleep(100);
+            Assert.IsNotInstanceOfType(
+                IntellisenseSessionStack.TopSession,
+#if DEV14_OR_LATER
+                typeof(ILightBulbSession)
+#else
+                typeof(ISmartTagSession)
+#endif
+            );
         }
 
         private static void ShowSmartTag() {
-            ThreadPool.QueueUserWorkItem(ShowSmartTagWorker);
-        }
-
-        private static void ShowSmartTagWorker(object dummy) {
-            for (int i = 0; i < 40; i++) {
-                try {
-                    VSTestContext.DTE.ExecuteCommand("View.ShowSmartTag");
-                    break;
-                } catch {
-                    System.Threading.Thread.Sleep(250);
+            Task.Run(() => {
+                for (int i = 0; i < 40; i++) {
+                    try {
+                        VSTestContext.DTE.ExecuteCommand("View.ShowSmartTag");
+                        break;
+                    } catch {
+                        Thread.Sleep(250);
+                    }
                 }
-            }
+            }).Wait();
         }
 
-        public SessionHolder<ISmartTagSession> StartSmartTagSession() {
+        public SessionHolder<SmartTagSessionWrapper> StartSmartTagSession() {
             ShowSmartTag();
-            return WaitForSession<ISmartTagSession>();
-        }
 #if DEV14_OR_LATER
-#pragma warning restore 0618
+            var sh = WaitForSession<ILightBulbSession>();
+#else
+            var sh = WaitForSession<ISmartTagSession>();
 #endif
+            return sh == null ? null : new SessionHolder<SmartTagSessionWrapper>(new SmartTagSessionWrapper(sh), this);
+        }
 
         public SessionHolder<T> WaitForSession<T>() where T : IIntellisenseSession {
             return WaitForSession<T>(true);

@@ -1,16 +1,21 @@
- # ############################################################################
- #
- # Copyright (c) Microsoft Corporation. 
- #
- # This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- # copy of the license can be found in the License.html file at the root of this distribution. If 
- # you cannot locate the Apache License, Version 2.0, please send an email to 
- # vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- # by the terms of the Apache License, Version 2.0.
- #
- # You must not remove this notice, or any other, from this software.
- #
- # ###########################################################################
+# Python Tools for Visual Studio
+# Copyright(c) Microsoft Corporation
+# All rights reserved.
+# 
+# Licensed under the Apache License, Version 2.0 (the License); you may not use
+# this file except in compliance with the License. You may obtain a copy of the
+# License at http://www.apache.org/licenses/LICENSE-2.0
+# 
+# THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+# OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+# IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+# MERCHANTABLITY OR NON-INFRINGEMENT.
+# 
+# See the Apache Version 2.0 License for specific language governing
+# permissions and limitations under the License.
+
+__author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
+__version__ = "3.0.0.0"
 
 __all__ = ['enable_attach', 'wait_for_attach', 'break_into_debugger', 'settrace', 'is_attached', 'AttachAlreadyEnabledError']
 
@@ -70,7 +75,7 @@ from ptvsd.visualstudio_py_util import to_bytes, read_bytes, read_int, read_stri
 
 PTVS_VER = '2.2'
 DEFAULT_PORT = 5678
-PTVSDBG_VER = 5 # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
+PTVSDBG_VER = 6 # must be kept in sync with DebuggerProtocolVersion in PythonRemoteProcess.cs
 PTVSDBG = to_bytes('PTVSDBG')
 ACPT = to_bytes('ACPT')
 RJCT = to_bytes('RJCT')
@@ -155,9 +160,6 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
         raise AttachAlreadyEnabledError('ptvsd.enable_attach() has already been called in this process.')
     _attach_enabled = True
 
-    if redirect_output:
-        vspd.enable_output_redirection()
-
     atexit.register(vspd.detach_process_and_notify_debugger)
 
     server = socket.socket()
@@ -235,6 +237,10 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
                     client.recv(1)
 
                 elif response == ATCH:
+                    debug_options = vspd.parse_debug_options(read_string(client))
+                    if redirect_output:
+                        debug_options.add('RedirectOutput')
+
                     if vspd.DETACHED:
                         write_bytes(client, ACPT)
                         try:
@@ -248,7 +254,7 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
                         write_int(client, minor)
                         write_int(client, micro)
 
-                        vspd.attach_process_from_socket(client, report = True)
+                        vspd.attach_process_from_socket(client, debug_options, report = True)
                         vspd.mark_all_threads_for_break(vspd.STEPPING_ATTACH_BREAK)
                         _attached.set()
                         client = None
@@ -270,7 +276,7 @@ def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, 
                     client.close()
 
     server_thread = threading.Thread(target = server_thread_func)
-    server_thread.daemon = True
+    server_thread.setDaemon(True)
     server_thread.start()
 
     frames = []

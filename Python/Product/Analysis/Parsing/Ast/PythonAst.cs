@@ -1,16 +1,18 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -22,14 +24,14 @@ namespace Microsoft.PythonTools.Parsing.Ast {
     /// <summary>
     /// Top-level ast for all Python code.  Holds onto the body and the line mapping information.
     /// </summary>
-    public sealed class PythonAst : ScopeStatement, ILocationResolver {
+    public sealed class PythonAst : ScopeStatement {
         private readonly PythonLanguageVersion _langVersion;
         private readonly Statement _body;
-        internal readonly int[] _lineLocations;
+        internal readonly NewLineLocation[] _lineLocations;
         private readonly Dictionary<Node, Dictionary<object, object>> _attributes = new Dictionary<Node, Dictionary<object, object>>();
         private string _privatePrefix;
 
-        public PythonAst(Statement body, int[] lineLocations, PythonLanguageVersion langVersion) {
+        public PythonAst(Statement body, NewLineLocation[] lineLocations, PythonLanguageVersion langVersion) {
             if (body == null) {
                 throw new ArgumentNullException("body");
             }
@@ -108,23 +110,19 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         internal SourceLocation IndexToLocation(int index) {
-            if (index == -1) {
-                return SourceLocation.Invalid;
-            }
+            return NewLineLocation.IndexToLocation(_lineLocations, index);
+        }
 
-            var locs = GlobalParent._lineLocations;
-            int match = Array.BinarySearch(locs, index);
-            if (match < 0) {
-                // If our index = -1, it means we're on the first line.
-                if (match == -1) {
-                    return new SourceLocation(index, 1, index + 1);
-                }
-
-                // If we couldn't find an exact match for this line number, get the nearest
-                // matching line number less than this one
-                match = ~match - 1;
+        internal int GetLineEndFromPosition(int index) {
+            var loc = IndexToLocation(index);
+            var res = _lineLocations[loc.Line - 1];
+            switch (res.Kind) {
+                case NewLineKind.LineFeed:
+                case NewLineKind.CarriageReturn: return res.EndIndex - 1;
+                case NewLineKind.CarriageReturnLineFeed: return res.EndIndex - 2;
+                default:
+                    throw new InvalidOperationException("Bad line ending info");
             }
-            return new SourceLocation(index, match + 2, index - locs[match] + 1);
         }
 
         #region Name Binding Support
@@ -195,22 +193,6 @@ namespace Microsoft.PythonTools.Parsing.Ast {
             _body.AppendCodeString(res, ast, format);
             res.Append(this.GetExtraVerbatimText(ast));
         }
-
-        #region ILocationResolver Members
-
-        LocationInfo ILocationResolver.ResolveLocation(IProjectEntry project, object location) {
-            Node node = (Node)location;
-            MemberExpression me = node as MemberExpression;
-            SourceSpan span;
-            if (me != null) {
-                span = me.GetNameSpan(this);
-            } else {
-                span = node.GetSpan(this);
-            }
-            return new LocationInfo(project, span.Start.Line, span.Start.Column);
-        }
-
-        #endregion
     }
 }
 

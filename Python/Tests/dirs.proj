@@ -10,18 +10,41 @@
     <ProjectFile Include="DebuggerUITests\DebuggerUITests.csproj" />
     <ProjectFile Include="Django\DjangoTests.csproj" />
     <ProjectFile Include="Django.UI\DjangoUITests.csproj" />
-    <ProjectFile Include="FastCgi\FastCgiTest.csproj" Condition="$(IncludeWFastCgi)" />
-    <ProjectFile Include="TestAdapterTests\TestAdapterTests.csproj" Condition="$(IncludeTestAdapter)" />
+    <ProjectFile Include="FastCgi\FastCgiTest.csproj" />
+    <ProjectFile Include="TestAdapterTests\TestAdapterTests.csproj" />
     <ProjectFile Include="VSInterpretersTests\VSInterpretersTests.csproj" />
     <ProjectFile Include="ProfilingUITests\ProfilingUITests.csproj" />
     <ProjectFile Include="Core\PythonToolsTests.csproj" />
     <ProjectFile Include="Core.UI\PythonToolsUITests.csproj" />
-    <ProjectFile Include="IronPython\IronPythonTests.csproj" />
+    <ProjectFile Include="IronPython\IronPythonTests.csproj" Condition="'$(IncludeIronPython)' == 'True'" />
     <ProjectFile Include="ReplWindowUITests\ReplWindowUITests.csproj" />
     <ProjectFile Include="Utilities.Python\TestUtilities.Python.csproj" />
     <ProjectFile Include="PythonToolsMockTests\PythonToolsMockTests.csproj" />
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
+
+  <Target Name="_CopyTestData" Condition="'$(CopyTestData)' == 'true'" AfterTargets="Build">
+    <ItemGroup>
+      <_RawTestDataFiles Include="TestData\**\*" />
+      <_TestDataFiles Include="@(_RawTestDataFiles)">
+        <TargetPath>$(OutputPath)TestData\%(_RawTestDataFiles.RecursiveDir)%(_RawTestDataFiles.Filename)%(_RawTestDataFiles.Extension)</TargetPath>
+      </_TestDataFiles>
+      <_TestDataFiles Include="InstallFromDrop.ps1">
+        <TargetPath>$(OutputPath)InstallFromDrop.ps1</TargetPath>
+      </_TestDataFiles>
+      <_TestDataFiles Include="refreshdb.py">
+        <TargetPath>$(OutputPath)refreshdb.py</TargetPath>
+      </_TestDataFiles>
+    </ItemGroup>
+    <Copy SourceFiles="@(_TestDataFiles)"
+          DestinationFiles="@(_TestDataFiles->'%(TargetPath)')"
+          SkipUnchangedFiles="true"
+          OverwriteReadOnlyFiles="true"
+          Retries="3"
+          RetryDelayMilliseconds="1000" />
+    
+    <WriteLinesToFile File="$(OutputPath)build.root" Lines="Test data was included, so mark as top of tree" Overwrite="true" />
+  </Target>
 
 </Project>

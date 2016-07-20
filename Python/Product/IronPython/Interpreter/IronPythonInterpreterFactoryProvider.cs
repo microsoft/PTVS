@@ -1,45 +1,69 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using System.Diagnostics;
 using System.Reflection;
+using System.Threading;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.Win32;
 
 namespace Microsoft.IronPythonTools.Interpreter {
+    [InterpreterFactoryId("IronPython")]
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    class IronPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
+    sealed class IronPythonInterpreterFactoryProvider : IPythonInterpreterFactoryProvider, IDisposable {
         private IPythonInterpreterFactory _interpreter;
         private IPythonInterpreterFactory _interpreterX64;
+        private InterpreterConfiguration _config, _configX64;
         const string IronPythonCorePath = "Software\\IronPython";
 
         public IronPythonInterpreterFactoryProvider() {
             DiscoverInterpreterFactories();
-            if (_interpreter == null) {
-                var token = RegistryWatcher.Instance.TryAdd(
-                    RegistryHive.LocalMachine, RegistryView.Registry32, IronPythonCorePath,
-                    Registry_Changed,
-                    recursive: true, notifyValueChange: true, notifyKeyChange: true
-                ) ?? RegistryWatcher.Instance.Add(
-                    RegistryHive.LocalMachine, RegistryView.Registry32, "Software",
-                    Registry_Software_Changed,
-                    recursive: false, notifyValueChange: false, notifyKeyChange: true
-                );
+            if (_config == null) {
+                StartWatching(RegistryHive.LocalMachine, RegistryView.Registry32);
+            }
+        }
+
+        public void Dispose() {
+            (_interpreter as IDisposable)?.Dispose();
+            (_interpreterX64 as IDisposable)?.Dispose();
+        }
+
+
+        private void StartWatching(RegistryHive hive, RegistryView view, int retries = 5) {
+            var tag = RegistryWatcher.Instance.TryAdd(
+                hive, view, IronPythonCorePath,
+                Registry_Changed,
+                recursive: true, notifyValueChange: true, notifyKeyChange: true
+            ) ?? RegistryWatcher.Instance.TryAdd(
+                hive, view, "Software",
+                Registry_Software_Changed,
+                recursive: false, notifyValueChange: false, notifyKeyChange: true
+            );
+
+            if (tag == null && retries > 0) {
+                Trace.TraceWarning("Failed to watch registry. Retrying {0} more times", retries);
+                Thread.Sleep(100);
+                StartWatching(hive, view, retries - 1);
+            } else if (tag == null) {
+                Trace.TraceError("Failed to watch registry");
             }
         }
 
@@ -55,7 +79,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 e.CancelWatcher = true;
             } else {
                 DiscoverInterpreterFactories();
-                if (_interpreter != null) {
+                if (_config != null) {
                     e.CancelWatcher = true;
                 }
             }
@@ -81,19 +105,61 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IPythonInterpreterProvider Members
 
         public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
-            if (_interpreter != null) {
-                yield return _interpreter;
+            if (_config != null) {
+                yield return GetInterpreterFactory(_config.Id);
             }
-            if (_interpreterX64 != null) {
-                yield return _interpreterX64;
+            if (_configX64 != null) {
+                yield return GetInterpreterFactory(_configX64.Id);
+            }
+        }
+
+        public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
+            if (_config != null) {
+                yield return _config;
+            }
+            if (_configX64 != null) {
+                yield return _configX64;
+            }
+        }
+
+        public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+            if (_config != null && id == _config.Id) {
+                EnsureInterpreter();
+
+                return _interpreter;
+            } else if (_configX64 != null && id == _configX64.Id) {
+                EnsureInterpreterX64();
+
+                return _interpreterX64;
+            }
+            return null;
+        }
+
+        private void EnsureInterpreterX64() {
+            if (_interpreterX64 == null) {
+                lock (this) {
+                    if (_interpreterX64 == null) {
+                        _interpreterX64 = new IronPythonInterpreterFactory(_configX64.Architecture);
+                    }
+                }
+            }
+        }
+
+        private void EnsureInterpreter() {
+            if (_interpreter == null) {
+                lock (this) {
+                    if (_interpreter == null) {
+                        _interpreter = new IronPythonInterpreterFactory(_config.Architecture);
+                    }
+                }
             }
         }
 
         private void DiscoverInterpreterFactories() {
-            if (_interpreter == null && IronPythonResolver.GetPythonInstallDir() != null) {
-                _interpreter = new IronPythonInterpreterFactory(ProcessorArchitecture.X86);
+            if (_config == null && IronPythonResolver.GetPythonInstallDir() != null) {
+                _config = IronPythonInterpreterFactory.GetConfiguration(ProcessorArchitecture.X86);
                 if (Environment.Is64BitOperatingSystem) {
-                    _interpreterX64 = new IronPythonInterpreterFactory(ProcessorArchitecture.Amd64);
+                    _configX64 = IronPythonInterpreterFactory.GetConfiguration(ProcessorArchitecture.Amd64);
                 }
                 var evt = InterpreterFactoriesChanged;
                 if (evt != null) {
@@ -104,6 +170,15 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public event EventHandler InterpreterFactoriesChanged;
 
+        public object GetProperty(string id, string propName) {
+            switch (propName) {
+                case "Vendor":
+                    return "IronPython team";
+                case "SupportUrl":
+                    return "http://ironpython.net/";
+            }
+            return null;
+        }
 
         #endregion
 

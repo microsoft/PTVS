@@ -1,16 +1,18 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections;
@@ -28,6 +30,9 @@ using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
@@ -151,6 +156,9 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Return an imageindex
         /// </summary>
         /// <returns></returns>
+#if DEV14_OR_LATER
+        [Obsolete("Use GetIconMoniker() to specify the icon")]
+#endif
         public virtual int ImageIndex {
             get { return NoImage; }
         }
@@ -507,14 +515,28 @@ namespace Microsoft.VisualStudioTools.Project {
             return null;
         }
 
+#if DEV14_OR_LATER
+        protected virtual bool SupportsIconMonikers {
+            get { return false; }
+        }
+        
         /// <summary>
-        /// Return an iconhandle
+        /// Returns the icon to use.
+        /// </summary>
+        protected virtual ImageMoniker GetIconMoniker(bool open) {
+            return default(ImageMoniker);
+        }
+#else
+        /// <summary>
+        /// Return an icon handle
         /// </summary>
         /// <param name="open"></param>
         /// <returns></returns>
         public virtual object GetIconHandle(bool open) {
-            return null;
+            var index = ImageIndex;
+            return index == NoImage ? null : (object)ProjectMgr.ImageHandler.GetIconHandle(index);
         }
+#endif
 
         /// <summary>
         /// Removes a node from the hierarchy.
@@ -576,24 +598,17 @@ namespace Microsoft.VisualStudioTools.Project {
                     result = false;
                     break;
 
+#if !DEV14_OR_LATER
                 case __VSHPROPID.VSHPROPID_IconImgList:
                     result = this.ProjectMgr.ImageHandler.ImageList.Handle;
                     break;
 
                 case __VSHPROPID.VSHPROPID_OpenFolderIconIndex:
                 case __VSHPROPID.VSHPROPID_IconIndex:
-                    int index = this.ImageIndex;
+                    int index = ImageIndex;
                     if (index != NoImage) {
                         result = index;
                     }
-                    break;
-
-                case __VSHPROPID.VSHPROPID_StateIconIndex:
-                    result = (int)this.StateIconIndex;
-                    break;
-
-                case __VSHPROPID.VSHPROPID_OverlayIconIndex:
-                    result = (int)this.OverlayIconIndex;
                     break;
 
                 case __VSHPROPID.VSHPROPID_IconHandle:
@@ -602,6 +617,15 @@ namespace Microsoft.VisualStudioTools.Project {
 
                 case __VSHPROPID.VSHPROPID_OpenFolderIconHandle:
                     result = GetIconHandle(true);
+                    break;
+#endif
+
+                case __VSHPROPID.VSHPROPID_StateIconIndex:
+                    result = (int)this.StateIconIndex;
+                    break;
+
+                case __VSHPROPID.VSHPROPID_OverlayIconIndex:
+                    result = (int)this.OverlayIconIndex;
                     break;
 
                 case __VSHPROPID.VSHPROPID_NextVisibleSibling:
@@ -725,6 +749,32 @@ namespace Microsoft.VisualStudioTools.Project {
                     break;
             }
 #endif
+
+#if DEV14_OR_LATER
+            __VSHPROPID8 id8 = (__VSHPROPID8)propId;
+            switch (id8) {
+                case __VSHPROPID8.VSHPROPID_SupportsIconMonikers:
+                    result = SupportsIconMonikers;
+                    break;
+
+                case __VSHPROPID8.VSHPROPID_IconMonikerGuid:
+                    result = GetIconMoniker(false).Guid;
+                    break;
+
+                case __VSHPROPID8.VSHPROPID_IconMonikerId:
+                    result = GetIconMoniker(false).Id;
+                    break;
+
+                case __VSHPROPID8.VSHPROPID_OpenFolderIconMonikerGuid:
+                    result = GetIconMoniker(true).Guid;
+                    break;
+
+                case __VSHPROPID8.VSHPROPID_OpenFolderIconMonikerId:
+                    result = GetIconMoniker(true).Id;
+                    break;
+            }
+#endif
+
 #if DEBUG
             if (propId != LastTracedProperty) {
                 string trailer = (result == null) ? "null" : result.ToString();
@@ -776,6 +826,18 @@ namespace Microsoft.VisualStudioTools.Project {
             if (propid == (int)__VSHPROPID.VSHPROPID_TypeGuid) {
                 guid = this.ItemTypeGuid;
             }
+#if DEV14_OR_LATER
+            __VSHPROPID8 id8 = (__VSHPROPID8)propid;
+            switch (id8) {
+                case __VSHPROPID8.VSHPROPID_IconMonikerGuid:
+                    guid = GetIconMoniker(false).Guid;
+                    break;
+
+                case __VSHPROPID8.VSHPROPID_OpenFolderIconMonikerGuid:
+                    guid = GetIconMoniker(true).Guid;
+                    break;
+            }
+#endif
 
             if (guid.Equals(Guid.Empty)) {
                 return VSConstants.DISP_E_MEMBERNOTFOUND;
@@ -829,7 +891,7 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Removes items from the hierarchy. Project overwrites this
         /// </summary>
         /// <param name="removeFromStorage"></param>
-        public virtual void Remove(bool removeFromStorage) {
+        public virtual bool Remove(bool removeFromStorage) {
             string documentToRemove = this.GetMkDocument();
 
             // Ask Document tracker listeners if we can remove the item.
@@ -837,16 +899,17 @@ namespace Microsoft.VisualStudioTools.Project {
             if (!String.IsNullOrWhiteSpace(documentToRemove)) {
                 VSQUERYREMOVEFILEFLAGS[] queryRemoveFlags = this.GetQueryRemoveFileFlags(filesToBeDeleted);
                 if (!this.ProjectMgr.Tracker.CanRemoveItems(filesToBeDeleted, queryRemoveFlags)) {
-                    return;
+                    return false;
                 }
             }
 
             // Close the document if it has a manager.
             DocumentManager manager = this.GetDocumentManager();
             if (manager != null) {
-                if (manager.Close(!removeFromStorage ? __FRAMECLOSE.FRAMECLOSE_PromptSave : __FRAMECLOSE.FRAMECLOSE_NoSave) == VSConstants.E_ABORT) {
+                int res = manager.Close(!removeFromStorage ? __FRAMECLOSE.FRAMECLOSE_PromptSave : __FRAMECLOSE.FRAMECLOSE_NoSave);
+                if (res == VSConstants.E_ABORT || res == VSConstants.S_FALSE) {
                     // User cancelled operation in message box.
-                    return;
+                    return false;
                 }
             }
 
@@ -867,6 +930,7 @@ namespace Microsoft.VisualStudioTools.Project {
 
             // Dispose the node now that is deleted.
             this.Dispose(true);
+            return true;
         }
 
         /// <summary>
@@ -1108,28 +1172,40 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         /// <summary>
+        /// Handles the exclude from project command. After operations 
+        /// is completed it refreshes property browser.
+        /// </summary>
+        internal int ExcludeFromProjectWithRefresh() {
+            try {
+                int hr = this.ExcludeFromProject();
+                if (ErrorHandler.Succeeded(hr)) {
+                    // https://pytools.codeplex.com/workitem/1996
+                    // Mark the previous sibling or direct parent as the active item
+                    IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
+                        ProjectMgr.Site,
+                        new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
+                    windows.ExpandItem(
+                        ProjectMgr,
+                        PreviousVisibleSibling != null ?
+                            PreviousVisibleSibling.ID :
+                            Parent.ID,
+                        EXPANDFLAGS.EXPF_SelectItem
+                    );
+                }
+                return hr;
+            }
+            finally {
+                ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+            }
+        }
+
+        /// <summary>
         /// Handles the exclude from project command potentially displaying
         /// a progress bar if the operation can take a long time.
         /// </summary>
         /// <returns></returns>
         internal virtual int ExcludeFromProjectWithProgress() {
-
-            int hr = ExcludeFromProject();
-            if (ErrorHandler.Succeeded(hr)) {
-                // https://pytools.codeplex.com/workitem/1996
-                // Mark the previous sibling or direct parent as the active item
-                IVsUIHierarchyWindow2 windows = UIHierarchyUtilities.GetUIHierarchyWindow(
-                    ProjectMgr.Site,
-                    new Guid(ToolWindowGuids80.SolutionExplorer)) as IVsUIHierarchyWindow2;
-                windows.ExpandItem(
-                    ProjectMgr,
-                    PreviousVisibleSibling != null ?
-                        PreviousVisibleSibling.ID :
-                        Parent.ID,
-                    EXPANDFLAGS.EXPF_SelectItem
-                );
-            }
-            return hr;
+            return ExcludeFromProjectWithRefresh();
         }
 
         /// <summary>
@@ -1145,7 +1221,23 @@ namespace Microsoft.VisualStudioTools.Project {
         /// if the operation can potentially take a long time.
         /// </summary>
         internal virtual int IncludeInProjectWithProgress(bool includeChildren) {
-            return IncludeInProject(includeChildren);
+            return IncludeInProjectWithRefresh(includeChildren);
+        }
+
+        /// <summary>
+        /// Handles the include in project command.
+        /// </summary>
+        internal int IncludeInProjectWithRefresh(bool includeChildren) {
+            try {
+                return this.IncludeInProject(includeChildren);
+            }
+            finally {
+                //
+                ((CommonProjectNode)this.ProjectMgr).BoldStartupItem();
+
+                // https://nodejstools.codeplex.com/workitem/273, refresh the property browser...
+                ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+            }
         }
 
         /// <summary>
@@ -1324,7 +1416,7 @@ namespace Microsoft.VisualStudioTools.Project {
             return shell.ShowContextMenu(0, ref menuGroup, menuId, pnts, (Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget)ProjectMgr);
         }
 
-        #region initiation of command execution
+#region initiation of command execution
         /// <summary>
         /// Handles command execution.
         /// </summary>
@@ -1396,9 +1488,9 @@ namespace Microsoft.VisualStudioTools.Project {
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }
 
-        #endregion
+#endregion
 
-        #region query command handling
+#region query command handling
 
 
         /// <summary>
@@ -1455,7 +1547,7 @@ namespace Microsoft.VisualStudioTools.Project {
             return (int)OleConstants.OLECMDERR_E_NOTSUPPORTED;
         }
 
-        #endregion
+#endregion
         internal virtual bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
             return this.ProjectMgr.CanProjectDeleteItems;
         }
@@ -1618,9 +1710,9 @@ namespace Microsoft.VisualStudioTools.Project {
             cancel = true;
         }
 
-        #endregion
+#endregion
 
-        #region public methods
+#region public methods
 
         /// <summary>
         /// Clears the cached node properties so that it will be recreated on the next request.
@@ -1741,9 +1833,9 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
 
-        #endregion
+#endregion
 
-        #region IDisposable
+#region IDisposable
         /// <summary>
         /// The IDispose interface Dispose method for disposing the object determinastically.
         /// </summary>
@@ -1752,7 +1844,7 @@ namespace Microsoft.VisualStudioTools.Project {
             GC.SuppressFinalize(this);
         }
 
-        #endregion
+#endregion
 
         public virtual void Close() {
             DocumentManager manager = this.GetDocumentManager();
@@ -1772,7 +1864,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        #region helper methods
+#region helper methods
 
         /// <summary>
         /// Searches the immediate children of this node for a node which matches the specified predicate.
@@ -1839,13 +1931,13 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        #endregion
+#endregion
 
         private bool InvalidProject() {
             return this.projectMgr == null || this.projectMgr.IsClosed;
         }
 
-        #region nested types
+#region nested types
         /// <summary>
         /// DropEffect as defined in oleidl.h
         /// </summary>
@@ -1855,9 +1947,9 @@ namespace Microsoft.VisualStudioTools.Project {
             Move = 2,
             Link = 4
         };
-        #endregion
+#endregion
 
-        #region IOleServiceProvider
+#region IOleServiceProvider
 
         int IOleServiceProvider.QueryService(ref Guid guidService, ref Guid riid, out IntPtr ppvObject) {
             object obj;
@@ -1903,6 +1995,6 @@ namespace Microsoft.VisualStudioTools.Project {
             return VSConstants.E_FAIL;
         }
 
-        #endregion
+#endregion
     }
 }

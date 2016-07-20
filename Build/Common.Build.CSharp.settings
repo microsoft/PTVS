@@ -12,6 +12,8 @@
     <Language>C#</Language>        <!-- Duplicated from the C# targets file -->
     <Platform Condition="'$(Platform)'==''">x86</Platform>
 
+    <DefineConstants>$(DefineConstants);USE_PYTHON_TESTDATA</DefineConstants>
+
     <CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
     <!-- This eliminates the warning CA0060, EnvDTE Version=7.0 not found, for VS 10 installations. -->
     <CodeAnalysisAdditionalOptions> /assemblycomparemode:StrongNameIgnoringVersion</CodeAnalysisAdditionalOptions>
@@ -30,14 +32,19 @@
     <DefineConstants>TRACE;$(DefineConstants)</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <DefineConstants Condition="$(FeatureAzureRemoteDebug)">$(DefineConstants);FEATURE_AZURE_REMOTE_DEBUG</DefineConstants>
+  <PropertyGroup Condition=" '$(VSTarget)' == '15.0' ">
+    <DefineConstants>$(DefineConstants);DEV15;DEV15_OR_LATER;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</DefineConstants>
+    <VSCTDefinitions>DEV15;DEV15_OR_LATER;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</VSCTDefinitions>
+    <MicrosoftBuildAssemblyVersion>15.0.0.0</MicrosoftBuildAssemblyVersion>
+    <MicrosoftBuildEngineAssemblyVersion>15.0.0.0</MicrosoftBuildEngineAssemblyVersion>
+    <MicrosoftBuildAssemblyVersionSuffix>Core</MicrosoftBuildAssemblyVersionSuffix>
   </PropertyGroup>
-
+  
   <PropertyGroup Condition=" '$(VSTarget)' == '14.0' ">
     <DefineConstants>$(DefineConstants);DEV14;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</DefineConstants>
     <VSCTDefinitions>DEV14;DEV14_OR_LATER;DEV12_OR_LATER;DEV11_OR_LATER</VSCTDefinitions>
     <MicrosoftBuildAssemblyVersion>14.0.0.0</MicrosoftBuildAssemblyVersion>
+    <MicrosoftBuildEngineAssemblyVersion>14.0.0.0</MicrosoftBuildEngineAssemblyVersion>
     <MicrosoftBuildAssemblyVersionSuffix>Core</MicrosoftBuildAssemblyVersionSuffix>
   </PropertyGroup>
   
@@ -64,7 +71,6 @@
 
   <PropertyGroup>
     <SignManifests>false</SignManifests>
-    <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>$(TargetsPath)\FinalPublicKey.snk</AssemblyOriginatorKeyFile>
     <DelaySign>true</DelaySign>
   </PropertyGroup>

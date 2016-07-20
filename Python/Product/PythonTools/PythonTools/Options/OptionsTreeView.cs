@@ -1,22 +1,23 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools.Project;
 
@@ -24,8 +25,6 @@ namespace Microsoft.PythonTools.Options {
     class OptionsTreeView : TreeView {
         private static ImageList _imageList;
         internal const int TransparentIndex = 0;
-        internal const int OpenFolderIndex = 1;
-        internal const int ClosedFolderIndex = 2;
 
         public OptionsTreeView() {
             InitializeImageList();
@@ -42,26 +41,16 @@ namespace Microsoft.PythonTools.Options {
 
         private void InitializeImageList() {
             if (_imageList == null) {
-                using (var imgHandler = new ImageHandler(typeof(OptionsTreeView).Assembly.GetManifestResourceStream("Microsoft.PythonTools.Project.Resources.imagelis.bmp"))) {
-                    var openFolder = imgHandler.ImageList.Images[(int)ProjectNode.ImageName.OpenFolder];
-                    var closedFolder = imgHandler.ImageList.Images[(int)ProjectNode.ImageName.Folder];
+                _imageList = new ImageList();
 
-                    _imageList = new ImageList();
+                Bitmap bmp = new Bitmap(16, 16);
 
-                    Bitmap bmp = new Bitmap(16, 16);
-
-                    // transparent image is the image we use for owner drawn icons
-                    _imageList.TransparentColor = Color.Magenta;
-                    using (var g = Graphics.FromImage(bmp)) {
-                        g.FillRectangle(
-                            Brushes.Magenta,
-                            new Rectangle(0, 0, 16, 16)
-                        );
-                    }
-                    _imageList.Images.Add(bmp);
-                    _imageList.Images.Add(openFolder);
-                    _imageList.Images.Add(closedFolder);
+                // transparent image is the image we use for owner drawn icons
+                _imageList.TransparentColor = Color.Magenta;
+                using (var g = Graphics.FromImage(bmp)) {
+                    g.FillRectangle(Brushes.Magenta, new Rectangle(0, 0, 16, 16));
                 }
+                _imageList.Images.Add(bmp);
             }
 
             StateImageList = _imageList;
@@ -128,7 +117,6 @@ namespace Microsoft.PythonTools.Options {
         protected override void OnAfterExpand(TreeViewEventArgs e) {
             OptionFolderNode node = e.Node as OptionFolderNode;
             if (node != null) {
-                node.SelectedImageIndex = node.ImageIndex = OpenFolderIndex;
                 InvalidateNodeIcon(node);
                 node.WasExpanded = true;
                 return;
@@ -139,7 +127,6 @@ namespace Microsoft.PythonTools.Options {
         protected override void OnAfterCollapse(TreeViewEventArgs e) {
             OptionFolderNode node = e.Node as OptionFolderNode;
             if (node != null) {
-                node.SelectedImageIndex = node.ImageIndex = ClosedFolderIndex;
                 InvalidateNodeIcon(node);
                 node.WasExpanded = false;
                 return;
@@ -402,9 +389,7 @@ namespace Microsoft.PythonTools.Options {
         public bool WasExpanded = true;
 
         public OptionFolderNode(string name)
-            : base(name) {
-            StateImageIndex = SelectedImageIndex = ImageIndex = OptionsTreeView.OpenFolderIndex;
-        }
+            : base(name) { }
     }
 
     abstract class OptionSettingNode : OptionNode {

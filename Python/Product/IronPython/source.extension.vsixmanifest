@@ -1,49 +1,30 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
-  <Identifier Id="0AC9CC8C-C057-4CFA-884B-0D4318BB2EFC">
-    <Name>Python Tools for Visual Studio - IronPython</Name>
-    <Author>Microsoft</Author>
-    <Version>2.2</Version>
-    <Description xml:space="preserve">Adds templates and intellisense support for IronPython based projects in Python Tools for Visual Studio.</Description>
-    <Locale>1033</Locale>
-    <InstalledByMsi>true</InstalledByMsi>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Id="0AC9CC8C-C057-4CFA-884B-0D4318BB2EFC" Version="3.0" Language="en-US" Publisher="Microsoft Corporation" />
+    <DisplayName>Python Tools for Visual Studio - IronPython</DisplayName>
+    <Description xml:space="preserve">Provides templates and integration for IronPython-based projects.</Description>
+    <MoreInfo>http://aka.ms/ptvs</MoreInfo>
+    <License>Python Tools for VS License.rtf</License>
+    <GettingStartedGuide>http://aka.ms/ptvstutorial</GettingStartedGuide>
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
-    <SupportedProducts>
-      <!-- The Edition specifications are minimums; any SKU equal or 'higher'
-           will accept them. -->
-      <VisualStudio Version="10.0">
-        <Edition>Pro</Edition>
-      </VisualStudio>
-      <VisualStudio Version="11.0">
-        <Edition>Pro</Edition>
-      </VisualStudio>
-      <VisualStudio Version="12.0">
-        <Edition>IntegratedShell</Edition>
-        <Edition>VSWinDesktopExpress</Edition>
-        <Edition>VWDExpress</Edition>
-      </VisualStudio>
-      <VisualStudio Version="14.0">
-        <Edition>IntegratedShell</Edition>
-        <Edition>VSWinDesktopExpress</Edition>
-        <Edition>VWDExpress</Edition>
-      </VisualStudio>
-    </SupportedProducts>
-    <SupportedFrameworkRuntimeEdition MinVersion="4.5" />
-  </Identifier>
-  <References>
-    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="2.2" MaxVersion="2.2">
-      <Name>Python Tools for Visual Studio</Name>
-      <MoreInfoUrl>http://aka.ms/ptvs</MoreInfoUrl>
-    </Reference>  
-  </References>
-  <Content>
-    <Assembly AssemblyName="|%CurrentProject%;_GetAssemblyName|">|%CurrentProject%;_GetTargetPath|</Assembly>
-    <Assembly AssemblyName="|Microsoft.IronPythonTools.Resolver;AssemblyName|">|Microsoft.IronPythonTools.Resolver|</Assembly>
-    <Assembly AssemblyName="|Microsoft.PythonTools.IronPython.Interpreter;AssemblyName|">|Microsoft.PythonTools.IronPython.Interpreter|</Assembly>
-    <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
-    <MefComponent>|%CurrentProject%|</MefComponent>
-    <ProjectTemplate>ProjectTemplates</ProjectTemplate>
-    <ItemTemplate>ItemTemplates</ItemTemplate>
-  </Content>
-</Vsix>
+  </Metadata>
+  <Installation InstalledByMsi="true">
+    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[14.0,16.0)" />
+    <InstallationTarget Id="Microsoft.VisualStudio.IntegratedShell" Version="14.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.WDExpress" Version="14.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.VWDExpress" Version="14.0" />
+  </Installation>
+  <Dependencies>
+    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.6" />
+    <Dependency Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" DisplayName="Python Tools for Visual Studio" Version="3.0" />
+  </Dependencies>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|%CurrentProject%;_GetTargetPath|" AssemblyName="|%CurrentProject%;_GetAssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.IronPythonTools.Resolver;_GetTargetPath|" AssemblyName="|Microsoft.IronPythonTools.Resolver;_GetAssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Microsoft.PythonTools.IronPython.Interpreter;_GetTargetPath|" AssemblyName="|Microsoft.PythonTools.IronPython.Interpreter;_GetAssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|%CurrentProject%;_GetTargetPath|" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.IronPython.Interpreter;_GetTargetPath|" />
+  </Assets>
+</PackageManifest>

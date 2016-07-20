@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.ComponentModel.Composition;
@@ -19,6 +21,7 @@ using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -48,8 +51,8 @@ namespace Microsoft.PythonTools.Project {
                     // try copying without impersonating first...
                     CopyOneFile(destination, item);
                 } catch (UnauthorizedAccessException) {
-                    var resource = new NativeMethods._NETRESOURCE();
-                    resource.dwType = NativeMethods.RESOURCETYPE_DISK;
+                    var resource = new VisualStudioTools.Project.NativeMethods._NETRESOURCE();
+                    resource.dwType = VisualStudioTools.Project.NativeMethods.RESOURCETYPE_DISK;
                     resource.lpRemoteName = Path.GetPathRoot(destination.LocalPath);
 
                     NetworkCredential creds = null;
@@ -62,7 +65,7 @@ namespace Microsoft.PythonTools.Project {
                         throw;
                     }
 
-                    var netAddRes = NativeMethods.WNetAddConnection3(
+                    var netAddRes = VisualStudioTools.Project.NativeMethods.WNetAddConnection3(
                         Process.GetCurrentProcess().MainWindowHandle,
                         ref resource,
                         creds.Password,
@@ -84,7 +87,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private static void CopyOneFile(Uri destination, IPublishFile item) {
-            var destFile = CommonUtils.GetAbsoluteFilePath(destination.LocalPath, item.DestinationFile);
+            var destFile = PathUtils.GetAbsoluteFilePath(destination.LocalPath, item.DestinationFile);
             Debug.WriteLine("CopyingOneFile: " + destFile);
             string destDir = Path.GetDirectoryName(destFile);
             if (!Directory.Exists(destDir)) {

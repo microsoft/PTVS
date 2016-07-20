@@ -1,2 +1,2 @@
-﻿fob = True
+fob = True
 oar = False

@@ -1,18 +1,19 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
-extern alias analysis;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,11 +26,11 @@ using Microsoft.Build.Execution;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Logging;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
-using CommonUtils = analysis::Microsoft.VisualStudioTools.CommonUtils;
 
 namespace PythonToolsTests {
     [TestClass]
@@ -62,13 +63,13 @@ namespace PythonToolsTests {
             errTask.SetParameter("Text", "Expected did not match QualifiedProjectHome");
 
             
-            var loc = CommonUtils.EnsureEndSeparator(TestData.GetTempPath(randomSubPath: true));
+            var loc = PathUtils.EnsureEndSeparator(TestData.GetTempPath(randomSubPath: true));
             proj.Save(Path.Combine(loc, string.Format("test.proj")));
 
             foreach(var test in new [] {
                 new { ProjectHome="", Expected=loc },
                 new { ProjectHome=".", Expected=loc },
-                new { ProjectHome="..", Expected=CommonUtils.EnsureEndSeparator(Path.GetDirectoryName(Path.GetDirectoryName(loc))) },
+                new { ProjectHome="..", Expected=PathUtils.EnsureEndSeparator(Path.GetDirectoryName(Path.GetDirectoryName(loc))) },
                 new { ProjectHome="\\", Expected=Directory.GetDirectoryRoot(loc) },
                 new { ProjectHome="abc", Expected=loc + @"abc\" },
                 new { ProjectHome=@"a\b\c", Expected=loc + @"a\b\c\" },
@@ -81,7 +82,8 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s"), TestCategory("Installed")]
         public void TestResolveEnvironment() {
             var proj1 = new ProjectInstance(TestData.GetPath(@"TestData\Targets\Environments1.pyproj"));
             Assert.IsTrue(proj1.Build("TestResolveEnvironment", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
@@ -90,19 +92,21 @@ namespace PythonToolsTests {
             Assert.IsTrue(proj2.Build("TestResolveEnvironment", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        [TestCategory("10s"), TestCategory("Installed")]
         public void TestResolveEnvironmentReference() {
             var proj = new ProjectInstance(TestData.GetPath(@"TestData\Targets\EnvironmentReferences1.pyproj"));
             Assert.IsTrue(proj.Build("TestResolveEnvironment", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1), TestCategory("Installed")]
         public void TestCommandDefinitions() {
             var proj = new ProjectInstance(TestData.GetPath(@"TestData\Targets\Commands1.pyproj"));
             Assert.IsTrue(proj.Build("TestCommands", new ILogger[] { new ConsoleLogger(LoggerVerbosity.Detailed) }));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(3)]
+        [TestCategory("10s"), TestCategory("60s")]
         public void TestRunPythonCommand() {
             var expectedSearchPath = string.Format("['{0}', '{1}']",
                 TestData.GetPath(@"TestData").Replace("\\", "\\\\"),
@@ -112,11 +116,15 @@ namespace PythonToolsTests {
             var proj = new Project(TestData.GetPath(@"TestData\Targets\Commands4.pyproj"));
 
             foreach (var version in PythonPaths.Versions) {
+                if (version.IsIronPython) {
+                    // IronPython isn't registered on developer machines...
+                    continue;
+                }
+
                 var verStr = version.Version.ToVersion().ToString();
-                proj.SetProperty("InterpreterId", version.Id.ToString("B"));
-                proj.SetProperty("InterpreterVersion", verStr);
+                proj.SetProperty("InterpreterId", version.Id.ToString());
                 proj.RemoveItems(proj.ItemsIgnoringCondition.Where(i => i.ItemType == "InterpreterReference").ToArray());
-                proj.AddItem("InterpreterReference", string.Format("{0:B}\\{1}", version.Id, verStr));
+                proj.AddItem("InterpreterReference", version.Id);
                 proj.Save();
                 proj.ReevaluateIfNecessary();
 

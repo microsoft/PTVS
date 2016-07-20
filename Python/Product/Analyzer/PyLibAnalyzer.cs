@@ -1,19 +1,22 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition.Hosting;
 using System.Configuration;
 using System.Diagnostics;
 using System.IO;
@@ -25,12 +28,11 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -38,7 +40,7 @@ namespace Microsoft.PythonTools.Analysis {
         private const string AnalysisLimitsKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion + 
             @"\Analysis\StandardLibrary";
 
-        private readonly Guid _id;
+        private readonly string _id;
         private readonly Version _version;
         private readonly string _interpreter;
         private readonly List<PythonLibraryPath> _library;
@@ -46,10 +48,11 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly List<string> _baseDb;
         private readonly string _logPrivate, _logGlobal, _logDiagnostic;
         private readonly bool _dryRun;
-        private readonly string _waitForAnalysis;
+        private readonly string _waitForAnalysis, _projectFile;
         private readonly int _repeatCount;
 
-        private bool _all;
+        private bool _all, _interactive;
+
         private FileStream _pidMarkerFile;
 
         private readonly AnalyzerStatusUpdater _updater;
@@ -58,6 +61,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal readonly List<List<ModulePath>> _scrapeFileGroups, _analyzeFileGroups;
         private readonly HashSet<string> _treatPathsAsStandardLibrary;
         private IEnumerable<string> _readModulePath;
+        
 
         private int _progressOffset;
         private int _progressTotal;
@@ -76,6 +80,8 @@ namespace Microsoft.PythonTools.Analysis {
             Console.WriteLine();
             Console.WriteLine(" /id         [GUID]             - specify GUID of the interpreter being used");
             Console.WriteLine(" /v[ersion]  [version]          - specify language version to be used (x.y format)");
+            Console.WriteLine(" /interactive                   - start interactive analyzer");
+
             Console.WriteLine(" /py[thon]   [filename]         - full path to the Python interpreter to use");
             Console.WriteLine(" /lib[rary]  [directory]        - full path to the Python library to analyze");
             Console.WriteLine(" /outdir     [output dir]       - specify output directory for analysis (default " +
@@ -90,6 +96,7 @@ namespace Microsoft.PythonTools.Analysis {
                               "would have been analyzed.");
             Console.WriteLine(" /wait       [identifier]       - wait for the specified analysis to complete.");
             Console.WriteLine(" /repeat     [count]            - repeat up to count times if needed (default 3).");
+            Console.WriteLine(" /comment    [comment]          - provide descriptive text about why this analyzed was created");
         }
 
         private static IEnumerable<KeyValuePair<string, string>> ParseArguments(IEnumerable<string> args) {
@@ -170,28 +177,37 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private async Task RunWorker() {
-            WaitForOtherRun();
+            if (_interactive) {
+                var analyzer = new OutOfProcProjectAnalyzer(
+                    Console.OpenStandardOutput(),
+                    Console.OpenStandardInput()
+                );
 
-            while (true) {
-                try {
-                    await StartTraceListener();
-                    break;
-                } catch (IOException) {
+                await analyzer.ProcessMessages();
+            } else {
+                WaitForOtherRun();
+
+                while (true) {
+                    try {
+                        await StartTraceListener();
+                        break;
+                    } catch (IOException) {
+                    }
+                    await Task.Delay(20000);
                 }
-                await Task.Delay(20000);
-            }
 
-            LogToGlobal("START_STDLIB");
+                LogToGlobal("START_STDLIB");
 
-            for (int i = 0; i < _repeatCount && await Prepare(i == 0); ++i) {
-                await Scrape();
-                await Analyze();
+                for (int i = 0; i < _repeatCount && await Prepare(i == 0); ++i) {
+                    await Scrape();
+                    await Analyze();
+                }
+                await Epilogue();
             }
-            await Epilogue();
         }
 
         public PyLibAnalyzer(
-            Guid id,
+            string id,
             Version langVersion,
             string interpreter,
             IEnumerable<PythonLibraryPath> library,
@@ -203,7 +219,9 @@ namespace Microsoft.PythonTools.Analysis {
             bool rescanAll,
             bool dryRun,
             string waitForAnalysis,
-            int repeatCount
+            int repeatCount,
+            string projectFile = null,
+            bool interactive = false
         ) {
             _id = id;
             _version = langVersion;
@@ -217,15 +235,16 @@ namespace Microsoft.PythonTools.Analysis {
             _dryRun = dryRun;
             _waitForAnalysis = waitForAnalysis;
             _repeatCount = repeatCount;
+            _interactive = interactive;
+            _projectFile = projectFile;
 
             _scrapeFileGroups = new List<List<ModulePath>>();
             _analyzeFileGroups = new List<List<ModulePath>>();
             _treatPathsAsStandardLibrary = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             _library = library != null ? library.ToList() : new List<PythonLibraryPath>();
 
-            if (_id != Guid.Empty) {
-                var identifier = AnalyzerStatusUpdater.GetIdentifier(_id, _version);
-                _updater = new AnalyzerStatusUpdater(identifier);
+            if (!String.IsNullOrWhiteSpace(_id) && !interactive) {
+                _updater = new AnalyzerStatusUpdater(_id);
                 // We worry about initialization exceptions here, specifically
                 // that our identifier may already be in use.
                 _updater.WaitForWorkerStarted();
@@ -293,39 +312,47 @@ namespace Microsoft.PythonTools.Analysis {
 
             string value;
 
-            Guid id;
-            Version version;
+            string id = string.Empty;
+            Version version = default(Version);
             string interpreter, outDir;
             var library = new List<PythonLibraryPath>();
             List<string> baseDb;
-            string logPrivate, logGlobal, logDiagnostic;
-            bool rescanAll, dryRun;
+            string logPrivate, logGlobal, logDiagnostic, projectFile = null;
+            bool rescanAll, dryRun, interactive = false;
             int repeatCount;
 
             var cwd = Environment.CurrentDirectory;
 
-            if (!options.TryGetValue("id", out value)) {
-                id = Guid.Empty;
-            } else if (!Guid.TryParse(value, out id)) {
-                throw new ArgumentException(value, "id");
+            if (options.ContainsKey("interactive")) {
+                interactive = true;
+            }
+            if (options.TryGetValue("proj", out value)) {
+                projectFile = value;
             }
 
-            if (!options.TryGetValue("version", out value) && !options.TryGetValue("v", out value)) {
-                throw new ArgumentNullException("version");
-            } else if (!Version.TryParse(value, out version)) {
-                throw new ArgumentException(value, "version");
+
+            if (!interactive) {
+                if (options.TryGetValue("id", out value)) {
+                    id = value;
+                }
+
+                if (!options.TryGetValue("version", out value) && !options.TryGetValue("v", out value)) {
+                    throw new ArgumentNullException("version");
+                } else if (!Version.TryParse(value, out version)) {
+                    throw new ArgumentException(value, "version");
+                }
             }
 
             if (!options.TryGetValue("python", out value) && !options.TryGetValue("py", out value)) {
                 value = null;
             }
-            if (!string.IsNullOrEmpty(value) && !CommonUtils.IsValidPath(value)) {
+            if (!string.IsNullOrEmpty(value) && !PathUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "python");
             }
             interpreter = value;
 
             if (options.TryGetValue("library", out value) || options.TryGetValue("lib", out value)) {
-                if (!CommonUtils.IsValidPath(value)) {
+                if (!PathUtils.IsValidPath(value)) {
                     throw new ArgumentException(value, "library");
                 }
                 if (Directory.Exists(value)) {
@@ -333,6 +360,8 @@ namespace Microsoft.PythonTools.Analysis {
                     var sitePackagesDir = Path.Combine(value, "site-packages");
                     if (Directory.Exists(sitePackagesDir)) {
                         library.Add(new PythonLibraryPath(sitePackagesDir, false, null));
+                        library.AddRange(ModulePath.ExpandPathFiles(sitePackagesDir)
+                            .Select(p => new PythonLibraryPath(p, false, null)));
                     }
                 }
             }
@@ -340,28 +369,28 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("outdir", out value)) {
                 value = cwd;
             }
-            if (!CommonUtils.IsValidPath(value)) {
+            if (!PathUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "outdir");
             }
-            outDir = CommonUtils.GetAbsoluteDirectoryPath(cwd, value);
+            outDir = PathUtils.GetAbsoluteDirectoryPath(cwd, value);
 
             if (!options.TryGetValue("basedb", out value)) {
                 value = Environment.CurrentDirectory;
             }
-            if (!CommonUtils.IsValidPath(value)) {
+            if (!PathUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "basedb");
             }
-            baseDb = value.Split(';').Select(p => CommonUtils.GetAbsoluteDirectoryPath(cwd, p)).ToList();
+            baseDb = value.Split(';').Select(p => PathUtils.GetAbsoluteDirectoryPath(cwd, p)).ToList();
 
             // Private log defaults to in current directory
             if (!options.TryGetValue("log", out value)) {
                 value = "AnalysisLog.txt";
             }
-            if (!CommonUtils.IsValidPath(value)) {
+            if (!PathUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "log");
             }
             if (!Path.IsPathRooted(value)) {
-                value = CommonUtils.GetAbsoluteFilePath(outDir, value);
+                value = PathUtils.GetAbsoluteFilePath(outDir, value);
             }
             logPrivate = value;
 
@@ -369,11 +398,11 @@ namespace Microsoft.PythonTools.Analysis {
             if (!options.TryGetValue("glog", out value)) {
                 value = null;
             }
-            if (!string.IsNullOrEmpty(value) && !CommonUtils.IsValidPath(value)) {
+            if (!string.IsNullOrEmpty(value) && !PathUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "glog");
             }
             if (!string.IsNullOrEmpty(value) && !Path.IsPathRooted(value)) {
-                value = CommonUtils.GetAbsoluteFilePath(outDir, value);
+                value = PathUtils.GetAbsoluteFilePath(outDir, value);
             }
             logGlobal = value;
 
@@ -385,11 +414,11 @@ namespace Microsoft.PythonTools.Analysis {
                     }
                 }
             }
-            if (!string.IsNullOrEmpty(value) && !CommonUtils.IsValidPath(value)) {
+            if (!string.IsNullOrEmpty(value) && !PathUtils.IsValidPath(value)) {
                 throw new ArgumentException(value, "diag");
             }
             if (!string.IsNullOrEmpty(value) && !Path.IsPathRooted(value)) {
-                value = CommonUtils.GetAbsoluteFilePath(outDir, value);
+                value = PathUtils.GetAbsoluteFilePath(outDir, value);
             }
             logDiagnostic = value;
 
@@ -421,12 +450,14 @@ namespace Microsoft.PythonTools.Analysis {
                 rescanAll,
                 dryRun,
                 waitForAnalysis, 
-                repeatCount
+                repeatCount,
+                projectFile,
+                interactive
             );
         }
 
         internal async Task StartTraceListener() {
-            if (!CommonUtils.IsValidPath(_logPrivate)) {
+            if (!PathUtils.IsValidPath(_logPrivate)) {
                 return;
             }
 
@@ -450,6 +481,11 @@ namespace Microsoft.PythonTools.Analysis {
             } else {
                 LogToGlobal(string.Format("WARN: Unable to log output to {0}", _logPrivate));
             }
+        }
+
+        private static bool IsTestPackage(ModulePath path) {
+            var fn = "." + path.FullName;
+            return fn.Contains(".test.") || fn.Contains(".tests.");
         }
 
         internal void WaitForOtherRun() {
@@ -527,8 +563,10 @@ namespace Microsoft.PythonTools.Analysis {
                 _library.AddRange(library);
             }
 
-            foreach (var module in IncludeModulesFromModulePath) {
-                _library.AddRange(await GetSearchPathsFromModulePath(_interpreter, module));
+            if (File.Exists(_interpreter)) {
+                foreach (var module in IncludeModulesFromModulePath) {
+                    _library.AddRange(await GetSearchPathsFromModulePath(_interpreter, module));
+                }
             }
 
             _treatPathsAsStandardLibrary.UnionWith(_library.Where(p => p.IsStandardLibrary).Select(p => p.Path));
@@ -552,12 +590,34 @@ namespace Microsoft.PythonTools.Analysis {
                 await Task.Delay(500);
             }
 
+            // Collect all test package files into their own groups. This
+            // reduces completion information, generally for the better, and
+            // significantly reduces time and memory usage while generating it.
+            var testPackageGroups = new List<Tuple<List<ModulePath>, List<ModulePath>>>();
+            foreach (var g in fileGroups) {
+                var tg = g.Where(IsTestPackage).ToList();
+                if (tg.Any()) {
+                    g.RemoveAll(IsTestPackage);
+                    testPackageGroups.Add(Tuple.Create(g, tg));
+                }
+            }
+
+            // Insert test groups after the one they were obtained from
+            foreach (var t in testPackageGroups) {
+                int i = fileGroups.IndexOf(t.Item1);
+                if (i >= 0 && i < fileGroups.Count) {
+                    fileGroups.Insert(i + 1, t.Item2);
+                } else {
+                    fileGroups.Add(t.Item2);
+                }
+            }
+
             // HACK: Top-level modules in site-packages folders
             // Need to analyse them after the standard library and treat their
             // library paths as standard library so that output files are put at
             // the top level in the database.
             var sitePackageGroups = fileGroups
-                .Where(g => g.Any() && CommonUtils.GetFileOrDirectoryName(g[0].LibraryPath) == "site-packages")
+                .Where(g => g.Any() && PathUtils.GetFileOrDirectoryName(g[0].LibraryPath) == "site-packages")
                 .ToList();
             fileGroups.RemoveAll(sitePackageGroups.Contains);
             fileGroups.InsertRange(1, sitePackageGroups);
@@ -589,8 +649,8 @@ namespace Microsoft.PythonTools.Analysis {
                 // If the top level does not contain any .idb files, we won't
                 // bother recursing.
                 if (Directory.Exists(_outDir) &&
-                    Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.TopDirectoryOnly).Any()) {
-                    filesInDatabase.UnionWith(Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories));
+                    PathUtils.EnumerateFiles(_outDir, "*.idb", recurse: false).Any()) {
+                    filesInDatabase.UnionWith(PathUtils.EnumerateFiles(_outDir, "*.idb"));
                 }
             } else if (firstRun) {
                 Directory.CreateDirectory(_outDir);
@@ -644,7 +704,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             if (!_dryRun) {
-                filesInDatabase.UnionWith(Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.AllDirectories));
+                filesInDatabase.UnionWith(PathUtils.EnumerateFiles(_outDir, "*.idb"));
             }
 
             // Store the files we want to keep separately, in case we decide to
@@ -668,9 +728,7 @@ namespace Microsoft.PythonTools.Analysis {
                 } else {
                     // Failed to get builtin names, so don't delete anything
                     // from the main output directory.
-                    filesToKeep.UnionWith(
-                        Directory.EnumerateFiles(_outDir, "*.idb", SearchOption.TopDirectoryOnly)
-                    );
+                    filesToKeep.UnionWith(PathUtils.EnumerateFiles(_outDir, "*.idb", recurse: false));
                 }
             }
 
@@ -678,7 +736,7 @@ namespace Microsoft.PythonTools.Analysis {
             _progressOffset = 0;
 
             _scrapeFileGroups.Clear();
-            _analyzeFileGroups.Clear();
+            var analyzeFileGroups = new List<List<ModulePath>>();
             var candidateScrapeFileGroups = new List<List<ModulePath>>();
             var candidateAnalyzeFileGroups = new List<List<ModulePath>>();
 
@@ -693,7 +751,7 @@ namespace Microsoft.PythonTools.Analysis {
                         TraceVerbose("Adding /all because the above module is builtin or stdlib");
                         // Include all the file groups we've already seen.
                         _scrapeFileGroups.InsertRange(0, candidateScrapeFileGroups);
-                        _analyzeFileGroups.InsertRange(0, candidateAnalyzeFileGroups);
+                        analyzeFileGroups.InsertRange(0, candidateAnalyzeFileGroups);
                         _progressTotal += candidateScrapeFileGroups.Concat(candidateAnalyzeFileGroups).Sum(fg => fg.Count);
                         candidateScrapeFileGroups = null;
                         candidateAnalyzeFileGroups = null;
@@ -705,7 +763,7 @@ namespace Microsoft.PythonTools.Analysis {
                         _scrapeFileGroups.Add(toScrape);
                     }
                     if (toAnalyze.Any()) {
-                        _analyzeFileGroups.Add(toAnalyze);
+                        analyzeFileGroups.Add(toAnalyze);
                     }
                 } else {
                     filesToKeep.UnionWith(fileGroup
@@ -725,11 +783,28 @@ namespace Microsoft.PythonTools.Analysis {
                 filesInDatabase.ExceptWith(filesToKeep);
             }
 
+            // Reorder analyzeFileGroups to improve quality of results for
+            // later packages.
+            var firstPackages = analyzeFileGroups
+                .Where(g => _treatPathsAsStandardLibrary.Contains(g[0].LibraryPath))
+                .ToList();
+            analyzeFileGroups.RemoveAll(g => _treatPathsAsStandardLibrary.Contains(g[0].LibraryPath));
+            foreach (var package in GetPackageOrder()) {
+                var matching = analyzeFileGroups
+                    .Where(g => g[0].ModuleName.StartsWith(package + ".") || g[0].ModuleName == package)
+                    .ToList();
+                firstPackages.AddRange(matching);
+                analyzeFileGroups.RemoveAll(g => matching.Contains(g));
+            }
+            _analyzeFileGroups.Clear();
+            _analyzeFileGroups.AddRange(firstPackages);
+            _analyzeFileGroups.AddRange(analyzeFileGroups);
+
             // Scale file removal by 10 because it's much quicker than analysis.
             _progressTotal += filesInDatabase.Count / 10;
             Clean(filesInDatabase, 10);
 
-            return _scrapeFileGroups.Any() || _analyzeFileGroups.Any();
+            return _scrapeFileGroups.Any() || _analyzeFileGroups.Any() || _all;
         }
 
         internal static async Task<IEnumerable<PythonLibraryPath>> GetSearchPathsFromModulePath(
@@ -815,7 +890,7 @@ namespace Microsoft.PythonTools.Analysis {
 
             return builtinNames
                 .Where(n => !SkipBuiltinNames.Contains(n))
-                .Where(CommonUtils.IsValidPath)
+                .Where(PathUtils.IsValidPath)
                 .Select(n => GetOutputFile(n));
         }
 
@@ -826,21 +901,29 @@ namespace Microsoft.PythonTools.Analysis {
 
             int modCount = 0;
             TraceInformation("Deleting {0} files", files.Count);
+            bool traceDelete = files.Count < 10;
             foreach (var file in files) {
                 if (_updater != null && ++modCount >= progressScale) {
                     modCount = 0;
                     _updater.UpdateStatus(++_progressOffset, _progressTotal, "Cleaning old files");
                 }
 
-                TraceVerbose("Deleting \"{0}\"", file);
                 if (_dryRun) {
                     TraceDryRun("DELETE:{0}", file);
                 } else {
+                    if (traceDelete) {
+                        // Extra logging for occasional issues where a few files
+                        // always get deleted.
+                        TraceInformation("Deleting \"{0}\"", file);
+                    } else {
+                        TraceVerbose("Deleting \"{0}\"", file);
+                    }
                     try {
                         File.Delete(file);
                         File.Delete(file + ".$memlist");
                         var dirName = Path.GetDirectoryName(file);
                         if (!Directory.EnumerateFileSystemEntries(dirName, "*", SearchOption.TopDirectoryOnly).Any()) {
+                            TraceVerbose("Removing empty directory \"{0}\"", dirName);
                             Directory.Delete(dirName);
                         }
                     } catch (ArgumentException) {
@@ -916,6 +999,18 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
+        private IEnumerable<string> GetPackageOrder() {
+            var values = ConfigurationManager.AppSettings.Get("PackageOrder");
+            if (string.IsNullOrEmpty(values)) {
+                return Enumerable.Empty<string>();
+            }
+
+            return values.Split(',', ';')
+                .Select(n => n?.Trim())
+                .Where(n => !string.IsNullOrEmpty(n));
+        }
+
+
 
         private IEnumerable<string> IncludeModulesFromModulePath {
             get {
@@ -925,7 +1020,10 @@ namespace Microsoft.PythonTools.Analysis {
                         _readModulePath = Enumerable.Empty<string>();
                     } else {
                         TraceInformation("IncludeModulesFromModulePath = {0}", values);
-                        _readModulePath = values.Split(',', ';').Where(n => !string.IsNullOrWhiteSpace(n)).ToArray();
+                        _readModulePath = values.Split(',', ';')
+                            .Select(n => n?.Trim())
+                            .Where(n => !string.IsNullOrEmpty(n))
+                            .ToArray();
                     }
                 }
                 return _readModulePath;
@@ -977,12 +1075,12 @@ namespace Microsoft.PythonTools.Analysis {
 
                 if (_updater != null) {
                     _updater.UpdateStatus(_progressOffset++, _progressTotal,
-                        "Scraping " + CommonUtils.GetFileOrDirectoryName(file.LibraryPath));
+                        "Scraping " + PathUtils.GetFileOrDirectoryName(file.LibraryPath));
                 }
 
                 var destFile = Path.ChangeExtension(GetOutputFile(file), null);
                 if (_dryRun) {
-                    TraceDryRun("SCRAPE;{0};{1}.idb", file.SourceFile, CommonUtils.CreateFriendlyDirectoryPath(_outDir, destFile));
+                    TraceDryRun("SCRAPE;{0};{1}.idb", file.SourceFile, PathUtils.CreateFriendlyDirectoryPath(_outDir, destFile));
                 } else {
                     Directory.CreateDirectory(Path.GetDirectoryName(destFile));
 
@@ -1056,6 +1154,30 @@ namespace Microsoft.PythonTools.Analysis {
             return false;
         }
 
+        private IEnumerable<string> GetDatabasePaths(string outDir) {
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            if (seen.Add(_outDir)) {
+                yield return _outDir;
+            }
+
+            if (seen.Add(outDir)) {
+                yield return outDir;
+            }
+
+            foreach (var d in PathUtils.EnumerateDirectories(_outDir, recurse: false)) {
+                if (seen.Add(d)) {
+                    yield return d;
+                }
+            }
+
+            foreach (var d in _baseDb.Skip(1)) {
+                if (seen.Add(d)) {
+                    yield return d;
+                }
+            }
+        }
+
         internal Task Analyze() {
             if (_updater != null) {
                 _updater.UpdateStatus(_progressOffset, _progressTotal, "Starting analysis");
@@ -1091,7 +1213,7 @@ namespace Microsoft.PythonTools.Analysis {
                         }
 
                         Debug.Assert(!file.IsCompiled);
-                        var idbFile = CommonUtils.CreateFriendlyDirectoryPath(
+                        var idbFile = PathUtils.CreateFriendlyDirectoryPath(
                             _outDir,
                             Path.Combine(outDir, file.ModuleName)
                         );
@@ -1109,13 +1231,13 @@ namespace Microsoft.PythonTools.Analysis {
                 if (_treatPathsAsStandardLibrary.Contains(files[0].LibraryPath)) {
                     currentLibrary = "standard library";
                 } else {
-                    currentLibrary = CommonUtils.GetFileOrDirectoryName(files[0].LibraryPath);
+                    currentLibrary = PathUtils.GetFileOrDirectoryName(files[0].LibraryPath);
                 }
 
                 using (var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(
                     _version,
                     null,
-                    new[] { _outDir, outDir }.Concat(_baseDb.Skip(1)).Distinct(StringComparer.OrdinalIgnoreCase).ToArray()
+                    GetDatabasePaths(outDir).ToArray()
                 ))
                 using (var projectState = PythonAnalyzer.CreateAsync(factory).WaitAndUnwrapExceptions()) {
                     int? mostItemsInQueue = null;
@@ -1283,7 +1405,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return _outDir;
             } else {
                 return Path.Combine(_outDir, Regex.Replace(
-                    CommonUtils.TrimEndSeparator(CommonUtils.GetFileOrDirectoryName(file.LibraryPath)),
+                    PathUtils.TrimEndSeparator(PathUtils.GetFileOrDirectoryName(file.LibraryPath)),
                     @"[.\\/\s]",
                     "_"
                 ));
@@ -1291,11 +1413,11 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private string GetOutputFile(string builtinName) {
-            return CommonUtils.GetAbsoluteFilePath(_outDir, builtinName + ".idb");
+            return PathUtils.GetAbsoluteFilePath(_outDir, builtinName + ".idb");
         }
 
         private string GetOutputFile(ModulePath file) {
-            return CommonUtils.GetAbsoluteFilePath(GetOutputDir(file), file.ModuleName + ".idb");
+            return PathUtils.GetAbsoluteFilePath(GetOutputDir(file), file.ModuleName + ".idb");
         }
 
         class AnalysisItem {

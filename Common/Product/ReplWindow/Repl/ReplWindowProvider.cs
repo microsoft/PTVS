@@ -28,13 +28,6 @@ namespace Microsoft.NodejsTools.Repl {
 #else
 namespace Microsoft.VisualStudio.Repl {
 #endif
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
-    using IReplWindowProvider = IInteractiveWindowProvider;
-    using IReplEvaluator = IInteractiveEngine;
-    using IReplEvaluatorProvider = IInteractiveEngineProvider;
-#endif
-
     [Export(typeof(IReplWindowProvider))]
     [PartCreationPolicy(CreationPolicy.Shared)]
     internal sealed class ReplWindowProvider : IReplWindowProvider {

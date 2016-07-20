@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -24,6 +26,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Threading;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Analysis.Browser {
@@ -53,12 +56,44 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 "Python Tools"
             );
 
-            var path = Environment.GetCommandLineArgs().LastOrDefault();
+            if (Directory.Exists(App.InitialPath)) {
+                Hide();
+                ProcessArguments().DoNotWait();
+            }
+        }
+
+        private async Task ProcessArguments() {
             try {
-                if (Directory.Exists(path)) {
-                    Load(path);
+                Version version;
+                if (Version.TryParse(App.InitialVersion, out version)) {
+                    Version = version;
                 }
-            } catch {
+
+                if (!(App.ExportTree || App.ExportDiffable)) {
+                    Show();
+                }
+
+                await Load(App.InitialPath);
+
+                if ((App.ExportTree || App.ExportDiffable) && !string.IsNullOrEmpty(App.ExportPath)) {
+                    if (!App.ExportPerPackage) {
+                        await (App.ExportDiffable ?
+                            Analysis.ExportDiffable(App.ExportPath, App.ExportFilter) :
+                            Analysis.ExportTree(App.ExportPath, App.ExportFilter));
+                    } else {
+                        Directory.CreateDirectory(App.ExportPath);
+                        foreach (var package in Analysis.Modules.OfType<ModuleView>().Select(m => m.Name).Where(n => !n.Contains("."))) {
+                            var path = Path.Combine(App.ExportPath, package + ".txt");
+                            var filter = "^" + package + ".*";
+                            await (App.ExportDiffable ?
+                                Analysis.ExportDiffable(path, filter) :
+                                Analysis.ExportTree(path, filter));
+                        }
+                    }
+                    Close();
+                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                MessageBox.Show(string.Format("Error occurred:{0}{0}{1}", Environment.NewLine, ex));
             }
         }
 
@@ -154,10 +189,10 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 }
             }
 
-            Load(path);
+            Load(path).DoNotWait();
         }
 
-        private void Load(string path) {
+        private async Task Load(string path) {
             HasAnalysis = false;
             Loading = true;
             Analysis = null;
@@ -198,7 +233,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 return new AnalysisView(path, version, withContention, withRecursion);
             }, TaskContinuationOptions.LongRunning);
 
-            loadTask.ContinueWith(
+            await loadTask.ContinueWith(
                 t => {
                     Tag = null;
 
@@ -218,10 +253,6 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
         private void Export_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = HasAnalysis && !string.IsNullOrEmpty(ExportFilename.Text);
-            if (e.Command == AnalysisView.ExportDiffableCommand) {
-                // Not implemented yet
-                e.CanExecute = false;
-            }
         }
 
         private void Export_Executed(object sender, ExecutedRoutedEventArgs e) {
@@ -380,11 +411,18 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 return;
             }
 
+            int bestIndex = -1;
+            Version bestVersion = null;
             foreach (var ver in SupportedVersions.Reverse()) {
-                if (dir.Contains("\\" + ver.ToString())) {
-                    Version = ver;
-                    break;
+                int index = dir.IndexOf("\\" + ver.ToString());
+                if (index > bestIndex) {
+                    bestVersion = ver;
+                    bestIndex = index;
                 }
+            }
+
+            if (bestIndex >= 0) {
+                Version = bestVersion;
             }
         }
 
@@ -428,7 +466,7 @@ namespace Microsoft.PythonTools.Analysis.Browser {
         public bool NamesOnly { get; set; }
 
         private IEnumerable<string> GetParentDirectory(string dir) {
-            if (!IncludeParentDirectory || ! CommonUtils.IsValidPath(dir)) {
+            if (!IncludeParentDirectory || !PathUtils.IsValidPath(dir)) {
                 yield break;
             }
 

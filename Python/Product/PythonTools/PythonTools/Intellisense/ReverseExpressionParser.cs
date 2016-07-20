@@ -1,23 +1,26 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
-using System.Diagnostics;
-using Microsoft.PythonTools.Analysis;
 
 namespace Microsoft.PythonTools.Intellisense {
     /// <summary>
@@ -28,11 +31,10 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly ITextSnapshot _snapshot;
         private readonly ITextBuffer _buffer;
         private readonly ITrackingSpan _span;
-        private IList<ClassificationSpan> _tokens;
         private ITextSnapshotLine _curLine;
-        private PythonClassifier _classifier;
-        private static readonly string[] _assignOperators = new[] {
-            "=" ,  "+=" ,  "-=" ,  "/=" ,  "%=" ,  "^=" ,  "*=" ,  "//=" ,  "&=" ,  "|=" ,  ">>=" ,  "<<=" ,  "**="
+        private readonly PythonClassifier _classifier;
+        private static readonly HashSet<string> _assignOperators = new HashSet<string> {
+            "=" ,  "+=" ,  "-=" ,  "/=" ,  "%=" ,  "^=" ,  "*=" ,  "//=" ,  "&=" ,  "|=" ,  ">>=" ,  "<<=" ,  "**=", "@="
         };
 
 
@@ -45,7 +47,10 @@ namespace Microsoft.PythonTools.Intellisense {
             var line = _curLine = snapshot.GetLineFromPosition(loc.Start);
 
             var targetSpan = new Span(line.Start.Position, span.GetEndPoint(snapshot).Position - line.Start.Position);
-            _tokens = Classifier.GetClassificationSpans(new SnapshotSpan(snapshot, targetSpan));
+
+            if (!_buffer.Properties.TryGetProperty(typeof(PythonClassifier), out _classifier) || _classifier == null) {
+                throw new ArgumentException("Failed to get classifier from buffer");
+            }
         }
 
         public SnapshotSpan? GetExpressionRange(bool forCompletion = true, int nesting = 0) {
@@ -130,7 +135,7 @@ namespace Microsoft.PythonTools.Intellisense {
             int groupingLevel = 1;
 
             while (MoveNextSkipExplicitNewLines(enumerator)) {
-                if (enumerator.Current.ClassificationType == _classifier.Provider.Keyword) {
+                if (enumerator.Current.ClassificationType == Classifier.Provider.Keyword) {
                     if (enumerator.Current.Span.GetText() == "def" && groupingLevel == 0) {
                         return true;
                     }
@@ -188,9 +193,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             ClassificationSpan lastToken = null;
             // Walks backwards over all the lines
-            var enumerator = ReverseClassificationSpanEnumerator(_classifier, _span.GetSpan(_snapshot).End);
+            var enumerator = ReverseClassificationSpanEnumerator(Classifier, _span.GetSpan(_snapshot).End);
             if (enumerator.MoveNext()) {
-                if (enumerator.Current != null && enumerator.Current.ClassificationType == this._classifier.Provider.StringLiteral) {
+                if (enumerator.Current != null && enumerator.Current.ClassificationType == this.Classifier.Provider.StringLiteral) {
                     return enumerator.Current.Span;
                 }
 
@@ -311,12 +316,12 @@ namespace Microsoft.PythonTools.Intellisense {
 
                                 // hovering directly over a keyword, don't provide a tooltip
                                 return null;
-                            } else if ((nestingChanged || forCompletion) && token.ClassificationType == Classifier.Provider.Keyword && text == "def") {
+                            } else if ((nestingChanged || forCompletion) && token.ClassificationType == Classifier.Provider.Keyword && (text == "def" || text == "class")) {
                                 return null;
                             }
                             if (text == "*" || text == "**") {
-                                if (enumerator.MoveNext()) {
-                                    if (enumerator.Current.ClassificationType == _classifier.Provider.CommaClassification) {
+                                if (MoveNextSkipExplicitNewLines(enumerator)) {
+                                    if (enumerator.Current.ClassificationType == Classifier.Provider.CommaClassification) {
                                         isParameterName = IsParameterNameComma(enumerator);
                                     } else if (enumerator.Current.IsOpenGrouping() && enumerator.Current.Span.GetText() == "(") {
                                         isParameterName = IsParameterNameOpenParen(enumerator);
@@ -335,7 +340,8 @@ namespace Microsoft.PythonTools.Intellisense {
                             } else {
                                 break;
                             }
-                        } else if (token.ClassificationType == Classifier.Provider.Keyword && (text == "if" || text == "else")) {
+                        } else if (token.ClassificationType == Classifier.Provider.Keyword &&
+                            (text == "if" || text == "else")) {
                             // if and else can be used in an expression context or a statement context
                             if (currentParamAtLastColon != -1) {
                                 start = startAtLastToken;
@@ -364,7 +370,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     } else if (token.ClassificationType == Classifier.Provider.Comment) {
                         return null;
                     } else if (!lastTokenWasCommaOrOperator) {
-                        break;
+                        if (nesting == 0 && otherNesting == 0) {
+                            break;
+                        }
                     } else {
                         if (lastTokenWasKeywordArgAssignment &&
                             token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier) &&
@@ -396,7 +404,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static bool IsAssignmentOperator(string text) {
-            return ((IList<string>)_assignOperators).Contains(text);
+            return _assignOperators.Contains(text);
         }
 
         internal static bool IsExplicitLineJoin(ClassificationSpan cur) {
@@ -419,7 +427,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public PythonClassifier Classifier {
-            get { return _classifier ?? (_classifier = (PythonClassifier)_buffer.Properties.GetProperty(typeof(PythonClassifier))); }
+            get { return _classifier; }
         }
 
         public ITextSnapshot Snapshot {
@@ -434,25 +442,12 @@ namespace Microsoft.PythonTools.Intellisense {
             get { return _span; }
         }
 
-        /// <summary>
-        /// Tokens for the current line
-        /// </summary>
-        public IList<ClassificationSpan> Tokens {
-            get { return _tokens; }
-            set { _tokens = value; }
-        }
-
-        public ITextSnapshotLine CurrentLine {
-            get { return _curLine; }
-            set { _curLine = value; }
-        }
-
         public IEnumerator<ClassificationSpan> GetEnumerator() {
-            return ReverseClassificationSpanEnumerator(_classifier, _span.GetSpan(_snapshot).End);
+            return ReverseClassificationSpanEnumerator(Classifier, _span.GetSpan(_snapshot).End);
         }
 
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() {
-            return ReverseClassificationSpanEnumerator(_classifier, _span.GetSpan(_snapshot).End);
+            return ReverseClassificationSpanEnumerator(Classifier, _span.GetSpan(_snapshot).End);
         }
 
         internal bool IsInGrouping() {
@@ -536,14 +531,14 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             // Keep going to find the end of the statement
-            using (var e = ForwardClassificationSpanEnumerator(_classifier, Span.GetStartPoint(Snapshot))) {
+            using (var e = ForwardClassificationSpanEnumerator(Classifier, Span.GetStartPoint(Snapshot))) {
                 eol = false;
                 while (e.MoveNext()) {
                     if (e.Current == null) {
-                        eol = true;
                         if (nesting == 0) {
                             break;
                         }
+                        eol = true;
                     } else {
                         eol = false;
                         if (setStart) {

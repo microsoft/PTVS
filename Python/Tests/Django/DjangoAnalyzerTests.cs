@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -18,7 +20,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Django.Project;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -47,23 +51,23 @@ namespace DjangoTests {
             Assert.AreEqual(value, values.Single().GetConstantValueAsString());
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestRender() {
             TestSingleRenderVariable("test_render.html");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestRenderToResponse() {
             TestSingleRenderVariable("test_render_to_response.html");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestRequestContext() {
             TestSingleRenderVariable("test_RequestContext.html");
             TestSingleRenderVariable("test_RequestContext2.html");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestCustomFilter() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
 
@@ -72,20 +76,52 @@ namespace DjangoTests {
                 "test_filter",
                 "test_filter_2"
             );
+
+            var entry = proj._filters["test_filter_2"].Entry;
+            var parser = Parser.CreateParser(
+                new StringReader(File.ReadAllText(entry.FilePath).Replace("test_filter_2", "test_filter_3")),
+                PythonLanguageVersion.V27
+            );
+            entry.UpdateTree(parser.ParseFile(), null);
+            entry.Analyze(CancellationToken.None, false);
+
+            AssertUtil.ContainsExactly(
+                proj._filters.Keys.Except(DjangoAnalyzer._knownFilters.Keys),
+                "test_filter",
+                "test_filter_3"
+            );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestCustomTag() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
 
             AssertUtil.ContainsExactly(
                 proj._tags.Keys.Except(DjangoAnalyzer._knownTags.Keys),
                 "test_tag",
-                "test_tag_2"
+                "test_tag_2",
+                "test_assignment_tag",
+                "test_simple_tag"
+            );
+
+            var entry = proj._tags["test_tag_2"].Entry;
+            var parser = Parser.CreateParser(
+                new StringReader(File.ReadAllText(entry.FilePath).Replace("test_tag_2", "test_tag_3")),
+                PythonLanguageVersion.V27
+            );
+            entry.UpdateTree(parser.ParseFile(), null);
+            entry.Analyze(CancellationToken.None, false);
+
+            AssertUtil.ContainsExactly(
+                proj._tags.Keys.Except(DjangoAnalyzer._knownTags.Keys),
+                "test_tag",
+                "test_tag_3",
+                "test_assignment_tag",
+                "test_simple_tag"
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestListView() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
             var templates = TestData.GetPath("TestData\\DjangoAnalysisTestApp\\myapp\\templates\\myapp\\");
@@ -95,7 +131,7 @@ namespace DjangoTests {
             AssertUtil.ContainsExactly(detailsVars.Keys, "latest_poll_list");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void TestDetailsView() {
             var proj = AnalyzerTest(TestData.GetPath("TestData\\DjangoAnalysisTestApp"));
             var templates = TestData.GetPath("TestData\\DjangoAnalysisTestApp\\myapp\\templates\\myapp\\");
@@ -125,8 +161,8 @@ namespace DjangoTests {
 
             var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
             PythonAnalyzer analyzer = PythonAnalyzer.CreateAsync(testFact).WaitAndUnwrapExceptions();
-            DjangoAnalyzer djangoAnalyzer = new DjangoAnalyzer(serviceProvider);
-            djangoAnalyzer.OnNewAnalyzer(analyzer);
+            DjangoAnalyzer djangoAnalyzer = new DjangoAnalyzer();
+            djangoAnalyzer.Register(analyzer);
 
             analyzer.AddAnalysisDirectory(path);
 

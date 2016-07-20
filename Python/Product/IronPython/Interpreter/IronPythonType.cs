@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -38,7 +40,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IPythonFunction GetConstructors() {
             if (_ctors == null) {
-                if (!Interpreter.Remote.PythonTypeHasNewOrInitMethods(Value)) {
+                var ri = RemoteInterpreter;
+                if (ri != null && !ri.PythonTypeHasNewOrInitMethods(Value)) {
                     _ctors = GetClrOverloads();
                 }
 
@@ -53,7 +56,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         /// Returns the overloads for a normal .NET type
         /// </summary>
         private IPythonFunction GetClrOverloads() {
-            var ctors = Interpreter.Remote.GetPythonTypeConstructors(Value);
+            var ri = RemoteInterpreter;
+            var ctors = ri != null ? ri.GetPythonTypeConstructors(Value) : null;
             if (ctors != null) {
                 return new IronPythonConstructorFunction(Interpreter, ctors, this);
             }
@@ -63,7 +67,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public override PythonMemberType MemberType {
             get {
                 if (_memberType == PythonMemberType.Unknown) {
-                    _memberType = Interpreter.Remote.GetPythonTypeMemberType(Value);
+                    var ri = RemoteInterpreter;
+                    _memberType = ri != null ? ri.GetPythonTypeMemberType(Value) : PythonMemberType.Unknown;
                 }
                 return _memberType;
             }
@@ -72,7 +77,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public string Name {
             get {
                 if (_name == null) {
-                    _name = Interpreter.Remote.GetPythonTypeName(Value);
+                    var ri = RemoteInterpreter;
+                    _name = ri != null ? ri.GetPythonTypeName(Value) : string.Empty;
                 }
 
                 return _name; 
@@ -81,14 +87,16 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public string Documentation {
             get {
-                return Interpreter.Remote.GetPythonTypeDocumentation(Value);
+                var ri = RemoteInterpreter;
+                return ri != null ? ri.GetPythonTypeDocumentation(Value) : string.Empty;
             }
         }
 
         public BuiltinTypeId TypeId {
             get {
                 if (_typeId == null) {
-                    _typeId = Interpreter.Remote.PythonTypeGetBuiltinTypeId(Value);
+                    var ri = RemoteInterpreter;
+                    _typeId = ri != null ? ri.PythonTypeGetBuiltinTypeId(Value) : BuiltinTypeId.Unknown;
                 }
                 return _typeId.Value;
             }
@@ -96,14 +104,16 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public IPythonModule DeclaringModule {
             get {
-                return Interpreter.ImportModule(Interpreter.Remote.GetTypeDeclaringModule(Value));
+                var ri = RemoteInterpreter;
+                return ri != null ? Interpreter.ImportModule(ri.GetTypeDeclaringModule(Value)) : null;
             }
         }
 
         public IList<IPythonType> Mro {
             get {
                 if (_mro == null) {
-                    var types = Interpreter.Remote.GetPythonTypeMro(Value);
+                    var ri = RemoteInterpreter;
+                    var types = ri != null ? ri.GetPythonTypeMro(Value) : new ObjectIdentityHandle[0];
                     var mro = new IPythonType[types.Length];
                     for (int i = 0; i < types.Length; ++i) {
                         mro[i] = Interpreter.GetTypeFromType(types[i]);
@@ -128,17 +138,20 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public bool IsArray {
             get {
-                return Interpreter.Remote.IsPythonTypeArray(Value);
+                var ri = RemoteInterpreter;
+                return ri != null ? ri.IsPythonTypeArray(Value) : false;
             }
         }
 
         public IPythonType GetElementType() {
-            return Interpreter.GetTypeFromType(Interpreter.Remote.GetPythonTypeElementType(Value));
+            var ri = RemoteInterpreter;
+            return ri != null ? Interpreter.GetTypeFromType(ri.GetPythonTypeElementType(Value)) : null;
         }
 
         public IList<IPythonType> GetTypesPropagatedOnCall() {
             if (_propagateOnCall == null) {
-                if (Interpreter.Remote.IsDelegateType(Value)) {
+                var ri = RemoteInterpreter;
+                if (ri != null && ri.IsDelegateType(Value)) {
                     _propagateOnCall = GetEventInvokeArgs();
                 } else {
                     _propagateOnCall = EmptyTypes;
@@ -151,7 +164,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #endregion
 
         private IPythonType[] GetEventInvokeArgs() {
-            var types = Interpreter.Remote.GetEventInvokeArgs(Value);
+            var ri = RemoteInterpreter;
+            var types = ri != null ? ri.GetEventInvokeArgs(Value) : new ObjectIdentityHandle[0];
 
             var args = new IPythonType[types.Length];
             for (int i = 0; i < types.Length; i++) {
@@ -165,7 +179,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public bool IsGenericTypeDefinition {
             get {
                 if (_genericTypeDefinition == null) {
-                    _genericTypeDefinition = Interpreter.Remote.IsPythonTypeGenericTypeDefinition(Value);
+                    var ri = RemoteInterpreter;
+                    _genericTypeDefinition = ri != null ? ri.IsPythonTypeGenericTypeDefinition(Value) : false;
                 }
                 return _genericTypeDefinition.Value;
             }
@@ -177,7 +192,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
             for (int i = 0; i < types.Length; i++) {
                 types[i] = ((IronPythonType)indexTypes[i]).Value;
             }
-            return Interpreter.GetTypeFromType(Interpreter.Remote.PythonTypeMakeGenericType(Value, types));
+            var ri = RemoteInterpreter;
+            return ri != null ? Interpreter.GetTypeFromType(ri.PythonTypeMakeGenericType(Value, types)) : null;
         }
 
         #endregion

@@ -1,22 +1,25 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Language.Intellisense;
@@ -207,21 +210,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                     string varName = Expression.Value.Substring(0, Expression.Value.IndexOf('.'));
 
                     // get the members of this variable
-                    HashSet<AnalysisValue> values;
-                    if (context.Variables != null && context.Variables.TryGetValue(varName, out values)) {
-                        var newTags = new Dictionary<string, PythonMemberType>();
-                        foreach (var member in values.SelectMany(item => item.GetAllMembers(context.ModuleContext))) {
-                            string name = member.Key;
-                            PythonMemberType type, newType = GetMemberType(member.Value);
-
-                            if (!newTags.TryGetValue(name, out type)) {
-                                newTags[name] = newType;
-                            } else if (type != newType && type != PythonMemberType.Unknown && newType != PythonMemberType.Unknown) {
-                                newTags[name] = PythonMemberType.Multiple;
-                            }
-                        }
-                        return CompletionInfo.ToCompletionInfo(newTags);
-                    }
+                    return CompletionInfo.ToCompletionInfo(context.GetMembers(varName));
                 } else {
                     return CompletionInfo.ToCompletionInfo(context.Variables, StandardGlyphGroup.GlyphGroupField);
                 }
@@ -249,20 +238,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             return Enumerable.Empty<CompletionInfo>();
         }
 
-        private static PythonMemberType GetMemberType(IAnalysisSet values) {
-            PythonMemberType newType = PythonMemberType.Unknown;
-            foreach (var value in values) {
-                if (value.MemberType == newType) {
-                    continue;
-                } else if (newType == PythonMemberType.Unknown) {
-                    newType = value.MemberType;
-                } else {
-                    newType = PythonMemberType.Multiple;
-                    break;
-                }
-            }
-            return newType;
-        }
 
         public IEnumerable<BlockClassification> GetSpans() {
             if (Expression != null) {
@@ -304,7 +279,12 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
             if (dictionary == null) {
                 return Enumerable.Empty<CompletionInfo>();
             }
-            return dictionary.Select(key => new CompletionInfo(key.Key, glyph, key.Key, key.Value.Documentation));
+            return dictionary.Select(key => new CompletionInfo(
+                key.Key, 
+                glyph, 
+                key.Key, 
+                key.Value.Documentation
+            ));
         }
 
         internal static IEnumerable<CompletionInfo> ToCompletionInfo<T>(Dictionary<string, T> dictionary, StandardGlyphGroup glyph) {

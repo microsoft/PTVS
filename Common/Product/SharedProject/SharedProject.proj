@@ -166,6 +166,10 @@
       <Link>SharedProject\Automation\OAProjectItems.cs</Link>
       <Visible>true</Visible>
     </Compile>
+	<Compile Include="$(_ProjectSystemFilesLocation)\Automation\OAProjects.cs">
+      <Link>SharedProject\Automation\OAProjects.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\Automation\OAProperties.cs">
       <Link>SharedProject\Automation\OAProperties.cs</Link>
       <Visible>true</Visible>
@@ -551,8 +555,8 @@
       <Link>SharedProject\UIThread.cs</Link>
       <Visible>true</Visible>
     </Compile>
-    <Compile Include="$(_ProjectSystemFilesLocation)\IUIThread.cs">
-      <Link>SharedProject\IUIThread.cs</Link>
+    <Compile Include="$(_ProjectSystemFilesLocation)\UIThreadBase.cs" Condition="$(SharedProject_IncludeUIThreadBase) != 'false'">
+      <Link>SharedProject\UIThreadBase.cs</Link>
       <Visible>true</Visible>
     </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\UIThreadSynchronizer.cs">
@@ -619,6 +623,10 @@
     </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\ProvideDebugPortSupplierAttribute.cs">
       <Link>SharedProject\ProvideDebugPortSupplierAttribute.cs</Link>
+      <Visible>true</Visible>
+    </Compile>
+    <Compile Include="$(_ProjectSystemFilesLocation)\ProvideDebugPortPickerAttribute.cs">
+      <Link>SharedProject\ProvideDebugPortPickerAttribute.cs</Link>
       <Visible>true</Visible>
     </Compile>
     <Compile Include="$(_ProjectSystemFilesLocation)\ProvideTextEditorAutomationAttribute.cs">

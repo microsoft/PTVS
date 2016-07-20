@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Runtime.InteropServices;
@@ -20,19 +22,9 @@ namespace Microsoft.PythonTools.Options {
     // TODO: We should switch to a scheme which takes strings / returns object for options so they're extensible w/o reving the interface
     [Guid("BACA2500-5EA7-4075-8D02-647EAC0BC6E3")]
     public interface IPythonOptions {
-        IPythonIntellisenseOptions Intellisense {
-            get;
-        }
+        IPythonIntellisenseOptions Intellisense { get; }
 
-        /// <summary>
-        /// Gets interactive options for the given environment.
-        /// </summary>
-        /// <param name="interpreterName">
-        /// The user-visible description of the environment. If multiple
-        /// environments have the same description, one will be returned
-        /// arbitrarily.
-        /// </param>
-        IPythonInteractiveOptions GetInteractiveOptions(string interpreterName);
+        IPythonInteractiveOptions Interactive { get; }
 
         bool PromptBeforeRunningWithBuildErrorSetting {
             get;
@@ -74,54 +66,19 @@ namespace Microsoft.PythonTools.Options {
         bool AutoListIdentifiers { get; set; }
     }
 
-    [Guid("6DCCD6E9-FAC4-4EFA-9243-AE1A71D8923D")]
+    [Guid("28214322-2EEC-4750-8D87-EF76714757CE")]
     public interface IPythonInteractiveOptions {
-        string PrimaryPrompt {
+        bool UseSmartHistory {
             get;
             set;
         }
 
-        string SecondaryPrompt {
+        string CompletionMode {
             get;
             set;
         }
 
-        bool UseInterpreterPrompts {
-            get;
-            set;
-        }
-
-        bool InlinePrompts {
-            get;
-            set;
-        }
-
-        bool ReplSmartHistory {
-            get;
-            set;
-        }
-
-        string ReplIntellisenseMode {
-            get;
-            set;
-        }
-
-        string StartupScript {
-            get;
-            set;
-        }
-
-        string ExecutionMode {
-            get;
-            set;
-        }
-
-        string InterpreterArguments {
-            get;
-            set;
-        }
-
-        bool EnableAttach {
+        string StartupScripts {
             get;
             set;
         }

@@ -1,35 +1,28 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
-using SR = Microsoft.PythonTools.Project.SR;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Commands {
     public partial class DiagnosticsForm : Form {
         private readonly IServiceProvider _provider;
-
-        [Obsolete("Use IServiceProvider overload")]
-        public DiagnosticsForm(string content)
-#pragma warning disable 0618
-            : this(PythonToolsPackage.Instance, content) {
-#pragma warning restore 0618
-        }
 
         public DiagnosticsForm(IServiceProvider serviceProvider, string content) {
             _provider = serviceProvider;
@@ -63,7 +56,7 @@ namespace Microsoft.PythonTools.Commands {
             var path = _provider.BrowseForFileSave(
                 Handle,
                 "Text Files (*.txt)|*.txt|All Files (*.*)|*.*",
-                CommonUtils.GetAbsoluteFilePath(
+                PathUtils.GetAbsoluteFilePath(
                     Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
                     string.Format("Diagnostic Info {0:yyyy-MM-dd'T'HHmmss}.txt", DateTime.Now)
                 )
@@ -77,11 +70,11 @@ namespace Microsoft.PythonTools.Commands {
                 TaskDialog.CallWithRetry(
                     _ => File.WriteAllText(path, _textBox.Text),
                     _provider,
-                    SR.ProductName,
-                    SR.GetString(SR.FailedToSaveDiagnosticInfo),
-                    SR.GetString(SR.ErrorDetail),
-                    SR.GetString(SR.Retry),
-                    SR.GetString(SR.Cancel)
+                    Strings.ProductTitle,
+                    Strings.FailedToSaveDiagnosticInfo,
+                    Strings.ErrorDetail,
+                    Strings.Retry,
+                    Strings.Cancel
                 );
 
                 Process.Start("explorer.exe", "/select," + ProcessOutput.QuoteSingleArgument(path));

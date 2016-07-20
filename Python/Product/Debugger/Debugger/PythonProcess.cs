@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -20,6 +22,7 @@ using System.Linq;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -38,7 +41,9 @@ namespace Microsoft.PythonTools.Debugger {
         private readonly Dictionary<int, CompletionInfo> _pendingExecutes = new Dictionary<int, CompletionInfo>();
         private readonly Dictionary<int, ChildrenInfo> _pendingChildEnums = new Dictionary<int, ChildrenInfo>();
         private readonly Dictionary<int, TaskCompletionSource<int>> _pendingGetHitCountRequests = new Dictionary<int, TaskCompletionSource<int>>();
+        private readonly List<TaskCompletionSource<int>> _pendingGetThreadFramesRequests = new List<TaskCompletionSource<int>>();
         private readonly object _pendingGetHitCountRequestsLock = new object();
+        private readonly object _pendingGetThreadFramesRequestsLock = new object();
         private readonly PythonLanguageVersion _langVersion;
         private readonly Guid _processGuid = Guid.NewGuid();
         private readonly List<string[]> _dirMapping;
@@ -62,9 +67,10 @@ namespace Microsoft.PythonTools.Debugger {
         protected PythonProcess(int pid, PythonLanguageVersion languageVersion) {
             _pid = pid;
             _langVersion = languageVersion;
+            _dirMapping = new List<string[]>();
         }
 
-        private PythonProcess(int pid) {
+        private PythonProcess(int pid, PythonDebugOptions debugOptions) {
             _pid = pid;
             _process = Process.GetProcessById(pid);
             _process.EnableRaisingEvents = true;
@@ -72,7 +78,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             ListenForConnection();
 
-            using (var result = DebugAttach.AttachAD7(pid, DebugConnectionListener.ListenerPort, _processGuid)) {
+            using (var result = DebugAttach.AttachAD7(pid, DebugConnectionListener.ListenerPort, _processGuid, debugOptions.ToString())) {
                 if (result.Error != ConnErrorMessages.None) {
                     throw new ConnectionException(result.Error);
                 }
@@ -84,7 +90,7 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        private PythonProcess(Stream stream, int pid, PythonLanguageVersion version) {
+        private PythonProcess(Stream stream, int pid, PythonLanguageVersion version, PythonDebugOptions debugOptions) {
             _pid = pid;
             _process = Process.GetProcessById(pid);
             _process.EnableRaisingEvents = true;
@@ -96,6 +102,7 @@ namespace Microsoft.PythonTools.Debugger {
 
             stream.WriteInt32(DebugConnectionListener.ListenerPort);
             stream.WriteString(_processGuid.ToString());
+            stream.WriteString(debugOptions.ToString());
         }
 
         public PythonProcess(PythonLanguageVersion languageVersion, string exe, string args, string dir, string env, string interpreterOptions, PythonDebugOptions options = PythonDebugOptions.None, List<string[]> dirMapping = null)
@@ -120,12 +127,7 @@ namespace Microsoft.PythonTools.Debugger {
                 "\"" + dir + "\" " +
                 " " + DebugConnectionListener.ListenerPort + " " +
                 " " + _processGuid + " " +
-                (((options & PythonDebugOptions.WaitOnAbnormalExit) != 0) ? " --wait-on-exception " : "") +
-                (((options & PythonDebugOptions.WaitOnNormalExit) != 0) ? " --wait-on-exit " : "") +
-                (((options & PythonDebugOptions.RedirectOutput) != 0) ? " --redirect-output " : "") +
-                (((options & PythonDebugOptions.BreakOnSystemExitZero) != 0) ? " --break-on-systemexit-zero " : "") +
-                (((options & PythonDebugOptions.DebugStdLib) != 0) ? " --debug-stdlib " : "") +
-                (((options & PythonDebugOptions.DjangoDebugging) != 0) ? " --django-debugging " : "") +
+                "\"" + options + "\" " +
                 args;
 
             if (env != null) {
@@ -145,12 +147,12 @@ namespace Microsoft.PythonTools.Debugger {
             _process.Exited += new EventHandler(_process_Exited);
         }
 
-        public static PythonProcess Attach(int pid) {
-            return new PythonProcess(pid);
+        public static PythonProcess Attach(int pid, PythonDebugOptions debugOptions = PythonDebugOptions.None) {
+            return new PythonProcess(pid, debugOptions);
         }
 
-        public static PythonProcess AttachRepl(Stream stream, int pid, PythonLanguageVersion version) {
-            return new PythonProcess(stream, pid, version);
+        public static PythonProcess AttachRepl(Stream stream, int pid, PythonLanguageVersion version, PythonDebugOptions debugOptions = PythonDebugOptions.None) {
+            return new PythonProcess(stream, pid, version, debugOptions);
         }
 
         #region Public Process API
@@ -185,6 +187,12 @@ namespace Microsoft.PythonTools.Debugger {
             GC.SuppressFinalize(this);
         }
 
+        internal void AddDirMapping(string[] mapping) {
+            if (mapping != null) {
+                _dirMapping.Add(mapping);
+            }
+        }
+
         protected virtual void Dispose(bool disposing) {
             DebugConnectionListener.UnregisterProcess(_processGuid);
 
@@ -206,6 +214,8 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         void _process_Exited(object sender, EventArgs e) {
+            // TODO: Abort all pending operations
+
             if (!_sentExited) {
                 _sentExited = true;
                 var exited = ProcessExited;
@@ -665,14 +675,19 @@ namespace Microsoft.PythonTools.Debugger {
         private void HandleExecutionException(Stream stream) {
             int execId = stream.ReadInt32();
             CompletionInfo completion;
-
             lock (_pendingExecutes) {
-                completion = _pendingExecutes[execId];
-                _pendingExecutes.Remove(execId);
+                if (_pendingExecutes.TryGetValue(execId, out completion)) {
+                    _pendingExecutes.Remove(execId);
+                    _ids.Free(execId);
+                } else {
+                    Debug.Fail("Received execution result with unknown execution ID " + execId);
+                }
             }
 
             string exceptionText = stream.ReadString();
-            completion.Completion(new PythonEvaluationResult(this, exceptionText, completion.Text, completion.Frame));
+            if (completion != null) {
+                completion.Completion(new PythonEvaluationResult(this, exceptionText, completion.Text, completion.Frame));
+            }
         }
 
         private void HandleExecutionResult(Stream stream) {
@@ -683,7 +698,7 @@ namespace Microsoft.PythonTools.Debugger {
                     _pendingExecutes.Remove(execId);
                     _ids.Free(execId);
                 } else {
-                    Debug.Fail("Received REPL execution result with unknown execution ID " + execId);
+                    Debug.Fail("Received execution result with unknown execution ID " + execId);
                 }
             }
 
@@ -703,18 +718,24 @@ namespace Microsoft.PythonTools.Debugger {
 
             ChildrenInfo completion;
             lock (_pendingChildEnums) {
-                completion = _pendingChildEnums[execId];
-                _pendingChildEnums.Remove(execId);
+                if (_pendingChildEnums.TryGetValue(execId, out completion)) {
+                    _pendingChildEnums.Remove(execId);
+                    _ids.Free(execId);
+                } else {
+                    Debug.Fail("Received enum children result with unknown execution ID " + execId);
+                }
             }
 
             var children = new PythonEvaluationResult[stream.ReadInt32()];
             for (int i = 0; i < children.Length; i++) {
                 string childName = stream.ReadString();
                 string childExpr = stream.ReadString();
-                children[i] = ReadPythonObject(stream, childExpr, childName, completion.Frame);
+                children[i] = ReadPythonObject(stream, childExpr, childName, completion != null ? completion.Frame : null);
             }
 
-            completion.Completion(children);
+            if (completion != null) {
+                completion.Completion(children);
+            }
         }
 
         private PythonEvaluationResult ReadPythonObject(Stream stream, string expr, string childName, PythonStackFrame frame) {
@@ -787,6 +808,13 @@ namespace Microsoft.PythonTools.Debugger {
                 if (threadName != null) {
                     thread.Name = threadName;
                 }
+            }
+
+            lock(_pendingGetThreadFramesRequestsLock) {
+                foreach (TaskCompletionSource<int> tcs in _pendingGetThreadFramesRequests) {
+                    tcs.SetResult(0);
+                }
+                _pendingGetThreadFramesRequests.Clear();
             }
         }
 
@@ -988,6 +1016,21 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
+        public Task GetThreadFramesAsync(long threadId) {
+            DebugWriteCommand("GetThreadFrames");
+            var tcs = new TaskCompletionSource<int>();
+            lock (_pendingGetThreadFramesRequestsLock) {
+                _pendingGetThreadFramesRequests.Add(tcs);
+            }
+
+            lock (_streamLock) {
+                _stream.Write(GetThreadFramesCommandBytes);
+                _stream.WriteInt64(threadId);
+            }
+
+            return tcs.Task;
+        }
+
         public void Detach() {
             DebugWriteCommand("Detach");
             try {
@@ -1043,16 +1086,14 @@ namespace Microsoft.PythonTools.Debugger {
                     string mapTo = mappingInfo[toDebuggee ? 1 : 0];
 
                     if (file.StartsWith(mapFrom, StringComparison.OrdinalIgnoreCase)) {
-                        if (file.StartsWith(mapFrom, StringComparison.OrdinalIgnoreCase)) {
-                            int len = mapFrom.Length;
-                            if (!mappingInfo[0].EndsWith("\\")) {
-                                len++;
-                            }
-
-                            string newFile = Path.Combine(mapTo, file.Substring(len));
-                            Debug.WriteLine(String.Format("Filename mapped from {0} to {1}", file, newFile));
-                            return newFile;
+                        int len = mapFrom.Length;
+                        if (!mappingInfo[0].EndsWith("\\")) {
+                            len++;
                         }
+
+                        string newFile = Path.Combine(mapTo, file.Substring(len));
+                        Debug.WriteLine("Filename mapped from {0} to {1}", file, newFile);
+                        return newFile;
                     }
                 }
             }

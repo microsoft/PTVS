@@ -1,33 +1,33 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     internal class ImportKeywordCompletionAnalysis : CompletionAnalysis {
-        public ImportKeywordCompletionAnalysis(ITrackingSpan span, ITextBuffer buffer, CompletionOptions options)
-            : base(span, buffer, options) { }
+        public ImportKeywordCompletionAnalysis(IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer buffer, CompletionOptions options)
+            : base(serviceProvider, view, span, buffer, options) { }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var completion = new[] { PythonCompletion(glyphService, "import", null, StandardGlyphGroup.GlyphKeyword) };
@@ -42,14 +42,14 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly string[] _namespace;
         private readonly bool _includeStar;
 
-        private FromImportCompletionAnalysis(string[] ns, bool includeStar, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(span, textBuffer, options) {
+        private FromImportCompletionAnalysis(string[] ns, bool includeStar, IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(serviceProvider, view, span, textBuffer, options) {
 
             _namespace = ns;
             _includeStar = includeStar;
         }
 
-        public static CompletionAnalysis Make(IList<ClassificationSpan> tokens, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
+        public static CompletionAnalysis Make(IList<ClassificationSpan> tokens, IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
             Debug.Assert(tokens[0].Span.GetText() == "from");
 
             var ns = new List<string>();
@@ -98,9 +98,9 @@ namespace Microsoft.PythonTools.Intellisense {
             }
             if (!seenImport) {
                 if (nsComplete) {
-                    return new ImportKeywordCompletionAnalysis(span, textBuffer, options);
+                    return new ImportKeywordCompletionAnalysis(serviceProvider, view, span, textBuffer, options);
                 } else {
-                    return ImportCompletionAnalysis.Make(tokens, span, textBuffer, options);
+                    return ImportCompletionAnalysis.Make(tokens, serviceProvider, view, span, textBuffer, options);
                 }
             }
 
@@ -109,10 +109,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (seenName) {
-                return new AsKeywordCompletionAnalysis(span, textBuffer, options);
+                return new AsKeywordCompletionAnalysis(serviceProvider, view, span, textBuffer, options);
             }
 
-            return new FromImportCompletionAnalysis(ns.ToArray(), includeStar, span, textBuffer, options);
+            return new FromImportCompletionAnalysis(ns.ToArray(), includeStar, serviceProvider, view, span, textBuffer, options);
         }
 
         private static string GetText(ITextSnapshot snapshot, ClassificationSpan start, ClassificationSpan target, bool includeEnd) {

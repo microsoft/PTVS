@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using Microsoft.PythonTools.Interpreter;
@@ -21,36 +23,15 @@ namespace Microsoft.PythonTools.Profiling {
     /// </summary>
     public class PythonInterpreterView {
         readonly string _name;
-        readonly Guid _id;
-        readonly Version _version;
+        readonly string _id;
         readonly string _path;
         
         /// <summary>
-        /// Create a PythonInterpreterView with values from an IPythonInterpreterFactory.
-        /// </summary>
-        public PythonInterpreterView(IPythonInterpreterFactory factory) {
-            _name = factory.Description;
-            _id = factory.Id;
-            _version = factory.Configuration.Version;
-            _path = factory.Configuration.InterpreterPath;
-        }
-
-        /// <summary>
-        /// Create a PythonInterpreterView with values from a PythonInterpreter.
-        /// </summary>
-        public PythonInterpreterView(PythonInterpreter interpreter) {
-            _name = null;
-            _id = interpreter.Id;
-            _version = Version.Parse(interpreter.Version);
-            _path = null;
-        }
-        /// <summary>
         /// Create a PythonInterpreterView with values from parameters.
         /// </summary>
-        public PythonInterpreterView(string name, Guid id, Version version, string path) {
+        public PythonInterpreterView(string name, string id, string path) {
             _name = name;
             _id = id;
-            _version = version;
             _path = path;
         }
 
@@ -60,8 +41,7 @@ namespace Microsoft.PythonTools.Profiling {
         /// <returns></returns>
         public PythonInterpreter GetInterpreter() {
             return new PythonInterpreter {
-                Id = Id,
-                Version = Version.ToString()
+                Id = Id
             };
         }
 
@@ -77,18 +57,9 @@ namespace Microsoft.PythonTools.Profiling {
         /// <summary>
         /// The Guid identifying the interpreter.
         /// </summary>
-        public Guid Id { 
+        public string Id { 
             get {
                 return _id;
-            }
-        }
-
-        /// <summary>
-        /// The version of the interpreter.
-        /// </summary>
-        public Version Version { 
-            get {
-                return _version;
             }
         }
 
@@ -110,7 +81,7 @@ namespace Microsoft.PythonTools.Profiling {
             if (other == null) {
                 return false;
             } else {
-                return Id.Equals(other.Id) && Version.Equals(other.Version);
+                return Id.Equals(other.Id);
             }
         }
 

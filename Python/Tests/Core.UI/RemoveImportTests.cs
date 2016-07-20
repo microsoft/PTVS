@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System.Threading;
 using EnvDTE;
@@ -28,8 +30,8 @@ namespace PythonToolsUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FromImport1() {
             string expectedText = @"from sys import oar
 
@@ -39,8 +41,8 @@ oar";
             RemoveSmartTagTest("FromImport1.py", 1, 1, false, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FromImport2() {
             string expectedText = @"from sys import baz
 
@@ -49,8 +51,8 @@ baz";
             RemoveSmartTagTest("FromImport2.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FromImportParens1() {
             string expectedText = @"from sys import (oar)
 
@@ -59,8 +61,8 @@ oar";
             RemoveSmartTagTest("FromImportParens1.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FromImportParens2() {
             string expectedText = @"from sys import (baz)
 
@@ -69,8 +71,8 @@ baz";
             RemoveSmartTagTest("FromImportParens2.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FromImportParensTrailingComma1() {
             string expectedText = @"from sys import (baz, )
 
@@ -79,8 +81,8 @@ baz";
             RemoveSmartTagTest("FromImportParensTrailingComma1.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FromImportParensTrailingComma2() {
             string expectedText = @"from sys import (oar, )
 
@@ -89,8 +91,8 @@ oar";
             RemoveSmartTagTest("FromImportParensTrailingComma2.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Import1() {
             string expectedText = @"import oar
 
@@ -99,8 +101,8 @@ oar";
             RemoveSmartTagTest("Import1.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Import2() {
             string expectedText = @"import baz
 
@@ -109,8 +111,8 @@ baz";
             RemoveSmartTagTest("Import2.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Import3() {
             string expectedText = @"import baz
 
@@ -119,8 +121,8 @@ baz";
             RemoveSmartTagTest("Import3.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Import4() {
             string expectedText = @"import oar, quox
 
@@ -130,8 +132,8 @@ quox";
             RemoveSmartTagTest("Import4.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Import5() {
             string expectedText = @"import oar, quox
 
@@ -141,8 +143,8 @@ quox";
             RemoveSmartTagTest("Import5.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Import6() {
             string expectedText = @"import oar,          quox
 
@@ -152,8 +154,8 @@ quox";
             RemoveSmartTagTest("Import6.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportComment() {
             string expectedText = @"#baz
 import oar,          quox
@@ -166,8 +168,8 @@ quox";
             RemoveSmartTagTest("ImportComment.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FromImportComment() {
             string expectedText = @"#baz
 from xyz import oar,          quox
@@ -180,48 +182,48 @@ quox";
             RemoveSmartTagTest("FromImportComment.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportDup() {
             string expectedText = @"";
 
             RemoveSmartTagTest("ImportDup.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FromImportDup() {
             string expectedText = @"";
 
             RemoveSmartTagTest("FromImportDup.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Import() {
             string expectedText = @"";
 
             RemoveSmartTagTest("Import.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FromImport() {
             string expectedText = @"";
 
             RemoveSmartTagTest("FromImport.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FutureImport() {
             string expectedText = @"from __future__ import with_statement";
 
             RemoveSmartTagTest("FutureImport.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LocalScopeDontRemoveGlobal() {
             string expectedText = @"import dne
 
@@ -233,8 +235,8 @@ def f():
             RemoveSmartTagTest("LocalScopeDontRemoveGlobal.py", 4, 10, false, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LocalScopeOnly() {
             string expectedText = @"import dne
 
@@ -245,16 +247,16 @@ def f():
             RemoveSmartTagTest("LocalScopeOnly.py", 4, 10, false, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportTrailingWhitespace() {
             string expectedText = @"fob";
 
             RemoveSmartTagTest("ImportTrailingWhitespace.py", 1, 1, true, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ClosureReference() {
             string expectedText = @"def f():
     import something
@@ -265,8 +267,8 @@ def f():
             RemoveSmartTagTest("ClosureReference.py", 2, 14, false, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void NameMangledUnmangled() {
             string expectedText = @"class C:
     def f(self):
@@ -277,8 +279,8 @@ def f():
             RemoveSmartTagTest("NameMangleUnmangled.py", 3, 14, false, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void NameMangledMangled() {
             string expectedText = @"class C:
     def f(self):
@@ -289,8 +291,8 @@ def f():
             RemoveSmartTagTest("NameMangleMangled.py", 3, 14, false, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void EmptyFuncDef1() {
             string expectedText = @"def f():
     pass";
@@ -299,8 +301,8 @@ def f():
             RemoveSmartTagTest("EmptyFuncDef1.py", 2, 7, false, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void EmptyFuncDef2() {
             string expectedText = @"def f():
     pass";
@@ -309,8 +311,8 @@ def f():
             RemoveSmartTagTest("EmptyFuncDef2.py", 2, 7, false, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void EmptyFuncDefWhitespace() {
             string expectedText = @"def f():
     pass";
@@ -319,8 +321,8 @@ def f():
             RemoveSmartTagTest("EmptyFuncDefWhitespace.py", 2, 7, false, expectedText);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ImportStar() {
             string expectedText = @"from sys import *";
 

@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -18,6 +20,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows.Automation;
 using EnvDTE;
 using EnvDTE80;
@@ -47,6 +50,10 @@ namespace TestUtilities.UI {
         public VisualStudioApp(DTE dte = null)
             : this(new IntPtr((dte ?? VSTestContext.DTE).MainWindow.HWnd)) {
             _dte = dte ?? VSTestContext.DTE;
+
+            foreach (var p in ((DTE2)_dte).ToolWindows.OutputWindow.OutputWindowPanes.OfType<OutputWindowPane>()) {
+                p.Clear();
+            }
         }
 
         private VisualStudioApp(IntPtr windowHandle)
@@ -94,6 +101,8 @@ namespace TestUtilities.UI {
                 } catch (Exception ex) {
                     Debug.WriteLine("Exception disposing VisualStudioApp: {0}", ex);
                 }
+
+                AssertListener.ThrowUnhandled();
             }
         }
 
@@ -150,6 +159,7 @@ namespace TestUtilities.UI {
         /// </summary>
         public void OpenObjectBrowser() {
             Dte.ExecuteCommand("View.ObjectBrowser");
+            Dte.ExecuteCommand("View.ObjectBrowserSortObjectsAlphabetically");
         }
 
         /// <summary>
@@ -331,7 +341,7 @@ namespace TestUtilities.UI {
         }
 
         public OutputWindowPane GetOutputWindow(string name) {
-            return ((DTE2)VSTestContext.DTE).ToolWindows.OutputWindow.OutputWindowPanes.Item(name);
+            return ((DTE2)Dte).ToolWindows.OutputWindow.OutputWindowPanes.Item(name);
         }
 
         public IEnumerable<Window> OpenDocumentWindows {
@@ -768,48 +778,130 @@ namespace TestUtilities.UI {
             return sln.Projects.Cast<Project>().FirstOrDefault(p => p.Name == projectName);
         }
 
-        public Project OpenProject(string projName, string startItem = null, int? expectedProjects = null, string projectName = null, bool setStartupItem = true) {
+        private static IEnumerable<IVsProject> EnumerateLoadedProjects(IVsSolution solution) {
+            IEnumHierarchies hierarchies;
+            Guid guid = Guid.Empty;
+            ErrorHandler.ThrowOnFailure((solution.GetProjectEnum(
+                (uint)(__VSENUMPROJFLAGS.EPF_ALLINSOLUTION),
+                ref guid,
+                out hierarchies
+            )));
+            IVsHierarchy[] hierarchy = new IVsHierarchy[1];
+            uint fetched;
+            while (ErrorHandler.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
+                var project = hierarchy[0] as IVsProject;
+                if (project != null) {
+                    yield return project;
+                }
+            }
+        }
+
+        public Project OpenProject(
+            string projName,
+            string startItem = null,
+            int? expectedProjects = null,
+            string projectName = null,
+            bool setStartupItem = true,
+            Func<AutomationDialog, bool> onDialog = null
+        ) {
             string fullPath = TestData.GetPath(projName);
             Assert.IsTrue(File.Exists(fullPath), "Cannot find " + fullPath);
             Console.WriteLine("Opening {0}", fullPath);
 
             // If there is a .suo file, delete that so that there is no state carried over from another test.
-            for (int i = 10; i <= 12; ++i) {
+            for (int i = 10; i <= 15; ++i) {
                 string suoPath = Path.ChangeExtension(fullPath, ".v" + i + ".suo");
                 if (File.Exists(suoPath)) {
                     File.Delete(suoPath);
                 }
             }
-
-            Dte.Solution.Open(fullPath);
-            Assert.IsTrue(Dte.Solution.IsOpen, "The solution is not open");
-
-            // Force all projects to load before running any tests.
-            var solution = GetService<IVsSolution4>(typeof(SVsSolution));
-            Assert.IsNotNull(solution, "Failed to obtain SVsSolution service");
-            solution.EnsureSolutionIsLoaded((uint)__VSBSLFLAGS.VSBSLFLAGS_None);
-
-            int count = Dte.Solution.Projects.Count;
-            if (expectedProjects != null && expectedProjects.Value != count) {
-                // if we have other files open we can end up with a bonus project...
-                int i = 0;
-                foreach (EnvDTE.Project proj in Dte.Solution.Projects) {
-                    if (proj.Name != "Miscellaneous Files") {
-                        i++;
-                    }
+            var dotVsPath = Path.Combine(Path.GetDirectoryName(fullPath), ".vs");
+            if (Directory.Exists(dotVsPath)) {
+                foreach (var suoPath in FileUtils.EnumerateFiles(dotVsPath, ".vso")) {
+                    File.Delete(suoPath);
                 }
+            }
+            
+            var solution = GetService<IVsSolution>(typeof(SVsSolution));
+            var solution4 = solution as IVsSolution4;
+            Assert.IsNotNull(solution, "Failed to obtain SVsSolution service");
+            Assert.IsNotNull(solution4, "Failed to obtain IVsSolution4 interface");
 
-                Assert.AreEqual(expectedProjects, i, "Wrong number of loaded projects");
+            var t = Task.Run(() => {
+                ErrorHandler.ThrowOnFailure(solution.OpenSolutionFile((uint)0, fullPath));
+                // Force all projects to load before running any tests.
+                solution4.EnsureSolutionIsLoaded((uint)__VSBSLFLAGS.VSBSLFLAGS_None);
+            });
+            using (var cts = System.Diagnostics.Debugger.IsAttached ? new CancellationTokenSource() : new CancellationTokenSource(30000)) {
+                try {
+                    if (!t.Wait(1000, cts.Token)) {
+                        // Load has taken a while, start checking whether a dialog has
+                        // appeared
+                        IVsUIShell uiShell = GetService<IVsUIShell>(typeof(IVsUIShell));
+                        IntPtr hwnd;
+                        while (!t.Wait(1000, cts.Token)) {
+                            ErrorHandler.ThrowOnFailure(uiShell.GetDialogOwnerHwnd(out hwnd));
+                            if (hwnd != _mainWindowHandle) {
+                                using (var dlg = new AutomationDialog(this, AutomationElement.FromHandle(hwnd))) {
+                                    if (onDialog == null || onDialog(dlg) == false) {
+                                        Console.WriteLine("Unexpected dialog");
+                                        DumpElement(dlg.Element);
+                                        Assert.Fail("Unexpected dialog while loading project");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (OperationCanceledException) {
+                    Assert.Fail("Failed to open project quickly enough");
+                }
             }
 
-            Project project = GetProject(projectName);
+            var projects = EnumerateLoadedProjects(solution).ToList();
+            
+            if (expectedProjects != null && expectedProjects.Value != projects.Count) {
+                // if we have other files open we can end up with a bonus project...
+                Assert.AreEqual(
+                    expectedProjects,
+                    projects.Count(p => {
+                        string mk;
+                        return ErrorHandler.Succeeded(solution.GetUniqueNameOfProject((IVsHierarchy)p, out mk)) &&
+                            mk != "Miscellaneous Files";
+                    }),
+                    "Wrong number of loaded projects"
+                );
+            }
+
+
+            var vsProject = string.IsNullOrEmpty(projectName) ?
+                projects.OfType<IVsHierarchy>().FirstOrDefault() :
+                projects.OfType<IVsHierarchy>().FirstOrDefault(p => {
+                string mk;
+                if (ErrorHandler.Failed(solution.GetUniqueNameOfProject(p, out mk))) {
+                    return false;
+                }
+                Console.WriteLine(mk);
+                return Path.GetFileNameWithoutExtension(mk) == projectName;
+            });
 
             string outputText = "(unable to get Solution output)";
             try {
                 outputText = GetOutputWindowText("Solution");
             } catch (Exception) {
             }
-            Assert.IsNotNull(project, "No project loaded: " + outputText);
+            Assert.IsNotNull(vsProject, "No project loaded: " + outputText);
+
+            Guid projGuid;
+            ErrorHandler.ThrowOnFailure(solution.GetGuidOfProject(vsProject, out projGuid));
+
+            object o;
+            ErrorHandler.ThrowOnFailure(vsProject.GetProperty(VSConstants.VSITEMID_ROOT, (int)__VSHPROPID.VSHPROPID_ExtObject, out o));
+            var project = (Project)o;
+
+            if (project.Properties == null) {
+                ErrorHandler.ThrowOnFailure(solution4.ReloadProject(ref projGuid));
+            }
+
             // HACK: Testing whether Properties is just slow to initialize
             for (int retries = 10; retries > 0 && project.Properties == null; --retries) {
                 Trace.TraceWarning("Waiting for project.Properties to become non-null");
@@ -938,7 +1030,7 @@ namespace TestUtilities.UI {
                 System.Threading.Thread.Sleep(5000);
             }
 
-            for (int retries = 10; retries > 0; --retries) {
+            for (int retries = 20; retries > 0; --retries) {
                 allItems.Clear();
                 IVsEnumTaskItems items;
                 ErrorHandler.ThrowOnFailure(errorList.EnumTaskItems(out items));

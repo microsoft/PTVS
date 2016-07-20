@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Diagnostics;
@@ -29,6 +31,10 @@ using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools.Project.Automation;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.VisualStudioTools.Project {
     internal class CommonFileNode : FileNode {
@@ -96,6 +102,40 @@ namespace Microsoft.VisualStudioTools.Project {
 
         #region overridden methods
 
+#if DEV14_OR_LATER
+        protected override bool SupportsIconMonikers {
+            get { return true; }
+        }
+
+        protected virtual ImageMoniker CodeFileIconMoniker {
+            get { return KnownMonikers.Document; }
+        }
+
+        protected virtual ImageMoniker StartupCodeFileIconMoniker {
+            get { return CodeFileIconMoniker; }
+        }
+
+        protected virtual ImageMoniker FormFileIconMoniker {
+            get { return KnownMonikers.WindowsForm; }
+        }
+
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            if (ItemNode.IsExcluded) {
+                return KnownMonikers.HiddenFile;
+            } else if (!File.Exists(Url)) {
+                return KnownMonikers.DocumentWarning;
+            } else if (IsFormSubType) {
+                return FormFileIconMoniker;
+            } else if (this._project.IsCodeFile(FileName)) {
+                if (CommonUtils.IsSamePath(this.Url, _project.GetStartupFile())) {
+                    return StartupCodeFileIconMoniker;
+                } else {
+                    return CodeFileIconMoniker;
+                }
+            }
+            return default(ImageMoniker);
+        }
+#else
         public override int ImageIndex {
             get {
                 if (ItemNode.IsExcluded) {
@@ -114,6 +154,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 return base.ImageIndex;
             }
         }
+#endif
+
 
         /// <summary>
         /// Open a file depending on the SubType property associated with the file item in the project file
@@ -122,10 +164,12 @@ namespace Microsoft.VisualStudioTools.Project {
             FileDocumentManager manager = this.GetDocumentManager() as FileDocumentManager;
             Utilities.CheckNotNull(manager, "Could not get the FileDocumentManager");
 
-            Guid viewGuid =
-                (IsFormSubType ? VSConstants.LOGVIEWID_Designer : VSConstants.LOGVIEWID_Code);
             IVsWindowFrame frame;
-            manager.Open(false, false, viewGuid, out frame, WindowFrameShowAction.Show);
+            if (IsFormSubType)
+                manager.Open(false, false, VSConstants.LOGVIEWID_Designer, out frame, WindowFrameShowAction.Show);
+            else
+                //manager.Open(false, false, VSConstants.LOGVIEWID_Code, out frame, WindowFrameShowAction.Show);    // Do not use, as in VS2010 css files are opened as plain text
+                manager.Open(false, false, WindowFrameShowAction.Show);
         }
 
         private static Guid CLSID_VsTextBuffer = new Guid("{8E7B96A8-E33D-11d0-A6D5-00C04FB67F6A}");
@@ -256,7 +300,9 @@ namespace Microsoft.VisualStudioTools.Project {
                 ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
                 ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
             }
-            ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+
+            // For performance reasons we don't want to call RefreshPropertyBrowser here. 
+            // We just want to call refresh once in ExcludeFromProjectWithRefresh
             return VSConstants.S_OK;
         }
 
@@ -284,13 +330,9 @@ namespace Microsoft.VisualStudioTools.Project {
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
             ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
 
-            // https://nodejstools.codeplex.com/workitem/273, refresh the property browser...
-            ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+            // For performance reasons (99%) we don't want to call RefreshPropertyBrowser and 
+            // bold startup file here. We just want to call it once in IncludeInProjectWithRefresh
 
-            if (CommonUtils.IsSamePath(ProjectMgr.GetStartupFile(), Url)) {
-                ProjectMgr.BoldItem(this, true);
-            }
-            
             // On include, the file should be added to source control.
             this.ProjectMgr.Tracker.OnItemAdded(this.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);
 

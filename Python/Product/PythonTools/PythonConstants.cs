@@ -1,16 +1,18 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using Microsoft.VisualStudioTools;
@@ -26,11 +28,7 @@ namespace Microsoft.PythonTools {
         /// The extension for Python files which represent Windows applications.
         /// </summary>
         internal const string WindowsFileExtension = ".pyw";
-#if DEV11_OR_LATER
         internal const string ProjectImageList = "Microsoft.PythonImageList.png";
-#else
-        internal const string ProjectImageList = "Microsoft.PythonImageList.bmp";
-#endif
 
         internal const string IssueTrackerUrl = "http://go.microsoft.com/fwlink/?LinkId=402428";
 
@@ -40,9 +38,9 @@ namespace Microsoft.PythonTools {
         internal const string WebProjectFactoryGuid = "1b580a1a-fdb3-4b32-83e1-6407eb2722e6";
         internal const string EditorFactoryGuid = "888888c4-36f9-4453-90aa-29fa4d2e5706";
         internal const string ProjectNodeGuid = "8888881a-afb8-42b1-8398-e60d69ee864d";
-        internal const string GeneralPropertyPageGuid = "888888fd-3c4a-40da-aefb-5ac10f5e8b30";
-        internal const string DebugPropertyPageGuid = "9A46BC86-34CB-4597-83E5-498E3BDBA20A";
-        internal const string PublishPropertyPageGuid = "63DF0877-CF53-4975-B200-2B11D669AB00";
+        public const string GeneralPropertyPageGuid = "888888fd-3c4a-40da-aefb-5ac10f5e8b30";
+        public const string DebugPropertyPageGuid = "9A46BC86-34CB-4597-83E5-498E3BDBA20A";
+        public const string PublishPropertyPageGuid = "63DF0877-CF53-4975-B200-2B11D669AB00";
         internal const string WebPropertyPageGuid = "76EED3B5-14B1-413B-937A-F6F79AC1F8C8";
         internal const string EditorFactoryPromptForEncodingGuid = "CA887E0B-55C6-4AE9-B5CF-A2EEFBA90A3E";
 
@@ -62,7 +60,6 @@ namespace Microsoft.PythonTools {
         // IDs of the icons for product registration (see Resources.resx)
         internal const int IconIfForSplashScreen = 300;
         internal const int IconIdForAboutBox = 400;
-        internal const int ResourceIdForReplImages = 407;
 
         // Command IDs
         internal const int AddEnvironment = 0x4006;
@@ -146,5 +143,7 @@ namespace Microsoft.PythonTools {
         /// The settings collection where "Suppress{dialog}" settings are stored
         /// </summary>
         public const string DontShowUpgradeDialogAgainCollection = "PythonTools\\Dialogs";
+
+        internal const string PythonToolsProcessIdEnvironmentVariable = "_PTVS_PID";
     }
 }

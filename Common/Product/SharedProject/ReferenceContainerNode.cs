@@ -1,16 +1,18 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -26,6 +28,10 @@ using MSBuild = Microsoft.Build.Evaluation;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.VisualStudioTools.Project {
     [ComVisible(true)]
@@ -116,10 +122,21 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
 
-        public override object GetIconHandle(bool open) {
-            return this.ProjectMgr.GetIconHandleByName(ProjectNode.ImageName.ReferenceFolder);
+#if DEV14_OR_LATER
+        protected override bool SupportsIconMonikers {
+            get { return true; }
         }
 
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            return KnownMonikers.Reference;
+        }
+#else
+        public override int ImageIndex {
+            get {
+                return ProjectMgr.GetIconIndex(ProjectNode.ImageName.ReferenceFolder);
+            }
+        }
+#endif
 
         /// <summary>
         /// References node cannot be dragged.
@@ -438,6 +455,13 @@ namespace Microsoft.VisualStudioTools.Project {
         internal event EventHandler<HierarchyNodeEventArgs> OnChildRemoved {
             add { onChildRemoved += value; }
             remove { onChildRemoved -= value; }
+        }
+
+        internal void FireChildAdded(ReferenceNode referenceNode) {
+            var added = onChildAdded;
+            if (added != null) {
+                added(this, new HierarchyNodeEventArgs(referenceNode));
+            }
         }
 
         internal void FireChildRemoved(ReferenceNode referenceNode) {

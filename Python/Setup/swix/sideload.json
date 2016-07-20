@@ -1,0 +1,62 @@
+{
+  "manifestVersion": "1.0",
+  "info": {
+    "id": "Microsoft.PythonTools_Sideload,version=15.0.0.0"
+  },
+  "packages": [
+    {
+      "installParams": {
+        "fileName": "[InstallDir]\\Common7\\IDE\\devenv.exe",
+        "parameters": "/setup"
+      },
+      "repairParams": {
+        "fileName": "[InstallDir]\\Common7\\IDE\\devenv.exe",
+        "parameters": "/setup"
+      },
+      "uninstallParams": {
+        "fileName": "[InstallDir]\\Common7\\IDE\\devenv.exe",
+        "parameters": "/setup"
+      },
+      "language": "en-us",
+      "dependencies": {
+        "microsoft.PythonTools.Core.Vsix": {
+          "version": "[0.0, 100.0)"
+        },
+        "microsoft.PythonTools.Core.Templates.Vsix": {
+          "version": "[0.0, 100.0)"
+        },
+        "microsoft.PythonTools.Web.Templates.Vsix": {
+          "version": "[0.0, 100.0)"
+        },
+        "microsoft.PythonTools.Profiling.Vsix": {
+          "version": "[0.0, 100.0)"
+        },
+        "microsoft.PythonTools.Django.Vsix": {
+          "version": "[0.0, 100.0)"
+        },
+        "microsoft.PythonTools.Django.Templates.Vsix": {
+          "version": "[0.0, 100.0)"
+        },
+        "microsoft.PythonTools.Samples.Vsix": {
+          "version": "[0.0, 100.0)"
+        },
+        "microsoft.PythonTools.Uwp.Vsix": {
+          "version": "[0.0, 100.0)"
+        },
+        "microsoft.PythonTools.Uwp.Templates.Vsix": {
+          "version": "[0.0, 100.0)"
+        }
+      },
+      "localizedResources": [
+        {
+          "language": "en-us",
+          "title": "Python",
+          "description": "Develop and debug Python code, including interactive windows and virtual environments."
+        }
+      ],
+      "id": "Microsoft.PythonTools_Sideload",
+      "version": "15.0.0.0",
+      "type": "Product"
+    }
+  ]
+}

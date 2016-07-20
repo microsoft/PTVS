@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -25,7 +27,7 @@ namespace TestUtilities {
         const string BinariesAltSourcePath = @"Tests";
         const string BinariesSourcePath = @"BuildOutput\" +
 #if DEBUG
-            @"Debug" + 
+            @"Debug" +
 #else
             @"Release" + 
 #endif
@@ -37,8 +39,8 @@ namespace TestUtilities {
 
         private static string GetSolutionDir() {
             var dir = Path.GetDirectoryName((typeof(TestData)).Assembly.Location);
-            while (!string.IsNullOrEmpty(dir) && 
-                Directory.Exists(dir) && 
+            while (!string.IsNullOrEmpty(dir) &&
+                Directory.Exists(dir) &&
                 !File.Exists(Path.Combine(dir, "build.root"))) {
                 dir = Path.GetDirectoryName(dir);
             }
@@ -46,45 +48,7 @@ namespace TestUtilities {
         }
 
         public static void CopyFiles(string sourceDir, string destDir) {
-            sourceDir = sourceDir.TrimEnd('\\');
-            destDir = destDir.TrimEnd('\\');
-            try {
-                Directory.CreateDirectory(destDir);
-            } catch (IOException) {
-            }
-            
-            var newDirectories = new HashSet<string>(from d in Directory.EnumerateDirectories(sourceDir, "*", SearchOption.AllDirectories)
-                                                     where d.StartsWith(sourceDir)
-                                                     select d.Substring(sourceDir.Length + 1), StringComparer.OrdinalIgnoreCase);
-            newDirectories.ExceptWith(from d in Directory.EnumerateDirectories(destDir, "*", SearchOption.AllDirectories)
-                                      where d.StartsWith(destDir)
-                                      select d.Substring(destDir.Length + 1));
-
-            foreach (var newDir in newDirectories.OrderBy(i => i.Length).Select(i => Path.Combine(destDir, i))) {
-                try {
-                    Directory.CreateDirectory(newDir);
-                } catch {
-                    Debug.WriteLine("Failed to create directory " + newDir);
-                }
-            }
-
-            var newFiles = new HashSet<string>(from f in Directory.EnumerateFiles(sourceDir, "*", SearchOption.AllDirectories)
-                                               where f.StartsWith(sourceDir)
-                                               select f.Substring(sourceDir.Length + 1), StringComparer.OrdinalIgnoreCase);
-            newFiles.ExceptWith(from f in Directory.EnumerateFiles(destDir, "*", SearchOption.AllDirectories)
-                                where f.StartsWith(destDir)
-                                select f.Substring(destDir.Length + 1));
-
-            foreach (var newFile in newFiles) {
-                var copyFrom = Path.Combine(sourceDir, newFile);
-                var copyTo = Path.Combine(destDir, newFile);
-                try {
-                    File.Copy(copyFrom, copyTo);
-                    File.SetAttributes(copyTo, FileAttributes.Normal);
-                } catch {
-                    Debug.WriteLine("Failed to copy " + copyFrom + " to " + copyTo);
-                }
-            }
+            FileUtils.CopyDirectory(sourceDir, destDir);
         }
 
         public static string BinarySourceLocation {
@@ -184,3 +148,4 @@ namespace TestUtilities {
         }
     }
 }
+

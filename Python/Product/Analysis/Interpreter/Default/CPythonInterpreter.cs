@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -19,7 +21,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.VisualStudioTools;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreter : IPythonInterpreter, IPythonInterpreterWithProjectReferences2, IDisposable {
@@ -27,6 +29,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private PythonInterpreterFactoryWithDatabase _factory;
         private PythonTypeDatabase _typeDb;
         private HashSet<ProjectReference> _references;
+        private readonly object _referencesLock = new object();
 
         public CPythonInterpreter(PythonInterpreterFactoryWithDatabase factory) {
             _langVersion = factory.Configuration.Version;
@@ -43,10 +46,14 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             }
 
             _typeDb = factory.GetCurrentDatabase();
-            
-            if (_references != null) {
+
+            List<ProjectReference> references = null;
+            lock (_referencesLock) {
+                references = _references != null ? _references.ToList() : null;
+            }
+            if (references != null) {
                 _typeDb = _typeDb.Clone();
-                foreach (var reference in _references) {
+                foreach (var reference in references) {
                     string modName;
                     try {
                         modName = Path.GetFileNameWithoutExtension(reference.Name);
@@ -137,18 +144,25 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 return MakeExceptionTask(new ArgumentNullException("reference"));
             }
 
-            if (_references == null) {
-                _references = new HashSet<ProjectReference>();
+            bool cloneDb = false;
+            lock (_referencesLock) {
+                if (_references == null) {
+                    _references = new HashSet<ProjectReference>();
+                    cloneDb = true;
+                }
+            }
+
+            if (cloneDb && _typeDb != null) {
                 // If we needed to set _references, then we also need to clone
                 // _typeDb to avoid adding modules to the shared database.
-                if (_typeDb != null) {
-                    _typeDb = _typeDb.Clone();
-                }
+                _typeDb = _typeDb.Clone();
             }
 
             switch (reference.Kind) {
                 case ProjectReferenceKind.ExtensionModule:
-                    _references.Add(reference);
+                    lock (_referencesLock) {
+                        _references.Add(reference);
+                    }
                     string filename;
                     try {
                         filename = Path.GetFileNameWithoutExtension(reference.Name);
@@ -170,7 +184,11 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         public void RemoveReference(ProjectReference reference) {
             switch (reference.Kind) {
                 case ProjectReferenceKind.ExtensionModule:
-                    if (_references != null && _references.Remove(reference) && _typeDb != null) {
+                    bool removed = false;
+                    lock (_referencesLock) {
+                        removed = _references != null && _references.Remove(reference);
+                    }
+                    if (removed && _typeDb != null) {
                         _typeDb.UnloadExtensionModule(Path.GetFileNameWithoutExtension(reference.Name));
                         RaiseModulesChanged(null);
                     }
@@ -179,7 +197,10 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         }
 
         public IEnumerable<ProjectReference> GetReferences() {
-            return _references != null ? _references : Enumerable.Empty<ProjectReference>();
+            var references = _references;
+            return references != null ?
+                references.AsLockedEnumerable(_referencesLock) :
+                Enumerable.Empty<ProjectReference>();
         }
 
         private static Task MakeExceptionTask(Exception e) {

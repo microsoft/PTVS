@@ -42,7 +42,7 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Management.Automation, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="System.Management.Automation, Version=3.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="System.Runtime.Remoting" />
@@ -70,8 +70,6 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Reference Include="Microsoft.Office.Tools.v4.0.Framework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.VisualStudio.Tools.Applications.Runtime, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Shell.$(VSTarget)" />
     <Reference Include="Microsoft.VisualStudio.Shell.Immutable.$(VSTarget)" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
@@ -95,6 +93,7 @@
     <Compile Include="SessionHolder.cs" />
     <Compile Include="SharedProject\SymbolicLinkItem.cs" />
     <Compile Include="VCCompiler.cs" />
+    <Compile Include="VisualStudioPath.cs" />
     <Compile Include="WebDownloadUtility.cs" />
     <Compile Include="Classification.cs" />
     <Compile Include="IWarningLogger.cs" />

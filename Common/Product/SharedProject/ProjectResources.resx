@@ -665,6 +665,12 @@ folder you are copying, do you want to replace the existing files?</value>
   <data name="SeeActivityLog" xml:space="preserve">
     <value>An unexpected error occurred.
 
-You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file '{0}'.</value>
+You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file '{0}', or by checking the Event Log.</value>
+  </data>
+  <data name="FileOpenDoesNotExist" xml:space="preserve">
+    <value>The filename you are renaming to exists in the project, is open in the editor, but does not exist on disk.  Either close the editor window or remove the file from the project before attempting to rename a file to the save name.</value>
+  </data>
+  <data name="UnableToRemoveFile" xml:space="preserve">
+    <value>The file does not exist on disk but is present in your project and cannot be removed.  Please remove the item from the project before attempting to rename an item to a filename of the same name.</value>
   </data>
 </root>

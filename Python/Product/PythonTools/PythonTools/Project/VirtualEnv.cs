@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -19,9 +21,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     static class VirtualEnv {
@@ -48,12 +49,12 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private static async Task ContinueCreate(IServiceProvider provider, IPythonInterpreterFactory factory, string path, bool useVEnv, Redirector output) {
-            path = CommonUtils.TrimEndSeparator(path);
+            path = PathUtils.TrimEndSeparator(path);
             var name = Path.GetFileName(path);
             var dir = Path.GetDirectoryName(path);
 
             if (output != null) {
-                output.WriteLine(SR.GetString(SR.VirtualEnvCreating, path));
+                output.WriteLine(Strings.VirtualEnvCreating.FormatUI(path));
                 if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForVirtualEnvCreate) {
                     output.ShowAndActivate();
                 } else {
@@ -76,9 +77,9 @@ namespace Microsoft.PythonTools.Project {
 
                 if (output != null) {
                     if (exitCode == 0) {
-                        output.WriteLine(SR.GetString(SR.VirtualEnvCreationSucceeded, path));
+                        output.WriteLine(Strings.VirtualEnvCreationSucceeded.FormatUI(path));
                     } else {
-                        output.WriteLine(SR.GetString(SR.VirtualEnvCreationFailedExitCode, path, exitCode));
+                        output.WriteLine(Strings.VirtualEnvCreationFailedExitCode.FormatUI(path, exitCode));
                     }
                     if (provider.GetPythonToolsService().GeneralOptions.ShowOutputWindowForVirtualEnvCreate) {
                         output.ShowAndActivate();
@@ -88,7 +89,7 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 if (exitCode != 0 || !Directory.Exists(path)) {
-                    throw new InvalidOperationException(SR.GetString(SR.VirtualEnvCreationFailed, path));
+                    throw new InvalidOperationException(Strings.VirtualEnvCreationFailed.FormatUI(path));
                 }
             }
         }
@@ -134,177 +135,56 @@ namespace Microsoft.PythonTools.Project {
                     await Pip.InstallPip(provider, factory, elevate, output);
                 }
                 if (!await Install(provider, factory, output)) {
-                    throw new InvalidOperationException(SR.GetString(SR.VirtualEnvCreationFailed, path));
+                    throw new InvalidOperationException(Strings.VirtualEnvCreationFailed.FormatUI(path));
                 }
             }
 
             await ContinueCreate(provider, factory, path, false, output);
         }
 
-        private static IPythonInterpreterFactory FindBaseInterpreterFromVirtualEnv(
+        public static InterpreterConfiguration FindInterpreterConfiguration(
+            string id,
             string prefixPath,
-            string libPath,
-            IInterpreterOptionsService service
-        ) {
-            string basePath = GetOrigPrefixPath(prefixPath, libPath);
-
-            if (Directory.Exists(basePath)) {
-                return service.Interpreters.FirstOrDefault(interp =>
-                    CommonUtils.IsSamePath(interp.Configuration.PrefixPath, basePath)
-                );
-            }
-            return null;
-        }
-
-        internal static string GetOrigPrefixPath(string prefixPath, string libPath = null) {
-            string basePath = null;
-
-            if (!Directory.Exists(prefixPath)) {
-                return null;
-            }
-
-            var cfgFile = Path.Combine(prefixPath, "pyvenv.cfg");
-            if (File.Exists(cfgFile)) {
-                try {
-                    var lines = File.ReadAllLines(cfgFile);
-                    basePath = lines
-                        .Select(line => Regex.Match(line, "^home *= *(?<path>.+)$", RegexOptions.IgnoreCase))
-                        .Where(m => m != null && m.Success)
-                        .Select(m => m.Groups["path"])
-                        .Where(g => g != null && g.Success)
-                        .Select(g => g.Value)
-                        .FirstOrDefault(CommonUtils.IsValidPath);
-                } catch (IOException) {
-                } catch (UnauthorizedAccessException) {
-                } catch (System.Security.SecurityException) {
-                }
-            }
-
-            if (string.IsNullOrEmpty(libPath)) {
-                libPath = FindLibPath(prefixPath);
-            }
-
-            if (!Directory.Exists(libPath)) {
-                return null;
-            }
-
-            var prefixFile = Path.Combine(libPath, "orig-prefix.txt");
-            if (basePath == null && File.Exists(prefixFile)) {
-                try {
-                    var lines = File.ReadAllLines(prefixFile);
-                    basePath = lines.FirstOrDefault(CommonUtils.IsValidPath);
-                } catch (IOException) {
-                } catch (UnauthorizedAccessException) {
-                } catch (System.Security.SecurityException) {
-                }
-            }
-            return basePath;
-        }
-
-        private static string FindFile(string root, string file, int depthLimit = 2) {
-            var candidate = Path.Combine(root, file);
-            if (File.Exists(candidate)) {
-                return candidate;
-            }
-            candidate = Path.Combine(root, "Scripts", file);
-            if (File.Exists(candidate)) {
-                return candidate;
-            }
-
-            // Do a BFS of the filesystem to ensure we find the match closest to
-            // the root directory.
-            var dirQueue = new Queue<string>();
-            dirQueue.Enqueue(root);
-            dirQueue.Enqueue("<EOD>");
-            while (dirQueue.Any()) {
-                var dir = dirQueue.Dequeue();
-                if (dir == "<EOD>") {
-                    depthLimit -= 1;
-                    if (depthLimit <= 0) {
-                        return null;
-                    }
-                    continue;
-                }
-                var result = Directory.EnumerateFiles(dir, file, SearchOption.TopDirectoryOnly).FirstOrDefault();
-                if (result != null) {
-                    return result;
-                }
-                foreach (var subDir in Directory.EnumerateDirectories(dir)) {
-                    dirQueue.Enqueue(subDir);
-                }
-                dirQueue.Enqueue("<EOD>");
-            }
-            return null;
-        }
-
-        internal static string FindLibPath(string prefixPath) {
-            // Find site.py to find the library
-            var libPath = FindFile(prefixPath, "site.py");
-            if (!File.Exists(libPath)) {
-                // Python 3.3 venv does not add site.py, but always puts the
-                // library in prefixPath\Lib
-                libPath = Path.Combine(prefixPath, "Lib");
-                if (!Directory.Exists(libPath)) {
-                    return null;
-                }
-            } else {
-                libPath = Path.GetDirectoryName(libPath);
-            }
-            return libPath;
-        }
-
-        public static InterpreterFactoryCreationOptions FindInterpreterOptions(
-            string prefixPath,
-            IInterpreterOptionsService service,
+            IInterpreterRegistryService service,
             IPythonInterpreterFactory baseInterpreter = null
         ) {
-            var result = new InterpreterFactoryCreationOptions();
 
-            var libPath = FindLibPath(prefixPath);
-
-            result.PrefixPath = prefixPath;
-            result.LibraryPath = libPath;
+            var libPath = DerivedInterpreterFactory.FindLibPath(prefixPath);
 
             if (baseInterpreter == null) {
-                baseInterpreter = FindBaseInterpreterFromVirtualEnv(prefixPath, libPath, service);
-            }
-
-            string interpExe, winterpExe;
-
-            if (baseInterpreter != null) {
-                // The interpreter name should be the same as the base interpreter.
-                interpExe = Path.GetFileName(baseInterpreter.Configuration.InterpreterPath);
-                winterpExe = Path.GetFileName(baseInterpreter.Configuration.WindowsInterpreterPath);
-                result.InterpreterPath = FindFile(prefixPath, interpExe);
-                result.WindowInterpreterPath = FindFile(prefixPath, winterpExe);
-                result.PathEnvironmentVariableName = baseInterpreter.Configuration.PathEnvironmentVariable;
-            } else {
-                result.InterpreterPath = string.Empty;
-                result.WindowInterpreterPath = string.Empty;
-                result.PathEnvironmentVariableName = string.Empty;
-            }
-
-            if (baseInterpreter != null) {
-                result.Description = string.Format(
-                    "{0} ({1})",
-                    CommonUtils.GetFileOrDirectoryName(prefixPath),
-                    baseInterpreter.Description
+                baseInterpreter = DerivedInterpreterFactory.FindBaseInterpreterFromVirtualEnv(
+                    prefixPath,
+                    libPath,
+                    service
                 );
 
-                result.Id = baseInterpreter.Id;
-                result.LanguageVersion = baseInterpreter.Configuration.Version;
-                result.Architecture = baseInterpreter.Configuration.Architecture;
-                result.WatchLibraryForNewModules = true;
-            } else {
-                result.Description = CommonUtils.GetFileOrDirectoryName(prefixPath);
-
-                result.Id = Guid.Empty;
-                result.LanguageVersion = new Version(0, 0);
-                result.Architecture = ProcessorArchitecture.None;
-                result.WatchLibraryForNewModules = false;
+                if (baseInterpreter == null) {
+                    return null;
+                }
             }
 
-            return result;
+            // The interpreter name should be the same as the base interpreter.
+            string interpExe = Path.GetFileName(baseInterpreter.Configuration.InterpreterPath);
+            string winterpExe = Path.GetFileName(baseInterpreter.Configuration.WindowsInterpreterPath);
+            var scripts = new[] { "Scripts", "bin" };
+            interpExe = PathUtils.FindFile(prefixPath, interpExe, firstCheck: scripts);
+            winterpExe = PathUtils.FindFile(prefixPath, winterpExe, firstCheck: scripts);
+            string pathVar = baseInterpreter.Configuration.PathEnvironmentVariable;
+            string description = PathUtils.GetFileOrDirectoryName(prefixPath);
+
+            return new InterpreterConfiguration(
+                id ?? baseInterpreter.Configuration.Id,
+                description,
+                prefixPath,
+                interpExe,
+                winterpExe,
+                libPath,
+                pathVar,
+                baseInterpreter.Configuration.Architecture,
+                baseInterpreter.Configuration.Version,
+                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase,
+                baseInterpreter != null ? string.Format("({0})", baseInterpreter.Configuration.FullDescription) : ""
+            );
         }
 
         // This helper function is not yet needed, but may be useful at some point.
@@ -313,7 +193,7 @@ namespace Microsoft.PythonTools.Project {
         //    using (var output = ProcessOutput.RunHiddenAndCapture(interpreterPath, "-c", "import site; print(site.__file__)")) {
         //        output.Wait();
         //        return output.StandardOutputLines
-        //            .Where(CommonUtils.IsValidPath)
+        //            .Where(PathUtils.IsValidPath)
         //            .Select(line => Path.GetDirectoryName(line))
         //            .LastOrDefault(dir => Directory.Exists(dir));
         //    }

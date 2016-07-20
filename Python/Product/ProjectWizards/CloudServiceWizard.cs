@@ -1,18 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
-
-#if DEV11_OR_LATER
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -20,7 +20,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using Microsoft.PythonTools.ProjectWizards.Properties;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.TemplateWizard;
 using Microsoft.VisualStudioTools;
@@ -32,12 +32,10 @@ namespace Microsoft.PythonTools.ProjectWizards {
         private IWizard _wizard;
         private readonly bool _recommendUpgrade;
 
-#if DEV11
-        const string AzureToolsDownload = "https://go.microsoft.com/fwlink/p/?linkid=323511";
-#elif DEV12
-        const string AzureToolsDownload = "https://go.microsoft.com/fwlink/p/?linkid=323510";
-#elif DEV14
+#if DEV14
         const string AzureToolsDownload = "http://go.microsoft.com/fwlink/?linkid=518003";
+#elif DEV15
+        const string AzureToolsDownload = "http://go.microsoft.com/fwlink/?LinkId=760649";
 #else
 #error Unsupported VS version
 #endif
@@ -119,12 +117,12 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 }
 
                 var dlg = new TaskDialog(provider) {
-                    Title = Resources.PythonToolsForVisualStudio,
-                    MainInstruction = Resources.AzureToolsRequired,
-                    Content = Resources.AzureToolsInstallInstructions,
+                    Title = Strings.ProductTitle,
+                    MainInstruction = Strings.AzureToolsRequired,
+                    Content = Strings.AzureToolsInstallInstructions,
                     AllowCancellation = true
                 };
-                var download = new TaskDialogButton(Resources.DownloadAndInstall);
+                var download = new TaskDialogButton(Strings.DownloadAndInstall);
                 dlg.Buttons.Add(download);
                 dlg.Buttons.Add(TaskDialogButton.Cancel);
 
@@ -144,15 +142,15 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 if (!store.CollectionExists(PythonConstants.DontShowUpgradeDialogAgainCollection) ||
                     !store.GetBoolean(PythonConstants.DontShowUpgradeDialogAgainCollection, DontShowUpgradeDialogAgainProperty, false)) {
                     var dlg = new TaskDialog(provider) {
-                        Title = Resources.PythonToolsForVisualStudio,
-                        MainInstruction = Resources.AzureToolsUpgradeRecommended,
-                        Content = Resources.AzureToolsUpgradeInstructions,
+                        Title = Strings.ProductTitle,
+                        MainInstruction = Strings.AzureToolsUpgradeRecommended,
+                        Content = Strings.AzureToolsUpgradeInstructions,
                         AllowCancellation = true,
-                        VerificationText = Resources.DontShowAgain
+                        VerificationText = Strings.DontShowAgain
                     };
-                    var download = new TaskDialogButton(Resources.DownloadAndInstall);
+                    var download = new TaskDialogButton(Strings.DownloadAndInstall);
                     dlg.Buttons.Add(download);
-                    var cont = new TaskDialogButton(Resources.ContinueWithoutAzureToolsUpgrade);
+                    var cont = new TaskDialogButton(Strings.ContinueWithoutAzureToolsUpgrade);
                     dlg.Buttons.Add(cont);
                     dlg.Buttons.Add(TaskDialogButton.Cancel);
 
@@ -188,5 +186,3 @@ namespace Microsoft.PythonTools.ProjectWizards {
         }
     }
 }
-
-#endif

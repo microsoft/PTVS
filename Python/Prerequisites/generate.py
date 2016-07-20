@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 '''Regenerates the strong name verification scripts based on the list of
 assemblies stored in this file.
 
@@ -23,41 +24,36 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.AttacherX86",
     "Microsoft.PythonTools.AzureSetup",
     "Microsoft.PythonTools.BuildTasks",
+    "Microsoft.PythonTools.Common",
     "Microsoft.PythonTools.Debugger",
     "Microsoft.PythonTools.Django",
+    "Microsoft.PythonTools.Django.Analysis",
     "Microsoft.PythonTools.EnvironmentsList",
     "Microsoft.PythonTools.EnvironmentsList.Host",
-    "Microsoft.PythonTools.Hpc",
     "Microsoft.PythonTools.ImportWizard",
     "Microsoft.PythonTools.IronPython",
     "Microsoft.PythonTools.IronPython.Interpreter",
+    "Microsoft.PythonTools.Ipc.Json",
     "Microsoft.PythonTools.ML",
-    "Microsoft.PythonTools.MpiShim",
     "Microsoft.PythonTools.Profiling",
     "Microsoft.PythonTools.ProjectWizards",
     "Microsoft.PythonTools.PyKinect",
-    "Microsoft.PythonTools.Pyvot",
     "Microsoft.PythonTools.TestAdapter",
+    "Microsoft.PythonTools.TestAdapter.Analysis",
+    "Microsoft.PythonTools.Uwp",
+    "Microsoft.PythonTools.Uwp.Interpreter",
+    "Microsoft.PythonTools.VSCommon",
     "Microsoft.PythonTools.VSInterpreters",
     "Microsoft.PythonTools.VsLogger",
     "Microsoft.PythonTools.WebRole",
-    "Microsoft.VisualStudio.ReplWindow",
+    "Microsoft.PythonTools.XamlDesignerSupport",
     "MockVsTests",
     "ProfilingUITests",
     "PythonToolsTests",
     "PythonToolsMockTests",
     "PythonToolsUITests",
     "ReplWindowUITests",
-    "ReplWindowUITests25",
-    "ReplWindowUITests26",
-    "ReplWindowUITests27",
-    "ReplWindowUITestsIRON27",
-    "ReplWindowUITests30",
-    "ReplWindowUITests31",
-    "ReplWindowUITests32",
-    "ReplWindowUITests33",
-    "ReplWindowUITests34",
-    "SharedProjectTests",
+    "SharedProjectUITests",
     "TestAdapterTests",
     "TestSccPackage",
     "TestUtilities",
@@ -104,6 +100,6 @@ FILES = [
 
 if __name__ == '__main__':
     for file in FILES:
-        with open(file.__name__ + '.reg', 'w', encoding='utf-16') as f:
+        with open(file.__name__ + '.reg', 'w', encoding='utf-8') as f:
             f.writelines(line + '\n' for line in file())
         print('Wrote {}.reg'.format(file.__name__))

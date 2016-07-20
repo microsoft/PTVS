@@ -1,16 +1,18 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections;
@@ -27,6 +29,7 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Infrastructure;
 using IOleDataObject = Microsoft.VisualStudio.OLE.Interop.IDataObject;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 
@@ -802,11 +805,11 @@ namespace Microsoft.VisualStudioTools.Project {
                         if (sourceFolder.IsNonMemberItem) {
                             // copying or moving an existing excluded folder, new folder
                             // is excluded too.
-                            ErrorHandler.ThrowOnFailure(newNode.ExcludeFromProject());
+                            ErrorHandler.ThrowOnFailure(newNode.ExcludeFromProjectWithRefresh());
                         } else if (sourceFolder.Parent.IsNonMemberItem) {
                             // We've moved an included folder to a show all files folder,
                             //     add the parent to the project   
-                            ErrorHandler.ThrowOnFailure(sourceFolder.Parent.IncludeInProject(false));
+                            ErrorHandler.ThrowOnFailure(sourceFolder.Parent.IncludeInProjectWithRefresh(false));
                         }
 
                         if (DropEffect == DropEffect.Move) {
@@ -1330,29 +1333,35 @@ namespace Microsoft.VisualStudioTools.Project {
                                 var targetFolder = Project.CreateFolderNodes(TargetFolder);
 
                                 //If a race occurrs simply treat the source as a non-included item
-                                bool wasMemberItem = false;
-                                var sourceItem = Project.FindNodeByFullPath(SourceMoniker);
-                                if (sourceItem != null) {
-                                    wasMemberItem = !sourceItem.IsNonMemberItem;
+                                IVsHierarchy source = SourceHierarchy as IVsHierarchy;
+                                bool wasMemberItem = true;
+                                if (source != null) {
+                                    uint itemId;
+                                    if (ErrorHandler.Succeeded(source.ParseCanonicalName(SourceMoniker, out itemId))) {
+                                        object nonMember;
+                                        if (ErrorHandler.Succeeded(source.GetProperty(itemId, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, out nonMember))) {
+                                            wasMemberItem = !(nonMember as bool? ?? false);
+                                        }
+                                    }
                                 }
 
                                 if (wasMemberItem && targetFolder.IsNonMemberItem) {
                                     // dropping/pasting folder into non-member folder, non member folder
                                     // should get included into the project.
-                                    ErrorHandler.ThrowOnFailure(targetFolder.IncludeInProject(false));
+                                    ErrorHandler.ThrowOnFailure(targetFolder.IncludeInProjectWithRefresh(false));
                                 }
 
                                 targetFolder.AddChild(fileNode);
                                 if (!wasMemberItem) {
                                     // added child by default is included,
                                     //   non-member copies are not added to the project
-                                    ErrorHandler.ThrowOnFailure(fileNode.ExcludeFromProject());
+                                    ErrorHandler.ThrowOnFailure(fileNode.ExcludeFromProjectWithRefresh());
                                 }
                             }
                             Project.tracker.OnItemAdded(fileNode.Url, VSADDFILEFLAGS.VSADDFILEFLAGS_NoFlags);
                         } else if (existing.IsNonMemberItem) {
                             // replacing item that already existed, just include it in the project.
-                            existing.IncludeInProject(false);
+                            existing.IncludeInProjectWithRefresh(false);
                         }
                     }
                 }

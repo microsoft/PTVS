@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -31,15 +33,16 @@ using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project {
     sealed class AddInterpreterView : DependencyObject, INotifyPropertyChanged, IDisposable {
-        readonly IInterpreterOptionsService _interpreterService;
+        private readonly PythonProjectNode _project;
+
         
         public AddInterpreterView(
+            PythonProjectNode project,
             IServiceProvider serviceProvider,
-            IInterpreterOptionsService interpreterService,
             IEnumerable<IPythonInterpreterFactory> selected
         ) {
-            _interpreterService = interpreterService;
-            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(serviceProvider, interpreterService));
+            _project = project;
+            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(serviceProvider, project));
             
             var map = new Dictionary<IPythonInterpreterFactory, InterpreterView>();
             foreach (var view in Interpreters) {
@@ -52,19 +55,17 @@ namespace Microsoft.PythonTools.Project {
                 if (map.TryGetValue(interp, out view)) {
                     view.IsSelected = true;
                 } else {
-                    view = new InterpreterView(interp, interp.Description, false);
+                    view = new InterpreterView(interp, interp.Configuration.FullDescription, false);
                     view.IsSelected = true;
                     Interpreters.Add(view);
                 }
             }
 
-            _interpreterService.InterpretersChanged += OnInterpretersChanged;
+            _project.InterpreterFactoriesChanged += OnInterpretersChanged;
         }
 
         public void Dispose() {
-            if (_interpreterService != null) {
-                _interpreterService.InterpretersChanged -= OnInterpretersChanged;
-            }
+            _project.InterpreterFactoriesChanged -= OnInterpretersChanged;
         }
 
         private void OnInterpretersChanged(object sender, EventArgs e) {
@@ -72,9 +73,9 @@ namespace Microsoft.PythonTools.Project {
                 Dispatcher.BeginInvoke((Action)(() => OnInterpretersChanged(sender, e)));
                 return;
             }
-            var def = _interpreterService.DefaultInterpreter;
+            var def = _project.ActiveInterpreter;
             Interpreters.Merge(
-                _interpreterService.Interpreters.Select(i => new InterpreterView(i, i.Description, i == def)),
+                _project.InterpreterFactories.Select(i => new InterpreterView(i, i.Configuration.FullDescription, i == def)),
                 InterpreterView.EqualityComparer,
                 InterpreterView.Comparer
             );

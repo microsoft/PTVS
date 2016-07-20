@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -18,6 +20,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using EnvDTE;
+using Microsoft.Html.Editor.Document;
+using Microsoft.Html.Editor.Settings;
+using Microsoft.Html.Editor.Tree;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -31,14 +36,6 @@ using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
-
-#if DEV14_OR_LATER
-using Microsoft.Html.Editor.Document;
-using Microsoft.Html.Editor.Settings;
-using Microsoft.Html.Editor.Tree;
-#elif DEV12_OR_LATER
-using Microsoft.Html.Editor;
-#endif
 
 namespace DjangoUITests {
     [TestClass]
@@ -54,8 +51,9 @@ namespace DjangoUITests {
         [TestInitialize]
         public void ChangeDefaultInterpreter() {
             var model = (IComponentModel)VSTestContext.ServiceProvider.GetService(typeof(SComponentModel));
-            var interpreterService = model.GetService<IInterpreterOptionsService>();
-            PreviousDefault = interpreterService.DefaultInterpreter;
+            var interpreterService = model.GetService<IInterpreterRegistryService>();
+            var optionsService = model.GetService<IInterpreterOptionsService>();
+            PreviousDefault = optionsService.DefaultInterpreter;
 
             foreach (var ver in PythonPaths.Versions) {
                 if (!ver.IsCPython) {
@@ -64,7 +62,7 @@ namespace DjangoUITests {
 
                 foreach (var p in Directory.EnumerateDirectories(Path.Combine(ver.LibPath, "site-packages"))) {
                     if (Path.GetFileName(p).StartsWith("django")) {
-                        interpreterService.DefaultInterpreter = interpreterService.FindInterpreter(ver.Id, ver.Version.ToVersion());
+                        optionsService.DefaultInterpreter = interpreterService.FindInterpreter(ver.Id);
                         return;
                     }
                 }
@@ -96,7 +94,6 @@ namespace DjangoUITests {
         }
 
         private static void WaitForHtmlTreeUpdate(IWpfTextView textView) {
-#if DEV12_OR_LATER
             var htmlDoc = HtmlEditorDocument.TryFromTextView(textView);
             Assert.IsNotNull(htmlDoc);
 
@@ -119,17 +116,10 @@ namespace DjangoUITests {
             htmlDoc.HtmlEditorTree.UpdateCompleted += updateCompletedHandler;
 
             Assert.IsTrue(are.WaitOne(5000), "Failed to see HTML tree update");
-#endif
         }
 
-#if DEV12_OR_LATER
-        private const string DjangoComment = "HTML Comment";
-#else
-        private const string DjangoComment = "comment";
-#endif
-
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Classifications() {
             InsertionTest("Classification.html.djt", 8, 10, "",
                 new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -366,8 +356,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Insertion1() {
             InsertionTest("Insertion1.html.djt", 8, 10, "}",
                 new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -442,8 +432,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Insertion2() {
             InsertionDeletionTest("Insertion2.html.djt", 9, 34, "{",
                 new Classification[] {
@@ -520,8 +510,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Insertion3() {
             InsertionTest("Insertion3.html.djt", 2, 5, "}",
                 new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -532,8 +522,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Insertion4() {
             InsertionTest("Insertion4.html.djt", 1, 1, "{", new[] {
                 new Classification("Django template tag", 0, 2, "{{"),
@@ -546,18 +536,18 @@ namespace DjangoUITests {
             });
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Insertion5() {
             InsertionTest("Insertion5.html.djt", 1, 2, "#",
                 new Classification("Django template tag", 0, 2, "{#"),
-                new Classification(DjangoComment, 2, 11, "{<html>\r\n"),
+                new Classification("HTML Comment", 2, 11, "{<html>\r\n"),
                 new Classification("Django template tag", 11, 13, "#}")
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Insertion6() {
             InsertionTest("Insertion6.html.djt", 1, 4, "a",
                 new Classification("Django template tag", 4, 6, "{{"),
@@ -565,8 +555,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Insertion7() {
             InsertionTest("Insertion7.html.djt", 1, 16, "{",
                 new Classification("Django template tag", 0, 2, "{{"),
@@ -581,8 +571,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Insertion8() {
             InsertionTest("Insertion8.html.djt", 2, 9, "}",
                 new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -594,8 +584,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Insertion9() {
             InsertionTest("Insertion9.html.djt", 1, 7, "a",
                 new Classification("Django template tag", 4, 6, "{{"),
@@ -604,8 +594,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Insertion10() {
             InsertionTest("Insertion10.html.djt", 7, 10, "a",
                 new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -644,8 +634,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Insertion11() {
             InsertionTest("Insertion11.html.djt", 9, 5, 1, "{", true,
                 new Classification("Django template tag", 2, 4, "{%"),
@@ -751,8 +741,8 @@ namespace DjangoUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/753
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Insertion12() {
             InsertionTest("Insertion12.html.djt", 9, 61, "}",
                 new Classification("HTML Tag Delimiter", 0, 1, "<"),
@@ -783,15 +773,11 @@ namespace DjangoUITests {
                 new Classification("HTML Attribute Value", 87, 90, "\"1\""),
                 new Classification("HTML Attribute Name", 91, 96, "style"),
                 new Classification("HTML Operator", 96, 97, "="),
-#if DEV12_OR_LATER
- new Classification("HTML Attribute Value", 97, 98, "\""),
+                new Classification("HTML Attribute Value", 97, 98, "\""),
                 new Classification("CSS Property Name", 98, 103, "width"),
                 new Classification("CSS Property Value", 105, 109, "100%"),
                 new Classification("HTML Attribute Value", 109, 110, "\""),
-#else
-                new Classification("HTML Attribute Value", 97, 110, "\"width: 100%\""),
-#endif
- new Classification("HTML Tag Delimiter", 110, 111, ">"),
+                new Classification("HTML Tag Delimiter", 110, 111, ">"),
                 new Classification("HTML Tag Delimiter", 121, 122, "<"),
                 new Classification("HTML Element Name", 122, 124, "tr"),
                 new Classification("HTML Tag Delimiter", 124, 125, ">"),
@@ -945,15 +931,11 @@ namespace DjangoUITests {
                 new Classification("HTML Element Name", 894, 899, "table"),
                 new Classification("HTML Attribute Name", 900, 905, "style"),
                 new Classification("HTML Operator", 905, 906, "="),
-#if DEV12_OR_LATER
- new Classification("HTML Attribute Value", 906, 907, "\""),
+                new Classification("HTML Attribute Value", 906, 907, "\""),
                 new Classification("CSS Property Name", 907, 912, "width"),
                 new Classification("CSS Property Value", 914, 918, "100%"),
                 new Classification("HTML Attribute Value", 918, 919, "\""),
-#else
-                new Classification("HTML Attribute Value", 906, 919, "\"width: 100%\""),
-#endif
- new Classification("HTML Tag Delimiter", 919, 920, ">"),
+                new Classification("HTML Tag Delimiter", 919, 920, ">"),
                 new Classification("HTML Tag Delimiter", 926, 927, "<"),
                 new Classification("HTML Element Name", 927, 929, "tr"),
                 new Classification("HTML Tag Delimiter", 929, 930, ">"),
@@ -1038,8 +1020,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Deletion1() {
             DeletionTest("Deletion1.html.djt", 1, 2, 1,
                 new Classification("Django template tag", 0, 2, "{{"),
@@ -1057,8 +1039,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void Paste1() {
             PasteTest("Paste1.html.djt", 1, 2, "{{fob}}", "{{bazz}}",
                 new Classification("Django template tag", 0, 2, "{{"),
@@ -1072,44 +1054,44 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SelectAllMixed1() {
             SelectAllAndDeleteTest("SelectAllMixed1.html.djt");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SelectAllMixed2() {
             SelectAllAndDeleteTest("SelectAllMixed2.html.djt");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SelectAllMixed3() {
             SelectAllAndDeleteTest("SelectAllMixed3.html.djt");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SelectAllMixed4() {
             SelectAllAndDeleteTest("SelectAllMixed4.html.djt");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SelectAllTag() {
             SelectAllAndDeleteTest("SelectAllTag.html.djt");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void SelectAllText() {
             SelectAllAndDeleteTest("SelectAllText.html.djt");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void CutUndo() {
             CutUndoTest("CutUndo.html.djt",
                 6, 1, "{% for x in oar %}",
@@ -1272,12 +1254,10 @@ namespace DjangoUITests {
 
         private static bool SetBraceCompletion(VisualStudioApp app, bool value) {
             bool oldValue = false;
-#if DEV12_OR_LATER
             ThreadHelper.Generic.Invoke(() => {
                 HtmlSettings.InsertMatchingBraces = false;
                 HtmlSettings.InsertEndTags = false;
             });
-#endif
             return oldValue;
         }
 
@@ -1415,8 +1395,8 @@ namespace DjangoUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletions() {
             InsertionTest("Intellisense.html.djt", 6, 3, -1, " end\r",
                 paste: false,
@@ -1456,8 +1436,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletions2() {
             InsertionTest("Intellisense2.html.djt", 6, 1, -1, "{{" + Keyboard.OneSecondDelay + " o\t }}",
                 paste: false,
@@ -1500,8 +1480,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletions4() {
             InsertionTest("TestApp\\Templates\\page.html.djt", 6, 11, -1, "|cu\t",
                 paste: false,
@@ -1538,8 +1518,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletions5() {
             InsertionTest("TestApp\\Templates\\page.html.djt", 6, 11, -1, ".c\t",
                 paste: false,
@@ -1577,8 +1557,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletions6() {
             InsertionTest("TestApp\\Templates\\page.html.djt", 7, 1, -1, "{%" + Keyboard.OneSecondDelay + " auto\t o\t %}",
                 paste: false,
@@ -1621,8 +1601,8 @@ namespace DjangoUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/756
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletions7() {
             InsertionTest("TestApp\\Templates\\page4.html.djt", 6, 8, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
@@ -1658,14 +1638,10 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletions8() {
-            string keySequence = Keyboard.CtrlSpace.ToString();
-#if !DEV12_OR_LATER
-            keySequence += "\t";
-#endif
-            InsertionTest("TestApp\\Templates\\page2.html.djt", 7, 8, -1, keySequence,
+            InsertionTest("TestApp\\Templates\\page2.html.djt", 7, 8, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
                 checkInsertionLen: false,
                 projectName: @"TestData\DjangoTemplateCodeIntelligence.sln",
@@ -1706,13 +1682,10 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletions9() {
-            string keySequence = Keyboard.CtrlSpace.ToString();
-#if DEV12_OR_LATER
-            keySequence = "c" + keySequence;
-#endif
+            string keySequence = "c" + Keyboard.CtrlSpace.ToString();
             InsertionTest("TestApp\\Templates\\page2.html.djt", 8, 4, -1, keySequence,
                 paste: false,
                 checkInsertionLen: false,
@@ -1756,8 +1729,8 @@ namespace DjangoUITests {
         }
 
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletions10() {
             InsertionTest("TestApp\\Templates\\page3.html.djt", 6, 1, -1, Keyboard.CtrlSpace + "{%" + Keyboard.OneSecondDelay + " fo\t fob in con\t \t %}",
                 paste: false,
@@ -1802,8 +1775,8 @@ namespace DjangoUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/756
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletions11() {
             InsertionTest("TestApp\\Templates\\page.html.djt", 3, 1, -1, "<\b\t",
                 paste: false,
@@ -1842,8 +1815,8 @@ namespace DjangoUITests {
         /// <summary>
         /// http://pytools.codeplex.com/workitem/1191
         /// </summary>
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletions12() {
             InsertionTest("TestApp\\Templates\\page5.html.djt", 6, 8, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
@@ -1879,8 +1852,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletionsHtml() {
             InsertionTest("Intellisense3.html.djt", 4, 1, -1, "<bo>",
                 paste: false,
@@ -1920,10 +1893,8 @@ namespace DjangoUITests {
             );
         }
 
-#if DEV12_OR_LATER
-
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletionsCss() {
             InsertionTest("IntellisenseCssJs.html.djt", 3, 36, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
@@ -1975,8 +1946,8 @@ namespace DjangoUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void IntellisenseCompletionsJS() {
             InsertionTest("IntellisenseCssJs.html.djt", 4, 35, -1, Keyboard.CtrlSpace.ToString(),
                 paste: false,
@@ -2027,8 +1998,6 @@ namespace DjangoUITests {
                 }
             );
         }
-
-#endif
 
         private static EditorWindow OpenDjangoProjectItem(VisualStudioApp app, string startItem, out Window window, string projectName = @"TestData\DjangoEditProject.sln", bool wait = false) {
             var project = app.OpenProject(projectName, startItem);

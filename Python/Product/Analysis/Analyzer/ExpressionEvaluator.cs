@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -54,6 +56,34 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return res;
         }
 
+        /// <summary>
+        /// Returns possible variable refs associated with the expr in the expression evaluators scope.
+        /// </summary>
+        internal IAnalysisSet EvaluateNoMemberRecursion(Expression node, HashSet<AnalysisValue> seenValues = null) {
+            if (seenValues == null) {
+                seenValues = new HashSet<AnalysisValue>();
+            }
+
+            MemberExpression member = node as MemberExpression;
+            if (member != null) {
+                var target = EvaluateNoMemberRecursion(member.Target, seenValues);
+                IAnalysisSet unseenValues = AnalysisSet.Empty;
+                foreach (var value in target) {
+                    if (!seenValues.Add(value)) {
+                        unseenValues = unseenValues.Add(value, true);
+                    }
+                }
+                if (unseenValues.Count > 0) {
+                    return unseenValues.GetMember(member, _unit, member.Name);
+                }
+                return AnalysisSet.Empty;
+            }
+
+            var res = EvaluateWorker(node);
+            Debug.Assert(res != null);
+            return res;
+        }
+
         public IAnalysisSet EvaluateMaybeNull(Expression node) {
             if (node == null) {
                 return null;
@@ -67,7 +97,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// </summary>
         public IAnalysisSet LookupAnalysisSetByName(Node node, string name, bool addRef = true) {
             if (_mergeScopes) {
-                var scope = Scope.EnumerateTowardsGlobal.FirstOrDefault(s => (s == Scope || s.VisibleToChildren) && s.Variables.ContainsKey(name));
+                var scope = Scope.EnumerateTowardsGlobal
+                    .FirstOrDefault(s => (s == Scope || s.VisibleToChildren) && s.ContainsVariable(name));
                 if (scope != null) {
                     return scope.GetMergedVariableTypes(name);
                 }
@@ -77,12 +108,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         var refs = scope.GetVariable(node, _unit, name, addRef);
                         if (refs != null) {
                             if (addRef) {
-                                var linkedVars = scope.GetLinkedVariablesNoCreate(name);
-                                if (linkedVars != null) {
-                                    foreach (var linkedVar in linkedVars) {
-                                        linkedVar.AddReference(node, _unit);
-                                    }
-                                }
+                                scope.AddReferenceToLinkedVariables(node, _unit, name);
                             }
                             return refs.Types;
                         } else if (scope.ContainsImportStar && addRef) {
@@ -151,6 +177,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         private static Dictionary<Type, EvalDelegate> _evaluators = new Dictionary<Type, EvalDelegate> {
             { typeof(AndExpression), ExpressionEvaluator.EvaluateAnd },
+            { typeof(AwaitExpression), ExpressionEvaluator.EvaluateAwait },
             { typeof(BackQuoteExpression), ExpressionEvaluator.EvaluateBackQuote },
             { typeof(BinaryExpression), ExpressionEvaluator.EvaluateBinary },
             { typeof(CallExpression), ExpressionEvaluator.EvaluateCall },
@@ -206,7 +233,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         private static IAnalysisSet EvaluateMember(ExpressionEvaluator ee, Node node) {
             var n = (MemberExpression)node;
-            return ee.Evaluate(n.Target).GetMember(node, ee._unit, n.Name);
+            var target = ee.Evaluate(n.Target);
+            if (string.IsNullOrEmpty(n.Name)) {
+                return AnalysisSet.Empty;
+            }
+            return target.GetMember(node, ee._unit, n.Name);
         }
 
         private static IAnalysisSet EvaluateIndex(ExpressionEvaluator ee, Node node) {
@@ -218,7 +249,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         private static IAnalysisSet EvaluateSet(ExpressionEvaluator ee, Node node) {
             var n = (SetExpression)node;
 
-            var setInfo = (SetInfo)ee.Scope.GetOrMakeNodeValue(node, x => new SetInfo(
+            var setInfo = (SetInfo)ee.Scope.GetOrMakeNodeValue(node, NodeValueKind.Set, x => new SetInfo(
                 ee.ProjectState,
                 x,
                 ee._unit.ProjectEntry
@@ -232,7 +263,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         private static IAnalysisSet EvaluateDictionary(ExpressionEvaluator ee, Node node) {
             var n = (DictionaryExpression)node;
-            IAnalysisSet result = ee.Scope.GetOrMakeNodeValue(node, _ => {
+            IAnalysisSet result = ee.Scope.GetOrMakeNodeValue(node, NodeValueKind.DictLiteral, _ => {
                 var dictInfo = new DictionaryInfo(ee._unit.ProjectEntry, node);
                 result = dictInfo.SelfSet;
 
@@ -279,6 +310,11 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             return result.Union(ee.Evaluate(n.Right));
         }
 
+        private static IAnalysisSet EvaluateAwait(ExpressionEvaluator ee, Node node) {
+            var n = (AwaitExpression)node;
+            return ee.Evaluate(n.Expression).Await(node, ee._unit);
+        }
+
         private static IAnalysisSet EvaluateCall(ExpressionEvaluator ee, Node node) {
             // Get the argument types that we're providing at this call site
             var n = (CallExpression)node;
@@ -306,6 +342,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                     }
 
                     res[i - (args.Count - res.Length)] = (NameExpression)args[i].NameExpression;
+                } else if (res != null) {
+                    res[i - (args.Count - res.Length)] = NameExpression.Empty;
                 }
             }
             return res ?? EmptyNames;
@@ -362,6 +400,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
                 var listInfo = (ListInfo)ee.Scope.GetOrMakeNodeValue(
                     node,
+                    NodeValueKind.ListComprehension,
                     (x) => new ListInfo(
                         VariableDef.EmptyArray,
                         ee._unit.ProjectState.ClassInfos[BuiltinTypeId.List],
@@ -409,7 +448,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         internal void AssignTo(Node assignStmt, Expression left, IAnalysisSet values) {
             if (left is NameExpression) {
                 var l = (NameExpression)left;
-                if (l.Name != null) {
+                if (!string.IsNullOrEmpty(l.Name)) {
                     Scope.AssignVariable(
                         l.Name,
                         l,
@@ -419,7 +458,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 }
             } else if (left is MemberExpression) {
                 var l = (MemberExpression)left;
-                if (l.Name != null) {
+                if (!string.IsNullOrEmpty(l.Name)) {
                     foreach (var obj in Evaluate(l.Target)) {
                         obj.SetMember(l, _unit, l.Name, values);
                     }
@@ -449,7 +488,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         private static IAnalysisSet EvaluateLambda(ExpressionEvaluator ee, Node node) {
             var lambda = (LambdaExpression)node;
 
-            return ee.Scope.GetOrMakeNodeValue(node, n => MakeLambdaFunction(lambda, ee));
+            return ee.Scope.GetOrMakeNodeValue(node, NodeValueKind.LambdaFunction, n => MakeLambdaFunction(lambda, ee));
         }
 
         private static IAnalysisSet MakeLambdaFunction(LambdaExpression node, ExpressionEvaluator ee) {
@@ -476,7 +515,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         private IAnalysisSet MakeSequence(ExpressionEvaluator ee, Node node) {
-            var sequence = (SequenceInfo)ee.Scope.GetOrMakeNodeValue(node, x => {
+            var sequence = (SequenceInfo)ee.Scope.GetOrMakeNodeValue(node, NodeValueKind.Sequence, x => {
                 if (node is ListExpression) {
                     return new ListInfo(
                         VariableDef.EmptyArray,

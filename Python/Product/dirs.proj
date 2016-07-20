@@ -4,10 +4,15 @@
 
   <ItemGroup>
     <ProjectFile Include="$(BuildRoot)\Common\Product\dirs.proj"/>
-    
+
+    <ProjectFile Include="Common\Common.csproj"/>
+    <ProjectFile Include="VsCommon\VsCommon.csproj"/>
+
     <ProjectFile Include="Analysis\Analysis.csproj"/>
     <ProjectFile Include="VSInterpreters\VSInterpreters.csproj"/>
     <ProjectFile Include="Analyzer\Analyzer.csproj"/>
+
+    <ProjectFile Include="XamlDesignerSupport\XamlDesignerSupport.csproj"/>
 
     <ProjectFile Include="PyDebugAttach\PyDebugAttach.vcxproj"/>
     <ProjectFile Include="PyDebugAttach\PyDebugAttachX86.vcxproj"/>
@@ -17,20 +22,17 @@
     
     <ProjectFile Include="EnvironmentsList\EnvironmentsList.csproj"/>
 
-    <ProjectFile Include="TestAdapter\TestAdapter.csproj" Condition="$(IncludeTestAdapter)"/>
+    <ProjectFile Include="TestAdapter\TestAdapter.csproj"/>
+    <ProjectFile Include="TestAdapter.Analysis\TestAdapter.Analysis.csproj"/>
 
     <ProjectFile Include="ImportWizard\ImportWizard.csproj"/>
     <ProjectFile Include="ProjectWizards\ProjectWizards.csproj"/>
 
-    <ProjectFile Include="ReplWindow\ReplWindow.csproj"/>
     <ProjectFile Include="PythonTools\PythonTools.csproj"/>
 
-    <ProjectFile Include="MpiShim\MpiShim.csproj"/>
-    <ProjectFile Include="Hpc\Hpc.csproj" Condition="$(IncludeHpc)"/>
-
-    <ProjectFile Include="IronPythonResolver\IronPythonResolver.csproj"/>
-    <ProjectFile Include="IronPython\IronPython.Interpreter.csproj"/>
-    <ProjectFile Include="IronPython\IronPython.csproj"/>
+    <ProjectFile Include="IronPythonResolver\IronPythonResolver.csproj" Condition="'$(IncludeIronPython)' == 'True'"/>
+    <ProjectFile Include="IronPython\IronPython.Interpreter.csproj" Condition="'$(IncludeIronPython)' == 'True'"/>
+    <ProjectFile Include="IronPython\IronPython.csproj" Condition="'$(IncludeIronPython)' == 'True'"/>
 
     <ProjectFile Include="VsPyProf\VsPyProf.vcxproj"/>
     <ProjectFile Include="VsPyProf\VsPyProfX86.vcxproj"/>
@@ -38,14 +40,18 @@
 
     <ProjectFile Include="AzureSetup\AzureSetup.csproj"/>
     <ProjectFile Include="WebRole\WebRole.csproj"/>
-    <ProjectFile Include="Django\Django.csproj"/>
+    <ProjectFile Include="Django\Django.csproj" Condition="'$(IncludeDjango)' == 'True'"/>
 
+    <ProjectFile Include="AnalysisBrowser\AnalysisBrowser.csproj" Condition="$(VSTarget) != '15.0'" />
+    <ProjectFile Include="AnalysisMemoryTester\AnalysisMemoryTester.csproj" Condition="$(VSTarget) != '15.0'" />
+    <ProjectFile Include="EnvironmentsListHost\EnvironmentsListHost.csproj" Condition="$(VSTarget) != '15.0'" />
+
+    <ProjectFile Include="ML\ML.csproj" Condition="'$(IncludeML)' == 'True'"/>
     
-    <ProjectFile Include="AnalysisBrowser\AnalysisBrowser.csproj" />
-    <ProjectFile Include="AnalysisMemoryTester\AnalysisMemoryTester.csproj" />
-    <ProjectFile Include="EnvironmentsListHost\EnvironmentsListHost.csproj" />
-
-    <ProjectFile Include="ML\ML.csproj" Condition="$(IncludeML)"/>
+    <ProjectFile Include="Uwp\Uwp.csproj" Condition="'$(IncludeUwp)' == 'True'"/>
+    
+    <ProjectFile Include="..\Templates\Templates.csproj" />
+    <ProjectFile Include="..\Templates\Samples.csproj" />
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

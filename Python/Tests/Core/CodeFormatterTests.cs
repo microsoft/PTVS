@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Linq;
@@ -36,7 +38,7 @@ namespace PythonToolsTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCodeFormattingSelection() {
             var input = @"print('Hello World')
 
@@ -74,7 +76,7 @@ class Oar(object):
             CodeFormattingTest(input, selection, expected, "    def say_hello .. method_end", options);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCodeFormattingEndOfFile() {
             var input = @"print('Hello World')
 
@@ -91,14 +93,14 @@ class Oar(object):
 ";
 
             var options = new CodeFormattingOptions() {
-                SpaceBeforeClassDeclarationParen = true,
-                SpaceWithinFunctionDeclarationParens = true
+                SpaceBeforeClassDeclarationParen = false,
+                SpaceWithinFunctionDeclarationParens = false
             };
 
             CodeFormattingTest(input, new Span(input.Length, 0), input, null, options);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCodeFormattingInMethodExpression() {
             var input = @"print('Hello World')
 
@@ -122,7 +124,7 @@ class Oar(object):
             CodeFormattingTest(input, "method_end", input, null, options);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TestCodeFormattingStartOfMethodSelection() {
             var input = @"print('Hello World')
 
@@ -160,7 +162,7 @@ class Oar(object):
             CodeFormattingTest(input, selection, expected, "    def say_hello .. method_end", options);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void FormatDocument() {
             var input = @"fob('Hello World')";
             var expected = @"fob( 'Hello World' )";
@@ -172,20 +174,23 @@ class Oar(object):
         private static void CodeFormattingTest(string input, object selection, string expected, object expectedSelection, CodeFormattingOptions options, bool selectResult = true) {
             var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
             var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
-            using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact, new[] { fact })) {
+            using (var analyzer = new VsProjectAnalyzer(serviceProvider, fact)) {
                 var buffer = new MockTextBuffer(input, PythonCoreConstants.ContentType, "C:\\fob.py");
                 buffer.AddProperty(typeof(VsProjectAnalyzer), analyzer);
                 var view = new MockTextView(buffer);
+                analyzer.MonitorTextBufferAsync(buffer).Wait();
                 var selectionSpan = new SnapshotSpan(
                     buffer.CurrentSnapshot,
                     ExtractMethodTests.GetSelectionSpan(input, selection)
                 );
                 view.Selection.Select(selectionSpan, false);
 
-                new CodeFormatter(serviceProvider, view, options).FormatCode(
+                analyzer.FormatCodeAsync(
                     selectionSpan,
+                    view,
+                    options,
                     selectResult
-                );
+                ).Wait();
 
                 Assert.AreEqual(expected, view.TextBuffer.CurrentSnapshot.GetText());
                 if (expectedSelection != null) {

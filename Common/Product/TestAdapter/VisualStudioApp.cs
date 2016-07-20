@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -26,32 +28,29 @@ namespace Microsoft.VisualStudioTools {
     class VisualStudioApp : IDisposable {
         private static readonly Dictionary<int, VisualStudioApp> _knownInstances = new Dictionary<int, VisualStudioApp>();
         private readonly int _processId;
-        private DTE _dte;
 
-        public DTE DTE {
-            get {
-                if (_dte == null) {
-                    _dte = GetDTE(_processId);
+        public static VisualStudioApp FromProcessId(int processId) {
+            VisualStudioApp inst;
+            lock (_knownInstances) {
+                if (!_knownInstances.TryGetValue(processId, out inst)) {
+                    _knownInstances[processId] = inst = new VisualStudioApp(processId);
                 }
-                return _dte;
             }
+            return inst;
         }
 
-        public static VisualStudioApp FromCommandLineArgs(string[] commandLineArgs) {
-            for (int i = 0; i < commandLineArgs.Length - 1; ++i) {
-                int processId;
-                if (commandLineArgs[i].Equals("/parentProcessId", StringComparison.InvariantCultureIgnoreCase) &&
-                    int.TryParse(commandLineArgs[i + 1], out processId)) {
-                    VisualStudioApp inst;
-                    lock (_knownInstances) {
-                        if (!_knownInstances.TryGetValue(processId, out inst)) {
-                            _knownInstances[processId] = inst = new VisualStudioApp(processId);
-                        }
-                    }
-                    return inst;
-                }
+        public static VisualStudioApp FromEnvironmentVariable(string variable) {
+            string pid = Environment.GetEnvironmentVariable(variable);
+            if (pid == null) {
+                return null;
             }
-            return null;
+
+            int processId;
+            if (!int.TryParse(pid, out processId)) {
+                return null;
+            }
+
+            return FromProcessId(processId);
         }
 
         public VisualStudioApp(int processId) {
@@ -62,11 +61,6 @@ namespace Microsoft.VisualStudioTools {
             lock (_knownInstances) {
                 _knownInstances.Remove(_processId);
             }
-            if (_dte != null) {
-                Marshal.ReleaseComObject(_dte);
-                _dte = null;
-                MessageFilter.Revoke();
-            }
         }
 
         // Source from
@@ -74,6 +68,14 @@ namespace Microsoft.VisualStudioTools {
         [SuppressMessage("Microsoft.Design", "CA1060:MovePInvokesToNativeMethodsClass")]
         [DllImport("ole32.dll")]
         private static extern int CreateBindCtx(uint reserved, out IBindCtx ppbc);
+
+        public DTE GetDTE() {
+            var dte = GetDTE(_processId);
+            if (dte == null) {
+                throw new InvalidOperationException("Could not find VS DTE object for process " + _processId);
+            }
+            return dte;
+        }
 
         private static DTE GetDTE(int processId) {
             MessageFilter.Register();
@@ -133,7 +135,7 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public bool AttachToProcess(ProcessOutput processOutput, Guid portSupplier, string transportQualifierUri) {
-            var debugger3 = (EnvDTE90.Debugger3)DTE.Debugger;
+            var debugger3 = (EnvDTE90.Debugger3)GetDTE().Debugger;
             var transports = debugger3.Transports;
             EnvDTE80.Transport transport = null;
             for (int i = 1; i <= transports.Count; ++i) {
@@ -157,7 +159,7 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public bool AttachToProcess(ProcessOutput processOutput, Guid[] engines) {
-            var debugger3 = (EnvDTE90.Debugger3)DTE.Debugger;
+            var debugger3 = (EnvDTE90.Debugger3)GetDTE().Debugger;
             var processes = debugger3.LocalProcesses;
             for (int i = 1; i < processes.Count; ++i) {
                 var process = processes.Item(i);
@@ -172,7 +174,8 @@ namespace Microsoft.VisualStudioTools {
         public bool AttachToProcess(ProcessOutput processOutput, EnvDTE.Process process, Guid[] engines = null) {
             // Retry the attach itself 3 times before displaying a Retry/Cancel
             // dialog to the user.
-            DTE.SuppressUI = true;
+            var dte = GetDTE();
+            dte.SuppressUI = true;
             try {
                 try {
                     if (engines == null) {
@@ -192,7 +195,7 @@ namespace Microsoft.VisualStudioTools {
                     }
                 }
             } finally {
-                DTE.SuppressUI = false;
+                dte.SuppressUI = false;
             }
 
             // Another attempt, but display UI.

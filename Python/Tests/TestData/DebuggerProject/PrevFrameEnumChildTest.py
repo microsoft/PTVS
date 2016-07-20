@@ -1,4 +1,5 @@
-﻿def g():
+# coding: utf-8
+def g():
     pass
 
 def f():

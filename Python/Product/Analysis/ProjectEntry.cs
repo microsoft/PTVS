@@ -1,19 +1,22 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -32,7 +35,7 @@ namespace Microsoft.PythonTools.Analysis {
     /// </summary>
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "Unclear ownership makes it unlikely this object will be disposed correctly")]
-    internal sealed class ProjectEntry : IPythonProjectEntry {
+    internal sealed class ProjectEntry : IPythonProjectEntry, IAggregateableProjectEntry {
         private readonly PythonAnalyzer _projectState;
         private readonly string _moduleName;
         private readonly string _filePath;
@@ -45,6 +48,7 @@ namespace Microsoft.PythonTools.Analysis {
         private Dictionary<object, object> _properties = new Dictionary<object, object>();
         private ManualResetEventSlim _curWaiter;
         private int _updatesPending, _waiters;
+        internal readonly HashSet<AggregateProjectEntry> _aggregates = new HashSet<AggregateProjectEntry>();
 
         // we expect to have at most 1 waiter on updated project entries, so we attempt to share the event.
         private static ManualResetEventSlim _sharedWaitEvent = new ManualResetEventSlim(false);
@@ -88,6 +92,10 @@ namespace Microsoft.PythonTools.Analysis {
             if (newParse != null) {
                 newParse(this, EventArgs.Empty);
             }
+        }
+
+        internal bool IsVisible(ProjectEntry assigningScope) {
+            return true;
         }
 
         public void GetTreeAndCookie(out PythonAst tree, out IAnalysisCookie cookie) {
@@ -142,8 +150,13 @@ namespace Microsoft.PythonTools.Analysis {
             if (cancel.IsCancellationRequested) {
                 return;
             }
+
             lock (this) {
                 _analysisVersion++;
+
+                foreach (var aggregate in _aggregates) {
+                    aggregate.BumpVersion();
+                }
 
                 Parse(enqueueOnly, cancel);
             }
@@ -209,18 +222,19 @@ namespace Microsoft.PythonTools.Analysis {
             _unit = new AnalysisUnit(tree, _myScope.Scope);
             AnalysisLog.NewUnit(_unit);
 
-            foreach (var value in MyScope.Scope.Variables.Values) {
-                value.EnqueueDependents();
+            foreach (var value in MyScope.Scope.AllVariables) {
+                value.Value.EnqueueDependents();
             }
 
             MyScope.Scope.Children.Clear();
             MyScope.Scope.ClearNodeScopes();
             MyScope.Scope.ClearNodeValues();
             MyScope.ClearUnresolvedModules();
-            
+
             // collect top-level definitions first
             var walker = new OverviewWalker(this, _unit, tree);
             tree.Walk(walker);
+
             _myScope.Specialize();
 
             // It may be that we have analyzed some child packages of this package already, but because it wasn't analyzed,
@@ -232,7 +246,7 @@ namespace Microsoft.PythonTools.Analysis {
                     from pair in _projectState.ModulesByFilename
                     // Is the candidate child package in a subdirectory of our package?
                     let fileName = pair.Key
-                    where fileName.StartsWith(pathPrefix) 
+                    where fileName.StartsWith(pathPrefix)
                     let moduleName = pair.Value.Name
                     // Is the full name of the candidate child package qualified with the name of our package?
                     let lastDot = moduleName.LastIndexOf('.')
@@ -246,26 +260,29 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             _unit.Enqueue();
-            
+
             if (!enqueueOnly) {
                 _projectState.AnalyzeQueuedEntries(cancel);
             }
 
             // publish the analysis now that it's complete/running
             _currentAnalysis = new ModuleAnalysis(
-                _unit, 
-                ((ModuleScope)_unit.Scope).CloneForPublish(),
-                cookie);
+                _unit,
+                ((ModuleScope)_unit.Scope).CloneForPublish()
+            );
+        }
+
+        private void ClearScope() {
+            MyScope.Scope.Children.Clear();
+            MyScope.Scope.ClearNodeScopes();
+            MyScope.Scope.ClearNodeValues();
+            MyScope.ClearUnresolvedModules();
         }
 
         public IGroupableAnalysisProject AnalysisGroup {
             get {
                 return _projectState;
             }
-        }
-
-        public string GetLine(int lineNo) {
-            return _cookie.GetLine(lineNo);
         }
 
         public ModuleAnalysis Analysis {
@@ -316,12 +333,22 @@ namespace Microsoft.PythonTools.Analysis {
 
         public void RemovedFromProject() {
             _analysisVersion = -1;
+            foreach (var aggregatedInto in _aggregates) {
+                if (aggregatedInto.AnalysisVersion != -1) {
+                    ProjectState.ClearAggregate(aggregatedInto);
+                    aggregatedInto.RemovedFromProject();
+                }
+            }
         }
 
         #endregion
 
         internal void Enqueue() {
             _unit.Enqueue();
+        }
+
+        public void AggregatedInto(AggregateProjectEntry into) {
+            _aggregates.Add(into);
         }
     }
 
@@ -332,32 +359,30 @@ namespace Microsoft.PythonTools.Analysis {
         void Analyze(CancellationToken cancel);
     }
 
-    /// <summary>
-    /// Represents a file which is capable of being analyzed.  Can be cast to other project entry types
-    /// for more functionality.  See also IPythonProjectEntry and IXamlProjectEntry.
-    /// </summary>
-    public interface IProjectEntry : IAnalyzable {
-        /// <summary>
-        /// Returns true if the project entry has been parsed and analyzed.
-        /// </summary>
-        bool IsAnalyzed { get; }
-
+    public interface IVersioned {
         /// <summary>
         /// Returns the current analysis version of the project entry.
         /// </summary>
         int AnalysisVersion {
             get;
         }
+    }
 
+    /// <summary>
+    /// Represents a file which is capable of being analyzed.  Can be cast to other project entry types
+    /// for more functionality.  See also IPythonProjectEntry and IXamlProjectEntry.
+    /// </summary>
+    public interface IProjectEntry : IAnalyzable, IVersioned {
+        /// <summary>
+        /// Returns true if the project entry has been parsed and analyzed.
+        /// </summary>
+        bool IsAnalyzed { get; }
+
+        
         /// <summary>
         /// Returns the project entries file path.
         /// </summary>
         string FilePath { get; }
-
-        /// <summary>
-        /// Gets the specified line of text from the project entry.
-        /// </summary>
-        string GetLine(int lineNo);
 
         /// <summary>
         /// Provides storage of arbitrary properties associated with the project entry.

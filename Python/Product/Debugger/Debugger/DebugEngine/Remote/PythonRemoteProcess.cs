@@ -1,31 +1,34 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Net.Security;
+using System.Linq;
 using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Text;
+using System.Web;
 using System.Windows.Forms;
+using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Transports;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Debugger.Remote {
     internal class PythonRemoteProcess : PythonProcess {
-        public const byte DebuggerProtocolVersion = 5; // must be kept in sync with PTVSDBG_VER in attach_server.py
+        public const byte DebuggerProtocolVersion = 6; // must be kept in sync with PTVSDBG_VER in attach_server.py
         public const string DebuggerSignature = "PTVSDBG";
         public const string Accepted = "ACPT";
         public const string Rejected = "RJCT";
@@ -37,9 +40,26 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         private PythonRemoteProcess(int pid, Uri uri, PythonLanguageVersion langVer)
             : base(pid, langVer) {
             Uri = uri;
+            ParseQueryString();
         }
 
         public Uri Uri { get; private set; }
+
+        internal string TargetHostType { get; private set; }
+
+        private void ParseQueryString() {
+            if (Uri != null && Uri.Query != null) {
+                var queryParts = HttpUtility.ParseQueryString(Uri.Query);
+
+                TargetHostType = queryParts[AD7Engine.TargetHostType];
+
+                var sourceDir = queryParts[AD7Engine.SourceDirectoryKey];
+                var targetDir = queryParts[AD7Engine.TargetDirectoryKey];
+                if (!string.IsNullOrWhiteSpace(sourceDir) && !string.IsNullOrWhiteSpace(targetDir)) {
+                    AddDirMapping(new string[] { sourceDir, targetDir });
+                }
+            }
+        }
 
         /// <summary>
         /// Connects to and performs the initial handshake with the remote debugging server, verifying protocol signature and version number,
@@ -119,9 +139,20 @@ namespace Microsoft.PythonTools.Debugger.Remote {
         }
 
         public static PythonProcess Attach(Uri uri, bool warnAboutAuthenticationErrors) {
+            string debugOptions = "";
+            if (uri.Query != null) {
+                // It is possible to have more than one opt=... in the URI - the debug engine will always supply one based on
+                // the options that it gets from VS, but the user can also explicitly specify it directly in the URI when doing
+                // ptvsd attach (this is currently the only way to enable some flags when attaching, e.g. Django debugging).
+                // ParseQueryString will automatically concat them all into a single value using commas.
+                var queryParts = HttpUtility.ParseQueryString(uri.Query);
+                debugOptions = queryParts[AD7Engine.DebugOptionsKey] ?? "";
+            }
+
             var stream = Connect(uri, warnAboutAuthenticationErrors);
             try {
                 stream.Write(AttachCommandBytes);
+                stream.WriteString(debugOptions);
 
                 string attachResp = stream.ReadAsciiString(Accepted.Length);
                 if (attachResp != Accepted) {

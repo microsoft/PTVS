@@ -1,6 +1,8 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup>
-    <OutputPathSuffix Condition="'$(OutputPathSuffix)' == ''">ToolBinaries\$(MSBuildProjectName)\</OutputPathSuffix>
-  </PropertyGroup>
   <Import Project="ProjectBefore.settings" />
+  <PropertyGroup>
+    <RunCodeAnalysis>false</RunCodeAnalysis>
+    <MicroBuild_FXCop>false</MicroBuild_FXCop>
+    <MicroBuild_APIScan>false</MicroBuild_APIScan>
+  </PropertyGroup>
 </Project>

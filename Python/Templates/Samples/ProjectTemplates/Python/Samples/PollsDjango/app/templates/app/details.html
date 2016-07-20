@@ -1,0 +1,26 @@
+{% extends "app/layout.html" %}
+
+{% block content %}
+
+<h2>{{poll.text}}</h2>
+<br />
+
+{% if error_message %}
+<p class="text-danger">{{error_message}}</p>
+{% endif %}
+
+<form action="{% url 'app:vote' poll.id %}" method="post">
+{% csrf_token %}
+{% for choice in poll.choice_set.all %}
+    <div class="radio">
+        <label>
+            <input type="radio" name="choice" id="choice{{ forloop.counter }}" value="{{ choice.id }}" />
+            {{ choice.text }}
+        </label>
+    </div>
+{% endfor %}
+    <br />
+    <button class="btn btn-primary" type="submit">Vote</button>
+</form>
+
+{% endblock %}

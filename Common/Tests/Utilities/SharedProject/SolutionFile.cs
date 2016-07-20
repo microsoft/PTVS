@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -73,7 +75,9 @@ namespace TestUtilities.SharedProject {
 #elif DEV12
             StringBuilder slnFile = new StringBuilder("\r\nMicrosoft Visual Studio Solution File, Format Version 12.00\r\n\u0023 Visual Studio 2013\r\nVisualStudioVersion = 12.0.20827.3\r\nMinimumVisualStudioVersion = 10.0.40219.1\r\n");
 #elif DEV14
-            StringBuilder slnFile = new StringBuilder("\r\nMicrosoft Visual Studio Solution File, Format Version 12.00\r\n\u0023 Visual Studio 2015\r\nVisualStudioVersion = 14.0.22230.0\r\nMinimumVisualStudioVersion = 10.0.40219.1\r\n");
+            StringBuilder slnFile = new StringBuilder("\r\nMicrosoft Visual Studio Solution File, Format Version 12.00\r\n\u0023 Visual Studio 14\r\nVisualStudioVersion = 14.0.25123.0\r\nMinimumVisualStudioVersion = 10.0.40219.1\r\n");
+#elif DEV15
+            StringBuilder slnFile = new StringBuilder("\r\nMicrosoft Visual Studio Solution File, Format Version 12.00\r\n\u0023 Visual Studio 15\r\nVisualStudioVersion = 15.0.25424.0\r\nMinimumVisualStudioVersion = 10.0.40219.1\r\n");
 #else
 #error Unsupported VS version
 #endif
@@ -85,19 +89,20 @@ namespace TestUtilities.SharedProject {
                 var project = projects[i];
                 var projectTypeGuid = toGenerate[i].TypeGuid;
 
-                slnFile.AppendFormat(@"Project(""{0:B}"") = ""{1}"", ""{2}"", ""{3:B}""
+                slnFile.AppendFormat(@"Project(""{0}"") = ""{1}"", ""{2}"", ""{3}""
 EndProject
-", projectTypeGuid,
+", projectTypeGuid.ToString("B").ToUpperInvariant(),
  project != null ? Path.GetFileNameWithoutExtension(project.FullPath) : toGenerate[i].Name,
  project != null ? CommonUtils.GetRelativeFilePath(location, project.FullPath): toGenerate[i].Name,
- project != null ? Guid.Parse(project.GetProperty("ProjectGuid").EvaluatedValue) : Guid.NewGuid());
+ (project != null ? Guid.Parse(project.GetProperty("ProjectGuid").EvaluatedValue) : Guid.NewGuid()).ToString("B").ToUpperInvariant()
+ );
             }
             slnFile.Append(@"Global
-    GlobalSection(SolutionConfigurationPlatforms) = preSolution
-        Debug|Any CPU = Debug|Any CPU
-        Release|Any CPU = Release|Any CPU
-    EndGlobalSection
-    GlobalSection(ProjectConfigurationPlatforms) = postSolution
+\tGlobalSection(SolutionConfigurationPlatforms) = preSolution
+\t\tDebug|Any CPU = Debug|Any CPU
+\t\tRelease|Any CPU = Release|Any CPU
+\tEndGlobalSection
+\tGlobalSection(ProjectConfigurationPlatforms) = postSolution
 ");
             for (int i = 0; i < projects.Count; i++) {
                 if (toGenerate[i].Flags.HasFlag(SolutionElementFlags.ExcludeFromConfiguration)) {
@@ -105,17 +110,17 @@ EndProject
                 }
 
                 var project = projects[i];
-                slnFile.AppendFormat(@"		{0:B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-        {0:B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-        {0:B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-        {0:B}.Release|Any CPU.Build.0 = Release|Any CPU
-", Guid.Parse(project.GetProperty("ProjectGuid").EvaluatedValue));
+                slnFile.AppendFormat(@"\t\t{0:B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+\t\t{0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+\t\t{0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+\t\t{0}.Release|Any CPU.Build.0 = Release|Any CPU
+", Guid.Parse(project.GetProperty("ProjectGuid").EvaluatedValue).ToString("B").ToUpperInvariant());
             }
 
-            slnFile.Append(@"	EndGlobalSection
-    GlobalSection(SolutionProperties) = preSolution
-        HideSolutionNode = FALSE
-    EndGlobalSection
+            slnFile.Append(@"\tEndGlobalSection
+\tGlobalSection(SolutionProperties) = preSolution
+\t\tHideSolutionNode = FALSE
+\tEndGlobalSection
 EndGlobal
 ");
 
@@ -123,7 +128,7 @@ EndGlobal
             collection.Dispose();
 
             var slnFilename = Path.Combine(location, solutionName + ".sln");
-            File.WriteAllText(slnFilename, slnFile.ToString(), Encoding.UTF8);
+            File.WriteAllText(slnFilename, slnFile.ToString().Replace("\\t", "\t"), Encoding.UTF8);
             return new SolutionFile(slnFilename, toGenerate);
         }
 

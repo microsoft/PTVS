@@ -1,19 +1,22 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
@@ -191,13 +194,7 @@ namespace Microsoft.PythonTools.Profiling {
 
     public sealed class PythonInterpreter {
         [XmlElement("Id")]
-        public Guid Id {
-            get;
-            set;
-        }
-
-        [XmlElement("Version")]
-        public string Version {
+        public string Id {
             get;
             set;
         }
@@ -206,7 +203,6 @@ namespace Microsoft.PythonTools.Profiling {
             var res = new PythonInterpreter();
 
             res.Id = Id;
-            res.Version = Version;
             return res;
         }
 
@@ -214,8 +210,7 @@ namespace Microsoft.PythonTools.Profiling {
             if (self == null) {
                 return other == null;
             } else if (other != null) {
-                return self.Id == other.Id &&
-                    self.Version == other.Version;
+                return self.Id == other.Id;
             }
             return false;
         }
@@ -228,6 +223,7 @@ namespace Microsoft.PythonTools.Profiling {
             Report = reports;
         }
 
+        [SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays")]
         [XmlElement("Report")]
         public Report[] Report {
             get {

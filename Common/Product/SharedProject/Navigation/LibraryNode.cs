@@ -1,16 +1,18 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -18,12 +20,13 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Threading;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
 
 namespace Microsoft.VisualStudioTools.Navigation {
-
+    
     /// <summary>
     /// Single node inside the tree of the libraries in the object browser or class view.
     /// </summary>
@@ -32,21 +35,16 @@ namespace Microsoft.VisualStudioTools.Navigation {
         private readonly LibraryNode _parent;
         private LibraryNodeCapabilities _capabilities;
         private readonly LibraryNodeType _type;
-        private readonly CommandID _contextMenuID;
         private readonly string _tooltip;
         private readonly Dictionary<LibraryNodeType, LibraryNode> _filteredView;
         private readonly Dictionary<string, LibraryNode[]> _childrenByName;
         private bool _duplicatedByName;
 
-        public LibraryNode(LibraryNode parent, string name, string fullname, LibraryNodeType type)
-            : this(parent, name, fullname, type, LibraryNodeCapabilities.None, null) { }
-
-        public LibraryNode(LibraryNode parent, string name, string fullname, LibraryNodeType type, LibraryNodeCapabilities capabilities, CommandID contextMenuID) {
+        public LibraryNode(LibraryNode parent, string name, string fullname, LibraryNodeType type, LibraryNodeCapabilities capabilities = LibraryNodeCapabilities.None, IList<LibraryNode> children = null) : base(children) {
             Debug.Assert(name != null);
 
             _parent = parent;
             _capabilities = capabilities;
-            _contextMenuID = contextMenuID;
             _name = name;
             _fullname = fullname;
             _tooltip = name;
@@ -62,12 +60,13 @@ namespace Microsoft.VisualStudioTools.Navigation {
         protected LibraryNode(LibraryNode node, string newFullName) {
             _parent = node._parent;
             _capabilities = node._capabilities;
-            _contextMenuID = node._contextMenuID;
             _name = node._name;
             _tooltip = node._tooltip;
             _type = node._type;
             _fullname = newFullName;
-            Children.AddRange(node.Children);
+            foreach (var child in node.Children) {
+                Children.Add(child);
+            }
             _childrenByName = new Dictionary<string, LibraryNode[]>(node._childrenByName);
             _filteredView = new Dictionary<LibraryNodeType, LibraryNode>();
         }
@@ -252,6 +251,10 @@ namespace Microsoft.VisualStudioTools.Navigation {
             // Do nothing.
         }
 
+        public virtual IVsSimpleObjectList2 FindReferences() {
+            return null;
+        }
+
         public virtual string Name {
             get {
                 return _name;
@@ -294,7 +297,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         public CommandID ContextMenuID {
             get {
-                return _contextMenuID;
+                return null;
             }
         }
 
@@ -405,7 +408,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
             }
 
             public int Reset() {
-                throw new NotImplementedException();
+                return VSConstants.E_NOTIMPL;
             }
 
             public int Skip(uint celt) {

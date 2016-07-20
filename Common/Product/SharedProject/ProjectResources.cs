@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.ComponentModel;
@@ -88,6 +90,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string FileCopyError = "FileCopyError";
         internal const string FileName = "FileName";
         internal const string FileNameDescription = "FileNameDescription";
+        internal const string FileOpenDoesNotExist = "FileOpenDoesNotExist";
         internal const string FileOrFolderAlreadyExists = "FileOrFolderAlreadyExists";
         internal const string FileOrFolderCannotBeFound = "FileOrFolderCannotBeFound";
         internal const string FileProperties = "FileProperties";
@@ -154,6 +157,7 @@ namespace Microsoft.VisualStudioTools.Project {
         internal const string StartupFileDescription = "StartupFileDescription";
         internal const string StartWebBrowser = "StartWebBrowser";
         internal const string StartWebBrowserDescription = "StartWebBrowserDescription";
+        internal const string UnableToRemoveFile = "UnableToRemoveFile";
         internal const string UnknownInParentheses = "UnknownInParentheses";
         internal const string URL = "URL";
         internal const string UseOfDeletedItemError = "UseOfDeletedItemError";
@@ -212,11 +216,11 @@ namespace Microsoft.VisualStudioTools.Project {
             }
 
             Debug.WriteLineIf(
-                Enumerable.Range(0, args.Length).Any(i => result.IndexOf(string.Format("{{{0}}}", i)) < 0),
+                Enumerable.Range(0, args.Length).Any(i => result.IndexOf(string.Format("{{{0}", i)) < 0),
                 string.Format("Resource string '{0}' does not use all {1} arguments", value, args.Length)
             );
             Debug.WriteLineIf(
-                result.IndexOf(string.Format("{{{0}}}", args.Length)) >= 0,
+                result.IndexOf(string.Format("{{{0}", args.Length)) >= 0,
                 string.Format("Resource string '{0}' requires more than {1} argument(s)", value, args.Length)
             );
 

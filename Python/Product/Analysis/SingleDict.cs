@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections;
@@ -23,9 +25,12 @@ namespace Microsoft.PythonTools.Analysis {
     /// A simple dictionary like object which has efficient storage when there's only a single item in the dictionary.
     /// </summary>
     [DebuggerDisplay("Count = {Count}")]
-    struct SingleDict<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>> {
+    struct SingleDict<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
+        where TKey : class
+        where TValue : class
+    {
         [DebuggerBrowsable(DebuggerBrowsableState.Collapsed)]
-        private object _data; // Dictionary<TKey, TValue>, SingleEntry<TKey, TValue> or IEqualityComparer<TKey>
+        internal object _data; // AnalysisDictionary<TKey, TValue>, SingleEntry<TKey, TValue> or IEqualityComparer<TKey>
 
         public SingleDict(IEqualityComparer<TKey> comparer) {
             _data = comparer;
@@ -39,7 +44,7 @@ namespace Microsoft.PythonTools.Analysis {
                     return new[] { new KeyValuePair<TKey, TValue>(single.Key, single.Value) };
                 }
 
-                var dict = _data as Dictionary<TKey, TValue>;
+                var dict = _data as AnalysisDictionary<TKey, TValue>;
                 if (dict != null) {
                     return dict.ToArray();
                 }
@@ -55,7 +60,7 @@ namespace Microsoft.PythonTools.Analysis {
                     return single.Comparer;
                 }
 
-                var dict = _data as Dictionary<TKey, TValue>;
+                var dict = _data as AnalysisDictionary<TKey, TValue>;
                 if (dict != null) {
                     return dict.Comparer;
                 }
@@ -64,7 +69,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
         }
 
-        sealed class SingleDependency {
+        internal sealed class SingleDependency {
             public readonly TKey Key;
             public TValue Value;
             public readonly IEqualityComparer<TKey> Comparer;
@@ -82,7 +87,7 @@ namespace Microsoft.PythonTools.Analysis {
             if (single != null) {
                 return single.Comparer.Equals(single.Key, key);
             }
-            var dict = _data as Dictionary<TKey, TValue>;
+            var dict = _data as AnalysisDictionary<TKey, TValue>;
             if (dict != null) {
                 return dict.ContainsKey(key);
             }
@@ -100,7 +105,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return false;
             }
 
-            var dict = _data as Dictionary<TKey, TValue>;
+            var dict = _data as AnalysisDictionary<TKey, TValue>;
             if (dict != null) {
                 return dict.TryGetValue(key, out value);
             }
@@ -132,16 +137,16 @@ namespace Microsoft.PythonTools.Analysis {
                         return;
                     }
 
-                    var data = new Dictionary<TKey, TValue>(single.Comparer);
+                    var data = new AnalysisDictionary<TKey, TValue>(single.Comparer);
                     data[single.Key] = single.Value;
                     data[key] = value;
                     _data = data;
                     return;
                 }
 
-                var dict = _data as Dictionary<TKey, TValue>;
+                var dict = _data as AnalysisDictionary<TKey, TValue>;
                 if (dict == null) {
-                    _data = dict = new Dictionary<TKey, TValue>(comparer ?? EqualityComparer<TKey>.Default);
+                    _data = dict = new AnalysisDictionary<TKey, TValue>(comparer ?? EqualityComparer<TKey>.Default);
                 }
                 dict[key] = value;
             }
@@ -156,7 +161,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return;
             }
 
-            var dict = _data as Dictionary<TKey, TValue>;
+            var dict = _data as AnalysisDictionary<TKey, TValue>;
             if (dict != null) {
                 dict.Remove(fromModule);
             }
@@ -172,20 +177,25 @@ namespace Microsoft.PythonTools.Analysis {
             return false;
         }
 
+        public bool TryGetSingleDependency(out SingleDependency dependency) {
+            dependency = _data as SingleDependency;
+            return dependency != null;
+        }
+
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        public Dictionary<TKey, TValue>.ValueCollection DictValues {
+        public IEnumerable<TValue> DictValues {
             get {
-                Debug.Assert(_data is Dictionary<TKey, TValue>);
+                Debug.Assert(_data is AnalysisDictionary<TKey, TValue>);
 
-                return ((Dictionary<TKey, TValue>)_data).Values;
+                return ((AnalysisDictionary<TKey, TValue>)_data).EnumerateValues;
             }
         }
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        internal Dictionary<TKey, TValue> InternalDict {
+        internal AnalysisDictionary<TKey, TValue> InternalDict {
             get {
-                return _data as Dictionary<TKey, TValue>;
+                return _data as AnalysisDictionary<TKey, TValue>;
             }
             set {
                 if (value.Count == 1) {
@@ -203,7 +213,7 @@ namespace Microsoft.PythonTools.Analysis {
         public IEnumerable<TValue> Values {
             get {
                 SingleDependency single;
-                var dict = _data as Dictionary<TKey, TValue>;
+                var dict = _data as AnalysisDictionary<TKey, TValue>;
                 if (dict != null) {
                     return dict.Values;
                 } else if ((single = _data as SingleDependency) != null) {
@@ -221,7 +231,7 @@ namespace Microsoft.PythonTools.Analysis {
                     yield return single.Key;
                 }
 
-                var dict = _data as Dictionary<TKey, TValue>;
+                var dict = _data as AnalysisDictionary<TKey, TValue>;
                 if (dict != null) {
                     foreach (var value in dict.Keys) {
                         yield return value;
@@ -237,7 +247,7 @@ namespace Microsoft.PythonTools.Analysis {
                     return 1;
                 }
 
-                var dict = _data as Dictionary<TKey, TValue>;
+                var dict = _data as AnalysisDictionary<TKey, TValue>;
                 if (dict != null) {
                     return dict.Count;
                 }
@@ -253,12 +263,12 @@ namespace Microsoft.PythonTools.Analysis {
         #region IEnumerable<KeyValuePair<TKey,TValue>> Members
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() {
-            SingleDependency single = _data as SingleDependency;
+            var single = _data as SingleDependency;
             if (single != null) {
                 yield return new KeyValuePair<TKey, TValue>(single.Key, single.Value);
             }
 
-            Dictionary<TKey, TValue> dict = _data as Dictionary<TKey, TValue>;
+            var dict = _data as AnalysisDictionary<TKey, TValue>;
             if (dict != null) {
                 foreach (var keyValue in dict) {
                     yield return keyValue;
@@ -271,7 +281,7 @@ namespace Microsoft.PythonTools.Analysis {
         #region IEnumerable Members
 
         IEnumerator IEnumerable.GetEnumerator() {
-            throw new NotImplementedException();
+            return GetEnumerator();
         }
 
         #endregion

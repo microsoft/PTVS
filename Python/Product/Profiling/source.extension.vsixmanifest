@@ -1,40 +1,26 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Vsix xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" Version="1.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2010">
-  <Identifier Id="81da0100-e6db-4783-91ea-c38c3fa1b81e">
-    <Name>Python Tools for Visual Studio - Profiling</Name>
-    <Author>Microsoft</Author>
-    <Version>2.2</Version>
-    <Description xml:space="preserve">Provides support for profiling Python projects</Description>
-    <Locale>1033</Locale>
-    <InstalledByMsi>true</InstalledByMsi>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Id="81da0100-e6db-4783-91ea-c38c3fa1b81e" Version="3.0" Language="en-US" Publisher="Microsoft Corporation" />
+    <DisplayName>Python Tools for Visual Studio - Profiling</DisplayName>
+    <Description xml:space="preserve">Provides support for profiling Python projects.</Description>
+    <MoreInfo>http://aka.ms/ptvs</MoreInfo>
+    <License>Python Tools for VS License.rtf</License>
+    <GettingStartedGuide>http://aka.ms/ptvstutorial</GettingStartedGuide>
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
-    <SupportedProducts>
-      <!-- The Edition specifications are minimums; any SKU equal or 'higher'
-           will accept them. -->
-      <VisualStudio Version="10.0">
-        <Edition>Premium</Edition>
-      </VisualStudio>
-      <VisualStudio Version="11.0">
-        <Edition>Premium</Edition>
-      </VisualStudio>
-      <VisualStudio Version="12.0">
-        <Edition>Premium</Edition>
-      </VisualStudio>
-    </SupportedProducts>
-    <SupportedFrameworkRuntimeEdition MinVersion="4.0" />
-  </Identifier>
-  <References>
-    <Reference Id="Microsoft.VisualStudio.MPF" MinVersion="10.0">
-      <Name>Visual Studio MPF</Name>
-    </Reference>
-    <Reference Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" MinVersion="2.2" MaxVersion="2.2">
-      <Name>Python Tools for Visual Studio</Name>
-      <MoreInfoUrl>http://pytools.codeplex.com/</MoreInfoUrl>
-    </Reference>
-  </References>
-  <Content>
-    <Assembly AssemblyName="|%CurrentProject%;_GetAssemblyName|">|%CurrentProject%;_GetTargetPath|</Assembly>
-    <VsPackage>|%CurrentProject%;PkgdefProjectOutputGroup|</VsPackage>
-  </Content>
-</Vsix>
+  </Metadata>
+  <Installation InstalledByMsi="true">
+    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[14.0,16.0)" />
+    <InstallationTarget Id="Microsoft.VisualStudio.IntegratedShell" Version="14.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.WDExpress" Version="14.0" />
+    <InstallationTarget Id="Microsoft.VisualStudio.VWDExpress" Version="14.0" />
+  </Installation>
+  <Dependencies>
+    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.6" />
+    <Dependency Id="96492FC7-7BC6-46F7-8559-66BB4E09FD1E" DisplayName="Python Tools for Visual Studio" Version="3.0" />
+  </Dependencies>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|%CurrentProject%;_GetTargetPath|" AssemblyName="|%CurrentProject%;_GetAssemblyName|" />
+  </Assets>
+</PackageManifest>

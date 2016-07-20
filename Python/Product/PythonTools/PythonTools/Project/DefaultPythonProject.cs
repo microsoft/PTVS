@@ -1,21 +1,24 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.Build.Execution;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools.Project;
@@ -25,72 +28,47 @@ namespace Microsoft.PythonTools.Project {
         private readonly IServiceProvider _serviceProvider;
         private readonly string _filePath;
 
+        public event EventHandler<AnalyzerChangingEventArgs> ProjectAnalyzerChanging { add { } remove { } }
+
         public DefaultPythonProject(IServiceProvider serviceProvider, string filePath) {
             Utilities.ArgumentNotNullOrEmpty("filePath", filePath);
             _filePath = filePath;
             _serviceProvider = serviceProvider;
         }
 
-        private string FullPath {
-            get {
-                return Path.GetFullPath(_filePath);
-            }
+        public void SetProperty(string name, string value) {
+            Debug.Fail("Unexpected DefaultPythonProject.SetProperty() call");
         }
 
-        #region IPythonProject Members
-
-        string IPythonProject.GetProperty(string name) {
-            return null;
-        }
-
-        void IPythonProject.SetProperty(string name, string value) {
-            Debug.Assert(false, "Unexpected DefaultPythonProject.SetProperty() call");
-        }
-
-        string IPythonProject.GetWorkingDirectory() {
-            return Path.GetDirectoryName(FullPath);
-        }
-
-        string IPythonProject.GetStartupFile() {
-            return FullPath;
-        }
-
-        string IPythonProject.ProjectDirectory {
-            get {
-                return Path.GetDirectoryName(_filePath);
-            }
-        }
-
-        string IPythonProject.ProjectName {
-            get {
-                return Path.GetFileNameWithoutExtension(_filePath);
-            }
-        }
-
-        IPythonInterpreterFactory IPythonProject.GetInterpreterFactory() {
-            return _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>().DefaultInterpreter;
-        }
-
-        bool IPythonProject.Publish(PublishProjectOptions options) {
-            Debug.Assert(false, "Unexpected DefaultPythonProject.Publish() call");
-            return false;
-        }
-
-        string IPythonProject.GetUnevaluatedProperty(string name) {
-            return null;
-        }
-
-        VsProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
+        public VsProjectAnalyzer GetProjectAnalyzer() {
             return _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
         }
 
-        public event System.EventHandler ProjectAnalyzerChanged {
-            add {
-            }
-            remove {
-            }
+        public IPythonInterpreterFactory GetInterpreterFactory() {
+            return _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>().DefaultInterpreter;
         }
 
-        #endregion
+        public bool Publish(PublishProjectOptions options) {
+            Debug.Fail("Unexpected DefaultPythonProject.Publish() call");
+            return false;
+        }
+
+        private string FullPath => Path.GetFullPath(_filePath);
+        public string GetProperty(string name) => null;
+        public string GetWorkingDirectory() => PathUtils.GetParent(FullPath);
+        public string GetStartupFile() => FullPath;
+        public string ProjectDirectory => PathUtils.GetParent(_filePath);
+        public string ProjectName => Path.GetFileNameWithoutExtension(_filePath);
+        public string ProjectHome => ProjectDirectory;
+        public string ProjectFile => FullPath;
+        public IServiceProvider Site => _serviceProvider;
+        public string GetUnevaluatedProperty(string name) => null;
+        public IAsyncCommand FindCommand(string canonicalName) => null;
+        public ProjectInstance GetMSBuildProjectInstance() => null;
+        public void AddActionOnClose(object key, Action<object> action) { }
+        public IPythonInterpreterFactory GetInterpreterFactoryOrThrow() => GetInterpreterFactory();
+        public LaunchConfiguration GetLaunchConfigurationOrThrow() => new LaunchConfiguration(GetInterpreterFactory().Configuration);
+
+        public event EventHandler ProjectAnalyzerChanged { add { } remove { } }
     }
 }

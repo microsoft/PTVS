@@ -1,16 +1,18 @@
-/* ****************************************************************************
-*
-* Copyright (c) Microsoft Corporation.
-*
-* This source code is subject to terms and conditions of the Apache License, Version 2.0. A
-* copy of the license can be found in the License.html file at the root of this distribution. If
-* you cannot locate the Apache License, Version 2.0, please send an email to
-* vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
-* by the terms of the Apache License, Version 2.0.
-*
-* You must not remove this notice, or any other, from this software.
-*
-* ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 // PyDebugAttach.cpp : Defines the exported functions for the DLL application.
 //
@@ -564,12 +566,14 @@ void IncRef(PyObject* object) {
 
 // Structure for our shared memory communication, aligned to be identical on 64-bit and 32-bit
 struct MemoryBuffer {
-    int PortNumber;             // offset 0-4
-    __declspec(align(8)) HANDLE AttachStartingEvent;  // offset 8 - 16
-    __declspec(align(8)) HANDLE AttachDoneEvent;  // offset 16 - 24
-    __declspec(align(8)) int ErrorNumber;            // offset 24-28
-    int VersionNumber;          // offset 28-32
-    char DebugId[1];            // null terminated string
+    int32_t PortNumber;                                 // offset 0-4
+    unsigned : 4;                                       // offset 4-8 (padding)
+    __declspec(align(8)) HANDLE AttachStartingEvent;    // offset 8-16
+    __declspec(align(8)) HANDLE AttachDoneEvent;        // offset 16-24
+    __declspec(align(8)) int32_t ErrorNumber;           // offset 24-28
+    int32_t VersionNumber;                              // offset 28-32
+    char DebugId[64];                                   // null terminated string
+    char DebugOptions[1];                               // null terminated string (VLA)
 };
 
 class ConnectionInfo {
@@ -860,7 +864,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             pyDictNew == nullptr || pyCompileString == nullptr || pyEvalCode == nullptr || getDictItem == nullptr || call == nullptr ||
             getBuiltins == nullptr || dictSetItem == nullptr || intFromLong == nullptr || pyErrRestore == nullptr || pyErrFetch == nullptr ||
             errOccurred == nullptr || pyImportMod == nullptr || pyGetAttr == nullptr || pyNone == nullptr || pySetAttr == nullptr || boolFromLong == nullptr ||
-            getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr || releaseLock == nullptr ||
+            getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr ||
             pyGilStateEnsure == nullptr || pyGilStateRelease == nullptr) {
                 // we're missing some APIs, we cannot attach.
                 connInfo.ReportError(ConnError_PythonNotFound);
@@ -1081,10 +1085,9 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         }
 
         auto pyPortNum = PyObjectHolder(isDebug, intFromLong(connInfo.Buffer->PortNumber));
-
         auto debugId = PyObjectHolder(isDebug, strFromString(connInfo.Buffer->DebugId));
-
-        DecRef(call(attach_process.ToPython(), pyPortNum.ToPython(), debugId.ToPython(), pyTrue, pyFalse, NULL), isDebug);
+        auto debugOptions = PyObjectHolder(isDebug, strFromString(connInfo.Buffer->DebugOptions));
+        DecRef(call(attach_process.ToPython(), pyPortNum.ToPython(), debugId.ToPython(), debugOptions.ToPython(), pyTrue, pyFalse, NULL), isDebug);
 
         auto sysMod = PyObjectHolder(isDebug, pyImportMod("sys"));
         if (*sysMod == nullptr) {

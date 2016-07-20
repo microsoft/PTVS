@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -173,6 +175,11 @@ namespace Microsoft.PythonTools.Analysis {
             SpecializeFunction("functools", "update_wrapper", UpdateWrapperFunction);
             SpecializeFunction("functools", "wraps", WrapsFunction);
 
+            SpecializeFunction("unittest", "_id", Identity);
+            SpecializeFunction("unittest", "skip", IdentityDecorator);
+            SpecializeFunction("unittest", "skipIf", IdentityDecorator);
+            SpecializeFunction("unittest", "skipUnless", IdentityDecorator);
+
             // cached for quick checks to see if we're a call to clr.AddReference
 
             SpecializeFunction("wpf", "LoadComponent", LoadComponent);
@@ -187,7 +194,10 @@ namespace Microsoft.PythonTools.Analysis {
             for (int i = 0, j = args.Length - keywordArgNames.Length;
                 i < keywordArgNames.Length && j < args.Length;
                 ++i, ++j) {
-                if (keywordArgNames[i].Name == name) {
+                var kwArg = keywordArgNames[i];
+                if (kwArg == null) {
+                    Debug.Fail("Null keyword argument");
+                } else if (kwArg.Name == name) {
                     return args[j];
                 }
             }
@@ -203,8 +213,24 @@ namespace Microsoft.PythonTools.Analysis {
             return AnalysisSet.Empty;
         }
 
+        IAnalysisSet Identity(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            return args.Length > 0 ? args[0] : AnalysisSet.Empty;
+        }
+
+        IAnalysisSet IdentityDecorator(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            if (args.Length == 0) {
+                return AnalysisSet.Empty;
+            }
+            if (args[0].GetMember(node, unit, "__call__").Any()) {
+                return args[0];
+            }
+            return unit.ProjectState.GetCached(" PythonAnalyzer.Identity()", () => {
+                return new SpecializedCallable(null, Identity, false);
+            });
+        }
+
         IAnalysisSet RangeConstructor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            return unit.Scope.GetOrMakeNodeValue(node, (nn) => new RangeInfo(unit.ProjectState.Types[BuiltinTypeId.List], unit.ProjectState));
+            return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.Range, (nn) => new RangeInfo(unit.ProjectState.Types[BuiltinTypeId.List], unit.ProjectState));
         }
 
         IAnalysisSet CopyFunction(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
@@ -223,7 +249,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         IAnalysisSet ReturnsListOfString(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            return unit.Scope.GetOrMakeNodeValue(node, n => {
+            return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.ListOfString, n => {
                 var vars = new VariableDef();
                 vars.AddTypes(unit, unit.ProjectState.ClassInfos[BuiltinTypeId.Str].Instance);
                 return new ListInfo(
@@ -236,7 +262,7 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         IAnalysisSet ReturnsStringToObjectDict(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            return unit.Scope.GetOrMakeNodeValue(node, n => {
+            return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.StrDict, n => {
                 var dict = new DictionaryInfo(unit.ProjectEntry, node);
                 dict.AddTypes(
                     node,
@@ -294,16 +320,17 @@ namespace Microsoft.PythonTools.Analysis {
 
         IAnalysisSet SpecialIter(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length == 1) {
-                return args[0].GetIterator(node, unit);
+                var res = args[0].GetIterator(node, unit);
+                return res;
             } else if (args.Length == 2) {
-                var iterator = unit.Scope.GetOrMakeNodeValue(node, n => {
-                    var iterTypes = new[] { new VariableDef() };
-                    return new IteratorInfo(iterTypes, unit.ProjectState.ClassInfos[BuiltinTypeId.CallableIterator], node);
+
+                var iterator = unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.Iterator, n => {
+                    return new SingleIteratorValue(new VariableDef(), unit.ProjectState.ClassInfos[BuiltinTypeId.CallableIterator], unit.ProjectEntry);
                 });
-                foreach (var iter in iterator.OfType<IteratorInfo>()) {
+                foreach (var iter in iterator.OfType<SingleIteratorValue>()) {
                     // call the callable object
                     // the sentinel's type is never seen, so don't include it
-                    iter.AddTypes(unit, new[] { args[0].Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames) });
+                    iter._indexTypes.AddTypes(unit, args[0].Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames), true, unit.ProjectEntry);
                 }
                 return iterator;
             }
@@ -356,7 +383,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return AnalysisSet.Empty;
             }
 
-            return unit.Scope.GetOrMakeNodeValue(node, _ => {
+            return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.Super, _ => {
                 var res = AnalysisSet.Empty;
                 foreach (var classInfo in classes.OfType<ClassInfo>()) {
                     res = res.Add(new SuperInfo(classInfo, instances));
@@ -367,17 +394,17 @@ namespace Microsoft.PythonTools.Analysis {
 
         IAnalysisSet PartialFunction(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             if (args.Length >= 1) {
-                return unit.Scope.GetOrMakeNodeValue(node, n => {
-                    return new PartialFunctionInfo(args[0], args.Skip(1).ToArray(), keywordArgNames);
+                return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.PartialFunction, n => {
+                    return new PartialFunctionInfo(unit.ProjectEntry, args[0], args.Skip(1).ToArray(), keywordArgNames);
                 });
             }
 
             return AnalysisSet.Empty;
         }
 
-        private static IEnumerable<string> IterateStringConstants(IEnumerable<VariableDef> args) {
+        private static IEnumerable<string> IterateStringConstants(AnalysisUnit unit, IEnumerable<VariableDef> args) {
             return args
-                .SelectMany(arg => arg.TypesNoCopy)
+                .SelectMany(arg => arg.GetTypesNoCopy(unit))
                 .Where(obj => obj != null)
                 .Select(obj => obj.GetConstantValueAsString())
                 .Where(value => !string.IsNullOrEmpty(value));
@@ -386,8 +413,8 @@ namespace Microsoft.PythonTools.Analysis {
         IAnalysisSet UpdateWrapperFunction(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
             var wrapper = GetArg(args, keywordArgNames, "wrapper", 0);
             var wrapped = GetArg(args, keywordArgNames, "wrapped", 1);
-            var assigned = GetArg(args, keywordArgNames, "assigned", 2) as IterableInfo;
-            var updated = GetArg(args, keywordArgNames, "updated", 3) as IterableInfo;
+            var assigned = GetArg(args, keywordArgNames, "assigned", 2) as IterableValue;
+            var updated = GetArg(args, keywordArgNames, "updated", 3) as IterableValue;
 
             if (wrapper == null || wrapped == null) {
                 return AnalysisSet.Empty;
@@ -396,7 +423,7 @@ namespace Microsoft.PythonTools.Analysis {
             wrapper.SetMember(node, unit, "__wrapped__", wrapped);
             
             var assignedItems = (assigned != null) ?
-                IterateStringConstants(assigned.IndexTypes) :
+                IterateStringConstants(unit, assigned.IndexTypes) :
                 new[] { "__module__", "__name__", "__qualname__", "__doc__", "__annotations__" };
 
             foreach (var attr in assignedItems) {
@@ -407,7 +434,7 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             var updatedItems = (updated != null) ?
-                IterateStringConstants(updated.IndexTypes) :
+                IterateStringConstants(unit, updated.IndexTypes) :
                 new[] { "__dict__" };
 
             foreach (var attr in updatedItems) {
@@ -431,7 +458,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return AnalysisSet.Empty;
             }
 
-            return unit.Scope.GetOrMakeNodeValue(node, n => {
+            return unit.Scope.GetOrMakeNodeValue(node, NodeValueKind.Wraps, n => {
                 ModuleReference modRef;
                 if (!Modules.TryImport("functools", out modRef)) {
                     return AnalysisSet.Empty;
@@ -464,6 +491,7 @@ namespace Microsoft.PythonTools.Analysis {
                 }
 
                 return new PartialFunctionInfo(
+                    unit.ProjectEntry,
                     updateWrapper,
                     newArgs,
                     newKeywords
@@ -524,7 +552,10 @@ namespace Microsoft.PythonTools.Analysis {
                                     VariableDef def;
                                     if (instInfo.InstanceAttributes.TryGetValue(keyValue.Key, out def)) {
                                         def.AddAssignment(
-                                            new EncodedLocation(SourceLocationResolver.Instance, new SourceLocation(1, type.LineNumber, type.LineOffset)),
+                                            new EncodedLocation(
+                                                new LocationInfo(xamlProject.FilePath, type.LineNumber, type.LineOffset),
+                                                null
+                                            ),
                                             xamlProject
                                         );
                                     }
@@ -545,9 +576,12 @@ namespace Microsoft.PythonTools.Analysis {
                                     ClassInfo ci = instInfo.ClassInfo;
 
                                     VariableDef def;
-                                    if (ci.Scope.Variables.TryGetValue(keyValue.Key, out def)) {
+                                    if (ci.Scope.TryGetVariable(keyValue.Key, out def)) {
                                         def.AddReference(
-                                            new EncodedLocation(SourceLocationResolver.Instance, new SourceLocation(1, member.LineNumber, member.LineOffset)),
+                                            new EncodedLocation(
+                                                new LocationInfo(xamlProject.FilePath, member.LineNumber, member.LineOffset),
+                                                null
+                                            ),
                                             xamlProject
                                         );
                                     }

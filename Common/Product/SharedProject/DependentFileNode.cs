@@ -1,16 +1,18 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -21,6 +23,10 @@ using Microsoft.VisualStudio.Shell.Interop;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;
 using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.VisualStudioTools.Project {
     /// <summary>
@@ -33,12 +39,6 @@ namespace Microsoft.VisualStudioTools.Project {
         /// Defines if the node has a name relation to its parent node
         /// e.g. Form1.ext and Form1.resx are name related (until first occurence of extention separator)
         /// </summary>
-        #endregion
-
-        #region Properties
-        public override int ImageIndex {
-            get { return (this.CanShowDefaultIcon() ? (int)ProjectNode.ImageName.DependentFile : (int)ProjectNode.ImageName.MissingFile); }
-        }
         #endregion
 
         #region ctor
@@ -65,14 +65,23 @@ namespace Microsoft.VisualStudioTools.Project {
             throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// Gets a handle to the icon that should be set for this node
-        /// </summary>
-        /// <param name="open">Whether the folder is open, ignored here.</param>
-        /// <returns>Handle to icon for the node</returns>
-        public override object GetIconHandle(bool open) {
-            return this.ProjectMgr.ImageHandler.GetIconHandle(this.ImageIndex);
+#if DEV14_OR_LATER
+        protected override bool SupportsIconMonikers {
+            get { return true; }
         }
+
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            return CanShowDefaultIcon() ?
+                // TODO: Check this image
+                KnownMonikers.ReferencedElement :
+                KnownMonikers.DocumentWarning;
+        }
+#else
+        public override int ImageIndex {
+            get { return (this.CanShowDefaultIcon() ? (int)ProjectNode.ImageName.DependentFile : (int)ProjectNode.ImageName.MissingFile); }
+        }
+
+#endif
 
         /// <summary>
         /// Disable certain commands for dependent file nodes 

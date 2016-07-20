@@ -1,1 +1,1 @@
-﻿#DragAndDroppedDuringCopy.py
+#DragAndDroppedDuringCopy.py

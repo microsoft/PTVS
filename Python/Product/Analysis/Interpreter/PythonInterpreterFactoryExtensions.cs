@@ -1,25 +1,24 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     public static class PythonInterpreterFactoryExtensions {
@@ -44,9 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 return false;
             }
 
-            return x.Id == y.Id && 
-                x.Description == y.Description &&
-                x.Configuration.Equals(y.Configuration);
+            return x.Configuration.Equals(y.Configuration);
         }
 
         /// <summary>
@@ -54,7 +51,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// modules.
         /// </summary>
         /// <returns>The names of the modules that were found.</returns>
-        internal static async Task<HashSet<string>> FindModulesAsync(this IPythonInterpreterFactory factory, params string[] moduleNames) {
+        public static async Task<HashSet<string>> FindModulesAsync(this IPythonInterpreterFactory factory, params string[] moduleNames) {
             var withDb = factory as PythonInterpreterFactoryWithDatabase;
             if (withDb != null && withDb.IsCurrent) {
                 var db = withDb.GetCurrentDatabase();
@@ -100,6 +97,79 @@ namespace Microsoft.PythonTools.Interpreter {
             var tcs = new TaskCompletionSource<int>();
             factory.GenerateDatabase(options, tcs.SetResult);
             return tcs.Task;
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the factory should appear in the UI.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public static bool IsUIVisible(this IPythonInterpreterFactory factory) {
+            return factory != null &&
+                factory.Configuration != null &&
+                !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.Hidden);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the factory should appear in the UI.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public static bool IsUIVisible(this InterpreterConfiguration config) {
+            return config != null &&
+                !config.UIMode.HasFlag(InterpreterUIMode.Hidden);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the factory can ever be the default
+        /// interpreter.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public static bool CanBeDefault(this IPythonInterpreterFactory factory) {
+            return factory != null &&
+                factory.Configuration != null &&
+                !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.CannotBeDefault);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the factory can be automatically selected as
+        /// the default interpreter.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public static bool CanBeAutoDefault(this IPythonInterpreterFactory factory) {
+            return factory != null &&
+                factory.Configuration != null &&
+                !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.CannotBeDefault) &&
+                !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.CannotBeAutoDefault);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the factory can be automatically selected as
+        /// the default interpreter.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public static bool CanBeAutoDefault(this InterpreterConfiguration config) {
+            return config != null &&
+                !config.UIMode.HasFlag(InterpreterUIMode.CannotBeDefault) &&
+                !config.UIMode.HasFlag(InterpreterUIMode.CannotBeAutoDefault);
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the factory can be configured.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public static bool CanBeConfigured(this InterpreterConfiguration config) { 
+            return config != null &&
+                !config.UIMode.HasFlag(InterpreterUIMode.CannotBeConfigured);
+        }
+
+
+        /// <summary>
+        /// Returns <c>true</c> if the factory can be configured.
+        /// </summary>
+        /// <remarks>New in 2.2</remarks>
+        public static bool CanBeConfigured(this IPythonInterpreterFactory factory) {
+            return factory != null &&
+                factory.Configuration != null &&
+                !factory.Configuration.UIMode.HasFlag(InterpreterUIMode.CannotBeConfigured);
         }
     }
 }

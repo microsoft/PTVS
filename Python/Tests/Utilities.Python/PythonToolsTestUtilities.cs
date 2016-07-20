@@ -1,21 +1,28 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
+using System;
+using System.ComponentModel.Design;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.InteractiveWindow.Commands;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
-using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Text.Adornments;
+using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using TestUtilities.Mocks;
 
@@ -34,34 +41,68 @@ namespace TestUtilities.Python {
             return serviceProvider.GetPythonToolsService();
         }
 
+        private static IContentTypeRegistryService CreateContentTypeRegistryService() {
+            var service = new MockContentTypeRegistryService();
+            service.AddContentType(PythonCoreConstants.ContentType, new[] { "code" });
+
+            service.AddContentType("Python Interactive Command", new[] { "code" });
+            return service;
+        }
+
         /// <summary>
         /// Sets up a limited service provider which can be used for testing.  
         /// 
         /// This will not include many of the services which are typically available in
         /// VS but is suitable for simple test cases which need just some base functionality.
         /// </summary>
-        public static MockServiceProvider CreateMockServiceProvider() {
+        public static MockServiceProvider CreateMockServiceProvider(
+            bool suppressTaskProvider = false
+        ) {
             var serviceProvider = new MockServiceProvider();
-            var errorProvider = new MockErrorProviderFactory();
-            serviceProvider.AddService(typeof(MockErrorProviderFactory), errorProvider, true);
-            serviceProvider.AddService(typeof(SComponentModel), new MockComponentModel());
-            serviceProvider.AddService(
-                typeof(ErrorTaskProvider),
-                (container, type) => new ErrorTaskProvider(serviceProvider, null, errorProvider),
-                true
+
+            serviceProvider.ComponentModel.AddExtension(
+                typeof(IErrorProviderFactory),
+                () => new MockErrorProviderFactory()
             );
-            serviceProvider.AddService(
-                typeof(CommentTaskProvider),
-                (container, type) => new CommentTaskProvider(serviceProvider, null, errorProvider),
-                true
+            serviceProvider.ComponentModel.AddExtension(
+                typeof(IContentTypeRegistryService),
+                CreateContentTypeRegistryService
             );
-            serviceProvider.AddService(typeof(IUIThread), new MockUIThread());
+
+            serviceProvider.ComponentModel.AddExtension(
+                typeof(IInteractiveWindowCommandsFactory),
+                () => new MockInteractiveWindowCommandsFactory()
+            );
+
+            var optService = new Lazy<MockInterpreterOptionsService>(() => new MockInterpreterOptionsService());
+            serviceProvider.ComponentModel.AddExtension<IInterpreterRegistryService>(() => optService.Value);
+            serviceProvider.ComponentModel.AddExtension<IInterpreterOptionsService>(() => optService.Value);
+
+            if (suppressTaskProvider) {
+                serviceProvider.AddService(typeof(ErrorTaskProvider), null, true);
+                serviceProvider.AddService(typeof(CommentTaskProvider), null, true);
+            } else {
+                serviceProvider.AddService(typeof(ErrorTaskProvider), CreateTaskProviderService, true);
+                serviceProvider.AddService(typeof(CommentTaskProvider), CreateTaskProviderService, true);
+            }
+            serviceProvider.AddService(typeof(UIThreadBase), new MockUIThread());
             var optionsService = new MockPythonToolsOptionsService();
             serviceProvider.AddService(typeof(IPythonToolsOptionsService), optionsService, true);
 
             var ptvsService = new PythonToolsService(serviceProvider);
             serviceProvider.AddService(typeof(PythonToolsService), ptvsService);
             return serviceProvider;
+        }
+
+        private static object CreateTaskProviderService(IServiceContainer container, Type type) {
+            var errorProvider = container.GetComponentModel().GetService<IErrorProviderFactory>();
+            if (type == typeof(ErrorTaskProvider)) {
+                return new ErrorTaskProvider(container, null, errorProvider);
+            } else if (type == typeof(CommentTaskProvider)) {
+                return new CommentTaskProvider(container, null, errorProvider);
+            } else {
+                return null;
+            }
         }
 
     }

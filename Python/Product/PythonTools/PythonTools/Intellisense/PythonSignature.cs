@@ -1,52 +1,56 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
-    internal class PythonSignature : ISignature, IOverloadResult {
+    using AP = AnalysisProtocol;
+
+    internal class PythonSignature : ISignature {
         private readonly ITrackingSpan _span;
         private readonly string _content, _ppContent;
         private readonly string _documentation;
         private readonly ReadOnlyCollection<IParameter> _parameters;
         private IParameter _currentParameter;
-        private readonly IOverloadResult _overload;
+        private readonly AP.Signature _overload;
 
-        public PythonSignature(ITrackingSpan span, IOverloadResult overload, int paramIndex, string lastKeywordArg = null) {
+        public PythonSignature(VsProjectAnalyzer analyzer, ITrackingSpan span, AP.Signature overload, int paramIndex, string lastKeywordArg = null) {
             _span = span;
             _overload = overload;
             if (lastKeywordArg != null) {
                 paramIndex = Int32.MaxValue;
             }
 
-            var content = new StringBuilder(overload.Name);
-            var ppContent = new StringBuilder(overload.Name);
+            var content = new StringBuilder(overload.name);
+            var ppContent = new StringBuilder(overload.name);
             content.Append('(');
             ppContent.AppendLine("(");
             int start = content.Length, ppStart = ppContent.Length;
-            var parameters = new IParameter[overload.Parameters.Length];
-            for (int i = 0; i < overload.Parameters.Length; i++) {
+            var parameters = new IParameter[overload.parameters.Length];
+            for (int i = 0; i < overload.parameters.Length; i++) {
                 ppContent.Append("    ");
                 ppStart = ppContent.Length;
                 
-                var param = overload.Parameters[i];
-                if (param.IsOptional) {
+                var param = overload.parameters[i];
+                if (param.optional) {
                     content.Append('[');
                     ppContent.Append('[');
                 }
@@ -55,44 +59,50 @@ namespace Microsoft.PythonTools.Intellisense {
                     start = content.Length;
                 }
 
-                content.Append(param.Name);
-                ppContent.Append(param.Name);
-                if (!string.IsNullOrEmpty(param.Type) && param.Type != "object") {
+                content.Append(param.name);
+                ppContent.Append(param.name);
+                if (!string.IsNullOrEmpty(param.type) && param.type != "object") {
                     content.Append(": ");
-                    content.Append(param.Type);
+                    content.Append(param.type);
                     ppContent.Append(": ");
-                    ppContent.Append(param.Type);
+                    ppContent.Append(param.type);
                 }
                 
-                if (!String.IsNullOrWhiteSpace(param.DefaultValue)) {
+                if (!String.IsNullOrWhiteSpace(param.defaultValue)) {
                     content.Append(" = ");
-                    content.Append(param.DefaultValue);
+                    content.Append(param.defaultValue);
                     ppContent.Append(" = ");
-                    ppContent.Append(param.DefaultValue);
+                    ppContent.Append(param.defaultValue);
                 }
 
                 var paramSpan = new Span(start, content.Length - start);
                 var ppParamSpan = new Span(ppStart, ppContent.Length - ppStart);
 
-                if (param.IsOptional) {
+                if (param.optional) {
                     content.Append(']');
                     ppContent.Append(']');
                 }
 
                 ppContent.AppendLine(",");
 
-                if (lastKeywordArg != null && param.Name == lastKeywordArg) {
+                if (lastKeywordArg != null && param.name == lastKeywordArg) {
                     paramIndex = i;
                 }
 
-                parameters[i] = new PythonParameter(this, param, paramSpan, ppParamSpan);
+                parameters[i] = new PythonParameter(
+                    this, 
+                    param, 
+                    paramSpan, 
+                    ppParamSpan,
+                    param.variables != null ? param.variables.Select(analyzer.ToAnalysisVariable).ToArray() : null
+                );
             }
             content.Append(')');
             ppContent.Append(')');
 
             _content = content.ToString();
             _ppContent = ppContent.ToString();
-            _documentation = overload.Documentation.LimitLines(15, stopAtFirstBlankLine: true);
+            _documentation = overload.doc.LimitLines(15, stopAtFirstBlankLine: true);
 
             _parameters = new ReadOnlyCollection<IParameter>(parameters);
             if (lastKeywordArg == null) {
@@ -153,17 +163,5 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         #endregion
-
-        string IOverloadResult.Name {
-            get { return _overload.Name; }
-        }
-
-        string IOverloadResult.Documentation {
-            get { return _documentation; }
-        }
-
-        ParameterResult[] IOverloadResult.Parameters {
-            get { return _overload.Parameters; }
-        }
     }
 }

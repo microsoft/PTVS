@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -125,15 +127,22 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 using (var writer = new StreamWriter(filename, false, Encoding.UTF8)) {
                     foreach (var mod in _modules) {
                         if (regex.IsMatch(mod.Name)) {
-                            PrettyPrint(writer, mod, "", "  ");
+                            PrettyPrint(writer, mod, "", "  ", true);
                         }
                     }
                 }
             });
         }
 
-        static void PrettyPrint(TextWriter writer, IAnalysisItemView item, string currentIndent, string indent) {
+        static void PrettyPrint(
+            TextWriter writer,
+            IAnalysisItemView item,
+            string currentIndent,
+            string indent,
+            bool tree
+        ) {
             var stack = new Stack<IAnalysisItemView>();
+            var exportStack = new Stack<IAnalysisItemView>();
             var seen = new HashSet<IAnalysisItemView>();
             stack.Push(item);
 
@@ -141,16 +150,22 @@ namespace Microsoft.PythonTools.Analysis.Browser {
                 var i = stack.Pop();
                 if (i == null) {
                     currentIndent = currentIndent.Remove(0, indent.Length);
+                    exportStack.Pop();
                     continue;
                 }
-                
+
                 IEnumerable<IAnalysisItemView> exportChildren;
-                i.ExportToTree(writer, currentIndent, indent, out exportChildren);
+                if (tree) {
+                    i.ExportToTree(writer, currentIndent, indent, out exportChildren);
+                } else {
+                    i.ExportToDiffable(writer, currentIndent, indent, exportStack, out exportChildren);
+                }
                 if (exportChildren != null && seen.Add(i)) {
                     stack.Push(null);
                     foreach (var child in exportChildren.Reverse()) {
                         stack.Push(child);
                     }
+                    exportStack.Push(i);
                     currentIndent += indent;
                 }
             }
@@ -158,6 +173,14 @@ namespace Microsoft.PythonTools.Analysis.Browser {
 
         public Task ExportDiffable(string filename, string filter) {
             return Task.Factory.StartNew(() => {
+                var regex = new Regex(filter);
+                using (var writer = new StreamWriter(filename, false, Encoding.UTF8)) {
+                    foreach (var mod in _modules) {
+                        if (regex.IsMatch(mod.Name)) {
+                            PrettyPrint(writer, mod, "", "  ", false);
+                        }
+                    }
+                }
             });
         }
     }

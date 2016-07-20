@@ -1,0 +1,14 @@
+﻿
+folder "InstallDir:\MSBuild\Microsoft\VisualStudio\v$(VSTarget)\Python Tools"
+  file source="$(LayoutOutputPath)\Microsoft.PythonTools\Microsoft.PythonTools.targets"
+  file source="$(LayoutOutputPath)\Microsoft.PythonTools\Microsoft.PythonTools.Web.targets"
+  file source="$(LayoutOutputPath)\Microsoft.PythonTools\Microsoft.PythonTools.Worker.targets"
+
+  file source="$(LayoutOutputPath)\Microsoft.PythonTools\Microsoft.PythonTools.AzureSetup.exe"
+  file source="$(LayoutOutputPath)\Microsoft.PythonTools\Microsoft.PythonTools.AzureSetup.exe.config"
+  file source="$(LayoutOutputPath)\Microsoft.PythonTools\Microsoft.PythonTools.WebRole.dll"
+  file source="$(LayoutOutputPath)\Microsoft.PythonTools\Microsoft.PythonTools.WebRole.dll.config"
+  file source="$(LayoutOutputPath)\Microsoft.PythonTools\ptvs_virtualenv_proxy.py"
+  file source="$(LayoutOutputPath)\Microsoft.PythonTools\web_config.xml"
+  file source="$(LayoutOutputPath)\Microsoft.PythonTools\web_debug_config.xml"
+  file source="$(LayoutOutputPath)\Microsoft.PythonTools\wfastcgi.py"

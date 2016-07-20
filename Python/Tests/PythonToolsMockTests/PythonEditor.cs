@@ -1,22 +1,25 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Options;
@@ -24,6 +27,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
 
@@ -41,7 +45,8 @@ namespace PythonToolsMockTests {
             PythonLanguageVersion version = PythonLanguageVersion.V27,
             MockVs vs = null,
             IPythonInterpreterFactory factory = null,
-            VsProjectAnalyzer analyzer = null
+            VsProjectAnalyzer analyzer = null,
+            string filename = null
         ) {
             if (vs == null) {
                 _disposeVS = true;
@@ -49,9 +54,13 @@ namespace PythonToolsMockTests {
             }
             MockVsTextView view = null;
             try {
-                AdvancedOptions = vs.GetPyService().AdvancedOptions;
-                AdvancedOptions.AutoListMembers = true;
-                AdvancedOptions.AutoListIdentifiers = false;
+                AdvancedEditorOptions advancedOptions = null;
+                vs.InvokeSync(() => {
+                    advancedOptions = vs.GetPyService().AdvancedOptions;
+                    advancedOptions.AutoListMembers = true;
+                    advancedOptions.AutoListIdentifiers = false;
+                });
+                AdvancedOptions = advancedOptions;
 
                 if (factory == null) {
                     _disposeFactory = true;
@@ -59,16 +68,33 @@ namespace PythonToolsMockTests {
                 }
                 if (analyzer == null) {
                     _disposeAnalyzer = true;
-                    analyzer = new VsProjectAnalyzer(vs.ServiceProvider, factory, new[] { factory });
+                    vs.InvokeSync(() => {
+                        analyzer = new VsProjectAnalyzer(vs.ServiceProvider, factory);
+                    });
+                    var task = analyzer.ReloadTask;
+                    if (task != null) {
+                        task.WaitAndUnwrapExceptions();
+                    }
                 }
 
-                view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "", v => {
-                    v.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
-                });
-                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-                analyzer.WaitForCompleteAnalysis(x => !cts.IsCancellationRequested);
-                if (cts.IsCancellationRequested) {
-                    Assert.Fail("Timed out waiting for code analysis");
+                var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
+                using (var mre = new ManualResetEventSlim()) {
+                    EventHandler evt = (s, e) => mre.Set();
+                    analyzer.AnalysisStarted += evt;
+                    view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "", v => {
+                        v.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
+                    }, filename);
+
+                    try {
+                        mre.Wait(cts.Token);
+                        analyzer.WaitForCompleteAnalysis(x => !cts.IsCancellationRequested);
+                    } catch (OperationCanceledException) {
+                    } finally {
+                        analyzer.AnalysisStarted -= evt;
+                    }
+                    if (cts.IsCancellationRequested) {
+                        Assert.Fail("Timed out waiting for code analysis");
+                    }
                 }
 
                 View = view;
@@ -101,22 +127,37 @@ namespace PythonToolsMockTests {
         public string Text {
             get { return View.Text; }
             set {
-                using (var edit = View.TextView.TextBuffer.CreateEdit()) {
-                    edit.Delete(0, edit.Snapshot.Length);
-                    edit.Apply();
-                }
-                using (var edit = View.TextView.TextBuffer.CreateEdit()) {
-                    edit.Insert(0, value);
-                    edit.Apply();
-                }
+                using (var mre = new ManualResetEventSlim()) {
+                    EventHandler evt = (s, e) => mre.Set();
+                    using (var edit = View.TextView.TextBuffer.CreateEdit()) {
+                        edit.Delete(0, edit.Snapshot.Length);
+                        edit.Apply();
+                    }
+                    mre.Reset();
 
-                VS.Sleep(20);
-                Analyzer.WaitForCompleteAnalysis(_ => true);
+                    var buffer = View.TextView.TextBuffer;
+                    var oldVersion = buffer.CurrentSnapshot;
+                    buffer.GetPythonAnalysisClassifier().ClassificationChanged += (s, e) => {
+                        var entry = View.TextView.GetAnalysisEntry(buffer, VS.ServiceProvider);
+                        if (entry.BufferParser.GetAnalysisVersion(buffer).VersionNumber > oldVersion.Version.VersionNumber) {
+                            mre.Set();
+                        }
+                    };
+                    
+                    using (var edit = View.TextView.TextBuffer.CreateEdit()) {
+                        edit.Insert(0, value);
+                        edit.Apply();
+                    }
+
+                    var analysis = View.TextView.GetAnalysisEntry(buffer, VS.ServiceProvider);
+                    analysis.BufferParser.Requeue();    // force the reparse to happen quickly...
+
+                    if (!mre.Wait(10000)) {
+                        throw new TimeoutException("Failed to see buffer start analyzing");
+                    }
+                    Analyzer.WaitForCompleteAnalysis(_ => true);
+                }
             }
-        }
-
-        public void Type(string text) {
-            View.Type(text);
         }
 
         public ITextSnapshot CurrentSnapshot {
@@ -138,7 +179,7 @@ namespace PythonToolsMockTests {
                 index += snapshot.Length + 1;
             }
             View.MoveCaret(new SnapshotPoint(snapshot, index));
-            View.MemberList();
+            VS.Invoke(() => View.MemberList());
             using (var sh = View.WaitForSession<ICompletionSession>(assertIfNoSession: assertIfNoCompletions)) {
                 if (sh == null) {
                     return new List<Completion>();
@@ -146,6 +187,14 @@ namespace PythonToolsMockTests {
                 return sh.Session.CompletionSets.SelectMany(cs => cs.Completions).ToList();
             }
         }
+
+        public void Backspace() => VS.InvokeSync(() => View.Backspace());
+        public void Clear() => VS.InvokeSync(() => View.Clear());
+        public void MoveCaret(int line, int column) => View.MoveCaret(line, column);
+        public void MemberList() => VS.InvokeSync(() => View.MemberList());
+        public void ParamInfo() => VS.InvokeSync(() => View.ParamInfo());
+        public void Type(string text) => VS.InvokeSync(() => View.Type(text));
+
 
         public IEnumerable<string> GetCompletions(int index) {
             return GetCompletionList(index, false).Select(c => c.DisplayText);

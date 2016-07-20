@@ -1,31 +1,27 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools;
-using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
 
@@ -36,8 +32,8 @@ namespace PythonToolsMockTests {
         public static void Initialize(TestContext context) {
             AssertListener.Initialize();
         }
-        
-        [TestMethod]
+
+        [TestMethod, Priority(1)]
         public void BuiltinFunctionSigHelp() {
             using (var view = new PythonEditor()) {
                 view.Type("min(");
@@ -56,7 +52,19 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
+        public void SigHelpInClass() {
+            using (var view = new PythonEditor()) {
+                view.Type("class C(): pass");
+                view.MoveCaret(1, 9);
+
+                view.ParamInfo();
+
+                view.View.AssertNoIntellisenseSession();
+            }
+        }
+
+        [TestMethod, Priority(1)]
         public void BuiltinFunctionCompletions() {
             using (var view = new PythonEditor()) {
                 view.Type("min.");
@@ -67,7 +75,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void FilterCompletions() {
             using (var view = new PythonEditor()) {
                 view.Type("min.");
@@ -82,7 +90,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void DotCompletes() {
             using (var view = new PythonEditor()) {
                 view.Type("min.");
@@ -97,7 +105,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void NonIdentifierDismisses() {
             using (var view = new PythonEditor()) {
                 view.Type("min.");
@@ -114,7 +122,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void EnterCommits() {
             using (var view = new PythonEditor()) {
                 view.Type("min.");
@@ -128,7 +136,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void EnterDismisses() {
             using (var view = new PythonEditor()) {
                 view.AdvancedOptions.EnterCommitsIntellisense = false;
@@ -145,7 +153,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void EnterCommitsCompleteNoNewLine() {
             using (var view = new PythonEditor()) {
                 view.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord = true;
@@ -164,7 +172,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void TabCommits() {
             using (var view = new PythonEditor()) {
                 view.AdvancedOptions.EnterCommitsIntellisense = false;
@@ -184,7 +192,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void DecoratorCompletions() {
             using (var view = new PythonEditor()) {
                 view.Type("@");
@@ -195,7 +203,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void DecoratorNonCompletions() {
             using (var view = new PythonEditor()) {
                 view.Type("a = b @");
@@ -204,7 +212,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void AutoListIdentifierCompletions() {
             using (var view = new PythonEditor()) {
                 view.AdvancedOptions.AutoListIdentifiers = true;
@@ -220,7 +228,7 @@ namespace PythonToolsMockTests {
                         sh.Session.Dismiss();
                     }
 
-                    view.View.Backspace();
+                    view.Backspace();
                 }
 
                 view.View.AssertNoIntellisenseSession();
@@ -234,7 +242,7 @@ namespace PythonToolsMockTests {
 
                     view.View.AssertNoIntellisenseSession();
 
-                    view.View.Backspace();
+                    view.Backspace();
                 }
             }
         }
@@ -283,32 +291,32 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void AutoListInDef() {
             AutoListTest("def fn(p:a, q=b) -> x", 9, 14, 20);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void AutoListInAssignment() {
             AutoListTest("a, b, c = a, b, c", 10, 13, 16);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void AutoListInClass() {
             AutoListTest("class F(o, p):", 8, 11);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void AutoListInLambda() {
             AutoListTest("a = lambda x, y: p", 4, 17);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void AutoListInWith() {
             AutoListTest("with a as b, c(x) as d:", 5, 13, -22);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void AutoListInLiterals() {
             AutoListTest("[a, b, c]", 1, 4, 7);
             AutoListTest("{a, b, c}", 1, 4, 7);
@@ -316,18 +324,19 @@ namespace PythonToolsMockTests {
             AutoListTest("{a: b, c: d, e: f}", 1, 4, 7, 10, 13, 16);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void AutoListInComprehensions() {
             // TODO: Make completions trigger after spaces
             // eg: AutoListTest("[a for a in b]", 1, 3, 9, 12);
 
-            AutoListTest("[a for a in b for c in d if x]", 1, 12, 23, 28);
-            AutoListTest("{a for a in b for c in d if x}", 1, 12, 23, 28);
-            AutoListTest("(a for a in b for c in d if x)", 1, 12, 23, 28);
-            AutoListTest("{a: b for a, b in b for c, d in e if x}", 1, 4, 18, 32, 37);
+            AutoListTest("[a for a in b for c in d if x]", 1, -7, 12, -18, 23, 28);
+            AutoListTest("{a for a in b for c in d if x}", 1, -7, 12, -18, 23, 28);
+            AutoListTest("(a for a in b for c in d if x)", 1, -7, 12, -18, 23, 28);
+            AutoListTest("{a: b for a, b in b for c, d in e if x}", 1, 4, -10, -13, 18, 32, 37);
+            AutoListTest("x = [a for a in b for c in d if x]", -1, 5, -11, 16, -22, 27, 32);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void AutoListInStatements() {
             AutoListTest("assert a", -6, 7);
             AutoListTest("a += b", 5);
@@ -343,7 +352,7 @@ namespace PythonToolsMockTests {
             AutoListTest("yield a", -5, 6);
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void DisableAutoCompletions() {
             using (var view = new PythonEditor()) {
                 view.AdvancedOptions.AutoListMembers = false;
@@ -355,12 +364,12 @@ namespace PythonToolsMockTests {
 
                     view.View.AssertNoIntellisenseSession();
 
-                    view.View.Clear();
+                    view.Clear();
                 }
             }
         }
 
-        [TestMethod]
+        [TestMethod, Priority(1)]
         public void CompletionsAtEndOfLastChildScope() {
             using (var view = new PythonEditor(@"class A:
     def f(param1, param2):
@@ -371,9 +380,9 @@ namespace PythonToolsMockTests {
 class B:
     pass
 ")) {
-                view.View.MoveCaret(5, 9);
+                view.MoveCaret(5, 9);
                 view.Type("p");
-                view.View.MemberList();
+                view.MemberList();
                 using (var sh = view.View.WaitForSession<ICompletionSession>()) {
                     AssertUtil.ContainsAtLeast(sh.Session.Completions(), "param1", "param2");
                 }

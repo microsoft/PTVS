@@ -1,25 +1,31 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Security;
 using System.Text;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
@@ -64,7 +70,7 @@ namespace Microsoft.PythonTools.Project {
         private static string GetNodeNameForPackage(HierarchyNode node) {
             var project = node as ProjectNode;
             if (project != null) {
-                return CommonUtils.GetFileOrDirectoryName(project.ProjectHome);
+                return PathUtils.GetFileOrDirectoryName(project.ProjectHome);
             } else {
                 return node.Caption;
             }
@@ -80,7 +86,7 @@ namespace Microsoft.PythonTools.Project {
                         // Set the StartupFile project property to the Url of this node
                         ProjectMgr.SetProjectProperty(
                             CommonConstants.StartupFile,
-                            CommonUtils.GetRelativeFilePath(this.ProjectMgr.ProjectHome, Url)
+                            PathUtils.GetRelativeFilePath(this.ProjectMgr.ProjectHome, Url)
                         );
                         return VSConstants.S_OK;
                     case CommonConstants.StartDebuggingCmdId:
@@ -92,21 +98,7 @@ namespace Microsoft.PythonTools.Project {
                                 return VSConstants.E_ABORT;
                             }
 
-                            var starter2 = starter as IProjectLauncher2;
-                            if (starter2 != null) {
-                                starter2.LaunchFile(
-                                    this.Url,
-                                    cmd == CommonConstants.StartDebuggingCmdId,
-                                    new Microsoft.PythonTools.Commands.StartScriptCommand.LaunchFileProperties(
-                                        null,
-                                        CommonUtils.GetParent(this.Url),
-                                        ((PythonProjectNode)ProjectMgr).GetInterpreterFactory().Configuration.PathEnvironmentVariable,
-                                        ProjectMgr.GetWorkingDirectory()
-                                    )
-                                );
-                            } else {
-                                starter.LaunchFile(this.Url, cmd == CommonConstants.StartDebuggingCmdId);
-                            }
+                            starter.LaunchFile(this.Url, cmd == CommonConstants.StartDebuggingCmdId);
                         }
                         return VSConstants.S_OK;
                 }
@@ -124,7 +116,7 @@ namespace Microsoft.PythonTools.Project {
                             //the file is in project home dir and if the file is not the startup file already.
                             string startupFile = ((CommonProjectNode)ProjectMgr).GetStartupFile();
                             if (IsInProjectHome() && 
-                                !CommonUtils.IsSamePath(startupFile, Url) &&
+                                !PathUtils.IsSamePath(startupFile, Url) &&
                                 !IsNonMemberItem) {
                                 result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                             }
@@ -150,9 +142,39 @@ namespace Microsoft.PythonTools.Project {
             return true;
         }
 
-        public override void Remove(bool removeFromStorage) {
-            ((PythonProjectNode)ProjectMgr).GetAnalyzer().UnloadFile(GetProjectEntry());
-            base.Remove(removeFromStorage);
+        private void TryDelete(string filename) {
+            if (!File.Exists(filename)) {
+                return;
+            }
+
+            var node = ((PythonProjectNode)ProjectMgr).FindNodeByFullPath(filename);
+            if (node != null) {
+                if (node.IsNonMemberItem) {
+                    node.Remove(true);
+                }
+                return;
+            }
+
+            try {
+                File.Delete(filename);
+            } catch (IOException) {
+            } catch (UnauthorizedAccessException) {
+            } catch (SecurityException) {
+            }
+        }
+
+        public override bool Remove(bool removeFromStorage) {
+            var analysis = GetAnalysisEntry();
+            if (analysis != null) {
+                ((PythonProjectNode)ProjectMgr).GetAnalyzer().UnloadFileAsync(analysis).DoNotWait();
+            }
+
+            if (Url.EndsWith(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase) && removeFromStorage) {
+                TryDelete(Url + "c");
+                TryDelete(Url + "o");
+            }
+
+            return base.Remove(removeFromStorage);
         }
 
         public override string GetEditLabel() {
@@ -173,30 +195,47 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public IProjectEntry GetProjectEntry() {
-            var textBuffer = GetTextBuffer(false);
+        public AnalysisEntry GetAnalysisEntry() {
+            return ((PythonProjectNode)ProjectMgr).GetAnalyzer().GetAnalysisEntryFromPath(Url);
+        }
 
-            IProjectEntry entry;
-            if (textBuffer != null && textBuffer.TryGetProjectEntry(out entry)) {
-                return entry;
+        private void TryRename(string oldFile, string newFile) {
+            if (!File.Exists(oldFile) || File.Exists(newFile)) {
+                return;
             }
 
-            return ((PythonProjectNode)this.ProjectMgr).GetAnalyzer().GetEntryFromFile(Url);
+            var node = ((PythonProjectNode)ProjectMgr).FindNodeByFullPath(oldFile);
+            if (node != null && !node.IsNonMemberItem) {
+                return;
+            }
+
+            try {
+                File.Move(oldFile, newFile);
+            } catch (IOException) {
+            } catch (UnauthorizedAccessException) {
+            } catch (SecurityException) {
+            }
         }
 
         internal override FileNode RenameFileNode(string oldFileName, string newFileName) {
             var res = base.RenameFileNode(oldFileName, newFileName);
+
+            if (newFileName.EndsWith(PythonConstants.FileExtension, StringComparison.OrdinalIgnoreCase)) {
+                TryRename(oldFileName + "c", newFileName + "c");
+                TryRename(oldFileName + "o", newFileName + "o");
+            }
+
             if (res != null) {
                 var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
-                var analysis = GetProjectEntry();
+                var analysis = GetAnalysisEntry();
                 if (analysis != null) {
-                    analyzer.UnloadFile(analysis);
+                    analyzer.UnloadFileAsync(analysis).DoNotWait();
                 }
 
                 var textBuffer = GetTextBuffer(false);
 
-                BufferParser parser;
-                if (textBuffer != null && textBuffer.Properties.TryGetProperty<BufferParser>(typeof(BufferParser), out parser)) {
+                BufferParser parser = analysis?.BufferParser;
+                if (parser != null) {
                     analyzer.ReAnalyzeTextBuffers(parser);
                 }
 
@@ -206,19 +245,27 @@ namespace Microsoft.PythonTools.Project {
 
         internal override int IncludeInProject(bool includeChildren) {
             var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
-            analyzer.AnalyzeFile(Url);
+            analyzer.AnalyzeFileAsync(Url).DoNotWait();
 
             return base.IncludeInProject(includeChildren);
         }
 
         internal override int ExcludeFromProject() {
             var analyzer = ((PythonProjectNode)this.ProjectMgr).GetAnalyzer();
-            var analysis = GetProjectEntry();
+            var analysis = GetAnalysisEntry();
             if (analysis != null) {
-                analyzer.UnloadFile(analysis);
+                analyzer.UnloadFileAsync(analysis).DoNotWait();
             }
 
             return base.ExcludeFromProject();
+        }
+
+        protected override ImageMoniker CodeFileIconMoniker {
+            get { return KnownMonikers.PYFileNode; }
+        }
+
+        protected override ImageMoniker StartupCodeFileIconMoniker {
+            get { return KnownMonikers.PYFileNode; }
         }
     }
 }

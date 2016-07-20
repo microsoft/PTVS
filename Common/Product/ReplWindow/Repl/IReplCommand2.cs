@@ -12,30 +12,20 @@
  *
  * ***************************************************************************/
 
-using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 #if NTVS_FEATURE_INTERACTIVEWINDOW
 namespace Microsoft.NodejsTools.Repl {
 #else
 namespace Microsoft.VisualStudio.Repl {
 #endif
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
-#endif
-
     /// <summary>
     /// Represents a command which can be run from a REPL window.
     /// 
     /// This interface is a MEF contract and can be implemented and exported to add commands to the REPL window.
     /// This is new in v1.5.
     /// </summary>
-#if INTERACTIVE_WINDOW
-    public interface IInteractiveWindowCommand2 {
-#else
     public interface IReplCommand2 : IReplCommand {
-#endif
         /// <summary>
         /// Gets a list of aliases for the command.
         /// </summary>

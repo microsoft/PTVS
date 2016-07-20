@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -20,43 +22,43 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudioTools;
 
 namespace TestUtilities.Mocks {
-    public class MockUIThread : IMockUIThread {
-        public void Invoke(Action action) {
+    public class MockUIThread : MockUIThreadBase {
+        public override void Invoke(Action action) {
             action();
         }
 
-        public T Invoke<T>(Func<T> func) {
+        public override T Invoke<T>(Func<T> func) {
             return func();
         }
 
-        public Task InvokeAsync(Action action) {
+        public override Task InvokeAsync(Action action) {
             var tcs = new TaskCompletionSource<object>();
             UIThread.InvokeAsyncHelper(action, tcs);
             return tcs.Task;
         }
 
-        public Task<T> InvokeAsync<T>(Func<T> func) {
+        public override Task<T> InvokeAsync<T>(Func<T> func) {
             var tcs = new TaskCompletionSource<T>();
             UIThread.InvokeAsyncHelper<T>(func, tcs);
             return tcs.Task;
         }
 
-        public Task InvokeTask(Func<Task> func) {
+        public override Task InvokeTask(Func<Task> func) {
             var tcs = new TaskCompletionSource<object>();
             UIThread.InvokeTaskHelper(func, tcs);
             return tcs.Task;
         }
 
-        public Task<T> InvokeTask<T>(Func<Task<T>> func) {
+        public override Task<T> InvokeTask<T>(Func<Task<T>> func) {
             var tcs = new TaskCompletionSource<T>();
             UIThread.InvokeTaskHelper<T>(func, tcs);
             return tcs.Task;
         }
 
-        public void MustBeCalledFromUIThreadOrThrow() {
+        public override void MustBeCalledFromUIThreadOrThrow() {
         }
 
-        public bool InvokeRequired {
+        public override bool InvokeRequired {
             get { return false; }
         }
     }

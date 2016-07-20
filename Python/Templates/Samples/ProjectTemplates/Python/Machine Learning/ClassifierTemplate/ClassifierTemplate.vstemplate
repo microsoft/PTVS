@@ -1,0 +1,20 @@
+<VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Classifier Project</Name>
+    <Description>A project for testing scikit-learn classifiers.
+
+This project requires the pandas, numpy, scikit-learn, and matplotlib packages.</Description>
+    <Icon Package="{185d223a-f461-4197-bd14-de0236e7eeca}" ID="401" />
+    <ProjectType>Python</ProjectType>
+    <SortOrder>20</SortOrder>
+    <NumberOfParentCategoriesToRollUp>0</NumberOfParentCategoriesToRollUp>
+    <CreateNewFolder>false</CreateNewFolder>
+    <DefaultName>PythonClassifierApplication</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="ClassifierTemplate.pyproj" ReplaceParameters="true">
+      <ProjectItem ReplaceParameters="true" OpenInEditor="true">classifier.py</ProjectItem>
+    </Project>
+  </TemplateContent>
+</VSTemplate>

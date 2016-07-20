@@ -1,35 +1,41 @@
 From: "Saved by Internet Explorer 11"
 Subject: Python Tools for Visual Studio
-Date: Mon, 2 Jun 2014 11:49:18 -0700
+Date: Mon, 26 Oct 2015 15:23:29 -0700
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----=_NextPart_000_0010_01CF7E58.AFB8A810"
-X-MimeOLE: Produced By Microsoft MimeOLE V6.3.9600.16384
+	boundary="----=_NextPart_000_000A_01D11002.4432E460"
+X-MimeOLE: Produced By Microsoft MimeOLE V10.0.10011.16384
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0010_01CF7E58.AFB8A810
+------=_NextPart_000_000A_01D11002.4432E460
 Content-Type: text/html;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
-Content-Location: file://D:\PTVS\Main\Python\Product\PythonTools\NoInterpreters.html
+Content-Location: file://D:\PTVS\PTVS\Python\Product\PythonTools\NoInterpreters.html
 
 =EF=BB=BF<!DOCTYPE HTML>
 <!DOCTYPE html PUBLIC "" ""><!--=0A=
- Copyright (c) Microsoft Corporation.=0A=
+Python Tools for Visual Studio=0A=
+Copyright(c) Microsoft Corporation=0A=
+All rights reserved.=0A=
 =0A=
- This source code is subject to terms and conditions of the Apache =
-License, Version 2.0. A =0A=
- copy of the license can be found in the License.html file at the root =
-of this distribution. If =0A=
- you cannot locate the Apache License, Version 2.0, please send an email =
-to =0A=
- vspython@microsoft.com. By using this source code in any fashion, you =
-are agreeing to be bound =0A=
- by the terms of the Apache License, Version 2.0.=0A=
+Licensed under the Apache License, Version 2.0 (the License); you may =
+not use=0A=
+this file except in compliance with the License. You may obtain a copy =
+of the=0A=
+License at http://www.apache.org/licenses/LICENSE-2.0=0A=
 =0A=
- You must not remove this notice, or any other, from this software.=0A=
+THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR =
+CONDITIONS=0A=
+OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY=0A=
+IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR =
+PURPOSE,=0A=
+MERCHANTABLITY OR NON-INFRINGEMENT.=0A=
+=0A=
+See the Apache Version 2.0 License for specific language governing=0A=
+permissions and limitations under the License.=0A=
 --><HTML=20
 lang=3D"en" xmlns=3D"http://www.w3.org/1999/xhtml"><HEAD><META =
 content=3D"IE=3D11.0000"=20
@@ -38,10 +44,10 @@ http-equiv=3D"X-UA-Compatible">
 <META charset=3D"utf-8">     <TITLE>Python Tools for Visual =
 Studio</TITLE>    =20
 <LINK =
-href=3D"file:///D:/PTVS/Main/Python/Product/PythonTools/ReadmeStyle.css" =
+href=3D"file:///D:/PTVS/PTVS/Python/Product/PythonTools/ReadmeStyle.css" =
 
 rel=3D"stylesheet" type=3D"text/css">=20
-<META name=3D"GENERATOR" content=3D"MSHTML 11.00.9600.17107"></HEAD>=20
+<META name=3D"GENERATOR" content=3D"MSHTML 11.00.10240.16542"></HEAD>=20
 <BODY>
 <H1 class=3D"top">We didn't find any interpreters</H1>
 <P>        Installing a Python interpreter will let you run your =
@@ -87,11 +93,11 @@ you can=20
 find more         documentation, discussion forums, and updates.    =20
 </P></BODY></HTML>
 
-------=_NextPart_000_0010_01CF7E58.AFB8A810
+------=_NextPart_000_000A_01D11002.4432E460
 Content-Type: text/css;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
-Content-Location: file:///D:/PTVS/Main/Python/Product/PythonTools/ReadmeStyle.css
+Content-Location: file:///D:/PTVS/PTVS/Python/Product/PythonTools/ReadmeStyle.css
 
 body {
 	font-family: "Segoe UI", Arial, Helvetica, sans-serif; font-size: 11pt; =
@@ -135,4 +141,4 @@ li > img {
 	vertical-align: middle;
 }
 
-------=_NextPart_000_0010_01CF7E58.AFB8A810--
+------=_NextPart_000_000A_01D11002.4432E460--

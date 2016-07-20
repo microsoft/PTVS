@@ -1,0 +1,33 @@
+<VSTemplate Version="2.0.0" Type="Project" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Django Web Role</Name>
+    <Description>A blank Django Web Role</Description>
+    <Hidden>true</Hidden>
+    <Icon Package="{a8637c34-aa55-46e2-973c-9c3e09afc17b}" ID="410" />
+    <ProjectType>Python</ProjectType>
+    <SortOrder>71</SortOrder>
+    <NumberOfParentCategoriesToRollUp>0</NumberOfParentCategoriesToRollUp>
+    <CreateNewFolder>true</CreateNewFolder>
+    <DefaultName>WebRole</DefaultName>
+    <ProvideDefaultName>true</ProvideDefaultName>
+  </TemplateData>
+  <TemplateContent>
+    <Project File="DjangoWebRole.pyproj" ReplaceParameters="true">
+      <ProjectItem OpenInWebBrowser="true" TargetFileName="Readme.mht">WebRoleConfiguration.mht</ProjectItem>
+      <Folder Name="Bin">
+        <ProjectItem>ConfigureCloudService.ps1</ProjectItem>
+        <ProjectItem>ps.cmd</ProjectItem>
+      </Folder>
+      <ProjectItem>requirements.txt</ProjectItem>
+      <ProjectItem>manage.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\__init__.py">__init__.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\urls.py">urls.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\settings.py">settings.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\wsgi.py">wsgi.py</ProjectItem>
+    </Project>
+  </TemplateContent>
+  <WizardExtension>
+    <Assembly>Microsoft.PythonTools.ProjectWizards, Version=2.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <FullClassName>Microsoft.PythonTools.ProjectWizards.InstallRequirementsWizard</FullClassName>
+  </WizardExtension>
+</VSTemplate>

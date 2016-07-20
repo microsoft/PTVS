@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -29,11 +31,6 @@ namespace TestUtilities {
 
         public static readonly Guid CPythonGuid = new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}");
         public static readonly Guid CPython64Guid = new Guid("{9A7A9026-48C1-4688-9D5D-E5699D47D074}");
-        public static readonly Guid IronPythonGuid = new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}");
-        public static readonly Guid IronPython64Guid = new Guid("{FCC291AA-427C-498C-A4D7-4502D6449B8C}");
-
-        // Not currently used for auto-detection
-        public static readonly Guid JythonGuid = new Guid("{844BA471-72F7-431B-AA3F-675AFD18E230}");
 
         public static readonly PythonVersion Python25 = GetCPythonVersion(PythonLanguageVersion.V25);
         public static readonly PythonVersion Python26 = GetCPythonVersion(PythonLanguageVersion.V26);
@@ -69,7 +66,14 @@ namespace TestUtilities {
                             if (installPath != null) {
                                 var res = installPath.GetValue("") as string;
                                 if (res != null) {
-                                    return new PythonVersion(Path.Combine(res, exeName), PythonLanguageVersion.V27, IronPythonGuid);
+                                    return new PythonVersion(
+                                        Path.Combine(res, exeName),
+                                        PythonLanguageVersion.V27,
+                                        x64 ? "IronPython|2.7-64" : "IronPython|2.7-32",
+                                        x64,
+                                        true,
+                                        false
+                                    );
                                 }
                             }
                         }
@@ -77,7 +81,14 @@ namespace TestUtilities {
                 }
             }
 
-            var ver = new PythonVersion("C:\\Program Files (x86)\\IronPython 2.7\\" + exeName, PythonLanguageVersion.V27, IronPythonGuid);
+            var ver = new PythonVersion(
+                "C:\\Program Files (x86)\\IronPython 2.7\\" + exeName, 
+                PythonLanguageVersion.V27,
+                "IronPython|2.7-32",
+                false,
+                true,
+                false
+            );
             if (File.Exists(ver.InterpreterPath)) {
                 return ver;
             }
@@ -109,16 +120,48 @@ namespace TestUtilities {
             var path = "C:\\Python" + version.ToString().Substring(1) + "\\python.exe";
             var arch = NativeMethods.GetBinaryType(path);
             if (arch == ProcessorArchitecture.X86 && !x64) {
-                return new PythonVersion(path, version, CPythonGuid);
+                return new PythonVersion(path, version, 
+                    CPythonInterpreterFactoryConstants.GetInterpreterId(
+                        "PythonCore",
+                        arch,
+                        version.ToVersion().ToString()
+                    ),
+                    false,
+                    false,
+                    true
+                );
             } else if (arch == ProcessorArchitecture.Amd64 && x64) {
-                return new PythonVersion(path, version, CPython64Guid);
+                return new PythonVersion(
+                    path, 
+                    version,
+                    CPythonInterpreterFactoryConstants.GetInterpreterId(
+                        "PythonCore",
+                        arch,
+                        version.ToVersion().ToString()
+                    ),
+                    true,
+                    false,
+                    true
+                );
             }
 
             if (x64) {
                 path = "C:\\Python" + version.ToString().Substring(1) + "_x64\\python.exe";
                 arch = NativeMethods.GetBinaryType(path);
                 if (arch == ProcessorArchitecture.Amd64) {
-                    return new PythonVersion(path, version, CPython64Guid);
+                    return new PythonVersion(
+                        path, 
+                        version,
+                        CPythonInterpreterFactoryConstants.GetInterpreterId(
+                            "PythonCore",
+                            arch,
+                            version.ToVersion().ToString()
+                        ),
+                        true,
+                        false,
+                        true
+
+                    );
                 }
             }
 
@@ -128,7 +171,7 @@ namespace TestUtilities {
         private static PythonVersion TryGetCPythonPath(PythonLanguageVersion version, RegistryKey python, bool x64) {
             if (python != null) {
                 string versionStr = version.ToString().Substring(1);
-                versionStr = versionStr[0] + "." + versionStr[1];
+                string id = versionStr = versionStr[0] + "." + versionStr[1];
                 if (!x64 && version >= PythonLanguageVersion.V35) {
                     versionStr += "-32";
                 }
@@ -140,9 +183,31 @@ namespace TestUtilities {
                             var path = Path.Combine(installPath.ToString(), "python.exe");
                             var arch = NativeMethods.GetBinaryType(path);
                             if (arch == ProcessorArchitecture.X86) {
-                                return new PythonVersion(path, version, CPythonGuid);
+                                return x64 ? null : new PythonVersion(
+                                    path, 
+                                    version, 
+                                    CPythonInterpreterFactoryConstants.GetInterpreterId(
+                                        "PythonCore",
+                                        arch,
+                                        id
+                                    ),
+                                    false,
+                                    false,
+                                    true
+                                );
                             } else if (arch == ProcessorArchitecture.Amd64) {
-                                return new PythonVersion(path, version, CPython64Guid);
+                                return x64 ? new PythonVersion(
+                                    path, 
+                                    version,
+                                    CPythonInterpreterFactoryConstants.GetInterpreterId(
+                                        "PythonCore",
+                                        arch,
+                                        id
+                                    ),
+                                    true,
+                                    false,
+                                    true
+                                ) : null;
                             } else {
                                 return null;
                             }
@@ -179,7 +244,18 @@ namespace TestUtilities {
                 if (libPath == null || !libPath.EnumerateFiles("site.py").Any()) {
                     continue;
                 }
-                return new PythonVersion(interpreter.FullName, version, JythonGuid);
+                return new PythonVersion(
+                    interpreter.FullName, 
+                    version,
+                    CPythonInterpreterFactoryConstants.GetInterpreterId(
+                        "Jython",
+                        ProcessorArchitecture.X86,
+                        version.ToVersion().ToString()
+                    ),
+                    false,
+                    false,
+                    true
+                );
             }
             return null;
         }
@@ -251,18 +327,27 @@ namespace TestUtilities {
     public class PythonVersion {
         public readonly string InterpreterPath;
         public readonly PythonLanguageVersion Version;
-        public readonly Guid Id;
+        public string Id;
         public readonly bool IsCPython;
         public readonly bool IsIronPython;
         public readonly bool Isx64;
 
-        public PythonVersion(string path, PythonLanguageVersion pythonLanguageVersion, Guid id) {
+        public PythonVersion(string path, PythonLanguageVersion pythonLanguageVersion, string id, bool x64, bool ironPython, bool cPython) {
             InterpreterPath = path;
             Version = pythonLanguageVersion;
+            IsCPython = cPython;
+            Isx64 = x64;
+            IsIronPython = ironPython;
             Id = id;
-            IsCPython = (Id == PythonPaths.CPythonGuid || Id == PythonPaths.CPython64Guid);
-            Isx64 = (Id == PythonPaths.CPython64Guid || Id == PythonPaths.IronPython64Guid);
-            IsIronPython = (Id == PythonPaths.IronPythonGuid || Id == PythonPaths.IronPython64Guid);
+        }
+
+        public override string ToString() {
+            return string.Format(
+                "{0}Python {1} {2}",
+                IsCPython ? "C" : IsIronPython ? "Iron" : "Other ",
+                Version,
+                Isx64 ? "x64" : "x86"
+            );
         }
 
         public string PrefixPath {
@@ -280,6 +365,8 @@ namespace TestUtilities {
         public InterpreterConfiguration Configuration {
             get {
                 return new InterpreterConfiguration(
+                    Id,
+                    "",
                     PrefixPath, InterpreterPath, null, LibPath, "PYTHONPATH",
                     Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
                     Version.ToVersion()

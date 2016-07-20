@@ -1,35 +1,77 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Text;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Language;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
+using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Navigation {
     internal class PythonLibraryNode : CommonLibraryNode {
-        
-        public PythonLibraryNode(LibraryNode parent, IScopeNode scope, string namePrefix, IVsHierarchy hierarchy, uint itemId)
-            : base(parent, scope, namePrefix, hierarchy, itemId) { }
+        private readonly CompletionResult _value;
 
-        protected PythonLibraryNode(PythonLibraryNode node) : base(node) { }
+        public PythonLibraryNode(LibraryNode parent, CompletionResult value, IVsHierarchy hierarchy, uint itemId, IList<LibraryNode> children)
+            : base(parent, value.Name, value.Name, hierarchy, itemId, GetLibraryNodeType(value, parent), children: children) {
+            _value = value;
+            bool hasLocation = false;
+            foreach (var completion in value.Values) {
+                if (completion.locations.Any()) {
+                    hasLocation = true;
+                }
+            }
+            if (hasLocation) {
+                CanGoToSource = true;
+            }
+        }
 
-        protected PythonLibraryNode(PythonLibraryNode node, string newFullName) : base(node, newFullName) { }
+        private static LibraryNodeType GetLibraryNodeType(CompletionResult value, LibraryNode parent) {
+            switch (value.MemberType) {
+                case PythonMemberType.Class:
+                    return LibraryNodeType.Classes;
+                case PythonMemberType.Function:
+                    //if (parent is PythonFileLibraryNode) {
+                    //    return LibraryNodeType.Classes | LibraryNodeType.Members;
+                    //}
+                    return LibraryNodeType.Members;
+                default:
+                    return LibraryNodeType.Members;
+            }
+
+        }
+        protected PythonLibraryNode(PythonLibraryNode node) : base(node) {
+            _value = node._value;
+        }
+
+        protected PythonLibraryNode(PythonLibraryNode node, string newFullName) : base(node, newFullName) {
+            _value = node._value;
+        }
 
         public override LibraryNode Clone() {
             return new PythonLibraryNode(this);
@@ -41,137 +83,125 @@ namespace Microsoft.PythonTools.Navigation {
 
         public override StandardGlyphGroup GlyphType {
             get {
-                if (ScopeNode is FunctionScopeNode) {
-                    return StandardGlyphGroup.GlyphGroupMethod;
-                } else if (ScopeNode is AssignmentScopeNode) {
-                    return StandardGlyphGroup.GlyphGroupField;
+                switch (_value.MemberType) {
+                    case PythonMemberType.Class:
+                        return StandardGlyphGroup.GlyphGroupClass;
+                    case PythonMemberType.Method:
+                    case PythonMemberType.Function:
+                        return StandardGlyphGroup.GlyphGroupMethod;
+                    case PythonMemberType.Field:
+                    case PythonMemberType.Instance:
+                        return StandardGlyphGroup.GlyphGroupField;
+                    case PythonMemberType.Constant:
+                        return StandardGlyphGroup.GlyphGroupConstant;
+                    case PythonMemberType.Module:
+                        return StandardGlyphGroup.GlyphGroupModule;
+                    default:
+                        return StandardGlyphGroup.GlyphGroupUnknown;
                 }
-
-                return StandardGlyphGroup.GlyphGroupClass;
             }
         }
 
         public override string GetTextRepresentation(VSTREETEXTOPTIONS options) {
-            FunctionScopeNode funcScope = ScopeNode as FunctionScopeNode;
-            if (funcScope != null) {
-                StringBuilder sb = new StringBuilder();
-                GetFunctionDescription(funcScope.Definition, (text, kind, arg) => {
-                    sb.Append(text);
-                });
-                return sb.ToString();
+            StringBuilder res = new StringBuilder();
+            foreach (var value in _value.Values) {
+                bool isAlias = false;
+                foreach (var desc in value.description) {
+                    if (desc.kind == "name") {
+                        if (desc.text != Name) {
+                            isAlias = true;
+                        }
+                    }
+                }
+
+                if (isAlias) {
+                    res.Append(Name);
+                    res.Append(" (alias of ");
+                }
+
+                foreach (var desc in value.description) {
+                    if (desc.kind == "enddecl") {
+                        break;
+                    }
+                    res.Append(desc.text);
+                }
+
+                if (isAlias) {
+                    res.Append(")");
+                }
             }
 
-            return Name;
+            if (res.Length == 0) {
+                return Name;
+            }
+            return res.ToString();
         }
 
         public override void FillDescription(_VSOBJDESCOPTIONS flags, IVsObjectBrowserDescription3 description) {
             description.ClearDescriptionText();
-            FunctionScopeNode funcScope = ScopeNode as FunctionScopeNode;
-            if (funcScope != null) {
-                description.AddDescriptionText3("def ", VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
-                var def = funcScope.Definition;
-                GetFunctionDescription(def, (text, kind, arg) => {
-                    description.AddDescriptionText3(text, kind, arg);
-                });
-                description.AddDescriptionText3(null, VSOBDESCRIPTIONSECTION.OBDS_ENDDECL, null);
-                if (def.Body.Documentation != null) {
-                    description.AddDescriptionText3("    " + def.Body.Documentation, VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
+            foreach (var value in _value.Values) {
+                foreach (var desc in value.description) {
+                    VSOBDESCRIPTIONSECTION kind;
+                    switch (desc.kind) {
+                        case "enddecl": kind = VSOBDESCRIPTIONSECTION.OBDS_ENDDECL; break;
+                        case "name": kind = VSOBDESCRIPTIONSECTION.OBDS_NAME; break;
+                        case "param": kind = VSOBDESCRIPTIONSECTION.OBDS_PARAM; break;
+                        case "comma": kind = VSOBDESCRIPTIONSECTION.OBDS_COMMA; break;
+                        default: kind = VSOBDESCRIPTIONSECTION.OBDS_MISC; break;
+
+                    }
+                    description.AddDescriptionText3(desc.text, kind, null);
                 }
-            } else {
-                var classScope = ScopeNode as ClassScopeNode;
-                if (classScope != null) {
-                    FillClassDescription(description, classScope);
-                } else {
-                    var assign = ScopeNode as AssignmentScopeNode;
-                    if (assign != null) {
-                        description.AddDescriptionText3("field ", VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
-                        description.AddDescriptionText3(assign.Name, VSOBDESCRIPTIONSECTION.OBDS_NAME, null);
-                        description.AddDescriptionText3("\n", VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
-                        description.AddDescriptionText3(null, VSOBDESCRIPTIONSECTION.OBDS_ENDDECL, null);
+            }
+        }
+
+        public override void GotoSource(VSOBJGOTOSRCTYPE gotoType) {
+            // We do not support the "Goto Reference"
+            if (VSOBJGOTOSRCTYPE.GS_REFERENCE == gotoType) {
+                return;
+            }
+
+            foreach (var completion in _value.Values) {
+                foreach (var location in completion.locations) {
+                    if (File.Exists(location.file)) {
+                        PythonToolsPackage.NavigateTo(
+                            Site,
+                            location.file,
+                            Guid.Empty,
+                            location.line - 1,
+                            location.column - 1
+                        );
+                        break;
                     }
                 }
             }
         }
 
-        private static void FillClassDescription(IVsObjectBrowserDescription3 description, ClassScopeNode classScope) {
-            description.AddDescriptionText3("class ", VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
-            description.AddDescriptionText3(classScope.Name, VSOBDESCRIPTIONSECTION.OBDS_NAME, null);
-            var classDef = classScope.Definition;
-            if (classDef.Bases.Count > 0) {
-                description.AddDescriptionText3("(", VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
-                bool comma = false;
-                foreach (var baseClass in classDef.Bases) {
-                    if (comma) {
-                        description.AddDescriptionText3(", ", VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
-                    }
+        public override IVsSimpleObjectList2 FindReferences() {
+            var analyzer = this.Hierarchy.GetPythonProject().GetAnalyzer();
 
-                    string baseStr = FormatExpression(baseClass.Expression);
-                    if (baseStr != null) {
-                        description.AddDescriptionText3(baseStr, VSOBDESCRIPTIONSECTION.OBDS_TYPE, null);
-                    }
 
-                    comma = true;
-                }
-                description.AddDescriptionText3(")", VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
-            }
-
-            description.AddDescriptionText3("\n", VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
-            description.AddDescriptionText3(null, VSOBDESCRIPTIONSECTION.OBDS_ENDDECL, null);
-
-            if (!String.IsNullOrWhiteSpace(classDef.Body.Documentation)) {
-                description.AddDescriptionText3("    " + classDef.Body.Documentation, VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
-            }
-        }
-
-        private static string FormatExpression(Expression baseClass) {
-            NameExpression ne = baseClass as NameExpression;
-            if (ne != null) {
-                return ne.Name;
-            }
-
-            MemberExpression me = baseClass as MemberExpression;
-            if (me != null) {
-                string expr = FormatExpression(me.Target);
-                if (expr != null) {
-                    return expr + "." + me.Name;
-                }
-            }
-
-            return null;
-        }
-
-        private void GetFunctionDescription(FunctionDefinition def, Action<string, VSOBDESCRIPTIONSECTION, IVsNavInfo> addDescription) {
-            addDescription(ScopeNode.Name, VSOBDESCRIPTIONSECTION.OBDS_NAME, null);
-            addDescription("(", VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
-
-            for (int i = 0; i < def.Parameters.Count; i++) {
-                if (i != 0) {
-                    addDescription(", ", VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
-                }
-
-                var curParam = def.Parameters[i];
-
-                string name = curParam.Name;
-                if (curParam.IsDictionary) {
-                    name = "**" + name;
-                } else if (curParam.IsList) {
-                    name = "*" + curParam.Name;
-                }
-
-                if (curParam.DefaultValue != null) {
-                    // TODO: Support all possible expressions for default values, we should
-                    // probably have a PythonAst walker for expressions or we should add ToCodeString()
-                    // onto Python ASTs so they can round trip
-                    ConstantExpression defaultValue = curParam.DefaultValue as ConstantExpression;
-                    if (defaultValue != null) {
-                        // FIXME: Use python repr
-                        name = name + " = " + defaultValue.GetConstantRepr(def.GlobalParent.LanguageVersion);
+            List<AnalysisVariable> vars = new List<AnalysisVariable>();
+            if (analyzer != null) {
+                foreach (var value in _value.Values) {
+                    foreach (var reference in value.locations) {
+                        var entry = analyzer.GetAnalysisEntryFromPath(reference.file);
+                        var analysis = VsProjectAnalyzer.AnalyzeExpressionAsync(
+                            entry, 
+                            Name, 
+                            new SourceLocation(0, reference.line, reference.column)
+                        ).WaitOrDefault(1000);
+                        vars.AddRange(analysis.Variables);
                     }
                 }
-
-                addDescription(name, VSOBDESCRIPTIONSECTION.OBDS_PARAM, null);
             }
-            addDescription(")\n", VSOBDESCRIPTIONSECTION.OBDS_MISC, null);
+
+            return EditFilter.GetFindRefLocations(
+                analyzer,
+                Site,
+                Name,
+                vars.ToArray()
+            );
         }
 
         public override int GetLibGuid(out Guid pGuid) {

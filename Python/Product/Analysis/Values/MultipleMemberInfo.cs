@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -18,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
@@ -57,10 +60,15 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var ignored = base.GetMember(node, unit, name);
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
+            var res = AnalysisSet.Empty;
+            foreach (var member in _members) {
+                res = res.Union(member.GetTypeMember(node, unit, name));
+            }
+            return res;
+        }
 
+        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
             var res = AnalysisSet.Empty;
             foreach (var member in _members) {
                 res = res.Union(member.GetMember(node, unit, name));
@@ -96,17 +104,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(PythonTools.Interpreter.IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             Dictionary<string, IAnalysisSet> res = new Dictionary<string, IAnalysisSet>();
             foreach (var member in _members) {
-                foreach (var keyValue in member.GetAllMembers(moduleContext)) {
+                foreach (var keyValue in member.GetAllMembers(moduleContext, options)) {
                     IAnalysisSet existing;
                     if (res.TryGetValue(keyValue.Key, out existing)) {
                         MultipleMemberInfo existingMultiMember = existing as MultipleMemberInfo;
                         if (existingMultiMember != null) {
-                            res[keyValue.Key] = MultipleMemberInfo.Create(existingMultiMember._members, keyValue.Value);
+                            res[keyValue.Key] = Create(existingMultiMember._members, keyValue.Value);
                         } else {
-                            res[keyValue.Key] = MultipleMemberInfo.Create(existing, keyValue.Value);
+                            res[keyValue.Key] = Create(existing, keyValue.Value);
                         }
                     } else {
                         res[keyValue.Key] = keyValue.Value;
@@ -155,14 +163,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
             return base.GetConstantValue();
-        }
-
-        public override IAnalysisSet GetStaticDescriptor(AnalysisUnit unit) {
-            var res = AnalysisSet.Empty;
-            foreach (var member in _members) {
-                res = res.Union(member.GetStaticDescriptor(unit));
-            }
-            return res;
         }
 
         public override int? GetLength() {

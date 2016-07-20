@@ -1,109 +1,92 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.Repl;
 
 namespace Microsoft.PythonTools.Options {
     /// <summary>
-    /// Stores options related to the interactive window for a single Python interpreter instance.
+    /// Stores options related to the all interactive windows.
     /// </summary>
-    class PythonInteractiveOptions : PythonInteractiveCommonOptions {
-        private readonly IServiceProvider _serviceProvider;
-        private bool _enableAttach;
-        private string _startupScript, _executionMode, _interperterOptions;
+    class PythonInteractiveOptions {
+        private bool _smartHistory, _liveCompletionsOnly;
+        private ReplIntellisenseMode _completionMode;
+        private string _scripts;
 
-        private const string ExecutionModeSetting = "ExecutionMode";
-        private const string InterpreterOptionsSetting = "InterpreterOptions";
-        private const string EnableAttachSetting = "EnableAttach";
-        private const string StartupScriptSetting = "StartupScript";
+        internal readonly PythonToolsService _pyService;
 
-        internal PythonInteractiveOptions(IServiceProvider serviceProvider, PythonToolsService pyService, string category, string id)
-            : base(pyService, category, id) {
-            _serviceProvider = serviceProvider;
+        internal readonly string _category;
+
+        private const string CompletionModeSetting = "CompletionMode";
+        private const string UseSmartHistorySetting = "UseSmartHistory";
+        private const string LiveCompletionsOnlySetting = "LiveCompletionsOnly";
+        private const string ScriptsSetting = "Scripts";
+
+        internal PythonInteractiveOptions(PythonToolsService pyService, string category) {
+            _pyService = pyService;
+            _category = category;
+            _completionMode = ReplIntellisenseMode.DontEvaluateCalls;
+            _smartHistory = true;
+            _scripts = string.Empty;
         }
 
-        public bool EnableAttach {
-            get { return _enableAttach; }
-            set { _enableAttach = value; }
+        internal ReplIntellisenseMode CompletionMode {
+            get { return _completionMode; }
+            set { _completionMode = value; }
         }
 
-        public string StartupScript {
-            get { return _startupScript; }
-            set { _startupScript = value; }
+        public bool UseSmartHistory {
+            get { return _smartHistory; }
+            set { _smartHistory = value; }
         }
 
-        public string ExecutionMode {
-            get { return _executionMode; }
-            set { _executionMode = value; }
+        public bool LiveCompletionsOnly {
+            get { return _liveCompletionsOnly; }
+            set { _liveCompletionsOnly = value; }
         }
 
-        public string InterpreterOptions {
-            get { return _interperterOptions; }
-            set { _interperterOptions = value; }
+        public string Scripts {
+            get { return _scripts; }
+            set { _scripts = value ?? string.Empty; }
         }
 
-        public new void Load() {
-            base.Load();
-            EnableAttach = _pyService.LoadBool(_id + EnableAttachSetting, _category) ?? false;
-            ExecutionMode = _pyService.LoadString(_id + ExecutionModeSetting, _category) ?? "";
-            InterpreterOptions = _pyService.LoadString(_id + InterpreterOptionsSetting, _category) ?? "";
-            StartupScript = _pyService.LoadString(_id + StartupScriptSetting, _category) ?? "";
+        public void Load() {
+            CompletionMode = _pyService.LoadEnum<ReplIntellisenseMode>(CompletionModeSetting, _category) ?? ReplIntellisenseMode.DontEvaluateCalls;
+            UseSmartHistory = _pyService.LoadBool(UseSmartHistorySetting, _category) ?? true;
+            LiveCompletionsOnly = _pyService.LoadBool(LiveCompletionsOnlySetting, _category) ?? false;
+            Scripts = _pyService.LoadString(ScriptsSetting, _category) ?? string.Empty;
+            Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Save(IPythonInterpreterFactory interpreter) {
-            base.Save();
-            _pyService.SaveString(_id + InterpreterOptionsSetting, _category, InterpreterOptions ?? "");
-            _pyService.SaveBool(_id + EnableAttachSetting, _category, EnableAttach);
-            _pyService.SaveString(_id + ExecutionModeSetting, _category, ExecutionMode ?? "");
-            _pyService.SaveString(_id + StartupScriptSetting, _category, StartupScript ?? "");
-
-            var replProvider = _serviceProvider.GetComponentModel().GetService<IReplWindowProvider>();
-            if (replProvider != null) {
-                // propagate changed settings to existing REPL windows
-                foreach (var replWindow in replProvider.GetReplWindows()) {
-                    PythonReplEvaluator pyEval = replWindow.Evaluator as PythonReplEvaluator;
-                    if (EvaluatorUsesThisInterpreter(pyEval, interpreter)) {
-                        if (UseInterpreterPrompts) {
-                            replWindow.SetOptionValue(ReplOptions.PrimaryPrompt, pyEval.PrimaryPrompt);
-                            replWindow.SetOptionValue(ReplOptions.SecondaryPrompt, pyEval.SecondaryPrompt);
-                        } else {
-                            replWindow.SetOptionValue(ReplOptions.PrimaryPrompt, PrimaryPrompt);
-                            replWindow.SetOptionValue(ReplOptions.SecondaryPrompt, SecondaryPrompt);
-                        }
-                        replWindow.SetOptionValue(ReplOptions.DisplayPromptInMargin, !InlinePrompts);
-                        replWindow.SetOptionValue(ReplOptions.UseSmartUpDown, ReplSmartHistory);
-                    }
-                }
-            }
+        public void Save() {
+            _pyService.SaveEnum(CompletionModeSetting, _category, CompletionMode);
+            _pyService.SaveBool(UseSmartHistorySetting, _category, UseSmartHistory);
+            _pyService.SaveBool(LiveCompletionsOnlySetting, _category, LiveCompletionsOnly);
+            _pyService.SaveString(ScriptsSetting, _category, Scripts);
+            Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        private static bool EvaluatorUsesThisInterpreter(PythonReplEvaluator pyEval, IPythonInterpreterFactory interpreter) {
-            return pyEval != null &&
-                pyEval.Interpreter != null &&
-                pyEval.Interpreter.Id == interpreter.Id &&
-                pyEval.Interpreter.Configuration.Version == interpreter.Configuration.Version;
+        public void Reset() {
+            CompletionMode = ReplIntellisenseMode.DontEvaluateCalls;
+            UseSmartHistory = true;
+            LiveCompletionsOnly = false;
+            Scripts = string.Empty;
+            Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        public new void Reset() {
-            base.Reset();
-            ExecutionMode = "";
-            InterpreterOptions = "";
-            EnableAttach = false;
-            StartupScript = "";
-        }
+        public event EventHandler Changed;
     }
 }

@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
@@ -24,10 +26,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using IronPython.Runtime;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonInterpreter :
@@ -113,8 +115,33 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 typeof(RemoteInterpreterProxy).Assembly.FullName,
                 typeof(RemoteInterpreterProxy).FullName);
 
+#if DEBUG
+            var assertListener = Debug.Listeners["Microsoft.PythonTools.AssertListener"];
+            if (assertListener != null) {
+                domain.DoCallBack(new AssertListenerInitializer(assertListener).Initialize);
+            }
+#endif
+
             return domain;
         }
+
+#if DEBUG
+        [Serializable]
+        class AssertListenerInitializer {
+            private readonly TraceListener _listener;
+
+            public AssertListenerInitializer(TraceListener listener) {
+                _listener = listener;
+            }
+
+            public void Initialize() {
+                if (Debug.Listeners[_listener.Name] == null) {
+                    Debug.Listeners.Add(_listener);
+                    Debug.Listeners.Remove("Default");
+                }
+            }
+        }
+#endif
 
         class AssemblyResolver {
             internal static AssemblyResolver Instance = new AssemblyResolver();
@@ -158,6 +185,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             if (_state != null) {
                 _state.AnalysisDirectoriesChanged += AnalysisDirectoryChanged;
+                AnalysisDirectoryChanged(_state, EventArgs.Empty);
             }
         }
 
@@ -194,6 +222,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
         private void ReloadRemoteDomain() {
             var oldUnloader = _unloader;
 
+            var evt = UnloadingDomain;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
+            }
+
             lock (this) {
                 _members.Clear();
                 _modules.Clear();
@@ -208,6 +241,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             oldUnloader.Dispose();
         }
+
+        public event EventHandler UnloadingDomain;
 
         private ObjectHandle LoadAssemblyByName(string name) {
             return Remote.LoadAssemblyByName(name);
@@ -285,7 +320,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
                         if (asm == null && _state != null) {
                             foreach (var dir in _state.AnalysisDirectories) {
-                                if (!CommonUtils.IsValidPath(dir) && !CommonUtils.IsValidPath(asmName)) {
+                                if (!PathUtils.IsValidPath(dir) && !PathUtils.IsValidPath(asmName)) {
                                     string path = Path.Combine(dir, asmName);
                                     if (File.Exists(path)) {
                                         asm = Remote.LoadAssemblyFrom(path);
@@ -463,6 +498,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 switch (_remote.GetObjectKind(obj)) {
                     case ObjectKind.Module: res = new IronPythonModule(this, obj); break;
                     case ObjectKind.Type: res = new IronPythonType(this, obj); break;
+                    case ObjectKind.ConstructorFunction: res = new IronPythonConstructorFunction(this, _remote.GetConstructorFunctionTargets(obj), GetTypeFromType(_remote.GetConstructorFunctionDeclaringType(obj))); break;
                     case ObjectKind.BuiltinFunction: res = new IronPythonBuiltinFunction(this, obj); break;
                     case ObjectKind.BuiltinMethodDesc: res = new IronPythonBuiltinMethodDescriptor(this, obj); break;
                     case ObjectKind.ReflectedEvent: res = new IronPythonEvent(this, obj); break;
@@ -473,7 +509,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     case ObjectKind.NamespaceTracker: res = new IronPythonNamespace(this, obj); break;
                     case ObjectKind.Constant: res = new IronPythonConstant(this, obj); break;
                     case ObjectKind.ClassMethod: res = new IronPythonGenericMember(this, obj, PythonMemberType.Method); break;
-                    case ObjectKind.Method: res = res = new IronPythonGenericMember(this, obj, PythonMemberType.Method); break;
+                    case ObjectKind.Method: res = new IronPythonGenericMember(this, obj, PythonMemberType.Method); break;
                     case ObjectKind.PythonTypeSlot: res = new IronPythonGenericMember(this, obj, PythonMemberType.Property); break;
                     case ObjectKind.PythonTypeTypeSlot: res = new IronPythonGenericMember(this, obj, PythonMemberType.Property); break;
                     case ObjectKind.Unknown: res = new PythonObject(this, obj); break;
@@ -533,12 +569,20 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IDisposable Members
 
         public void Dispose() {
+            var evt = UnloadingDomain;
+            if (evt != null) {
+                evt(this, EventArgs.Empty);
+            }
+
             if (_factory != null) {
                 _factory.NewDatabaseAvailable -= OnNewDatabaseAvailable;
             }
             _typeDb = null;
             AppDomain.CurrentDomain.AssemblyResolve -= AssemblyResolver.Instance.CurrentDomain_AssemblyResolve;
             _unloader.Dispose();
+#if DEBUG
+            GC.SuppressFinalize(this);
+#endif
         }
 
         #endregion

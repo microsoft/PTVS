@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -26,6 +28,7 @@ namespace TestUtilities.Python {
         private AnalyzerStatusUpdater _updater;
         private bool _isCurrent;
         internal bool? _success;
+        public Dictionary<string, object> _properties;
 
         public const string UpToDateReason = "Database is up to date";
         public const string NoDatabaseReason = "Database has never been generated";
@@ -33,15 +36,8 @@ namespace TestUtilities.Python {
         public const string InvalidReason = "Database is invalid";
         public const string MissingModulesReason = "Database is missing modules";
 
-        public MockPythonInterpreterFactory(
-            Guid id,
-            string description,
-            InterpreterConfiguration config,
-            bool withStatusUpdater = false
-        ) {
+        public MockPythonInterpreterFactory(InterpreterConfiguration config, bool withStatusUpdater = false) {
             _config = config;
-            Id = id;
-            Description = description;
 
             _isCurrent = false;
             IsCurrentReason = NoDatabaseReason;
@@ -56,20 +52,10 @@ namespace TestUtilities.Python {
             }
         }
 
-        public string Description {
-            get;
-            private set;
-        }
-
         public InterpreterConfiguration Configuration {
             get {
                 return _config;
             }
-        }
-
-        public Guid Id {
-            get;
-            private set;
         }
 
         public IPythonInterpreter CreateInterpreter() {
@@ -83,7 +69,7 @@ namespace TestUtilities.Python {
                 if (_updater != null) {
                     _updater.Dispose();
                 }
-                _updater = new AnalyzerStatusUpdater(AnalyzerStatusUpdater.GetIdentifier(Id, _config.Version));
+                _updater = new AnalyzerStatusUpdater(_config.Id);
                 _updater.WaitForWorkerStarted();
                 _updater.ThrowPendingExceptions();
                 _updater.UpdateStatus(0, 0);
@@ -181,6 +167,21 @@ namespace TestUtilities.Python {
         public void NotifyCorruptDatabase() {
             IsCurrentReason = InvalidReason;
             _isCurrent = false;
+        }
+
+        public Dictionary<string, object> Properties {
+            get {
+                if (_properties == null) {
+                    _properties = new Dictionary<string, object>();
+                }
+                return _properties;
+            }
+        }
+
+        public object GetProperty(string propName) {
+            object value = null;
+            _properties?.TryGetValue(propName, out value);
+            return value;
         }
     }
 }

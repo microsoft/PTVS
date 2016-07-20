@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
 
   <!--  This is the file that defines the actual layout and type of the commands.
@@ -122,20 +122,6 @@
 
     <!--The bitmaps section is used to define the bitmaps that are used for the commands.-->
     <Bitmaps>
-    <!-- 
-      <Bitmaps Condition="Defined(DEV14)">
-        <Bitmap guid="guidMLImages" href="..\..\..\Common\Product\Icons\Dev14.0\MLImages.bmp" usedList="one" />
-      </Bitmaps>
-      <Bitmaps Condition="Defined(DEV12)">
-        <Bitmap guid="guidMLImages" href="..\..\..\Common\Product\Icons\Dev12.0\MLImages.bmp" usedList="one" />
-      </Bitmaps>
-      <Bitmaps Condition="Defined(DEV11)">
-        <Bitmap guid="guidMLImages" href="..\..\..\Common\Product\Icons\Dev11.0\MLImages.bmp" usedList="one" />
-      </Bitmaps>
-      <Bitmaps Condition="Defined(DEV10)">
-        <Bitmap guid="guidMLImages" href="..\..\..\Common\Product\Icons\Dev10.0\MLImages.png" usedList="one" />
-      </Bitmaps>
-      -->
     </Bitmaps>
 
   </Commands>

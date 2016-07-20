@@ -1,16 +1,18 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -23,8 +25,8 @@ using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
-//#define ConfigTrace
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Infrastructure;
 using MSBuildConstruction = Microsoft.Build.Construction;
 using MSBuildExecution = Microsoft.Build.Execution;
 
@@ -48,8 +50,10 @@ namespace Microsoft.VisualStudioTools.Project {
         private IVsProjectFlavorCfg flavoredCfg;
         private List<OutputGroup> outputGroups;
         private BuildableProjectConfig buildableCfg;
+        private string platformName;
 
         #region properties
+
         internal ProjectNode ProjectMgr {
             get {
                 return this.project;
@@ -62,6 +66,15 @@ namespace Microsoft.VisualStudioTools.Project {
             }
             set {
                 this.configName = value;
+            }
+        }
+
+        public string PlatformName {
+            get {
+                return platformName;
+            }
+            set {
+                platformName = value;
             }
         }
 
@@ -97,7 +110,20 @@ namespace Microsoft.VisualStudioTools.Project {
         #region ctors
         internal ProjectConfig(ProjectNode project, string configuration) {
             this.project = project;
-            this.configName = configuration;
+            
+            if (configuration.Contains("|")) { // If configuration is in the form "<Configuration>|<Platform>"
+                string[] configStrArray = configuration.Split('|');
+                if (2 == configStrArray.Length) {
+                    this.configName = configStrArray[0];
+                    this.platformName = configStrArray[1];
+                }
+                else {
+                    throw new Exception(string.Format(CultureInfo.InvariantCulture, "Invalid configuration format: {0}", configuration));
+                }
+            }
+            else { // If configuration is in the form "<Configuration>"          
+                this.configName = configuration;
+            }
 
             var flavoredCfgProvider = ProjectMgr.GetOuterInterface<IVsProjectFlavorCfgProvider>();
             Utilities.ArgumentNotNull("flavoredCfgProvider", flavoredCfgProvider);
@@ -107,7 +133,7 @@ namespace Microsoft.VisualStudioTools.Project {
             // if the flavored object support XML fragment, initialize it
             IPersistXMLFragment persistXML = flavoredCfg as IPersistXMLFragment;
             if (null != persistXML) {
-                this.project.LoadXmlFragment(persistXML, configName);
+                this.project.LoadXmlFragment(persistXML, configName, platformName);
             }
         }
         #endregion
@@ -240,7 +266,12 @@ namespace Microsoft.VisualStudioTools.Project {
         /// first part is the config name, 2nd part is the platform name
         /// </summary>
         public virtual int get_DisplayName(out string name) {
-            name = DisplayName;
+            if (!string.IsNullOrEmpty(PlatformName)) {
+                name = ConfigName + "|" + PlatformName;
+
+            } else {
+                name = DisplayName;
+            }
             return VSConstants.S_OK;
         }
 

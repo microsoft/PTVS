@@ -1,16 +1,18 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Diagnostics;
@@ -18,6 +20,8 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -39,13 +43,13 @@ namespace Microsoft.PythonTools.Project {
         internal PythonExtensionReferenceNode(PythonProjectNode root, ProjectElement element, string filename)
             : base(root, element) {
             Utilities.ArgumentNotNullOrEmpty("filename", filename);
-            _filename = CommonUtils.GetAbsoluteFilePath(root.ProjectHome, filename);
+            _filename = PathUtils.GetAbsoluteFilePath(root.ProjectHome, filename);
 
-            AnalyzeReference(root.GetInterpreter() as IPythonInterpreterWithProjectReferences);
+            AnalyzeReference(root.GetAnalyzer());
             InitializeFileChangeEvents();
         }
 
-        internal void AnalyzeReference(IPythonInterpreterWithProjectReferences interp) {
+        internal void AnalyzeReference(VsProjectAnalyzer interp) {
             if (interp == null) {
                 _failedToAnalyze = true;
                 return;
@@ -104,7 +108,7 @@ namespace Microsoft.PythonTools.Project {
         /// Links a reference node to the project and hierarchy.
         /// </summary>
         protected override void BindReferenceData() {
-            string relativePath = CommonUtils.GetRelativeFilePath(ProjectMgr.ProjectFolder, _filename);
+            string relativePath = PathUtils.GetRelativeFilePath(ProjectMgr.ProjectFolder, _filename);
 
             // If the item has not been set correctly like in case of a new reference added it now.
             // The constructor for the AssemblyReference node will create a default project item. In that case the Item is null.
@@ -153,7 +157,7 @@ namespace Microsoft.PythonTools.Project {
                 if (null != extensionRefNode) {
                     // We will check if Url of the assemblies is the same.
                     // TODO: Check full assembly name?
-                    if (CommonUtils.IsSamePath(extensionRefNode.Url, Url)) {
+                    if (PathUtils.IsSamePath(extensionRefNode.Url, Url)) {
                         return true;
                     }
                 }
@@ -201,16 +205,16 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences;
-            if (interp != null && CommonUtils.IsSamePath(e.FileName, _filename)) {
+            var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
+            if (interp != null && PathUtils.IsSamePath(e.FileName, _filename)) {
                 if ((e.FileChangeFlag & (_VSFILECHANGEFLAGS.VSFILECHG_Attr | _VSFILECHANGEFLAGS.VSFILECHG_Size | _VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Add)) != 0) {
                     // file was modified, unload and reload the extension module from our database.
-                    interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
+                    interp.RemoveReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
 
                     AnalyzeReference(interp);
                 } else if ((e.FileChangeFlag & _VSFILECHANGEFLAGS.VSFILECHG_Del) != 0) {
                     // file was deleted, unload from our extension database
-                    interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
+                    interp.RemoveReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
                     ProjectMgr.OnInvalidateItems(Parent);
                 }
             }
@@ -219,17 +223,17 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Overridden method. The method updates the build dependency list before removing the node from the hierarchy.
         /// </summary>
-        public override void Remove(bool removeFromStorage) {
+        public override bool Remove(bool removeFromStorage) {
             if (ProjectMgr == null) {
-                return;
+                return false;
             }
 
-            var interp = ((PythonProjectNode)ProjectMgr).GetInterpreter() as IPythonInterpreterWithProjectReferences;
+            var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
             if (interp != null) {
-                interp.RemoveReference(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
+                interp.RemoveReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
             }
             ItemNode.RemoveFromProjectFile();
-            base.Remove(removeFromStorage);
+            return base.Remove(removeFromStorage);
         }
 
         #endregion

@@ -28,18 +28,10 @@ namespace Microsoft.VisualStudio.Repl {
     /// </summary>
     [MetadataAttribute]
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-#if INTERACTIVE_WINDOW
-    public sealed class InteractiveWindowRoleAttribute : Attribute {
-#else
     public sealed class ReplRoleAttribute : Attribute {
-#endif
         private readonly string _name;
 
-#if INTERACTIVE_WINDOW
-        public InteractiveWindowRoleAttribute(string name) {
-#else
         public ReplRoleAttribute(string name) {
-#endif
             if (name.Contains(","))
                 throw new ArgumentException("ReplRoleAttribute name cannot contain any commas. Apply multiple attributes if you want to support multiple roles.", "name");
 

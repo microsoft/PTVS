@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -26,6 +28,7 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using Microsoft.PythonTools.EnvironmentsList.Properties;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudioTools;
@@ -59,7 +62,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private void UninstallPackage_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            e.CanExecute = e.Parameter is PipPackageView;
+            e.CanExecute = _provider.CanExecute && e.Parameter is PipPackageView;
+            e.Handled = true;
         }
 
         private async void UninstallPackage_Executed(object sender, ExecutedRoutedEventArgs e) {
@@ -76,21 +80,20 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private void UpgradePackage_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.Handled = true;
+
             if (!_provider.CanExecute) {
                 e.CanExecute = false;
-                e.Handled = true;
                 return;
             }
             
             var view = e.Parameter as PipPackageView;
             if (view == null) {
                 e.CanExecute = false;
-                e.Handled = true;
                 return;
             }
 
             e.CanExecute = !view.UpgradeVersion.IsEmpty && view.UpgradeVersion.CompareTo(view.Version) > 0;
-            e.Handled = true;
         }
 
         private async void UpgradePackage_Executed(object sender, ExecutedRoutedEventArgs e) {
@@ -190,6 +193,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _provider = provider;
             _provider.UpdateStarted += PipExtensionProvider_UpdateStarted;
             _provider.UpdateComplete += PipExtensionProvider_UpdateComplete;
+            _provider.IsPipInstalledChanged += PipExtensionProvider_IsPipInstalledChanged;
             _installCommandView = new InstallPackageView(this);
 
             _matcher = new FuzzyStringMatcher(FuzzyMatchMode.FuzzyIgnoreCase);
@@ -207,6 +211,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             FinishInitialization();
         }
 
+        private async void PipExtensionProvider_IsPipInstalledChanged(object sender, EventArgs e) {
+            await Dispatcher.InvokeAsync(() => { IsPipInstalled = _provider.IsPipInstalled ?? true; });
+        }
+
         private void InstalledView_CurrentChanged(object sender, EventArgs e) {
             if (_installedView.View.CurrentItem != null) {
                 _installableView.View.MoveCurrentTo(null);
@@ -221,23 +229,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private async void FinishInitialization() {
             try {
-                try {
-                    if (!(IsPipInstalled = await _provider.IsPipInstalled())) {
-                        // pip is not installed, so no point refreshing packages.
-                        return;
-                    }
-                } catch (InvalidOperationException) {
-                    IsPipInstalled = false;
-                    return;
-                } catch (OperationCanceledException) {
-                    IsPipInstalled = false;
-                    return;
-                }
-
-                try {
-                    await RefreshPackages();
-                } catch (OperationCanceledException) {
-                }
+                await RefreshPackages();
+            } catch (OperationCanceledException) {
             } catch (Exception ex) {
                 if (ex.IsCriticalException()) {
                     throw;
@@ -249,6 +242,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public void Dispose() {
             _provider.UpdateStarted -= PipExtensionProvider_UpdateStarted;
             _provider.UpdateComplete -= PipExtensionProvider_UpdateComplete;
+            _provider.IsPipInstalledChanged -= PipExtensionProvider_IsPipInstalledChanged;
             _installableViewRefreshTimer.Dispose();
         }
 
@@ -400,10 +394,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 CommandManager.InvalidateRequerySuggested();
             });
             try {
-                await Task.WhenAll(
-                    RefreshInstalledPackages(),
-                    RefreshInstallablePackages()
-                );
+                if (IsPipInstalled) {
+                    await Task.WhenAll(
+                        RefreshInstalledPackages(),
+                        RefreshInstallablePackages()
+                    );
+                }
             } finally {
                 Dispatcher.Invoke(() => {
                     IsListRefreshing = false;
@@ -414,6 +410,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private async Task RefreshInstalledPackages() {
             var installed = await _provider.GetInstalledPackagesAsync();
+
+            if (installed == null || !installed.Any()) {
+                return;
+            }
 
             await Dispatcher.InvokeAsync(() => {
                 lock (_installed) {

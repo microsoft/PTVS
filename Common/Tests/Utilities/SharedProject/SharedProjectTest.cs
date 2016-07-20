@@ -1,20 +1,23 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -43,53 +46,85 @@ namespace TestUtilities.SharedProject {
             // we want to pick up all of the MEF exports which are available, but they don't
             // depend upon us.  So if we're just running some tests in the IDE when the deployment
             // happens it won't have the DLLS with the MEF exports.  So we copy them here.
+#if USE_PYTHON_TESTDATA
+            TestUtilities.Python.PythonTestData.Deploy(includeTestData: false);
+#else
             TestData.Deploy(null, includeTestData: false);
+#endif
 
-            // load all of the available DLLs that depend upon TestUtilities into our catalog
-            List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
-            foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
-                TryAddAssembly(catalogs, file);
-            }
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+            try {
+                // load all of the available DLLs that depend upon TestUtilities into our catalog
+                List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
+                foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
+                    TryAddAssembly(catalogs, file);
+                }
 
-            // Compose everything
-            var catalog = new AggregateCatalog(catalogs.ToArray());
+                // Compose everything
+                var catalog = new AggregateCatalog(catalogs.ToArray());
 
-            var container = Container = new CompositionContainer(catalog);
-            var compBatch = new CompositionBatch();
-            container.Compose(compBatch);
+                var container = Container = new CompositionContainer(catalog);
+                var compBatch = new CompositionBatch();
+                container.Compose(compBatch);
 
-            // Initialize our ProjectTypes information from the catalog.            
+                // Initialize our ProjectTypes information from the catalog.            
 
-            // First, get a mapping from extension type to all available IProjectProcessor's for
-            // that extension
-            var processorsMap = container
-                .GetExports<IProjectProcessor, IProjectProcessorMetadata>()
-                .GroupBy(x => x.Metadata.ProjectExtension)
-                .ToDictionary(
-                    x => x.Key, 
-                    x => x.Select(lazy => lazy.Value).ToArray(), 
-                    StringComparer.OrdinalIgnoreCase
-                );
-
-            // Then create the ProjectTypes
-            ProjectTypes = container
-                .GetExports<ProjectTypeDefinition, IProjectTypeDefinitionMetadata>()
-                .Select(lazyVal => {
-                    var md = lazyVal.Metadata;
-                    IProjectProcessor[] processors;
-                    processorsMap.TryGetValue(md.ProjectExtension, out processors);
-
-                    return new ProjectType(
-                        md.CodeExtension,
-                        md.ProjectExtension,
-                        Guid.Parse(md.ProjectTypeGuid),
-                        md.SampleCode,
-                        processors
+                // First, get a mapping from extension type to all available IProjectProcessor's for
+                // that extension
+                var processorsMap = container
+                    .GetExports<IProjectProcessor, IProjectProcessorMetadata>()
+                    .GroupBy(x => x.Metadata.ProjectExtension)
+                    .ToDictionary(
+                        x => x.Key,
+                        x => x.Select(lazy => lazy.Value).ToArray(),
+                        StringComparer.OrdinalIgnoreCase
                     );
-                });
+
+                // Then create the ProjectTypes
+                ProjectTypes = container
+                    .GetExports<ProjectTypeDefinition, IProjectTypeDefinitionMetadata>()
+                    .Select(lazyVal => {
+                        var md = lazyVal.Metadata;
+                        IProjectProcessor[] processors;
+                        processorsMap.TryGetValue(md.ProjectExtension, out processors);
+
+                        return new ProjectType(
+                            md.CodeExtension,
+                            md.ProjectExtension,
+                            Guid.Parse(md.ProjectTypeGuid),
+                            md.SampleCode,
+                            processors
+                        );
+                    });
+            } catch (ReflectionTypeLoadException ex) {
+                foreach (var e in ex.LoaderExceptions) {
+                    Trace.TraceError(e.ToString());
+                }
+                throw;
+            } finally {
+                AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
+            }
 
             // something's broken if we don't have any languages to test against, so fail the test.
             Assert.IsTrue(ProjectTypes.Count() > 0, "no project types were registered and no tests will run");
+        }
+
+        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
+            Assembly asm = null;
+            var name = new AssemblyName(args.Name);
+            var path = Path.Combine(VisualStudioPath.PrivateAssemblies, name.Name + ".dll");
+            if (File.Exists(path)) {
+                asm = Assembly.LoadFile(path);
+            } else {
+                path = Path.Combine(VisualStudioPath.PublicAssemblies, name.Name + ".dll");
+                if (File.Exists(path)) {
+                    asm = Assembly.LoadFile(path);
+                }
+            }
+            if (asm != null && asm.FullName != name.FullName) {
+                asm = null;
+            }
+            return asm;
         }
 
         private static void TryAddAssembly(List<AssemblyCatalog> catalogs, string file) {

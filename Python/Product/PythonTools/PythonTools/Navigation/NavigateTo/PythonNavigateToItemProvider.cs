@@ -1,22 +1,27 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Project;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.NavigateTo.Interfaces;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -27,7 +32,6 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
     internal class PythonNavigateToItemProvider : INavigateToItemProvider {
         private readonly IServiceProvider _serviceProvider;
         private readonly IGlyphService _glyphService;
-        private Task _searchTask;
         private CancellationTokenSource _searchCts;
 
         // Used to propagate information to PythonNavigateToItemDisplay inside NavigateToItem.Tag.
@@ -50,6 +54,8 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
             private readonly FuzzyStringMatcher _comparer, _regexComparer;
             private readonly PythonToolsService _pyService;
 
+            private static readonly Guid _projectType = new Guid(PythonConstants.ProjectFactoryGuid);
+
             public LibraryNodeVisitor(PythonToolsService pyService, PythonNavigateToItemProvider itemProvider, INavigateToCallback navCallback, string searchValue) {
                 _pyService = pyService;
                 _itemProvider = itemProvider;
@@ -64,6 +70,21 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 if (ct.IsCancellationRequested) {
                     _navCallback.Invalidate();
                     return false;
+                }
+
+                IVsHierarchy hierarchy;
+                uint itemId, itemsCount;
+                Guid projectType;
+                node.SourceItems(out hierarchy, out itemId, out itemsCount);
+                if (hierarchy != null) {
+                    ErrorHandler.ThrowOnFailure(hierarchy.GetGuidProperty(
+                        (uint)VSConstants.VSITEMID.Root,
+                        (int)__VSHPROPID.VSHPROPID_TypeGuid,
+                        out projectType
+                    ));
+                    if (projectType != _projectType) {
+                        return false;
+                    }
                 }
 
                 var parentNode = _path.Peek();
@@ -129,21 +150,32 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
             var libraryManager = (LibraryManager)_serviceProvider.GetService(typeof(IPythonLibraryManager));
             var library = libraryManager.Library;
 
-            if (_searchCts != null) {
-                _searchCts.Dispose();
+            var searchCts = new CancellationTokenSource();
+            var oldCts = Interlocked.Exchange(ref _searchCts, searchCts);
+            if (oldCts != null) {
+                oldCts.Dispose();
             }
-            _searchCts = new CancellationTokenSource();
-            var pyService = (PythonToolsService)_serviceProvider.GetService(typeof(PythonToolsService));
-            _searchTask = Task.Factory.StartNew(() => library.VisitNodes(new LibraryNodeVisitor(pyService, this, callback, searchValue), _searchCts.Token), _searchCts.Token);
+            var pyService = _serviceProvider.GetPythonToolsService();
+            Task.Run(() => {
+                try {
+                    library.VisitNodes(new LibraryNodeVisitor(pyService, this, callback, searchValue), searchCts.Token);
+                } finally {
+                    callback.Done();
+                }
+            }).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
         }
 
         public void StopSearch() {
-            _searchCts.Cancel();
+            var cts = Volatile.Read(ref _searchCts);
+            if (cts != null) {
+                cts.Cancel();
+            }
         }
 
         public void Dispose() {
-            if (_searchCts != null) {
-                _searchCts.Dispose();
+            var cts = Interlocked.Exchange(ref _searchCts, null);
+            if (cts != null) {
+                cts.Dispose();
             }
         }
     }

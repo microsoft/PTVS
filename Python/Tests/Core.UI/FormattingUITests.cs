@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -39,8 +41,8 @@ namespace PythonToolsUITests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void ToggleableOptionTest() {
             using (var app = new PythonVisualStudioApp()) {
                 var pyService = app.ServiceProvider.GetPythonToolsService();
@@ -71,10 +73,9 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatDocument() {
-            // Fails due to https://pytools.codeplex.com/workitem/1952
             FormattingTest("document.py", null, @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
 # over the slow lazy dog
 def f():
@@ -82,14 +83,13 @@ def f():
 
 # short comment
 def g():
-    pass", new[] { new Span(0, 104) });
+    pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) });
         }
 
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatSelection() {
-            // Fails due to https://pytools.codeplex.com/workitem/1952
             FormattingTest("selection.py", new Span(0, 121), @"# the quick brown fox jumped over the slow lazy dog the quick brown fox jumped
 # over the slow lazy dog
 def f():
@@ -97,11 +97,11 @@ def f():
 
 # short comment
 def g():
-    pass", new[] { new Span(0, 104) });
+    pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) });
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatSelectionNoSelection() {
             FormattingTest("selection2.py", new Span(5, 0), @"x=1
 
@@ -110,13 +110,13 @@ y=2
 z=3", new Span[0]);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatReduceLines() {
             var pyService = VSTestContext.ServiceProvider.GetPythonToolsService();
             pyService.SetFormattingOption("SpacesAroundBinaryOperators", true);
 
-            FormattingTest("linereduction.py", null, "(a + b + c + d + e + f)\r\n", new[] { new Span(0, 41) });
+            FormattingTest("linereduction.py", null, "(a + b + c + d + e + f)\r\n", new[] { new Span(0, 23), Span.FromBounds(25, 50) });
         }
 
         /// <summary>

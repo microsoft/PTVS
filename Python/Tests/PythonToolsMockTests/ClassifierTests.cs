@@ -1,21 +1,24 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -47,7 +50,7 @@ namespace PythonToolsMockTests {
             PythonTestData.Deploy(includeTestData: false);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void KeywordClassification27() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V27));
             code += "\r\nTrue\r\nFalse";
@@ -70,7 +73,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void KeywordClassification33() {
             var code = string.Join(Environment.NewLine, PythonKeywords.All(PythonLanguageVersion.V33));
 
@@ -92,7 +95,7 @@ namespace PythonToolsMockTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ModuleClassification() {
             var code = @"import abc
 import os
@@ -104,9 +107,6 @@ abc = True
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki ki ki i.i=i i=n i=b");
-
-                helper.Analyze();
-
                 helper.CheckAnalysisClassifierSpans("m<abc>m<os>m<ntpath>m<os>m<ntpath>m<abc>m<abc>");
             }
         }
@@ -115,7 +115,7 @@ abc = True
             return new MockTextBuffer(code, PythonCoreConstants.ContentType, "C:\\fob.py");
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ImportClassifications() {
             var code = @"import abc as x
 from os import fdopen
@@ -127,14 +127,11 @@ fdopen
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("kiki kiki i i i i");
-
-                helper.Analyze();
-
                 helper.CheckAnalysisClassifierSpans("m<abc>m<x>m<os>m<x>");
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TypeClassification() {
             var code = @"class MyClass(object):
     pass
@@ -146,15 +143,11 @@ MyClassType = type(mc)
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki(i): k i=i() i=i i=i() i=i(i)");
-                helper.AnalysisClassifierSpans.ToArray();
-
-                helper.Analyze();
-
                 helper.CheckAnalysisClassifierSpans("c<MyClass>c<object>cc<MyClassAlias>ccc<type>");
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ParameterClassification() {
             var code = @"def f(a, b, c):
     a = b
@@ -167,14 +160,25 @@ b = c
 ";
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
                 helper.CheckAstClassifierSpans("ki(i,i,i): i=i i=i ki i(i,i,i) i=i i=i");
-
-                helper.Analyze();
-
                 helper.CheckAnalysisClassifierSpans("f<f>ppppppppf<f>");
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
+        public void ParameterAnnotationClassification() {
+            var code = @"class A: pass
+class B: pass
+
+def f(a = A, b : B):
+    pass
+";
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V27)) {
+                helper.CheckAstClassifierSpans("ki:k ki:k ki(i=i,i:i): k");
+                helper.CheckAnalysisClassifierSpans("c<A>c<B>f<f>pc<A>pc<B>");
+            }
+        }
+
+        [TestMethod, Priority(1)]
         public void TrueFalseClassification() {
             var code = "True False";
 
@@ -187,46 +191,97 @@ b = c
             }
         }
 
+        [TestMethod, Priority(1)]
+        public void AsyncAwaitClassification() {
+            var code = @"
+await f
+await + f
+async with f: pass
+async for x in f: pass
+
+async def f():
+    await f
+    async with f: pass
+    async for x in f: pass
+
+class F:
+    async def f(self): pass
+
+";
+
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V35)) {
+                helper.CheckAstClassifierSpans("ii i+i iki:k ikiki:k iki(): ii iki:k ikiki:k ki: iki(i): k");
+                // "await f" does not highlight "f", but "await + f" does
+                helper.CheckAnalysisClassifierSpans("fff k<async>f k<await>f k<async>f k<async>f c<F> k<async>fp");
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        public void ReturnAnnotationClassifications() {
+            var code = @"
+def f() -> int:
+    pass
+";
+
+            using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V35)) {
+                helper.CheckAnalysisClassifierSpans("f<f>c<int>");
+            }
+        }
+
         #region ClassifierHelper class
 
         private class ClassifierHelper : IDisposable {
-            private readonly MockVs _vs;
             private readonly PythonClassifierProvider _provider1;
             private readonly PythonAnalysisClassifierProvider _provider2;
-
-            private readonly MockVsTextView _view;
-            private readonly VsProjectAnalyzer _analyzer;
+            private readonly ManualResetEventSlim _classificationsReady1, _classificationsReady2;
+            private readonly PythonEditor _view;
 
             public ClassifierHelper(string code, PythonLanguageVersion version) {
-                _vs = new MockVs();
+                _view = new PythonEditor("", version);
 
-                var reg = _vs.ContentTypeRegistry;
-                var providers = _vs.ComponentModel.GetExtensions<IClassifierProvider>().ToArray();
+                var providers = _view.VS.ComponentModel.GetExtensions<IClassifierProvider>().ToArray();
                 _provider1 = providers.OfType<PythonClassifierProvider>().Single();
                 _provider2 = providers.OfType<PythonAnalysisClassifierProvider>().Single();
 
-                var factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
-                _analyzer = new VsProjectAnalyzer(_vs.ServiceProvider, factory, new[] { factory });
-                
-                _view = _vs.CreateTextView(PythonCoreConstants.ContentType, code, v => {
-                    v.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), _analyzer);
-                });
+                _classificationsReady1 = new ManualResetEventSlim();
+                _classificationsReady2 = new ManualResetEventSlim();
+
+                AstClassifier.ClassificationChanged += (s, e) => SafeSetEvent(_classificationsReady1);
+                var startVersion = _view.CurrentSnapshot.Version;
+                AnalysisClassifier.ClassificationChanged += (s, e) => {
+                    var analysis = _view.View.TextView.GetAnalysisEntry(_view.CurrentSnapshot.TextBuffer, _view.VS.ServiceProvider);
+                    // make sure we have classifications from the version we analyzed after
+                    // setting the text below.
+                    if (analysis.GetAnalysisVersion(_view.CurrentSnapshot.TextBuffer).VersionNumber > startVersion.VersionNumber) {
+                        SafeSetEvent(_classificationsReady2);
+                    }
+                };
+
+                _view.Text = code;
+            }
+
+            private static void SafeSetEvent(ManualResetEventSlim evt) {
+                try {
+                    evt.Set();
+                } catch (ObjectDisposedException) {
+                }
             }
 
             public void Dispose() {
-                _vs.Dispose();
-                _analyzer.Dispose();
+                _classificationsReady1.Dispose();
+                _classificationsReady2.Dispose();
+                _view.Dispose();
             }
 
             public ITextView TextView {
                 get {
-                    return _view.TextView;
+                    return _view.View.TextView;
                 }
             }
 
             public ITextBuffer TextBuffer {
                 get {
-                    return _view.TextView.TextBuffer;
+                    return _view.View.TextView.TextBuffer;
                 }
             }
 
@@ -238,6 +293,7 @@ b = c
 
             public IEnumerable<ClassificationSpan> AstClassifierSpans {
                 get {
+                    _classificationsReady1.Wait();
                     return AstClassifier.GetClassificationSpans(
                         new SnapshotSpan(TextBuffer.CurrentSnapshot, 0, TextBuffer.CurrentSnapshot.Length)
                     ).OrderBy(s => s.Span.Start.Position);
@@ -252,6 +308,7 @@ b = c
 
             public IEnumerable<ClassificationSpan> AnalysisClassifierSpans {
                 get {
+                    _classificationsReady2.Wait();
                     return AnalysisClassifier.GetClassificationSpans(
                         new SnapshotSpan(TextBuffer.CurrentSnapshot, 0, TextBuffer.CurrentSnapshot.Length)
                     ).OrderBy(s => s.Span.Start.Position);
@@ -270,6 +327,7 @@ b = c
                 { 'k', PredefinedClassificationTypeNames.Keyword },
                 { '(', PythonPredefinedClassificationTypeNames.Grouping },
                 { ')', PythonPredefinedClassificationTypeNames.Grouping },
+                { '+', PythonPredefinedClassificationTypeNames.Operator },
                 { ':', PythonPredefinedClassificationTypeNames.Operator },
                 { '=', PythonPredefinedClassificationTypeNames.Operator },
                 { ',', PythonPredefinedClassificationTypeNames.Comma },
@@ -342,26 +400,6 @@ b = c
                 }
 
                 Assert.IsTrue(string.IsNullOrEmpty(expectedSpans), "Remaining: " + expectedSpans);
-            }
-
-            public VsProjectAnalyzer Analyzer {
-                get {
-                    return _analyzer;
-                }
-            }
-
-            public void Analyze() {
-                var classifier = AnalysisClassifier;
-                using (var evt = new ManualResetEventSlim()) {
-                    classifier.ClassificationChanged += (o, e) => evt.Set();
-                    var ensureClassifier = AnalysisClassifierSpans.ToArray();
-                    TextBuffer.GetPythonProjectEntry().Analyze(CancellationToken.None, true);
-                    _analyzer.WaitForCompleteAnalysis(_ => true);
-                    while (TextBuffer.GetPythonProjectEntry().Analysis == null) {
-                        Thread.Sleep(500);
-                    }
-                    Assert.IsTrue(evt.Wait(10000));
-                }
             }
         }
 

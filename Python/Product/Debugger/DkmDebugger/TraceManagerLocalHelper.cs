@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -18,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.DkmDebugger.Proxies;
 using Microsoft.PythonTools.DkmDebugger.Proxies.Structs;
 using Microsoft.PythonTools.Parsing;
@@ -203,6 +206,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         private readonly PythonDllBreakpointHandlers _handlers;
         private readonly DkmNativeInstructionAddress _traceFunc;
         private readonly UInt32Proxy _pyTracingPossible;
+        private readonly ByteProxy _isTracing;
 
         // A step-in gate is a function inside the Python interpreter or one of the libaries that may call out
         // to native user code such that it may be a potential target of a step-in operation. For every gate,
@@ -244,6 +248,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
             _pyrtInfo = process.GetPythonRuntimeInfo();
 
             _traceFunc = _pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("TraceFunc");
+            _isTracing = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<ByteProxy>("isTracing");
             _pyTracingPossible = _pyrtInfo.DLLs.Python.GetStaticVariable<UInt32Proxy>("_Py_TracingPossible");
 
             if (kind == Kind.StepIn) {
@@ -271,10 +276,6 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
                 _handlers = new PythonDllBreakpointHandlers(this);
                 LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "new_threadstate", _handlers.new_threadstate, enable: true);
-                LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "PyErr_SetObject", _handlers.PyErr_SetObject, enable: true);
-                if (_pyrtInfo.LanguageVersion <= PythonLanguageVersion.V27) {
-                    LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "do_raise", _handlers.do_raise, enable: true);
-                }
 
                 foreach (var methodInfo in _handlers.GetType().GetMethods()) {
                     var stepInAttr = (StepInGateAttribute)Attribute.GetCustomAttribute(methodInfo, typeof(StepInGateAttribute));
@@ -298,7 +299,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 Handler = handler,
                 HasMultipleExitPoints = hasMultipleExitPoints,
                 Breakpoint = LocalComponent.CreateRuntimeDllFunctionBreakpoint(module, funcName,
-                    (thread, frameBase, vframe) => handler(thread, frameBase, vframe, useRegisters: thread.Process.Is64Bit()))
+                    (thread, frameBase, vframe, retAddr) => handler(thread, frameBase, vframe, useRegisters: thread.Process.Is64Bit()))
             };
             _stepInGates.Add(gate);
         }
@@ -310,8 +311,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
         public unsafe void RegisterTracing(PyThreadState tstate) {
             tstate.use_tracing.Write(1);
             tstate.c_tracefunc.Write(_traceFunc.GetPointer());
-
             _pyTracingPossible.Write(_pyTracingPossible.Read() + 1);
+            _isTracing.Write(1);
         }
 
         public void OnBeginStepIn(DkmThread thread) {
@@ -441,68 +442,6 @@ namespace Microsoft.PythonTools.DkmDebugger {
             _stepInTargetBreakpoints.Add(bp);
         }
 
-        private void OnException(DkmThread thread) {
-            if (thread.SystemPart == null) {
-                Debug.Fail("OnException couldn't obtain system thread ID.");
-                return;
-            }
-            var tid = thread.SystemPart.Id;
-
-            var process = thread.Process;
-            PyThreadState tstate = PyThreadState.GetThreadStates(process).FirstOrDefault(ts => ts.thread_id.Read() == tid);
-            if (tstate == null) {
-                Debug.Fail("OnException couldn't find PyThreadState corresponding to system thread " + tid);
-                return;
-            }
-
-            var exc_type = tstate.curexc_type.TryRead();
-            var exc_value = tstate.curexc_value.TryRead();
-            if (exc_type == null || exc_type.IsNone) {
-                return;
-            }
-
-            var reprOptions = new ReprOptions(process);
-
-            string typeName = "<unknown exception type>";
-            string additionalInfo = "";
-            try {
-                var typeObject = exc_type as PyTypeObject;
-                if (typeObject != null) {
-                    var mod = typeObject.__module__;
-                    var ver = _process.GetPythonRuntimeInfo().LanguageVersion;
-                    if ((mod == "builtins" && ver >= PythonLanguageVersion.V30) ||
-                        (mod == "exceptions" && ver < PythonLanguageVersion.V30)) {
-                        
-                        typeName = typeObject.__name__;
-                    } else {
-                        typeName = mod + "." + typeObject.__name__;
-                    }
-                }
-
-                var exc = exc_value as PyBaseExceptionObject;
-                if (exc != null) {
-                    var args = exc.args.TryRead();
-                    if (args != null) {
-                        additionalInfo = args.Repr(reprOptions);
-                    }
-                } else {
-                    var str = exc_value as IPyBaseStringObject;
-                    if (str != null) {
-                        additionalInfo = str.ToString();
-                    } else if (exc_value != null) {
-                        additionalInfo = exc_value.Repr(reprOptions);
-                    }
-                }
-            } catch {
-            }
-
-            new RemoteComponent.RaiseExceptionRequest {
-                ThreadId = thread.UniqueId,
-                Name = typeName,
-                AdditionalInformation = Encoding.Unicode.GetBytes(additionalInfo)
-            }.SendLower(process);
-        }
-
         // Indicates that the breakpoint handler is for a Python-to-native step-in gate.
         [AttributeUsage(AttributeTargets.Method)]
         private class StepInGateAttribute : Attribute {
@@ -524,7 +463,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 _owner = owner;
             }
 
-            public void new_threadstate(DkmThread thread, ulong frameBase, ulong vframe) {
+            public void new_threadstate(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress) {
                 var process = thread.Process;
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
@@ -535,14 +474,6 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 }
 
                 _owner.RegisterTracing(tstate);
-            }
-
-            public void PyErr_SetObject(DkmThread thread, ulong frameBase, ulong vframe) {
-                _owner.OnException(thread);
-            }
-
-            public void do_raise(DkmThread thread, ulong frameBase, ulong vframe) {
-                _owner.OnException(thread);
             }
 
             // This step-in gate is not marked [StepInGate] because it doesn't live in pythonXX.dll, and so we register it manually.

@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Diagnostics;
@@ -19,6 +21,10 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
+#if DEV14_OR_LATER
+using Microsoft.VisualStudio.Imaging;
+using Microsoft.VisualStudio.Imaging.Interop;
+#endif
 
 namespace Microsoft.VisualStudioTools.Project {
 
@@ -36,6 +42,14 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
+#if DEV14_OR_LATER
+        protected override ImageMoniker GetIconMoniker(bool open) {
+            if (ItemNode.IsExcluded) {
+                return open ? KnownMonikers.HiddenFolderOpened : KnownMonikers.HiddenFolderClosed;
+            }
+            return base.GetIconMoniker(open);
+        }
+#else
         public override object GetIconHandle(bool open) {
             if (ItemNode.IsExcluded) {
                 return ProjectMgr.GetIconHandleByName(open ?
@@ -45,6 +59,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
             return base.GetIconHandle(open);
         }
+#endif
 
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             //Hide Exclude from Project command, show everything else normal Folder node supports
@@ -140,7 +155,8 @@ namespace Microsoft.VisualStudioTools.Project {
                 ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
                 ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
             }
-            ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+            // PERFORMANCE: call it once only!
+            // ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
 
             return VSConstants.S_OK;
         }
@@ -150,7 +166,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 "Excluding files and folders...",
                 "Excluding files and folders in your project, this may take several seconds...",
                 ProjectMgr.Site)) {
-                return base.ExcludeFromProjectWithProgress();
+                return ExcludeFromProjectWithRefresh();
             }
         }
 
@@ -186,7 +202,7 @@ namespace Microsoft.VisualStudioTools.Project {
             }
             ProjectMgr.ReDrawNode(this, UIHierarchyElement.Icon);
             ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_IsNonMemberItem, 0);
-            ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
+            // PERFORMANCE: call it once only! // ((IVsUIShell)GetService(typeof(SVsUIShell))).RefreshPropertyBrowser(0);
 
             // On include, the folder should be added to source control.
             this.ProjectMgr.Tracker.OnFolderAdded(this.Url, VSADDDIRECTORYFLAGS.VSADDDIRECTORYFLAGS_NoFlags);
@@ -199,8 +215,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 "Including files and folders...",
                 "Including files and folders to your project, this may take several seconds...",
                 ProjectMgr.Site)) {
-
-                return IncludeInProject(includeChildren);
+                return IncludeInProjectWithRefresh(includeChildren);
             }
         }
 
@@ -218,11 +233,14 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        public override void Remove(bool removeFromStorage) {
-            base.Remove(removeFromStorage);
+        public override  bool Remove(bool removeFromStorage) {
+            if (base.Remove(removeFromStorage)) {
 
-            // if we were a symlink folder, we need to stop watching now.
-            ProjectMgr.TryDeactivateSymLinkWatcher(this);
+                // if we were a symlink folder, we need to stop watching now.
+                ProjectMgr.TryDeactivateSymLinkWatcher(this);
+                return true;
+            }
+            return false;
         }
 
         public override void Close() {

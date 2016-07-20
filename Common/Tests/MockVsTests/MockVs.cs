@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -18,8 +20,11 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
 using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Input;
@@ -31,18 +36,15 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudio.Utilities;
 using TestUtilities;
 using TestUtilities.Mocks;
+using Thread = System.Threading.Thread;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
-    using System.Diagnostics;
-    using System.Runtime.ExceptionServices;
-    using Microsoft.VisualStudio.Text;
-    using Thread = System.Threading.Thread;
-
     public sealed class MockVs : IComponentModel, IDisposable, IVisualStudioInstance {
         internal static CachedVsInfo CachedInfo = CreateCachedVsInfo();
         public CompositionContainer Container;
@@ -64,19 +66,29 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         private readonly MockOutputWindow _outputWindow = new MockOutputWindow();
         private readonly MockVsBuildManagerAccessor _buildManager = new MockVsBuildManagerAccessor();
         private readonly MockUIHierWinClipboardHelper _hierClipHelper = new MockUIHierWinClipboardHelper();
-        private readonly MockVsMonitorSelection _monSel;
-        private readonly MockVsUIHierarchyWindow _uiHierarchy;
+        internal readonly MockVsMonitorSelection _monSel;
+        internal readonly uint _monSelCookie;
+        internal readonly MockVsUIHierarchyWindow _uiHierarchy;
         private readonly MockVsQueryEditQuerySave _queryEditSave = new MockVsQueryEditQuerySave();
         private readonly MockVsRunningDocumentTable _rdt;
         private readonly MockVsUIShellOpenDocument _shellOpenDoc = new MockVsUIShellOpenDocument();
         private readonly MockVsSolutionBuildManager _slnBuildMgr = new MockVsSolutionBuildManager();
-        private readonly MockVsExtensibility _extensibility  = new MockVsExtensibility();
-        internal IFocusable _focused;
+        private readonly MockVsExtensibility _extensibility = new MockVsExtensibility();
+        private readonly MockDTE _dte;
         private bool _shutdown;
         private AutoResetEvent _uiEvent = new AutoResetEvent(false);
         private readonly List<Action> _uiEvents = new List<Action>();
         private readonly Thread _throwExceptionsOn;
         private ExceptionDispatchInfo _edi;
+        private readonly List<IMockPackage> _loadedPackages = new List<IMockPackage>();
+
+        internal IOleCommandTarget
+            /*_contextTarget, */    // current context menu
+            /*_toolbarTarget, */    // current toolbar
+            _focusTarget,       // current IVsWindowFrame that has focus
+            _docCmdTarget,      // current document
+            _projectTarget/*,   // current IVsHierarchy
+            _shellTarget*/;
 
         private readonly Thread UIThread;
 
@@ -86,8 +98,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             var serviceProvider = _serviceProvider = Container.GetExportedValue<MockVsServiceProvider>();
             UIShell = new MockVsUIShell(this);
             _monSel = new MockVsMonitorSelection(this);
-            _uiHierarchy = new MockVsUIHierarchyWindow();
+            _uiHierarchy = new MockVsUIHierarchyWindow(this);
             _rdt = new MockVsRunningDocumentTable(this);
+            _dte = new MockDTE(this);
             _serviceProvider.AddService(typeof(SVsTextManager), TextManager);
             _serviceProvider.AddService(typeof(SVsActivityLog), ActivityLog);
             _serviceProvider.AddService(typeof(SVsSettingsManager), SettingsManager);
@@ -111,8 +124,16 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             _serviceProvider.AddService(typeof(SVsUIShellOpenDocument), _shellOpenDoc);
             _serviceProvider.AddService(typeof(SVsSolutionBuildManager), _slnBuildMgr);
             _serviceProvider.AddService(typeof(EnvDTE.IVsExtensibility), _extensibility);
+            _serviceProvider.AddService(typeof(EnvDTE.DTE), _dte);
 
-            UIShell.AddToolWindow(new Guid(ToolWindowGuids80.SolutionExplorer), new MockToolWindow(new MockVsUIHierarchyWindow()));
+            UIShell.AddToolWindow(new Guid(ToolWindowGuids80.SolutionExplorer), new MockToolWindow(_uiHierarchy));
+
+            ErrorHandler.ThrowOnFailure(
+                _monSel.AdviseSelectionEvents(
+                    new SelectionEvents(this),
+                    out _monSelCookie
+                )
+            );
 
             _throwExceptionsOn = Thread.CurrentThread;
 
@@ -125,6 +146,53 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 e.WaitOne();
             }
             ThrowPendingException();
+        }
+
+        public void Dispose() {
+            // Dispose of packages while the UI thread is still running, it's
+            // possible some packages may need to get back onto the UI thread
+            // before their Dispose is complete.  TaskProvider does this - it wants
+            // to wait for the task provider thread to exit, but the same thread
+            // maybe attempting to get back onto the UI thread.  If we yank out
+            // the UI thread first then it never makes it over and we just hang
+            // and deadlock.
+            foreach (var package in _loadedPackages) {
+                package.Dispose();
+            }
+
+            _shutdown = true;
+            Shell.SetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, true);
+            _uiEvent.Set();
+            if (!UIThread.Join(TimeSpan.FromSeconds(30))) {
+                Console.WriteLine("Failed to wait for UI thread to terminate");
+            }
+            ThrowPendingException();
+            _monSel.UnadviseSelectionEvents(_monSelCookie);
+            AssertListener.ThrowUnhandled();
+            Container.Dispose();
+        }
+
+
+        class SelectionEvents : IVsSelectionEvents {
+            private readonly MockVs _vs;
+
+            public SelectionEvents(MockVs vs) {
+                _vs = vs;
+            }
+
+            public int OnCmdUIContextChanged(uint dwCmdUICookie, int fActive) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnElementValueChanged(uint elementid, object varValueOld, object varValueNew) {
+                return VSConstants.S_OK;
+            }
+
+            public int OnSelectionChanged(IVsHierarchy pHierOld, uint itemidOld, IVsMultiItemSelect pMISOld, ISelectionContainer pSCOld, IVsHierarchy pHierNew, uint itemidNew, IVsMultiItemSelect pMISNew, ISelectionContainer pSCNew) {
+                _vs._projectTarget = pHierNew as IOleCommandTarget;
+                _vs._focusTarget = pSCNew as IOleCommandTarget;
+                return VSConstants.S_OK;
+            }
         }
 
         class MockSyncContext : SynchronizationContext {
@@ -142,36 +210,49 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
+        public void AssertUIThread() {
+            Assert.AreEqual(UIThread, Thread.CurrentThread);
+        }
+
         private void UIThreadWorker(object evt) {
             try {
                 SynchronizationContext.SetSynchronizationContext(new MockSyncContext(this));
-                var packages = new List<IMockPackage>();
                 foreach (var package in Container.GetExportedValues<IMockPackage>()) {
-                    packages.Add(package);
+                    _loadedPackages.Add(package);
                     package.Initialize();
                 }
+
                 ((AutoResetEvent)evt).Set();
-
-                while (!_shutdown) {
-                    _uiEvent.WaitOne();
-                    Action[] events;
-                    do {
-                        lock (_uiEvents) {
-                            events = _uiEvents.ToArray();
-                            _uiEvents.Clear();
-                        }
-                        foreach (var action in events) {
-                            action();
-                        }
-                    } while (events.Length > 0);
-                }
-
-                foreach (var package in packages) {
-                    package.Dispose();
-                }
+                RunMessageLoop();
             } catch (Exception ex) {
                 Trace.TraceError("Captured exception on mock UI thread: {0}", ex);
                 _edi = ExceptionDispatchInfo.Capture(ex);
+            }
+        }
+
+        internal void RunMessageLoop(AutoResetEvent dialogEvent = null) {
+            WaitHandle[] handles;
+            if (dialogEvent == null) {
+                handles = new[] { _uiEvent };
+            } else {
+                handles = new[] { _uiEvent, dialogEvent };
+            }
+
+            while (!_shutdown) {
+                if (WaitHandle.WaitAny(handles) == 1) {
+                    // dialog is closing...
+                    break;
+                }
+                Action[] events;
+                do {
+                    lock (_uiEvents) {
+                        events = _uiEvents.ToArray();
+                        _uiEvents.Clear();
+                    }
+                    foreach (var action in events) {
+                        action();
+                    }
+                } while (events.Length > 0);
             }
         }
 
@@ -194,6 +275,13 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 _uiEvents.Add(action);
                 _uiEvent.Set();
             }
+        }
+
+        public void InvokeSync(Action action) {
+            Invoke<int>(() => {
+                action();
+                return 0;
+            });
         }
 
         public T Invoke<T>(Func<T> func) {
@@ -265,16 +353,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             var view = new MockTextView(buffer);
             var res = new MockVsTextView(_serviceProvider, this, view);
             view.Properties[typeof(MockVsTextView)] = res;
-            if (onCreate != null) {
-                onCreate(res);
-            }
+            onCreate?.Invoke(res);
 
-            foreach (var classifier in Container.GetExports<IClassifierProvider, IContentTypeMetadata>()) {
-                foreach (var targetContentType in classifier.Metadata.ContentTypes) {
-                    if (buffer.ContentType.IsOfType(targetContentType)) {
-                        classifier.Value.GetClassifier(buffer);
-                    }
-                }
+            var classifier = res.Classifier;
+            if (classifier != null) {
+                classifier.GetClassificationSpans(new SnapshotSpan(buffer.CurrentSnapshot, 0, buffer.CurrentSnapshot.Length));
             }
 
             // Initialize code window
@@ -354,38 +437,48 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             // we want to pick up all of the MEF exports which are available, but they don't
             // depend upon us.  So if we're just running some tests in the IDE when the deployment
             // happens it won't have the DLLS with the MEF exports.  So we copy them here.
+#if USE_PYTHON_TESTDATA
+            TestUtilities.Python.PythonTestData.Deploy(includeTestData: false);
+#else
             TestData.Deploy(null, includeTestData: false);
+#endif
 
             // load all of the available DLLs that depend upon TestUtilities into our catalog
             List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
             List<Type> packageTypes = new List<Type>();
-            foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
-                if (file.EndsWith("VsLogger.dll", StringComparison.OrdinalIgnoreCase)) {
-                    continue;
-                }
-                
-                Assembly asm;
-                try {
-                    asm = Assembly.Load(Path.GetFileNameWithoutExtension(file));
-                } catch {
-                    continue;
-                }
 
-                Console.WriteLine("Including {0}", file);
-                try {
-                    foreach (var type in asm.GetTypes()) {
-                        if (type.IsDefined(typeof(PackageRegistrationAttribute), false)) {
-                            packageTypes.Add(type);
-                        }
+            AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+            try {
+                foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
+                    if (file.EndsWith("VsLogger.dll", StringComparison.OrdinalIgnoreCase)) {
+                        continue;
                     }
-                    catalogs.Add(new AssemblyCatalog(asm));
-                } catch (TypeInitializationException tix) {
-                    Console.WriteLine(tix);
-                } catch (ReflectionTypeLoadException tlx) {
-                    Console.WriteLine(tlx);
-                } catch (IOException iox) {
-                    Console.WriteLine(iox);
+
+                    Assembly asm;
+                    try {
+                        asm = Assembly.Load(Path.GetFileNameWithoutExtension(file));
+                    } catch {
+                        continue;
+                    }
+
+                    Console.WriteLine("Including {0}", file);
+                    try {
+                        foreach (var type in asm.GetTypes()) {
+                            if (type.IsDefined(typeof(PackageRegistrationAttribute), false)) {
+                                packageTypes.Add(type);
+                            }
+                        }
+                        catalogs.Add(new AssemblyCatalog(asm));
+                    } catch (TypeInitializationException tix) {
+                        Console.WriteLine(tix);
+                    } catch (ReflectionTypeLoadException tlx) {
+                        Console.WriteLine(tlx);
+                    } catch (IOException iox) {
+                        Console.WriteLine(iox);
+                    }
                 }
+            } finally {
+                AppDomain.CurrentDomain.AssemblyResolve -= CurrentDomain_AssemblyResolve;
             }
 
             return new CachedVsInfo(
@@ -394,10 +487,36 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             );
         }
 
+        private static Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args) {
+            Assembly asm = null;
+            var name = new AssemblyName(args.Name);
+            var path = Path.Combine(VisualStudioPath.PrivateAssemblies, name.Name + ".dll");
+            if (File.Exists(path)) {
+                asm = Assembly.LoadFile(path);
+            } else {
+                path = Path.Combine(VisualStudioPath.PublicAssemblies, name.Name + ".dll");
+                if (File.Exists(path)) {
+                    asm = Assembly.LoadFile(path);
+                }
+            }
+            if (asm != null && asm.FullName != name.FullName) {
+                asm = null;
+            }
+            return asm;
+        }
+
         #endregion
 
         public ITreeNode WaitForItemRemoved(params string[] path) {
-            throw new NotImplementedException();
+            ITreeNode item = null;
+            for (int i = 0; i < 400; i++) {
+                item = FindItem(path);
+                if (item == null) {
+                    break;
+                }
+                System.Threading.Thread.Sleep(25);
+            }
+            return item;
         }
 
         ITreeNode IVisualStudioInstance.WaitForItem(params string[] items) {
@@ -409,7 +528,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public ITreeNode FindItem(params string[] items) {
-            throw new NotImplementedException();
+            var res = WaitForItem(items);
+            if (res.IsNull) {
+                return null;
+            }
+            return new MockTreeNode(this, res);
         }
 
         /// <summary>
@@ -476,7 +599,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             string[] temp = new string[path.Length + 1];
             temp[0] = project;
             Array.Copy(path, 0, temp, 1, path.Length);
-            var item = WaitForItem(temp);
+            var item = WaitForItemWorker(temp);
             if (item.IsNull) {
                 return null;
             }
@@ -486,40 +609,33 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 languageName = "code";
             }
 
-            var res = CreateTextView(languageName, File.ReadAllText(item.CanonicalName), null, item.CanonicalName);
-            SetFocus(res);
-
-            uint cookie;
-            IVsTextLines lines;
-            ErrorHandler.ThrowOnFailure(((IVsTextView)res).GetBuffer(out lines));
-            IntPtr linesPtr = Marshal.GetIUnknownForObject(lines);
-            try {
-                ErrorHandler.ThrowOnFailure(
-                    _rdt.RegisterAndLockDocument(
-                        (uint)_VSRDTFLAGS.RDT_NoLock,
-                        item.CanonicalName,
-                        item.Hierarchy,
-                        item.ItemId,
-                        linesPtr,
-                        out cookie
-                    )
-                );
-            } finally {
-                Marshal.Release(linesPtr);
+            var res = CreateTextViewWorker(languageName, File.ReadAllText(item.CanonicalName), view => {
+                uint cookie;
+                IVsTextLines lines;
+                ErrorHandler.ThrowOnFailure(((IVsTextView)view).GetBuffer(out lines));
+                IntPtr linesPtr = Marshal.GetIUnknownForObject(lines);
+                try {
+                    ErrorHandler.ThrowOnFailure(
+                        _rdt.RegisterAndLockDocument(
+                            (uint)_VSRDTFLAGS.RDT_NoLock,
+                            item.CanonicalName,
+                            item.Hierarchy,
+                            item.ItemId,
+                            linesPtr,
+                            out cookie
+                        )
+                    );
+                } finally {
+                    Marshal.Release(linesPtr);
+                }
+            }, item.CanonicalName);
+            if (_docCmdTarget != null) {
+                ((IFocusable)_docCmdTarget).LostFocus();
             }
+            _docCmdTarget = res;
+            ((IFocusable)res).GetFocus();
+
             return res;
-        }
-
-        internal void SetFocus(IFocusable res) {
-            Invoke(() =>SetFocusWorker(res));
-        }
-
-        private void SetFocusWorker(IFocusable res) {
-            if (_focused != null) {
-                _focused.LostFocus();
-            }
-            res.GetFocus();
-            _focused = res;
         }
 
         ComposablePartCatalog IComponentModel.DefaultCatalog {
@@ -531,7 +647,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         ExportProvider IComponentModel.DefaultExportProvider {
-            get { throw new NotImplementedException(); }
+            get { return Container; }
         }
 
         ComposablePartCatalog IComponentModel.GetCatalog(string catalogName) {
@@ -546,29 +662,73 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             return Container.GetExportedValue<T>();
         }
 
-        public void Dispose() {
-            _shutdown = true;
-            _uiEvent.Set();
-            ThrowPendingException();
-            AssertListener.ThrowUnhandled();
-        }
 
-        
         public void Type(Key key) {
             Invoke(() => TypeWorker(key));
         }
 
         private void TypeWorker(Key key) {
-            var cmdTarget = _focused as IOleCommandTarget;
-            if (cmdTarget != null) {
-                switch (key) {
-                    case Key.F2: cmdTarget.Rename(); break;
-                    case Key.Enter: cmdTarget.Enter(); break;
-                    case Key.Tab: cmdTarget.Tab(); break;
-                    default:
-                        throw new InvalidOperationException("Unmapped key " + key);
+            Guid guid;
+            switch (key) {
+                case Key.F2:
+                    guid = VSConstants.GUID_VSStandardCommandSet97;
+                    Exec(ref guid, (int)VSConstants.VSStd97CmdID.Rename, 0, IntPtr.Zero, IntPtr.Zero);
+                    break;
+                case Key.Enter:
+                    guid = VSConstants.VSStd2K;
+                    Exec(ref guid, (int)VSConstants.VSStd2KCmdID.RETURN, 0, IntPtr.Zero, IntPtr.Zero);
+                    break;
+                case Key.Tab:
+                    guid = VSConstants.VSStd2K;
+                    Exec(ref guid, (int)VSConstants.VSStd2KCmdID.TAB, 0, IntPtr.Zero, IntPtr.Zero);
+                    break;
+                case Key.Delete: 
+                    guid = VSConstants.VSStd2K;
+                    Exec(ref guid, (int)VSConstants.VSStd2KCmdID.DELETE, 0, IntPtr.Zero, IntPtr.Zero);
+                    break;
+                default:
+                    throw new InvalidOperationException("Unmapped key " + key);
+            }
+        }
+
+
+        private IEnumerable<IOleCommandTarget> Targets {
+            get {
+                if (_focusTarget != null) {
+                    yield return _focusTarget;
+                }
+                if (_docCmdTarget != null) {
+                    yield return _docCmdTarget;
+                }
+                if (_projectTarget != null) {
+                    yield return _projectTarget;
                 }
             }
+        }
+
+        private int Exec(ref Guid cmdGroup, uint cmdId, uint cmdExecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            int hr = NativeMethods.OLECMDERR_E_NOTSUPPORTED;
+            foreach (var target in Targets) {
+                hr = target.Exec(
+                    cmdGroup,
+                    cmdId,
+                    cmdExecopt,
+                    pvaIn,
+                    pvaOut
+                );
+                if (hr == NativeMethods.OLECMDERR_E_CANCELED ||
+                    (hr != NativeMethods.OLECMDERR_E_NOTSUPPORTED &&
+                    hr != NativeMethods.OLECMDERR_E_UNKNOWNGROUP)) {
+                    if (hr == NativeMethods.OLECMDERR_E_CANCELED) {
+                        hr = VSConstants.S_OK;
+                    }
+                    break;
+                }
+            }
+            return hr;
+        }
+
+        private void ContinueRouting() {
         }
 
         public void ControlX() {
@@ -576,10 +736,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         private void ControlXWorker() {
-            var cmdTarget = _focused as IOleCommandTarget;
-            if (cmdTarget != null) {
-                cmdTarget.Cut();
-            }
+            var guid = VSConstants.GUID_VSStandardCommandSet97;
+            Exec(ref guid, (int)VSConstants.VSStd97CmdID.Cut, 0, IntPtr.Zero, IntPtr.Zero);
         }
 
         public void ControlC() {
@@ -587,21 +745,71 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         private void ControlCWorker() {
-            var cmdTarget = _focused as IOleCommandTarget;
-            if (cmdTarget != null) {
-                cmdTarget.Copy();
-            }
+            var guid = VSConstants.GUID_VSStandardCommandSet97;
+            Exec(ref guid, (int)VSConstants.VSStd97CmdID.Copy, 0, IntPtr.Zero, IntPtr.Zero);
         }
 
         public void Type(string p) {
             Invoke(() => TypeWorker(p));
         }
 
+        public void PressAndRelease(Key key, params Key[] modifier) {
+            throw new NotImplementedException();
+        }
+
         private void TypeWorker(string p) {
-            var cmdTarget = _focused as IOleCommandTarget;
-            if (cmdTarget != null) {
-                cmdTarget.Type(p);
+            if (UIShell.Dialogs.Count != 0) {
+                UIShell.Dialogs.Last().Type(p);
+                return;
             }
+
+            TypeCmdTarget(p);
+        }
+
+        private void TypeCmdTarget(string text) {
+            var guid = VSConstants.VSStd2K;
+            var variantMem = Marshal.AllocCoTaskMem(Marshal.SizeOf(typeof(VARIANT)));
+            try {
+                for (int i = 0; i < text.Length; i++) {
+                    switch (text[i]) {
+                        case '\r': TypeWorker(Key.Enter); break;
+                        case '\t': TypeWorker(Key.Tab); break;
+                        default:
+                            Marshal.GetNativeVariantForObject((ushort)text[i], variantMem);
+                            Exec(
+                                ref guid,
+                                (int)VSConstants.VSStd2KCmdID.TYPECHAR,
+                                0,
+                                variantMem,
+                                IntPtr.Zero
+                            );
+                            break;
+                    }
+
+                }
+            } finally {
+                Marshal.FreeCoTaskMem(variantMem);
+            }
+        }
+
+        [StructLayout(LayoutKind.Explicit, Size = 16)]
+        struct VARIANT {
+            [FieldOffset(0)]
+            public ushort vt;
+            [FieldOffset(8)]
+            public IntPtr pdispVal;
+            [FieldOffset(8)]
+            public byte ui1;
+            [FieldOffset(8)]
+            public ushort ui2;
+            [FieldOffset(8)]
+            public uint ui4;
+            [FieldOffset(8)]
+            public ulong ui8;
+            [FieldOffset(8)]
+            public float r4;
+            [FieldOffset(8)]
+            public double r8;
         }
 
         public void ControlV() {
@@ -609,10 +817,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         private void ControlVWorker() {
-            var cmdTarget = _focused as IOleCommandTarget;
-            if (cmdTarget != null) {
-                cmdTarget.Paste();
-            }
+            var guid = VSConstants.GUID_VSStandardCommandSet97;
+            Exec(ref guid, (int)VSConstants.VSStd97CmdID.Paste, 0, IntPtr.Zero, IntPtr.Zero);
         }
 
         public void CheckMessageBox(params string[] text) {
@@ -644,31 +850,47 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public IntPtr WaitForDialog() {
-            throw new NotImplementedException();
+            return UIShell.WaitForDialog();
         }
 
         public void WaitForDialogDismissed() {
-            throw new NotImplementedException();
+            UIShell.WaitForDialogDismissed();
         }
 
         public void AssertFileExists(params string[] path) {
-            throw new NotImplementedException();
+            Assert.IsNotNull(FindItem(path));
+
+            var basePath = Path.Combine(new[] { SolutionDirectory }.Concat(path).ToArray());
+            Assert.IsTrue(File.Exists(basePath), "File doesn't exist: " + basePath);
         }
 
         public void AssertFileDoesntExist(params string[] path) {
-            throw new NotImplementedException();
+            Assert.IsNull(FindItem(path));
+
+            var basePath = Path.Combine(new[] { SolutionDirectory }.Concat(path).ToArray());
+            Assert.IsFalse(File.Exists(basePath), "File exists: " + basePath);
         }
 
         public void AssertFolderExists(params string[] path) {
-            throw new NotImplementedException();
+            Assert.IsNotNull(FindItem(path));
+
+            var basePath = Path.Combine(new[] { SolutionDirectory }.Concat(path).ToArray());
+            Assert.IsTrue(Directory.Exists(basePath), "Folder doesn't exist: " + basePath);
         }
 
         public void AssertFolderDoesntExist(params string[] path) {
-            throw new NotImplementedException();
+            Assert.IsNull(FindItem(path));
+
+            var basePath = Path.Combine(new[] { SolutionDirectory }.Concat(path).ToArray());
+            Assert.IsFalse(Directory.Exists(basePath), "Folder exists: " + basePath);
         }
 
         public void AssertFileExistsWithContent(string content, params string[] path) {
-            throw new NotImplementedException();
+            Assert.IsNotNull(FindItem(path));
+
+            var basePath = Path.Combine(new[] { SolutionDirectory }.Concat(path).ToArray());
+            Assert.IsTrue(File.Exists(basePath), "File doesn't exist: " + basePath);
+            Assert.AreEqual(File.ReadAllText(basePath), content);
         }
 
         public void CloseActiveWindow(vsSaveChanges save) {
@@ -686,7 +908,27 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public Project GetProject(string projectName) {
-            throw new NotImplementedException();
+            var empty = Guid.Empty;
+            IEnumHierarchies ppenum;
+            ErrorHandler.ThrowOnFailure(Solution.GetProjectEnum(
+                (uint)__VSENUMPROJFLAGS.EPF_ALLPROJECTS,
+                ref empty,
+                out ppenum
+            ));
+
+            var projects = new IVsHierarchy[32];
+            int hr;
+            uint fetched;
+            while ((hr = ppenum.Next((uint)projects.Length, projects, out fetched)) == VSConstants.S_OK && fetched > 0) {
+                var project = projects.FirstOrDefault(h =>
+                    projectName.Equals(h.GetPropertyValue((int)__VSHPROPID.VSHPROPID_Name, (uint)VSConstants.VSITEMID.Root) as string)
+                );
+                if (project != null) {
+                    return project.GetPropertyValue((int)__VSHPROPID.VSHPROPID_ExtObject, (uint)VSConstants.VSITEMID.Root) as Project;
+                }
+            }
+
+            return null;
         }
 
         public void SelectProject(Project project) {
@@ -705,7 +947,6 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             throw new NotImplementedException();
         }
 
-
         public IAddNewItem AddNewItem() {
             throw new NotImplementedException();
         }
@@ -720,11 +961,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
 
         public DTE Dte {
-            get { throw new NotImplementedException(); }
+            get { return _dte; }
         }
 
         public void OnDispose(Action action) {
-            
+
         }
     }
 }

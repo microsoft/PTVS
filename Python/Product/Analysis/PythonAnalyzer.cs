@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+// 
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+// 
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
@@ -20,15 +22,16 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.ExceptionServices;
 using System.Security;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.PyAnalysis;
-using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Analysis {
@@ -55,10 +58,12 @@ namespace Microsoft.PythonTools.Analysis {
         private readonly PythonLanguageVersion _langVersion;
         internal readonly AnalysisUnit _evalUnit;   // a unit used for evaluating when we don't otherwise have a unit available
         private readonly HashSet<string> _analysisDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        private Dictionary<string, List<SpecializationInfo>> _specializationInfo = new Dictionary<string, List<SpecializationInfo>>();  // delayed specialization information, for modules not yet loaded...
+        private readonly Dictionary<string, List<SpecializationInfo>> _specializationInfo = new Dictionary<string, List<SpecializationInfo>>();  // delayed specialization information, for modules not yet loaded...
         private AnalysisLimits _limits;
         private static object _nullKey = new object();
         private readonly SemaphoreSlim _reloadLock = new SemaphoreSlim(1, 1);
+        private ExceptionDispatchInfo _loadKnownTypesException;
+        private Dictionary<IProjectEntry[], AggregateProjectEntry> _aggregates = new Dictionary<IProjectEntry[], AggregateProjectEntry>(AggregateComparer.Instance);
 
         private const string AnalysisLimitsKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion +
             @"\Analysis\Project";
@@ -146,7 +151,15 @@ namespace Microsoft.PythonTools.Analysis {
             _evalUnit = new AnalysisUnit(null, null, new ModuleInfo("$global", new ProjectEntry(this, "$global", String.Empty, null), _defaultContext).Scope, true);
             AnalysisLog.NewUnit(_evalUnit);
 
-            LoadInitialKnownTypes();
+            try {
+                LoadInitialKnownTypes();
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                // This will be rethrown in LoadKnownTypesAsync
+                _loadKnownTypesException = ExceptionDispatchInfo.Capture(ex);
+            }
         }
 
         private void LoadInitialKnownTypes() {
@@ -162,6 +175,10 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private async Task LoadKnownTypesAsync() {
+            if (_loadKnownTypesException != null) {
+                _loadKnownTypesException.Throw();
+            }
+
             _itemCache.Clear();
 
             Debug.Assert(_builtinModule != null, "LoadInitialKnownTypes was not called");
@@ -576,11 +593,14 @@ namespace Microsoft.PythonTools.Analysis {
             foreach (var keyValue in Modules) {
                 var modName = keyValue.Key;
                 var moduleRef = keyValue.Value;
-
+            
                 if (moduleRef.IsValid) {
                     // include modules which can be imported
-                    if (modName == name || PackageNameMatches(name, modName)) {
-                        yield return new ExportedMemberInfo(modName, true);
+                    string pkgName;
+                    if (modName == name) {
+                        yield return new ExportedMemberInfo(null, modName);
+                    } else if (GetPackageNameIfMatch(name, modName, out pkgName)) {
+                        yield return new ExportedMemberInfo(pkgName, name);
                     }
                 }
             }
@@ -590,22 +610,21 @@ namespace Microsoft.PythonTools.Analysis {
                 var modName = keyValue.Key;
                 var moduleRef = keyValue.Value;
 
-                if (moduleRef.IsValid) {
-                    // then check for members within the module.
-                    if (moduleRef.ModuleContainsMember(_defaultContext, name)) {
-                        yield return new ExportedMemberInfo(modName + "." + name, true);
-                    } else {
-                        yield return new ExportedMemberInfo(modName + "." + name, false);
-                    }
+                if (moduleRef.IsValid && moduleRef.ModuleContainsMember(_defaultContext, name)) {
+                    yield return new ExportedMemberInfo(modName, name);
                 }
             }
         }
 
-        private static bool PackageNameMatches(string name, string modName) {
-            int lastDot;
-            return (lastDot = modName.LastIndexOf('.')) != -1 &&
-                modName.Length == lastDot + 1 + name.Length &&
-                String.Compare(modName, lastDot + 1, name, 0, name.Length) == 0;
+        private static bool GetPackageNameIfMatch(string name, string fullName, out string packageName) {
+            int lastDot = fullName.LastIndexOf('.');
+            if (lastDot < 0) {
+                packageName = null;
+                return false;
+            }
+
+            packageName = fullName.Remove(lastDot);
+            return String.Compare(fullName, lastDot + 1, name, 0, name.Length) == 0;
         }
 
         /// <summary>
@@ -781,6 +800,7 @@ namespace Microsoft.PythonTools.Analysis {
                 case BuiltinTypeId.List: return new ListBuiltinClassInfo(type, this);
                 case BuiltinTypeId.Tuple: return new TupleBuiltinClassInfo(type, this);
                 case BuiltinTypeId.Object: return new ObjectBuiltinClassInfo(type, this);
+                case BuiltinTypeId.Dict: return new DictBuiltinClassInfo(type, this);
                 default: return new BuiltinClassInfo(type, this);
             }
         }
@@ -871,6 +891,17 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal ConcurrentDictionary<string, ModuleInfo> ModulesByFilename {
             get { return _modulesByFilename; }
+        }
+
+        public bool TryGetProjectEntryByPath(string path, out IProjectEntry projEntry) {
+            ModuleInfo modInfo;
+            if (_modulesByFilename.TryGetValue(path, out modInfo)) {
+                projEntry = modInfo.ProjectEntry;
+                return true;
+            }
+
+            projEntry = null;
+            return false;
         }
 
         internal IAnalysisSet GetConstant(IPythonConstant value) {
@@ -1008,9 +1039,89 @@ namespace Microsoft.PythonTools.Analysis {
                 if (_disposeInterpreter && interpreter != null) {
                     interpreter.Dispose();
                 }
+                // Try and acquire the lock before disposing. This helps avoid
+                // some (non-fatal) exceptions.
+                _reloadLock.Wait(TimeSpan.FromSeconds(10));
+                _reloadLock.Dispose();
             }
         }
 
+        ~PythonAnalyzer() {
+            Dispose(false);
+        }
+
         #endregion
+
+        internal AggregateProjectEntry GetAggregate(params IProjectEntry[] aggregating) {
+            Debug.Assert(new HashSet<IProjectEntry>(aggregating).Count == aggregating.Length);
+
+            SortAggregates(aggregating);
+
+            return GetAggregateWorker(aggregating);
+        }
+
+        private static void SortAggregates(IProjectEntry[] aggregating) {
+            Array.Sort(aggregating, (x, y) => x.GetHashCode() - y.GetHashCode());
+        }
+
+        internal AggregateProjectEntry GetAggregate(HashSet<IProjectEntry> from, IProjectEntry with) {
+            Debug.Assert(!from.Contains(with));
+
+            IProjectEntry[] all = new IProjectEntry[from.Count + 1];
+            from.CopyTo(all);
+            all[from.Count] = with;
+
+            SortAggregates(all);
+
+            return GetAggregateWorker(all);
+        }
+
+        internal void ClearAggregate(AggregateProjectEntry entry) {
+            var aggregating = entry._aggregating.ToArray();
+            SortAggregates(aggregating);
+
+            _aggregates.Remove(aggregating);
+        }
+
+        private AggregateProjectEntry GetAggregateWorker(IProjectEntry[] all) {
+            AggregateProjectEntry agg;
+            if (!_aggregates.TryGetValue(all, out agg)) {
+                _aggregates[all] = agg = new AggregateProjectEntry(new HashSet<IProjectEntry>(all));
+
+                foreach (var proj in all) {
+                    IAggregateableProjectEntry aggretable = proj as IAggregateableProjectEntry;
+                    if (aggretable != null) {
+                        aggretable.AggregatedInto(agg);
+                    }
+                }
+            }
+
+            return agg;
+        }
+
+        class AggregateComparer : IEqualityComparer<IProjectEntry[]> {
+            public static AggregateComparer Instance = new AggregateComparer();
+
+            public bool Equals(IProjectEntry[] x, IProjectEntry[] y) {
+                if (x.Length != y.Length) {
+                    return false;
+                }
+                for (int i = 0; i < x.Length; i++) {
+                    if (x[i] != y[i]) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            public int GetHashCode(IProjectEntry[] obj) {
+                int res = 0;
+                for (int i = 0; i < obj.Length; i++) {
+                    res ^= obj[i].GetHashCode();
+                }
+                return res;
+            }
+        }
+
     }
 }

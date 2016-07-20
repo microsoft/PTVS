@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 extern alias analysis;
 extern alias pythontools;
@@ -28,6 +30,7 @@ using System.Windows.Automation;
 using System.Xml;
 using EnvDTE;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Project.Web;
@@ -40,10 +43,8 @@ using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
-using ExcExt = pythontools::Microsoft.VisualStudioTools.ExceptionExtensions;
 using InterpreterExt = analysis::Microsoft.PythonTools.Interpreter.PythonInterpreterFactoryExtensions;
 using Process = System.Diagnostics.Process;
-using TaskExt = pythontools::Microsoft.VisualStudioTools.TaskExtensions;
 using Thread = System.Threading.Thread;
 
 namespace PythonToolsUITests {
@@ -57,8 +58,8 @@ namespace PythonToolsUITests {
 
         public TestContext TestContext { get; set; }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void LoadWebFlavoredProject() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\EmptyWebProject.sln");
@@ -71,7 +72,7 @@ namespace PythonToolsUITests {
                 extender.StartWebServerOnDebug = false;
 
                 var proj = project.GetCommonProject();
-                var ccp = proj as IPythonProject2;
+                var ccp = proj as IPythonProject;
                 Assert.IsNotNull(ccp);
                 Assert.IsNotNull(ccp.FindCommand("PythonRunWebServerCommand"), "No PythonRunWebServerCommand");
                 Assert.IsNotNull(ccp.FindCommand("PythonDebugWebServerCommand"), "No PythonDebugWebServerCommand");
@@ -82,7 +83,7 @@ namespace PythonToolsUITests {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\CheckCommandLineArgs.sln");
 
-                var proj = project.GetCommonProject() as IPythonProject2;
+                var proj = project.GetCommonProject() as IPythonProject;
                 Assert.IsNotNull(proj);
 
                 var outFile = Path.Combine(Path.GetDirectoryName(project.FullName), "output.txt");
@@ -108,25 +109,25 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectCommandLineArgs() {
             CheckCommandLineArgs(Guid.NewGuid().ToString("N"));
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectStartupModuleArgs() {
             CheckCommandLineArgs("{StartupModule}", "CheckCommandLineArgs");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectEnvironment() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.OpenProject(@"TestData\CheckEnvironment.sln");
 
-                var proj = project.GetCommonProject() as IPythonProject2;
+                var proj = project.GetCommonProject() as IPythonProject;
                 Assert.IsNotNull(proj);
 
                 var outFile = Path.Combine(Path.GetDirectoryName(project.FullName), "output.txt");
@@ -149,8 +150,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectStaticUri() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.CreateProject(
@@ -234,8 +235,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectBuildWarnings() {
             using (var app = new PythonVisualStudioApp())
             using (app.SelectDefaultInterpreter(PythonPaths.Python33 ?? PythonPaths.Python33_x64)) {
@@ -246,8 +247,9 @@ namespace PythonToolsUITests {
                     "WebProjectBuildWarnings"
                 );
 
-                var proj = project.GetCommonProject();
+                var proj = project.GetPythonProject();
                 Assert.IsNotNull(proj);
+                Assert.AreEqual(new Version(3, 3), app.ServiceProvider.GetUIThread().Invoke(() => proj.GetLaunchConfigurationOrThrow().Interpreter.Version));
 
                 for (int iteration = 0; iteration <= 2; ++iteration) {
                     var warnings = app.ServiceProvider.GetUIThread().Invoke(() => {
@@ -258,6 +260,7 @@ namespace PythonToolsUITests {
                         project.DTE.Solution.SolutionBuild.Build(true);
 
                         var text = app.GetOutputWindowText("Build");
+                        Console.WriteLine(text);
                         return text.Split('\r', '\n')
                             .Select(s => Regex.Match(s, @"warning\s*:\s*(?<msg>.+)"))
                             .Where(m => m.Success)
@@ -299,19 +302,20 @@ namespace PythonToolsUITests {
                             break;
                         case 1:
                             var model = app.GetService<IComponentModel>(typeof(SComponentModel));
-                            var interpreterService = model.GetService<IInterpreterOptionsService>();
-                            var newInterpreter = interpreterService.FindInterpreter(PythonPaths.CPythonGuid, "3.4")
-                                ?? interpreterService.FindInterpreter(PythonPaths.CPythonGuid, "2.7");
+                            var interpreterService = model.GetService<IInterpreterRegistryService>();
+                            var optionsService = model.GetService<IInterpreterOptionsService>();
+                            var newInterpreter = interpreterService.FindInterpreter("Global|PythonCore|3.4|x86")
+                                ?? interpreterService.FindInterpreter("Global|PythonCore|2.7|x86");
                             Assert.IsNotNull(newInterpreter);
-                            interpreterService.DefaultInterpreter = newInterpreter;
+                            optionsService.DefaultInterpreter = newInterpreter;
                             break;
                     }
                 }
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectAddSupportFiles() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.CreateProject(
@@ -337,8 +341,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void WorkerProjectAddSupportFiles() {
             using (var app = new PythonVisualStudioApp()) {
                 var project = app.CreateProject(
@@ -364,8 +368,8 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectCreateVirtualEnvOnNew() {
             using (var app = new PythonVisualStudioApp()) {
                 var t = Task.Run(() => app.CreateProject(
@@ -386,34 +390,33 @@ namespace PythonToolsUITests {
                     dlg.ClickButtonAndClose("Close", nameIsAutomationId: true);
                 }
                 
-                var project = TaskExt.WaitAndUnwrapExceptions(t);
+                var project = t.WaitAndUnwrapExceptions();
 
-                var provider = project.Properties.Item("InterpreterFactoryProvider").Value as MSBuildProjectInterpreterFactoryProvider;
+                var contextProvider = app.ComponentModel.GetService<VsProjectContextProvider>();
                 for (int retries = 20; retries > 0; --retries) {
-                    if (provider.IsProjectSpecific(provider.ActiveInterpreter)) {
+                    if (contextProvider.IsProjectSpecific(project.GetPythonProject().ActiveInterpreter.Configuration)) {
                         break;
                     }
                     Thread.Sleep(1000);
                 }
-                Assert.IsTrue(provider.IsProjectSpecific(provider.ActiveInterpreter), "Did not have virtualenv");
+                Assert.IsTrue(contextProvider.IsProjectSpecific(project.GetPythonProject().ActiveInterpreter.Configuration), "Did not have virtualenv");
                 
                 for (int retries = 60; retries > 0; --retries) {
-                    if (provider.ActiveInterpreter.FindModules("flask").Any()) {
+                    if (project.GetPythonProject().ActiveInterpreter.FindModules("flask").Any()) {
                         break;
                     }
                     Thread.Sleep(1000);
                 }
-                AssertUtil.ContainsExactly(provider.ActiveInterpreter.FindModules("flask"), "flask");
+                AssertUtil.ContainsExactly(project.GetPythonProject().ActiveInterpreter.FindModules("flask"), "flask");
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectInstallOnNew() {
             using (var app = new PythonVisualStudioApp()) {
-                TaskExt.WaitAndUnwrapExceptions(
-                    Pip.Uninstall(app.ServiceProvider, app.InterpreterService.DefaultInterpreter, "bottle", false)
-                );
+                Pip.Uninstall(app.ServiceProvider, app.OptionsService.DefaultInterpreter, "bottle", false)
+                    .WaitAndUnwrapExceptions();
 
                 var t = Task.Run(() => app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
@@ -428,30 +431,32 @@ namespace PythonToolsUITests {
                     dlg.ClickButtonAndClose("CommandLink_1001", nameIsAutomationId: true);
                 }
 
-                var project = TaskExt.WaitAndUnwrapExceptions(t);
+                var project = t.WaitAndUnwrapExceptions();
 
-                var provider = project.Properties.Item("InterpreterFactoryProvider").Value as MSBuildProjectInterpreterFactoryProvider;
-
-                Assert.AreSame(app.InterpreterService.DefaultInterpreter, provider.ActiveInterpreter);
+                Assert.AreSame(app.OptionsService.DefaultInterpreter, project.GetPythonProject().ActiveInterpreter);
 
                 for (int retries = 60; retries > 0; --retries) {
-                    if (provider.ActiveInterpreter.FindModules("bottle").Any()) {
+                    if (project.GetPythonProject().ActiveInterpreter.FindModules("bottle").Any()) {
                         break;
                     }
                     Thread.Sleep(1000);
                 }
-                AssertUtil.ContainsExactly(provider.ActiveInterpreter.FindModules("bottle"), "bottle");
+                AssertUtil.ContainsExactly(project.GetPythonProject().ActiveInterpreter.FindModules("bottle"), "bottle");
 
-                TaskExt.WaitAndUnwrapExceptions(
-                    Pip.Uninstall(app.ServiceProvider, app.InterpreterService.DefaultInterpreter, "bottle", false)
-                );
+                Pip.Uninstall(app.ServiceProvider, app.OptionsService.DefaultInterpreter, "bottle", false)
+                    .WaitAndUnwrapExceptions();
             }
         }
 
         private static void CloudProjectTest(string roleType, bool openServiceDefinition) {
             Assert.IsTrue(roleType == "Web" || roleType == "Worker", "Invalid roleType: " + roleType);
 
-            var asm = Assembly.Load("Microsoft.VisualStudio.CloudService.Wizard,Version=1.0.0.0,Culture=neutral,PublicKeyToken=b03f5f7f11d50a3a");
+            Assembly asm = null;
+            try {
+                asm = Assembly.Load("Microsoft.VisualStudio.CloudService.Wizard,Version=1.0.0.0,Culture=neutral,PublicKeyToken=b03f5f7f11d50a3a");
+            } catch {
+                // Failed to load - we'll skip the test below
+            }
             
             if (asm != null && asm.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false)
                 .OfType<AssemblyFileVersionAttribute>()
@@ -522,26 +527,26 @@ namespace PythonToolsUITests {
             }
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void UpdateWebRoleServiceDefinitionInVS() {
             CloudProjectTest("Web", false);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void UpdateWorkerRoleServiceDefinitionInVS() {
             CloudProjectTest("Worker", false);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void UpdateWebRoleServiceDefinitionInVSDocumentOpen() {
             CloudProjectTest("Web", true);
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void UpdateWorkerRoleServiceDefinitionInVSDocumentOpen() {
             CloudProjectTest("Worker", true);
         }
@@ -584,7 +589,7 @@ namespace PythonToolsUITests {
                 using (new ProcessScope("Microsoft.PythonTools.Analyzer")) {
                     factory = CreateVirtualEnvironment(pythonVersion, app, pyProj);
 
-                    EndToEndLog("Created virtual environment {0}", factory.Description);
+                    EndToEndLog("Created virtual environment {0}", factory.Configuration.Description);
 
                     InstallWebFramework(app, moduleName, packageName ?? moduleName, factory);
 
@@ -725,13 +730,13 @@ namespace PythonToolsUITests {
             var uiThread = app.ServiceProvider.GetUIThread();
             var task = uiThread.InvokeTask(() => {
                 var model = app.GetService<IComponentModel>(typeof(SComponentModel));
-                var service = model.GetService<IInterpreterOptionsService>();
+                var service = model.GetService<IInterpreterRegistryService>();
 
                 return pyProj.CreateOrAddVirtualEnvironment(
                     service,
                     true,
                     Path.Combine(pyProj.ProjectHome, "env"),
-                    service.FindInterpreter(PythonPaths.CPythonGuid, pythonVersion),
+                    service.FindInterpreter("Global|PythonCore|" + pythonVersion + "|x86"),
                     Version.Parse(pythonVersion) >= new Version(3, 3)
                 );
             });
@@ -741,11 +746,11 @@ namespace PythonToolsUITests {
                 throw ex.InnerException;
             }
             var factory = task.Result;
-            Assert.IsTrue(uiThread.Invoke(() => factory.Id == pyProj.GetInterpreterFactory().Id));
+            Assert.IsTrue(uiThread.Invoke(() => factory.Configuration.Id == pyProj.GetInterpreterFactory().Configuration.Id));
             return factory;
         }
 
-        class TraceRedirector : pythontools::Microsoft.VisualStudioTools.Project.Redirector {
+        class TraceRedirector : Redirector {
             private readonly string _prefix;
 
             public TraceRedirector(string prefix = "") {
@@ -780,32 +785,32 @@ namespace PythonToolsUITests {
 
         #endregion
 
-        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FlaskEndToEndV34() {
             EndToEndTest(PythonVisualStudioApp.FlaskWebProjectTemplate, "flask", "Hello World!", "3.4");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void FlaskEndToEndV27() {
             EndToEndTest(PythonVisualStudioApp.FlaskWebProjectTemplate, "flask", "Hello World!", "2.7");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BottleEndToEndV34() {
             EndToEndTest(PythonVisualStudioApp.BottleWebProjectTemplate, "bottle", "<b>Hello world</b>!", "3.4");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void BottleEndToEndV27() {
             EndToEndTest(PythonVisualStudioApp.BottleWebProjectTemplate, "bottle", "<b>Hello world</b>!", "2.7");
         }
 
-        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DjangoEndToEndV27() {
             EndToEndTest(
                 PythonVisualStudioApp.DjangoWebProjectTemplate,
@@ -815,8 +820,8 @@ namespace PythonToolsUITests {
             );
         }
 
-        [TestMethod, Priority(0), TestCategory("Core"), Timeout(10 * 60 * 1000)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1), Timeout(10 * 60 * 1000)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public void DjangoEndToEndV34() {
             EndToEndTest(
                 PythonVisualStudioApp.DjangoWebProjectTemplate,

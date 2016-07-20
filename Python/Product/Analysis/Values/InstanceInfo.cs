@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System.Collections.Generic;
 using System.Linq;
@@ -31,7 +33,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _classInfo = classInfo;
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             var res = new Dictionary<string, IAnalysisSet>();
             if (_instanceAttrs != null) {
                 foreach (var kvp in _instanceAttrs) {
@@ -45,29 +47,31 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
 
             // check and see if it's defined in a base class instance as well...
-            foreach (var b in _classInfo.Bases) {
-                foreach (var ns in b) {
-                    if (ns.Push()) {
-                        try {
-                            ClassInfo baseClass = ns as ClassInfo;
-                            if (baseClass != null &&
-                                baseClass.Instance._instanceAttrs != null) {
-                                foreach (var kvp in baseClass.Instance._instanceAttrs) {
-                                    kvp.Value.ClearOldValues();
-                                    if (kvp.Value.VariableStillExists) {
-                                        MergeTypes(res, kvp.Key, kvp.Value.TypesNoCopy);
+            if (!options.HasFlag(GetMemberOptions.DeclaredOnly)) {
+                foreach (var b in _classInfo.Bases) {
+                    foreach (var ns in b) {
+                        if (ns.Push()) {
+                            try {
+                                ClassInfo baseClass = ns as ClassInfo;
+                                if (baseClass != null &&
+                                    baseClass.Instance._instanceAttrs != null) {
+                                    foreach (var kvp in baseClass.Instance._instanceAttrs) {
+                                        kvp.Value.ClearOldValues();
+                                        if (kvp.Value.VariableStillExists) {
+                                            MergeTypes(res, kvp.Key, kvp.Value.TypesNoCopy);
+                                        }
                                     }
                                 }
+                            } finally {
+                                ns.Pop();
                             }
-                        } finally {
-                            ns.Pop();
                         }
                     }
                 }
-            }
 
-            foreach (var classMem in _classInfo.GetAllMembers(moduleContext)) {
-                MergeTypes(res, classMem.Key, classMem.Value);
+                foreach (var classMem in _classInfo.GetAllMembers(moduleContext)) {
+                    MergeTypes(res, classMem.Key, classMem.Value);
+                }
             }
             return res;
         }
@@ -127,7 +131,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return res;
         }
 
-        internal IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
             var result = AnalysisSet.Empty;
             var classMem = _classInfo.GetMemberNoReferences(node, unit, name);
             if (classMem.Count > 0) {
@@ -145,9 +149,6 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var ignored = base.GetMember(node, unit, name);
-
             // __getattribute__ takes precedence over everything.
             IAnalysisSet getattrRes = AnalysisSet.Empty;
             var getAttribute = _classInfo.GetMemberNoReferences(node, unit.CopyForEval(), "__getattribute__");
@@ -187,7 +188,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
                             if (baseClass != null &&
                                 baseClass.Instance._instanceAttrs != null &&
                                 baseClass.Instance._instanceAttrs.TryGetValue(name, out def)) {
-                                res = res.Union(def.TypesNoCopy);
+                                res = res.Union(def.GetTypesNoCopy(unit, DeclaringModule));
                             }
                         } finally {
                             ns.Pop();
@@ -235,7 +236,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
             instMember.AddAssignment(node, unit);
             instMember.MakeUnionStrongerIfMoreThan(ProjectState.Limits.InstanceMembers, value);
-            instMember.AddTypes(unit, value);
+            instMember.AddTypes(unit, value, true, DeclaringModule);
         }
 
         public override void DeleteMember(Node node, AnalysisUnit unit, string name) {
@@ -354,6 +355,41 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 case PythonOperator.TrueDivide: op = "__rtruediv__"; break;
             }
             return op;
+        }
+
+        public override IAnalysisSet GetEnumeratorTypes(Node node, AnalysisUnit unit) {
+            if (Push()) {
+                try {
+                    var iter = GetIterator(node, unit);
+                    if (iter.Any()) {
+                        return iter
+                            .GetMember(node, unit, unit.ProjectState.LanguageVersion.Is3x() ? "__next__" : "next")
+                            .Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames);
+                    }
+                } finally {
+                    Pop();
+                }
+            }
+
+            return base.GetEnumeratorTypes(node, unit);
+        }
+
+        public override IAnalysisSet GetAsyncEnumeratorTypes(Node node, AnalysisUnit unit) {
+            if (unit.ProjectState.LanguageVersion.Is3x() && Push()) {
+                try {
+                    var iter = GetAsyncIterator(node, unit);
+                    if (iter.Any()) {
+                        return iter
+                            .GetMember(node, unit, "__anext__")
+                            .Call(node, unit, ExpressionEvaluator.EmptySets, ExpressionEvaluator.EmptyNames)
+                            .Await(node, unit);
+                    }
+                } finally {
+                    Pop();
+                }
+            }
+
+            return base.GetAsyncEnumeratorTypes(node, unit);
         }
 
         public override IPythonProjectEntry DeclaringModule {

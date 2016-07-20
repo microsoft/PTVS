@@ -1,19 +1,22 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
@@ -23,44 +26,41 @@ using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Refactoring {
     class VariableRenamer {
         private readonly ITextView _view;
         private readonly IServiceProvider _serviceProvider;
+        private readonly UIThreadBase _uiThread;
 
         public VariableRenamer(ITextView textView, IServiceProvider serviceProvider) {
             _view = textView;
             _serviceProvider = serviceProvider;
+            _uiThread = _serviceProvider.GetUIThread();
         }
 
-        public void RenameVariable(IRenameVariableInput input, IVsPreviewChangesService previewChanges) {
+        public async Task RenameVariable(IRenameVariableInput input, IVsPreviewChangesService previewChanges) {
             if (IsModuleName(input)) {
                 input.CannotRename("Cannot rename a module name");
                 return;
             }
 
-            var analysis = _view.GetExpressionAnalysis(_serviceProvider);
+            var caret = _view.GetPythonCaret();
+            var analysis = await VsProjectAnalyzer.AnalyzeExpressionAsync(_serviceProvider, _view, caret.Value);
+            if (analysis == null) {
+                input.CannotRename("Unable to get analysis for current text view.");
+                return;
+            }
             
             string originalName = null;
             string privatePrefix = null;
-            Expression expr = null;
-            if (analysis != ExpressionAnalysis.Empty) {
-                PythonAst ast = analysis.GetEvaluatedAst();
+            if (!String.IsNullOrWhiteSpace(analysis.Expression)) {
+                originalName = analysis.MemberName;
 
-                expr = Statement.GetExpression(ast.Body);
-
-                NameExpression ne = expr as NameExpression;
-                MemberExpression me;
-                if (ne != null) {
-                    originalName = ne.Name;
-                } else if ((me = expr as MemberExpression) != null) {
-                    originalName = me.Name;
-                }
-
-                if (ast.PrivatePrefix != null && originalName != null && originalName.StartsWith("_" + ast.PrivatePrefix)) {
-                    originalName = originalName.Substring(ast.PrivatePrefix.Length + 1);
-                    privatePrefix = ast.PrivatePrefix;
+                if (analysis.PrivatePrefix != null && originalName != null && originalName.StartsWith("_" + analysis.PrivatePrefix)) {
+                    originalName = originalName.Substring(analysis.PrivatePrefix.Length + 1);
+                    privatePrefix = analysis.PrivatePrefix;
                 }
 
                 if (originalName != null && _view.Selection.IsActive && !_view.Selection.IsEmpty) {
@@ -84,9 +84,9 @@ namespace Microsoft.PythonTools.Refactoring {
                 }
             }
 
-            IEnumerable<IAnalysisVariable> variables;
+            IEnumerable<AnalysisVariable> variables;
             if (!hasVariables) {
-                List<IAnalysisVariable> paramVars = GetKeywordParameters(expr, originalName);
+                List<AnalysisVariable> paramVars = await GetKeywordParameters(analysis.Expression, originalName);
 
                 if (paramVars.Count == 0) {
                     input.CannotRename(string.Format("No information is available for the variable '{0}'.", originalName));
@@ -100,7 +100,7 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             PythonLanguageVersion languageVersion = PythonLanguageVersion.None;
-            var analyzer = _view.GetAnalyzer(_serviceProvider);
+            var analyzer = _view.GetAnalyzerAtCaret(_serviceProvider);
             var factory = analyzer != null ? analyzer.InterpreterFactory : null;
             if (factory != null) {
                 languageVersion = factory.Configuration.Version.ToLanguageVersion();
@@ -108,7 +108,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
             var info = input.GetRenameInfo(originalName, languageVersion);
             if (info != null) {
-                var engine = new PreviewChangesEngine(_serviceProvider, input, analysis, info, originalName, privatePrefix, _view.GetAnalyzer(_serviceProvider), variables);
+                var engine = new PreviewChangesEngine(_serviceProvider, input, analysis.Expression, info, originalName, privatePrefix, _view.GetAnalyzerAtCaret(_serviceProvider), variables);
                 if (info.Preview) {
                     previewChanges.PreviewChanges(engine);
                 } else {
@@ -117,17 +117,18 @@ namespace Microsoft.PythonTools.Refactoring {
             }
         }
 
-        private List<IAnalysisVariable> GetKeywordParameters(Expression expr, string originalName) {
-            List<IAnalysisVariable> paramVars = new List<IAnalysisVariable>();
-            if (expr is NameExpression) {
+        private async Task<List<AnalysisVariable>> GetKeywordParameters(string expr, string originalName) {
+            List<AnalysisVariable> paramVars = new List<AnalysisVariable>();
+            if (expr.IndexOf('.')  == -1) {
                 // let's check if we'r re-naming a keyword argument...
                 ITrackingSpan span = _view.GetCaretSpan();
-                var sigs = _view.TextBuffer.CurrentSnapshot.GetSignatures(_serviceProvider, span);
+                var sigs = await _uiThread.InvokeTask(() => _serviceProvider.GetPythonToolsService().GetSignaturesAsync(_view, _view.TextBuffer.CurrentSnapshot, span))
+                    .ConfigureAwait(false);
 
                 foreach (var sig in sigs.Signatures) {
-                    IOverloadResult overloadRes = sig as IOverloadResult;
+                    PythonSignature overloadRes = sig as PythonSignature;
                     if (overloadRes != null) {
-                        foreach (var param in overloadRes.Parameters) {
+                        foreach (PythonParameter param in overloadRes.Parameters) {
                             if (param.Name == originalName && param.Variables != null) {
                                 paramVars.AddRange(param.Variables);
                             }
@@ -135,6 +136,7 @@ namespace Microsoft.PythonTools.Refactoring {
                     }
                 }
             }
+
             return paramVars;
         }
 

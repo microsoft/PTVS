@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -159,15 +161,17 @@ namespace Microsoft.PythonTools.Intellisense {
         readonly bool _shouldHideAdvanced;
         readonly bool _matchInsertionText;
 
+        public const bool DefaultCommitByDefault = true;
+
         private readonly static Regex _advancedItemPattern = new Regex(
             @"__\w+__($|\s)",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant
         );
 
         private readonly static IList<Completion> _noCompletions = new[] { new Completion(
-            SR.GetString(SR.NoCompletionsCompletion),
+            Strings.NoCompletionsCompletion,
             string.Empty,
-            SR.GetString(SR.WarningUnknownType),
+            Strings.WarningUnknownType,
             null,
             null
         ) };
@@ -221,11 +225,22 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
                 _filteredCompletions.Filter(IsVisible);
             }
+
+            CommitByDefault = DefaultCommitByDefault;
         }
 
         private bool IsAdvanced(Completion comp) {
             return _advancedItemPattern.IsMatch(_matchInsertionText ? comp.InsertionText : comp.DisplayText);
         }
+
+        /// <summary>
+        /// If True, the best item is selected by default. Otherwise, the user
+        /// will need to manually select it before committing.
+        /// </summary>
+        /// <remarks>
+        /// By default, this is set to <see cref="DefaultCommitByDefault"/>
+        /// </remarks>
+        public bool CommitByDefault { get; set; }
 
         /// <summary>
         /// Gets or sets the list of completions that are part of this completion set.
@@ -322,7 +337,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            if (Moniker == "PythonOverrides") {
+            if (!CommitByDefault) {
                 allowSelect = false;
                 isUnique = false;
             }

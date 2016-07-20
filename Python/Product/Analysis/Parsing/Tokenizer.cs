@@ -1,16 +1,18 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 //#define DUMP_TOKENS
 
@@ -36,7 +38,7 @@ namespace Microsoft.PythonTools.Parsing {
         private ErrorSink _errors;
         private Severity _indentationInconsistencySeverity;
         private bool _endContinues, _printFunction, _unicodeLiterals, _withStatement;
-        private List<int> _newLineLocations;
+        private List<NewLineLocation> _newLineLocations;
         private SourceLocation _initialLocation;
         private TextReader _reader;
         private char[] _buffer;
@@ -134,7 +136,7 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         public SourceLocation IndexToLocation(int index) {
-            int match = _newLineLocations.BinarySearch(index);
+            int match = _newLineLocations.BinarySearch(new NewLineLocation(index, NewLineKind.None));
             if (match < 0) {
                 // If our index = -1, it means we're on the first line.
                 if (match == -1) {
@@ -145,7 +147,7 @@ namespace Microsoft.PythonTools.Parsing {
                 match = ~match - 1;
             }
 
-            return new SourceLocation(index + _initialLocation.Index, match + 2 + _initialLocation.Line - 1, index - _newLineLocations[match] + _initialLocation.Column);
+            return new SourceLocation(index + _initialLocation.Index, match + 2 + _initialLocation.Line - 1, index - _newLineLocations[match].EndIndex + _initialLocation.Column);
         }
 
         internal ErrorSink ErrorSink {
@@ -206,7 +208,7 @@ namespace Microsoft.PythonTools.Parsing {
                 _buffer = new char[bufferCapacity];
             }
 
-            _newLineLocations = new List<int>();
+            _newLineLocations = new List<NewLineLocation>();
             _tokenEnd = -1;
             _multiEolns = !_disableLineFeedLineSeparator;
             _initialLocation = initialLocation;
@@ -315,6 +317,11 @@ namespace Microsoft.PythonTools.Parsing {
                 case TokenKind.KeywordTrue:
                 case TokenKind.KeywordFalse:
                     result.Category = TokenCategory.Keyword;
+                    break;
+
+                case TokenKind.KeywordAsync:
+                case TokenKind.KeywordAwait:
+                    result.Category = TokenCategory.Identifier;
                     break;
 
                 default:
@@ -491,7 +498,7 @@ namespace Microsoft.PythonTools.Parsing {
                         NewLineKind nlKind;
                         var nextChar = NextChar();
                         if ((nlKind = ReadEolnOpt(nextChar)) != NewLineKind.None) {
-                            _newLineLocations.Add(CurrentIndex);
+                            _newLineLocations.Add(new NewLineLocation(CurrentIndex, nlKind));
 
                             if ((_options & TokenizerOptions.VerbatimCommentsAndLineJoins) != 0) {
                                 // report the explicit line join
@@ -586,7 +593,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                     default:
                         if ((nlKind = ReadEolnOpt(ch)) > 0) {
-                            _newLineLocations.Add(CurrentIndex);
+                            _newLineLocations.Add(new NewLineLocation(CurrentIndex, nlKind));
                             // token marked by the callee:
                             if (ReadIndentationAfterNewLine(nlKind)) {
                                 return NewLineKindToToken(nlKind, _state.LastNewLine);
@@ -800,7 +807,7 @@ namespace Microsoft.PythonTools.Parsing {
             int end_add = 0;
             NewLineKind nlKind;
 
-            for (; ; ) {
+            for (;;) {
                 int ch = NextChar();
 
                 if (ch == EOF) {
@@ -849,7 +856,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                         return new IncompleteStringErrorToken("<eof> while reading string", incompleteContents);
                     } else if ((nlKind = ReadEolnOpt(ch)) > 0) {
-                        _newLineLocations.Add(CurrentIndex);
+                        _newLineLocations.Add(new NewLineLocation(CurrentIndex, nlKind));
 
                         // skip \<eoln> unless followed by EOF:
                         if (Peek() == EOF) {
@@ -869,7 +876,7 @@ namespace Microsoft.PythonTools.Parsing {
                     }
 
                 } else if ((nlKind = ReadEolnOpt(ch)) > 0) {
-                    _newLineLocations.Add(CurrentIndex);
+                    _newLineLocations.Add(new NewLineLocation(CurrentIndex, nlKind));
                     if (!isTriple) {
                         // backup over the eoln:
 
@@ -1226,68 +1233,70 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Token ReadExponent(bool leftIsFloat = false) {
+            string tokenStr;
             int ch = NextChar();
 
             if (ch == '-' || ch == '+') {
                 ch = NextChar();
             }
 
-            for (var iter = 0; ;iter++ ) {
-                    switch (ch) {
-                        case '0':
-                        case '1':
-                        case '2':
-                        case '3':
-                        case '4':
-                        case '5':
-                        case '6':
-                        case '7':
-                        case '8':
-                        case '9':
-                            ch = NextChar();
-                            break;
+            for (var iter = 0; ; iter++) {
+                switch (ch) {
+                    case '0':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
+                        ch = NextChar();
+                        break;
 
-                        case 'j':
-                        case 'J':
+                    case 'j':
+                    case 'J':
+                        MarkTokenEnd();
+
+                        // TODO: parse in place
+                        tokenStr = GetTokenString();
+                        if (Verbatim) {
+                            return new VerbatimConstantValueToken(ParseComplex(tokenStr), tokenStr);
+                        }
+                        return new ConstantValueToken(ParseComplex(tokenStr));
+
+                    default:
+                        if (iter <= 0) {
+                            // CPython Issue 21642 allows entries such as 1else which should be
+                            // parsed as '1 else' and not '1e lse'.  Back the buffer to before the e.
+                            BufferBack(-2);
+                            MarkTokenEnd();
+
+                            // since we are ignoring the e this could be either a float or int
+                            // depending on the lhs of the e
+                            tokenStr = GetTokenString();
+                            object parsed = leftIsFloat ? ParseFloat(tokenStr) : ParseInteger(tokenStr, 10);
+                            // TODO: parse in place
+                            if (Verbatim) {
+                                return new VerbatimConstantValueToken(parsed, tokenStr);
+                            }
+                            return new ConstantValueToken(parsed);
+                        } else {
+                            // we have a valid exponent but it is against a variable and are on the e.
+                            // For example 1e23else.
+                            BufferBack();
                             MarkTokenEnd();
 
                             // TODO: parse in place
+                            tokenStr = GetTokenString();
                             if (Verbatim) {
-                                string tokenStr = GetTokenString();
-                                return new VerbatimConstantValueToken(LiteralParser.ParseImaginary(tokenStr), tokenStr);
+                                return new VerbatimConstantValueToken(ParseFloat(tokenStr), tokenStr);
                             }
-                            return new ConstantValueToken(LiteralParser.ParseImaginary(GetTokenString()));
-                        default:
-                            if (iter <= 0) {
-                                // CPython Issue 21642 allows entries such as 1else which should be
-                                // parsed as '1 else' and not '1e lse'.  Back the buffer to before the e.
-                                BufferBack(-2);
-                                MarkTokenEnd();
-
-                                // since we are ignoring the e this could be either a float or int
-                                // depending on the lhs of the e
-                                string tokenStr = GetTokenString();
-                                object parsed = leftIsFloat ? ParseFloat(tokenStr) : ParseInteger(tokenStr, 10);
-                                // TODO: parse in place
-                                if (Verbatim) {
-                                    return new VerbatimConstantValueToken(parsed, tokenStr);
-                                }
-                                return new ConstantValueToken(parsed);
-                            } else {
-                                // we have a valid exponent but it is against a variable and are on the e.
-                                // For example 1e23else.
-                                BufferBack();
-                                MarkTokenEnd();
-
-                                // TODO: parse in place
-                                string tokenStr = GetTokenString();
-                                if (Verbatim) {
-                                    return new VerbatimConstantValueToken(ParseFloat(tokenStr), tokenStr);
-                                }
-                                return new ConstantValueToken(ParseFloat(tokenStr));
-                            }
-                    }
+                            return new ConstantValueToken(ParseFloat(tokenStr));
+                        }
                 }
+            }
         }
 
         private Token ReadName() {
@@ -1453,8 +1462,21 @@ namespace Microsoft.PythonTools.Parsing {
                         MarkTokenEnd();
                         return Tokens.KeywordAsToken;
                     }
-                    if (NextChar() == 's' && NextChar() == 'e' && NextChar() == 'r' && NextChar() == 't' && !IsNamePart(Peek())) {
-                        return TransformStatementToken(Tokens.KeywordAssertToken);
+                    ch = NextChar();
+                    if (ch == 's') {
+                        if (NextChar() == 'e' && NextChar() == 'r' && NextChar() == 't' && !IsNamePart(Peek())) {
+                            return TransformStatementToken(Tokens.KeywordAssertToken);
+                        }
+                    } else if (ch == 'y') {
+                        if (_langVersion >= PythonLanguageVersion.V35 && NextChar() == 'n' && NextChar() == 'c' && !IsNamePart(Peek())) {
+                            MarkTokenEnd();
+                            return Tokens.KeywordAsyncToken;
+                        }
+                    }
+                } else if (ch == 'w') {
+                    if (_langVersion >= PythonLanguageVersion.V35 && NextChar() == 'a' && NextChar() == 'i' && NextChar() == 't' && !IsNamePart(Peek())) {
+                        MarkTokenEnd();
+                        return Tokens.KeywordAwaitToken;
                     }
                 }
             } else if (ch == 'y') {
@@ -2001,6 +2023,15 @@ namespace Microsoft.PythonTools.Parsing {
             }
         }
 
+        private object ParseComplex(string s) {
+            try {
+                return LiteralParser.ParseImaginary(s);
+            } catch (Exception e) {
+                ReportSyntaxError(BufferTokenSpan, e.Message, ErrorCodes.SyntaxError);
+                return default(Complex);
+            }
+        }
+
         private void ReportSyntaxError(IndexSpan span, string message, int errorCode) {
             _errors.Add(message, _newLineLocations.ToArray(), span.Start, span.End, errorCode, Severity.FatalError);
         }
@@ -2010,7 +2041,7 @@ namespace Microsoft.PythonTools.Parsing {
             Console.WriteLine("{0} `{1}`", token.Kind, token.Image.Replace("\r", "\\r").Replace("\n", "\\n").Replace("\t", "\\t"));
         }
 
-        public int[] GetLineLocations() {
+        public NewLineLocation[] GetLineLocations() {
             return _newLineLocations.ToArray();
         }
 
@@ -2457,11 +2488,53 @@ namespace Microsoft.PythonTools.Parsing {
         #endregion
     }
 
-    enum NewLineKind {
+    public enum NewLineKind {
         None,
         LineFeed,
         CarriageReturn,
         CarriageReturnLineFeed
+    }
+
+    public struct NewLineLocation : IComparable<NewLineLocation> {
+        private int _endIndex;
+        private NewLineKind _kind;
+
+        public NewLineLocation(int lineEnd, NewLineKind kind) {
+            _endIndex = lineEnd;
+            _kind = kind;
+        }
+
+        /// <summary>
+        /// The end of of the line, including the line break.
+        /// </summary>
+        public int EndIndex => _endIndex;
+
+        /// <summary>
+        /// The type of new line which terminated the line.
+        /// </summary>
+        public NewLineKind Kind => _kind;
+
+        public int CompareTo(NewLineLocation other) {
+            return EndIndex - other.EndIndex;
+        }
+
+        public static SourceLocation IndexToLocation(NewLineLocation[] lineLocations, int index) {
+            if (lineLocations == null) {
+                return new SourceLocation(index, 1, 1);
+            }
+            int match = Array.BinarySearch(lineLocations, new NewLineLocation(index, NewLineKind.None));
+            if (match < 0) {
+                // If our index = -1, it means we're on the first line.
+                if (match == -1) {
+                    return new SourceLocation(index, 1, checked(index + 1));
+                }
+                // If we couldn't find an exact match for this line number, get the nearest
+                // matching line number less than this one
+                match = ~match - 1;
+            }
+
+            return new SourceLocation(index, match + 2, index - lineLocations[match].EndIndex + 1);
+        }
     }
 
     static class NewLineKindExtensions {

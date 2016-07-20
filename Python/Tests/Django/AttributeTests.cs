@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.IO;
@@ -30,7 +32,7 @@ namespace DjangoTests {
             PythonTestData.Deploy();
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void ProvideDebugLanguageTests() {
             var attr = new ProvideDebugLanguageAttribute("Django Templates",
                 DjangoPackage.DjangoTemplateLanguageId,
@@ -52,7 +54,7 @@ SetValue: Engine, 0{EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9}
 ", mockCtx._result.ToString());
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void ProvideLanguageTemplatesAttributeTests() {
             var attr = new ProvideLanguageTemplatesAttribute(
                 "{349C5851-65DF-11DA-9384-00065B846F21}", 
@@ -85,7 +87,7 @@ Closed Key: Projects\{9AF89C0F-85F6-4A20-9023-5D15D912F3B1}
 ", mockCtx._result.ToString());
         }
 
-        [TestMethod, Priority(0), TestCategory("Core")]
+        [TestMethod, Priority(1)]
         public void ProvideEditorExtension2AttributeTests() {
             var attr = new ProvideEditorExtension2Attribute(
                     typeof(DjangoEditorFactory),

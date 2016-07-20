@@ -1,34 +1,30 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
-
-#if DEV12_OR_LATER
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System.Linq;
+using Microsoft.Html.Editor.Document;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Text;
-
-#if DEV14_OR_LATER
-using Microsoft.Html.Editor.Document;
-#else
-using Microsoft.Html.Editor;
-#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class ProjectBlockCompletionContext : ProjectBlockCompletionContextBase {
-        public ProjectBlockCompletionContext(DjangoAnalyzer analyzer, ITextBuffer buffer)
-            : base(analyzer, buffer, buffer.GetFileName()) {
+        public ProjectBlockCompletionContext(VsProjectAnalyzer analyzer, ITextBuffer buffer)
+            : base(analyzer, buffer.GetFileName()) {
 
             var doc = HtmlEditorDocument.FromTextBuffer(buffer);
             if (doc == null) {
@@ -49,5 +45,3 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
     }
 }
-
-#endif

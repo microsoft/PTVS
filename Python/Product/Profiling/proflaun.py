@@ -1,4 +1,4 @@
-﻿"""
+"""
 Starts profiling, expected to start with normal program
 to start as first argument and directory to run from as
 the second argument.
@@ -50,6 +50,8 @@ except:
         sys.stdout.write('Press any key to continue . . .')
         sys.stdout.flush()
         msvcrt.getch()
+    else:
+        raise
 else:
     import sys, msvcrt, os
     if 'VSPYPROF_WAIT_ON_NORMAL_EXIT' in os.environ:

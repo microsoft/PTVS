@@ -1,16 +1,18 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -25,12 +27,15 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         private Expression _returnAnnotation;
         private DecoratorStatement _decorators;
         private bool _generator;                        // The function is a generator
+        private bool _coroutine;
         private bool _isLambda;
 
         private PythonVariable _variable;               // The variable corresponding to the function name or null for lambdas
         internal PythonVariable _nameVariable;          // the variable that refers to the global __name__
         internal bool _hasReturn;
         private int _headerIndex;
+
+        internal static readonly object WhitespaceAfterAsync = new object();
 
         public FunctionDefinition(NameExpression name, Parameter[] parameters)
             : this(name, parameters, (Statement)null) {            
@@ -97,13 +102,22 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         }
 
         /// <summary>
-        /// True is the function is a generator.  Generators contain at least one yield
+        /// True if the function is a generator.  Generators contain at least one yield
         /// expression and instead of returning a value when called they return a generator
         /// object which implements the iterator protocol.
         /// </summary>
         public bool IsGenerator {
             get { return _generator; }
             set { _generator = value; }
+        }
+
+        /// <summary>
+        /// True if the function is a coroutine. Coroutines are defined using
+        /// 'async def'.
+        /// </summary>
+        public bool IsCoroutine {
+            get { return _coroutine; }
+            set { _coroutine = value; }
         }
 
         /// <summary>
@@ -230,6 +244,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 if (_body != null) {
                     _body.Walk(walker);
                 }
+                if (_returnAnnotation != null) {
+                    _returnAnnotation.Walk(walker);
+                }
             }
             walker.PostWalk(this);
         }
@@ -259,6 +276,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
                 Decorators.AppendCodeString(res, ast, format);
             }
             format.ReflowComment(res, this.GetProceedingWhiteSpaceDefaultNull(ast));
+            if (IsCoroutine) {
+                res.Append("async");
+                res.Append(NodeAttributes.GetWhiteSpace(this, ast, WhitespaceAfterAsync));
+            }
             res.Append("def");
             var name = this.GetVerbatimImage(ast) ?? Name;
             if (!String.IsNullOrEmpty(name)) {

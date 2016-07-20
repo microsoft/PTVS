@@ -1,4 +1,4 @@
-﻿namespace Microsoft.PythonTools.Commands {
+namespace Microsoft.PythonTools.Commands {
     partial class DiagnosticsForm {
         /// <summary>
         /// Required designer variable.

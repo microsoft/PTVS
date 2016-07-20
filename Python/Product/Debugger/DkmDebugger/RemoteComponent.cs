@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.ObjectModel;
@@ -18,7 +20,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
-using System.Text;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Breakpoints;
 using Microsoft.VisualStudio.Debugger.CallStack;
@@ -39,6 +40,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
         IDkmRuntimeStepper,
         IDkmExceptionController,
         IDkmExceptionFormatter,
+        IDkmExceptionManager,
         IDkmAsyncBreakCompleteReceived {
 
         public RemoteComponent()
@@ -65,8 +67,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     pyrtInfo.DLLs.DebuggerHelper = nativeModules.Single(mi => mi.UniqueId == DebuggerHelperDllModuleInstanceId);
                     pyrtInfo.DLLs.DebuggerHelper.FlagAsTransitionModule();
 
-                    var traceManager = new TraceManager(process);
-                    process.SetDataItem(DkmDataCreationDisposition.CreateNew, traceManager);
+                    process.SetDataItem(DkmDataCreationDisposition.CreateNew, new TraceManager(process));
                 }
 
                 var runtimeId = new DkmRuntimeInstanceId(Guids.PythonRuntimeTypeGuid, 0);
@@ -111,7 +112,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 Debug.Fail("EnableRuntimeBreakpoint called before TraceMananger is initialized.");
                 throw new InvalidOperationException();
             }
-            
+
             var loc = new SourceLocation(instrAddr.AdditionalData);
             bp.SetDataItem(DkmDataCreationDisposition.CreateNew, loc);
             traceManager.AddBreakpoint(bp);
@@ -133,7 +134,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     BreakpointId = runtimeBreakpoint.UniqueId,
                     ThreadId = thread.UniqueId,
                     FrameBase = frameBase,
-                    VFrame = vframe
+                    VFrame = vframe,
+                    ReturnAddress = retAddr
                 }.SendHigher(thread.Process);
             } else if (runtimeBreakpoint.SourceId == Guids.PythonTraceManagerSourceGuid || runtimeBreakpoint.SourceId == Guids.PythonStepTargetSourceGuid) {
                 var traceManager = runtimeBreakpoint.Process.GetDataItem<TraceManager>();
@@ -294,16 +296,23 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         string IDkmExceptionFormatter.GetAdditionalInformation(DkmExceptionInformation exception) {
-            var customException = exception as DkmCustomExceptionInformation;
-            if (customException == null || customException.AdditionalInformation == null) {
-                return null;
-            }
-
-            return Encoding.Unicode.GetString(customException.AdditionalInformation.ToArray());
+            var em = exception.Process.GetOrCreateDataItem(() => new ExceptionManager(exception.Process));
+            return em.GetAdditionalInformation(exception);
         }
 
         string IDkmExceptionFormatter.GetDescription(DkmExceptionInformation exception) {
-            return exception.Name;
+            var em = exception.Process.GetOrCreateDataItem(() => new ExceptionManager(exception.Process));
+            return em.GetDescription(exception);
+        }
+
+        void IDkmExceptionManager.AddExceptionTrigger(DkmProcess process, Guid sourceId, DkmExceptionTrigger trigger) {
+            var em = process.GetOrCreateDataItem(() => new ExceptionManager(process));
+            em.AddExceptionTrigger(process, sourceId, trigger);
+        }
+
+        void IDkmExceptionManager.ClearExceptionTriggers(DkmProcess process, Guid sourceId) {
+            var em = process.GetOrCreateDataItem(() => new ExceptionManager(process));
+            em.ClearExceptionTriggers(process, sourceId);
         }
 
         [DataContract]

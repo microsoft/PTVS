@@ -1,33 +1,29 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Repl;
+using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Commands {
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
-    using IReplEvaluator = IInteractiveEngine;
-#endif
-
     /// <summary>
     /// Provides the command for starting the Python Debug REPL window.
     /// </summary>
@@ -38,50 +34,15 @@ namespace Microsoft.PythonTools.Commands {
             _serviceProvider = serviceProvider;
         }
 
-        internal static IReplWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider) {
+        internal static IVsInteractiveWindow/*!*/ EnsureReplWindow(IServiceProvider serviceProvider) {
             var compModel = serviceProvider.GetComponentModel();
-            var provider = compModel.GetService<IReplWindowProvider>();
+            var provider = compModel.GetService<InteractiveWindowProvider>();
 
-            string replId = PythonDebugReplEvaluatorProvider.GetDebugReplId();
-            var window = provider.FindReplWindow(replId);
-            if (window == null) {
-                window = provider.CreateReplWindow(serviceProvider.GetPythonContentType(), "Python Debug Interactive", typeof(PythonLanguageInfo).GUID, replId);
-
-                var pyService = serviceProvider.GetPythonToolsService();
-                window.SetOptionValue(
-                    ReplOptions.UseSmartUpDown,
-                    pyService.DebugInteractiveOptions.ReplSmartHistory
-                );
-            }
-            return window;
+            return provider.OpenOrCreate(PythonDebugReplEvaluatorProvider.GetDebugReplId());
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            var window = (IReplWindow)EnsureReplWindow(_serviceProvider);
-            IVsWindowFrame windowFrame = (IVsWindowFrame)((ToolWindowPane)window).Frame;
-
-            ErrorHandler.ThrowOnFailure(windowFrame.Show());
-            window.Focus();
-        }
-
-        public override EventHandler BeforeQueryStatus {
-            get {
-                return QueryStatusMethod;
-            }
-        }
-
-        private void QueryStatusMethod(object sender, EventArgs args) {
-            var oleMenu = sender as OleMenuCommand;
-
-            oleMenu.Visible = true;
-            oleMenu.Enabled = true;
-            oleMenu.Supported = true;
-        }
-
-        public string Description {
-            get {
-                return "Python Interactive Debug";
-            }
+            EnsureReplWindow(_serviceProvider).Show(true);
         }
 
         public override int CommandId {

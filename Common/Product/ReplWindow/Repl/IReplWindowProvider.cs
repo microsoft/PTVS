@@ -24,18 +24,10 @@ namespace Microsoft.NodejsTools.Repl {
 #else
 namespace Microsoft.VisualStudio.Repl {
 #endif
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
-#endif
-
     /// <summary>
     /// Provides access to creating or finding existing REPL windows.   
     /// </summary>
-#if INTERACTIVE_WINDOW
-    public interface IInteractiveWindowProvider {
-#else
     public interface IReplWindowProvider {
-#endif
         /// <summary>
         /// Creates a REPL window and returns a ToolWindowPane which implements IReplWindow.  An IReplEvaluatorProvider must exist
         /// to respond and create the specified REPL ID.

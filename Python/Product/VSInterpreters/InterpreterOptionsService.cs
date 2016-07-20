@@ -1,406 +1,113 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.Settings;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 using Microsoft.Win32;
-using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Interpreter {
     [Export(typeof(IInterpreterOptionsService))]
     [PartCreationPolicy(CreationPolicy.Shared)]
-    sealed class InterpreterOptionsService : IInterpreterOptionsService2, IDisposable {
-        internal static Guid NoInterpretersFactoryGuid = new Guid("{15CEBB59-1008-4305-97A9-CF5E2CB04711}");
+    sealed class InterpreterOptionsService : IInterpreterOptionsService {
+        private readonly Lazy<IInterpreterRegistryService> _registryService;
+        private readonly Lazy<CPythonInterpreterFactoryProvider> _cpythonProvider;
+        private bool _defaultInterpreterWatched;
+        private string _defaultInterpreterId;
+        IPythonInterpreterFactory _defaultInterpreter;
+        private EventHandler _defaultInterpreterChanged;
 
-        // Two locations for specifying factory providers.
-        // The first is within the VS 1x.0_Config hive, and is easiest to
-        // specify in pkgdef files.
-        internal const string FactoryProvidersCollection = @"PythonTools\InterpreterFactories";
         // The second is a static registry entry for the local machine and/or
         // the current user (HKCU takes precedence), intended for being set by
         // other installers.
-        private const string FactoryProvidersRegKey = @"Software\Microsoft\PythonTools\" + AssemblyVersionInfo.VSVersion + @"\InterpreterFactories";
-        internal const string FactoryProviderCodeBaseSetting = "CodeBase";
-
-        // If this collection exists in the settings provider, no factories will
-        // be loaded. This is meant for tests.
-        private const string SuppressFactoryProvidersCollection = @"PythonTools\NoInterpreterFactories";
-
-        private const string DefaultInterpreterOptionsCollection = @"PythonTools\Options\Interpreters";
+        private const string DefaultInterpreterOptionsCollection = @"SOFTWARE\\Microsoft\\PythonTools\\Interpreters";
         private const string DefaultInterpreterSetting = "DefaultInterpreter";
-        private const string DefaultInterpreterVersionSetting = "DefaultInterpreterVersion";
 
-        private readonly SettingsManager _settings;
-        private readonly IVsActivityLog _activityLog;
-
-        private IPythonInterpreterFactoryProvider[] _providers;
-
-        private readonly object _suppressInterpretersChangedLock = new object();
-        private int _suppressInterpretersChanged;
-        private bool _raiseInterpretersChanged;
-
-        IPythonInterpreterFactory _defaultInterpreter;
-        IPythonInterpreterFactory _noInterpretersValue;
-
-        sealed class LockInfo : IDisposable {
-            public int _lockCount;
-            public readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
-
-            public void Dispose() {
-                _lock.Dispose();
-            }
-        }
-        private Dictionary<IPythonInterpreterFactory, Dictionary<object, LockInfo>> _locks;
-        private readonly object _locksLock = new object();
-
-
-        private readonly Thread _serviceThread;
-#if !DEV12_OR_LATER
-        private readonly SynchronizationContext _serviceContext;
-#endif
+        private const string PathKey = "ExecutablePath";
+        private const string WindowsPathKey = "WindowedExecutablePath";
+        private const string LibraryPathKey = "LibraryPath";
+        private const string ArchitectureKey = "Architecture";
+        private const string VersionKey = "SysVersion";
+        private const string PathEnvVarKey = "PathEnvironmentVariable";
+        private const string DescriptionKey = "Description";
+        private const string PythonInterpreterKey = "SOFTWARE\\Python\\VisualStudio";
 
         [ImportingConstructor]
-        public InterpreterOptionsService([Import(typeof(SVsServiceProvider), AllowDefault = true)] IServiceProvider provider) {
-            _serviceThread = Thread.CurrentThread;
-#if !DEV12_OR_LATER
-            _serviceContext = SynchronizationContext.Current;
-#endif
-            _settings = SettingsManagerCreator.GetSettingsManager(provider);
-            if (provider != null) {
-                _activityLog = provider.GetService(typeof(SVsActivityLog)) as IVsActivityLog;
-            } else if (ServiceProvider.GlobalProvider != null) {
-                _activityLog = ServiceProvider.GlobalProvider.GetService(typeof(SVsActivityLog)) as IVsActivityLog;
-            }
-            Initialize(provider);
-
-            InitializeDefaultInterpreterWatcher(provider);
+        public InterpreterOptionsService([Import]Lazy<IInterpreterRegistryService> registryService, Lazy<CPythonInterpreterFactoryProvider> cpythonProvider) {
+            _registryService = registryService;
+            _cpythonProvider = cpythonProvider;
         }
 
-        public void Dispose() {
-            lock (_locksLock) {
-                if (_locks != null) {
-                    foreach (var dict in _locks.Values) {
-                        foreach (var li in dict.Values) {
-                            li.Dispose();
-                        }
-                    }
-                    _locks = null;
-                }
-            }
 
-            foreach (var provider in _providers.OfType<IDisposable>()) {
-                provider.Dispose();
-            }
-        }
+        private void InitializeDefaultInterpreterWatcher() {
+            _registryService.Value.InterpretersChanged += Provider_InterpreterFactoriesChanged;
 
-        private void InitializeDefaultInterpreterWatcher(IServiceProvider serviceProvider) {
-            RegistryKey userSettingsKey;
-            if (serviceProvider != null) {
-                userSettingsKey = VSRegistry.RegistryRoot(serviceProvider, __VsLocalRegistryType.RegType_UserSettings, false);
-            } else {
-                userSettingsKey = VSRegistry.RegistryRoot(__VsLocalRegistryType.RegType_UserSettings, false);
-            }
-            using (userSettingsKey) {
-                RegistryHive hive;
-                RegistryView view;
-                string keyName;
-                if (RegistryWatcher.GetRegistryKeyLocation(userSettingsKey, out hive, out view, out keyName)) {
-                    if (RegistryWatcher.Instance.TryAdd(
-                        hive, view, keyName + "\\" + DefaultInterpreterOptionsCollection,
-                        DefaultInterpreterRegistry_Changed,
-                        recursive: false, notifyValueChange: true, notifyKeyChange: false
-                    ) == null) {
-                        // DefaultInterpreterOptions subkey does not exist yet, so
-                        // create it and then start the watcher.
-                        SaveDefaultInterpreter();
+            RegistryHive hive = RegistryHive.CurrentUser;
+            RegistryView view = RegistryView.Default;
+            if (RegistryWatcher.Instance.TryAdd(
+                hive, view, DefaultInterpreterOptionsCollection,
+                DefaultInterpreterRegistry_Changed,
+                recursive: false, notifyValueChange: true, notifyKeyChange: false
+            ) == null) {
+                // DefaultInterpreterOptions subkey does not exist yet, so
+                // create it and then start the watcher.
+                SaveDefaultInterpreter(_defaultInterpreter?.Configuration?.Id);
 
-                        RegistryWatcher.Instance.Add(
-                            hive, view, keyName + "\\" + DefaultInterpreterOptionsCollection,
-                            DefaultInterpreterRegistry_Changed,
-                            recursive: false, notifyValueChange: true, notifyKeyChange: false
-                        );
-                    }
-                }
+                RegistryWatcher.Instance.Add(
+                    hive, view, DefaultInterpreterOptionsCollection,
+                    DefaultInterpreterRegistry_Changed,
+                    recursive: false, notifyValueChange: true, notifyKeyChange: false
+                );
             }
-        }
-
-        private void Initialize(IServiceProvider serviceProvider) {
-            BeginSuppressInterpretersChangedEvent();
-            try {
-                var store = _settings.GetReadOnlySettingsStore(SettingsScope.Configuration);
-                _providers = LoadProviders(store, serviceProvider);
-            } finally {
-                EndSuppressInterpretersChangedEvent();
-            }
-
-            foreach (var provider in _providers) {
-                provider.InterpreterFactoriesChanged += Provider_InterpreterFactoriesChanged;
-            }
-
-            LoadDefaultInterpreter(suppressChangeEvent: true);
+            _defaultInterpreterWatched = true;
         }
 
         private void Provider_InterpreterFactoriesChanged(object sender, EventArgs e) {
-            lock (_suppressInterpretersChangedLock) {
-                if (_suppressInterpretersChanged > 0) {
-                    _raiseInterpretersChanged = true;
-                    return;
+            // reload the default interpreter ID and see if it changed...
+            string oldId = _defaultInterpreterId;
+            _defaultInterpreterId = null;
+            LoadDefaultInterpreterId();
+
+            if (oldId != _defaultInterpreterId) {
+                // it changed, invalidate the old interpreter ID.  If no one is watching then
+                // we'll just load it on demand next time someone requests it.
+                _defaultInterpreter = null;
+                if (_defaultInterpreterWatched) {
+                    // someone is watching it, so load it now and raise the changed event.
+                    LoadDefaultInterpreter();
                 }
             }
-
-            // May have removed the default interpreter, so select a new default
-            if (FindInterpreter(DefaultInterpreter.Id, DefaultInterpreter.Configuration.Version) == null) {
-                DefaultInterpreter = Interpreters.LastOrDefault();
-            }
-
-            var evt = InterpretersChanged;
-            if (evt != null) {
-                evt(this, EventArgs.Empty);
-            }
         }
-
-        private static void LogException(
-            IVsActivityLog log,
-            string message,
-            string path,
-            Exception ex,
-            IEnumerable<object> data = null
-        ) {
-            if (log == null) {
-                return;
-            }
-
-            var fullMessage = string.Format("{1}:{0}{2}{0}{3}",
-                Environment.NewLine,
-                message,
-                ex,
-                data == null ? string.Empty : string.Join(Environment.NewLine, data)
-            ).Trim();
-
-            if (string.IsNullOrEmpty(path)) {
-                log.LogEntry(
-                    (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_ERROR,
-                    "Python Tools",
-                    fullMessage
-                );
-            } else {
-                log.LogEntryPath(
-                    (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_ERROR,
-                    "Python Tools",
-                    fullMessage,
-                    path
-                );
-            }
-        }
-
-        private static void LoadOneProvider(
-            string codebase,
-            HashSet<string> seen,
-            List<ComposablePartCatalog> catalog,
-            IVsActivityLog log
-        ) {
-            if (string.IsNullOrEmpty(codebase)) {
-                return;
-            }
-            
-            if (!seen.Add(codebase)) {
-                return;
-            }
-
-            if (log != null) {
-                log.LogEntryPath(
-                    (uint)__ACTIVITYLOG_ENTRYTYPE.ALE_INFORMATION,
-                    "Python Tools",
-                    "Loading interpreter provider assembly",
-                    codebase
-                );
-            }
-
-            AssemblyCatalog assemblyCatalog = null;
-
-            const string FailedToLoadAssemblyMessage = "Failed to load interpreter provider assembly";
-            try {
-                assemblyCatalog = new AssemblyCatalog(codebase);
-            } catch (Exception ex) {
-                LogException(log, FailedToLoadAssemblyMessage, codebase, ex);
-            }
-
-            if (assemblyCatalog == null) {
-                return;
-            }
-
-            const string FailedToLoadMessage = "Failed to load interpreter provider";
-            try {
-                catalog.Add(assemblyCatalog);
-            } catch (Exception ex) {
-                LogException(log, FailedToLoadMessage, codebase, ex);
-            }
-        }
-
-        private IPythonInterpreterFactoryProvider[] LoadProviders(
-            SettingsStore store,
-            IServiceProvider serviceProvider
-        ) {
-            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var catalog = new List<ComposablePartCatalog>();
-
-            if (store.CollectionExists(SuppressFactoryProvidersCollection)) {
-                return new IPythonInterpreterFactoryProvider[0];
-            }
-
-            if (store.CollectionExists(FactoryProvidersCollection)) {
-                foreach (var idStr in store.GetSubCollectionNames(FactoryProvidersCollection)) {
-                    var key = FactoryProvidersCollection + "\\" + idStr;
-                    LoadOneProvider(
-                        store.GetString(key, FactoryProviderCodeBaseSetting, ""),
-                        seen,
-                        catalog,
-                        _activityLog
-                    );
-                }
-            }
-
-            foreach (var baseKey in new[] { Registry.CurrentUser, Registry.LocalMachine }) {
-                using (var key = baseKey.OpenSubKey(FactoryProvidersRegKey)) {
-                    if (key != null) {
-                        foreach (var idStr in key.GetSubKeyNames()) {
-                            using (var subkey = key.OpenSubKey(idStr)) {
-                                if (subkey != null) {
-                                    LoadOneProvider(
-                                        subkey.GetValue(FactoryProviderCodeBaseSetting, "") as string,
-                                        seen,
-                                        catalog,
-                                        _activityLog
-                                    );
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!catalog.Any()) {
-                LoadOneProvider(
-                    typeof(CPythonInterpreterFactoryConstants).Assembly.Location,
-                    seen,
-                    catalog,
-                    _activityLog
-                );
-            }
-
-            const string FailedToImportMessage = "Failed to import factory providers";
-            var providers = new List<IPythonInterpreterFactoryProvider>();
-            var serviceProviderProvider = new MockExportProvider();
-            if (serviceProvider != null) {
-                serviceProviderProvider.SetExport(typeof(SVsServiceProvider), () => serviceProvider);
-            }
-
-            foreach (var part in catalog) {
-                var container = new CompositionContainer(part, serviceProviderProvider);
-                try {
-                    foreach (var provider in container.GetExports<IPythonInterpreterFactoryProvider>()) {
-                        if (provider.Value != null) {
-                            providers.Add(provider.Value);
-                        }
-                    }
-                } catch (CompositionException ex) {
-                    LogException(_activityLog, FailedToImportMessage, null, ex, ex.Errors);
-                } catch (ReflectionTypeLoadException ex) {
-                    LogException(_activityLog, FailedToImportMessage, null, ex, ex.LoaderExceptions);
-                } catch (Exception ex) {
-                    LogException(_activityLog, FailedToImportMessage, null, ex);
-                }
-            }
-
-            return providers.ToArray();
-        }
-
-        // Used for testing.
-        internal IPythonInterpreterFactoryProvider[] SetProviders(IPythonInterpreterFactoryProvider[] providers) {
-            var oldProviders = _providers;
-            _providers = providers;
-            var evt = InterpretersChanged;
-            if (evt != null) {
-                evt(this, EventArgs.Empty);
-            }
-            return oldProviders;
-        }
-
-        public IEnumerable<IPythonInterpreterFactory> Interpreters {
-            get {
-                return _providers.SelectMany(provider => provider.GetInterpreterFactories())
-                    .Where(fact => fact != null)
-                    .OrderBy(fact => fact.Description)
-                    .ThenBy(fact => fact.Configuration.Version);
-            }
-        }
-
-        public IPythonInterpreterFactory FindInterpreter(Guid id, Version version) {
-            return Interpreters.FirstOrDefault(fact => AreEqual(fact, id, version));
-        }
-
-        public IPythonInterpreterFactory FindInterpreter(Guid id, string version) {
-            Version parsedVersion;
-            if (Version.TryParse(version, out parsedVersion)) {
-                return FindInterpreter(id, parsedVersion);
-            }
-            return null;
-        }
-
-        public IPythonInterpreterFactory FindInterpreter(string id, string version) {
-            Guid parsedId;
-            if (Guid.TryParse(id, out parsedId)) {
-                return FindInterpreter(parsedId, version);
-            }
-            return null;
-        }
-
-        public event EventHandler InterpretersChanged;
 
         private void DefaultInterpreterRegistry_Changed(object sender, RegistryChangedEventArgs e) {
-#if !DEV12_OR_LATER
-            // Pre-VS 2013 has trouble obtaining services from the original
-            // thread, so attempt to get back to the thread we started on.
-            if (_serviceContext != null && Thread.CurrentThread != _serviceThread) {
-                _serviceContext.Post(_ => DefaultInterpreterRegistry_Changed(sender, e), null);
-                return;
-            }
-#endif
             try {
                 LoadDefaultInterpreter();
             } catch (InvalidComObjectException) {
                 // Race between VS closing and accessing the settings store.
             } catch (Exception ex) {
                 try {
-                    ActivityLog.LogError(
-                        "Python Tools for Visual Studio",
-                        string.Format("Exception updating default interpreter: {0}", ex)
-                    );
+                    //ActivityLog.LogError(
+                    //    "Python Tools for Visual Studio",
+                    //    string.Format("Exception updating default interpreter: {0}", ex)
+                    //);
                 } catch (InvalidOperationException) {
                     // Can't get the activity log service either. This probably
                     // means we're being used from outside of VS, but also
@@ -411,185 +118,155 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private static bool AreEqual(IPythonInterpreterFactory factory, Guid id, Version version) {
-            return factory != null && factory.Id.Equals(id) && (factory.Configuration.Version == null || factory.Configuration.Version.Equals(version));
+        private void LoadDefaultInterpreterId() {
+            if (_defaultInterpreterId == null) {
+                string id = null;
+                using (var interpreterOptions = Registry.CurrentUser.OpenSubKey(DefaultInterpreterOptionsCollection)) {
+                    if (interpreterOptions != null) {
+                        id = interpreterOptions.GetValue(DefaultInterpreterSetting) as string ?? string.Empty;
+                    }
+
+                    var newDefault = _registryService.Value.FindInterpreter(id);
+
+                    if (newDefault == null) {
+                        var defaultConfig = _registryService.Value.Configurations.LastOrDefault(fact => fact.CanBeAutoDefault());
+                        if (defaultConfig != null) {
+                            id = defaultConfig.Id;
+                        }
+                    }
+
+                    _defaultInterpreterId = id;
+                }
+            }
         }
 
         private void LoadDefaultInterpreter(bool suppressChangeEvent = false) {
-            string id = null, version = null;
-            var store = _settings.GetReadOnlySettingsStore(SettingsScope.UserSettings);
-            if (store.CollectionExists(DefaultInterpreterOptionsCollection)) {
-                id = store.GetString(DefaultInterpreterOptionsCollection, DefaultInterpreterSetting, string.Empty);
-                version = store.GetString(DefaultInterpreterOptionsCollection, DefaultInterpreterVersionSetting, string.Empty);
-            }
+            if (_defaultInterpreter == null) {
+                LoadDefaultInterpreterId();
+                if (_defaultInterpreterId != null) {
+                    var newDefault = _registryService.Value.FindInterpreter(_defaultInterpreterId);
 
-            var newDefault = FindInterpreter(id, version) ?? Interpreters.LastOrDefault();
-
-            if (suppressChangeEvent) {
-                _defaultInterpreter = newDefault;
-            } else {
-                DefaultInterpreter = newDefault;
+                    if (suppressChangeEvent) {
+                        _defaultInterpreter = newDefault;
+                    } else {
+                        DefaultInterpreter = newDefault;
+                    }
+                }
             }
         }
 
-        private void SaveDefaultInterpreter() {
-            var store = _settings.GetWritableSettingsStore(SettingsScope.UserSettings);
+        private void SaveDefaultInterpreter(string id) {
+            using (var interpreterOptions = Registry.CurrentUser.CreateSubKey(DefaultInterpreterOptionsCollection, true)) {
+                if (id == null) {
+                    interpreterOptions.SetValue(DefaultInterpreterSetting, "");
+                } else {
+                    Debug.Assert(!InterpreterRegistryConstants.IsNoInterpretersFactory(id));
 
-            store.CreateCollection(DefaultInterpreterOptionsCollection);
-            if (_defaultInterpreter == null) {
-                store.SetString(DefaultInterpreterOptionsCollection, DefaultInterpreterSetting, Guid.Empty.ToString("B"));
-                store.SetString(DefaultInterpreterOptionsCollection, DefaultInterpreterVersionSetting, new Version(2, 6).ToString());
-            } else {
-                Debug.Assert(_defaultInterpreter.Id != NoInterpretersFactoryGuid);
+                    interpreterOptions.SetValue(DefaultInterpreterSetting, id);
+                }
+            }
+        }
 
-                store.SetString(DefaultInterpreterOptionsCollection, DefaultInterpreterSetting, _defaultInterpreter.Id.ToString("B"));
-                store.SetString(DefaultInterpreterOptionsCollection, DefaultInterpreterVersionSetting, _defaultInterpreter.Configuration.Version.ToString());
+        public string DefaultInterpreterId {
+            get {
+                LoadDefaultInterpreterId();
+                return _defaultInterpreterId;
+            }
+            set {
+                if (_defaultInterpreterId != value) {
+                    _defaultInterpreterId = value;
+                    _defaultInterpreter = null; // cleared so we'll re-initialize if anyone cares about it.
+                    SaveDefaultInterpreter(value);
+
+                    _defaultInterpreterChanged?.Invoke(this, EventArgs.Empty);
+                }
             }
         }
 
         public IPythonInterpreterFactory DefaultInterpreter {
             get {
-                return _defaultInterpreter ?? NoInterpretersValue;
+                LoadDefaultInterpreter(true);
+                return _defaultInterpreter ?? _registryService.Value.NoInterpretersValue;
             }
             set {
                 var newDefault = value;
-                if (newDefault == NoInterpretersValue) {
+                if (_defaultInterpreter == null && (newDefault == _registryService.Value.NoInterpretersValue || value == null)) {
+                    // we may have not loaded the default interpreter yet.  Do so 
+                    // now so we know if we need to raise the change event.
+                    LoadDefaultInterpreter();
+                }
+
+                if (newDefault == _registryService.Value.NoInterpretersValue) {
                     newDefault = null;
                 }
                 if (newDefault != _defaultInterpreter) {
                     _defaultInterpreter = newDefault;
-                    SaveDefaultInterpreter();
+                    _defaultInterpreterId = _defaultInterpreter?.Configuration?.Id;
+                    SaveDefaultInterpreter(_defaultInterpreter?.Configuration?.Id);
 
-                    var evt = DefaultInterpreterChanged;
-                    if (evt != null) {
-                        evt(this, EventArgs.Empty);
+                    _defaultInterpreterChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+
+        public event EventHandler DefaultInterpreterChanged {
+            add {
+                if (!_defaultInterpreterWatched) {
+                    InitializeDefaultInterpreterWatcher();
+                }
+                _defaultInterpreterChanged += value;
+            }
+            remove {
+                _defaultInterpreterChanged -= value;
+            }
+        }
+
+        public string AddConfigurableInterpreter(string name, InterpreterConfiguration config) {
+            var collection = PythonInterpreterKey + "\\" + name;
+            using (var key = Registry.CurrentUser.CreateSubKey(collection, true)) {
+                key.SetValue(LibraryPathKey, config.LibraryPath ?? string.Empty);
+                key.SetValue(ArchitectureKey, config.ArchitectureString);
+                key.SetValue(VersionKey, config.Version?.ToString() ?? "2.7");
+                key.SetValue(PathEnvVarKey, config.PathEnvironmentVariable ?? string.Empty);
+                key.SetValue(DescriptionKey, config.Description ?? string.Empty);
+                using (var installPath = key.CreateSubKey("InstallPath")) {
+                    string exePath = config.InterpreterPath ?? config.WindowsInterpreterPath ?? "";
+                    if (!String.IsNullOrWhiteSpace(exePath)) {
+                        installPath.SetValue("", Path.GetDirectoryName(exePath));
                     }
+                    installPath.SetValue(WindowsPathKey, config.WindowsInterpreterPath ?? string.Empty);
+                    installPath.SetValue(PathKey, config.InterpreterPath ?? string.Empty);
                 }
             }
+
+            // ensure we're up to date...
+            _cpythonProvider.Value.DiscoverInterpreterFactories();
+
+            return CPythonInterpreterFactoryConstants.GetInterpreterId(
+                "VisualStudio",
+                config.Architecture,
+                name
+            );
+
         }
 
-        public event EventHandler DefaultInterpreterChanged;
-
-        public void BeginSuppressInterpretersChangedEvent() {
-            lock (_suppressInterpretersChangedLock) {
-                _suppressInterpretersChanged += 1;
-            }
-        }
-
-        public void EndSuppressInterpretersChangedEvent() {
-            bool shouldRaiseEvent = false;
-            lock (_suppressInterpretersChangedLock) {
-                _suppressInterpretersChanged -= 1;
-
-                if (_suppressInterpretersChanged == 0 && _raiseInterpretersChanged) {
-                    shouldRaiseEvent = true;
-                    _raiseInterpretersChanged = false;
-                }
-            }
-
-            if (shouldRaiseEvent) {
-                var evt = InterpretersChanged;
-                if (evt != null) {
-                    evt(this, EventArgs.Empty);
-                }
-            }
-        }
-
-        public IEnumerable<IPythonInterpreterFactory> InterpretersOrDefault {
-            get {
-                bool anyYielded = false;
-                foreach (var factory in _providers.SelectMany(provider => provider.GetInterpreterFactories())
-                                                  .Where(fact => fact != null)
-                                                  .OrderBy(fact => fact.Description)
-                                                  .ThenBy(fact => fact.Configuration.Version)) {
-                    Debug.Assert(factory != NoInterpretersValue);
-                    yield return factory;
-                    anyYielded = true;
-                }
-
-                if (!anyYielded) {
-                    yield return NoInterpretersValue;
-                }
-            }
-        }
-
-        public IPythonInterpreterFactory NoInterpretersValue {
-            get {
-                if (_noInterpretersValue == null) {
+        public void RemoveConfigurableInterpreter(string id) {
+            if (id.StartsWith("Global|VisualStudio|")) {
+                var key = id.Split(new[] { '|' } , 4);
+                if (key.Length == 4) {
+                    var collection = PythonInterpreterKey + "\\" + key[2];
                     try {
-                        _noInterpretersValue = InterpreterFactoryCreator.CreateInterpreterFactory(
-                            new InterpreterFactoryCreationOptions {
-                                Id = NoInterpretersFactoryGuid,
-                                Description = "No Interpreters",
-                                LanguageVersion = new Version(2, 7)
-                            }
-                        );
-                    } catch (Exception ex) {
-                        Trace.TraceError("Failed to create NoInterpretersValue:\n{0}", ex);
+                        Registry.CurrentUser.DeleteSubKeyTree(collection);
+
+                        _cpythonProvider.Value.DiscoverInterpreterFactories();
+                    } catch (ArgumentException) {
                     }
                 }
-                return _noInterpretersValue;
             }
         }
 
-
-        public IEnumerable<IPythonInterpreterFactoryProvider> KnownProviders {
-            get {
-                return _providers;
-            }
-        }
-
-        public async Task<object> LockInterpreterAsync(IPythonInterpreterFactory factory, object moniker, TimeSpan timeout) {
-            LockInfo info;
-            Dictionary<object, LockInfo> locks;
-
-            lock (_locksLock) {
-                if (_locks == null) {
-                    _locks = new Dictionary<IPythonInterpreterFactory, Dictionary<object, LockInfo>>();
-                }
-
-                if (!_locks.TryGetValue(factory, out locks)) {
-                    _locks[factory] = locks = new Dictionary<object, LockInfo>();
-                }
-
-                if (!locks.TryGetValue(moniker, out info)) {
-                    locks[moniker] = info = new LockInfo();
-                }
-            }
-
-            Interlocked.Increment(ref info._lockCount);
-            bool result = false;
-            try {
-                result = await info._lock.WaitAsync(timeout.TotalDays > 1 ? Timeout.InfiniteTimeSpan : timeout);
-                return result ? (object)info : null;
-            } finally {
-                if (!result) {
-                    Interlocked.Decrement(ref info._lockCount);
-                }
-            }
-        }
-
-        public bool IsInterpreterLocked(IPythonInterpreterFactory factory, object moniker) {
-            LockInfo info;
-            Dictionary<object, LockInfo> locks;
-
-            lock (_locksLock) {
-                return _locks != null &&
-                    _locks.TryGetValue(factory, out locks) &&
-                    locks.TryGetValue(moniker, out info) &&
-                    info._lockCount > 0;
-            }
-        }
-
-        public bool UnlockInterpreter(object cookie) {
-            var info = cookie as LockInfo;
-            if (info == null) {
-                throw new ArgumentException("cookie was not returned from a call to LockInterpreterAsync");
-            }
-
-            bool res = Interlocked.Decrement(ref info._lockCount) == 0;
-            info._lock.Release();
-            return res;
+        public bool IsConfigurable(string id) {
+            return id.StartsWith("Global|VisualStudio|");
         }
     }
 }

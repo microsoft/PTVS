@@ -1,30 +1,28 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
-using System.Collections;
-using System.Collections.Specialized;
-using System.ComponentModel.Composition;
 using System.Diagnostics;
-using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Windows.Forms;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
@@ -53,295 +51,113 @@ namespace Microsoft.IronPythonTools.Debugger {
 
         #region IPythonLauncher Members
 
-        public int LaunchProject(bool debug) {
-            string startupFile = ResolveStartupFile();
-            return LaunchFile(startupFile, debug);
-        }
-
-        private string NoIronPythonHelpPage {
-            get {
-                try {
-                    var path = Path.GetDirectoryName(typeof(IronPythonLauncher).Assembly.Location);
-                    return Path.Combine(path, "NoIronPython.mht");
-                } catch (ArgumentException) {
-                } catch (NotSupportedException) {
-                }
-                return null;
+        private static readonly Lazy<string> NoIronPythonHelpPage = new Lazy<string>(() => {
+            try {
+                var path = Path.GetDirectoryName(typeof(IronPythonLauncher).Assembly.Location);
+                return Path.Combine(path, "NoIronPython.mht");
+            } catch (ArgumentException) {
+            } catch (NotSupportedException) {
             }
+            return null;
+        });
+
+        public int LaunchProject(bool debug) {
+            LaunchConfiguration config;
+            try {
+                config = _project.GetLaunchConfigurationOrThrow();
+            } catch (NoInterpretersException) {
+                throw new NoInterpretersException(null, NoIronPythonHelpPage.Value);
+            }
+            
+            return Launch(config, debug);
         }
 
         public int LaunchFile(string file, bool debug) {
-            IPythonInterpreterFactory factory;
-            var ipp3 = _project as IPythonProject3;
-            if (ipp3 != null) {
-                try {
-                    factory = ipp3.GetInterpreterFactoryOrThrow();
-                } catch (NoInterpretersException) {
-                    throw new NoInterpretersException(null, NoIronPythonHelpPage);
-                }
-            } else {
-                factory = _project.GetInterpreterFactory();
-
-                if (factory == null ||
-                    factory.Configuration == null ||
-                    !File.Exists(factory.Configuration.InterpreterPath)) {
-                    throw new NoInterpretersException(null, NoIronPythonHelpPage);
-                }
+            LaunchConfiguration config;
+            try {
+                config = _project.GetLaunchConfigurationOrThrow();
+            } catch (NoInterpretersException) {
+                throw new NoInterpretersException(null, NoIronPythonHelpPage.Value);
             }
 
-            if (factory.Id == _cpyInterpreterGuid || factory.Id == _cpy64InterpreterGuid) {
-                MessageBox.Show(
-                    "The project is currently set to use the .NET debugger for IronPython debugging but the project is configured to start with a CPython interpreter.\r\n\r\nTo fix this change the debugger type in project properties->Debug->Launch mode.\r\nIf IronPython is not an available interpreter you may need to download it from http://ironpython.codeplex.com.",
-                    "Python Tools for Visual Studio");
-                return VSConstants.S_OK;
-            }
+            return Launch(config, debug);
+        }
 
-            string extension = Path.GetExtension(file);
-            if (String.Equals(extension, ".html", StringComparison.OrdinalIgnoreCase) ||
-                String.Equals(extension, ".htm", StringComparison.OrdinalIgnoreCase)) {
+        private int Launch(LaunchConfiguration config, bool debug) {
+
+            //if (factory.Id == _cpyInterpreterGuid || factory.Id == _cpy64InterpreterGuid) {
+            //    MessageBox.Show(
+            //        "The project is currently set to use the .NET debugger for IronPython debugging but the project is configured to start with a CPython interpreter.\r\n\r\nTo fix this change the debugger type in project properties->Debug->Launch mode.\r\nIf IronPython is not an available interpreter you may need to download it from http://ironpython.codeplex.com.",
+            //        "Python Tools for Visual Studio");
+            //    return VSConstants.S_OK;
+            //}
+
+            string extension = Path.GetExtension(config.ScriptName);
+            if (string.Equals(extension, ".html", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(extension, ".htm", StringComparison.OrdinalIgnoreCase)) {
                 try {
-                    StartSilverlightApp(file, debug);
+                    StartSilverlightApp(config, debug);
                 } catch (ChironNotFoundException ex) {
                     MessageBox.Show(ex.Message, "Python Tools for Visual Studio");
                 }
-            } else if (debug) {
-                StartWithDebugger(file);
-            } else {
-                StartWithoutDebugger(file);
+                return VSConstants.S_OK;
+            }
+
+            try {
+                if (debug) {
+                    if (string.IsNullOrEmpty(config.InterpreterArguments)) {
+                        config.InterpreterArguments = "-X:Debug";
+                    } else if (config.InterpreterArguments.IndexOf("-X:Debug", StringComparison.InvariantCultureIgnoreCase) < 0) {
+                        config.InterpreterArguments = "-X:Debug " + config.InterpreterArguments;
+                    }
+
+                    var debugStdLib = _project.GetProperty(IronPythonLauncherOptions.DebugStandardLibrarySetting);
+                    bool debugStdLibResult;
+                    if (!bool.TryParse(debugStdLib, out debugStdLibResult) || !debugStdLibResult) {
+                        string interpDir = config.Interpreter.PrefixPath;
+                        config.InterpreterArguments += " -X:NoDebug \"" + System.Text.RegularExpressions.Regex.Escape(Path.Combine(interpDir, "Lib\\")) + ".*\"";
+                    }
+
+                    using (var dti = DebugLaunchHelper.CreateDebugTargetInfo(_serviceProvider, config)) {
+                        // Set the CLR debugger
+                        dti.Info.clsidCustom = VSConstants.CLSID_ComPlusOnlyDebugEngine;
+                        dti.Info.grfLaunch = (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_StopDebuggingOnEnd;
+
+                        // Clear the CLSID list while launching, then restore it
+                        // so Dispose() can free it.
+                        var clsidList = dti.Info.pClsidList;
+                        dti.Info.pClsidList = IntPtr.Zero;
+                        try {
+                            dti.Launch();
+                        } finally {
+                            dti.Info.pClsidList = clsidList;
+                        }
+                    }
+                } else {
+                    var psi = DebugLaunchHelper.CreateProcessStartInfo(_serviceProvider, config);
+                    Process.Start(psi).Dispose();
+                }
+            } catch (FileNotFoundException) {
             }
             return VSConstants.S_OK;
         }
 
-        /// <summary>
-        /// Default implementation of the "Start withput Debugging" command.
-        /// </summary>
-        private void StartWithoutDebugger(string startupFile) {
-            var psi = CreateProcessStartInfoNoDebug(startupFile);
-            if (psi == null) {
-                MessageBox.Show(
-                    "The project cannot be started because its active Python environment does not have the interpreter executable specified.",
-                    "Python Tools for Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return;
-            }
-            Process.Start(psi);
-        }
-
-        /// <summary>
-        /// Creates process info used to start the project with no debugging.
-        /// </summary>
-        private ProcessStartInfo CreateProcessStartInfoNoDebug(string startupFile) {
-            string command = CreateCommandLineNoDebug(startupFile);
-
-            bool isWindows;
-            string interpreter = GetInterpreterExecutableInternal(out isWindows);
-            if (string.IsNullOrEmpty(interpreter)) {
-                return null;
-            }
-
-            ProcessStartInfo startInfo;
-            if (!isWindows && (_pyService.DebuggerOptions.WaitOnNormalExit || _pyService.DebuggerOptions.WaitOnAbnormalExit)) {
-                command = "/c \"\"" + interpreter + "\" " + command;
-                
-                if (_pyService.DebuggerOptions.WaitOnNormalExit &&
-                    _pyService.DebuggerOptions.WaitOnAbnormalExit) {
-                    command += " & pause";
-                } else if (_pyService.DebuggerOptions.WaitOnNormalExit) {
-                    command += " & if not errorlevel 1 pause";
-                } else if (_pyService.DebuggerOptions.WaitOnAbnormalExit) {
-                    command += " & if errorlevel 1 pause";
-                }
-
-                command += "\"";
-                startInfo = new ProcessStartInfo("cmd.exe", command);
-            } else {
-                startInfo = new ProcessStartInfo(interpreter, command);
-            }
-
-            startInfo.WorkingDirectory = _project.GetWorkingDirectory();
-
-            //In order to update environment variables we have to set UseShellExecute to false
-            startInfo.UseShellExecute = false;
-            SetupEnvironment(startInfo.EnvironmentVariables);
-            return startInfo;
-        }
-
-        /// <summary>
-        /// Creates language specific command line for starting the project without debigging.
-        /// </summary>
-        public string CreateCommandLineNoDebug(string startupFile) {
-            string cmdLineArgs = _project.GetProperty(PythonConstants.CommandLineArgumentsSetting);
-            string interpArgs = _project.GetProperty(PythonConstants.InterpreterArgumentsSetting);
-
-            return String.Format("{0} \"{1}\" {2}", interpArgs, startupFile, cmdLineArgs);
-        }
-
         #endregion
 
-        /// <summary>
-        /// Default implementation of the "Start Debugging" command.
-        /// </summary>
-        private void StartWithDebugger(string startupFile) {
-            VsDebugTargetInfo dbgInfo = new VsDebugTargetInfo();
-            dbgInfo.cbSize = (uint)Marshal.SizeOf(dbgInfo);
-            IntPtr ptr = Marshal.AllocCoTaskMem((int)dbgInfo.cbSize);
-            try {
-                Marshal.StructureToPtr(dbgInfo, ptr, false);
-                SetupDebugInfo(ref dbgInfo, startupFile);
 
-                if (string.IsNullOrEmpty(dbgInfo.bstrExe)) {
-                    MessageBox.Show(
-                        "The project cannot be debugged because its active Python environment does not have the interpreter executable specified.",
-                        "Python Tools for Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
+        private static Guid? guidSilverlightDebug = new Guid("{032F4B8C-7045-4B24-ACCF-D08C9DA108FE}");
 
-                LaunchDebugger(_serviceProvider, dbgInfo);
-            } finally {
-                if (ptr != IntPtr.Zero) {
-                    Marshal.FreeCoTaskMem(ptr);
-                }
-            }
-        }
+        public void StartSilverlightApp(LaunchConfiguration config, bool debug) {
+            var root = Path.GetFullPath(config.WorkingDirectory).TrimEnd('\\');
+            var file = Path.Combine(root, config.ScriptName);
+            int port = EnsureChiron(root);
+            var url = string.Format(
+                "http://localhost:{0}/{1}",
+                port,
+                (file.StartsWith(root + "\\") ? file.Substring(root.Length + 1) : file.TrimStart('\\')).Replace('\\', '/')
+            );
 
-        /// <summary>
-        /// Sets up debugger information.
-        /// </summary>
-        private void SetupDebugInfo(ref VsDebugTargetInfo dbgInfo, string startupFile) {
-            dbgInfo.dlo = DEBUG_LAUNCH_OPERATION.DLO_CreateProcess;
-            bool isWindows;
-            dbgInfo.bstrExe = GetInterpreterExecutableInternal(out isWindows);
-            dbgInfo.bstrCurDir = _project.GetWorkingDirectory();
-            dbgInfo.bstrArg = CreateCommandLineDebug(startupFile);
-            dbgInfo.bstrRemoteMachine = null;
-            dbgInfo.fSendStdoutToOutputWindow = 0;
-            StringDictionary env = new StringDictionary();
-            SetupEnvironment(env);
-
-            if (env.Count > 0) {
-                // add any inherited env vars
-                var variables = Environment.GetEnvironmentVariables();
-                foreach (var key in variables.Keys) {
-                    string strKey = (string)key;
-                    if (!env.ContainsKey(strKey)) {
-                        env.Add(strKey, (string)variables[key]);
-                    }
-                }
-
-                //Environemnt variables should be passed as a
-                //null-terminated block of null-terminated strings. 
-                //Each string is in the following form:name=value\0
-                StringBuilder buf = new StringBuilder();
-                foreach (DictionaryEntry entry in env) {
-                    buf.AppendFormat("{0}={1}\0", entry.Key, entry.Value);
-                }
-                buf.Append("\0");
-                dbgInfo.bstrEnv = buf.ToString();
-            }
-            // Set the CLR debugger
-            dbgInfo.clsidCustom = VSConstants.CLSID_ComPlusOnlyDebugEngine;
-            dbgInfo.grfLaunch = (uint)__VSDBGLAUNCHFLAGS.DBGLAUNCH_StopDebuggingOnEnd;
-        }
-
-        /// <summary>
-        /// Creates language specific command line for starting the project with debigging.
-        /// </summary>
-        public string CreateCommandLineDebug(string startupFile) {
-            string cmdLineArgs = null;
-            if (_project != null) {
-                cmdLineArgs = _project.GetProperty(PythonConstants.CommandLineArgumentsSetting);
-            }
-            return String.Format("-X:Debug {0} \"{1}\" {2}", GetOptions(), startupFile, cmdLineArgs);
-        }
-
-        /// <summary>
-        /// Returns full path of the language specififc iterpreter executable file.
-        /// </summary>
-        public string GetInterpreterExecutable(out bool isWindows) {
-            isWindows = Convert.ToBoolean(_project.GetProperty(PythonConstants.IsWindowsApplicationSetting));
-            return isWindows ? WindowsInterpreterExecutable : InterpreterExecutable;
-        }
-
-        private string/*!*/ GetInterpreterExecutableInternal(out bool isWindows) {
-            string result;
-            result = (_project.GetProperty(PythonConstants.InterpreterPathSetting) ?? "").Trim();
-            if (!String.IsNullOrEmpty(result)) {
-                if (!Path.IsPathRooted(result)) {
-                    result = Path.Combine(_project.GetWorkingDirectory(), result);
-                }
-                if (!File.Exists(result)) {
-                    throw new FileNotFoundException(String.Format("Interpreter specified in the project does not exist: '{0}'", result), result);
-                }
-                isWindows = false;
-                return result;
-            }
-
-
-            result = GetInterpreterExecutable(out isWindows);
-            if (result == null) {
-                throw new FileNotFoundException(@"The project is currently set to use the .NET debugger for IronPython debugging but IronPython is not installed.
-
-You may need to download it from http://ironpython.codeplex.com.");
-            }
-            return result;
-        }
-
-        private static void LaunchDebugger(IServiceProvider provider, VsDebugTargetInfo dbgInfo) {
-            if (!Directory.Exists(UnquotePath(dbgInfo.bstrCurDir))) {
-                MessageBox.Show(String.Format("Working directory \"{0}\" does not exist.", dbgInfo.bstrCurDir), "Python Tools for Visual Studio");
-            } else if (!File.Exists(UnquotePath(dbgInfo.bstrExe))) {
-                MessageBox.Show(String.Format("Interpreter \"{0}\" does not exist.", dbgInfo.bstrExe), "Python Tools for Visual Studio");
-            } else {
-                VsShellUtilities.LaunchDebugger(provider, dbgInfo);
-            }
-        }
-
-        private string InterpreterExecutable {
-            get {
-                var ipp3 = _project as IPythonProject3;
-                if (ipp3 != null) {
-                    return ipp3.GetInterpreterFactoryOrThrow().Configuration.InterpreterPath;
-                }
-                return _project.GetInterpreterFactory().Configuration.InterpreterPath;
-            }
-        }
-
-        private string WindowsInterpreterExecutable {
-            get {
-                var ipp3 = _project as IPythonProject3;
-                if (ipp3 != null) {
-                    return ipp3.GetInterpreterFactoryOrThrow().Configuration.WindowsInterpreterPath;
-                }
-                return _project.GetInterpreterFactory().Configuration.WindowsInterpreterPath;
-            }
-        }
-
-        private static string UnquotePath(string p) {
-            if (p.StartsWith("\"") && p.EndsWith("\"")) {
-                return p.Substring(1, p.Length - 2);
-            }
-            return p;
-        }
-
-        private static Guid guidSilvelightDebug = new Guid("{032F4B8C-7045-4B24-ACCF-D08C9DA108FE}");
-
-        public void StartSilverlightApp(string/*!*/ file, bool debug) {
-            string webSiteRoot;
-            webSiteRoot = _project.GetWorkingDirectory();
-            file = Path.GetFullPath(Path.Combine(webSiteRoot, file));
-            webSiteRoot = webSiteRoot.TrimEnd('\\');
-
-            int port = EnsureChiron(webSiteRoot);
-
-            string url = "http://localhost:" + port;
-            if (file.StartsWith(webSiteRoot) && file.Length > webSiteRoot.Length && file[webSiteRoot.Length] == '\\') {
-                url += file.Substring(webSiteRoot.Length).Replace('\\', '/');
-            } else if (file.StartsWith("\\")) {
-                url += file.Replace('\\', '/');
-            } else {
-                url += '/' + file.Replace('\\', '/');
-            }
-
-            StartInBrowser(url, debug ? guidSilvelightDebug : (Guid?)null);
+            StartInBrowser(url, debug ? guidSilverlightDebug : null);
         }
 
         public void StartInBrowser(string url, Guid? debugEngine) {
@@ -498,42 +314,6 @@ You may need to download it from http://ironpython.codeplex.com.");
             return File.Exists(Path.Combine(dir, "ipy.exe"));
         }
 
-        private string ResolveStartupFile() {
-            string startupFile = _project.GetStartupFile();
-            if (string.IsNullOrEmpty(startupFile)) {
-                //TODO: need to start active file then
-                throw new ApplicationException("No startup file is defined for the startup project.");
-            }
-            return startupFile;
-        }
-
-
-        private string GetOptions() {
-            if (_project != null) {
-                string interpArgs = _project.GetProperty(PythonConstants.InterpreterArgumentsSetting);
-
-                var debugStdLib = _project.GetProperty(IronPythonLauncherOptions.DebugStandardLibrarySetting);
-                bool debugStdLibResult;
-                if (!bool.TryParse(debugStdLib, out debugStdLibResult) || !debugStdLibResult) {
-                    bool isWindows;
-                    string interpreter = GetInterpreterExecutableInternal(out isWindows);
-                    string interpDir = Path.GetDirectoryName(interpreter);
-                    var res = "-X:NoDebug \"" + System.Text.RegularExpressions.Regex.Escape(Path.Combine(interpDir, "Lib\\")) + ".*\"";
-
-                    return interpArgs + " " + res;
-                }
-
-                return interpArgs;
-            }
-            return String.Empty;
-        }
-
-        private void SetupEnvironment(StringDictionary environment) {
-            if (_project != null) {
-                //IronPython passes search path via IRONPYTHONPATH environment variable
-                environment["IRONPYTHONPATH"] = string.Join(";", _project.GetSearchPaths());
-            }
-        }
 
         [Serializable]
         class ChironNotFoundException : Exception {

@@ -1,22 +1,25 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using Microsoft.PythonTools.Analysis.Analyzer;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -79,9 +82,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _projectEntry.ProjectState.ModuleHasUnresolvedImports(this, false);
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
             var res = new Dictionary<string, IAnalysisSet>();
-            foreach (var kvp in _scope.Variables) {
+            foreach (var kvp in _scope.AllVariables) {
                 kvp.Value.ClearOldValues();
                 if (kvp.Value._dependencies.Count > 0) {
                     var types = kvp.Value.Types;
@@ -187,16 +190,16 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private void SpecializeOneFunction(string name, CallDelegate callable, bool mergeOriginalAnalysis) {
             int lastIndex;
             VariableDef def;
-            if (Scope.Variables.TryGetValue(name, out def)) {
+            if (Scope.TryGetVariable(name, out def)) {
                 SpecializeVariableDef(def, callable, mergeOriginalAnalysis);
             } else if ((lastIndex = name.LastIndexOf('.')) != -1 &&
-                Scope.Variables.TryGetValue(name.Substring(0, lastIndex), out def)) {
+                Scope.TryGetVariable(name.Substring(0, lastIndex), out def)) {
                 var methodName = name.Substring(lastIndex + 1, name.Length - (lastIndex + 1));
                 foreach (var v in def.TypesNoCopy) {
                     ClassInfo ci = v as ClassInfo;
                     if (ci != null) {
                         VariableDef methodDef;
-                        if (ci.Scope.Variables.TryGetValue(methodName, out methodDef)) {
+                        if (ci.Scope.TryGetVariable(methodName, out methodDef)) {
                             SpecializeVariableDef(methodDef, callable, mergeOriginalAnalysis);
                         }
                     }
@@ -212,24 +215,29 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
 
-            def._dependencies = default(SingleDict<IProjectEntry, TypedDependencyInfo<AnalysisValue>>);
+            def._dependencies = default(SingleDict<IVersioned, ReferenceableDependencyInfo>);
             foreach (var item in items) {
                 def.AddTypes(item.DeclaringModule, new SpecializedCallable(item, callable, mergeOriginalAnalysis).SelfSet);
             }
         }
 
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
+            return AnalysisSet.Empty;
+        }
+
         public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var ignored = base.GetMember(node, unit, name);
-
-            ModuleDefinition.AddDependency(unit);
-
-            return Scope.CreateEphemeralVariable(node, unit, name).Types;
+            if (unit.ForEval) {
+                VariableDef value;
+                return Scope.TryGetVariable(name, out value) ? value.Types : AnalysisSet.Empty;
+            } else {
+                ModuleDefinition.AddDependency(unit);
+                return Scope.CreateEphemeralVariable(node, unit, name).Types;
+            }
         }
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
             var variable = Scope.CreateVariable(node, unit, name, false);
-            if (variable.AddTypes(unit, value)) {
+            if (variable.AddTypes(unit, value, true, ProjectEntry)) {
                 ModuleDefinition.EnqueueDependents();
             }
 
@@ -305,7 +313,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public override IEnumerable<LocationInfo> Locations {
             get {
-                return new[] { new LocationInfo(ProjectEntry, 1, 1) };
+                return new[] { new LocationInfo(ProjectEntry.FilePath, 1, 1) };
             }
         }
 
@@ -317,7 +325,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
 
         public IEnumerable<IReferenceable> GetDefinitions(string name) {
             VariableDef def;
-            if (_scope.Variables.TryGetValue(name, out def)) {
+            if (_scope.TryGetVariable(name, out def)) {
                 yield return def;
             }
         }
@@ -331,14 +339,14 @@ namespace Microsoft.PythonTools.Analysis.Values {
             ModuleDefinition.AddDependency(unit);
 
             if (linkedScope != null) {
-                linkedScope.GetLinkedVariables(linkedName ?? name).Add(importedValue);
+                linkedScope.AddLinkedVariable(linkedName ?? name, importedValue);
             }
-            return importedValue.TypesNoCopy;
+            return importedValue.GetTypesNoCopy(unit, DeclaringModule);
         }
 
 
         public IEnumerable<string> GetModuleMemberNames(IModuleContext context) {
-            return Scope.Variables.Keys;
+            return Scope.AllVariables.Keys();
         }
 
         public void Imported(AnalysisUnit unit) {

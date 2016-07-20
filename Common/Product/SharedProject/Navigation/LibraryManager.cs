@@ -1,16 +1,18 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -62,10 +64,8 @@ namespace Microsoft.VisualStudioTools.Navigation {
             get { return _library; }
         }
 
-        protected abstract LibraryNode CreateLibraryNode(LibraryNode parent, IScopeNode subItem, string namePrefix, IVsHierarchy hierarchy, uint itemid);
-
-        public virtual LibraryNode CreateFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename, LibraryNodeType libraryNodeType) {
-            return new LibraryNode(null, name, filename, libraryNodeType);
+        public virtual LibraryNode CreateFileLibraryNode(LibraryNode parent, HierarchyNode hierarchy, string name, string filename) {
+            return new LibraryNode(null, name, filename, LibraryNodeType.Namespaces);
         }
 
         private object GetPackageService(Type/*!*/ type) {
@@ -162,7 +162,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
         public void RegisterLineChangeHandler(uint document,
             TextLineChangeEvent lineChanged, Action<IVsTextLines> onIdle) {
-            _documents[document].OnFileChangedImmediate += delegate(object sender, TextLineChange[] changes, int fLast) {
+            _documents[document].OnFileChangedImmediate += delegate (object sender, TextLineChange[] changes, int fLast) {
                 lineChanged(sender, changes, fLast);
             };
             _documents[document].OnFileChanged += (sender, args) => onIdle(args.TextBuffer);
@@ -189,7 +189,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
         /// 
         /// It is safe to call this method from any thread.
         /// </summary>
-        protected void FileParsed(LibraryTask task, IScopeNode scope) {
+        protected void FileParsed(LibraryTask task) {
             try {
                 var project = task.ModuleID.Hierarchy.GetProject().GetCommonProject();
 
@@ -203,8 +203,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
                     parent.ProjectLibraryNode,
                     fileNode,
                     System.IO.Path.GetFileName(task.FileName),
-                    task.FileName,
-                    LibraryNodeType.Package | LibraryNodeType.Classes
+                    task.FileName
                 );
 
                 // TODO: Creating the module tree should be done lazily as needed
@@ -213,7 +212,6 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 // finer grained and only update the changed nodes.  But then we
                 // need to make sure we're not mutating lists which are handed out.
 
-                CreateModuleTree(module, scope, task.FileName + ":", task.ModuleID);
                 if (null != task.ModuleID) {
                     LibraryNode previousItem = null;
                     lock (_files) {
@@ -235,24 +233,6 @@ namespace Microsoft.VisualStudioTools.Navigation {
             }
         }
 
-        private void CreateModuleTree(LibraryNode current, IScopeNode scope, string namePrefix, ModuleId moduleId) {
-            if ((null == scope) || (null == scope.NestedScopes)) {
-                return;
-            }
-
-            foreach (IScopeNode subItem in scope.NestedScopes) {
-                LibraryNode newNode = CreateLibraryNode(current, subItem, namePrefix, moduleId.Hierarchy, moduleId.ItemID);
-                string newNamePrefix = namePrefix;
-
-                current.AddNode(newNode);
-                if ((newNode.NodeType & LibraryNodeType.Classes) != LibraryNodeType.None) {
-                    newNamePrefix = namePrefix + newNode.Name + ".";
-                }
-
-                // Now use recursion to get the other types.
-                CreateModuleTree(newNode, subItem, newNamePrefix, moduleId);
-            }
-        }
         #endregion
 
         #region Hierarchy Events

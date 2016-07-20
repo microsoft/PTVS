@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -20,7 +22,8 @@ using System.Threading;
 using DebuggerTests;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.Repl;
+using Microsoft.PythonTools.InteractiveWindow;
+using Microsoft.PythonTools.InteractiveWindow.Commands;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -29,12 +32,6 @@ using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsTests {
-#if INTERACTIVE_WINDOW
-    using IReplEvaluator = IInteractiveEngine;
-    using IReplWindow = IInteractiveWindow;
-    using IReplWindowProvider = IInteractiveWindowProvider;
-#endif
-
     [TestClass]
     public class DebugReplEvaluatorTests {
         private PythonDebugReplEvaluator _evaluator;
@@ -65,7 +62,7 @@ namespace PythonToolsTests {
             var serviceProvider = PythonToolsTestUtilities.CreateMockServiceProvider();
             _evaluator = new PythonDebugReplEvaluator(serviceProvider);
             _window = new MockReplWindow(_evaluator);
-            _evaluator.Initialize(_window);
+            _evaluator._Initialize(_window);
             _processes = new List<PythonProcess>();
         }
 
@@ -95,7 +92,7 @@ namespace PythonToolsTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void DisplayVariables() {
             Attach("DebugReplTest1.py", 3);
 
@@ -103,7 +100,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("'hello'", ExecuteText("a"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(3)]
         public void DisplayFunctionLocalsAndGlobals() {
             Attach("DebugReplTest2.py", 13);
 
@@ -111,7 +108,7 @@ namespace PythonToolsTests {
             Assert.AreEqual("5", ExecuteText("print(global_val)"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(3)]
         public void ErrorInInput() {
             Attach("DebugReplTest2.py", 13);
 
@@ -122,7 +119,7 @@ NameError: name 'does_not_exist' is not defined
 ", _window.Error);
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(3)]
         public void ChangeVariables() {
             Attach("DebugReplTest2.py", 13);
 
@@ -130,7 +127,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("1", ExecuteText("print(innermost_val)"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ChangeModule() {
             Attach("DebugReplTest1.py", 3);
 
@@ -148,7 +145,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("'hello'", ExecuteText("a"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(2)]
         public void ChangeFrame() {
             Attach("DebugReplTest2.py", 13);
 
@@ -182,7 +179,8 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("1", ExecuteCommand(new DebugReplFrameCommand(), ""));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(3)]
+        [TestCategory("10s")]
         public void ChangeThread() {
             Attach("DebugReplTest3.py", 39);
 
@@ -211,7 +209,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("'thread1'", ExecuteText("t1_val"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void ChangeProcess() {
             Attach("DebugReplTest4A.py", 3);
             Attach("DebugReplTest4B.py", 3);
@@ -238,19 +236,20 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("60", ExecuteText("b2"));
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(3)]
+        [TestCategory("10s")]
         public void Abort() {
             Attach("DebugReplTest5.py", 3);
 
             _window.ClearScreen();
             var execute = _evaluator.ExecuteText("for i in range(0,20): time.sleep(0.5)");
-            _evaluator.AbortCommand();
+            _evaluator.AbortExecution();
             execute.Wait();
             Assert.IsTrue(execute.Result.IsSuccessful);
             Assert.AreEqual("Abort is not supported.", _window.Error.TrimEnd());
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void StepInto() {
             // Make sure that we don't step into the internal repl code
             // http://pytools.codeplex.com/workitem/777
@@ -270,7 +269,7 @@ NameError: name 'does_not_exist' is not defined
             Assert.AreEqual("<module>", thread.Frames[0].FunctionName);
         }
 
-        private string ExecuteCommand(IReplCommand cmd, string args) {
+        private string ExecuteCommand(IInteractiveWindowCommand cmd, string args) {
             _window.ClearScreen();
             var execute = cmd.Execute(_window, args);
             execute.Wait();
@@ -290,6 +289,13 @@ NameError: name 'does_not_exist' is not defined
             return _window.Output.TrimEnd();
         }
 
+        private void SafeSetEvent(AutoResetEvent evt) {
+            try {
+                evt.Set();
+            } catch (ObjectDisposedException) {
+            }
+        }
+
         private void Attach(string filename, int lineNo) {
             var debugger = new PythonDebugger();
             PythonProcess process = debugger.DebugProcess(Version, DebuggerTestPath + filename, (newproc, newthread) => {
@@ -303,8 +309,8 @@ NameError: name 'does_not_exist' is not defined
 
             using (var brkHit = new AutoResetEvent(false))
             using (var procExited = new AutoResetEvent(false)) {
-                EventHandler<BreakpointHitEventArgs> breakpointHitHandler = (s, e) => brkHit.Set();
-                EventHandler<ProcessExitedEventArgs> processExitedHandler = (s, e) => procExited.Set();
+                EventHandler<BreakpointHitEventArgs> breakpointHitHandler = (s, e) => SafeSetEvent(brkHit);
+                EventHandler<ProcessExitedEventArgs> processExitedHandler = (s, e) => SafeSetEvent(procExited);
                 process.BreakpointHit += breakpointHitHandler;
                 process.ProcessExited += processExitedHandler;
 
@@ -312,12 +318,9 @@ NameError: name 'does_not_exist' is not defined
                     process.Start();
                 } catch (Win32Exception ex) {
                     _processes.Remove(process);
-#if DEV11_OR_LATER
                     if (ex.HResult == -2147467259 /*0x80004005*/) {
                         Assert.Inconclusive("Required Python interpreter is not installed");
-                    } else
-#endif
-                    {
+                    } else {
                         Assert.Fail("Process start failed:\r\n" + ex.ToString());
                     }
                 }

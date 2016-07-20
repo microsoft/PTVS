@@ -1,4 +1,4 @@
-﻿for fob in oar: pass
+for fob in oar: pass
 
 for fob, oar in baz: pass
 

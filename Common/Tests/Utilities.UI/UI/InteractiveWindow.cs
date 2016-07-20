@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+﻿// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -24,29 +26,30 @@ using System.Windows.Threading;
 using Microsoft.VisualStudio.ComponentModelHost;
 #if NTVS_FEATURE_INTERACTIVEWINDOW
 using Microsoft.NodejsTools.Repl;
+#elif DEV14_OR_LATER
+using Microsoft.PythonTools.Repl;
 #else
 using Microsoft.VisualStudio.Repl;
 #endif
+#if DEV14_OR_LATER
+using Microsoft.PythonTools.InteractiveWindow;
+using Microsoft.PythonTools.InteractiveWindow.Shell;
+#else
+using IInteractiveWindow = Microsoft.VisualStudio.Repl.IReplWindow;
+using InteractiveWindowProvider = Microsoft.VisualStudio.Repl.IReplWindowProvider;
+#endif
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudioTools.VSTestHost;
 
 namespace TestUtilities.UI {
-#if INTERACTIVE_WINDOW
-    using IReplWindow = IInteractiveWindow;
-    using IReplWindowProvider = IInteractiveWindowProvider;
-#endif
-
     public class InteractiveWindow : EditorWindow {
-#if INTERACTIVE_WINDOW
-        const string CommandBase = "OtherContextMenus.InteractiveConsole.";
-#else
         const string CommandBase = "PythonInteractive.";
-#endif
 
 
-        private sealed class ReplWindowInfo {
+        private sealed class InteractiveWindowInfo {
             public readonly ManualResetEvent Idle = new ManualResetEvent(false);
             public readonly ManualResetEvent ReadyForInput = new ManualResetEvent(false);
 
@@ -56,12 +59,14 @@ namespace TestUtilities.UI {
             }
         }
 
-        private static ConditionalWeakTable<IReplWindow, ReplWindowInfo> _replWindows = new ConditionalWeakTable<IReplWindow, ReplWindowInfo>();
+        private static ConditionalWeakTable<ToolWindowPane, InteractiveWindowInfo> _replWindows =
+            new ConditionalWeakTable<ToolWindowPane, InteractiveWindowInfo>();
 
         private readonly VisualStudioApp _app;
         private readonly string _title;
-        private readonly ReplWindow _replWindow;
-        private readonly ReplWindowInfo _replWindowInfo;
+        private readonly ToolWindowPane _replWindow;
+        private readonly IInteractiveWindow _interactive;
+        private readonly InteractiveWindowInfo _replWindowInfo;
 
         public InteractiveWindow(string title, AutomationElement element, VisualStudioApp app)
             : base(null, element) {
@@ -69,14 +74,24 @@ namespace TestUtilities.UI {
             _title = title;
 
             var compModel = _app.GetService<IComponentModel>(typeof(SComponentModel));
-            var replWindowProvider = compModel.GetService<IReplWindowProvider>();
-            _replWindow = replWindowProvider.GetReplWindows()
-                .OfType<ReplWindow>()
-                .FirstOrDefault(p => p.Title.Equals(title, StringComparison.CurrentCulture));
+            var replWindowProvider = compModel.GetService<InteractiveWindowProvider>();
+            _replWindow = replWindowProvider
+#if DEV14_OR_LATER
+                .AllOpenWindows
+#else
+                .GetReplWindows()
+#endif
+                .OfType<ToolWindowPane>()
+                .FirstOrDefault(p => p.Caption.Equals(title, StringComparison.CurrentCulture));
+#if DEV14_OR_LATER
+            _interactive = ((IVsInteractiveWindow)_replWindow).InteractiveWindow;
+#else
+            _interactive = (IReplWindow)_replWindow;
+#endif
 
             _replWindowInfo = _replWindows.GetValue(_replWindow, window => {
-                var info = new ReplWindowInfo();
-                window.ReadyForInput += new Action(info.OnReadyForInput);
+                var info = new InteractiveWindowInfo();
+                _interactive.ReadyForInput += new Action(info.OnReadyForInput);
                 return info;
             });
         }
@@ -95,9 +110,9 @@ namespace TestUtilities.UI {
             } else {
                 compModel = (IComponentModel)VSTestContext.ServiceProvider.GetService(typeof(SComponentModel));
             }
-            var replWindowProvider = compModel.GetService<IReplWindowProvider>();
-            foreach (var frame in replWindowProvider.GetReplWindows()
-                .OfType<ReplWindow>()
+            var replWindowProvider = compModel.GetService<InteractiveWindowProvider>();
+            foreach (var frame in replWindowProvider.AllOpenWindows
+                .OfType<ToolWindowPane>()
                 .Select(r => r.Frame)
                 .OfType<IVsWindowFrame>()) {
                 frame.Hide();
@@ -240,7 +255,7 @@ namespace TestUtilities.UI {
         }
 
         public void ClearInput() {
-            var buffer = _replWindow.CurrentLanguageBuffer;
+            var buffer = ReplWindow.CurrentLanguageBuffer;
             if (buffer == null) {
                 return;
             }
@@ -278,9 +293,9 @@ namespace TestUtilities.UI {
             Assert.IsTrue(ReadyForInput.WaitOne(10000));
         }
 
-        internal IReplWindow2 ReplWindow {
+        internal IInteractiveWindow ReplWindow {
             get {
-                return _replWindow;
+                return _interactive;
             }
         }
 
@@ -290,25 +305,44 @@ namespace TestUtilities.UI {
             }
         }
 
+        public string PrimaryPrompt {
+            get {
+#if DEV14_OR_LATER
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+#error Implement for NTVS
+#else
+                return _interactive.GetPythonEvaluator()?.PrimaryPrompt ?? ">>> ";
+#endif
+#else
+                return (string)ReplWindow.GetOptionValue(ReplOptions.CurrentPrimaryPrompt);
+#endif
+            }
+        }
+
+        public string SecondaryPrompt {
+            get {
+#if DEV14_OR_LATER
+#if NTVS_FEATURE_INTERACTIVEWINDOW
+#error Implement for NTVS
+#else
+                return _interactive.GetPythonEvaluator()?.SecondaryPrompt ?? "... ";
+#endif
+#else
+                return (string)ReplWindow.GetOptionValue(ReplOptions.CurrentSecondaryPrompt);
+#endif
+            }
+        }
+
         public void Reset() {
             Console.WriteLine("REPL resetting");
 
-            Assert.IsTrue(ReplWindow.Reset().Wait(10000));
-        }
-
-        public void WithStandardInputPrompt(string prompt, Action<string> action) {
-            if ((bool)ReplWindow.GetOptionValue(ReplOptions.DisplayPromptInMargin)) {
-                action(String.Empty);
-                return;
-            }
-
-            string oldPrompt = (string)ReplWindow.GetOptionValue(ReplOptions.StandardInputPrompt);
-            ReplWindow.SetOptionValue(ReplOptions.StandardInputPrompt, prompt);
-            try {
-                action(prompt);
-            } finally {
-                ReplWindow.SetOptionValue(ReplOptions.StandardInputPrompt, oldPrompt);
-            }
+#if DEV14_OR_LATER
+            var t = ReplWindow.Evaluator.ResetAsync();
+#else
+            var t = ReplWindow.Reset();
+#endif
+            Assert.IsTrue(t.Wait(10000), "Reset timed out");
+            Assert.IsTrue(t.Result.IsSuccessful, "Reset failed");
         }
 
         internal virtual bool IsTabGroupContainer(AutomationElement element) {

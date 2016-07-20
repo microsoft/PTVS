@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="Microsoft.PythonTools.EnvironmentsList.EnvironmentPathsExtension"
+<UserControl x:Class="Microsoft.PythonTools.EnvironmentsList.EnvironmentPathsExtension"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -18,8 +18,12 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/EnvironmentView.xaml" />
+                <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/FileNameLabel.xaml" />
 
                 <ResourceDictionary>
+
+                    <wpf:Lambda Lambda="b => b ? Visibility.Visible : Visibility.Collapsed" x:Key="VisibleIfEnabled" />
+
                     <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="EnvironmentIsDefault">
                         <Grid Margin="6">
                             <Button x:Name="MakeDefaultButton"
@@ -32,16 +36,9 @@
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
-                                    <Path Grid.Column="0"
-                                          Margin="3 0"
-                                          Width="16" Height="16"
-                                          VerticalAlignment="Center"
-                                          Data="{StaticResource EnvironmentGeometry}"
-                                          Stretch="Uniform"
-                                          RenderOptions.EdgeMode="Aliased"
-                                          Fill="{DynamicResource {x:Static wpf:Controls.ControlForegroundKey}}"
-                                          Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                          StrokeThickness="1.0" />
+                                    <ContentControl Grid.Column="0"
+                                                    Margin="3 0"
+                                                    Style="{StaticResource PythonEnvironmentImage}" />
                                     <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
                                         Make this the default environment for new projects
                                     </TextBlock>
@@ -54,16 +51,9 @@
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
 
-                                <Path Grid.Column="0"
-                                      Margin="3 0"
-                                      Width="16" Height="16"
-                                      VerticalAlignment="Center"
-                                      Data="{StaticResource EnvironmentGeometry}"
-                                      Stretch="Uniform"
-                                      RenderOptions.EdgeMode="Aliased"
-                                      Fill="{DynamicResource PTVSGreenBrush}"
-                                      Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                      StrokeThickness="1.0" />
+                                <ContentControl Grid.Column="0"
+                                                Margin="3 0"
+                                                Style="{StaticResource ActiveEnvironmentImage}" />
                                 <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
                                     This is the default environment for new projects
                                 </TextBlock>
@@ -75,16 +65,10 @@
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
 
-                                <Path Grid.Column="0"
-                                      Margin="3 0"
-                                      Width="16" Height="16"
-                                      VerticalAlignment="Center"
-                                      Data="{StaticResource EnvironmentGeometry}"
-                                      Stretch="Uniform"
-                                      RenderOptions.EdgeMode="Aliased"
-                                      Fill="{DynamicResource PTVSGreenBrush}"
-                                      Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                      StrokeThickness="1.0" />
+                                <ContentControl Grid.Column="0"
+                                                Margin="3 0"
+                                                Opacity="0.5"
+                                                Style="{StaticResource PythonEnvironmentImage}" />
                                 <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
                                     This environment cannot be made the default.
                                 </TextBlock>
@@ -115,55 +99,108 @@
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
-                                    <Path Grid.Column="0"
-                                          Margin="3 0"
-                                          Width="16" Height="16"
-                                          Stretch="None"
-                                          HorizontalAlignment="Center" VerticalAlignment="Center"
-                                          RenderOptions.EdgeMode="Aliased"
-                                          Data="{StaticResource InteractiveWindowGeometry1}"
-                                          Fill="{StaticResource PTVSGreenBrush}"
-                                          Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                          StrokeThickness="1.0" />
-                                    <Path Grid.Column="0"
-                                          Margin="3 0"
-                                          Width="16" Height="16"
-                                          Stretch="None"
-                                          HorizontalAlignment="Center" VerticalAlignment="Center"
-                                          RenderOptions.EdgeMode="Aliased"
-                                          Data="{StaticResource InteractiveWindowGeometry2}"
-                                          Stroke="{StaticResource InteractiveWindowGeometryBrush2}"
-                                          StrokeThickness="1.0" />
+                                    <Control Grid.Column="0"
+                                             Margin="3 0"
+                                             Style="{StaticResource InteractiveWindowImage}" />
                                     <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
                                         Open interactive window
                                     </TextBlock>
                                 </Grid>
                             </Button>
 
-                            <Button Command="{x:Static l:EnvironmentView.OpenInteractiveOptions}"
+                            <Button Command="{x:Static l:EnvironmentView.OpenInteractiveScripts}"
                                     CommandParameter="{Binding}"
                                     Style="{StaticResource NavigationButton}"
-                                    Margin="6"
+                                    Margin="12 6 6 6"
                                     HorizontalAlignment="Left">
                                 <Grid Background="Transparent">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
-                                    <Path Grid.Column="0"
-                                          Margin="3 0"
-                                          Width="16" Height="16"
-                                          Stretch="Uniform"
-                                          VerticalAlignment="Center"
-                                          RenderOptions.EdgeMode="Aliased"
-                                          Data="{StaticResource CogGeometry}"
-                                          Fill="Gray"
-                                          Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                          StrokeThickness="1.0"/>
+                                    <Control Grid.Column="0"
+                                             Margin="3 0"
+                                             Style="{StaticResource SettingsImage}" />
                                     <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
-                                        Configure interactive window
+                                        Explore interactive scripts
                                     </TextBlock>
                                 </Grid>
+                            </Button>
+
+                            <!--
+                            This command is not expected to remain long-term,
+                            but should be replaced with a more general startup
+                            script tool.
+                            -->
+                            <Button Command="{x:Static l:EnvironmentView.EnableIPythonInteractive}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource NavigationButton}"
+                                    Margin="12 6 6 6"
+                                    HorizontalAlignment="Left"
+                                    Visibility="{Binding IsEnabled,RelativeSource={RelativeSource Self},Converter={StaticResource VisibleIfEnabled}}">
+                                <Grid Background="Transparent">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <Control Grid.Column="0"
+                                             Margin="3 0"
+                                             Style="{StaticResource CheckBoxUncheckedImage}" />
+                                    <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
+                                        Use IPython interactive mode
+                                    </TextBlock>
+                                </Grid>
+                            </Button>
+                            <Button Command="{x:Static l:EnvironmentView.DisableIPythonInteractive}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource NavigationButton}"
+                                    Margin="12 6 6 6"
+                                    HorizontalAlignment="Left"
+                                    Visibility="{Binding IsEnabled,RelativeSource={RelativeSource Self},Converter={StaticResource VisibleIfEnabled}}">
+                                <Grid Background="Transparent">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <Control Grid.Column="0"
+                                             Margin="3 0"
+                                             Style="{StaticResource CheckBoxCheckedImage}" />
+                                    <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
+                                        Use IPython interactive mode
+                                    </TextBlock>
+                                </Grid>
+                            </Button>
+
+                            <Button Command="{x:Static l:EnvironmentView.OpenInPowerShell}"
+                                    CommandParameter="{Binding Mode=OneWay}"
+                                    Style="{StaticResource NavigationButton}"
+                                    Margin="6"
+                                    HorizontalAlignment="Left"
+                                    x:Name="Button">
+                                <Grid Background="Transparent">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <ContentControl Grid.Column="0"
+                                                    Margin="3 0"
+                                                    Style="{StaticResource ConsoleImage}" />
+                                    <TextBlock Grid.Column="1">
+                                        Open in PowerShell
+                                    </TextBlock>
+                                </Grid>
+                                <Button.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem InputGestureText=""
+                                                  Command="{x:Static l:EnvironmentView.OpenInCommandPrompt}"
+                                                  CommandParameter="{Binding Mode=OneWay}"
+                                                  CommandTarget="{Binding PlacementTarget,RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}">
+                                            <MenuItem.Header>
+                                                Open in _Command Prompt
+                                            </MenuItem.Header>
+                                        </MenuItem>
+                                    </ContextMenu>
+                                </Button.ContextMenu>
                             </Button>
                         </StackPanel>
                     </DataTemplate>
@@ -181,19 +218,12 @@
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
-                                    <Path Grid.Column="0"
-                                          Margin="3 0"
-                                          Width="16" Height="16"
-                                          Stretch="Uniform"
-                                          VerticalAlignment="Center"
-                                          RenderOptions.EdgeMode="Aliased"
-                                          Data="{StaticResource ClosedFolderGeometry}"
-                                          Fill="{DynamicResource FolderGeometryBrush}"
-                                          Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                          StrokeThickness="1.0" />
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding PrefixPath,Mode=OneWay}"
-                                               TextTrimming="CharacterEllipsis" />
+                                    <ContentControl Grid.Column="0"
+                                                    Margin="3 0"
+                                                    Style="{StaticResource FolderClosedImage}" />
+                                    <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
+                                           Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
+                                           Content="{Binding PrefixPath,Mode=OneWay}" />
                                 </Grid>
                                 <Button.ContextMenu>
                                     <ContextMenu>
@@ -221,18 +251,12 @@
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
-                                    <Path Grid.Column="0"
-                                          Margin="3 0"
-                                          Width="16" Height="16"
-                                          Stretch="Uniform"
-                                          VerticalAlignment="Center"
-                                          Data="{StaticResource ConsoleGeometry}"
-                                          Fill="{DynamicResource ConsoleGeometryBrush}"
-                                          Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                          StrokeThickness="1.0" />
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding InterpreterPath,Mode=OneWay}"
-                                               TextTrimming="CharacterEllipsis" />
+                                    <ContentControl Grid.Column="0"
+                                                    Margin="3 0"
+                                                    Style="{StaticResource PythonConsoleApplicationImage}" />
+                                    <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
+                                           Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
+                                           Content="{Binding InterpreterPath,Mode=OneWay}" />
                                 </Grid>
                                 <Button.ContextMenu>
                                     <ContextMenu>
@@ -260,30 +284,12 @@
                                         <ColumnDefinition Width="auto" />
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
-                                    <Grid Grid.Column="0"
-                                          Margin="3 0"
-                                          Width="16" Height="16"
-                                          VerticalAlignment="Center">
-                                        <Path Width="16" Height="16"
-                                              Stretch="Uniform"
-                                              VerticalAlignment="Top"
-                                              RenderOptions.EdgeMode="Aliased"
-                                              Data="{StaticResource WindowsGeometry1}"
-                                              Fill="{DynamicResource WindowsGeometryBrush1}"
-                                              Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                              StrokeThickness="1.0" />
-                                        <Path Width="16" Height="16"
-                                              Stretch="Uniform"
-                                              VerticalAlignment="Top"
-                                              RenderOptions.EdgeMode="Aliased"
-                                              Data="{StaticResource WindowsGeometry2}"
-                                              Fill="{DynamicResource WindowsGeometryBrush2}"
-                                              Stroke="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"
-                                              StrokeThickness="1.0" />
-                                    </Grid>
-                                    <TextBlock Grid.Column="1"
-                                               Text="{Binding WindowsInterpreterPath,Mode=OneWay}"
-                                               TextTrimming="CharacterEllipsis" />
+                                    <ContentControl Grid.Column="0"
+                                                    Margin="3 0"
+                                                    Style="{StaticResource PythonApplicationImage}" />
+                                    <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
+                                           Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}"
+                                           Content="{Binding WindowsInterpreterPath,Mode=OneWay}" />
                                 </Grid>
                                 <Button.ContextMenu>
                                     <ContextMenu>
@@ -302,6 +308,36 @@
                         </StackPanel>
                     </DataTemplate>
 
+                    <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="VendorInformation">
+                        <StackPanel Orientation="Vertical">
+                            <Label x:Name="Vendor">
+                                <TextBlock>
+                                    <Run>By</Run>
+                                    <Run Text="{Binding Vendor,Mode=OneWay}" />
+                                </TextBlock>
+                            </Label> 
+                            <Button x:Name="SupportUrl"
+                                    Command="{x:Static l:EnvironmentPathsExtension.OpenInBrowser}"
+                                    CommandParameter="{Binding SupportUrl,Mode=OneWay}"
+                                    ToolTip="{Binding SupportUrl,Mode=OneWay}"
+                                    Style="{StaticResource NavigationButton}"
+                                    Margin="6 1"
+                                    HorizontalAlignment="Left">
+                                Online support
+                            </Button>
+                            <Rectangle Height="1" Margin="6 1"
+                                       Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                        </StackPanel>
+
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding Vendor,Mode=OneWay}" Value="">
+                                <Setter TargetName="Vendor" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding SupportUrl,Mode=OneWay}" Value="">
+                                <Setter TargetName="SupportUrl" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
+                    </DataTemplate>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -315,6 +351,7 @@
                     <Setter Property="Focusable" Value="False"/>
                 </Style>
             </StackPanel.Resources>
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource VendorInformation}" Margin="0 3" />
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource EnvironmentIsDefault}" Margin="0 3" />
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource InteractiveLinks}" Margin="0 3" />
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource EnvironmentLinks}" Margin="0 3" />

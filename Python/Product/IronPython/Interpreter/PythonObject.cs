@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -22,12 +24,20 @@ namespace Microsoft.IronPythonTools.Interpreter {
     class PythonObject : IMemberContainer, IMember {
         private readonly ObjectIdentityHandle _obj;
         private readonly IronPythonInterpreter _interpreter;
+        private RemoteInterpreterProxy _remote;
         private Dictionary<string, MemberInfo> _attrs;
         private bool _checkedClrAttrs;
 
         public PythonObject(IronPythonInterpreter interpreter, ObjectIdentityHandle obj) {
             _interpreter = interpreter;
+            _interpreter.UnloadingDomain += Interpreter_UnloadingDomain;
+            _remote = _interpreter.Remote;
             _obj = obj;
+        }
+
+        private void Interpreter_UnloadingDomain(object sender, EventArgs e) {
+            _remote = null;
+            _interpreter.UnloadingDomain -= Interpreter_UnloadingDomain;
         }
 
         public ObjectIdentityHandle Value {
@@ -39,6 +49,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IronPythonInterpreter Interpreter {
             get {
                 return _interpreter;
+            }
+        }
+
+        public RemoteInterpreterProxy RemoteInterpreter {
+            get {
+                return _remote;
             }
         }
 
@@ -78,7 +94,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
             MemberInfo member;
             if (!_attrs.TryGetValue(name, out member) || member.Member == null) {
-                var res = Interpreter.Remote.GetMember(Value, name);
+                var ri = RemoteInterpreter;
+                var res = ri != null ? ri.GetMember(Value, name) : default(ObjectIdentityHandle);
                 if (!res.Equals(Value)) {
                     _attrs[name] = member = new MemberInfo(_interpreter.MakeObject(res));
                 }
@@ -107,7 +124,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         private void CreateNonClrAttrs() {
             if (!_checkedClrAttrs) {
-                foreach (var name in Interpreter.Remote.DirHelper(_obj, false)) {
+                var ri = RemoteInterpreter;
+                foreach (var name in ri != null ? ri.DirHelper(_obj, false) : Enumerable.Empty<string>()) {
                     if (!_attrs.ContainsKey(name)) {
                         _attrs[name] = new MemberInfo(IsClrOnly.No);
                     } else {
@@ -126,7 +144,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
 
         public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
-            return Interpreter.Remote.DirHelper(Value, ((IronPythonModuleContext)moduleContext).ShowClr);
+            var ri = RemoteInterpreter;
+            return ri != null ? ri.DirHelper(Value, ((IronPythonModuleContext)moduleContext).ShowClr) : Enumerable.Empty<string>();
         }
 
         #endregion

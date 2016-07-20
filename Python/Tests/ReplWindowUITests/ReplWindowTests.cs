@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -21,27 +23,41 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using Microsoft.PythonTools;
+using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Language.Intellisense;
-using Microsoft.VisualStudio.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
 using TestUtilities;
+using TestUtilities.UI;
+using TestUtilities.UI.Python;
 using Keyboard = TestUtilities.UI.Keyboard;
 
 namespace ReplWindowUITests {
     [TestClass, Ignore]
     public abstract class ReplWindowTests {
-        internal abstract ReplWindowProxySettings Settings { get; }
+        internal abstract PythonReplWindowProxySettings Settings { get; }
 
-        private ReplWindowProxy Prepare() {
-            return ReplWindowProxy.Prepare(Settings);
+        static ReplWindowTests() {
+            AssertListener.Initialize();
+        }
+
+        private ReplWindowProxy Prepare(bool addNewLineAtEndOfFullyTypedWord = false) {
+            var s = Settings;
+            if (addNewLineAtEndOfFullyTypedWord != s.AddNewLineAtEndOfFullyTypedWord) {
+                s = s.Clone();
+                s.AddNewLineAtEndOfFullyTypedWord = addNewLineAtEndOfFullyTypedWord;
+            }
+
+            return ReplWindowProxy.Prepare(s);
         }
 
         #region Miscellaneous tests
 
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ClearInputHelper() {
             using (var interactive = Prepare()) {
                 interactive.Type("1 + ", commitLastLine: false);
@@ -53,41 +69,12 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
-        public virtual void ReplWindowOptions() {
-            using (var interactive = Prepare()) {
-                interactive.SetOptionValue(ReplOptions.CommandPrefix, "%");
-                Assert.AreEqual(interactive.GetOptionValue(ReplOptions.CommandPrefix), "%");
-                interactive.SetOptionValue(ReplOptions.CommandPrefix, "$");
-                Assert.AreEqual(interactive.GetOptionValue(ReplOptions.CommandPrefix), "$");
-
-                Assert.AreEqual(interactive.GetOptionValue(ReplOptions.PrimaryPrompt), interactive.Settings.PrimaryPrompt);
-                Assert.AreEqual(interactive.GetOptionValue(ReplOptions.SecondaryPrompt), interactive.Settings.SecondaryPrompt);
-
-                Assert.AreEqual(interactive.GetOptionValue(ReplOptions.DisplayPromptInMargin), !interactive.Settings.InlinePrompts);
-                Assert.AreEqual(interactive.GetOptionValue(ReplOptions.ShowOutput), true);
-
-                Assert.AreEqual(interactive.GetOptionValue(ReplOptions.UseSmartUpDown), true);
-
-                AssertUtil.Throws<InvalidOperationException>(
-                    () => interactive.SetOptionValue(ReplOptions.PrimaryPrompt, 42)
-                );
-                AssertUtil.Throws<InvalidOperationException>(
-                    () => interactive.SetOptionValue(ReplOptions.PrimaryPrompt, null)
-                );
-                AssertUtil.Throws<InvalidOperationException>(
-                    () => interactive.SetOptionValue((ReplOptions)(-1), null)
-                );
-            }
-        }
-
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void Reset() {
             using (var interactive = Prepare()) {
                 // TODO (bug): Reset doesn't clean up completely. 
-                Assert.Inconclusive("TODO (bug): Reset doesn't clean up completely.");
+                Assert.Fail("TODO (bug): Reset doesn't clean up completely.");
                 // This causes a space to appear in the buffer even after reseting the REPL.
 
                 // const string print1 = "print 1,";
@@ -100,12 +87,12 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void PromptPositions() {
             using (var interactive = Prepare()) {
                 // TODO (bug): this insert a space somwhere in the socket stream
-                Assert.Inconclusive("TODO (bug): this insert a space somwhere in the socket stream");
+                Assert.Fail("TODO (bug): this insert a space somwhere in the socket stream");
 
                 // const string print1 = "print 1,";
                 // Keyboard.Type(print1);
@@ -131,15 +118,15 @@ namespace ReplWindowUITests {
         /// f( should bring signature help up
         /// 
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void SimpleSignatureHelp() {
             using (var interactive = Prepare()) {
                 const string code = "def f(): pass";
                 interactive.SubmitCode(code);
                 interactive.WaitForText(">" + code, ">");
-                interactive.WaitForAnalysis();
+                WaitForAnalysis(interactive);
 
                 Keyboard.Type("f(");
 
@@ -156,15 +143,15 @@ namespace ReplWindowUITests {
         /// f( should bring signature help up and show default values and types
         /// 
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void SignatureHelpDefaultValue() {
             using (var interactive = Prepare()) {
                 const string code = "def f(a, b=1, c=\"d\"): pass";
                 interactive.SubmitCode(code);
                 interactive.WaitForText(">" + code, ">");
-                interactive.WaitForAnalysis();
+                WaitForAnalysis(interactive);
 
                 Keyboard.Type("f(");
 
@@ -184,9 +171,9 @@ namespace ReplWindowUITests {
         /// "x = 42"
         /// "x." should bring up intellisense completion
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void SimpleCompletion() {
             using (var interactive = Prepare()) {
                 const string code = "x = 42";
@@ -202,7 +189,10 @@ namespace ReplWindowUITests {
                     // commit entry
                     sh.Commit();
                     sh.WaitForSessionDismissed();
-                    interactive.WaitForText(">" + code, ">x." + interactive.Settings.IntFirstMember);
+                    interactive.WaitForText(
+                        ">" + code,
+                        ">x." + ((PythonReplWindowProxySettings)interactive.Settings).IntFirstMember
+                    );
                 }
 
                 // clear input at repl
@@ -218,9 +208,9 @@ namespace ReplWindowUITests {
         /// "x = 42"
         /// "x " should not bring up any completions.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void SimpleCompletionSpaceNoCompletion() {
             using (var interactive = Prepare()) {
                 const string code = "x = 42";
@@ -239,9 +229,9 @@ namespace ReplWindowUITests {
         /// <summary>
         /// x = 42; x.car[enter] – should type "car" not complete to "conjugate"
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CompletionWrongText() {
             using (var interactive = Prepare()) {
                 const string code = "x = 42";
@@ -258,7 +248,7 @@ namespace ReplWindowUITests {
                     ">" + code,
                     ">x.car",
                     "Traceback (most recent call last):",
-                    "  File \"<" + interactive.Settings.SourceFileName + ">\", line 1, in <module>",
+                    "  File \"<" + ((PythonReplWindowProxySettings)interactive.Settings).SourceFileName + ">\", line 1, in <module>",
                     "AttributeError: 'int' object has no attribute 'car'", ">"
                 );
             }
@@ -269,13 +259,11 @@ namespace ReplWindowUITests {
         /// and should respect enter at end of word completes option.  When it
         /// does execute the text the output should be on the next line.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CompletionFullTextWithoutNewLine() {
-            using (var interactive = Prepare()) {
-                interactive.AddNewLineAtEndOfFullyTypedWord = false;
-
+            using (var interactive = Prepare(addNewLineAtEndOfFullyTypedWord: false)) {
                 const string code = "x = 42";
                 interactive.SubmitCode(code);
                 interactive.WaitForText(">" + code, ">");
@@ -294,17 +282,16 @@ namespace ReplWindowUITests {
         /// and should respect enter at end of word completes option.  When it
         /// does execute the text the output should be on the next line.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CompletionFullTextWithNewLine() {
-            using (var interactive = Prepare()) {
-                interactive.AddNewLineAtEndOfFullyTypedWord = true;
+            using (var interactive = Prepare(addNewLineAtEndOfFullyTypedWord: true)) {
 
                 const string code = "x = 42";
                 interactive.SubmitCode(code);
                 interactive.WaitForText(">" + code, ">");
-                interactive.WaitForAnalysis();
+                WaitForAnalysis(interactive);
 
                 Keyboard.Type("x.");
                 using (var sh = interactive.WaitForSession<ICompletionSession>()) {
@@ -320,16 +307,17 @@ namespace ReplWindowUITests {
         /// With AutoListIdentifiers on, all [a-zA-Z_] should bring up
         /// completions
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void AutoListIdentifierCompletions() {
             using (var interactive = Prepare()) {
                 // the App instance preserves this property for us already
-                interactive.App.Options.Intellisense.AutoListIdentifiers = true;
+                ((PythonVisualStudioApp)interactive.App).Options.Intellisense.AutoListIdentifiers = true;
+                Keyboard.Type("x = ");
 
+                // 'x' should bring up a completion session
                 foreach (var c in "abcdefghijklmnopqrstuvwxyz_ABCDEFGHIJKLMNOPQRSTUVWXYZ") {
-                    // x<space> should bring up a completion session
                     Keyboard.Type(c.ToString());
 
                     using (var sh = interactive.WaitForSession<ICompletionSession>()) {
@@ -339,7 +327,7 @@ namespace ReplWindowUITests {
                     Keyboard.Backspace();
                 }
 
-                // x<space> should not bring up a completion session
+                // 'x' should not bring up a completion session
                 // Don't check too many items, since asserting that no session
                 // starts is slow.
                 foreach (var c in "1([{") {
@@ -357,8 +345,8 @@ namespace ReplWindowUITests {
 
         #region Input/output redirection tests
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void TestStdOutRedirected() {
             using (var interactive = Prepare()) {
                 interactive.RequirePrimaryPrompt();
@@ -373,7 +361,7 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(
                     ">" + code,
                     ">" + code2,
-                    interactive.Settings.Print42Output,
+                    ((PythonReplWindowProxySettings)interactive.Settings).Print42Output,
                     ">"
                 );
             }
@@ -382,13 +370,12 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Calling input while executing user code.  This should let the user start typing.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void TestRawInput() {
             using (var interactive = Prepare()) {
-                interactive.EnsureInputFunction();
-                interactive.SetOptionValue(ReplOptions.StandardInputPrompt, "INPUT: ");
+                EnsureInputFunction(interactive);
 
                 interactive.SubmitCode("x = input()");
                 interactive.WaitForText(">x = input()", "<");
@@ -401,13 +388,12 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void OnlyTypeInRawInput() {
             using (var interactive = Prepare()) {
-                interactive.EnsureInputFunction();
-                interactive.SetOptionValue(ReplOptions.StandardInputPrompt, "INPUT: ");
+                EnsureInputFunction(interactive);
 
                 interactive.SubmitCode("input()");
                 interactive.WaitForText(">input()", "<");
@@ -423,13 +409,12 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void DeleteCharactersInRawInput() {
             using (var interactive = Prepare()) {
-                interactive.EnsureInputFunction();
-                interactive.SetOptionValue(ReplOptions.StandardInputPrompt, "INPUT: ");
+                EnsureInputFunction(interactive);
 
                 interactive.Type("input()");
                 interactive.WaitForText(">input()", "<");
@@ -446,12 +431,11 @@ namespace ReplWindowUITests {
         /// Calling ReadInput while no code is running - this should remove the
         /// prompt and let the user type input
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void TestIndirectInput() {
             using (var interactive = Prepare()) {
-                interactive.SetOptionValue(ReplOptions.StandardInputPrompt, "INPUT: ");
                 var t = Task.Run(() => interactive.Window.ReadStandardInput());
 
                 // prompt should disappear
@@ -460,7 +444,7 @@ namespace ReplWindowUITests {
                 Keyboard.Type("abc\r");
                 interactive.WaitForText("<abc", ">");
 
-                var text = t.Result;
+                var text = t.Result?.ReadToEnd();
                 Assert.AreEqual("abc\r\n", text);
             }
         }
@@ -469,34 +453,33 @@ namespace ReplWindowUITests {
 
         #region Keyboard tests
 
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void EnterAtBeginningOfLine() {
             using (var interactive = Prepare()) {
                 // TODO (bug): complete statement detection
-                Assert.Inconclusive("TODO (bug): complete statement detection");
-                //                
-                // 
-                //    const string code = "\"\"\"";
-                //    Keyboard.Type(code);
-                //    Keyboard.Type(Key.Enter);
-                //    Keyboard.Type(Key.Enter);
-                //    interactive.WaitForText(">\"\"\"", ".", ".");
+                Assert.Fail("TODO (bug): complete statement detection");
 
-                //    Keyboard.Type("a");
-                //    Keyboard.Type(Key.Left);
-                //    Keyboard.Type(Key.Enter);
-                //    interactive.WaitForText(">\"\"\"", ".", ".", ".a");
+                //const string code = "\"\"\"";
+                //Keyboard.Type(code);
+                //Keyboard.Type(Key.Enter);
+                //Keyboard.Type(Key.Enter);
+                //interactive.WaitForText(">\"\"\"", ".", ".");
+                //
+                //Keyboard.Type("a");
+                //Keyboard.Type(Key.Left);
+                //Keyboard.Type(Key.Enter);
+                //interactive.WaitForText(">\"\"\"", ".", ".", ".a");
             }
         }
 
         /// <summary>
         /// Enter in a middle of a line should insert new line
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void EnterInMiddleOfLine() {
             using (var interactive = Prepare()) {
                 const string code = "def f(): #fob";
@@ -516,9 +499,9 @@ namespace ReplWindowUITests {
         /// <summary>
         /// LineBreak should insert a new line and not submit.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void LineBreak() {
             using (var interactive = Prepare()) {
                 const string quotes = "\"\"\"";
@@ -544,9 +527,9 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests entering a single line of text, moving to the middle, and pressing enter.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void LineBreakInMiddleOfLine() {
             using (var interactive = Prepare()) {
                 Keyboard.Type("def f(): print('hello')");
@@ -566,9 +549,9 @@ namespace ReplWindowUITests {
         /// <summary>
         /// "x=42" left left ctrl-enter should commit assignment
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CtrlEnterCommits() {
             using (var interactive = Prepare()) {
                 const string code = "x = 42";
@@ -584,9 +567,9 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Escape should clear both lines
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void EscapeClearsMultipleLines() {
             using (var interactive = Prepare()) {
                 const string code = "def f(): #fob";
@@ -608,9 +591,9 @@ namespace ReplWindowUITests {
         /// Ctrl-Enter on previous input should paste input to end of buffer 
         /// (doing it again should paste again – appending onto previous input)
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CtrlEnterOnPreviousInput() {
             using (var interactive = Prepare()) {
                 const string code = "def f(): pass";
@@ -623,7 +606,7 @@ namespace ReplWindowUITests {
                 Keyboard.Type(Key.Right);
                 Keyboard.PressAndRelease(Key.Enter, Key.LeftCtrl);
 
-                interactive.WaitForText(">" + code, ">" + code, ".");
+                interactive.WaitForText(">" + code, ">" + code);
 
                 Keyboard.PressAndRelease(Key.Escape);
 
@@ -635,9 +618,9 @@ namespace ReplWindowUITests {
         /// Type some text, hit Ctrl-Enter, should execute current line and not
         /// require a secondary prompt.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CtrlEnterForceCommit() {
             using (var interactive = Prepare()) {
                 const string code = "def f(): pass";
@@ -655,9 +638,9 @@ namespace ReplWindowUITests {
         /// Type a function definition, go to next line, type pass, navigate
         /// left, hit ctrl-enter, should immediately execute func def.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CtrlEnterMultiLineForceCommit() {
             using (var interactive = Prepare()) {
                 Keyboard.Type("def f():\rpass");
@@ -676,8 +659,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests backspacing pass the prompt to the previous line
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void BackspacePrompt() {
             using (var interactive = Prepare()) {
                 interactive.Type("def f():\npass", commitLastLine: false);
@@ -696,9 +679,9 @@ namespace ReplWindowUITests {
                 interactive.WaitForText(">def f():", ".    pass");
             }
         }
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void BackspaceSmartDedent() {
             using (var interactive = Prepare()) {
                 interactive.Type("   ", commitLastLine: false);
@@ -722,9 +705,9 @@ namespace ReplWindowUITests {
         /// secondary prompt.  The secondary prompt should be removed and the
         /// lines should be joined.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void BackspaceSecondaryPrompt() {
             using (var interactive = Prepare()) {
                 interactive.Type("def f():\nx = 42\ny = 100", commitLastLine: false);
@@ -743,9 +726,9 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests deleting when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void BackspaceSecondaryPromptSelected() {
             using (var interactive = Prepare()) {
                 interactive.RequireSecondaryPrompt();
@@ -766,9 +749,9 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests deleting when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void DeleteSecondaryPromptSelected() {
             using (var interactive = Prepare()) {
                 interactive.RequireSecondaryPrompt();
@@ -789,9 +772,9 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Tests typing when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void EditTypeSecondaryPromptSelected() {
             using (var interactive = Prepare()) {
                 interactive.RequireSecondaryPrompt();
@@ -812,9 +795,9 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Pressing delete with no text selected, it should delete the proceeding character.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void TestDelNoTextSelected() {
             using (var interactive = Prepare()) {
                 interactive.Type("abc", commitLastLine: false);
@@ -827,9 +810,9 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void TestDelAtEndOfLine() {
             using (var interactive = Prepare()) {
                 interactive.Type("def f():\nprint('hello')", commitLastLine: false);
@@ -847,8 +830,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void TestDelAtEndOfBuffer() {
             using (var interactive = Prepare()) {
                 interactive.Type("def f():\nprint('hello')", commitLastLine: false);
@@ -859,9 +842,9 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void TestDelInOutput() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode("print('hello')");
@@ -882,8 +865,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// while True: pass / Right Click -> Break Execution (or Ctrl-Break) should break execution
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CtrlBreakInterrupts() {
             using (var interactive = Prepare()) {
                 var code = "while True: pass";
@@ -892,7 +875,7 @@ namespace ReplWindowUITests {
 
                 interactive.CancelExecution();
 
-                if (interactive.Settings.KeyboardInterruptHasTracebackHeader) {
+                if (((PythonReplWindowProxySettings)interactive.Settings).KeyboardInterruptHasTracebackHeader) {
                     interactive.WaitForTextStart(">" + code, "Traceback (most recent call last):");
                 }
                 interactive.WaitForTextEnd("KeyboardInterrupt", ">");
@@ -906,7 +889,7 @@ namespace ReplWindowUITests {
         /// This version runs for 1/2 second which kicks in the running UI.
         /// </summary>
         [TestMethod, Priority(1)]
-        [HostType("VSTestHost")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CtrlBreakInterruptsLongRunning() {
             using (var interactive = Prepare()) {
                 var code = "while True: pass";
@@ -917,7 +900,7 @@ namespace ReplWindowUITests {
 
                 interactive.CancelExecution();
 
-                if (interactive.Settings.KeyboardInterruptHasTracebackHeader) {
+                if (((PythonReplWindowProxySettings)interactive.Settings).KeyboardInterruptHasTracebackHeader) {
                     interactive.WaitForTextStart(">" + code, "Traceback (most recent call last):");
                 }
                 interactive.WaitForTextEnd("KeyboardInterrupt", ">");
@@ -927,8 +910,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Ctrl-Break while running should result in a new prompt
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CtrlBreakNotRunning() {
             using (var interactive = Prepare()) {
                 interactive.WaitForText(">");
@@ -944,73 +927,10 @@ namespace ReplWindowUITests {
         }
 
         /// <summary>
-        /// Ctrl-Break while entering standard input should return an empty input and append a primary prompt.
-        /// </summary>
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
-        public virtual void CtrlBreakInStandardInput() {
-            using (var interactive = Prepare()) {
-                interactive.EnsureInputFunction();
-                interactive.SetOptionValue(ReplOptions.StandardInputPrompt, "INPUT: ");
-
-                interactive.WaitForText(">");
-
-                interactive.SubmitCode("input()");
-                interactive.WaitForText(">input()", "<");
-
-                Keyboard.Type("ignored");
-                interactive.WaitForText(">input()", "<ignored");
-
-                interactive.CancelExecution();
-
-                interactive.WaitForText(
-                    ">input()",
-                    "<ignored",
-                    "''",
-                    ">"
-                );
-
-                interactive.PreviousHistoryItem();
-                interactive.SubmitCurrentText();
-
-                interactive.WaitForText(
-                    ">input()",
-                    "<ignored",
-                    "''",
-                    ">input()",
-                    "<"
-                );
-
-                Keyboard.Type("ignored2");
-
-                interactive.WaitForText(
-                    ">input()",
-                    "<ignored",
-                    "''",
-                    ">input()",
-                    "<ignored2"
-                );
-
-                interactive.CancelExecution(1);
-
-                interactive.WaitForText(
-                    ">input()",
-                    "<ignored",
-                    "''",
-                    ">input()",
-                    "<ignored2",
-                    "''",
-                    ">"
-                );
-            }
-        }
-
-        /// <summary>
         /// Enter "while True: pass", then hit up/down arrow, should move the caret in the edit buffer
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CursorWhileCodeIsRunning() {
             using (var interactive = Prepare()) {
                 var code = "while True: pass";
@@ -1025,7 +945,7 @@ namespace ReplWindowUITests {
 
                 interactive.CancelExecution();
 
-                if (interactive.Settings.KeyboardInterruptHasTracebackHeader) {
+                if (((PythonReplWindowProxySettings)interactive.Settings).KeyboardInterruptHasTracebackHeader) {
                     interactive.WaitForTextStart(">" + code, "Traceback (most recent call last):");
                 } else {
                     interactive.WaitForTextStart(">" + code);
@@ -1045,19 +965,19 @@ namespace ReplWindowUITests {
 
         #region History tests
 
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void HistoryUpdateDef() {
             using (var interactive = Prepare()) {
-                Keyboard.Type("def f():\rprint('hi')\r\r");
+                interactive.Type("def f():\nprint('hi')\n");
                 interactive.WaitForText(">def f():", ".    print('hi')", ".", ">");
 
                 interactive.PreviousHistoryItem();
                 // delete i')
                 interactive.Backspace(3);
 
-                Keyboard.Type("ello')\r\r");
+                interactive.Type("ello')\n");
 
                 interactive.WaitForText(
                     ">def f():", ".    print('hi')", ".",
@@ -1081,9 +1001,9 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void HistoryAppendDef() {
             using (var interactive = Prepare()) {
                 Keyboard.Type("def f():\rprint('hi')\r\r");
@@ -1112,8 +1032,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void HistoryBackForward() {
             using (var interactive = Prepare()) {
                 const string code1 = "x = 23";
@@ -1139,7 +1059,7 @@ namespace ReplWindowUITests {
         /// Test that maximum length of history is enforced and stores correct items.
         /// </summary>
         [TestMethod, Priority(1)]
-        [HostType("VSTestHost")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void HistoryMaximumLength() {
             using (var interactive = Prepare()) {
                 const int historyMax = 50;
@@ -1171,8 +1091,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Test that we remember a partially typed input when we move to the history.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void HistoryUncommittedInput1() {
             using (var interactive = Prepare()) {
                 const string code1 = "x = 42", code2 = "y = 100";
@@ -1199,8 +1119,8 @@ namespace ReplWindowUITests {
         /// <summary>
         /// Test that we don't restore on submit an uncomitted input saved for history.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void HistoryUncommittedInput2() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode("1");
@@ -1222,8 +1142,8 @@ namespace ReplWindowUITests {
         /// history, add print "hello" to 2nd line, enter, scroll back through
         /// both function definitions
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void HistorySearch() {
             using (var interactive = Prepare()) {
                 const string code1 = ">x = 42";
@@ -1263,7 +1183,7 @@ namespace ReplWindowUITests {
         #region Clipboard tests
 
         [TestMethod, Priority(1)]
-        [HostType("VSTestHost")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CommentPaste() {
             using (var interactive = Prepare()) {
                 const string comment = "# fob oar baz";
@@ -1273,7 +1193,7 @@ namespace ReplWindowUITests {
 
                 interactive.ClearInput();
                 interactive.Paste(comment + "\r\n");
-                interactive.WaitForText(">" + comment);
+                interactive.WaitForText(">" + comment, ".");
 
                 interactive.ClearInput();
                 interactive.Paste(comment + "\r\ndef f():\r\n    pass");
@@ -1289,43 +1209,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        /// <summary>
-        /// def f(): pass
-        /// 
-        /// X
-        /// 
-        /// def g(): pass
-        /// 
-        /// </summary>
         [TestMethod, Priority(1)]
-        [HostType("VSTestHost")]
-        public virtual void PasteWithError() {
-            using (var interactive = Prepare()) {
-                interactive.RequirePrimaryPrompt();
-
-                const string code = @"def f(): pass
-
-X
-
-def g(): pass
-
-";
-                interactive.Paste(code);
-
-                interactive.WaitForText(
-                    ">def f(): pass",
-                    ".",
-                    ">X",
-                    "Traceback (most recent call last):",
-                    "  File \"<" + interactive.Settings.SourceFileName + ">\", line 1, in <module>",
-                    "NameError: name 'X' is not defined",
-                    ">"
-                );
-            }
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CsvPaste() {
             using (var interactive = Prepare()) {
                 interactive.Invoke(() => {
@@ -1350,9 +1235,9 @@ def g(): pass
             }
         }
 
-        [TestMethod, Priority(0)]
-        [TestCategory("Interactive"), TestCategory("RequiresKeyboard")]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [TestCategory("Interactive")]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void SelectAll() {
             using (var interactive = Prepare()) {
                 // Python interactive window.  Type $help for a list of commands.
@@ -1369,8 +1254,7 @@ def g(): pass
                 // >>> 
 
                 interactive.RequireSecondaryPrompt();
-                interactive.SetOptionValue(ReplOptions.StandardInputPrompt, "INPUT: ");
-                interactive.EnsureInputFunction();
+                EnsureInputFunction(interactive);
                 interactive.Type(@"def fob():
 print('hi')
 return 123
@@ -1429,8 +1313,8 @@ input()");
         /// Tests cut when the secondary prompt is highlighted as part of the
         /// selection
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void EditCutIncludingPrompt() {
             using (var interactive = Prepare()) {
                 interactive.RequireSecondaryPrompt();
@@ -1455,8 +1339,8 @@ input()");
         /// <summary>
         /// Tests pasting when the secondary prompt is highlighted as part of the selection
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void EditPasteSecondaryPromptSelected() {
             using (var interactive = Prepare()) {
                 interactive.RequireSecondaryPrompt();
@@ -1491,8 +1375,8 @@ input()");
         /// Same as EditPasteSecondaryPromptSelected, but the selection is reversed so that the
         /// caret is in the prompt.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void EditPasteSecondaryPromptSelectedInPromptMargin() {
             using (var interactive = Prepare()) {
                 interactive.RequireSecondaryPrompt();
@@ -1522,21 +1406,21 @@ input()");
         /// <summary>
         /// Tests entering an unknown repl commmand
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ReplCommandUnknown() {
             using (var interactive = Prepare()) {
                 const string code = "$unknown";
                 interactive.SubmitCode(code);
-                interactive.WaitForText(">" + code, "Unknown command 'unknown', use \"$help\" for help", ">");
+                interactive.WaitForText(">" + code, "Unknown command '$unknown', use '$help' for a list of commands.", ">");
             }
         }
 
         /// <summary>
         /// Tests entering an unknown repl commmand
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ReplCommandComment() {
             using (var interactive = Prepare()) {
                 const string code = "$$ quox oar baz";
@@ -1548,8 +1432,8 @@ input()");
         /// <summary>
         /// Tests using the $cls clear screen command
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ClearScreenCommand() {
             using (var interactive = Prepare()) {
                 interactive.Type("$cls", commitLastLine: false);
@@ -1563,15 +1447,16 @@ input()");
         /// <summary>
         /// Tests REPL command help
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ReplCommandHelp() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode("$help");
 
                 interactive.WaitForTextStart(
                     ">$help",
-                    string.Format("  {0,-24}  {1}", "$help", "Show a list of REPL commands")
+                    "Keyboard shortcuts:",
+                    "  Enter                Evaluate the current input if it appears to be complete."
                 );
             }
         }
@@ -1579,8 +1464,8 @@ input()");
         /// <summary>
         /// Tests REPL command $load, with a simple script.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CommandsLoadScript() {
             using (var interactive = Prepare()) {
                 const string content = "print('hello world')";
@@ -1602,8 +1487,8 @@ input()");
         /// <summary>
         /// Tests REPL command $load, with a simple script.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CommandsLoadScriptWithQuotes() {
             using (var interactive = Prepare()) {
                 const string content = "print('hello world')";
@@ -1625,8 +1510,8 @@ input()");
         /// <summary>
         /// Tests REPL command $load, with multiple statements including a class definition.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CommandsLoadScriptWithClass() {
             using (var interactive = Prepare()) {
                 // http://pytools.codeplex.com/workitem/632
@@ -1656,8 +1541,8 @@ c = C()
         /// <summary>
         /// Tests $load command with file that includes multiple submissions.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CommandsLoadScriptMultipleSubmissions() {
             using (var interactive = Prepare()) {
                 const string content = @"def fob():
@@ -1690,8 +1575,8 @@ fob()
         /// <summary>
         /// Tests that ClearScreen doesn't cancel pending submissions queue.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CommandsLoadScriptMultipleSubmissionsWithClearScreen() {
             using (var interactive = Prepare()) {
                 const string content = @"def fob():
@@ -1719,8 +1604,8 @@ $cls
         /// <summary>
         /// Inserts code to REPL while input is accepted. 
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void InsertCode() {
             using (var interactive = Prepare()) {
                 interactive.Window.InsertCode("1");
@@ -1744,8 +1629,8 @@ $cls
         /// Inserts code to REPL while submission execution is in progress. 
         /// The inserted input should be appended to uncommitted input and show up when the execution is finished/aborted.
         /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void InsertCodeWhileRunning() {
             using (var interactive = Prepare()) {
                 var code = "while True: pass";
@@ -1762,7 +1647,7 @@ $cls
 
                 interactive.CancelExecution();
 
-                if (interactive.Settings.KeyboardInterruptHasTracebackHeader) {
+                if (((PythonReplWindowProxySettings)interactive.Settings).KeyboardInterruptHasTracebackHeader) {
                     interactive.WaitForTextStart(">" + code, "Traceback (most recent call last):");
                 } else {
                     interactive.WaitForTextStart(">" + code);
@@ -1777,91 +1662,43 @@ $cls
 
         #endregion
 
-        #region Projection Buffer tests
-
-        /// <summary>
-        /// Replacing a snippet including a single line break with another
-        /// snippet that also includes a single line break (line delta is zero).
-        /// </summary>
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
-        public virtual void TestProjectionBuffers_ZeroLineDeltaChange() {
-            using (var interactive = Prepare()) {
-                interactive.Invoke(() => {
-                    var buffer = interactive.Window.CurrentLanguageBuffer;
-                    buffer.Replace(new Span(0, 0), "def f():\r\n    pass");
-                    VerifyProjectionSpans((ReplWindow)interactive.Window);
-
-                    var snapshot = buffer.CurrentSnapshot;
-
-                    var spanToReplace = new Span("def f():".Length, "\r\n    ".Length);
-                    Assert.AreEqual("\r\n    ", snapshot.GetText(spanToReplace));
-
-                    using (var edit = buffer.CreateEdit(EditOptions.None, null, null)) {
-                        edit.Replace(spanToReplace.Start, spanToReplace.Length, "\r\n");
-                        edit.Apply();
-                    }
-
-                    VerifyProjectionSpans((ReplWindow)interactive.Window);
-                });
-            }
-        }
-
-        /// <summary>
-        /// Verifies that current langauge buffer is projected as:
-        /// {Prompt1}{Language Span}\r\n
-        /// {Prompt2}{Language Span}\r\n
-        /// {Prompt2}{Language Span}
-        /// </summary>
-        private static void VerifyProjectionSpans(ReplWindow repl) {
-            var projectionSpans = repl.ProjectionSpans;
-            var projectionBuffer = repl.TextBuffer;
-            var snapshot = repl.CurrentLanguageBuffer.CurrentSnapshot;
-
-            int firstLangSpan = projectionSpans.Count - snapshot.LineCount * 2 + 1;
-            int projectionLine = projectionBuffer.CurrentSnapshot.LineCount - snapshot.LineCount;
-            for (int i = firstLangSpan; i < projectionSpans.Count; i += 2, projectionLine++) {
-                // prompt:
-                if (i == firstLangSpan) {
-                    Assert.IsTrue(projectionSpans[i - 1].Kind == ReplSpanKind.Prompt);
-                } else {
-                    Assert.IsTrue(projectionSpans[i - 1].Kind == ReplSpanKind.SecondaryPrompt);
-                }
-
-                // language span:
-                Assert.IsTrue(projectionSpans[i].Kind == ReplSpanKind.Language);
-                var trackingSpan = projectionSpans[i].TrackingSpan;
-                Assert.IsNotNull(trackingSpan);
-
-                var text = trackingSpan.GetText(snapshot);
-                var lineBreak = projectionBuffer.CurrentSnapshot.GetLineFromLineNumber(projectionLine).GetLineBreakText();
-                Assert.IsTrue(text.EndsWith(lineBreak));
-                Assert.IsTrue(text.IndexOf("\n") == -1 || text.IndexOf("\n") >= text.Length - lineBreak.Length);
-
-            }
-        }
-
-        #endregion
-
         #region Helper methods
 
         internal static void AssertContainingRegion(ReplWindowProxy interactive, int position, string expectedText) {
-            SnapshotSpan? span = ((ReplWindow)interactive.Window).GetContainingRegion(
+            SnapshotSpan? span = interactive.GetContainingRegion(
                 new SnapshotPoint(interactive.TextView.TextBuffer.CurrentSnapshot, position)
             );
             Assert.IsNotNull(span);
             Assert.AreEqual(expectedText, span.Value.GetText());
         }
 
+        static void EnsureInputFunction(ReplWindowProxy interactive) {
+            var settings = (PythonReplWindowProxySettings)interactive.Settings;
+            if (settings.RawInput != "input") {
+                interactive.SubmitCode("input = " + settings.RawInput);
+                interactive.ClearScreen();
+            }
+        }
+
+        static void WaitForAnalysis(ReplWindowProxy interactive) {
+            var stopAt = DateTime.Now.Add(TimeSpan.FromSeconds(60));
+            interactive.GetAnalyzer().WaitForCompleteAnalysis(_ => DateTime.Now < stopAt);
+            if (DateTime.Now >= stopAt) {
+                Assert.Fail("Timeout waiting for complete analysis");
+            }
+            // Most of the time we're waiting to ensure that IntelliSense will
+            // work, which normally requires a bit more time.
+            Thread.Sleep(500);
+        }
 
         #endregion
     }
 
     [TestClass]
     public class ReplWindowTestsDefaultPrompt : ReplWindowTests {
-        internal override ReplWindowProxySettings Settings {
+        internal override PythonReplWindowProxySettings Settings {
             get {
-                return new ReplWindowProxySettings {
+                return new PythonReplWindowProxySettings {
                     Version = PythonPaths.Python27 ?? PythonPaths.Python27_x64,
                     InlinePrompts = true
                 };
@@ -1869,29 +1706,9 @@ $cls
         }
     }
 
-    [TestClass]
-    public class ReplWindowTestsGlyphPrompt : ReplWindowTests {
-        internal override ReplWindowProxySettings Settings {
-            get {
-                return new ReplWindowProxySettings {
-                    Version = PythonPaths.Python27 ?? PythonPaths.Python27_x64,
-                    InlinePrompts = false
-                };
-            }
+    static class ReplWindowProxyExtensions {
+        public static VsProjectAnalyzer GetAnalyzer(this ReplWindowProxy proxy) {
+            return ((IPythonInteractiveIntellisense)proxy.Window.Evaluator).Analyzer;
         }
-
-        // The following tests are skipped when running in this class
-        public override void CtrlEnterOnPreviousInput() { }
-        public override void BackspaceSecondaryPromptSelected() { }
-        public override void DeleteSecondaryPromptSelected() { }
-        public override void EditTypeSecondaryPromptSelected() { }
-        public override void TestDelAtEndOfLine() { }
-        public override void CursorWhileCodeIsRunning() { }
-        public override void HistoryBackForward() { }
-        public override void PasteWithError() { }
-        public override void EditCutIncludingPrompt() { }
-        public override void EditPasteSecondaryPromptSelected() { }
-        public override void EditPasteSecondaryPromptSelectedInPromptMargin() { }
-
     }
 }

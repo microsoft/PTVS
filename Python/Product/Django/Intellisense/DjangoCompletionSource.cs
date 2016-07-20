@@ -1,49 +1,52 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
-#if DEV12_OR_LATER
-
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Html.Editor.Document;
 using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
-
-#if DEV14_OR_LATER
-using Microsoft.Html.Editor.Document;
+using Microsoft.VisualStudio.Text.Projection;
 using Microsoft.Web.Core.Text;
-#else
-using Microsoft.Html.Editor;
-using Microsoft.Web.Core;
-#endif
 
 namespace Microsoft.PythonTools.Django.Intellisense {
     internal class DjangoCompletionSource : DjangoCompletionSourceBase {
-        public DjangoCompletionSource(IGlyphService glyphService, DjangoAnalyzer analyzer, ITextBuffer textBuffer)
+        private readonly IServiceProvider _serviceProvider;
+
+        public DjangoCompletionSource(IGlyphService glyphService, VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, ITextBuffer textBuffer)
             : base(glyphService, analyzer, textBuffer) {
+            _serviceProvider = serviceProvider;
         }
 
         public override void AugmentCompletionSession(ICompletionSession session, IList<CompletionSet> completionSets) {
-            var doc = HtmlEditorDocument.FromTextBuffer(_buffer);
+            var doc = TemplateClassifier.HtmlEditorDocumentFromTextBuffer(_buffer);
             if (doc == null) {
                 return;
             }
-            doc.HtmlEditorTree.EnsureTreeReady();
+            var tree = doc.HtmlEditorTree;
+            if (tree == null) {
+                return;
+            }
+            tree.EnsureTreeReady();
 
-            var primarySnapshot = doc.PrimaryView.TextSnapshot;
+            var primarySnapshot = tree.TextSnapshot;
             var nullableTriggerPoint = session.GetTriggerPoint(primarySnapshot);
             if (!nullableTriggerPoint.HasValue) {
                 return;
@@ -65,7 +68,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             artifact.Parse(artifactText);
 
             ITrackingSpan applicableSpan;
-            var completionSet = GetCompletionSet(session.GetOptions(_analyzer._serviceProvider), _analyzer, artifact.TokenKind, artifactText, artifact.InnerRange.Start, triggerPoint, out applicableSpan);
+            var completionSet = GetCompletionSet(session.GetOptions(_serviceProvider), _analyzer, artifact.TokenKind, artifactText, artifact.InnerRange.Start, triggerPoint, out applicableSpan);
             completionSets.Add(completionSet);
         }
 
@@ -86,5 +89,3 @@ namespace Microsoft.PythonTools.Django.Intellisense {
         }
     }
 }
-
-#endif

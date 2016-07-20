@@ -1,25 +1,26 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Globalization;
 using System.IO;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
-#if DEV11_OR_LATER
 using Microsoft.VisualStudio.Shell.Interop;
-#endif
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools {
 
@@ -45,9 +46,7 @@ namespace Microsoft.PythonTools {
         private string _editorName;
         private Guid _linkedEditorGuid;
         private readonly string[] _extensions;
-#if DEV11_OR_LATER
         private __VSPHYSICALVIEWATTRIBUTES _commonViewAttrs;
-#endif
 
         /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute.ProvideEditorExtensionAttribute"]' />
         /// <devdoc>
@@ -73,12 +72,10 @@ namespace Microsoft.PythonTools {
             _extensions = extensions;
         }
 
-#if DEV11_OR_LATER
         public ProvideEditorExtension2Attribute(object factoryType, string extension, int priority, __VSPHYSICALVIEWATTRIBUTES commonViewAttributes, params string[] extensions) :
             this(factoryType, extension, priority, extensions) {
             _commonViewAttrs = commonViewAttributes;
         }
-#endif
 
         /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute.Extension"]' />
         /// <devdoc>
@@ -121,13 +118,11 @@ namespace Microsoft.PythonTools {
             set { _linkedEditorGuid = new System.Guid(value); }
         }
 
-#if DEV11_OR_LATER
         public __VSPHYSICALVIEWATTRIBUTES CommonPhysicalViewAttributes {
             get {
                 return _commonViewAttrs;
             }
         }
-#endif
 
         /// <include file='doc\ProvideEditorExtensionAttribute.uex' path='docs/doc[@for="ProvideEditorExtensionAttribute.EditorFactoryNotify"]/*' />
         public bool EditorFactoryNotify {
@@ -206,11 +201,9 @@ namespace Microsoft.PythonTools {
                 if (_linkedEditorGuid != Guid.Empty) {
                     editorKey.SetValue("LinkedEditorGuid", _linkedEditorGuid.ToString("B"));
                 }
-#if DEV11_OR_LATER
                 if (_commonViewAttrs != 0) {
                     editorKey.SetValue("CommonPhysicalViewAttributes", (int)_commonViewAttrs);
                 }
-#endif
                 editorKey.SetValue("Package", context.ComponentType.GUID.ToString("B"));
             }
 
@@ -239,7 +232,7 @@ namespace Microsoft.PythonTools {
                     if (_templateDir.Length != 0) {
                         Uri url = new Uri(context.ComponentType.Assembly.CodeBase);
                         string templates = url.LocalPath;
-                        templates = CommonUtils.GetAbsoluteDirectoryPath(Path.GetDirectoryName(templates), _templateDir);
+                        templates = PathUtils.GetAbsoluteDirectoryPath(Path.GetDirectoryName(templates), _templateDir);
                         templates = context.EscapePath(templates);
                         projectKey.SetValue("TemplatesDir", templates);
                     }

@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System.Collections.Generic;
 using System.Linq;
@@ -66,7 +68,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         public override IAnalysisSet GetMergedVariableTypes(string name) {
             VariableDef res;
-            if (Variables.TryGetValue(name, out res)) {
+            if (TryGetVariable(name, out res)) {
                 return res.Types;
             }
             return AnalysisSet.Empty;
@@ -90,7 +92,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
         internal VariableDef CreateTypedVariable(Node node, AnalysisUnit unit, string name, IAnalysisSet types, bool addRef = true) {
             VariableDef res, outer, immediateOuter;
-            if (!Variables.TryGetValue(name, out res)) {
+            if (!TryGetVariable(name, out res)) {
                 // Normal CreateVariable would use AddVariable, which will put
                 // the typed one in the wrong scope.
                 res = base.AddVariable(name);
@@ -103,13 +105,13 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
 
             foreach (var scope in OuterScope.EnumerateTowardsGlobal) {
                 outer = scope.GetVariable(node, unit, name, addRef);
-                if (scope.Variables.TryGetValue(name, out immediateOuter) && immediateOuter != res) {
+                if (scope.TryGetVariable(name, out immediateOuter) && immediateOuter != res) {
                     if (addRef && immediateOuter != outer) {
                         res.AddReference(node, unit);
                     }
                     PropagateIsInstanceTypes(node, unit, types, immediateOuter);
 
-                    scope.GetLinkedVariables(name).Add(res);
+                    scope.AddLinkedVariable(name, res);
                 }
 
                 if (!(scope is IsInstanceScope)) {
@@ -143,8 +145,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
-        public override IAnalysisSet AddNodeValue(Node node, IAnalysisSet variable) {
-            return OuterScope.AddNodeValue(node, variable);
+        public override IAnalysisSet AddNodeValue(Node node, NodeValueKind kind, IAnalysisSet variable) {
+            return OuterScope.AddNodeValue(node, kind, variable);
         }
 
         internal override bool RemoveNodeValue(Node node) {

@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -24,9 +26,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.PythonTools.EnvironmentsList.Properties;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 using Microsoft.VisualStudioTools.Wpf;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
@@ -143,7 +145,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     // any settings.
                     return view;
                 }
-                while (Directory.Exists(view.PrefixPath) && !File.Exists(CommonUtils.FindFile(view.PrefixPath, "site.py"))) {
+                while (Directory.Exists(view.PrefixPath) && !File.Exists(PathUtils.FindFile(view.PrefixPath, "site.py"))) {
                     view.PrefixPath = Path.GetDirectoryName(view.PrefixPath);
                 }
             }
@@ -155,21 +157,21 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
 
             if (!File.Exists(view.InterpreterPath)) {
-                view.InterpreterPath = CommonUtils.FindFile(
+                view.InterpreterPath = PathUtils.FindFile(
                     view.PrefixPath,
                     CPythonInterpreterFactoryConstants.ConsoleExecutable,
                     firstCheck: new[] { "scripts" }
                 );
             }
             if (!File.Exists(view.WindowsInterpreterPath)) {
-                view.WindowsInterpreterPath = CommonUtils.FindFile(
+                view.WindowsInterpreterPath = PathUtils.FindFile(
                     view.PrefixPath,
                     CPythonInterpreterFactoryConstants.WindowsExecutable,
                     firstCheck: new[] { "scripts" }
                 );
             }
             if (!Directory.Exists(view.LibraryPath)) {
-                var sitePy = CommonUtils.FindFile(
+                var sitePy = PathUtils.FindFile(
                     view.PrefixPath,
                     "os.py",
                     firstCheck: new[] { "lib" }
@@ -189,7 +191,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     }
                 }
 
-                var binaryType = Microsoft.PythonTools.Interpreter.NativeMethods.GetBinaryType(view.InterpreterPath);
+                var binaryType = Infrastructure.NativeMethods.GetBinaryType(view.InterpreterPath);
                 if (binaryType == ProcessorArchitecture.Amd64) {
                     view.ArchitectureName = "64-bit";
                 } else if (binaryType == ProcessorArchitecture.X86) {
@@ -203,30 +205,39 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
     sealed class ConfigurationExtensionProvider : IEnvironmentViewExtension {
         private FrameworkElement _wpfObject;
-        private readonly ConfigurablePythonInterpreterFactoryProvider _factoryProvider;
+        private readonly IInterpreterOptionsService _interpreterOptions;
 
-        internal ConfigurationExtensionProvider(ConfigurablePythonInterpreterFactoryProvider factoryProvider) {
-            _factoryProvider = factoryProvider;
+        internal ConfigurationExtensionProvider(IInterpreterOptionsService interpreterOptions) {
+            _interpreterOptions = interpreterOptions;
         }
 
         public void ApplyConfiguration(ConfigurationEnvironmentView view) {
-            _factoryProvider.SetOptions(new InterpreterFactoryCreationOptions {
-                Id = view.EnvironmentView.Factory.Id,
-                Description = view.Description,
-                PrefixPath = view.PrefixPath,
-                InterpreterPath = view.InterpreterPath,
-                WindowInterpreterPath = view.WindowsInterpreterPath,
-                LibraryPath = view.LibraryPath,
-                PathEnvironmentVariableName = view.PathEnvironmentVariable,
-                ArchitectureString = view.ArchitectureName,
-                LanguageVersionString = view.VersionName
-            });
+            var factory = view.EnvironmentView.Factory;
+            if (view.Description != factory.Configuration.Description) {
+                // We're renaming the interpreter, remove the old one...
+                _interpreterOptions.RemoveConfigurableInterpreter(factory.Configuration.Id);
+            }
+
+            var newInterp = _interpreterOptions.AddConfigurableInterpreter(
+                view.Description,
+                new InterpreterConfiguration(
+                    "",
+                    view.Description,
+                    view.PrefixPath,
+                    view.InterpreterPath,
+                    view.WindowsInterpreterPath,
+                    view.LibraryPath,
+                    view.PathEnvironmentVariable,
+                    view.ArchitectureName == "64-bit" ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
+                    Version.Parse(view.VersionName)
+                )
+            );
         }
 
         public bool IsConfigurationChanged(ConfigurationEnvironmentView view) {
             var factory = view.EnvironmentView.Factory;
             var arch = factory.Configuration.Architecture == ProcessorArchitecture.Amd64 ? "64-bit" : "32-bit";
-            return view.Description != factory.Description ||
+            return view.Description != factory.Configuration.Description ||
                 view.PrefixPath != factory.Configuration.PrefixPath ||
                 view.InterpreterPath != factory.Configuration.InterpreterPath ||
                 view.WindowsInterpreterPath != factory.Configuration.WindowsInterpreterPath ||
@@ -238,7 +249,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public void ResetConfiguration(ConfigurationEnvironmentView view) {
             var factory = view.EnvironmentView.Factory;
-            view.Description = factory.Description;
+            view.Description = factory.Configuration.Description;
             view.PrefixPath = factory.Configuration.PrefixPath;
             view.InterpreterPath = factory.Configuration.InterpreterPath;
             view.WindowsInterpreterPath = factory.Configuration.WindowsInterpreterPath;
@@ -250,7 +261,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public void RemoveConfiguration(ConfigurationEnvironmentView view) {
             var factory = view.EnvironmentView.Factory;
-            _factoryProvider.RemoveInterpreter(factory.Id);
+            _interpreterOptions.RemoveConfigurableInterpreter(factory.Configuration.Id);
         }
 
         public int SortPriority {

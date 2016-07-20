@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -30,11 +32,17 @@ namespace Microsoft.IronPythonTools.Interpreter {
         #region IBuiltinFunction Members
 
         public string Name {
-            get { return Interpreter.Remote.GetBuiltinFunctionName(Value); }
+            get {
+                var ri = RemoteInterpreter;
+                return ri != null ? ri.GetBuiltinFunctionName(Value) : string.Empty;
+            }
         }
 
         public string Documentation {
-            get { return Interpreter.Remote.GetBuiltinFunctionDocumentation(Value); }
+            get {
+                var ri = RemoteInterpreter;
+                return ri != null ? ri.GetBuiltinFunctionDocumentation(Value) : string.Empty;
+            }
         }
 
         public IList<IPythonFunctionOverload> Overloads {
@@ -43,7 +51,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 // object.Equals(Object_#1, object other))
 
                 if (_targets == null) {
-                    var overloads = Interpreter.Remote.GetBuiltinFunctionOverloads(Value);
+                    var ri = RemoteInterpreter;
+                    var overloads = ri != null ? ri.GetBuiltinFunctionOverloads(Value) : new ObjectIdentityHandle[0];
                     var result = new IronPythonBuiltinFunctionTarget[overloads.Length];
                     var decltype = (IronPythonType)DeclaringType;
                     for(int i = 0; i<overloads.Length; i++){
@@ -65,7 +74,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
         public IPythonType DeclaringType {
             get {
                 if (_declaringType == null) {
-                    _declaringType = Interpreter.GetTypeFromType(Interpreter.Remote.GetBuiltinFunctionDeclaringPythonType(Value));
+                    var ri = RemoteInterpreter;
+                    _declaringType = ri != null ? Interpreter.GetTypeFromType(ri.GetBuiltinFunctionDeclaringPythonType(Value)) : null;
                 }
                 return _declaringType;
             }
@@ -83,10 +93,17 @@ namespace Microsoft.IronPythonTools.Interpreter {
             }
         }
 
+        public bool IsClassMethod {
+            get {
+                return false;
+            }
+        }
+
         public IPythonModule DeclaringModule {
             get {
                 if (_declaringModule == null) {
-                    _declaringModule = Interpreter.GetModule(Interpreter.Remote.GetBuiltinFunctionModule(Value));
+                    var ri = RemoteInterpreter;
+                    _declaringModule = ri != null ? Interpreter.GetModule(ri.GetBuiltinFunctionModule(Value)) : null;
                 }
                 return _declaringModule;
             }

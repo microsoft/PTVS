@@ -1,22 +1,25 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.ComponentModel.Design;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
@@ -24,12 +27,14 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
-using TestUtilities.Mocks;
 using TestUtilities.Python;
 
 namespace PythonToolsMockTests {
+    using TaskProvider = Microsoft.PythonTools.Intellisense.TaskProvider;
+
     [Export(typeof(IMockPackage))]
     sealed class MockPythonToolsPackage : IMockPackage {
         private readonly IServiceContainer _serviceContainer;
@@ -41,12 +46,9 @@ namespace PythonToolsMockTests {
         }
 
         public void Initialize() {
-            // Specifiy PythonTools\NoInterpreterFactories to suppress loading
-            // all providers in tests.
             var settings = (IVsSettingsManager)_serviceContainer.GetService(typeof(SVsSettingsManager));
             IVsWritableSettingsStore store;
             ErrorHandler.ThrowOnFailure(settings.GetWritableSettingsStore((uint)SettingsScope.Configuration, out store));
-            ErrorHandler.ThrowOnFailure(store.CreateCollection(@"PythonTools\NoInterpreterFactories"));
             
             
             _serviceContainer.AddService(typeof(IPythonToolsOptionsService), new MockPythonToolsOptionsService());
@@ -55,31 +57,11 @@ namespace PythonToolsMockTests {
             _serviceContainer.AddService(typeof(IClipboardService), new MockClipboardService());
             UIThread.EnsureService(_serviceContainer);
 
-            _serviceContainer.AddService(
-                typeof(Microsoft.PythonTools.Intellisense.ErrorTaskProvider),
-                new ServiceCreatorCallback((container, type) => {
-                    var p = new Microsoft.PythonTools.Intellisense.ErrorTaskProvider(_serviceContainer, null, errorProvider);
-                    lock (_onDispose) {
-                        _onDispose.Add(() => p.Dispose());
-                    }
-                    return p;
-                }), 
-                true
-            );
-
-            _serviceContainer.AddService(
-                typeof(Microsoft.PythonTools.Intellisense.CommentTaskProvider),
-                new ServiceCreatorCallback((container, type) => {
-                    var p = new Microsoft.PythonTools.Intellisense.CommentTaskProvider(_serviceContainer, null, errorProvider);
-                    lock (_onDispose) {
-                        _onDispose.Add(() => p.Dispose());
-                    }
-                    return p;
-                }),
-                true
-            );
+            _serviceContainer.AddService(typeof(ErrorTaskProvider), CreateTaskProviderService, true);
+            _serviceContainer.AddService(typeof(CommentTaskProvider), CreateTaskProviderService, true);
 
             var pyService = new PythonToolsService(_serviceContainer);
+            _onDispose.Add(() => ((IDisposable)pyService).Dispose());
             _serviceContainer.AddService(typeof(PythonToolsService), pyService, true);
 
             _serviceContainer.AddService(typeof(IPythonLibraryManager), (object)null);
@@ -97,6 +79,22 @@ namespace PythonToolsMockTests {
 
         public void RemoveService(Type type) {
             _serviceContainer.RemoveService(type);
+        }
+
+        public static bool SuppressTaskProvider { get; set; }
+
+        private static object CreateTaskProviderService(IServiceContainer container, Type type) {
+            if (SuppressTaskProvider) {
+                return null;
+            }
+            var errorProvider = container.GetComponentModel().GetService<IErrorProviderFactory>();
+            if (type == typeof(ErrorTaskProvider)) {
+                return new ErrorTaskProvider(container, null, errorProvider);
+            } else if (type == typeof(CommentTaskProvider)) {
+                return new CommentTaskProvider(container, null, errorProvider);
+            } else {
+                return null;
+            }
         }
 
         public void Dispose() {

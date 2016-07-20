@@ -1,1 +1,1 @@
-﻿#DoubleCrossHierarchy.py
+#DoubleCrossHierarchy.py

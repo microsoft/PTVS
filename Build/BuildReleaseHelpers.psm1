@@ -1,22 +1,32 @@
 function submit_symbols {
-    param($buildname, $buildid, $filetype, $sourcedir, $contacts)
+    param($productgroup, $productver, $buildname, $buildid, $buildnum, $buildtype, $filetype, $sourcedir, $reqdir, $contacts)
     
     $request = `
     "BuildId=$buildid $filetype
-    BuildLabPhone=7058786
-    BuildRemark=$buildname
-    ContactPeople=$contacts
-    Directory=$sourcedir
-    Project=TechnicalComputing
-    Recursive=yes
-    StatusMail=$contacts
-    UserName=$env:username"
+BuildLabPhone=7058786
+BuildRemark=$buildname
+ContactPeople=$contacts
+Directory=$sourcedir
+Project=TechnicalComputing
+Recursive=yes
+StatusMail=$contacts
+UserName=$env:username
+SubmitToArchive=all
+SubmitToInternet=yes
+ProductGroup=$productgroup
+ProductName=$($productgroup)_$($productver)
+Release=$buildnum
+Build=$buildnum
+BuildType=$buildtype
+LocaleCode=en-US"
 
     Write-Output "*** Symbol Submission Text ***
 $request"
 
-    $request | Out-File -Encoding ascii -FilePath request_$filetype.txt
-    \\symbols\tools\createrequest.cmd -i request_$filetype.txt -d .\SymSrvRequestLogs -c -s
+    $reqfile = "$reqdir\symreq_$filetype.txt"
+    $request | Out-File -Encoding ascii -FilePath "$reqfile"
+
+    \\symbols\tools\createrequest.cmd -i "$reqfile" -d "$reqdir\SymSrvRequestLogs" -c -a
 }
 
 function _find_sdk_tool {
@@ -77,8 +87,8 @@ function begin_sign_files {
         }
     }
     
-    [Reflection.Assembly]::Load("CODESIGN.Submitter, Version=3.0.0.6, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL") | Out-Null
-    [Reflection.Assembly]::Load("CODESIGN.PolicyManager, Version=1.0.0.0, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL") | Out-Null
+    [Reflection.Assembly]::Load("CODESIGN.Submitter, Version=4.1.0.0, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL") | Out-Null
+    [Reflection.Assembly]::Load("CODESIGN.PolicyManager, Version=4.1.0.0, Culture=neutral, PublicKeyToken=3d8252bd1272440d, processorArchitecture=MSIL") | Out-Null
 
     while ($True) {
         try {
@@ -87,13 +97,19 @@ function begin_sign_files {
             $job.Keywords = $jobKeywords
             
             if ($certificates -match "authenticode") {
-                $job.SelectCertificate("10006")  # Authenticode
+                $job.SelectCertificate("401")    # Authenticode for binaries
+            }
+            if ($certificates -match "msi") {
+                $job.SelectCertificate("400")    # Authenticode for MSI
             }
             if ($certificates -match "strongname") {
                 $job.SelectCertificate("67")     # StrongName key
             }
-            if ($certificates -match "opc") {
-                $job.SelectCertificate("160")     # Microsoft OPC Publisher (VSIX)
+            if ($certificates -match "vsix") {
+                $job.SelectCertificate("100040160") # Microsoft OPC Publisher (VSIX)
+            }
+            if ($certificates -match "sha1opc") {
+                $job.SelectCertificate("160")    # Legacy OPC signing
             }
             
             foreach ($approver in $approvers) {
@@ -107,7 +123,10 @@ function begin_sign_files {
             $job.Send()
             return @{job=$job; description=$jobDescription; filecount=$($files.Count); outdir=$outdir}
         } catch [Exception] {
-            echo $_.Exception.Message
+            if ($job -and $job.ErrorList -and $job.ErrorList.Values) {
+                Write-Output $job.ErrorList.Values.Explanation
+            }
+            Write-Error $_
             sleep 60
         }
     }

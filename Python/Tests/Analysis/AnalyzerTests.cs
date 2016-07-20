@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -34,8 +36,8 @@ namespace AnalysisTests {
             PythonTestData.Deploy(includeTestData: false);
         }
 
-        [TestMethod, Priority(0)]
-        public void LogFileEncoding() {
+        [TestMethod, Priority(1)]
+        public async Task LogFileEncoding() {
             // Ensure that log messages round-trip correctly.
 
             const string TEST = "Abc \u01FA\u0299\uFB3B";
@@ -44,7 +46,7 @@ namespace AnalysisTests {
 
             try {
                 using (var analyzer = new PyLibAnalyzer(
-                    Guid.Empty,
+                    "",
                     new Version(),
                     null,
                     null,
@@ -58,7 +60,7 @@ namespace AnalysisTests {
                     null,
                     1
                 )) {
-                    analyzer.StartTraceListener();
+                    await analyzer.StartTraceListener();
                     analyzer.TraceError(TEST);
                     analyzer.TraceWarning(TEST);
                     analyzer.TraceInformation(TEST);
@@ -102,9 +104,9 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public void TemporaryLibTest() {
-            string libPath = "C:\\", dbPath = "C:\\";
+            string libPath, dbPath;
 
             using (var libDb = new TemporaryLibAndDB(
                 "a.py",
@@ -187,7 +189,7 @@ namespace AnalysisTests {
             "site-packages\\B\\b.py"
         };
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public async Task NoFilesOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -203,7 +205,7 @@ namespace AnalysisTests {
         }
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public async Task AllFilesOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -219,7 +221,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public async Task FileInStdLibMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -242,7 +244,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public async Task FileInSitePackageMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -257,7 +259,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public async Task FileInStdLibOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -274,7 +276,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public async Task FileInSitePackageOutOfDate() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -290,7 +292,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public async Task IdbInStdLibMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -307,7 +309,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public async Task IdbInSitePackageMissing() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -323,7 +325,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public async Task SitePackageAdded() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -343,7 +345,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public async Task SitePackageRemoved() {
             var files = BasicFiles;
             using (var libDb = new TemporaryLibAndDB(files))
@@ -361,7 +363,7 @@ namespace AnalysisTests {
         }
 
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public async Task ConflictingPyAndPyd() {
             var files = new[] {
                 "a.py",
@@ -381,7 +383,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public async Task ChangeAllToTrueOnSecondGroup() {
             var files = new[] {
                 "a.py",
@@ -400,7 +402,7 @@ namespace AnalysisTests {
             }
         }
 
-        [TestMethod, Priority(0)]
+        [TestMethod, Priority(1)]
         public async Task SitePackagesInPthFile() {
             var files = new[] {
                 "a.py",
@@ -488,7 +490,7 @@ namespace AnalysisTests {
 
             public PyLibAnalyzer Analyzer {
                 get {
-                    return new PyLibAnalyzer(Guid.Empty,
+                    return new PyLibAnalyzer("",
                         new Version(2, 7),
                         null,
                         new [] {

@@ -1,17 +1,22 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
+using System;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.PythonTools;
@@ -21,6 +26,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 
 namespace ReplWindowUITests {
     /// <summary>
@@ -30,16 +36,18 @@ namespace ReplWindowUITests {
     [TestClass, Ignore]
     public abstract class ReplWindowPythonSmokeTests {
         static ReplWindowPythonSmokeTests() {
+            AssertListener.Initialize();
             PythonTestData.Deploy();
         }
 
-        internal abstract ReplWindowProxySettings Settings {
+        internal abstract PythonReplWindowProxySettings Settings {
             get;
         }
 
         internal virtual ReplWindowProxy Prepare(
             bool enableAttach = false,
-            bool useIPython = false
+            bool useIPython = false,
+            bool addNewLineAtEndOfFullyTypedWord = false
         ) {
             var s = Settings;
             if (s.Version == null) {
@@ -47,61 +55,71 @@ namespace ReplWindowUITests {
             }
 
             if (enableAttach != s.EnableAttach) {
-                s = s.Clone();
+                s = object.ReferenceEquals(s, Settings) ? s.Clone() : s;
                 s.EnableAttach = enableAttach;
+            }
+            if (addNewLineAtEndOfFullyTypedWord != s.AddNewLineAtEndOfFullyTypedWord) {
+                s = object.ReferenceEquals(s, Settings) ? s.Clone() : s;
+                s.AddNewLineAtEndOfFullyTypedWord = addNewLineAtEndOfFullyTypedWord;
+            }
+            if (useIPython) {
+                s = object.ReferenceEquals(s, Settings) ? s.Clone() : s;
+                s.PrimaryPrompt = ">>> ";
+                s.UseInterpreterPrompts = false;
             }
 
             return ReplWindowProxy.Prepare(s, useIPython: useIPython);
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplSysArgv() {
-            using (var interactive = Prepare())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
-                var project = interactive.App.OpenProject(@"TestData\SysArgvRepl.sln");
+            using (var app = new PythonVisualStudioApp()) {
+                var project = app.OpenProject(@"TestData\SysArgvRepl.sln");
 
-                interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
-                interactive.WaitForTextEnd("Program.py']", ">");
+                using (var interactive = app.ExecuteInInteractive(project)) {
+                    interactive.WaitForTextEnd("Program.py']", ">");
+                }
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplSysArgvScriptArgs() {
-            using (var interactive = Prepare())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
-                var project = interactive.App.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
+            using (var app = new PythonVisualStudioApp()) {
+                var project = app.OpenProject(@"TestData\SysArgvScriptArgsRepl.sln");
 
-                interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
-                interactive.WaitForTextEnd(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']", ">");
+                using (var interactive = app.ExecuteInInteractive(project)) {
+                    interactive.WaitForTextEnd(@"Program.py', '-source', 'C:\\Projects\\BuildSuite', '-destination', 'C:\\Projects\\TestOut', '-pattern', '*.txt', '-recurse', 'true']", ">");
+                }
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void ExecuteInReplUnicodeFilename() {
-            using (var interactive = Prepare())
-            using (new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
-                var project = interactive.App.OpenProject(@"TestData\UnicodePathä.sln");
+            using (var app = new PythonVisualStudioApp()) {
+                var project = app.OpenProject(PythonTestData.GetUnicodePathSolution());
 
-                interactive.App.ExecuteCommand("Python.ExecuteInInteractive");
-                interactive.WaitForTextEnd("hello world from unicode path", ">");
+                using (var interactive = app.ExecuteInInteractive(project)) {
+                    interactive.WaitForTextEnd("hello world from unicode path", ">");
+                }
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void CwdImport() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode("import sys\nsys.path");
                 interactive.SubmitCode("import os\nos.chdir(r'" + TestData.GetPath("TestData\\ReplCwd") + "')");
 
+                var importErrorFormat = ((PythonReplWindowProxySettings)interactive.Settings).ImportError;
                 interactive.SubmitCode("import module1");
-                interactive.WaitForTextEnd(string.Format(interactive.Settings.ImportError, "module1"), ">");
+                interactive.WaitForTextEnd(string.Format(importErrorFormat, "module1"), ">");
 
                 interactive.SubmitCode("import module2");
-                interactive.WaitForTextEnd(string.Format(interactive.Settings.ImportError, "module2"), ">");
+                interactive.WaitForTextEnd(string.Format(importErrorFormat, "module2"), ">");
 
                 interactive.SubmitCode("os.chdir('A')");
                 interactive.WaitForTextEnd(">os.chdir('A')", ">");
@@ -110,7 +128,7 @@ namespace ReplWindowUITests {
                 interactive.WaitForTextEnd(">import module1", ">");
 
                 interactive.SubmitCode("import module2");
-                interactive.WaitForTextEnd(string.Format(interactive.Settings.ImportError, "module2"), ">");
+                interactive.WaitForTextEnd(string.Format(importErrorFormat, "module2"), ">");
 
                 interactive.SubmitCode("os.chdir('..\\B')");
                 interactive.WaitForTextEnd(">os.chdir('..\\B')", ">");
@@ -120,8 +138,8 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void QuitAndReset() {
             using (var interactive = Prepare()) {
                 interactive.SubmitCode("quit()");
@@ -135,8 +153,22 @@ namespace ReplWindowUITests {
             }
         }
 
-        [TestMethod, Priority(0)]
-        [HostType("VSTestHost")]
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public virtual void PrintAllCharacters() {
+            using (var interactive = Prepare()) {
+                interactive.SubmitCode("print(\"" +
+                    string.Join("", Enumerable.Range(0, 256).Select(i => string.Format("\\x{0:X2}", i))) +
+                    "\\nDONE\")",
+                    timeout: TimeSpan.FromSeconds(10.0)
+                );
+
+                interactive.WaitForTextEnd("DONE", ">");
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
         public virtual void AttachReplTest() {
             using (var interactive = Prepare(enableAttach: true)) {
                 var app = interactive.App;
@@ -145,8 +177,8 @@ namespace ReplWindowUITests {
                 Assert.IsNotNull(PythonToolsPackage.GetStartupProject(app.ServiceProvider), "Startup project was not set");
                 Assert.IsTrue(interactive.Settings.EnableAttach, "EnableAttach was not set");
 
-                using (var dis = new DefaultInterpreterSetter(interactive.TextView.GetAnalyzer(interactive.App.ServiceProvider).InterpreterFactory)) {
-                    Assert.AreEqual(dis.CurrentDefault.Description, project.GetPythonProject().GetInterpreterFactory().Description);
+                using (var dis = new DefaultInterpreterSetter(interactive.GetAnalyzer().InterpreterFactory)) {
+                    Assert.AreEqual(dis.CurrentDefault.Configuration.Description, project.GetPythonProject().GetInterpreterFactory().Configuration.Description);
 
                     interactive.Reset();
                     interactive.ClearScreen();
@@ -169,7 +201,7 @@ namespace ReplWindowUITests {
 
                     WaitForMode(app.Dte.Debugger, EnvDTE.dbgDebugMode.dbgRunMode);
 
-                    ((IVsWindowFrame)((ToolWindowPane)interactive.Window).Frame).Show();
+                    interactive.Show();
 
                     const string import = "import BreakpointTest";
                     interactive.SubmitCode(import, wait: false);

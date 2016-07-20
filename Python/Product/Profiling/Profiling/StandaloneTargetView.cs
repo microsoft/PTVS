@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Steve Dower (Zooba)
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -49,11 +51,21 @@ namespace Microsoft.PythonTools.Profiling {
 
         public StandaloneTargetView(IServiceProvider serviceProvider) {
             var componentService = (IComponentModel)(serviceProvider.GetService(typeof(SComponentModel)));
-            var interpreterService = componentService.GetService<IInterpreterOptionsService>();
+            
+            var interpreterProviders = componentService.DefaultExportProvider.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>();
+            var interpreterOptions = componentService.GetService<IInterpreterOptionsService>();
+            var registry = componentService.GetService<IInterpreterRegistryService>();
+            var pythonService = componentService.GetService<PythonToolsService>();
 
-            var availableInterpreters = interpreterService.Interpreters.Select(factory => new PythonInterpreterView(factory)).ToList();
+            var availableInterpreters = registry.Configurations.Select(
+                config => new PythonInterpreterView(
+                    config.FullDescription, 
+                    config.Id, 
+                    config.InterpreterPath
+                )
+            ).ToList();
 
-            _customInterpreter = new PythonInterpreterView("Other...", Guid.Empty, new Version(), null);
+            _customInterpreter = new PythonInterpreterView("Other...", "", null);
             availableInterpreters.Add(_customInterpreter);
             _availableInterpreters = new ReadOnlyCollection<PythonInterpreterView>(availableInterpreters);
 
@@ -68,9 +80,8 @@ namespace Microsoft.PythonTools.Profiling {
             PropertyChanged += new PropertyChangedEventHandler(StandaloneTargetView_PropertyChanged);
 
             if (IsAnyAvailableInterpreters) {
-                var defaultId = interpreterService.DefaultInterpreter.Id;
-                var defaultVersion = interpreterService.DefaultInterpreter.Configuration.Version;
-                Interpreter = AvailableInterpreters.FirstOrDefault(v => v.Id == defaultId && v.Version == defaultVersion);
+                var defaultId = interpreterOptions.DefaultInterpreterId;
+                Interpreter = AvailableInterpreters.FirstOrDefault(v => v.Id == defaultId);
             }
         }
 
@@ -84,10 +95,9 @@ namespace Microsoft.PythonTools.Profiling {
         public StandaloneTargetView(IServiceProvider serviceProvider, StandaloneTarget template)
             : this(serviceProvider) {
             if (template.PythonInterpreter != null) {
-                Version version;
-                if (IsAnyAvailableInterpreters && Version.TryParse(template.PythonInterpreter.Version, out version)) {
+                if (IsAnyAvailableInterpreters) {
                     Interpreter = AvailableInterpreters
-                        .FirstOrDefault(v => v.Id == template.PythonInterpreter.Id && v.Version == version);
+                        .FirstOrDefault(v => v.Id == template.PythonInterpreter.Id);
                 } else {
                     Interpreter = _customInterpreter;
                 }

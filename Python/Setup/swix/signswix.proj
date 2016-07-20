@@ -1,0 +1,27 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <IntermediateOutputPathSuffix>signlayout\</IntermediateOutputPathSuffix>
+  </PropertyGroup>
+  
+  <Import Project="SetupProjectBefore.settings" />
+  <Import Project="$(TargetsPath)\Common.Shim.targets" />
+  
+  <ItemGroup>
+    <FilesToSign Include="$(OutputPath)*.vsix">
+      <Authenticode>Vsix</Authenticode>
+      <UnsignedPath>$(UnsignedOutputPath)%(Filename)%(Extension)</UnsignedPath>
+    </FilesToSign>
+  </ItemGroup>
+  
+  <Target Name="_PreserveUnsigned" Inputs="%(FilesToSign.FullPath)" Outputs="%(FilesToSign.UnsignedPath)" BeforeTargets="SignFiles">
+    <Copy SourceFiles="%(FilesToSign.FullPath)" DestinationFiles="%(FilesToSign.UnsignedPath)" />
+  </Target>
+
+  <Target Name="ListFiles">
+    <Message Text="OutputPath: $(OutputPath)" Importance="high" />
+    <Message Text="@(FilesToSign->'%(Identity) (%(Authenticode))', '
+')" Importance="high" />
+  </Target>
+
+  <Import Project="$(TargetsPath)\MicroBuild.targets" />
+</Project>

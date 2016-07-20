@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System.Collections.Generic;
 using Microsoft.PythonTools.Interpreter;
@@ -121,11 +123,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _builtinInfo.GetDescriptor(node, instance, context, unit);
         }
 
-        public override IAnalysisSet GetMember(Node node, AnalysisUnit unit, string name) {
-            // Must unconditionally call the base implementation of GetMember
-            var res = base.GetMember(node, unit, name);
-
-            return _builtinInfo.GetMember(node, unit, name) ?? res;
+        public override IAnalysisSet GetTypeMember(Node node, AnalysisUnit unit, string name) {
+            return _builtinInfo.GetTypeMember(node, unit, name);
         }
 
         public override void SetMember(Node node, AnalysisUnit unit, string name, IAnalysisSet value) {
@@ -145,8 +144,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
             _builtinInfo.SetIndex(node, unit, index, value);
         }
 
-        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext) {
-            return _builtinInfo.GetAllMembers(moduleContext);
+        public override IDictionary<string, IAnalysisSet> GetAllMembers(IModuleContext moduleContext, GetMemberOptions options = GetMemberOptions.None) {
+            if (options.HasFlag(GetMemberOptions.DeclaredOnly)) {
+                return new Dictionary<string, IAnalysisSet>();
+            }
+
+            return _builtinInfo.GetAllMembers(moduleContext, options);
         }
 
         public override string Description {

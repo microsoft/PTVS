@@ -25,10 +25,6 @@ namespace Microsoft.NodejsTools.Repl {
 #else
 namespace Microsoft.VisualStudio.Repl {
 #endif
-#if INTERACTIVE_WINDOW
-    using IReplWindowProvider = IInteractiveWindowProvider;
-#endif
-
     /// <summary>
     /// This is the class that implements the package exposed by this assembly.
     ///

@@ -1,16 +1,18 @@
-/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Visual Studio Shared Project
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.IO;
@@ -19,6 +21,7 @@ using Microsoft.Build.Construction;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Infrastructure;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.VisualStudioTools.Project {
@@ -75,10 +78,19 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-        #endregion
+		/// <summary>
+		/// The msbuild project for the project file.
+		/// </summary>
+		protected MSBuild.Project BuildProject {
+			get	{
+				return this.buildProject;
+			}
+		}
 
-        #region ctor
-        [Obsolete("Provide an IServiceProvider instead of a package")]
+		#endregion
+
+		#region ctor
+		[Obsolete("Provide an IServiceProvider instead of a package")]
         protected ProjectFactory(Microsoft.VisualStudio.Shell.Package package)
             : this((IServiceProvider)package) {
         }
@@ -522,13 +534,13 @@ namespace Microsoft.VisualStudioTools.Project {
             out uint pUpgradeProjectCapabilityFlags
         ) {
             pUpgradeRequired = 0;
+            pguidNewProjectFactory = Guid.Empty;
+
             if (!File.Exists(bstrFileName)) {
-                pguidNewProjectFactory = Guid.Empty;
                 pUpgradeProjectCapabilityFlags = 0;
                 return VSConstants.E_INVALIDARG;
             }
 
-            pguidNewProjectFactory = GetType().GUID;
 
             var backupSupport = __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_BACKUPSUPPORTED |
                 __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_COPYBACKUP |
@@ -566,6 +578,13 @@ namespace Microsoft.VisualStudioTools.Project {
                 pUpgradeRequired = 0;
             }
             pUpgradeProjectCapabilityFlags = (uint)backupSupport;
+
+            // If the upgrade checker set the factory GUID to ourselves, we need
+            // to clear it
+            if (pguidNewProjectFactory == GetType().GUID) {
+                pguidNewProjectFactory = Guid.Empty;
+            }
+
             return VSConstants.S_OK;
         }
 
@@ -577,14 +596,14 @@ namespace Microsoft.VisualStudioTools.Project {
             out Guid pguidNewProjectFactory,
             out uint pUpgradeProjectCapabilityFlags
         ) {
+            pguidNewProjectFactory = Guid.Empty;
+
             if (!File.Exists(bstrFileName)) {
                 pUpgradeRequired = 0;
-                pguidNewProjectFactory = Guid.Empty;
                 pUpgradeProjectCapabilityFlags = 0;
                 return;
             }
 
-            pguidNewProjectFactory = GetType().GUID;
             var backupSupport = __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_BACKUPSUPPORTED |
                 __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_COPYBACKUP |
                 __VSPPROJECTUPGRADEVIAFACTORYFLAGS.PUVFF_SXSBACKUP;
@@ -640,6 +659,12 @@ namespace Microsoft.VisualStudioTools.Project {
                 pUpgradeRequired = (uint)__VSPPROJECTUPGRADEVIAFACTORYREPAIRFLAGS.VSPUVF_PROJECT_NOREPAIR;
             }
             pUpgradeProjectCapabilityFlags = (uint)backupSupport;
+
+            // If the upgrade checker set the factory GUID to ourselves, we need
+            // to clear it
+            if (pguidNewProjectFactory == GetType().GUID) {
+                pguidNewProjectFactory = Guid.Empty;
+            }
         }
 #endif
         #endregion

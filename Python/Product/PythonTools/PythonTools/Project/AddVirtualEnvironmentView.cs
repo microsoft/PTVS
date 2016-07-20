@@ -1,16 +1,18 @@
-﻿/* ****************************************************************************
- *
- * Copyright (c) Microsoft Corporation. 
- *
- * This source code is subject to terms and conditions of the Apache License, Version 2.0. A 
- * copy of the license can be found in the License.html file at the root of this distribution. If 
- * you cannot locate the Apache License, Version 2.0, please send an email to 
- * vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound 
- * by the terms of the Apache License, Version 2.0.
- *
- * You must not remove this notice, or any other, from this software.
- *
- * ***************************************************************************/
+// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
 
 using System;
 using System.Collections.Generic;
@@ -25,6 +27,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
 using Microsoft.VisualStudio.PlatformUI;
@@ -33,36 +36,29 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     sealed class AddVirtualEnvironmentView : DependencyObject, INotifyPropertyChanged, IDisposable {
-        readonly IInterpreterOptionsService _interpreterService;
+        readonly IInterpreterRegistryService _interpreterService;
         private readonly PythonProjectNode _project;
         internal readonly string _projectHome;
         private readonly SemaphoreSlim _ready = new SemaphoreSlim(1);
         private InterpreterView _lastUserSelectedBaseInterpreter;
 
-        // These interpreter IDs are known to support virtualenv.
-        private static readonly IEnumerable<Guid> SupportsVirtualEnv = new[] {
-            CPythonInterpreterFactoryConstants.Guid32,
-            CPythonInterpreterFactoryConstants.Guid64
-        };
-
-
         public AddVirtualEnvironmentView(
             PythonProjectNode project,
-            IInterpreterOptionsService interpreterService,
+            IInterpreterRegistryService interpreterService,
             IPythonInterpreterFactory selectInterpreter
         ) {
             _interpreterService = interpreterService;
             _project = project;
             VirtualEnvBasePath = _projectHome = project.ProjectHome;
-            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(project.Site, interpreterService));
+            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(project.Site, project));
             var selection = Interpreters.FirstOrDefault(v => v.Interpreter == selectInterpreter);
             if (selection == null) {
-                selection = Interpreters.FirstOrDefault(v => v.Interpreter == interpreterService.DefaultInterpreter)
+                selection = Interpreters.FirstOrDefault(v => v.Interpreter == project.GetInterpreterFactory())
                     ?? Interpreters.LastOrDefault();
             }
             BaseInterpreter = selection;
 
-            _interpreterService.InterpretersChanged += OnInterpretersChanged;
+            _project.InterpreterFactoriesChanged += OnInterpretersChanged;
 
             var venvName = "env";
             for (int i = 1; Directory.Exists(Path.Combine(_projectHome, venvName)); ++i) {
@@ -70,7 +66,7 @@ namespace Microsoft.PythonTools.Project {
             }
             VirtualEnvName = venvName;
 
-            CanInstallRequirementsTxt = File.Exists(CommonUtils.GetAbsoluteFilePath(_projectHome, "requirements.txt"));
+            CanInstallRequirementsTxt = File.Exists(PathUtils.GetAbsoluteFilePath(_projectHome, "requirements.txt"));
             WillInstallRequirementsTxt = CanInstallRequirementsTxt;
         }
 
@@ -83,13 +79,14 @@ namespace Microsoft.PythonTools.Project {
                 Dispatcher.BeginInvoke((Action)(() => OnInterpretersChanged(sender, e)));
                 return;
             }
+
             var existing = Interpreters.Where(iv => iv.Interpreter != null).ToDictionary(iv => iv.Interpreter);
-            var def = _interpreterService.DefaultInterpreter;
+            var def = _project.GetInterpreterFactory();
 
             int i = 0;
-            foreach (var interp in _interpreterService.Interpreters) {
+            foreach (var interp in InterpreterView.GetInterpreters(_project.Site, _project).Select(x => x.Interpreter)) {
                 if (!existing.Remove(interp)) {
-                    Interpreters.Insert(i, new InterpreterView(interp, interp.Description, interp == def));
+                    Interpreters.Insert(i, new InterpreterView(interp, interp.Configuration.FullDescription, interp == def));
                 }
                 i += 1;
             }
@@ -157,7 +154,7 @@ namespace Microsoft.PythonTools.Project {
                 d.SetValue(VirtualEnvPathPropertyKey, d.GetValue(VirtualEnvBasePathProperty));
             } else {
                 name = name.TrimEnd('.', ' ');
-                d.SetValue(VirtualEnvPathPropertyKey, CommonUtils.GetAbsoluteDirectoryPath(path, name));
+                d.SetValue(VirtualEnvPathPropertyKey, PathUtils.GetAbsoluteDirectoryPath(path, name));
             }
         }
 
@@ -183,11 +180,11 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private static bool IsValidVirtualEnvPath(string path) {
-            if (!CommonUtils.IsValidPath(path)) {
+            if (!PathUtils.IsValidPath(path)) {
                 return false;
             }
 
-            path = CommonUtils.TrimEndSeparator(path);
+            path = PathUtils.TrimEndSeparator(path);
             if (File.Exists(path)) {
                 return false;
             }
@@ -224,9 +221,9 @@ namespace Microsoft.PythonTools.Project {
             if (Directory.Exists(path) && Directory.EnumerateFileSystemEntries(path).Any()) {
                 WillCreateVirtualEnv = false;
 
-                var options = VirtualEnv.FindInterpreterOptions(path, _interpreterService);
-                if (options != null && File.Exists(options.InterpreterPath)) {
-                    var baseInterp = _interpreterService.FindInterpreter(options.Id, options.LanguageVersion);
+                var config = VirtualEnv.FindInterpreterConfiguration(null, path, _interpreterService);
+                if (config != null && File.Exists(config.InterpreterPath)) {
+                    var baseInterp = _interpreterService.FindInterpreter(config.Id);
                     InterpreterView baseInterpView;
                     if (baseInterp != null &&
                         (baseInterpView = Interpreters.FirstOrDefault(iv => iv.Interpreter == baseInterp)) != null) {
@@ -413,7 +410,7 @@ namespace Microsoft.PythonTools.Project {
                     return;
                 }
 
-                MayNotSupportVirtualEnv = !SupportsVirtualEnv.Contains(interp.Id);
+                //MayNotSupportVirtualEnv = !SupportsVirtualEnv.Contains(interp.Id);
                 RefreshCanCreateVirtualEnv(VirtualEnvPath);
 
                 var libPath = interp.Configuration.LibraryPath;
