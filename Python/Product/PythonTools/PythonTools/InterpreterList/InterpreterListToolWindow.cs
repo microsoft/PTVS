@@ -113,6 +113,11 @@ namespace Microsoft.PythonTools.InterpreterList {
                 DisableIPythonInteractive_Executed,
                 DisableIPythonInteractive_CanExecute
             ));
+            list.CommandBindings.Add(new CommandBinding(
+                EnvironmentPathsExtension.OpenInBrowser,
+                OpenInBrowser_Executed,
+                OpenInBrowser_CanExecute
+            ));
 
             Content = list;
         }
@@ -443,6 +448,15 @@ namespace Microsoft.PythonTools.InterpreterList {
             psi.WorkingDirectory = view.PrefixPath;
 
             Process.Start(psi).Dispose();
+        }
+
+        private void OpenInBrowser_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = e.Parameter is string;
+            e.Handled = true;
+        }
+
+        private void OpenInBrowser_Executed(object sender, ExecutedRoutedEventArgs e) {
+            PythonToolsPackage.OpenVsWebBrowser(_site, (string)e.Parameter);
         }
     }
 }

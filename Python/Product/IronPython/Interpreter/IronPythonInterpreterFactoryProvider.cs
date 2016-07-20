@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using System.Threading;
 using Microsoft.PythonTools;
@@ -171,7 +170,15 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public event EventHandler InterpreterFactoriesChanged;
 
-        public object GetProperty(string id, string propName) => null;
+        public object GetProperty(string id, string propName) {
+            switch (propName) {
+                case "Vendor":
+                    return "IronPython team";
+                case "SupportUrl":
+                    return "http://ironpython.net/";
+            }
+            return null;
+        }
 
         #endregion
 

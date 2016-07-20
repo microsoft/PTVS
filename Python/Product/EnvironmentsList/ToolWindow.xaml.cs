@@ -317,7 +317,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     .Distinct()
                     .Where(f => f.IsUIVisible())
                     .Select(f => {
-                        var view = new EnvironmentView(_service, f, null);
+                        var view = new EnvironmentView(_service, _interpreters, f, null);
                         OnViewCreated(view);
                         return view;
                     })

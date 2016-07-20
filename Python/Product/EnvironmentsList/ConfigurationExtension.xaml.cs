@@ -191,7 +191,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     }
                 }
 
-                var binaryType = Microsoft.PythonTools.Interpreter.NativeMethods.GetBinaryType(view.InterpreterPath);
+                var binaryType = Infrastructure.NativeMethods.GetBinaryType(view.InterpreterPath);
                 if (binaryType == ProcessorArchitecture.Amd64) {
                     view.ArchitectureName = "64-bit";
                 } else if (binaryType == ProcessorArchitecture.X86) {

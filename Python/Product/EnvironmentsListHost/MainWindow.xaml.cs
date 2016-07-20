@@ -159,5 +159,15 @@ namespace Microsoft.PythonTools.EnvironmentsList.Host {
                 File.Delete(path);
             }
         }
+
+        private void OpenInBrowser_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = e.Parameter is string;
+            e.Handled = true;
+        }
+
+        private void OpenInBrowser_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var url = (string)e.Parameter;
+            Process.Start(url)?.Dispose();
+        }
     }
 }
