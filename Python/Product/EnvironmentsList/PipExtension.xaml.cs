@@ -400,6 +400,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                         RefreshInstallablePackages()
                     );
                 }
+            } catch (OperationCanceledException) {
+                // User has probably closed the window or is quitting VS
             } finally {
                 Dispatcher.Invoke(() => {
                     IsListRefreshing = false;

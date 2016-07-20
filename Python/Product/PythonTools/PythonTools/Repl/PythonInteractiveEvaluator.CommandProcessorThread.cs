@@ -662,26 +662,25 @@ namespace Microsoft.PythonTools.Repl {
                         if (_listenerSocket != null) {
                             Trace.TraceInformation("Deferred executing text because connection is not fully established yet.");
                             _deferredExecute = send;
-                            _completion = new TaskCompletionSource<ExecutionResult>();
-                            return _completion.Task;
                         } else {
                             _eval.WriteError(Strings.ReplDisconnectedReset);
                             return ExecutionResult.Failed;
                         }
-                    }
-
-                    try {
-                        send();
-                    } catch (IOException) {
-                        _eval.WriteError(Strings.ReplDisconnectedReset);
-                        return ExecutionResult.Failed;
+                    } else {
+                        try {
+                            send();
+                        } catch (IOException) {
+                            _eval.WriteError(Strings.ReplDisconnectedReset);
+                            return ExecutionResult.Failed;
+                        }
                     }
                 }
 
+                var tcs = new TaskCompletionSource<ExecutionResult>();
                 lock (_completionLock) {
-                    _completion = new TaskCompletionSource<ExecutionResult>();
-                    return _completion.Task;
+                    _completion = tcs;
                 }
+                return tcs.Task;
             }
 
             public async Task<bool> ExecuteFile(string filename, string extraArgs, string fileType) {
@@ -701,25 +700,23 @@ namespace Microsoft.PythonTools.Repl {
                         // If we're still waiting for debuggee to connect to us, postpone the actual execution until we have the command stream.
                         if (_listenerSocket != null) {
                             _deferredExecute = send;
-                            _completion = new TaskCompletionSource<ExecutionResult>();
-                            return (await _completion.Task).IsSuccessful;
                         } else {
                             _eval.WriteError(Strings.ReplDisconnectedReset);
                             return false;
                         }
-                    }
-
-                    try {
-                        send();
-                    } catch (IOException) {
-                        _eval.WriteError(Strings.ReplDisconnectedReset);
-                        return false;
+                    } else {
+                        try {
+                            send();
+                        } catch (IOException) {
+                            _eval.WriteError(Strings.ReplDisconnectedReset);
+                            return false;
+                        }
                     }
                 }
 
-                TaskCompletionSource<ExecutionResult> tcs;
+                var tcs = new TaskCompletionSource<ExecutionResult>();
                 lock (_completionLock) {
-                    _completion = tcs = new TaskCompletionSource<ExecutionResult>();
+                    _completion = tcs;
                 }
                 return (await tcs.Task).IsSuccessful;
             }

@@ -39,7 +39,8 @@ namespace Microsoft.PythonTools.Infrastructure {
             Type callerType = null,
             [CallerFilePath] string callerFile = null,
             [CallerLineNumber] int callerLineNumber = 0,
-            [CallerMemberName] string callerName = null
+            [CallerMemberName] string callerName = null,
+            bool allowUI = true
         ) {
             var message = ex.ToUnhandledExceptionMessage(callerType, callerFile, callerLineNumber, callerName);
             // Send the message to the trace listener in case there is
@@ -70,11 +71,13 @@ namespace Microsoft.PythonTools.Infrastructure {
                 // Unknown error prevented writing to the log
             }
 
-            lock (_displayedMessages) {
-                if (!string.IsNullOrEmpty(logFile) &&
-                    _displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
-                    // First time we've seen this error, so let the user know
-                    MessageBox.Show(Strings.SeeActivityLog.FormatUI(logFile), Strings.ProductTitle);
+            if (allowUI) {
+                lock (_displayedMessages) {
+                    if (!string.IsNullOrEmpty(logFile) &&
+                        _displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
+                        // First time we've seen this error, so let the user know
+                        MessageBox.Show(Strings.SeeActivityLog.FormatUI(logFile), Strings.ProductTitle);
+                    }
                 }
             }
 
@@ -96,9 +99,10 @@ namespace Microsoft.PythonTools.Infrastructure {
             Type callerType = null,
             [CallerFilePath] string callerFile = null,
             [CallerLineNumber] int callerLineNumber = 0,
-            [CallerMemberName] string callerName = null
+            [CallerMemberName] string callerName = null,
+            bool allowUI = true
         ) {
-            return task.HandleAllExceptions(site, callerType, callerFile, callerLineNumber, callerName)
+            return task.HandleAllExceptions(site, callerType, callerFile, callerLineNumber, callerName, allowUI)
                 .WaitAndUnwrapExceptions();
         }
 
@@ -114,7 +118,8 @@ namespace Microsoft.PythonTools.Infrastructure {
             Type callerType = null,
             [CallerFilePath] string callerFile = null,
             [CallerLineNumber] int callerLineNumber = 0,
-            [CallerMemberName] string callerName = null
+            [CallerMemberName] string callerName = null,
+            bool allowUI = true
         ) {
             var result = default(T);
             try {
@@ -124,7 +129,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                     throw;
                 }
 
-                ex.ReportUnhandledException(site, callerType, callerFile, callerLineNumber, callerName);
+                ex.ReportUnhandledException(site, callerType, callerFile, callerLineNumber, callerName, allowUI);
             }
             return result;
         }
@@ -140,9 +145,10 @@ namespace Microsoft.PythonTools.Infrastructure {
             Type callerType = null,
             [CallerFilePath] string callerFile = null,
             [CallerLineNumber] int callerLineNumber = 0,
-            [CallerMemberName] string callerName = null
+            [CallerMemberName] string callerName = null,
+            bool allowUI = true
         ) {
-            task.HandleAllExceptions(site, callerType, callerFile, callerLineNumber, callerName)
+            task.HandleAllExceptions(site, callerType, callerFile, callerLineNumber, callerName, allowUI)
                 .WaitAndUnwrapExceptions();
         }
 
@@ -157,7 +163,8 @@ namespace Microsoft.PythonTools.Infrastructure {
             Type callerType = null,
             [CallerFilePath] string callerFile = null,
             [CallerLineNumber] int callerLineNumber = 0,
-            [CallerMemberName] string callerName = null
+            [CallerMemberName] string callerName = null,
+            bool allowUI = true
         ) {
             try {
                 await task;
@@ -166,7 +173,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                     throw;
                 }
 
-                ex.ReportUnhandledException(site, callerType, callerFile, callerLineNumber, callerName);
+                ex.ReportUnhandledException(site, callerType, callerFile, callerLineNumber, callerName, allowUI);
             }
         }
     }

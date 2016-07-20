@@ -100,16 +100,24 @@ namespace Microsoft.PythonTools.Infrastructure {
         }
 
         public override void Show() {
-            GetUIThread(_serviceProvider).Invoke(() => ErrorHandler.ThrowOnFailure(_pane.Activate()));
+            try {
+                GetUIThread(_serviceProvider).Invoke(() => ErrorHandler.ThrowOnFailure(_pane.Activate()));
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                ex.ReportUnhandledException(_serviceProvider, GetType());
+            }
         }
 
         public override void ShowAndActivate() {
-            GetUIThread(_serviceProvider).Invoke(() => {
-                ErrorHandler.ThrowOnFailure(_pane.Activate());
-                if (_window != null) {
-                    ErrorHandler.ThrowOnFailure(_window.ShowNoActivate());
-                }
-            });
+            try {
+                GetUIThread(_serviceProvider).Invoke(() => {
+                    ErrorHandler.ThrowOnFailure(_pane.Activate());
+                    if (_window != null) {
+                        ErrorHandler.ThrowOnFailure(_window.ShowNoActivate());
+                    }
+                });
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                ex.ReportUnhandledException(_serviceProvider, GetType());
+            }
         }
 
         public override void WriteLine(string line) {
