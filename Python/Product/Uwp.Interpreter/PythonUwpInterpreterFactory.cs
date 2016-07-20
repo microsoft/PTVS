@@ -16,10 +16,10 @@
 
 using System;
 using Microsoft.PythonTools.Interpreter;
+using System.IO;
 
 namespace Microsoft.PythonTools.Uwp.Interpreter {
     class PythonUwpInterpreterFactory : PythonInterpreterFactoryWithDatabase {
-        public const string InterpreterGuidString = "{86767848-40B4-4007-8BCC-A3835EDF0E69}";
 
         public PythonUwpInterpreterFactory(InterpreterConfiguration configuration) 
             : base(
@@ -29,6 +29,15 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
 
         public override IPythonInterpreter MakeInterpreter(PythonInterpreterFactoryWithDatabase factory) {
             return new PythonUwpInterpreter(factory);
+        }
+
+        public override string DatabasePath {
+            get {
+                return Path.Combine(
+                    Configuration.PrefixPath,
+                    "completionDB"
+                );
+            }
         }
     }
 }
