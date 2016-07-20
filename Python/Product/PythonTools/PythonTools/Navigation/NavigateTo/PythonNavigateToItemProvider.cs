@@ -17,20 +17,19 @@
 using System;
 using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.NavigateTo.Interfaces;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 
 namespace Microsoft.PythonTools.Navigation.NavigateTo {
     internal class PythonNavigateToItemProvider : INavigateToItemProvider {
         private readonly IServiceProvider _serviceProvider;
+        private readonly Library _library;
+        private readonly FuzzyMatchMode _matchMode;
         private readonly IGlyphService _glyphService;
         private CancellationTokenSource _searchCts;
 
@@ -52,17 +51,20 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
             private readonly string _searchValue;
             private readonly Stack<LibraryNode> _path = new Stack<LibraryNode>();
             private readonly FuzzyStringMatcher _comparer, _regexComparer;
-            private readonly PythonToolsService _pyService;
 
             private static readonly Guid _projectType = new Guid(PythonConstants.ProjectFactoryGuid);
 
-            public LibraryNodeVisitor(PythonToolsService pyService, PythonNavigateToItemProvider itemProvider, INavigateToCallback navCallback, string searchValue) {
-                _pyService = pyService;
+            public LibraryNodeVisitor(
+                PythonNavigateToItemProvider itemProvider,
+                INavigateToCallback navCallback,
+                string searchValue,
+                FuzzyMatchMode matchMode
+            ) {
                 _itemProvider = itemProvider;
                 _navCallback = navCallback;
                 _searchValue = searchValue;
                 _path.Push(null);
-                _comparer = new FuzzyStringMatcher(_pyService.AdvancedOptions.SearchMode);
+                _comparer = new FuzzyStringMatcher(matchMode);
                 _regexComparer = new FuzzyStringMatcher(FuzzyMatchMode.RegexIgnoreCase);
             }
 
@@ -144,25 +146,45 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
         public PythonNavigateToItemProvider(IServiceProvider serviceProvider, IGlyphService glyphService) {
             _serviceProvider = serviceProvider;
             _glyphService = glyphService;
+            var libraryManager = (LibraryManager)_serviceProvider.GetService(typeof(IPythonLibraryManager));
+            _library = libraryManager?.Library;
+            var pyService = _serviceProvider.GetPythonToolsService();
+            _matchMode = pyService?.AdvancedOptions.SearchMode ?? FuzzyMatchMode.FuzzyIgnoreLowerCase;
         }
 
-        public void StartSearch(INavigateToCallback callback, string searchValue) {
-            var libraryManager = (LibraryManager)_serviceProvider.GetService(typeof(IPythonLibraryManager));
-            var library = libraryManager.Library;
+        public async void StartSearch(INavigateToCallback callback, string searchValue) {
+            CancellationTokenSource searchCts;
 
-            var searchCts = new CancellationTokenSource();
-            var oldCts = Interlocked.Exchange(ref _searchCts, searchCts);
-            if (oldCts != null) {
-                oldCts.Dispose();
+            if (_library == null) {
+                callback.Done();
+                return;
             }
-            var pyService = _serviceProvider.GetPythonToolsService();
-            Task.Run(() => {
-                try {
-                    library.VisitNodes(new LibraryNodeVisitor(pyService, this, callback, searchValue), searchCts.Token);
-                } finally {
+
+            bool success = false;
+            try {
+                searchCts = new CancellationTokenSource();
+                var oldCts = Interlocked.Exchange(ref _searchCts, searchCts);
+                if (oldCts != null) {
+                    oldCts.Dispose();
+                }
+                success = true;
+            } finally {
+                if (!success) {
                     callback.Done();
                 }
-            }).HandleAllExceptions(_serviceProvider, GetType()).DoNotWait();
+            }
+
+            try {
+                await _library.VisitNodesAsync(
+                    new LibraryNodeVisitor(this, callback, searchValue, _matchMode),
+                    searchCts.Token
+                );
+            } catch (OperationCanceledException) {
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                ex.ReportUnhandledException(_serviceProvider, GetType());
+            } finally {
+                callback.Done();
+            }
         }
 
         public void StopSearch() {
