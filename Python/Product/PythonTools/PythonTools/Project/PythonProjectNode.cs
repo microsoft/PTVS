@@ -685,10 +685,11 @@ namespace Microsoft.PythonTools.Project {
                 this.AddChild(_searchPathContainer);
                 RefreshCurrentWorkingDirectory();
                 RefreshSearchPaths();
-                _interpretersContainer = new InterpretersContainerNode(this);
-                this.AddChild(_interpretersContainer);
-                RefreshInterpreters(alwaysCollapse: true);
             }
+
+            _interpretersContainer = new InterpretersContainerNode(this);
+            this.AddChild(_interpretersContainer);
+            RefreshInterpreters(alwaysCollapse: true);
 
             OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
 
@@ -813,13 +814,16 @@ namespace Microsoft.PythonTools.Project {
                 foreach (var fact in InterpreterFactories) {
                     if (!RemoveFirst(remaining, n => !n._isGlobalDefault && n._factory == fact)) {
                         bool isProjectSpecific = vsProjectContext.IsProjectSpecific(fact.Configuration);
+                        bool canRemove = !this.IsAppxPackageableProject(); // Do not allow change python enivronment for UWP
                         node.AddChild(new InterpretersNode(
                             this,
                             fact,
                             isInterpreterReference: !isProjectSpecific,
                             canDelete:
                                 isProjectSpecific &&
-                                Directory.Exists(fact.Configuration.PrefixPath)
+                                Directory.Exists(fact.Configuration.PrefixPath),
+                            isGlobalDefault:false,
+                            canRemove:canRemove
                         ));
                     }
                 }
@@ -1906,6 +1910,14 @@ namespace Microsoft.PythonTools.Project {
                                 return true;
                             }
                             break;
+                    }
+                } else if (this.IsAppxPackageableProject()) {
+                    // Disable adding environment for UWP projects
+                    switch ((int)cmd) {
+                        case PythonConstants.AddEnvironment:
+                        case PythonConstants.AddExistingVirtualEnv:
+                        case PythonConstants.AddVirtualEnv:
+                            return true;
                     }
                 }
             }
