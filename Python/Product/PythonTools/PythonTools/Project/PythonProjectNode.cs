@@ -92,6 +92,7 @@ namespace Microsoft.PythonTools.Project {
             // _active starts as null, so we need to start with this event
             // hooked up.
             InterpreterOptions.DefaultInterpreterChanged += GlobalDefaultInterpreterChanged;
+            InterpreterRegistry.InterpretersChanged += OnInterpreterRegistryChanged;
             _pythonProject = new VsPythonProject(this);
         }
 
@@ -165,6 +166,15 @@ namespace Microsoft.PythonTools.Project {
 
         private void OnInterpreterFactoriesChanged(object sender, EventArgs e) {
             Site.GetUIThread().Invoke(() => RefreshInterpreters());
+        }
+
+        private void OnInterpreterRegistryChanged(object sender, EventArgs e) {
+            // Check whether the active interpreter factory has changed.
+            var fact = InterpreterRegistry.FindInterpreter(ActiveInterpreter.Configuration.Id);
+            if (fact != null && fact != ActiveInterpreter) {
+                ActiveInterpreter = fact;
+                InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public IInterpreterOptionsService InterpreterOptions {
@@ -1162,6 +1172,7 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 InterpreterOptions.DefaultInterpreterChanged -= GlobalDefaultInterpreterChanged;
+                InterpreterRegistry.InterpretersChanged -= OnInterpreterRegistryChanged;
 
                 if (_interpretersContainer != null) {
                     _interpretersContainer.Dispose();
