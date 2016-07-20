@@ -22,12 +22,16 @@ using System.Threading;
 
 namespace Microsoft.PythonTools.Uwp.Interpreter {
     internal class InstalledPythonUwpInterpreter {
-        static internal string GetDirectory(Version ver) {
+        static public string GetDirectory(Version ver) {
             string result;
             if (_installedSdks.Value.TryGetValue(ver, out result)) {
                 return result;
             }
             return null;
+        }
+
+        static public IEnumerable<KeyValuePair<Version, string>> GetInterpreters() {
+            return _installedSdks.Value;
         }
 
         static private Lazy<Dictionary<Version, String>> _installedSdks = new Lazy<Dictionary<Version, string>>(DiscoverPythonUwpSdks, LazyThreadSafetyMode.ExecutionAndPublication);
@@ -58,7 +62,8 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
                                         var libPath = prefixPath?.GetDirectories(PythonUwpConstants.InterpreterLibPath).FirstOrDefault();
 
                                         if (targetsFile != null && libPath != null) {
-                                            pythonSdkMap.Add(pythonUwpVersion, prefixPath.FullName);
+                                            // Note, the order of discovery is important.  The last one wins.
+                                            pythonSdkMap[pythonUwpVersion] = prefixPath.FullName;
                                         }
                                     }
                                 }

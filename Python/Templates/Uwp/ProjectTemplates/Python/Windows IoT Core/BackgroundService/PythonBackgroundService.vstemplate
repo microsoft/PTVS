@@ -28,4 +28,8 @@
     <Assembly>Microsoft.PythonTools.ProjectWizards, Version=2.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
     <FullClassName>Microsoft.PythonTools.ProjectWizards.WindowsSDKWizard</FullClassName>
   </WizardExtension>
+  <WizardExtension>
+    <Assembly>Microsoft.PythonTools.Uwp.Wizards, Version=3.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</Assembly>
+    <FullClassName>Microsoft.PythonTools.Uwp.Wizards.PythonUwpSdkWizard</FullClassName>
+  </WizardExtension>
 </VSTemplate>

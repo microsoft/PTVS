@@ -243,6 +243,11 @@
       <Name>Uwp.Interpreter</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
+    <ProjectReference Include="..\Uwp.Wizards\Uwp.Wizards.csproj">
+      <Project>{45ac7de9-b820-47d6-81d4-45ff4aaab150}</Project>
+      <Name>Uwp.Wizards</Name>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup />
   <PropertyGroup>

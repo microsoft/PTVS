@@ -27,6 +27,7 @@
     
     <!-- Core extension -->
     <File Include="!(bindpath.bin)\Microsoft.PythonTools.Uwp.dll" />
+    <File Include="!(bindpath.bin)\Microsoft.PythonTools.Uwp.Wizards.dll" />
     <File Include="!(bindpath.bin)\Microsoft.PythonTools.Uwp.Interpreter.dll" />
 
     <File Include="Microsoft.PythonTools.Uwp.targets" />
