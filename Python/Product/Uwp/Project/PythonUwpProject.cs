@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Linq;
+using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -27,6 +28,7 @@ using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using IServiceProvider = System.IServiceProvider;
+using Microsoft.PythonTools.Uwp.Interpreter;
 
 namespace Microsoft.PythonTools.Uwp.Project {
     [Guid("27BB1268-135A-4409-914F-7AA64AD8195D")]
@@ -42,6 +44,7 @@ namespace Microsoft.PythonTools.Uwp.Project {
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
         private static Guid PythonProjectGuid = new Guid(PythonConstants.ProjectFactoryGuid);
         private IOleCommandTarget _menuService;
+        private FileSystemWatcher sitePackageWatcher;
 
         public PythonUwpProject() {
         }
@@ -64,7 +67,31 @@ namespace Microsoft.PythonTools.Uwp.Project {
         /// information from the project)
         /// </summary>
         protected override void InitializeForOuter(string fileName, string location, string name, uint flags, ref Guid guidProject, out bool cancel) {
+            var pythonProject = this.GetProject().GetPythonProject();
+            var msbuildProject = pythonProject.GetMSBuildProjectInstance();
+            msbuildProject.Build("CreatePythonUwpIoTPythonEnv", null);
+
+            var sitePackagesDir = Path.Combine(pythonProject.ProjectDirectory, PythonUwpConstants.InterpreterRelativePath, PythonUwpConstants.InterpreterLibPath, "site-packages");
+            var sitePackageDirInfo = new DirectoryInfo(sitePackagesDir);
+            if (sitePackageDirInfo.Exists) {
+                sitePackageWatcher = new FileSystemWatcher {
+                    IncludeSubdirectories = true,
+                    Path = sitePackagesDir,
+                };
+
+                sitePackageWatcher.Created += SitePackageWatcher_Changed;
+                sitePackageWatcher.Changed += SitePackageWatcher_Changed;
+                sitePackageWatcher.Deleted += SitePackageWatcher_Changed;
+                sitePackageWatcher.Renamed += SitePackageWatcher_Changed;
+                sitePackageWatcher.EnableRaisingEvents = true;
+            }
+
             base.InitializeForOuter(fileName, location, name, flags, ref guidProject, out cancel);
+        }
+
+        private void SitePackageWatcher_Changed(object sender, System.IO.FileSystemEventArgs e) {
+            var bps = this._innerProject as IVsBuildPropertyStorage;
+            bps.SetPropertyValue("SitePackageChangedTime", null, (uint)_PersistStorageType.PST_PROJECT_FILE, DateTime.Now.ToString());
         }
 
         #endregion
