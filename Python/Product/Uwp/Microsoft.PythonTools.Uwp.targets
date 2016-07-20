@@ -30,8 +30,6 @@
 
   <ItemGroup>
     <PtvsdFiles Include="$(PtvsLocation)ptvsd\**\*" />
-
-    <VisualStudioPyFiles Include="$(PtvsLocation)visualstudio_py_*.py" />
     <VisualStudioPyFiles Include="$(MSBuildThisFileDirectory)visualstudio_py_*.py" />
   </ItemGroup>
   
@@ -48,7 +46,7 @@
     <AssignTargetPath Files="@(PtvsdFiles->'%(FullPath)')" RootFolder="$(PtvsLocation)" Condition="Exists('$(PtvsLocation)')">
       <Output TaskParameter="AssignedFiles" ItemName="CustomOutputGroupForPackagingOutput" />
     </AssignTargetPath>
-    <AssignTargetPath Files="@(VisualStudioPyFiles->'%(FullPath)')" RootFolder="$(PtvsLocation)" Condition="Exists('$(PtvsLocation)')">
+    <AssignTargetPath Files="@(VisualStudioPyFiles->'%(FullPath)')" RootFolder="$(MSBuildThisFileDirectory)">
       <Output TaskParameter="AssignedFiles" ItemName="CustomOutputGroupForPackagingOutput" />
     </AssignTargetPath>
     <AssignTargetPath Files="@(OutputReferences->'%(FullPath)')" RootFolder="$(OutputPath)references" Condition="Exists('$(OutputPath)references')">
