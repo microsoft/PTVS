@@ -160,21 +160,14 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 return;
             }
 
-            bool success = false;
             try {
                 searchCts = new CancellationTokenSource();
                 var oldCts = Interlocked.Exchange(ref _searchCts, searchCts);
                 if (oldCts != null) {
+                    oldCts.Cancel();
                     oldCts.Dispose();
                 }
-                success = true;
-            } finally {
-                if (!success) {
-                    callback.Done();
-                }
-            }
 
-            try {
                 await _library.VisitNodesAsync(
                     new LibraryNodeVisitor(this, callback, searchValue, _matchMode),
                     searchCts.Token
