@@ -23,8 +23,8 @@
     <PackageCertificateKeyFile>$projectname$_TemporaryKey.pfx</PackageCertificateKeyFile>
     <DefaultLanguage>$currentuiculturename$</DefaultLanguage>
     <ProjectTypeGuids>{2b557614-1a2b-4903-b9df-ed20d7b63f3a};{888888A0-9F3D-457C-B088-3A5042F75D52}</ProjectTypeGuids>
-    <InterpreterId>{86767848-40B4-4007-8BCC-A3835EDF0E69}</InterpreterId>
     <InterpreterVersion>3.5</InterpreterVersion>
+    <InterpreterId>PythonUWP|IoT|$(InterpreterVersion)</InterpreterId>
     <RemoteDebugEnabled>true</RemoteDebugEnabled>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.WindowsSDK.props" />

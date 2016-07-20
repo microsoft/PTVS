@@ -27,13 +27,31 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
     [Export(typeof(IPythonInterpreterFactoryProvider))]
     class PythonUwpInterpreterFactoryProvider : IPythonInterpreterFactoryProvider {
         private HashSet<IPythonInterpreterFactory> _factories = null;
-        public const string InterpreterFactoryProviderId = "Uwp";
+        public const string InterpreterFactoryProviderId = "PythonUWP";
 
         private const string PythonUwpSdkTargetsFile = @"DesignTime\CommonConfiguration\Neutral\CPython.targets";
 
-        public event EventHandler InterpreterFactoriesChanged;
+        private EventHandler _interpFactoriesChanged;
+        public event EventHandler InterpreterFactoriesChanged {
+            add {
+                EnsureInitialized();
+                _interpFactoriesChanged += value;
+            }
+            remove {
+                _interpFactoriesChanged -= value;
+            }
+        }
+        private void OnInterpreterFactoriesChanged() {
+            _interpFactoriesChanged?.Invoke(this, EventArgs.Empty);
+        }
 
         public PythonUwpInterpreterFactoryProvider() {
+        }
+
+        private void EnsureInitialized() {
+            lock (this) {
+                DiscoverFactories();
+            }
         }
 
         private IDictionary<string, IPythonInterpreterFactory> FindFactoriesFromDirectories(params string[] directories) {
@@ -51,6 +69,7 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
                                 if (Version.TryParse(dirInfo.Name, out pythonUwpVersion)) {
                                     var targetsFile = dirInfo.GetFiles(PythonUwpSdkTargetsFile).FirstOrDefault();
                                     var factoryName = string.Join(" ", rootDirectoryInfo.Name, dirInfo.Name);
+                                    var id = String.Join("|", InterpreterFactoryProviderId, "IoT", pythonUwpVersion.ToString());
 
                                     if (targetsFile != null) {
                                         // This will add a new or overwrite factory with new factory found
@@ -58,7 +77,7 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
                                         // win the battle of conflicting factory names
                                         factoryMap[factoryName] = new PythonUwpInterpreterFactory(
                                             new InterpreterConfiguration(
-                                                pythonUwpVersion.ToString(),
+                                                id,
                                                 factoryName,
                                                 dirInfo.FullName,
                                                 targetsFile.FullName,
@@ -97,25 +116,23 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
                         _factories.Add(factory);
                     }
 
-                    var factoriesChanged = InterpreterFactoriesChanged;
-
-                    if (factoriesChanged != null) {
-                        factoriesChanged(this, new EventArgs());
-                    }
+                    OnInterpreterFactoriesChanged();
                 }
             }
         }
 
         public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
-            DiscoverFactories();
+            EnsureInitialized();
             return _factories;
         }
 
         public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {
+            EnsureInitialized();
             return GetInterpreterFactories().Select(x => x.Configuration);
         }
 
         public IPythonInterpreterFactory GetInterpreterFactory(string id) {
+            EnsureInitialized();
             return GetInterpreterFactories()
                 .Where(x => x.Configuration.Id == id)
                 .FirstOrDefault();
