@@ -16,18 +16,13 @@
 
 using System;
 using System.ComponentModel;
-using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
 using System.Runtime.InteropServices;
-using EnvDTE90a;
-using Microsoft.PythonTools.Debugger.DebugEngine;
-using Microsoft.PythonTools.Uwp.Interpreter;
 using Microsoft.PythonTools.Uwp.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace Microsoft.PythonTools.Uwp {
     /// <summary>

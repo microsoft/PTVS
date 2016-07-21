@@ -21,8 +21,7 @@ using System.Reflection;
 
 namespace Microsoft.PythonTools.Interpreter
 {
-    class NotFoundInterpreter : IPythonInterpreter
-    {
+    sealed class NotFoundInterpreter : IPythonInterpreter {
         public void Initialize(PythonAnalyzer state) { }
         public IPythonType GetBuiltinType(BuiltinTypeId id) { throw new KeyNotFoundException(); }
         public IList<string> GetModuleNames() { return new string[0]; }
@@ -31,17 +30,14 @@ namespace Microsoft.PythonTools.Interpreter
         public IModuleContext CreateModuleContext() { return null; }
     }
 
-    public class NotFoundInterpreterFactory : IPythonInterpreterFactory
-    {
+    sealed public class NotFoundInterpreterFactory : IPythonInterpreterFactory {
         public NotFoundInterpreterFactory(
             string id,
             Version version,
             string description = null,
             string prefixPath = null,
             ProcessorArchitecture architecture = ProcessorArchitecture.None,
-            string descriptionSuffix = null
-        )
-        {
+            string descriptionSuffix = null) {
             Configuration = new InterpreterConfiguration(
                 id,
                 string.IsNullOrEmpty(description) ? "Unknown Python" : description,
@@ -61,8 +57,7 @@ namespace Microsoft.PythonTools.Interpreter
         public InterpreterConfiguration Configuration { get; private set; }
         public Guid Id { get; private set; }
 
-        public IPythonInterpreter CreateInterpreter()
-        {
+        public IPythonInterpreter CreateInterpreter() {
             return new NotFoundInterpreter();
         }
     }

@@ -39,9 +39,8 @@ namespace Microsoft.PythonTools.Uwp.Wizards {
 
             if (version == null) {
                 // Show an error dialog if CPython UWP SDK is not installed
-                var msg = "Could not find CPython UWP SDK.  \nPlease download from <http://go.microsoft.com/fwlink/?LinkID=613495&amp;clcid=0x409> and restart Visual Studio.";
-                MessageBox.Show(msg, "Python Tools for Visual Studio", MessageBoxButton.OK, MessageBoxImage.Error);
-                throw new WizardCancelledException(msg);
+                MessageBox.Show(Resources.PythonUwpSdkNotFound, Resources.PTVSDialogBoxTitle, MessageBoxButton.OK, MessageBoxImage.Error);
+                throw new WizardCancelledException(Resources.PythonUwpSdkNotFound);
             }
 
             replacementsDictionary.Add("$pythonuwpsdkversion$", version.ToString());

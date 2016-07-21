@@ -152,7 +152,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     }
 
                     if (packet == null) {
-                        if (reader.EndOfStream) {
+                        if (reader.EndOfStream || !reader.BaseStream.CanRead) {
                             return;
                         }
                         await WriteError("Failed to parse packet" + message).ConfigureAwait(false);

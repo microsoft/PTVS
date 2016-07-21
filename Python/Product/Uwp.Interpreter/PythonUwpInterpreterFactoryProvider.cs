@@ -21,7 +21,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Infrastructure;
 using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.Uwp.Interpreter {
@@ -227,6 +226,8 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
         private abstract class ProjectInfo : IDisposable {
             public readonly IProjectContextProvider ContextProvider;
             private IPythonInterpreterFactory _factory;
+            private static bool _skipMSBuild;
+
             public IPythonInterpreterFactory Factory {
                 get {
                     return _factory;
@@ -243,16 +244,22 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
             }
 
             static public ProjectInfo CreateFromProjectContext(object context, IProjectContextProvider contextProvider) {
-                var projContext = context as MSBuild.Project;
-                if (projContext == null) {
-                    var projectFile = context as string;
-                    if (projectFile != null && projectFile.EndsWith(".pyproj", StringComparison.OrdinalIgnoreCase)) {
-                        projContext = new MSBuild.Project(projectFile);
-                    }
-                }
+                if (!_skipMSBuild) {
+                    try {
+                        var projContext = context as MSBuild.Project;
+                        if (projContext == null) {
+                            var projectFile = context as string;
+                            if (projectFile != null && projectFile.EndsWith(".pyproj", StringComparison.OrdinalIgnoreCase)) {
+                                projContext = new MSBuild.Project(projectFile);
+                            }
+                        }
 
-                if (projContext != null) {
-                    return new MSBuildProjectInfo(projContext, contextProvider);
+                        if (projContext != null) {
+                            return new MSBuildProjectInfo(projContext, contextProvider);
+                        }
+                    } catch (FileNotFoundException) {
+                        _skipMSBuild = true;
+                    }
                 }
 
                 var inMemory = context as InMemoryProject;
@@ -322,7 +329,7 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
                         return SetNotFoundInterpreterFactory(interpreterId, ver);
                     }
 
-                    var interpreterPath = PathUtils.GetAbsoluteDirectoryPath(projectHome, PythonUwpConstants.InterpreterRelativePath);
+                    var interpreterPath = Path.GetFullPath(Path.Combine(projectHome, PythonUwpConstants.InterpreterRelativePath));
                     var prefixPath = new DirectoryInfo(interpreterPath);
                     if (!prefixPath.Exists) {
                         // Per-project interpreter doesn't.  Return "Not found interpreter factory".
@@ -332,7 +339,7 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
                     var targetsFile = prefixPath.GetFiles(PythonUwpConstants.InterpreterFile).FirstOrDefault();
                     var libPath = prefixPath.GetDirectories(PythonUwpConstants.InterpreterLibPath).FirstOrDefault();
 
-                    if (!targetsFile.Exists || !libPath.Exists) {
+                    if (targetsFile == null || libPath == null || !targetsFile.Exists || !libPath.Exists) {
                         return SetNotFoundInterpreterFactory(interpreterId, ver);
                     }
 
@@ -391,11 +398,16 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
         }
 
         public object GetProperty(string id, string propName) {
-            if (propName == "ProjectMoniker") {
-                var moniker = id.Substring(id.LastIndexOf('|') + 1);
-                return PathUtils.IsValidPath(moniker) ? moniker : null;
+            if (propName != "ProjectMoniker") {
+                return null;
             }
-            return null;
+
+            var moniker = id.Substring(id.LastIndexOf('|') + 1);
+            if (string.IsNullOrEmpty(moniker) || moniker.IndexOfAny(Path.GetInvalidPathChars()) >= 0) {
+                return null;
+            }
+
+            return moniker;
         }
     }
 }
