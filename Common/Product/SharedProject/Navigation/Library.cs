@@ -15,7 +15,10 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell.Interop;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
@@ -28,12 +31,18 @@ namespace Microsoft.VisualStudioTools.Navigation {
     class Library : IVsSimpleLibrary2 {
         private Guid _guid;
         private _LIB_FLAGS2 _capabilities;
+        private readonly SemaphoreSlim _searching;
         private LibraryNode _root;
         private uint _updateCount;
+
+        private enum UpdateType { Add, Remove }
+        private readonly List<KeyValuePair<UpdateType, LibraryNode>> _updates;
 
         public Library(Guid libraryGuid) {
             _guid = libraryGuid;
             _root = new LibraryNode(null, String.Empty, String.Empty, LibraryNodeType.Package);
+            _updates = new List<KeyValuePair<UpdateType, LibraryNode>>();
+            _searching = new SemaphoreSlim(1);
         }
 
         public _LIB_FLAGS2 LibraryCapabilities {
@@ -41,21 +50,60 @@ namespace Microsoft.VisualStudioTools.Navigation {
             set { _capabilities = value; }
         }
 
-        internal void AddNode(LibraryNode node) {
-            lock (this) {
-                // re-create root node here because we may have handed out the node before and don't want to mutate it's list.
-                _root = _root.Clone();
-                _root.AddNode(node);
-                _updateCount++;
+        private void ApplyUpdates(bool assumeLockHeld) {
+            if (!assumeLockHeld) {
+                if (!_searching.Wait(0)) {
+                    // Didn't get the lock immediately, which means we are
+                    // currently searching. Once the search is done, updates
+                    // will be applied.
+                    return;
+                }
+            }
+
+            try {
+                lock (_updates) {
+                    if (_updates.Count == 0) {
+                        return;
+                    }
+
+                    // re-create root node here because we may have handed out
+                    // the node before and don't want to mutate it's list.
+                    _root = _root.Clone();
+                    _updateCount += 1;
+                    foreach (var kv in _updates) {
+                        switch (kv.Key) {
+                            case UpdateType.Add:
+                                _root.AddNode(kv.Value);
+                                break;
+                            case UpdateType.Remove:
+                                _root.RemoveNode(kv.Value);
+                                break;
+                            default:
+                                Debug.Fail("Unsupported update type " + kv.Key.ToString());
+                                break;
+                        }
+                    }
+                    _updates.Clear();
+                }
+            } finally {
+                if (!assumeLockHeld) {
+                    _searching.Release();
+                }
             }
         }
 
-        internal void RemoveNode(LibraryNode node) {
-            lock (this) {
-                _root = _root.Clone();
-                _root.RemoveNode(node);
-                _updateCount++;
+        internal async void AddNode(LibraryNode node) {
+            lock (_updates) {
+                _updates.Add(new KeyValuePair<UpdateType, LibraryNode>(UpdateType.Add, node));
             }
+            ApplyUpdates(false);
+        }
+
+        internal void RemoveNode(LibraryNode node) {
+            lock (_updates) {
+                _updates.Add(new KeyValuePair<UpdateType, LibraryNode>(UpdateType.Remove, node));
+            }
+            ApplyUpdates(false);
         }
 
         #region IVsSimpleLibrary2 Members
@@ -160,9 +208,13 @@ namespace Microsoft.VisualStudioTools.Navigation {
             return list;
         }
 
-        public void VisitNodes(ILibraryNodeVisitor visitor, CancellationToken ct = default(CancellationToken)) {
-            lock (this) {
-                _root.Visit(visitor, ct);
+        internal async Task VisitNodesAsync(ILibraryNodeVisitor visitor, CancellationToken ct = default(CancellationToken)) {
+            await _searching.WaitAsync();
+            try {
+                await Task.Run(() => _root.Visit(visitor, ct));
+                ApplyUpdates(true);
+            } finally {
+                _searching.Release();
             }
         }
 
