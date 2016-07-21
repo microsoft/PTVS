@@ -27,15 +27,17 @@
     
     <!-- Core extension -->
     <File Include="!(bindpath.bin)\Microsoft.PythonTools.Uwp.dll" />
+    <File Include="!(bindpath.bin)\Microsoft.PythonTools.Uwp.Wizards.dll" />
+    <File Include="!(bindpath.bin)\Microsoft.PythonTools.Uwp.Interpreter.dll" />
 
-    <File Include="Microsoft.PythonTools.Uwp.targets" />
+    <MSBuildFile Include="Microsoft.PythonTools.Uwp.targets" />
 
     <!-- Resources -->
     <File Include="PythonProject.ico;
                    PythonProjectBig.ico" />
 
     <!-- Templates -->
-    <ProjectTemplate Include="$(BuildRoot)Python\Templates\Uwp\ProjectTemplates\Python\Windows IoT Core\BackgroundService*">
+    <ProjectTemplate Include="$(BuildRoot)Python\Templates\Uwp\ProjectTemplates\Python\Windows IoT Core\BackgroundService\*">
       <TemplateName>UwpProjectTemplates_BackgroundService</TemplateName>
     </ProjectTemplate>
     

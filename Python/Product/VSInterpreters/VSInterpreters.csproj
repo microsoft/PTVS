@@ -75,6 +75,7 @@
     <Compile Include="InterpreterOptionsService.cs" />
     <Compile Include="MSBuildConstants.cs" />
     <Compile Include="MSBuildProjectInterpreterFactoryProvider.cs" />
+    <Compile Include="NotFoundInterpreterFactory.cs" />
     <Compile Include="RegistryWatcher.cs" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />

@@ -491,48 +491,6 @@ namespace Microsoft.PythonTools.Interpreter {
             return null;
         }
 
-        class NotFoundInterpreter : IPythonInterpreter {
-            public void Initialize(PythonAnalyzer state) { }
-            public IPythonType GetBuiltinType(BuiltinTypeId id) { throw new KeyNotFoundException(); }
-            public IList<string> GetModuleNames() { return new string[0]; }
-            public event EventHandler ModuleNamesChanged { add { } remove { } }
-            public IPythonModule ImportModule(string name) { return null; }
-            public IModuleContext CreateModuleContext() { return null; }
-        }
-
-        internal class NotFoundInterpreterFactory : IPythonInterpreterFactory {
-            public NotFoundInterpreterFactory(
-                string id,
-                Version version,
-                string description = null,
-                string prefixPath = null,
-                ProcessorArchitecture architecture = ProcessorArchitecture.None,
-                string descriptionSuffix = null
-            ) {
-                Configuration = new InterpreterConfiguration(
-                    id,
-                    string.IsNullOrEmpty(description) ? "Unknown Python" : description,
-                    prefixPath,
-                    null,
-                    null,
-                    null,
-                    null,
-                    architecture,
-                    version,
-                    InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured,
-                    "(unavailable)"
-                );
-            }
-
-            public string Description { get; private set; }
-            public InterpreterConfiguration Configuration { get; private set; }
-            public Guid Id { get; private set; }
-
-            public IPythonInterpreter CreateInterpreter() {
-                return new NotFoundInterpreter();
-            }
-        }
-
         private static string GetValue(Dictionary<string, string> from, string name) {
             string res;
             if (!from.TryGetValue(name, out res)) {

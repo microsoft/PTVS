@@ -224,6 +224,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     new InMemoryProject(
                         request.projectFile,
                         new Dictionary<string, object>() {
+                            { "InterpreterId", request.interpreterId },
                             { "ProjectHome", request.projectHome },
                             {  "Interpreters",
                                 request.derivedInterpreters.Select(

@@ -147,10 +147,12 @@ namespace Microsoft.PythonTools.Ipc.Json {
                         packet = JsonConvert.DeserializeObject<JObject>(line);
                     } catch (JsonSerializationException ex) {
                         message = ": " + ex.Message;
+                    } catch (JsonReaderException ex) {
+                        message = ": " + ex.Message;
                     }
 
                     if (packet == null) {
-                        if (reader.EndOfStream) {
+                        if (reader.EndOfStream || !reader.BaseStream.CanRead) {
                             return;
                         }
                         await WriteError("Failed to parse packet" + message).ConfigureAwait(false);

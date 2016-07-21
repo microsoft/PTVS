@@ -59,6 +59,7 @@
     <Reference Include="envdte90a, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
+    <Reference Include="Microsoft.Build.Framework, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.VisualStudio.CommandBars, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>True</EmbedInteropTypes>
@@ -241,6 +242,11 @@
     <ProjectReference Include="..\Uwp.Interpreter\Uwp.Interpreter.csproj">
       <Project>{833320ca-fa68-43b4-a256-2d57460b0f61}</Project>
       <Name>Uwp.Interpreter</Name>
+      <IncludeInVSIX>True</IncludeInVSIX>
+    </ProjectReference>
+    <ProjectReference Include="..\Uwp.Wizards\Uwp.Wizards.csproj">
+      <Project>{45ac7de9-b820-47d6-81d4-45ff4aaab150}</Project>
+      <Name>Uwp.Wizards</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
   </ItemGroup>

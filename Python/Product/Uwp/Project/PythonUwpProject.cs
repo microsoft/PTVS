@@ -18,15 +18,17 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using IServiceProvider = System.IServiceProvider;
+using Microsoft.PythonTools.Uwp.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
-using IServiceProvider = System.IServiceProvider;
+using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Uwp.Project {
     [Guid("27BB1268-135A-4409-914F-7AA64AD8195D")]
@@ -42,8 +44,13 @@ namespace Microsoft.PythonTools.Uwp.Project {
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
         private static Guid PythonProjectGuid = new Guid(PythonConstants.ProjectFactoryGuid);
         private IOleCommandTarget _menuService;
+        private FileSystemWatcher _sitePackageWatcher;
+        private readonly TaskScheduler _scheduler;
+        private readonly TaskFactory _factory;
 
         public PythonUwpProject() {
+            _scheduler = TaskScheduler.FromCurrentSynchronizationContext();
+            _factory = new TaskFactory(_scheduler);
         }
 
         internal PythonUwpPackage Package {
@@ -64,10 +71,56 @@ namespace Microsoft.PythonTools.Uwp.Project {
         /// information from the project)
         /// </summary>
         protected override void InitializeForOuter(string fileName, string location, string name, uint flags, ref Guid guidProject, out bool cancel) {
+            var pythonProject = this.GetProject().GetPythonProject();
+            var msbuildProject = pythonProject.GetMSBuildProjectInstance();
+            msbuildProject.Build("CreatePythonUwpIoTPythonEnv", null);
+
+            var sitePackagesDir = Path.Combine(
+                pythonProject.ProjectDirectory,
+                PythonUwpConstants.InterpreterRelativePath,
+                PythonUwpConstants.InterpreterLibPath,
+                PythonUwpConstants.InterpreterSitePackagesPath);
+
+            try {
+                var sitePackageDirInfo = new DirectoryInfo(sitePackagesDir);
+                if (sitePackageDirInfo.Exists) {
+                    _sitePackageWatcher = new FileSystemWatcher {
+                        IncludeSubdirectories = true,
+                        Path = sitePackagesDir,
+                    };
+
+                    _sitePackageWatcher.Created += SitePackageWatcher_Changed;
+                    _sitePackageWatcher.Changed += SitePackageWatcher_Changed;
+                    _sitePackageWatcher.Deleted += SitePackageWatcher_Changed;
+                    _sitePackageWatcher.Renamed += SitePackageWatcher_Changed;
+                    _sitePackageWatcher.EnableRaisingEvents = true;
+                }
+            } catch (PathTooLongException) {
+            }
+
             base.InitializeForOuter(fileName, location, name, flags, ref guidProject, out cancel);
         }
 
         #endregion
+
+        private void SitePackageWatcher_Changed(object sender, System.IO.FileSystemEventArgs e) {
+            // Run on the UI thread
+            _factory.StartNew(() => {
+                var bps = this._innerProject as IVsBuildPropertyStorage;
+                if (bps != null) {
+                    bps.SetPropertyValue("SitePackageChangedTime", null, (uint)_PersistStorageType.PST_PROJECT_FILE, DateTime.Now.ToString());
+                }
+            });
+        }
+
+        protected override void Close() {
+            base.Close();
+
+            if (_sitePackageWatcher != null) {
+                _sitePackageWatcher.Dispose();
+                _sitePackageWatcher = null;
+            }
+        }
 
         protected override int QueryStatusCommand(uint itemid, ref Guid pguidCmdGroup, uint cCmds, VisualStudio.OLE.Interop.OLECMD[] prgCmds, IntPtr pCmdText) {
             if (pguidCmdGroup == GuidList.guidOfficeSharePointCmdSet) {

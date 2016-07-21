@@ -59,7 +59,8 @@ namespace Microsoft.PythonTools.Project {
             IPythonInterpreterFactory factory,
             bool isInterpreterReference,
             bool canDelete,
-            bool isGlobalDefault = false
+            bool isGlobalDefault = false,
+            bool? canRemove = null
         )
             : base(project, MakeElement(project)) {
             ExcludeNodeFromScc = true;
@@ -69,7 +70,7 @@ namespace Microsoft.PythonTools.Project {
             _isReference = isInterpreterReference;
             _canDelete = canDelete;
             _isGlobalDefault = isGlobalDefault;
-            _canRemove = !isGlobalDefault;
+            _canRemove = canRemove.HasValue ? canRemove.Value : !isGlobalDefault;
             _captionSuffix = isGlobalDefault ? Strings.GlobalDefaultSuffix : "";
 
             if (Directory.Exists(_factory.Configuration.LibraryPath)) {

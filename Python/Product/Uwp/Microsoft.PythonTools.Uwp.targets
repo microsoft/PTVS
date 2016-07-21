@@ -7,7 +7,7 @@
   </PropertyGroup>
   
   <Target Name="PtvsUwpImportCheck">
-	<Error Text="Could not find CPython UWP SDK.  Please download from http://go.microsoft.com/fwlink/?LinkID=613495&amp;clcid=0x409 and reload the project after install." Condition="!Exists($(CPythonTargetsFile))" />
+    <Error Text="Could not find CPython UWP SDK.  Please download from http://go.microsoft.com/fwlink/?LinkID=613495&amp;clcid=0x409 and reload the project after install." Condition="!Exists($(CPythonTargetsFile))" />
   </Target>
 
   <Target Name="CoreCompile" />
@@ -21,17 +21,17 @@
     <QualifiedProjectHome Condition="'$(ProjectHome)' != '' and '$(ProjectHome)' != '.'">$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine($(MSBuildProjectDirectory), $(ProjectHome)))))</QualifiedProjectHome>
     <QualifiedProjectHome Condition="!HasTrailingSlash('$(QualifiedProjectHome)')">$(QualifiedProjectHome)\</QualifiedProjectHome>
 
-    <PtvsLocation>$(MSBuildThisFileDirectory)..\..\Python Tools for Visual Studio\$(PtvsVersion)\</PtvsLocation>
-    <PtvsLocation Condition="'$(PtvsLocation)' == '' or !Exists('$(PtvsLocation)')">$(MSBuildThisFileDirectory)..\..\Python Tools for Visual Studio\$(PtvsVersion)\</PtvsLocation>
+    <_PythonToolsPath Condition="!Exists($(_PythonToolsPath)) and $(VsInstallRoot) != ''">$(VsInstallRoot)\Common7\IDE\Extensions\Microsoft\Python\Core\</_PythonToolsPath>
+    <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\PythonTools\$(VisualStudioVersion)', 'InstallDir', null, RegistryView.Registry32))</_PythonToolsPath>
+    <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)\Extensions\Microsoft\Python Tools for Visual Studio\3.0</_PythonToolsPath>
+    <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft Corporation\Python Tools for Visual Studio\3.0</_PythonToolsPath>
+    <_PythonToolsPath Condition="!HasTrailingSlash('$(_PythonToolsPath)')">$(_PythonToolsPath)\</_PythonToolsPath>
 
     <PythonArguments Condition="'$(PythonArguments)'==''">$(StartupFile)</PythonArguments>
-
   </PropertyGroup>
 
   <ItemGroup>
-    <PtvsdFiles Include="$(PtvsLocation)ptvsd\**\*" />
-
-    <VisualStudioPyFiles Include="$(PtvsLocation)visualstudio_py_*.py" />
+    <PtvsdFiles Include="$(_PythonToolsPath)ptvsd\**\*" />
     <VisualStudioPyFiles Include="$(MSBuildThisFileDirectory)visualstudio_py_*.py" />
   </ItemGroup>
   
@@ -45,10 +45,10 @@
     <AssignTargetPath Files="@(Compile->'%(FullPath)')" RootFolder="$(OutputPath)">
       <Output TaskParameter="AssignedFiles" ItemName="CustomOutputGroupForPackagingOutput" />
     </AssignTargetPath>
-    <AssignTargetPath Files="@(PtvsdFiles->'%(FullPath)')" RootFolder="$(PtvsLocation)" Condition="Exists('$(PtvsLocation)')">
+    <AssignTargetPath Files="@(PtvsdFiles->'%(FullPath)')" RootFolder="$(_PythonToolsPath)" Condition="Exists('$(_PythonToolsPath)')">
       <Output TaskParameter="AssignedFiles" ItemName="CustomOutputGroupForPackagingOutput" />
     </AssignTargetPath>
-    <AssignTargetPath Files="@(VisualStudioPyFiles->'%(FullPath)')" RootFolder="$(PtvsLocation)" Condition="Exists('$(PtvsLocation)')">
+    <AssignTargetPath Files="@(VisualStudioPyFiles->'%(FullPath)')" RootFolder="$(MSBuildThisFileDirectory)">
       <Output TaskParameter="AssignedFiles" ItemName="CustomOutputGroupForPackagingOutput" />
     </AssignTargetPath>
     <AssignTargetPath Files="@(OutputReferences->'%(FullPath)')" RootFolder="$(OutputPath)references" Condition="Exists('$(OutputPath)references')">
@@ -61,6 +61,14 @@
     <Copy SourceFiles="@(Reference->'%(FullPath)')" DestinationFiles="$(OutputPath)\references\%(Reference.FileName)%(Reference.Extension)" />
     <ItemGroup>
       <OutputReferences Include="$(OutputPath)\references\**\*" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="PythonSitePackageCopy" BeforeTargets="CustomOutputGroupForPackaging">
+    <ItemGroup>
+      <PythonHost Include="$(MSBuildProjectDirectory)\PythonHome\lib\site-packages\**\*">
+        <RootFolder>$(MSBuildProjectDirectory)\PythonHome\lib\\</RootFolder>
+      </PythonHost>
     </ItemGroup>
   </Target>
 
@@ -89,44 +97,8 @@
     </Task>
   </UsingTask>
 
-  <UsingTask TaskName="UnZip" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
-    <ParameterGroup>
-      <InputFileName ParameterType="System.String" Required="true" />
-      <OutputDirectory ParameterType="System.String" Required="true" />
-    </ParameterGroup>
-    <Task>
-      <Reference Include="System.IO.Compression" />
-      <Reference Include="System.IO.Compression.FileSystem" />
-      <Using Namespace="System.IO.Compression" />
-      <Using Namespace="System.IO" />
-      <Code Type="Fragment" Language="cs">
-        <![CDATA[
-        var outputDirectory = new DirectoryInfo(OutputDirectory);
-        var lastZipChangeTime = DateTime.MinValue;
-        
-        if (File.Exists(InputFileName))
-        {
-            lastZipChangeTime = new FileInfo(InputFileName).LastWriteTimeUtc;
-            
-            // Directory is older than the ZIP, so let's go ahead and delete it to force an unzip again
-            if (outputDirectory.Exists && outputDirectory.LastWriteTimeUtc < lastZipChangeTime)
-            {
-                outputDirectory.Delete(true);
-            }
-            
-            if (!outputDirectory.Exists)
-            {
-                ZipFile.ExtractToDirectory(InputFileName, OutputDirectory);
-            }
-        }
-      ]]>
-      </Code>
-    </Task>
-  </UsingTask>
-
   <Target Name="BuildStartupInfo" BeforeTargets="CoreCompile">
     <CreateStartupInfo Arguments="$(PythonArguments)" StartupInfoFile="$(StartupInfoFile)" />
-    <UnZip InputFileName="$(CPythonSDKPath)\References\CommonConfiguration\Neutral\PythonHome\lib.zip" OutputDirectory="$(ProjectDir)\lib.zip" />
   </Target>
 
   <PropertyGroup>
