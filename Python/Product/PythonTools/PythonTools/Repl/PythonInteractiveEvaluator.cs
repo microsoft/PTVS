@@ -199,6 +199,12 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
+        public string CurrentScopePath {
+            get {
+                return (_thread?.IsConnected ?? false) ? _thread.CurrentScopeFileName : null;
+            }
+        }
+
         public IInteractiveWindow CurrentWindow {
             get {
                 return _window;
@@ -272,12 +278,12 @@ namespace Microsoft.PythonTools.Repl {
             AvailableScopesChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind() {
-            var t = _thread?.GetAvailableScopesAndKindAsync(1000);
+        public IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths() {
+            var t = _thread?.GetAvailableScopesAndPathsAsync(1000);
             if (t != null && t.Wait(1000) && t.Result != null) {
                 return t.Result;
             }
-            return Enumerable.Empty<KeyValuePair<string, bool>>();
+            return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
         public CompletionResult[] GetMemberNames(string text) {

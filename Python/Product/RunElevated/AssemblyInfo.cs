@@ -14,16 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Collections.Generic;
-using Microsoft.PythonTools.Intellisense;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 
-namespace Microsoft.PythonTools.Repl {
-    interface IPythonInteractiveIntellisense {
-        bool LiveCompletionsOnly { get; }
-        IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths();
-        CompletionResult[] GetMemberNames(string text);
-        OverloadDoc[] GetSignatureDocumentation(string text);
-        VsProjectAnalyzer Analyzer { get; }
-        string AnalysisFilename { get; }
-    }
-}
+[assembly: AssemblyTitle("Python Tools for Visual Studio task launcher")]
+[assembly: AssemblyDescription("Helper tool for running tasks as an Administrator")]

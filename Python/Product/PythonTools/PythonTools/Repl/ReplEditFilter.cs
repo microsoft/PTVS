@@ -205,6 +205,14 @@ namespace Microsoft.PythonTools.Repl {
 
                     case PkgCmdIDList.cmdidNewInteractiveWindow:
                         return CloneInteractiveWindow();
+
+                    case PkgCmdIDList.cmdidOpenInteractiveScopeInEditor:
+                        var path = GetCurrentScopeSourcePath();
+                        if (!string.IsNullOrEmpty(path)) {
+                            PythonToolsPackage.NavigateTo(_serviceProvider, path, Guid.Empty, 0);
+                            return VSConstants.S_OK;
+                        }
+                        break;
                 }
 
             }
@@ -213,6 +221,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private const OLECMDF CommandEnabled = OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED;
+        private const OLECMDF CommandDisabled = OLECMDF.OLECMDF_SUPPORTED;
         private const OLECMDF CommandDisabledAndHidden = OLECMDF.OLECMDF_INVISIBLE | OLECMDF.OLECMDF_SUPPORTED | OLECMDF.OLECMDF_DEFHIDEONCTXTMENU;
 
         private OLECMDF QueryStatus(Guid pguidCmdGroup, uint cmdID) {
@@ -229,6 +238,16 @@ namespace Microsoft.PythonTools.Repl {
 
                     case PkgCmdIDList.cmdidNewInteractiveWindow:
                         return _selectEval != null ? CommandEnabled : CommandDisabledAndHidden;
+
+                    case PkgCmdIDList.cmdidOpenInteractiveScopeInEditor:
+                        if (_scopeListVisible) {
+                            if (string.IsNullOrEmpty(GetCurrentScopeSourcePath())) {
+                                return CommandDisabled;
+                            } else {
+                                return CommandEnabled;
+                            }
+                        }
+                        return CommandDisabledAndHidden;
                 }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
                 //switch ((VSConstants.VSStd2KCmdID)cmdID) {
@@ -361,6 +380,27 @@ namespace Microsoft.PythonTools.Repl {
             string activeCode = _interactive.CurrentLanguageBuffer.CurrentSnapshot.GetText();
             (_interactive.Evaluator as IMultipleScopeEvaluator)?.SetScope(newItem);
             _interactive.InsertCode(activeCode);
+        }
+
+        private static readonly IEnumerable<string> SourceExtensions = new[] {
+            PythonConstants.FileExtension,
+            PythonConstants.WindowsFileExtension,
+        };
+
+        private string GetCurrentScopeSourcePath() {
+            var path = (_interactive.Evaluator as IMultipleScopeEvaluator)?.CurrentScopePath;
+            if (string.IsNullOrEmpty(path)) {
+                return null;
+            }
+
+            foreach (var ext in SourceExtensions) {
+                var source = Path.ChangeExtension(path, ext);
+                if (File.Exists(source)) {
+                    return source;
+                }
+            }
+
+            return null;
         }
 
         private bool? QuerySetEvaluator(string newEvaluator, string newEvaluatorId) {

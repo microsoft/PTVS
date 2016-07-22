@@ -141,9 +141,9 @@ namespace Microsoft.PythonTools.Intellisense {
             if (TextBuffer.Properties.TryGetProperty(typeof(IInteractiveEvaluator), out eval)) {
                 pyReplEval = eval as IPythonInteractiveIntellisense;
             }
-            IEnumerable<KeyValuePair<string, bool>> replScopes = null;
+            IEnumerable<KeyValuePair<string, string>> replScopes = null;
             if (pyReplEval != null) {
-                replScopes = pyReplEval.GetAvailableScopesAndKind();
+                replScopes = pyReplEval.GetAvailableScopesAndPaths();
             }
 
             if (package == null) {
@@ -167,7 +167,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private static IEnumerable<CompletionResult> GetModulesFromReplScope(
-            IEnumerable<KeyValuePair<string, bool>> scopes,
+            IEnumerable<KeyValuePair<string, string>> scopes,
             string[] package
         ) {
             if (package == null || package.Length == 0) {
@@ -175,7 +175,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     if (scope.Key.IndexOf('.') < 0) {
                         yield return new CompletionResult(
                             scope.Key,
-                            scope.Value ? PythonMemberType.Module : PythonMemberType.Namespace
+                            string.IsNullOrEmpty(scope.Value) ? PythonMemberType.Namespace : PythonMemberType.Module
                         );
                     }
                 }
@@ -186,7 +186,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         parts.Take(parts.Length - 1).SequenceEqual(package, StringComparer.Ordinal)) {
                         yield return new CompletionResult(
                             parts[parts.Length - 1],
-                            scope.Value ? PythonMemberType.Module : PythonMemberType.Namespace
+                            string.IsNullOrEmpty(scope.Value) ? PythonMemberType.Namespace : PythonMemberType.Module
                         );
                     }
                 }

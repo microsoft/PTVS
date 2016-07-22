@@ -207,10 +207,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 if (_isPipInstalled != value) {
                     _isPipInstalled = value;
 
-                    var evt = IsPipInstalledChanged;
-                    if (evt != null) {
-                        evt(this, EventArgs.Empty);
-                    }
+                    IsPipInstalledChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
         }
@@ -239,18 +236,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-        public event EventHandler<ValueEventArgs<bool>> GetElevateSetting;
+        public event EventHandler<QueryShouldElevateEventArgs> QueryShouldElevate;
 
-        private bool ShouldElevate {
-            get {
-                var evt = GetElevateSetting;
-                if (evt != null) {
-                    var e = new ValueEventArgs<bool>();
-                    evt(this, e);
-                    return e.Value;
-                }
-                return false;
+        private bool ShouldElevate(string targetPath) {
+            var e = new QueryShouldElevateEventArgs(targetPath);
+            QueryShouldElevate?.Invoke(this, e);
+            if (e.Cancel) {
+                throw new OperationCanceledException();
             }
+            return e.Elevate;
         }
 
         public bool CanExecute {
@@ -283,7 +277,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     UnbufferedEnv,
                     false,
                     _output,
-                    elevate: ShouldElevate
+                    elevate: ShouldElevate(_factory.Configuration.PrefixPath)
                 )) {
                     bool success = true;
                     try {
@@ -353,7 +347,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                         false,
                         _output,
                         quoteArgs: false,
-                        elevate: ShouldElevate
+                        elevate: ShouldElevate(_factory.Configuration.PrefixPath)
                     )) {
                         if (!output.IsStarted) {
                             return;
@@ -400,7 +394,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                         false,
                         _output,
                         quoteArgs: false,
-                        elevate: ShouldElevate
+                        elevate: ShouldElevate(_factory.Configuration.PrefixPath)
                     )) {
                         if (!output.IsStarted) {
                             return;
@@ -432,40 +426,28 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-        public event EventHandler<ValueEventArgs<string>> OutputTextReceived;
+        public event EventHandler<OutputEventArgs> OutputTextReceived;
 
         private void OnOutputTextReceived(string text) {
-            var evt = OutputTextReceived;
-            if (evt != null) {
-                evt(this, new ValueEventArgs<string>(text));
-            }
+            OutputTextReceived?.Invoke(this, new OutputEventArgs(text));
         }
 
-        public event EventHandler<ValueEventArgs<string>> ErrorTextReceived;
+        public event EventHandler<OutputEventArgs> ErrorTextReceived;
 
         private void OnErrorTextReceived(string text) {
-            var evt = ErrorTextReceived;
-            if (evt != null) {
-                evt(this, new ValueEventArgs<string>(text));
-            }
+            ErrorTextReceived?.Invoke(this, new OutputEventArgs(text));
         }
 
-        public event EventHandler<ValueEventArgs<string>> OperationStarted;
+        public event EventHandler<OutputEventArgs> OperationStarted;
 
         private void OnOperationStarted(string operation) {
-            var evt = OperationStarted;
-            if (evt != null) {
-                evt(this, new ValueEventArgs<string>(operation));
-            }
+            OperationStarted?.Invoke(this, new OutputEventArgs(operation));
         }
 
-        public event EventHandler<ValueEventArgs<string>> OperationFinished;
+        public event EventHandler<OutputEventArgs> OperationFinished;
 
         private void OnOperationFinished(string operation) {
-            var evt = OperationFinished;
-            if (evt != null) {
-                evt(this, new ValueEventArgs<string>(operation));
-            }
+            OperationFinished?.Invoke(this, new OutputEventArgs(operation));
         }
 
         sealed class PipRedirector : Redirector {
@@ -502,15 +484,21 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             : base(info, context) { }
     }
 
-    public class ValueEventArgs<T> : EventArgs {
-        public T Value { get; set; }
+    public sealed class QueryShouldElevateEventArgs : EventArgs {
+        public bool Cancel { get; set; }
+        public bool Elevate { get; set; }
+        public string TargetDirectory { get; }
 
-        public ValueEventArgs() {
-            Value = default(T);
+        public QueryShouldElevateEventArgs(string targetDirectory) {
+            TargetDirectory = targetDirectory;
         }
+    }
 
-        public ValueEventArgs(T value) {
-            Value = value;
+    public sealed class OutputEventArgs : EventArgs {
+        public string Data { get; }
+
+        public OutputEventArgs(string data) {
+            Data = data;
         }
     }
 }

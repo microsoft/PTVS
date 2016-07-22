@@ -955,7 +955,7 @@ due to the exec, so we do it here"""
                 self.exec_mod = clr.GetClrType(type(sys)).GetProperty('Scope', System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sys, ())
             else:
                 self.exec_mod = mod
-        else:
+        elif module:
             _debug_write('Unknown module ' + module)
 
     def get_module_names(self):
@@ -966,7 +966,10 @@ due to the exec, so we do it here"""
                     if sys.platform == 'cli' and type(module) is NamespaceType:
                         self.get_namespaces(name, module, res)
                     else:
-                        filename = getattr(module, '__file__', '') or ''
+                        try:
+                            filename = os.path.abspath(module.__file__)
+                        except Exception:
+                            filename = None
                         res.append((name, filename))
 
             except:

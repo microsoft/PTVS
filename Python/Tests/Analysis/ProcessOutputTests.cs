@@ -171,5 +171,32 @@ namespace AnalysisTests {
                 Assert.AreEqual(testString, output.StandardOutputLines.Single());
             }
         }
+
+        [TestMethod, Priority(1)]
+        public void RunElevatedProcess() {
+            var fact = Factories.First();
+            var output = new List<string>();
+            var redirector = new ListRedirector(output);
+            using (var process = ProcessOutput.RunElevated(
+                fact.Configuration.InterpreterPath,
+                new[] { "-c", "import os, sys; print(sys.version[:3]); print(os.getcwd()); print(os.getenv('TEST_KEY')); sys.exit(7)" },
+                fact.Configuration.PrefixPath,
+                new[] { new KeyValuePair<string, string>("TEST_KEY", "TEST_VALUE") },
+                redirector,
+                quoteArgs: true,
+                elevate: false      // don't really elevate for the test
+            )) {
+                Assert.IsTrue(process.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.FullDescription + " exceeded timeout");
+
+                Console.WriteLine(string.Join(Environment.NewLine, output));
+
+                Assert.AreEqual(7, process.ExitCode);
+                AssertUtil.AreEqual(output,
+                    fact.Configuration.Version.ToString(),
+                    fact.Configuration.PrefixPath,
+                    "TEST_VALUE"
+                );
+            }
+        }
     }
 }

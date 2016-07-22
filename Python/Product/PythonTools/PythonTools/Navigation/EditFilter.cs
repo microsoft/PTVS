@@ -649,16 +649,25 @@ namespace Microsoft.PythonTools.Language {
                     case VSConstants.VSStd97CmdID.FindReferences: FindAllReferences(); return VSConstants.S_OK;
                 }
             } else if (pguidCmdGroup == CommonConstants.Std2KCmdGroupGuid) {
+                SnapshotPoint? pyPoint;
                 OutliningTaggerProvider.OutliningTagger tagger;
                 switch ((VSConstants.VSStd2KCmdID)nCmdID) {
-                    case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
-                        var pyPoint = _textView.BufferGraph.MapDownToFirstMatch(
-                            _textView.Caret.Position.BufferPosition,
-                            PointTrackingMode.Positive,
-                            EditorExtensions.IsPythonContent,
-                            PositionAffinity.Successor
-                        );
+                    case VSConstants.VSStd2KCmdID.RETURN:
+                        pyPoint = _textView.GetPythonCaret();
+                        if (pyPoint != null) {
+                            var line = pyPoint.Value.GetContainingLine();
+                            var lineText = line.GetText();
+                            int comment = lineText.IndexOf('#');
+                            if (comment >= 0 && pyPoint.Value < line.End && line.Start + comment < pyPoint.Value) {
+                                _editorOps.InsertNewLine();
+                                _editorOps.InsertText(lineText.Substring(0, comment + 1));
+                                return VSConstants.S_OK;
+                            }
+                        }
+                        break;
 
+                    case VSConstants.VSStd2KCmdID.FORMATDOCUMENT:
+                        pyPoint = _textView.GetPythonCaret();
                         if (pyPoint != null) {
                             FormatCode(new SnapshotSpan(pyPoint.Value.Snapshot, 0, pyPoint.Value.Snapshot.Length), false);
                         }

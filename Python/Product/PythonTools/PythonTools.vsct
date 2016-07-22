@@ -707,6 +707,20 @@ permissions and limitations under the License.
           <LocCanonicalName>.Python.NewInteractive</LocCanonicalName>
         </Strings>
       </Button>
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidOpenInteractiveScopeInEditor" priority="0x0301" type="Button">
+        <Parent guid="guidInteractiveWindowCmdSet" id="InteractiveToolbarGroup"/>
+        <Icon guid="ImageCatalogGuid" id="Open"/>
+        <CommandFlag>DefaultInvisible</CommandFlag>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Open module in editor</ButtonText>
+          <ToolTipText>Opens the current module in the editor</ToolTipText>
+          <LocCanonicalName>.Python.OpenInteractiveScopeInEditor</LocCanonicalName>
+        </Strings>
+      </Button>
     </Buttons>
 
     <Combos>
@@ -740,7 +754,7 @@ permissions and limitations under the License.
         <CommandFlag>DefaultDisabled</CommandFlag>
         <CommandFlag>IconAndText</CommandFlag>
         <Strings>
-          <ButtonText>Scope: </ButtonText>
+          <ButtonText>Module: </ButtonText>
           <ToolTipText>Selects the current file scope that the interactive window is executing against.</ToolTipText>
           <CanonicalName>InteractiveScope</CanonicalName>
         </Strings>
@@ -854,6 +868,8 @@ permissions and limitations under the License.
 
       <IDSymbol name="cmdidInstallRequirementsTxt" value="0x4033" />
       <IDSymbol name="cmdidGenerateRequirementsTxt" value="0x4034" />
+
+      <IDSymbol name="cmdidOpenInteractiveScopeInEditor" value="0x4035"/>
 
       <!-- Groups -->
       <IDSymbol name="EditorContextGroup" value="0x1010" />

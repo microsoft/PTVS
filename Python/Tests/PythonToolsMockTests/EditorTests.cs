@@ -388,6 +388,41 @@ class B:
                 }
             }
         }
+
+        [TestMethod, Priority(1)]
+        public void NewlineWithinComment() {
+            using (var view = new PythonEditor(@"# comment")) {
+                view.MoveCaret(1, 1);
+                view.Enter();
+                Assert.AreEqual(2, view.CurrentSnapshot.LineCount);
+                Assert.AreEqual("", view.CurrentSnapshot.GetLineFromLineNumber(0).GetText());
+                Assert.AreEqual("# comment", view.CurrentSnapshot.GetLineFromLineNumber(1).GetText());
+            }
+
+            using (var view = new PythonEditor(@"# comment")) {
+                view.MoveCaret(1, 3);
+                view.Enter();
+                Assert.AreEqual(2, view.CurrentSnapshot.LineCount);
+                Assert.AreEqual("# ", view.CurrentSnapshot.GetLineFromLineNumber(0).GetText());
+                Assert.AreEqual("#comment", view.CurrentSnapshot.GetLineFromLineNumber(1).GetText());
+            }
+
+            using (var view = new PythonEditor(@"# comment")) {
+                view.MoveCaret(1, 10);
+                view.Enter();
+                Assert.AreEqual(2, view.CurrentSnapshot.LineCount);
+                Assert.AreEqual("# comment", view.CurrentSnapshot.GetLineFromLineNumber(0).GetText());
+                Assert.AreEqual("", view.CurrentSnapshot.GetLineFromLineNumber(1).GetText());
+            }
+
+            using (var view = new PythonEditor(@"    # comment")) {
+                view.MoveCaret(1, 7);
+                view.Enter();
+                Assert.AreEqual(2, view.CurrentSnapshot.LineCount);
+                Assert.AreEqual("    # ", view.CurrentSnapshot.GetLineFromLineNumber(0).GetText());
+                Assert.AreEqual("    #comment", view.CurrentSnapshot.GetLineFromLineNumber(1).GetText());
+            }
+        }
     }
 
     static class IntellisenseTestExtensions {
