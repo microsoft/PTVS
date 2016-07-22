@@ -24,7 +24,9 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
+#if INCLUDE_CODE_COVERAGE
 using Microsoft.VisualStudio.TestWindow.CodeCoverage;
+#endif
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.TestAdapter;
@@ -79,11 +81,13 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
+#if INCLUDE_CODE_COVERAGE
         public ICodeCoverageSettingsService CodeCoverage {
             get {
                 return _compModel.GetService<ICodeCoverageSettingsService>();
             }
         }
+#endif
 
         public string Name {
             get {
@@ -178,7 +182,9 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
 
             // And we also only care about doing it when we're all Python containers
+#pragma warning disable CS0219 // Variable is assigned but its value is never used
             bool allPython = true, anyPython = false;
+#pragma warning restore CS0219 // Variable is assigned but its value is never used
             foreach (var container in configurationInfo.TestContainers) {
                 if (container is TestContainer) {
                     anyPython = true;
@@ -192,6 +198,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return inputRunSettingDocument;
             }
 
+#if INCLUDE_CODE_COVERAGE
             var codeCov = CodeCoverage;
             if (codeCov.Enabled) {
                 // Code coverage is currently enabled.  We don't want it adding it's data 
@@ -229,6 +236,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     }
                 }
             }
+#endif
 
             return inputRunSettingDocument;
         }
