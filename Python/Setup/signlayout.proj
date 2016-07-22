@@ -29,6 +29,7 @@
         Microsoft.PythonTools.Ipc.Json.dll;
         Microsoft.PythonTools.Profiling.dll;
         Microsoft.PythonTools.ProjectWizards.dll;
+        Microsoft.PythonTools.RunElevated.exe;
         Microsoft.PythonTools.TestAdapter.dll;
         Microsoft.PythonTools.TestAdapter.Analysis.dll;
         Microsoft.PythonTools.VSCommon.dll;

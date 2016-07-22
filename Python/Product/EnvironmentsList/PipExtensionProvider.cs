@@ -487,7 +487,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
     public sealed class QueryShouldElevateEventArgs : EventArgs {
         public bool Cancel { get; set; }
         public bool Elevate { get; set; }
-        public string TargetDirectory { get; private set; }
+        public string TargetDirectory { get; }
 
         public QueryShouldElevateEventArgs(string targetDirectory) {
             TargetDirectory = targetDirectory;
@@ -495,7 +495,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
     }
 
     public sealed class OutputEventArgs : EventArgs {
-        public string Data { get; private set; }
+        public string Data { get; }
 
         public OutputEventArgs(string data) {
             Data = data;
