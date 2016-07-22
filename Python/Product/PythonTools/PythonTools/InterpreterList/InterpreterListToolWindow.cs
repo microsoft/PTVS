@@ -222,7 +222,7 @@ namespace Microsoft.PythonTools.InterpreterList {
         private void List_ViewCreated(object sender, EnvironmentViewEventArgs e) {
             var view = e.View;
             var pep = new PipExtensionProvider(view.Factory);
-            pep.GetElevateSetting += PipExtensionProvider_GetElevateSetting;
+            pep.QueryShouldElevate += PipExtensionProvider_QueryShouldElevate;
             pep.OperationStarted += PipExtensionProvider_OperationStarted;
             pep.OutputTextReceived += PipExtensionProvider_OutputTextReceived;
             pep.ErrorTextReceived += PipExtensionProvider_ErrorTextReceived;
@@ -272,32 +272,75 @@ namespace Microsoft.PythonTools.InterpreterList {
             }
         }
 
-        private void PipExtensionProvider_GetElevateSetting(object sender, ValueEventArgs<bool> e) {
-            e.Value = _pyService.GeneralOptions.ElevatePip;
+        private void PipExtensionProvider_QueryShouldElevate(object sender, QueryShouldElevateEventArgs e) {
+            if (_pyService.GeneralOptions.ElevatePip) {
+                e.Elevate = true;
+                return;
+            }
+
+            try {
+                // Create a test file and delete it immediately to ensure we can do it.
+                // If this fails, prompt the user to see whether they want to elevate.
+                var testFile = PathUtils.GetAvailableFilename(e.TargetDirectory, "access-test", ".txt");
+                using (new FileStream(testFile, FileMode.CreateNew, FileAccess.Write, FileShare.Delete, 4096, FileOptions.DeleteOnClose)) { }
+                e.Elevate = false;
+                return;
+            } catch (IOException) {
+            } catch (UnauthorizedAccessException) {
+            }
+
+            var td = new TaskDialog(_site) {
+                Title = Strings.ProductTitle,
+                MainInstruction = Strings.ElevateForInstallPackage_MainInstruction,
+                AllowCancellation = true,
+            };
+            var elevate = new TaskDialogButton(Strings.ElevateForInstallPackage_Elevate, Strings.ElevateForInstallPackage_Elevate_Note) {
+                ElevationRequired = true
+            };
+            var noElevate = new TaskDialogButton(Strings.ElevateForInstallPackage_DoNotElevate, Strings.ElevateForInstallPackage_DoNotElevate_Note);
+            var elevateAlways = new TaskDialogButton(Strings.ElevateForInstallPackage_ElevateAlways, Strings.ElevateForInstallPackage_ElevateAlways_Note) {
+                ElevationRequired = true
+            };
+            td.Buttons.Add(elevate);
+            td.Buttons.Add(noElevate);
+            td.Buttons.Add(elevateAlways);
+            td.Buttons.Add(TaskDialogButton.Cancel);
+            var sel = td.ShowModal();
+            if (sel == TaskDialogButton.Cancel) {
+                e.Cancel = true;
+            } else if (sel == noElevate) {
+                e.Elevate = false;
+            } else if (sel == elevateAlways) {
+                _pyService.GeneralOptions.ElevatePip = true;
+                _pyService.GeneralOptions.Save();
+                e.Elevate = true;
+            } else {
+                e.Elevate = true;
+            }
         }
 
-        private void PipExtensionProvider_OperationStarted(object sender, ValueEventArgs<string> e) {
-            _outputWindow.WriteLine(e.Value);
+        private void PipExtensionProvider_OperationStarted(object sender, EnvironmentsList.OutputEventArgs e) {
+            _outputWindow.WriteLine(e.Data);
             if (_statusBar != null) {
-                _statusBar.SetText(e.Value);
+                _statusBar.SetText(e.Data);
             }
             if (_pyService.GeneralOptions.ShowOutputWindowForPackageInstallation) {
                 _outputWindow.ShowAndActivate();
             }
         }
 
-        private void PipExtensionProvider_OutputTextReceived(object sender, ValueEventArgs<string> e) {
-            _outputWindow.WriteLine(e.Value);
+        private void PipExtensionProvider_OutputTextReceived(object sender, EnvironmentsList.OutputEventArgs e) {
+            _outputWindow.WriteLine(e.Data);
         }
 
-        private void PipExtensionProvider_ErrorTextReceived(object sender, ValueEventArgs<string> e) {
-            _outputWindow.WriteErrorLine(e.Value);
+        private void PipExtensionProvider_ErrorTextReceived(object sender, EnvironmentsList.OutputEventArgs e) {
+            _outputWindow.WriteErrorLine(e.Data);
         }
 
-        private void PipExtensionProvider_OperationFinished(object sender, ValueEventArgs<string> e) {
-            _outputWindow.WriteLine(e.Value);
+        private void PipExtensionProvider_OperationFinished(object sender, EnvironmentsList.OutputEventArgs e) {
+            _outputWindow.WriteLine(e.Data);
             if (_statusBar != null) {
-                _statusBar.SetText(e.Value);
+                _statusBar.SetText(e.Data);
             }
             if (_pyService.GeneralOptions.ShowOutputWindowForPackageInstallation) {
                 _outputWindow.ShowAndActivate();

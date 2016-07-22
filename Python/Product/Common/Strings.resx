@@ -787,4 +787,25 @@ modified from these scripts.</value>
   <data name="UpgradedImportsFor30" xml:space="preserve">
     <value>Some internal properties have been modified in this project.</value>
   </data>
+  <data name="ElevateForInstallPackage_DoNotElevate" xml:space="preserve">
+    <value>&amp;Continue without Administrator privileges</value>
+  </data>
+  <data name="ElevateForInstallPackage_DoNotElevate_Note" xml:space="preserve">
+    <value>Package installation may fail if you do not have sufficient permissions</value>
+  </data>
+  <data name="ElevateForInstallPackage_Elevate" xml:space="preserve">
+    <value>&amp;Elevate now</value>
+  </data>
+  <data name="ElevateForInstallPackage_ElevateAlways" xml:space="preserve">
+    <value>&amp;Always elevate when installing packages</value>
+  </data>
+  <data name="ElevateForInstallPackage_ElevateAlways_Note" xml:space="preserve">
+    <value>This dialog will not be shown again</value>
+  </data>
+  <data name="ElevateForInstallPackage_Elevate_Note" xml:space="preserve">
+    <value>You may be prompted for credentials</value>
+  </data>
+  <data name="ElevateForInstallPackage_MainInstruction" xml:space="preserve">
+    <value>Administrator privileges may be required to install or update this package.</value>
+  </data>
 </root>
