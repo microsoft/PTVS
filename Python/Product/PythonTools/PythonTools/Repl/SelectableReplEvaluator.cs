@@ -215,6 +215,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string CurrentScopeName => (_evaluator as IMultipleScopeEvaluator)?.CurrentScopeName;
+        public string CurrentScopePath => (_evaluator as IMultipleScopeEvaluator)?.CurrentScopePath;
         public bool EnableMultipleScopes => (_evaluator as IMultipleScopeEvaluator)?.EnableMultipleScopes ?? false;
 
         private void Evaluator_MultipleScopeSupportChanged(object sender, EventArgs e) {
@@ -279,9 +280,9 @@ namespace Microsoft.PythonTools.Repl {
                 ?? Task.FromResult(false);
         }
 
-        public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind() {
-            return (_evaluator as IPythonInteractiveIntellisense)?.GetAvailableScopesAndKind()
-                ?? Enumerable.Empty<KeyValuePair<string, bool>>();
+        public IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths() {
+            return (_evaluator as IPythonInteractiveIntellisense)?.GetAvailableScopesAndPaths()
+                ?? Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
         public CompletionResult[] GetMemberNames(string text) {

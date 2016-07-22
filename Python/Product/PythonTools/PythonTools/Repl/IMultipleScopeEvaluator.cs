@@ -32,9 +32,13 @@ namespace Microsoft.PythonTools.Repl {
         /// <summary>
         /// Gets the current scope name.
         /// </summary>
-        string CurrentScopeName {
-            get;
-        }
+        string CurrentScopeName { get; }
+
+        /// <summary>
+        /// Gets the path to the file that defines the current scope. May be
+        /// null if no file exists.
+        /// </summary>
+        string CurrentScopePath { get; }
 
         /// <summary>
         /// Event is fired when the list of available scopes changes.

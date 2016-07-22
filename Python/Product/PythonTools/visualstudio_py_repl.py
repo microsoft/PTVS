@@ -955,7 +955,7 @@ due to the exec, so we do it here"""
                 self.exec_mod = clr.GetClrType(type(sys)).GetProperty('Scope', System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sys, ())
             else:
                 self.exec_mod = mod
-        else:
+        elif module:
             _debug_write('Unknown module ' + module)
 
     def get_module_names(self):

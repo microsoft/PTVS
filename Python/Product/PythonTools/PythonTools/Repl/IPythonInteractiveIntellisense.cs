@@ -14,21 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Repl;
-using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 
 namespace Microsoft.PythonTools.Repl {
     interface IPythonInteractiveIntellisense {
         bool LiveCompletionsOnly { get; }
-        IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind();
+        IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths();
         CompletionResult[] GetMemberNames(string text);
         OverloadDoc[] GetSignatureDocumentation(string text);
         VsProjectAnalyzer Analyzer { get; }
