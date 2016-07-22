@@ -358,14 +358,18 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// Writes an error on a malformed request.
         /// </summary>
         private async Task WriteError(string message) {
-            await SendMessage(
-                new ErrorMessage() {
-                    seq = Interlocked.Increment(ref _seq),
-                    type = PacketType.Error,
-                    body = new Dictionary<string, object>() { { "message", message } }
-                },
-                CancellationToken.None
-            );
+            try {
+                await SendMessage(
+                    new ErrorMessage() {
+                        seq = Interlocked.Increment(ref _seq),
+                        type = PacketType.Error,
+                        body = new Dictionary<string, object>() { { "message", message } }
+                    },
+                    CancellationToken.None
+                );
+            } catch (ObjectDisposedException) {
+            } catch (IOException) {
+            }
             throw new InvalidOperationException(message);
         }
 

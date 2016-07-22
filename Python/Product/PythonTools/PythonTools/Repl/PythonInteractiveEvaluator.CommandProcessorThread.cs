@@ -528,7 +528,9 @@ namespace Microsoft.PythonTools.Repl {
                 for (int i = 0; i < moduleCount; i++) {
                     string name = _stream.ReadString();
                     string filename = _stream.ReadString();
-                    fileToModule[filename] = name;
+                    if (!string.IsNullOrEmpty(filename)) {
+                        fileToModule[filename] = name;
+                    }
                     moduleToFile[name] = filename;
                 }
 

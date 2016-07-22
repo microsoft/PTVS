@@ -966,7 +966,10 @@ due to the exec, so we do it here"""
                     if sys.platform == 'cli' and type(module) is NamespaceType:
                         self.get_namespaces(name, module, res)
                     else:
-                        filename = getattr(module, '__file__', '') or ''
+                        try:
+                            filename = os.path.abspath(module.__file__)
+                        except Exception:
+                            filename = None
                         res.append((name, filename))
 
             except:
