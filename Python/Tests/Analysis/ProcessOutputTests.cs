@@ -130,6 +130,9 @@ namespace AnalysisTests {
                     Console.WriteLine(output.Arguments);
                     Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.FullDescription + " exceeded timeout");
 
+                    foreach (var line in output.StandardOutputLines) {
+                        Console.WriteLine(line);
+                    }
                     Assert.AreEqual(0, output.StandardOutputLines.Count(), "Expected no standard output");
                     var error = output.StandardErrorLines.ToList();
                     Assert.AreEqual(3, error.Count, "Expected 3 lines on standard error");

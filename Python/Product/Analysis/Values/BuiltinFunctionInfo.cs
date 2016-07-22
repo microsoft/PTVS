@@ -14,13 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class BuiltinFunctionInfo : BuiltinNamespace<IPythonType> {
+    internal class BuiltinFunctionInfo : BuiltinNamespace<IPythonType>, IHasRichDescription {
         private IPythonFunction _function;
         private string _doc;
         private ReadOnlyCollection<OverloadResult> _overloads;
@@ -73,19 +75,66 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override string Description {
-            get {
-                string res;
-                if (_function.IsBuiltin) {
-                    res = "built-in function " + _function.Name;
-                } else {
-                    res = "function " + _function.Name;
+        public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            var def = _function.IsBuiltin ? "built-in function " : "function ";
+            return GetRichDescription(def, _function, Documentation);
+        }
+
+        internal static IEnumerable<KeyValuePair<string, string>> GetRichDescription(string def, IPythonFunction function, string doc) {
+            bool needNewline = false;
+            foreach (var overload in function.Overloads.OrderByDescending(o => o.GetParameters().Length)) {
+                if (needNewline) {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "\r\n");
+                }
+                needNewline = true;
+
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, def);
+
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, GetFullName(function.DeclaringType, function.Name));
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "(");
+                foreach (var kv in GetParameterString(overload)) {
+                    yield return kv;
+                }
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ")");
+            }
+            if (!string.IsNullOrEmpty(doc)) {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, needNewline ? "\r\n" : "");
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, doc);
+            }
+        }
+
+        private static string GetFullName(IPythonType type, string name) {
+            if (type == null) {
+                return name;
+            }
+            name = type.Name + "." + name;
+            if (type.IsBuiltin || type.DeclaringModule == null) {
+                return name;
+            }
+            return type.DeclaringModule.Name + "." + name;
+        }
+
+        private static IEnumerable<KeyValuePair<string, string>> GetParameterString(IPythonFunctionOverload overload) {
+            var parameters = overload.GetParameters();
+            for (int i = 0; i < parameters.Length; i++) {
+                if (i != 0) {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
+                }
+                var p = parameters[i];
+
+                var name = p.Name;
+                if (p.IsKeywordDict) {
+                    name = "**" + name;
+                } else if (p.IsParamArray) {
+                    name = "*" + name;
                 }
 
-                if (!string.IsNullOrWhiteSpace(Documentation)) {
-                    res += System.Environment.NewLine + Documentation;
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Parameter, name);
+
+                if (!string.IsNullOrWhiteSpace(p.DefaultValue)) {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " = ");
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, p.DefaultValue);
                 }
-                return res;
             }
         }
 
@@ -95,17 +144,12 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     var overloads = _function.Overloads;
                     var result = new OverloadResult[overloads.Count];
                     for (int i = 0; i < result.Length; i++) {
-                        result[i] = new BuiltinFunctionOverloadResult(ProjectState, _function.Name, overloads[i], 0, GetDoc);
+                        result[i] = new BuiltinFunctionOverloadResult(ProjectState, _function.Name, overloads[i], 0, () => Description);
                     }
                     _overloads = new ReadOnlyCollection<OverloadResult>(result);
                 }
                 return _overloads;
             }
-        }
-
-        // can't create delegate to property...
-        private string GetDoc() {
-            return Documentation;
         }
 
         public override string Documentation {

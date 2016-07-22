@@ -1477,18 +1477,17 @@ namespace Microsoft.PythonTools.Intellisense {
                     List<AP.CompletionValue> values = new List<AnalysisProtocol.CompletionValue>();
 
                     foreach (var value in member.Values) {
-                        var descComps = new List<AP.DescriptionComponent>();
-                        if (value is FunctionInfo) {
-                            var def = ((FunctionInfo)value).FunctionDefinition;
-                            ((FunctionInfo)value).GetDescription((text, kind) => {
-                                descComps.Add(new AP.DescriptionComponent(text, kind));
-                            });
-                        } else if (value is ClassInfo) {
-                            FillClassDescription(descComps, ((ClassInfo)value).ClassDefinition);
+                        var descComps = Array.Empty<AP.DescriptionComponent>();
+                        var hasDesc = value as IHasRichDescription;
+                        if (hasDesc != null) {
+                            descComps = hasDesc
+                                .GetRichDescription()
+                                .Select(kv => new AP.DescriptionComponent(kv.Value, kv.Key))
+                                .ToArray();
                         }
                         values.Add(
                             new AP.CompletionValue() {
-                                description = descComps.ToArray(),
+                                description = descComps,
                                 doc = value.Documentation,
                                 locations = value.Locations.Select(x => MakeReference(x, VariableType.Definition)).ToArray()
                             }
@@ -1498,52 +1497,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
             return res;
-        }
-
-        private static void FillClassDescription(List<AP.DescriptionComponent> description, ClassDefinition classDef) {
-            description.Add(new AP.DescriptionComponent("class ", "misc"));
-            description.Add(new AP.DescriptionComponent(classDef.Name, "name"));
-            if (classDef.Bases.Count > 0) {
-                description.Add(new AP.DescriptionComponent("(", "misc"));
-                bool comma = false;
-                foreach (var baseClass in classDef.Bases) {
-                    if (comma) {
-                        description.Add(new AP.DescriptionComponent(", ", "misc"));
-                    }
-
-                    string baseStr = FormatExpression(baseClass.Expression);
-                    if (baseStr != null) {
-                        description.Add(new AP.DescriptionComponent(baseStr, "type"));
-                    }
-
-                    comma = true;
-                }
-                description.Add(new AP.DescriptionComponent(")", "misc"));
-            }
-
-            description.Add(new AP.DescriptionComponent("\n", "misc"));
-            description.Add(new AP.DescriptionComponent(null, "enddecl"));
-
-            if (!String.IsNullOrWhiteSpace(classDef.Body.Documentation)) {
-                description.Add(new AP.DescriptionComponent("    " + classDef.Body.Documentation, "misc"));
-            }
-        }
-
-        private static string FormatExpression(Expression baseClass) {
-            NameExpression ne = baseClass as NameExpression;
-            if (ne != null) {
-                return ne.Name;
-            }
-
-            MemberExpression me = baseClass as MemberExpression;
-            if (me != null) {
-                string expr = FormatExpression(me.Target);
-                if (expr != null) {
-                    return expr + "." + me.Name ?? string.Empty;
-                }
-            }
-
-            return null;
         }
 
         private Response AnalyzeFile(AP.AddFileRequest request) {

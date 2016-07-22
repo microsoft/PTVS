@@ -153,10 +153,10 @@ f(x=42, y = 'abc')
                 quoxState.Analyze(CancellationToken.None, true);
                 state.AnalyzeQueuedEntries(CancellationToken.None);
 
-                AssertUtil.ContainsExactly(quoxState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
-                AssertUtil.ContainsExactly(bazState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
-                AssertUtil.ContainsExactly(oarInitState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
-                AssertUtil.ContainsExactly(fobInitState.Analysis.GetDescriptionsByIndex("func", 1), "def func() -> int");
+                AssertUtil.ContainsExactly(quoxState.Analysis.GetDescriptionsByIndex("func", 1), "def fob.oar.quox.func() -> int");
+                AssertUtil.ContainsExactly(bazState.Analysis.GetDescriptionsByIndex("func", 1), "def fob.oar.quox.func() -> int");
+                AssertUtil.ContainsExactly(oarInitState.Analysis.GetDescriptionsByIndex("func", 1), "def fob.oar.quox.func() -> int");
+                AssertUtil.ContainsExactly(fobInitState.Analysis.GetDescriptionsByIndex("func", 1), "def fob.oar.quox.func() -> int");
             } finally {
                 try {
                     AnalysisLog.Flush();
@@ -620,9 +620,8 @@ x = a()
 
             var func = entry.GetValuesByIndex("a", 0).OfType<FunctionInfo>().FirstOrDefault();
             Assert.IsNotNull(func);
-            var sb = new StringBuilder();
-            FunctionInfo.AddReturnTypeString((text, type) => sb.Append(text), func.GetReturnValue);
-            Assert.AreEqual(" -> tuple", sb.ToString());
+            var rts = string.Join("", FunctionInfo.GetReturnTypeString(func.GetReturnValue).Select(kv => kv.Value));
+            Assert.AreEqual(" -> tuple", rts);
         }
 
         [TestMethod, Priority(0)]
@@ -4838,7 +4837,7 @@ class C(object):
                 oar.Analyze(CancellationToken.None);
                 baz.Analyze(CancellationToken.None);
 
-                Assert.AreEqual(fob.Analysis.GetValuesByIndex("C", 1).First().Description, "class C");
+                Assert.AreEqual("C", fob.Analysis.GetValuesByIndex("C", 1).First().ShortDescription);
                 Assert.IsTrue(fob.Analysis.GetValuesByIndex("C", 1).First().Locations.Single().FilePath.EndsWith("oar.py"));
 
                 oarSrc = GetSourceUnit(@"
@@ -4856,7 +4855,7 @@ class C(object):
 
                 fob.Analyze(CancellationToken.None);
 
-                Assert.AreEqual(fob.Analysis.GetValuesByIndex("C", 1).First().Description, "class C");
+                Assert.AreEqual("C", fob.Analysis.GetValuesByIndex("C", 1).First().ShortDescription);
                 Assert.IsTrue(fob.Analysis.GetValuesByIndex("C", 1).First().Locations.Single().FilePath.EndsWith("baz.py"));
             }
         }
@@ -5352,27 +5351,27 @@ import imp as impp
             PermutedTest("mod", new[] { text1, text2 }, entries => {
                 AssertUtil.ContainsExactly(
                     entries[0].Analysis.GetDescriptionsByIndex("g", 1),
-                    "def g() -> built-in module re"
+                    "def mod1.g() -> built-in module re"
                 );
                 AssertUtil.ContainsExactly(
                     entries[0].Analysis.GetDescriptionsByIndex("f", 1),
-                    "def f() -> built-in module sys"
+                    "def mod1.f() -> built-in module sys"
                 );
                 AssertUtil.ContainsExactly(
                     entries[0].Analysis.GetDescriptionsByIndex("h", 1),
-                    "def h() -> built-in module sys"
+                    "def mod1.h() -> built-in module sys"
                 );
                 AssertUtil.ContainsExactly(
                     entries[0].Analysis.GetDescriptionsByIndex("i", 1),
-                    "def i() -> built-in module operator"
+                    "def mod1.i() -> built-in module operator"
                 );
                 AssertUtil.ContainsExactly(
                     entries[0].Analysis.GetDescriptionsByIndex("j", 1),
-                    "def j() -> built-in module mmap"
+                    "def mod1.j() -> built-in module mmap"
                 );
                 AssertUtil.ContainsExactly(
                     entries[0].Analysis.GetDescriptionsByIndex("k", 1),
-                    "def k() -> built-in module imp"
+                    "def mod1.k() -> built-in module imp"
                 );
             });
         }
@@ -5871,35 +5870,35 @@ def with_params_default_starargs(*args, **kwargs):
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("z", 1), "int");
             Assert.IsTrue(entry.GetDescriptionsByIndex("min", 1).First().StartsWith("built-in function min"));
             Assert.IsTrue(entry.GetDescriptionsByIndex("min", 1).First().Contains("min(x: object)"));
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("list.append", 1), "built-in method append");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("list.append", 1), "built-in method list.append(item)\r\nappend(self: list, item: object)");
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("\"abc\".Length", 1));
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("c.Length", 1));
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("d", 1), "fob instance");
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("sys", 1), "built-in module sys");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("f", 1), "def f() -> str");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("fob.f", 1), "def f(self)\r\ndeclared in fob");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("f", 1), "def fob.f() -> str");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("fob.f", 1), "def fob.fob.f(self)\r\ndeclared in fob");
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("fob().g", 1), "method g of fob objects ");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("fob", 1), "class fob");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("fob", 1), "class fob.fob(object)");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 1), "field of type StringSplitOptions");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("g", 1), "def g()");    // return info could be better
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("g", 1), "def fob.g()");    // return info could be better
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.AppDomain.DomainUnload", 1), "event of type System.EventHandler");
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("None", 1), "None");
             AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("f.func_name", 1), "property of type str");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("h", 1), "def h() -> def f() -> str, def g()");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("docstr_func", 1), "def docstr_func() -> int\r\nuseful documentation");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("h", 1), "def fob.h() -> def fob.f() -> str, def fob.g()");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("docstr_func", 1), "def fob.docstr_func() -> int\r\nuseful documentation");
 
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params", 1), "def with_params(a, b, c)");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default", 1), "def with_params_default(a, b, c = 100)");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default_2", 1), "def with_params_default_2(a, b, c = [])");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default_3", 1), "def with_params_default_3(a, b, c = ())");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default_4", 1), "def with_params_default_4(a, b, c = {})");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default_2a", 1), "def with_params_default_2a(a, b, c = [...])");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default_3a", 1), "def with_params_default_3a(a, b, c = (...))");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default_4a", 1), "def with_params_default_4a(a, b, c = {...})");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default_starargs", 1), "def with_params_default_starargs(*args, **kwargs)");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params", 1), "def fob.with_params(a, b, c)");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default", 1), "def fob.with_params_default(a, b, c = 100)");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default_2", 1), "def fob.with_params_default_2(a, b, c = [])");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default_3", 1), "def fob.with_params_default_3(a, b, c = ())");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default_4", 1), "def fob.with_params_default_4(a, b, c = {})");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default_2a", 1), "def fob.with_params_default_2a(a, b, c = [...])");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default_3a", 1), "def fob.with_params_default_3a(a, b, c = (...))");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default_4a", 1), "def fob.with_params_default_4a(a, b, c = {...})");
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("with_params_default_starargs", 1), "def fob.with_params_default_starargs(*args, **kwargs)");
 
             // method which returns it's self, we shouldn't stack overflow producing the help...
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("return_func_class().return_func", 1), @"method return_func of return_func_class objects  -> method return_func of return_func_class objects 
+            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("return_func_class().return_func", 1), @"method return_func of return_func_class objects  -> method return_func of return_func_class objects ...
 some help");
         }
 
@@ -5931,7 +5930,7 @@ def g():
 ";
             var entry = ProcessText(text);
 
-            AssertUtil.Contains(entry.GetCompletionDocumentationByIndex("f", "func_name", 1).First(), "-> str", " = value");
+            AssertUtil.Contains(entry.GetCompletionDocumentationByIndex("f", "func_name", 1).First(), "of type str");
             AssertUtil.Contains(entry.GetCompletionDocumentationByIndex("", "int", 1).First(), "integer");
             AssertUtil.Contains(entry.GetCompletionDocumentationByIndex("", "min", 1).First(), "min(");
         }
@@ -6692,8 +6691,8 @@ def update_wrapper(wrapper, wrapped, assigned, updated):
             var entry = ProcessText(code);
 
             Assert.AreEqual(
-                entry.GetDescriptionsByIndex("A.fn", 0).Single().Replace("\r\n", "\n"),
-                "def fn(self) -> lambda : 123 -> int\n    declared in A.fn\ndeclared in A"
+                "def fob.A.fn(self) -> lambda : 123 -> int\ndeclared in A",
+                entry.GetDescriptionsByIndex("A.fn", 0).Single().Replace("\r\n", "\n")
             );
         }
 

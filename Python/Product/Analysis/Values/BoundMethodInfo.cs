@@ -15,13 +15,13 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class BoundMethodInfo : AnalysisValue {
+    internal class BoundMethodInfo : AnalysisValue, IHasRichDescription {
         private readonly FunctionInfo _function;
         private readonly AnalysisValue _instanceInfo;
 
@@ -70,38 +70,31 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        public override string Description {
-            get {
-                var result = new StringBuilder();
-                result.Append("method ");
-                result.Append(_function.FunctionDefinition.Name);
-                
-                if (_instanceInfo is InstanceInfo) {
-                    result.Append(" of ");
-                    result.Append(((InstanceInfo)_instanceInfo).ClassInfo.ClassDefinition.Name);
-                    result.Append(" objects ");
-                }
+        public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "method ");
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, _function.FunctionDefinition.Name);
 
-                FunctionInfo.AddReturnTypeString((text, type) => result.Append(text), _function.GetReturnValue);
-                FunctionInfo.AddDocumentationString((text, type) => result.Append(text), _function.Documentation);
-
-                return result.ToString();
+            var ii = _instanceInfo as InstanceInfo;
+            if (ii != null) {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " of ");
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, ii.ClassInfo.ClassDefinition.Name);
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " objects ");
             }
-        }
 
-        public override string ShortDescription {
-            get {
-                var result = new StringBuilder();
-                result.Append("method ");
-                result.Append(_function.FunctionDefinition.Name);
+            foreach (var kv in FunctionInfo.GetReturnTypeString(_function.GetReturnValue)) {
+                yield return kv;
+            }
 
-                if (_instanceInfo is InstanceInfo) {
-                    result.Append(" of ");
-                    result.Append(((InstanceInfo)_instanceInfo).ClassInfo.ClassDefinition.Name);
-                    result.Append(" objects ");
+            bool needsNl = true;
+            var nlKind = WellKnownRichDescriptionKinds.EndOfDeclaration;
+
+            foreach (var kv in FunctionInfo.GetDocumentationString(_function.Documentation)) {
+                if (needsNl) {
+                    yield return new KeyValuePair<string, string>(nlKind, "\r\n");
+                    nlKind = WellKnownRichDescriptionKinds.Misc;
+                    needsNl = false;
                 }
-
-                return result.ToString();
+                yield return kv;
             }
         }
 

@@ -86,11 +86,21 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         public virtual string Description {
-            get { return null; }
+            get {
+                var hrd = this as IHasRichDescription;
+                if (hrd != null) {
+                    return string.Join("", hrd.GetRichDescription().Select(kv => kv.Value));
+                }
+                return null;
+            }
         }
 
         public virtual string ShortDescription {
             get {
+                var hrd = this as IHasRichDescription;
+                if (hrd != null) {
+                    return string.Join("", hrd.GetRichDescription().TakeWhile(kv => kv.Key != WellKnownRichDescriptionKinds.EndOfDeclaration).Select(kv => kv.Value));
+                }
                 return Description;
             }
         }

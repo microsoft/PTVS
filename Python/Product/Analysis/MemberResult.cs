@@ -85,7 +85,7 @@ namespace Microsoft.PythonTools.Analysis {
                 var doc = new StringBuilder();
 
                 foreach (var ns in _vars()) {
-                    var docString = ns.Documentation ?? string.Empty;
+                    var docString = ns.Description ?? string.Empty;
                     if (docSeen.Add(docString)) {
                         docs.Add(docString);
                     }
