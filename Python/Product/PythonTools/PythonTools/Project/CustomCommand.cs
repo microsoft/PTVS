@@ -622,6 +622,7 @@ namespace Microsoft.PythonTools.Project {
                 throw new InvalidOperationException(Strings.ErrorCommandAlreadyRunning);
             }
 
+            pyEvaluator.ProjectMoniker = _project.GetMkDocument();
             pyEvaluator.Configuration = new LaunchConfiguration(startInfo.Interpreter) {
                 WorkingDirectory = startInfo.WorkingDirectory,
                 Environment = startInfo.EnvironmentVariables.ToDictionary(kv => kv.Key, kv => kv.Value)
