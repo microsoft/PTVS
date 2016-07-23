@@ -47,7 +47,9 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference2 Include="..\RunElevated\RunElevated.csproj" />
+    <ProjectReference2 Include="..\RunElevated\RunElevated.csproj">
+      <BuildReference>false</BuildReference>
+    </ProjectReference2>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Infrastructure\CancellationTokens.cs" />
