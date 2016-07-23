@@ -805,7 +805,7 @@ namespace PythonToolsUITests {
                 }
                 if (CreatePipExtension) {
                     var pip = new PipExtensionProvider(e.View.Factory);
-                    pip.OutputTextReceived += (s, e2) => Console.WriteLine(e2.Value);
+                    pip.OutputTextReceived += (s, e2) => Console.WriteLine(e2.Data);
                     e.View.Extensions.Add(pip);
                 }
             }
