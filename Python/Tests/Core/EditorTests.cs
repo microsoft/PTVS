@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -396,14 +397,14 @@ string'''";
         private void SnapshotRegionTest(string fileContents, params ExpectedTag[] expected) {
             var snapshot = new TestUtilities.Mocks.MockTextSnapshot(new TestUtilities.Mocks.MockTextBuffer(fileContents), fileContents);
             var ast = Parser.CreateParser(new TextSnapshotToTextReader(snapshot), PythonLanguageVersion.V34).ParseFile();
-            var tags = Microsoft.PythonTools.OutliningTaggerProvider.OutliningTagger.ProcessRegionTags(snapshot);
+            var tags = Microsoft.PythonTools.OutliningTaggerProvider.OutliningTagger.ProcessRegionTags(snapshot, default(CancellationToken));
             VerifyTags(snapshot, tags, expected);
         }
 
         private void SnapshotCellTest(string fileContents, params ExpectedTag[] expected) {
             var snapshot = new TestUtilities.Mocks.MockTextSnapshot(new TestUtilities.Mocks.MockTextBuffer(fileContents), fileContents);
             var ast = Parser.CreateParser(new TextSnapshotToTextReader(snapshot), PythonLanguageVersion.V34).ParseFile();
-            var tags = Microsoft.PythonTools.OutliningTaggerProvider.OutliningTagger.ProcessCellTags(snapshot);
+            var tags = Microsoft.PythonTools.OutliningTaggerProvider.OutliningTagger.ProcessCellTags(snapshot, default(CancellationToken));
             VerifyTags(snapshot, tags, expected);
         }
 

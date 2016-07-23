@@ -57,6 +57,7 @@ namespace Microsoft.PythonTools {
             private readonly ITextBuffer _buffer;
             private readonly PythonToolsService _pyService;
             private TagSpan[] _tags = Array.Empty<TagSpan>();
+            private CancellationTokenSource _processing;
             private bool _enabled;
             private static readonly Regex _openingRegionRegex = new Regex(@"^\s*#\s*region($|\s+.*$)");
             private static readonly Regex _closingRegionRegex = new Regex(@"^\s*#\s*endregion($|\s+.*$)");
@@ -101,25 +102,39 @@ namespace Microsoft.PythonTools {
 
             private async void OnNewParseTree(AnalysisEntry entry) {
                 var snapshot = _buffer.CurrentSnapshot;
-                
+
+                Interlocked.Exchange(ref _processing, null)?.Cancel();
                 var tags = await entry.Analyzer.GetOutliningTagsAsync(snapshot);
                 if (tags != null) {
-                    _tags = tags
-                        .Concat(ProcessRegionTags(_buffer.CurrentSnapshot))
-                        .Concat(ProcessCellTags(_buffer.CurrentSnapshot))
-                        .ToArray();
-
-                    TagsChanged?.Invoke(
-                        this,
-                        new SnapshotSpanEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length))
-                    );
+                    var cts = new CancellationTokenSource();
+                    Interlocked.Exchange(ref _processing, cts)?.Cancel();
+                    try {
+                        _tags = await System.Threading.Tasks.Task.Run(() => tags
+                            .Concat(ProcessRegionTags(snapshot, cts.Token))
+                            .Concat(ProcessCellTags(snapshot, cts.Token))
+                            .ToArray(),
+                            cts.Token
+                        );
+                    } catch (OperationCanceledException) {
+                        return;
+                    }
+                } else if (_tags != null) {
+                    _tags = Array.Empty<TagSpan>();
+                } else {
+                    return;
                 }
+
+                TagsChanged?.Invoke(
+                    this,
+                    new SnapshotSpanEventArgs(new SnapshotSpan(snapshot, 0, snapshot.Length))
+                );
             }
 
-            internal static IEnumerable<TagSpan> ProcessRegionTags(ITextSnapshot snapshot) {
+            internal static IEnumerable<TagSpan> ProcessRegionTags(ITextSnapshot snapshot, CancellationToken cancel) {
                 Stack<ITextSnapshotLine> regions = new Stack<ITextSnapshotLine>();
                 // Walk lines and attempt to find '#region'/'#endregion' tags
                 foreach (var line in snapshot.Lines) {
+                    cancel.ThrowIfCancellationRequested();
                     var lineText = line.GetText();
                     if (_openingRegionRegex.IsMatch(lineText)) {
                         regions.Push(line);
@@ -132,7 +147,7 @@ namespace Microsoft.PythonTools {
                 }
             }
 
-            internal static IEnumerable<TagSpan> ProcessCellTags(ITextSnapshot snapshot) {
+            internal static IEnumerable<TagSpan> ProcessCellTags(ITextSnapshot snapshot, CancellationToken cancel) {
                 if (snapshot.LineCount == 0) {
                     yield break;
                 }
@@ -141,6 +156,7 @@ namespace Microsoft.PythonTools {
                 var line = snapshot.GetLineFromLineNumber(0);
                 int previousCellStart = -1;
                 while (line != null) {
+                    cancel.ThrowIfCancellationRequested();
                     var cellStart = CodeCellAnalysis.FindStartOfCell(line);
                     if (cellStart == null || cellStart.LineNumber == previousCellStart) {
                         if (line.LineNumber + 1 < snapshot.LineCount) {
