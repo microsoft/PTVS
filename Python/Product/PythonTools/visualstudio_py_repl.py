@@ -163,6 +163,7 @@ actual inspection and introspection."""
     _DETC = to_bytes('DETC')
     _DPNG = to_bytes('DPNG')
     _DXAM = to_bytes('DXAM')
+    _CHWD = to_bytes('CHWD')
 
     _MERR = to_bytes('MERR')
     _SERR = to_bytes('SERR')
@@ -415,6 +416,12 @@ actual inspection and introspection."""
             write_string(self.conn, ps2)
             write_int(self.conn, 1 if allow_multiple_statements else 0)
 
+    def send_cwd(self):
+        """sends the current working directory"""
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._CHWD)
+            write_string(self.conn, os.getcwd())
+
     def send_error(self):
         """reports that an error occured to the interactive window"""
         with self.send_lock:
@@ -648,6 +655,7 @@ due to the exec, so we do it here"""
             cur_modules = new_modules
 
             self.execute_item_lock.acquire()
+            cur_cwd = os.getcwd()
 
             if self.check_for_exit_execution_loop():
                 return True, None, None, None
@@ -672,7 +680,12 @@ due to the exec, so we do it here"""
 
                     cur_ps1 = new_ps1
                     cur_ps2 = new_ps2
-            except:
+            except Exception:
+                pass
+            try:
+                if cur_cwd != os.getcwd():
+                    self.send_cwd()
+            except Exception:
                 pass
         except SystemExit:
             self.send_error()

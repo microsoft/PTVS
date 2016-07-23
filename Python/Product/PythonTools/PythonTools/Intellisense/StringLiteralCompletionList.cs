@@ -15,9 +15,12 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.InteractiveWindow;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -31,41 +34,134 @@ namespace Microsoft.PythonTools.Intellisense {
             : base(serviceProvider, session, view, span, textBuffer, options) {
         }
 
+        private static readonly char[] QuoteChars = new[] { '"', '\'' };
+        private static readonly char[] SepChars = new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+
+        private static bool PathStartsWith(string path, string prefix) {
+            int sep = path.IndexOfAny(SepChars);
+            if (sep < prefix.Length) {
+                return false;
+            }
+            return path.Substring(0, sep) == prefix;
+        }
+
+        private static string RestorePrefix(string path, string prefix, string prefixRepl) {
+            if (!path.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) {
+                return path;
+            }
+            return prefixRepl + path.Substring(prefix.Length);
+        }
+
+        internal struct EntryInfo {
+            public string Caption;
+            public string InsertionText;
+            public string Tooltip;
+            public bool IsFile;
+
+            public override bool Equals(object obj) {
+                if (!(obj is EntryInfo)) {
+                    return false;
+                }
+                var other = (EntryInfo)obj;
+                return Caption == other.Caption &&
+                    InsertionText == other.InsertionText &&
+                    Tooltip == other.Tooltip &&
+                    IsFile == other.IsFile;
+            }
+
+            public override int GetHashCode() {
+                return Tooltip.GetHashCode();
+            }
+
+            public override string ToString() {
+                return string.Format("<{0}>", InsertionText);
+            }
+        }
+
+        internal static IEnumerable<EntryInfo> GetEntryInfo(string text, string cwd, string user) {
+            var dir = text;
+
+            int start = text.IndexOfAny(QuoteChars);
+            if (start >= 0) {
+                var quote = text[start];
+                dir = text.Substring(start + 1);
+                if (string.IsNullOrEmpty(dir)) {
+                    return Enumerable.Empty<EntryInfo>();
+                }
+                if (dir[dir.Length - 1] == quote) {
+                    dir = dir.Remove(dir.Length - 1);
+                }
+            }
+
+            string prefix = "", prefixReplacement = "";
+
+            if (Path.IsPathRooted(dir)) {
+            } else if (PathStartsWith(dir, ".")) {
+                prefixReplacement = ".\\";
+                prefix = PathUtils.EnsureEndSeparator(cwd);
+                dir = prefix + dir.Substring(2);
+            } else if (PathStartsWith(dir, "~")) {
+                prefixReplacement = "~\\";
+                prefix = PathUtils.EnsureEndSeparator(user);
+                dir = prefix + dir.Substring(2);
+            } else {
+                return Enumerable.Empty<EntryInfo>();
+            }
+            if (!Directory.Exists(dir)) {
+                dir = PathUtils.GetParent(dir);
+                if (!Directory.Exists(dir)) {
+                    return Enumerable.Empty<EntryInfo>();
+                }
+            }
+
+            var dirs = PathUtils.EnumerateDirectories(dir, recurse: false, fullPaths: true)
+                .Select(d => new EntryInfo {
+                    Caption = PathUtils.GetFileOrDirectoryName(d),
+                    InsertionText = "r\"" + RestorePrefix(d, prefix, prefixReplacement) + "\\\"",
+                    Tooltip = d,
+                    IsFile = false
+                });
+            var files = PathUtils.EnumerateFiles(dir, recurse: false, fullPaths: true)
+                .Select(f => new EntryInfo {
+                    Caption = PathUtils.GetFileOrDirectoryName(f),
+                    InsertionText = "r\"" + RestorePrefix(f, prefix, prefixReplacement) + "\"",
+                    Tooltip = f,
+                    IsFile = true
+                });
+
+            return dirs.Concat(files);
+        }
+
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var snapshot = TextBuffer.CurrentSnapshot;
             var span = snapshot.GetApplicableSpan(Span.GetStartPoint(snapshot));
             var text = span.GetText(snapshot);
 
-            int start = text.IndexOfAny("'\"".ToCharArray());
-            if (start < 0) {
-                return null;
-            }
-            var prefix = text.Substring(0, start);
-            var quote = text[start];
-            var dir = text.Substring(start + 1);
-            if (!Directory.Exists(dir)) {
-                dir = PathUtils.GetParent(dir);
-                if (!Directory.Exists(dir)) {
-                    return null;
-                }
+            string cwd;
+            var replEval = TextBuffer.GetInteractiveWindow()?.GetPythonEvaluator();
+            if (replEval != null) {
+                cwd = replEval.CurrentWorkingDirectory;
+            } else if (!string.IsNullOrEmpty(cwd = TextBuffer.GetFilePath())) {
+                cwd = PathUtils.GetParent(cwd);
+            } else {
+                cwd = Environment.CurrentDirectory;
             }
 
-            var dirs = PathUtils.EnumerateDirectories(dir, recurse: false, fullPaths: true)
-                .Select(d => new DynamicallyVisibleCompletion(
-                    PathUtils.GetFileOrDirectoryName(d),
-                    "r\"" + d + "\\\"",
-                    d,
-                    glyphService.GetGlyph(StandardGlyphGroup.GlyphClosedFolder, StandardGlyphItem.GlyphItemPublic),
-                    "Folder"
-                ));
-            var files = PathUtils.EnumerateFiles(dir, recurse: false, fullPaths: true)
-                .Select(f => new DynamicallyVisibleCompletion(
-                    PathUtils.GetFileOrDirectoryName(f),
-                    "r\"" + f + "\"",
-                    f,
-                    glyphService.GetGlyph(StandardGlyphGroup.GlyphLibrary, StandardGlyphItem.GlyphItemPublic),
-                    "File"
-                ));
+            var completions = GetEntryInfo(text, cwd, Environment.GetFolderPath(Environment.SpecialFolder.UserProfile))
+                .Select(e => new DynamicallyVisibleCompletion(
+                    e.Caption,
+                    e.InsertionText,
+                    e.Tooltip,
+                    glyphService.GetGlyph(
+                        e.IsFile ? StandardGlyphGroup.GlyphLibrary : StandardGlyphGroup.GlyphClosedFolder,
+                        StandardGlyphItem.GlyphItemPublic
+                    ),
+                    e.IsFile ? "File" : "Directory"
+                )).ToArray();
+
+            if (completions.Length == 0) {
+                return null;
+            }
 
             Session.Committed += Session_Committed;
 
@@ -73,7 +169,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 "PythonFilenames",
                 "Files",
                 Span,
-                dirs.Concat(files),
+                completions,
                 _options,
                 CompletionComparer.UnderscoresLast,
                 matchInsertionText: true

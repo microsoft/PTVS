@@ -333,7 +333,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var languageVersion = analysis.Analyzer.InterpreterFactory.Configuration.Version.ToLanguageVersion();
             PythonAst ast;
-            using (var parser = Parser.CreateParser(new StringReader(text), languageVersion, new ParserOptions())) {
+            using (var parser = Parser.CreateParser(new StringReader(text), languageVersion, new ParserOptions { Verbatim = true })) {
                 ast = parser.ParseSingleStatement();
             }
 
@@ -371,6 +371,14 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool Walk(ErrorExpression node) {
+                int quote = node.VerbatimImage.IndexOfAny(new[] { '"', '\'' });
+                if (quote >= 0) {
+                    var dir = node.VerbatimImage.Substring(quote + 1);
+                    if (Directory.Exists(dir) || Directory.Exists(PathUtils.GetParent(dir))) {
+                        CanComplete = true;
+                        CommitByDefault = true;
+                    }
+                }
                 return false;
             }
 
@@ -520,6 +528,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     CommitByDefault = false;
                     return false;
                 } else if (node.Expression is ConstantExpression) {
+                    node.Expression.Walk(this);
+                    return false;
+                } else if (node.Expression is ErrorExpression) {
+                    // Might be an unfinished string literal, which we care about
                     node.Expression.Walk(this);
                     return false;
                 }

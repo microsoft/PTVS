@@ -205,6 +205,12 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
+        public string CurrentWorkingDirectory {
+            get {
+                return (_thread?.IsConnected ?? false) ? _thread.CurrentWorkingDirectory : null;
+            }
+        }
+
         public IInteractiveWindow CurrentWindow {
             get {
                 return _window;
