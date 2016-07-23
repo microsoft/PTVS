@@ -201,13 +201,13 @@ namespace Microsoft.PythonTools {
             }
 
             _container.GetUIThread().InvokeAsync(() => {
-                if (_analyzer != null) {
-                    var analyzer = CreateAnalyzer();
-
-                    if (_analyzer != null) {
-                        analyzer.SwitchAnalyzers(_analyzer);
+                var analyzer = CreateAnalyzer();
+                var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
+                if (oldAnalyzer != null) {
+                    analyzer.SwitchAnalyzers(oldAnalyzer);
+                    if (oldAnalyzer.RemoveUser()) {
+                        oldAnalyzer.Dispose();
                     }
-                    _analyzer = analyzer;
                 }
             }).DoNotWait();
         }

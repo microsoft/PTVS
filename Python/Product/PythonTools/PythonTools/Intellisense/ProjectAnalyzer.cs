@@ -279,14 +279,16 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            try {
-                if (!_analysisProcess.HasExited) {
-                    _analysisProcess.Kill();
+            SendRequestAsync(new AP.ExitRequest()).ContinueWith(t => {
+                try {
+                    if (!_analysisProcess.WaitForExit(500)) {
+                        _analysisProcess.Kill();
+                    }
+                } catch (InvalidOperationException) {
+                    // race w/ process exit...
                 }
-            } catch (InvalidOperationException) {
-                // race w/ process exit...
-            }
-            _analysisProcess.Dispose();
+                _analysisProcess.Dispose();
+            });
         }
 
         #endregion
@@ -482,14 +484,17 @@ namespace Microsoft.PythonTools.Intellisense {
                     oldParser.UninitBuffer(buffer);
                 }
 
+                int oldAttachedViews;
+                lock (oldParser) {
+                    oldAttachedViews = oldParser.AttachedViews;
+                }
+
                 var monitoredResult = await MonitorTextBufferAsync(buffers[0]);
                 if (monitoredResult.AnalysisEntry != null) {
                     for (int i = 1; i < buffers.Length; i++) {
                         monitoredResult.AddBuffer(buffers[i]);
                     }
-                    lock (oldParser) {
-                        monitoredResult.AnalysisEntry.BufferParser.AttachedViews = oldParser.AttachedViews;
-                    }
+                    monitoredResult.AttachedViews = oldAttachedViews;
                 }
 
                 oldParser.AnalysisEntry.OnNewAnalysisEntry();
@@ -546,6 +551,8 @@ namespace Microsoft.PythonTools.Intellisense {
             } else {
                 entry.BufferParser.AddBuffer(textBuffer);
             }
+
+            Debug.Assert(entry.BufferParser.AnalysisEntry == entry);
 
             return entry.BufferParser;
         }

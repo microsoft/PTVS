@@ -176,6 +176,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     }
 
                 }
+            } catch (OperationCanceledException) {
             } catch (ObjectDisposedException) {
             }
         }
@@ -251,6 +252,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     new RequestArgs(command, request),
                     result => SendResponseAsync(seq.Value, command, success, message, result, CancellationToken.None)
                 );
+            } catch (OperationCanceledException) {
+                throw;
             } catch (Exception e) {
                 success = false;
                 message = e.ToString();
@@ -367,10 +370,10 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     },
                     CancellationToken.None
                 );
+                throw new InvalidOperationException(message);
             } catch (ObjectDisposedException) {
             } catch (IOException) {
             }
-            throw new InvalidOperationException(message);
         }
 
         /// <summary>

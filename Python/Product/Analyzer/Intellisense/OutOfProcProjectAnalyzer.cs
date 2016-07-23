@@ -187,6 +187,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ExtensionRequest.Command: response = ExtensionRequest((AP.ExtensionRequest)request); break;
                 case AP.InitializeRequest.Command: response = Initialize((AP.InitializeRequest)request); break;
                 case AP.ExpressionForDataTipRequest.Command: response = ExpressionForDataTip((AP.ExpressionForDataTipRequest)request); break;
+                case AP.ExitRequest.Command: throw new OperationCanceledException();
                 default:
                     throw new InvalidOperationException("Unknown command");
             }
