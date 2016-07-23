@@ -36,6 +36,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -714,8 +715,8 @@ namespace Microsoft.PythonTools {
 
         #region Intellisense
 
-        public CompletionAnalysis GetCompletions(ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            return VsProjectAnalyzer.GetCompletions(_container, view, snapshot, span, point, options);
+        public CompletionAnalysis GetCompletions(ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
+            return VsProjectAnalyzer.GetCompletions(_container, session, view, snapshot, span, point, options);
         }
 
         public SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {

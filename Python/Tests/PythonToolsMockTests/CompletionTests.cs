@@ -1187,6 +1187,7 @@ async def g():
             CompletionAnalysis context = null;
             view.VS.InvokeSync(() => {
                 context = view.VS.GetPyService().GetCompletions(
+                    null,
                     view.View.TextView,
                     snapshot,
                     snapshot.GetApplicableSpan(index) ?? snapshot.CreateTrackingSpan(index, 0, SpanTrackingMode.EdgeInclusive),

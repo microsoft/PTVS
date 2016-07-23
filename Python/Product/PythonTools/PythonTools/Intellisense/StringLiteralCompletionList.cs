@@ -15,6 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
+using System.IO;
+using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -24,13 +27,61 @@ namespace Microsoft.PythonTools.Intellisense {
     /// Provides file path completion
     /// </summary>
     internal class StringLiteralCompletionList : CompletionAnalysis {
-        internal StringLiteralCompletionList(IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(serviceProvider, view, span, textBuffer, options) {
+        internal StringLiteralCompletionList(IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(serviceProvider, session, view, span, textBuffer, options) {
         }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
-            // TODO: implement
-            return null;
+            var snapshot = TextBuffer.CurrentSnapshot;
+            var span = snapshot.GetApplicableSpan(Span.GetStartPoint(snapshot));
+            var text = span.GetText(snapshot);
+
+            int start = text.IndexOfAny("'\"".ToCharArray());
+            if (start < 0) {
+                return null;
+            }
+            var prefix = text.Substring(0, start);
+            var quote = text[start];
+            var dir = text.Substring(start + 1);
+            if (!Directory.Exists(dir)) {
+                dir = PathUtils.GetParent(dir);
+                if (!Directory.Exists(dir)) {
+                    return null;
+                }
+            }
+
+            var dirs = PathUtils.EnumerateDirectories(dir, recurse: false, fullPaths: true)
+                .Select(d => new DynamicallyVisibleCompletion(
+                    PathUtils.GetFileOrDirectoryName(d),
+                    "r\"" + d + "\\\"",
+                    d,
+                    glyphService.GetGlyph(StandardGlyphGroup.GlyphClosedFolder, StandardGlyphItem.GlyphItemPublic),
+                    "Folder"
+                ));
+            var files = PathUtils.EnumerateFiles(dir, recurse: false, fullPaths: true)
+                .Select(f => new DynamicallyVisibleCompletion(
+                    PathUtils.GetFileOrDirectoryName(f),
+                    "r\"" + f + "\"",
+                    f,
+                    glyphService.GetGlyph(StandardGlyphGroup.GlyphLibrary, StandardGlyphItem.GlyphItemPublic),
+                    "File"
+                ));
+
+            Session.Committed += Session_Committed;
+
+            return new FuzzyCompletionSet(
+                "PythonFilenames",
+                "Files",
+                Span,
+                dirs.Concat(files),
+                _options,
+                CompletionComparer.UnderscoresLast,
+                matchInsertionText: true
+            );
+        }
+
+        private void Session_Committed(object sender, EventArgs e) {
+            View.Caret.MoveTo(View.Caret.Position.BufferPosition.Subtract(1));
         }
     }
 }

@@ -37,6 +37,7 @@ using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using IServiceProvider = System.IServiceProvider;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Intellisense {
 
@@ -518,7 +519,13 @@ namespace Microsoft.PythonTools.Intellisense {
                     node.Expression.Walk(this);
                     CommitByDefault = false;
                     return false;
+                } else if (node.Expression is ConstantExpression) {
+                    node.Expression.Walk(this);
+                    return false;
                 }
+
+                CanComplete = true;
+                CommitByDefault = false;
                 return base.Walk(node);
             }
 
@@ -597,6 +604,17 @@ namespace Microsoft.PythonTools.Intellisense {
                     CanComplete = ce == null || ce.Value != null;
                 }
                 return base.Walk(node);
+            }
+
+            public override bool Walk(ConstantExpression node) {
+                var str = node.Value as string;
+                if (str != null) {
+                    if (Directory.Exists(str) || Directory.Exists(PathUtils.GetParent(str))) {
+                        CanComplete = true;
+                        CommitByDefault = true;
+                    }
+                }
+                return false;
             }
         }
 

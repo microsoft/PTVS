@@ -95,7 +95,8 @@ namespace Microsoft.PythonTools {
 
         internal static bool CanComplete(this ClassificationSpan token) {
             return token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Keyword) |
-                token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier);
+                token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.Identifier) |
+                token.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String);
         }
 
         /// <summary>
