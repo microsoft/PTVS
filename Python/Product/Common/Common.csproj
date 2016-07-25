@@ -47,11 +47,6 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference2 Include="..\RunElevated\RunElevated.csproj">
-      <BuildReference>false</BuildReference>
-    </ProjectReference2>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="Infrastructure\CancellationTokens.cs" />
     <Compile Include="Infrastructure\ICatalogLog.cs" />
     <Compile Include="Infrastructure\InterpreterCatalog.cs" />
