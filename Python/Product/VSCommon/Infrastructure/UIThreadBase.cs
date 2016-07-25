@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.VisualStudioTools {
@@ -30,6 +31,8 @@ namespace Microsoft.VisualStudioTools {
         public abstract T Invoke<T>(Func<T> func);
         public abstract Task InvokeAsync(Action action);
         public abstract Task<T> InvokeAsync<T>(Func<T> func);
+        public abstract Task InvokeAsync(Action action, CancellationToken cancellationToken);
+        public abstract Task<T> InvokeAsync<T>(Func<T> func, CancellationToken cancellationToken);
         public abstract Task InvokeTask(Func<Task> func);
         public abstract Task<T> InvokeTask<T>(Func<Task<T>> func);
         public abstract void MustBeCalledFromUIThreadOrThrow();
@@ -92,6 +95,14 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public override Task<T> InvokeAsync<T>(Func<T> func) {
+            return Task.FromResult<T>(default(T));
+        }
+
+        public override Task InvokeAsync(Action action, CancellationToken cancellationToken) {
+            return Task.FromResult<object>(null);
+        }
+
+        public override Task<T> InvokeAsync<T>(Func<T> func, CancellationToken cancellationToken) {
             return Task.FromResult<T>(default(T));
         }
 

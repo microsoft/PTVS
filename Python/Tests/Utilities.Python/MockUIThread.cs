@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudioTools;
 
@@ -39,6 +40,24 @@ namespace TestUtilities.Mocks {
 
         public override Task<T> InvokeAsync<T>(Func<T> func) {
             var tcs = new TaskCompletionSource<T>();
+            UIThread.InvokeAsyncHelper<T>(func, tcs);
+            return tcs.Task;
+        }
+
+        public override Task InvokeAsync(Action action, CancellationToken cancellationToken) {
+            var tcs = new TaskCompletionSource<object>();
+            if (cancellationToken.CanBeCanceled) {
+                cancellationToken.Register(() => tcs.TrySetCanceled());
+            }
+            UIThread.InvokeAsyncHelper(action, tcs);
+            return tcs.Task;
+        }
+
+        public override Task<T> InvokeAsync<T>(Func<T> func, CancellationToken cancellationToken) {
+            var tcs = new TaskCompletionSource<T>();
+            if (cancellationToken.CanBeCanceled) {
+                cancellationToken.Register(() => tcs.TrySetCanceled());
+            }
             UIThread.InvokeAsyncHelper<T>(func, tcs);
             return tcs.Task;
         }

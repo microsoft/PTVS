@@ -16,8 +16,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Threading;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -394,18 +397,80 @@ string'''";
         private void SnapshotRegionTest(string fileContents, params ExpectedTag[] expected) {
             var snapshot = new TestUtilities.Mocks.MockTextSnapshot(new TestUtilities.Mocks.MockTextBuffer(fileContents), fileContents);
             var ast = Parser.CreateParser(new TextSnapshotToTextReader(snapshot), PythonLanguageVersion.V34).ParseFile();
-            var tags = Microsoft.PythonTools.OutliningTaggerProvider.OutliningTagger.ProcessRegionTags(snapshot);
+            var tags = Microsoft.PythonTools.OutliningTaggerProvider.OutliningTagger.ProcessRegionTags(snapshot, default(CancellationToken));
             VerifyTags(snapshot, tags, expected);
         }
 
         private void SnapshotCellTest(string fileContents, params ExpectedTag[] expected) {
             var snapshot = new TestUtilities.Mocks.MockTextSnapshot(new TestUtilities.Mocks.MockTextBuffer(fileContents), fileContents);
             var ast = Parser.CreateParser(new TextSnapshotToTextReader(snapshot), PythonLanguageVersion.V34).ParseFile();
-            var tags = Microsoft.PythonTools.OutliningTaggerProvider.OutliningTagger.ProcessCellTags(snapshot);
+            var tags = Microsoft.PythonTools.OutliningTaggerProvider.OutliningTagger.ProcessCellTags(snapshot, default(CancellationToken));
             VerifyTags(snapshot, tags, expected);
         }
 
         #endregion Outlining Statements
+
+        private static StringLiteralCompletionList.EntryInfo MakeEntryInfo(string rootpath, string filename, string insertionText = null, string fullpath = null, bool? isFile = null) {
+            var realIsFile = isFile ?? !string.IsNullOrEmpty(Path.GetExtension(filename));
+            return new StringLiteralCompletionList.EntryInfo {
+                Tooltip = fullpath ?? Path.Combine(rootpath, filename),
+                InsertionText = insertionText ?? ("r\"" + Path.Combine(rootpath, filename) + (realIsFile ? "\"" : "\\\"")),
+                Caption = filename,
+                IsFile = realIsFile
+            };
+        }
+
+        [TestMethod, Priority(0)]
+        public void StringCompletionFileEntries() {
+            var cwd = TestData.GetPath("TestData");
+            var user = TestData.GetPath("TestData\\Databases");
+
+            foreach (var quotePrefix in new[] { "\"", "'", "r\"", "r'" }) {
+                AssertUtil.ContainsAtLeast(
+                    StringLiteralCompletionList.GetEntryInfo(quotePrefix + cwd + "\\AbsolutePaths", cwd, user),
+                    MakeEntryInfo(cwd, "AbsolutePath"),
+                    MakeEntryInfo(cwd, "AbsolutePath.sln"),
+                    MakeEntryInfo(cwd, "HelloWorld"),
+                    MakeEntryInfo(cwd, "HelloWorld.sln")
+                );
+                AssertUtil.ContainsAtLeast(
+                    StringLiteralCompletionList.GetEntryInfo(quotePrefix + cwd + "\\AbsolutePath\\", cwd, user),
+                    MakeEntryInfo(cwd + "\\AbsolutePath", "AbsolutePath.pyproj")
+                );
+                AssertUtil.ContainsAtLeast(
+                    StringLiteralCompletionList.GetEntryInfo(quotePrefix + "./AbsolutePaths", cwd, user),
+                    MakeEntryInfo(cwd, "AbsolutePath", "r\".\\AbsolutePath\\\""),
+                    MakeEntryInfo(cwd, "AbsolutePath.sln", "r\".\\AbsolutePath.sln\""),
+                    MakeEntryInfo(cwd, "HelloWorld", "r\".\\HelloWorld\\\""),
+                    MakeEntryInfo(cwd, "HelloWorld.sln", "r\".\\HelloWorld.sln\"")
+                );
+                AssertUtil.ContainsAtLeast(
+                    StringLiteralCompletionList.GetEntryInfo(quotePrefix + ".\\Ab", cwd, user),
+                    MakeEntryInfo(cwd, "AbsolutePath", "r\".\\AbsolutePath\\\""),
+                    MakeEntryInfo(cwd, "AbsolutePath.sln", "r\".\\AbsolutePath.sln\""),
+                    MakeEntryInfo(cwd, "HelloWorld", "r\".\\HelloWorld\\\""),
+                    MakeEntryInfo(cwd, "HelloWorld.sln", "r\".\\HelloWorld.sln\"")
+                );
+                AssertUtil.ContainsAtLeast(
+                    StringLiteralCompletionList.GetEntryInfo(quotePrefix + "~/Ab", cwd, user),
+                    MakeEntryInfo(user, "V27", "r\"~\\V27\\\""),
+                    MakeEntryInfo(user, "Readme.txt", "r\"~\\Readme.txt\"")
+                );
+                AssertUtil.ContainsAtLeast(
+                    StringLiteralCompletionList.GetEntryInfo(quotePrefix + "~\\Ab", cwd, user),
+                    MakeEntryInfo(user, "V27", "r\"~\\V27\\\""),
+                    MakeEntryInfo(user, "Readme.txt", "r\"~\\Readme.txt\"")
+                );
+                AssertUtil.ContainsAtLeast(
+                    StringLiteralCompletionList.GetEntryInfo(quotePrefix + "~\\V27\\", cwd, user),
+                    MakeEntryInfo(user + "\\V27", "ntpath.idb", "r\"~\\V27\\ntpath.idb\""),
+                    MakeEntryInfo(user + "\\V27", "os.idb", "r\"~\\V27\\os.idb\"")
+                );
+                AssertUtil.ContainsAtLeast(
+                    StringLiteralCompletionList.GetEntryInfo(quotePrefix + "Ab", cwd, user)
+                );
+            }
+        }
 
         #endregion Test Cases
 

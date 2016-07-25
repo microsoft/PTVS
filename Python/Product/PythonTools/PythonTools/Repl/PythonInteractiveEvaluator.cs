@@ -150,7 +150,7 @@ namespace Microsoft.PythonTools.Repl {
 
                 var config = Configuration;
 
-                if (config == null) {
+                if (config?.Interpreter == null) {
                     _analyzer = _serviceProvider.GetPythonToolsService().DefaultAnalyzer;
                 } else {
                     var projectFile = GetAssociatedPythonProject(config.Interpreter)?.BuildProject;
@@ -202,6 +202,12 @@ namespace Microsoft.PythonTools.Repl {
         public string CurrentScopePath {
             get {
                 return (_thread?.IsConnected ?? false) ? _thread.CurrentScopeFileName : null;
+            }
+        }
+
+        public string CurrentWorkingDirectory {
+            get {
+                return (_thread?.IsConnected ?? false) ? _thread.CurrentWorkingDirectory : null;
             }
         }
 

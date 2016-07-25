@@ -187,6 +187,7 @@ namespace Microsoft.PythonTools.Repl {
             private StringBuilder _preConnectionOutput;
             private string _currentScope = "__main__";
             private string _currentScopeFileName;
+            private string _currentWorkingDirectory;
             private MemberResults _memberResults;
 
             private CommandProcessorThread(PythonInteractiveEvaluator evaluator, Process process) {
@@ -202,6 +203,7 @@ namespace Microsoft.PythonTools.Repl {
             ) {
                 var thread = new CommandProcessorThread(evaluator, process);
                 thread._listenerSocket = listenerSocket;
+                thread._currentWorkingDirectory = process.StartInfo.WorkingDirectory;
                 thread.StartOutputThread(process.StartInfo.RedirectStandardOutput);
                 return thread;
             }
@@ -212,6 +214,8 @@ namespace Microsoft.PythonTools.Repl {
             ) {
                 var thread = new CommandProcessorThread(evaluator, null);
                 thread._stream = stream;
+                // Should be quickly replaced, but it's the best guess we have
+                thread._currentWorkingDirectory = Environment.CurrentDirectory;
                 thread.StartOutputThread(false);
                 return thread;
             }
@@ -226,6 +230,7 @@ namespace Microsoft.PythonTools.Repl {
 
             public string CurrentScope => _currentScope;
             public string CurrentScopeFileName => _currentScopeFileName;
+            public string CurrentWorkingDirectory => _currentWorkingDirectory;
 
             public bool IsProcessExpectedToExit { get; set; }
 
@@ -363,6 +368,7 @@ namespace Microsoft.PythonTools.Repl {
                                 case "DETC": HandleDebuggerDetach(); break;
                                 case "DPNG": HandleDisplayPng(); break;
                                 case "DXAM": HandleDisplayXaml(); break;
+                                case "CHWD": HandleWorkingDirectoryChanged(); break;
                                 case "EXIT":
                                     // REPL has exited
                                     _stream.Write(ExitCommandBytes);
@@ -465,6 +471,12 @@ namespace Microsoft.PythonTools.Repl {
                 SecondaryPrompt = prompt2;
                 _supportsMultipleStatements = supportMultipleStatements;
                 _receivedPrompts.TrySetResult(null);
+            }
+
+            private void HandleWorkingDirectoryChanged() {
+                Debug.Assert(Monitor.IsEntered(_streamLock));
+
+                _currentWorkingDirectory = _stream.ReadString();
             }
 
             public async Task<bool> GetSupportsMultipleStatementsAsync() {

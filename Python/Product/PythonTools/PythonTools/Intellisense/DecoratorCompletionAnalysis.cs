@@ -24,8 +24,8 @@ using Microsoft.VisualStudio.Text.Editor;
 
 namespace Microsoft.PythonTools.Intellisense {
     class DecoratorCompletionAnalysis : CompletionAnalysis {
-        internal DecoratorCompletionAnalysis(IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(serviceProvider, view, span, textBuffer, options) {
+        internal DecoratorCompletionAnalysis(IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(serviceProvider, session, view, span, textBuffer, options) {
         }
 
         private static bool IsDecoratorType(CompletionResult member) {

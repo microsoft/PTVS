@@ -31,8 +31,8 @@ namespace Microsoft.PythonTools.Intellisense {
     /// Provides the completion context for when the user is overriding a function.
     /// </summary>
     internal class OverrideCompletionAnalysis : CompletionAnalysis {
-        internal OverrideCompletionAnalysis(IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
-            : base(serviceProvider, view, span, textBuffer, options) {
+        internal OverrideCompletionAnalysis(IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options)
+            : base(serviceProvider, session, view, span, textBuffer, options) {
         }
 
         public override CompletionSet GetCompletions(IGlyphService glyphService) {

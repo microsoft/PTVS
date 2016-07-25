@@ -57,6 +57,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var triggerPoint = session.GetTriggerPoint(textBuffer);
             var options = session.GetOptions(_provider._serviceProvider);
             var provider = _provider._pyService.GetCompletions(
+                session,
                 session.TextView,
                 textBuffer.CurrentSnapshot,
                 span,

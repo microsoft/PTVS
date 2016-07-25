@@ -523,7 +523,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             } else if (!string.IsNullOrEmpty(e.Data)) {
                 foreach (var line in SplitLines(e.Data)) {
                     if (_redirector != null) {
-                        _redirector.WriteLine(line);
+                        _redirector.WriteErrorLine(line);
                     }
                 }
             }

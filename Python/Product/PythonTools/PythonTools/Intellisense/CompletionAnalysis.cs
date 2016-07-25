@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools.Intellisense {
     /// processed. The completion services are specific to the current context
     /// </summary>
     public class CompletionAnalysis {
+        private readonly ICompletionSession _session;
         private readonly ITextView _view;
         private readonly IServiceProvider _serviceProvider;
         private readonly ITrackingSpan _span;
@@ -42,9 +43,10 @@ namespace Microsoft.PythonTools.Intellisense {
         internal const Int64 TooMuchTime = 50;
         protected static Stopwatch _stopwatch = MakeStopWatch();
 
-        internal static CompletionAnalysis EmptyCompletionContext = new CompletionAnalysis(null, null, null, null, null);
+        internal static CompletionAnalysis EmptyCompletionContext = new CompletionAnalysis(null, null, null, null, null, null);
 
-        internal CompletionAnalysis(IServiceProvider serviceProvider, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
+        internal CompletionAnalysis(IServiceProvider serviceProvider, ICompletionSession session, ITextView view, ITrackingSpan span, ITextBuffer textBuffer, CompletionOptions options) {
+            _session = session;
             _view = view;
             _span = span;
             _serviceProvider = serviceProvider;
@@ -52,23 +54,10 @@ namespace Microsoft.PythonTools.Intellisense {
             _options = (options == null) ? new CompletionOptions() : options.Clone();
         }
 
-        public ITextBuffer TextBuffer {
-            get {
-                return _textBuffer;
-            }
-        }
-
-        public ITrackingSpan Span {
-            get {
-                return _span;
-            }
-        }
-
-        public ITextView View {
-            get {
-                return _view;
-            }
-        }
+        public ICompletionSession Session => _session;
+        public ITextBuffer TextBuffer => _textBuffer;
+        public ITrackingSpan Span => _span;
+        public ITextView View => _view;
 
         public virtual CompletionSet GetCompletions(IGlyphService glyphService) {
             return null;
