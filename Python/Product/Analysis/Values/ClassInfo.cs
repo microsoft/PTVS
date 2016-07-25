@@ -25,7 +25,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class ClassInfo : AnalysisValue, IReferenceableContainer {
+    internal class ClassInfo : AnalysisValue, IReferenceableContainer, IHasRichDescription {
         private AnalysisUnit _analysisUnit;
         private readonly List<IAnalysisSet> _bases;
         internal Mro _mro;
@@ -117,19 +117,70 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return _analysisUnit.Ast as ClassDefinition; }
         }
 
-        public override string ShortDescription {
-            get {
-                return ClassDefinition.Name;
+        private static string FormatExpression(Expression baseClass) {
+            NameExpression ne = baseClass as NameExpression;
+            if (ne != null) {
+                return ne.Name;
+            }
+
+            MemberExpression me = baseClass as MemberExpression;
+            if (me != null) {
+                string expr = FormatExpression(me.Target);
+                if (expr != null) {
+                    return expr + "." + me.Name ?? string.Empty;
+                }
+            }
+
+            return null;
+        }
+
+        public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "class ");
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, FullName);
+            
+            if (ClassDefinition.Bases.Count > 0) {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "(");
+                bool comma = false;
+                foreach (var baseClass in ClassDefinition.Bases) {
+                    if (comma) {
+                        yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
+                    }
+
+                    string baseStr = FormatExpression(baseClass.Expression);
+                    if (baseStr != null) {
+                        yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, baseStr);
+                    }
+
+                    comma = true;
+                }
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ")");
+            }
+
+            var doc = Documentation;
+            if (!string.IsNullOrWhiteSpace(doc)) {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, "\r\n");
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, doc);
             }
         }
 
-        public override string Description {
+        private string FullName {
             get {
-                var res = "class " + ClassDefinition.Name;
-                if (!String.IsNullOrEmpty(Documentation)) {
-                    res += Environment.NewLine + Documentation;
+                var name = ClassDefinition.Name;
+                for (var stmt = ClassDefinition.Parent; stmt != null; stmt = stmt.Parent) {
+                    if (stmt.IsGlobal) {
+                        name = DeclaringModule.ModuleName + "." + name;
+                        break;
+                    } else if (!string.IsNullOrEmpty(stmt.Name)) {
+                        name = stmt.Name + "." + name;
+                    }
                 }
-                return res;
+                return name;
+            }
+        }
+
+        public override string ShortDescription {
+            get {
+                return ClassDefinition.Name;
             }
         }
 

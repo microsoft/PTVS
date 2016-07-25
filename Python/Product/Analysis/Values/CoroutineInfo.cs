@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Microsoft.PythonTools.Interpreter;
@@ -24,7 +25,7 @@ namespace Microsoft.PythonTools.Analysis.Values {
     /// <summary>
     /// Represents a coroutine instance
     /// </summary>
-    internal class CoroutineInfo : BuiltinInstanceInfo {
+    internal class CoroutineInfo : BuiltinInstanceInfo, IHasRichDescription {
         private readonly IPythonProjectEntry _declaringModule;
         private readonly int _declaringVersion;
         public readonly VariableDef Returns;
@@ -43,12 +44,17 @@ namespace Microsoft.PythonTools.Analysis.Values {
         public override IPythonProjectEntry DeclaringModule { get { return _declaringModule; } }
         public override int DeclaringVersion { get { return _declaringVersion; } }
 
+        public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "coroutine");
+            foreach (var kv in FunctionInfo.GetReturnTypeString(Returns.TypesNoCopy.AsUnion)) {
+                yield return kv;
+            }
+        }
+
         public override string Description {
             get {
                 // Generator lies about its name when it represents a coroutine
-                var sb = new StringBuilder("coroutine");
-                FunctionInfo.AddReturnTypeString((text, type) => sb.Append(text), Returns.TypesNoCopy.AsUnion);
-                return sb.ToString();
+                return string.Join("", GetRichDescription().Select(kv => kv.Value));
             }
         }
 

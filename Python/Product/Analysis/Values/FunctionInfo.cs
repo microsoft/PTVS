@@ -24,7 +24,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class FunctionInfo : AnalysisValue, IReferenceableContainer {
+    internal class FunctionInfo : AnalysisValue, IReferenceableContainer, IHasRichDescription {
         private Dictionary<AnalysisValue, IAnalysisSet> _methods;
         private Dictionary<string, VariableDef> _functionAttrs;
         private readonly FunctionDefinition _functionDefinition;
@@ -165,81 +165,76 @@ namespace Microsoft.PythonTools.Analysis.Values {
             }
         }
 
-        internal void AddParameterString(Action<string, string> adder) {
+        internal IEnumerable<KeyValuePair<string, string>> GetParameterString() {
             for (int i = 0; i < FunctionDefinition.Parameters.Count; i++) {
                 if (i != 0) {
-                    adder(", ", "comma");
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
                 }
                 var p = FunctionDefinition.Parameters[i];
 
                 var name = MakeParameterName(p);
                 var defaultValue = GetDefaultValue(ProjectState, p, DeclaringModule.Tree);
 
-                adder(name, "param");
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Parameter, name);
                 if (!String.IsNullOrWhiteSpace(defaultValue)) {
-                    adder(" = ", "misc");
-                    adder(defaultValue, "misc");
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " = ");
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, defaultValue);
                 }
             }
         }
 
-        internal static void AddReturnTypeString(Action<string, string> adder, Func<int, IAnalysisSet> getReturnValue) {
-            for (int strength = 0; strength <= UnionComparer.MAX_STRENGTH; ++strength) {
-                var retTypes = getReturnValue(strength);
-                if (retTypes.Count == 0) {
-                    break;
+        internal static IEnumerable<KeyValuePair<string, string>> GetReturnTypeString(Func<int, IAnalysisSet> getReturnValue) {
+            var retTypes = getReturnValue(0);
+            for (int strength = 1; retTypes.Count > 10 && strength <= UnionComparer.MAX_STRENGTH; ++strength) {
+                retTypes = getReturnValue(strength);
+            }
+
+            var seenNames = new HashSet<string>();
+            var addDots = false;
+            var descriptions = new List<string>();
+            foreach (var av in retTypes) {
+                if (av == null) {
+                    continue;
                 }
-                if (retTypes.Count <= 10) {
-                    var seenNames = new HashSet<string>();
-                    var addDots = false;
-                    var descriptions = new List<string>();
-                    foreach (var av in retTypes) {
-                        if (av == null) {
-                            continue;
-                        }
 
-                        if (av.Push()) {
-                            try {
-                                var desc = av.ShortDescription;
-                                if (!string.IsNullOrWhiteSpace(desc) && seenNames.Add(desc)) {
-                                    descriptions.Add(desc.Replace("\r\n", "\n").Replace("\n", "\r\n    "));
-                                }
-                            } finally {
-                                av.Pop();
-                            }
-                        } else {
-                            addDots = true;
+                if (av.Push()) {
+                    try {
+                        var desc = av.ShortDescription;
+                        if (!string.IsNullOrWhiteSpace(desc) && seenNames.Add(desc)) {
+                            descriptions.Add(desc.Replace("\r\n", "\n").Replace("\n", "\r\n    "));
                         }
+                    } finally {
+                        av.Pop();
                     }
-
-                    var first = true;
-                    descriptions.Sort();
-                    foreach (var desc in descriptions) {
-                        if (first) {
-                            adder(" -> ", "misc");
-                            first = false;
-                        } else {
-                            adder(", ", "comma");
-                        }
-                        adder(desc, "type");
-                    }
-
-                    if (addDots) {
-                        adder("...", "misc");
-                    }
-                    break;
+                } else {
+                    addDots = true;
                 }
+            }
+
+            var first = true;
+            descriptions.Sort();
+            foreach (var desc in descriptions) {
+                if (first) {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, " -> ");
+                    first = false;
+                } else {
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Comma, ", ");
+                }
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Type, desc);
+            }
+
+            if (addDots) {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "...");
             }
         }
 
-        internal static void AddDocumentationString(Action<string, string> adder, string documentation) {
+        internal static IEnumerable<KeyValuePair<string,string>> GetDocumentationString(string documentation) {
             if (!String.IsNullOrEmpty(documentation)) {
-                adder("\r\n", "misc");
-                adder(documentation, "misc");
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, documentation);
             }
         }
 
-        internal void AddQualifiedLocationString(Action<string, string> adder) {
+        internal IEnumerable<KeyValuePair<string, string>> GetQualifiedLocationString() {
             var qualifiedNameParts = new Stack<string>();
             for (var item = FunctionDefinition.Parent; item is FunctionDefinition || item is ClassDefinition; item = item.Parent) {
                 if (!string.IsNullOrEmpty(item.Name)) {
@@ -247,25 +242,18 @@ namespace Microsoft.PythonTools.Analysis.Values {
                 }
             }
             if (qualifiedNameParts.Count > 0) {
-                adder("\r\n", "misc");
-                adder("declared in ", "misc");
-                adder(string.Join(".", qualifiedNameParts), "misc");
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "declared in ");
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, string.Join(".", qualifiedNameParts));
             }
         }
 
-        public override string Description {
-            get {
-                var result = new StringBuilder();
-                GetDescription((text, type) => result.Append(text));
-                return result.ToString();
-            }
-        }
-
-        internal void GetDescription(Action<string, string> adder) {
+        public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
             if (FunctionDefinition.IsLambda) {
-                adder("lambda ", "misc");
-                AddParameterString(adder);
-                adder(": ", "misc");
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "lambda ");
+                foreach (var kv in GetParameterString()) {
+                    yield return kv;
+                }
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ": ");
 
                 if (FunctionDefinition.IsGenerator) {
                     var lambdaExpr = ((ExpressionStatement)FunctionDefinition.Body).Expression;
@@ -279,25 +267,57 @@ namespace Microsoft.PythonTools.Analysis.Values {
                     } else {
                         Debug.Assert(false, "lambdaExpr is not YieldExpression or YieldFromExpression");
                     }
-                    adder(yieldExpr.ToCodeString(DeclaringModule.Tree), "misc");
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, yieldExpr.ToCodeString(DeclaringModule.Tree));
                 } else {
-                    adder(((ReturnStatement)FunctionDefinition.Body).Expression.ToCodeString(DeclaringModule.Tree), "misc");
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ((ReturnStatement)FunctionDefinition.Body).Expression.ToCodeString(DeclaringModule.Tree));
                 }
             } else {
                 if (FunctionDefinition.IsCoroutine) {
-                    adder("async ", "misc");
+                    yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "async ");
                 }
-                adder("def ", "misc");
-                adder(FunctionDefinition.Name, "name");
-                adder("(", "misc");
-                AddParameterString(adder);
-                adder(")", "misc");
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "def ");
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, GetFullName());
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, "(");
+                foreach (var kv in GetParameterString()) {
+                    yield return kv;
+                }
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, ")");
             }
 
-            AddReturnTypeString(adder, GetReturnValue);
-            adder("", "enddecl");
-            AddDocumentationString(adder, Documentation);
-            AddQualifiedLocationString(adder);
+            foreach (var kv in GetReturnTypeString(GetReturnValue)) {
+                yield return kv;
+            }
+            bool hasNl = false;
+            var nlKind = WellKnownRichDescriptionKinds.EndOfDeclaration;
+            foreach (var kv in GetDocumentationString(Documentation)) {
+                if (!hasNl) {
+                    yield return new KeyValuePair<string, string>(nlKind, "\r\n");
+                    nlKind = WellKnownRichDescriptionKinds.Misc;
+                    hasNl = true;
+                }
+                yield return kv;
+            }
+            hasNl = false;
+            foreach (var kv in GetQualifiedLocationString()) {
+                if (!hasNl) {
+                    yield return new KeyValuePair<string, string>(nlKind, "\r\n");
+                    hasNl = true;
+                }
+                yield return kv;
+            }
+        }
+
+        private string GetFullName() {
+            var name = FunctionDefinition.Name;
+            for (var stmt = FunctionDefinition.Parent; stmt != null; stmt = stmt.Parent) {
+                if (stmt.IsGlobal) {
+                    return DeclaringModule.ModuleName + "." + name;
+                }
+                if (!string.IsNullOrEmpty(stmt.Name)) {
+                    name = stmt.Name + "." + name;
+                }
+            }
+            return name;
         }
 
         public override IAnalysisSet GetDescriptor(Node node, AnalysisValue instance, AnalysisValue context, AnalysisUnit unit) {

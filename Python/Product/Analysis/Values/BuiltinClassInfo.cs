@@ -22,7 +22,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class BuiltinClassInfo : BuiltinNamespace<IPythonType>, IReferenceableContainer {
+    internal class BuiltinClassInfo : BuiltinNamespace<IPythonType>, IReferenceableContainer, IHasRichDescription {
         private BuiltinInstanceInfo _inst;
         private string _doc;
         private readonly MemberReferences _referencedMembers = new MemberReferences();
@@ -225,19 +225,24 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return false;
         }
 
-        public override string Description {
-            get {
-                var res = ShortDescription;
-                if (!String.IsNullOrEmpty(Documentation)) {
-                    res += Environment.NewLine + Documentation;
-                }
-                return res;
+        public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, _type.IsBuiltin ? "type " : "class ");
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Name, FullName);
+
+            yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.EndOfDeclaration, "\r\n");
+            var doc = Documentation;
+            if (!string.IsNullOrEmpty(doc)) {
+                yield return new KeyValuePair<string, string>(WellKnownRichDescriptionKinds.Misc, doc);
             }
         }
 
-        public override string ShortDescription {
+        private string FullName {
             get {
-                return (_type.IsBuiltin ? "type " : "class ") + _type.Name;
+                var name = _type.Name;
+                if (!_type.IsBuiltin && !string.IsNullOrEmpty(_type.DeclaringModule?.Name)) {
+                    name = _type.DeclaringModule.Name + "." + name;
+                }
+                return name;
             }
         }
 

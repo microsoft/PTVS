@@ -105,9 +105,9 @@ Aliased = test.Aliased
                 AssertUtil.ContainsExactly(newMod.Analysis.GetTypeIdsByIndex("abc", pos), BuiltinTypeId.Int);
                 AssertUtil.ContainsExactly(newMod.Analysis.GetTypeIdsByIndex("cf", pos), BuiltinTypeId.Int);
                 AssertUtil.ContainsExactly(newMod.Analysis.GetTypeIdsByIndex("cg", pos), BuiltinTypeId.Int);
-                Assert.AreEqual("function f1", newMod.Analysis.GetValuesByIndex("f1", pos).First().Description);
+                Assert.AreEqual("function f1(x = 42)", newMod.Analysis.GetValuesByIndex("f1", pos).First().Description);
                 Assert.AreEqual("bound method x", newMod.Analysis.GetValuesByIndex("dx", pos).First().Description);
-                Assert.AreEqual("function g", newMod.Analysis.GetValuesByIndex("scg", pos).First().Description);
+                Assert.AreEqual("function test.C.g(self)", newMod.Analysis.GetValuesByIndex("scg", pos).First().Description);
                 var unionMembers = new List<AnalysisValue>(newMod.Analysis.GetValuesByIndex("union", pos));
                 Assert.AreEqual(unionMembers.Count, 2);
                 AssertUtil.ContainsExactly(unionMembers.Select(x => x.PythonType.Name), "X", "Y");
@@ -147,15 +147,15 @@ def Aliased(fob):
     '''function doc'''
     pass
 
-def Overloaded():
+def Overloaded(a):
     '''help 1'''
     pass
 
-def Overloaded():
+def Overloaded(a, b):
     '''help 2'''
     pass
 
-def Overloaded():
+def Overloaded(a, b):
     '''help 2'''
     pass
 ";
@@ -174,14 +174,12 @@ Overloaded = test.Overloaded
 
                 var allMembers = newMod.Analysis.GetAllAvailableMembersByIndex(pos, GetMemberOptions.None);
 
-                Assert.AreEqual("class doc\r\n\r\nfunction doc", allMembers.First(x => x.Name == "Aliased").Documentation);
+                Assert.AreEqual("class test.Aliased\r\nclass doc\r\n\r\nfunction Aliased(fob)\r\nfunction doc", allMembers.First(x => x.Name == "Aliased").Documentation);
                 Assert.AreEqual(1, newMod.Analysis.GetSignaturesByIndex("FunctionNoRetType", pos).ToArray().Length);
 
-                var doc = newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First().Documentation;
-                // Out of order is okay, as long as "help 2" only appears once
-                if (doc != "help 2\r\n\r\nhelp 1") {
-                    Assert.AreEqual("help 1\r\n\r\nhelp 2", doc);
-                }
+                var doc = newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First();
+                // help 2 should be first because it has more parameters
+                Assert.AreEqual("function Overloaded(a, b)\r\nhelp 2\r\n\r\nfunction Overloaded(a)\r\nhelp 1", doc.Documentation);
             }
         }
 
@@ -335,8 +333,8 @@ baz_Fob = baz.Fob
 ";
                 var newMod = newPs.NewModule("fez", code);
 
-                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("oar_Fob", 0), "class Fob");
-                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("baz_Fob", 0), "class Fob");
+                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("oar_Fob", 0), "class fob.Fob");
+                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("baz_Fob", 0), "class fob.Fob");
             }
         }
 
