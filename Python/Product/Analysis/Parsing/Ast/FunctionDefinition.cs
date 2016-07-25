@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal PythonVariable _nameVariable;          // the variable that refers to the global __name__
         internal bool _hasReturn;
         private int _headerIndex;
+        private int _defIndex;
 
         internal static readonly object WhitespaceAfterAsync = new object();
 
@@ -86,6 +87,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public int HeaderIndex {
             get { return _headerIndex; }
             set { _headerIndex = value; }
+        }
+
+        public int DefIndex {
+            get { return _defIndex; }
+            set { _defIndex = value; }
         }
 
         public override string/*!*/ Name {
