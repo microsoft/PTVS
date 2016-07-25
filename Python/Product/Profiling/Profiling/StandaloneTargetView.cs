@@ -50,12 +50,12 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         public StandaloneTargetView(IServiceProvider serviceProvider) {
-            var componentService = (IComponentModel)(serviceProvider.GetService(typeof(SComponentModel)));
+            var componentService = serviceProvider.GetComponentModel();
             
             var interpreterProviders = componentService.DefaultExportProvider.GetExports<IPythonInterpreterFactoryProvider, Dictionary<string, object>>();
             var interpreterOptions = componentService.GetService<IInterpreterOptionsService>();
             var registry = componentService.GetService<IInterpreterRegistryService>();
-            var pythonService = componentService.GetService<PythonToolsService>();
+            var pythonService = serviceProvider.GetPythonToolsService();
 
             var availableInterpreters = registry.Configurations.Select(
                 config => new PythonInterpreterView(
