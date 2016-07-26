@@ -82,6 +82,9 @@ namespace Microsoft.PythonTools.Project {
         private readonly PythonProject _pythonProject;
 
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
+            // This will ensure that our package is loaded
+            var pyService = serviceProvider.GetPythonToolsService();
+
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
             ActiveInterpreterChanged += OnActiveInterpreterChanged;
@@ -89,6 +92,7 @@ namespace Microsoft.PythonTools.Project {
             // _active starts as null, so we need to start with this event
             // hooked up.
             InterpreterOptions.DefaultInterpreterChanged += GlobalDefaultInterpreterChanged;
+            InterpreterRegistry.InterpretersChanged += OnInterpreterRegistryChanged;
             _pythonProject = new VsPythonProject(this);
         }
 
@@ -162,6 +166,15 @@ namespace Microsoft.PythonTools.Project {
 
         private void OnInterpreterFactoriesChanged(object sender, EventArgs e) {
             Site.GetUIThread().Invoke(() => RefreshInterpreters());
+        }
+
+        private void OnInterpreterRegistryChanged(object sender, EventArgs e) {
+            // Check whether the active interpreter factory has changed.
+            var fact = InterpreterRegistry.FindInterpreter(ActiveInterpreter.Configuration.Id);
+            if (fact != null && fact != ActiveInterpreter) {
+                ActiveInterpreter = fact;
+                InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public IInterpreterOptionsService InterpreterOptions {
@@ -682,10 +695,11 @@ namespace Microsoft.PythonTools.Project {
                 this.AddChild(_searchPathContainer);
                 RefreshCurrentWorkingDirectory();
                 RefreshSearchPaths();
-                _interpretersContainer = new InterpretersContainerNode(this);
-                this.AddChild(_interpretersContainer);
-                RefreshInterpreters(alwaysCollapse: true);
             }
+
+            _interpretersContainer = new InterpretersContainerNode(this);
+            this.AddChild(_interpretersContainer);
+            RefreshInterpreters(alwaysCollapse: true);
 
             OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
 
@@ -810,13 +824,16 @@ namespace Microsoft.PythonTools.Project {
                 foreach (var fact in InterpreterFactories) {
                     if (!RemoveFirst(remaining, n => !n._isGlobalDefault && n._factory == fact)) {
                         bool isProjectSpecific = vsProjectContext.IsProjectSpecific(fact.Configuration);
+                        bool canRemove = !this.IsAppxPackageableProject(); // Do not allow change python enivronment for UWP
                         node.AddChild(new InterpretersNode(
                             this,
                             fact,
                             isInterpreterReference: !isProjectSpecific,
                             canDelete:
                                 isProjectSpecific &&
-                                Directory.Exists(fact.Configuration.PrefixPath)
+                                Directory.Exists(fact.Configuration.PrefixPath),
+                            isGlobalDefault:false,
+                            canRemove:canRemove
                         ));
                     }
                 }
@@ -1155,6 +1172,7 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 InterpreterOptions.DefaultInterpreterChanged -= GlobalDefaultInterpreterChanged;
+                InterpreterRegistry.InterpretersChanged -= OnInterpreterRegistryChanged;
 
                 if (_interpretersContainer != null) {
                     _interpretersContainer.Dispose();
@@ -1385,6 +1403,10 @@ namespace Microsoft.PythonTools.Project {
             str = GetProjectProperty(PythonConstants.WebBrowserPortSetting);
             if (!string.IsNullOrEmpty(str)) {
                 config.LaunchOptions[PythonConstants.WebBrowserPortSetting] = str;
+            }
+            str = GetProjectProperty(PythonConstants.EnableNativeCodeDebugging);
+            if (!string.IsNullOrEmpty(str)) {
+                config.LaunchOptions[PythonConstants.EnableNativeCodeDebugging] = str;
             }
 
             if (!File.Exists(config.GetInterpreterPath())) {
@@ -1903,6 +1925,14 @@ namespace Microsoft.PythonTools.Project {
                                 return true;
                             }
                             break;
+                    }
+                } else if (this.IsAppxPackageableProject()) {
+                    // Disable adding environment for UWP projects
+                    switch ((int)cmd) {
+                        case PythonConstants.AddEnvironment:
+                        case PythonConstants.AddExistingVirtualEnv:
+                        case PythonConstants.AddVirtualEnv:
+                            return true;
                     }
                 }
             }

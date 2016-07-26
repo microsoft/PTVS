@@ -163,6 +163,7 @@ actual inspection and introspection."""
     _DETC = to_bytes('DETC')
     _DPNG = to_bytes('DPNG')
     _DXAM = to_bytes('DXAM')
+    _CHWD = to_bytes('CHWD')
 
     _MERR = to_bytes('MERR')
     _SERR = to_bytes('SERR')
@@ -415,6 +416,12 @@ actual inspection and introspection."""
             write_string(self.conn, ps2)
             write_int(self.conn, 1 if allow_multiple_statements else 0)
 
+    def send_cwd(self):
+        """sends the current working directory"""
+        with self.send_lock:
+            write_bytes(self.conn, ReplBackend._CHWD)
+            write_string(self.conn, os.getcwd())
+
     def send_error(self):
         """reports that an error occured to the interactive window"""
         with self.send_lock:
@@ -648,6 +655,7 @@ due to the exec, so we do it here"""
             cur_modules = new_modules
 
             self.execute_item_lock.acquire()
+            cur_cwd = os.getcwd()
 
             if self.check_for_exit_execution_loop():
                 return True, None, None, None
@@ -672,7 +680,12 @@ due to the exec, so we do it here"""
 
                     cur_ps1 = new_ps1
                     cur_ps2 = new_ps2
-            except:
+            except Exception:
+                pass
+            try:
+                if cur_cwd != os.getcwd():
+                    self.send_cwd()
+            except Exception:
                 pass
         except SystemExit:
             self.send_error()
@@ -955,7 +968,7 @@ due to the exec, so we do it here"""
                 self.exec_mod = clr.GetClrType(type(sys)).GetProperty('Scope', System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(sys, ())
             else:
                 self.exec_mod = mod
-        else:
+        elif module:
             _debug_write('Unknown module ' + module)
 
     def get_module_names(self):
@@ -966,7 +979,10 @@ due to the exec, so we do it here"""
                     if sys.platform == 'cli' and type(module) is NamespaceType:
                         self.get_namespaces(name, module, res)
                     else:
-                        filename = getattr(module, '__file__', '') or ''
+                        try:
+                            filename = os.path.abspath(module.__file__)
+                        except Exception:
+                            filename = None
                         res.append((name, filename))
 
             except:

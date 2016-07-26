@@ -12,7 +12,7 @@
   <ItemDefinitionGroup>
     <SwrSource>
       <BaseInstall>$(BaseInstall)</BaseInstall>
-      <ExtraOptions></ExtraOptions>
+      <ExtraOptions>$(ExtraOptions)</ExtraOptions>
     </SwrSource>
     <Dependency>
       <Version>[$(SwixVersion),$([msbuild]::Add($(VSTarget), 1)).0)</Version>
@@ -20,20 +20,8 @@
     </Dependency>
   </ItemDefinitionGroup>
 
-  <ItemGroup Condition="'$(SourcePath)' != '' and '$(TargetsBaseInstall)' == ''">
-    <SwrSource Include="$(SourcePath)"  />
-  </ItemGroup>
-  
-  <ItemGroup Condition="'$(SourcePath)' != '' and '$(TargetsBaseInstall)' != ''">
-    <SwrSource Include="$(SourcePath)">
-      <BaseInstall>$(BaseInstall)</BaseInstall>
-      <ExtraOptions>-x "\.targets$"</ExtraOptions>
-    </SwrSource>
-    
-    <SwrSource Include="$(SourcePath)">
-      <BaseInstall>$(TargetsBaseInstall)</BaseInstall>
-      <ExtraOptions>-i "\.targets$"</ExtraOptions>
-    </SwrSource>
+  <ItemGroup Condition="'$(SourcePath)' != ''">
+    <SwrSource Include="$(SourcePath)" />
   </ItemGroup>
 
   <Target Name="_GenerateSwrMetadata" Condition="@(SwrSource) != '' or @(Dependency) != ''">

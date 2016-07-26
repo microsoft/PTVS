@@ -7,10 +7,6 @@
     <IsPackage>true</IsPackage>
   </PropertyGroup>
 
-  <Import Project="$(TargetsPath)\Common.Shim.targets" />
-
-  <Import Project="..\swix.generate.targets" />
-
-  <Import Project="..\..\SetupProjectAfter.settings" />
+  <Import Project="..\swix.targets" />
 </Project>
 

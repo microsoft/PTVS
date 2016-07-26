@@ -30,6 +30,7 @@
                    !(bindpath.bin)\Microsoft.PythonTools.VsInteractiveWindow.dll;
                    !(bindpath.bin)\Newtonsoft.Json.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.XamlDesignerSupport.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.RunElevated.exe;
                    pip_downloader.py" />
 
     <!-- Analyzer -->

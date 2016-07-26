@@ -389,7 +389,7 @@ namespace Microsoft.PythonTools.Infrastructure {
         /// <c>Path.GetDirectoryName(CommonUtils.TrimEndSeparator(path)) + Path.DirectorySeparatorChar</c>
         /// </remarks>
         public static string GetParent(string path) {
-            if (string.IsNullOrEmpty(path)) {
+            if (string.IsNullOrEmpty(path) || path.Length <= 1) {
                 return string.Empty;
             }
 

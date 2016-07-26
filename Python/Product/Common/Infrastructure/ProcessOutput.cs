@@ -20,6 +20,9 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -96,6 +99,57 @@ namespace Microsoft.PythonTools.Infrastructure {
             foreach (var redir in _redirectors) {
                 redir.ShowAndActivate();
             }
+        }
+    }
+
+    public sealed class ListRedirector : Redirector {
+        private readonly List<string> _output, _error;
+
+        public ListRedirector(List<string> output, List<string> error = null) {
+            _output = output;
+            _error = error ?? output;
+        }
+
+        public override void WriteErrorLine(string line) {
+            _error.Add(line);
+        }
+
+        public override void WriteLine(string line) {
+            _output.Add(line);
+        }
+    }
+
+    public sealed class StreamRedirector : Redirector {
+        private readonly StreamWriter _output, _error;
+        private readonly string _outputPrefix, _errorPrefix;
+
+        public StreamRedirector(
+            StreamWriter output,
+            StreamWriter error = null,
+            string outputPrefix = null,
+            string errorPrefix = null
+        ) {
+            _output = output;
+            _error = error ?? output;
+            _outputPrefix = outputPrefix;
+            _errorPrefix = errorPrefix;
+        }
+
+        private static string WithPrefix(string prefix, string line) {
+            if (string.IsNullOrEmpty(prefix)) {
+                return line;
+            }
+            return prefix + line;
+        }
+
+        public override void WriteErrorLine(string line) {
+            _error.WriteLine(WithPrefix(_errorPrefix, line));
+            _error.Flush();
+        }
+
+        public override void WriteLine(string line) {
+            _output.WriteLine(WithPrefix(_outputPrefix, line));
+            _output.Flush();
         }
     }
 
@@ -182,8 +236,10 @@ namespace Microsoft.PythonTools.Infrastructure {
                     filename,
                     arguments,
                     workingDirectory,
+                    env,
                     redirector,
                     quoteArgs,
+                    elevate,
                     outputEncoding,
                     errorEncoding
                 );
@@ -214,6 +270,13 @@ namespace Microsoft.PythonTools.Infrastructure {
             return new ProcessOutput(process, redirector);
         }
 
+        private static int GetFreePort() {
+            return Enumerable.Range(new Random().Next(49152, 65536), 60000).Except(
+                from connection in IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections()
+                select connection.LocalEndPoint.Port
+            ).First();
+        }
+
         /// <summary>
         /// Runs the file with the provided settings as a user with
         /// administrative permissions. The window is always hidden and output
@@ -231,84 +294,79 @@ namespace Microsoft.PythonTools.Infrastructure {
             string filename,
             IEnumerable<string> arguments,
             string workingDirectory,
+            IEnumerable<KeyValuePair<string, string>> env,
             Redirector redirector,
             bool quoteArgs = true,
+            bool elevate = true,
             Encoding outputEncoding = null,
             Encoding errorEncoding = null
         ) {
-            var outFile = Path.GetTempFileName();
-            var errFile = Path.GetTempFileName();
-            var psi = new ProcessStartInfo("cmd.exe");
+            var psi = new ProcessStartInfo(PythonToolsInstallPath.GetFile("Microsoft.PythonTools.RunElevated.exe", typeof(ProcessOutput).Assembly));
             psi.CreateNoWindow = true;
             psi.WindowStyle = ProcessWindowStyle.Hidden;
             psi.UseShellExecute = true;
-            psi.Verb = "runas";
+            psi.Verb = elevate ? "runas" : null;
 
+            int port = GetFreePort();
+            var listener = new TcpListener(IPAddress.Loopback, port);
+            psi.Arguments = port.ToString();
+
+            var utf8 = new UTF8Encoding(false);
+            // Send args and env as base64 to avoid newline issues
             string args;
             if (quoteArgs) {
-                args = string.Join(" ", arguments.Where(a => a != null).Select(QuoteSingleArgument));
+                args = string.Join("|", arguments
+                    .Where(a => a != null)
+                    .Select(a => Convert.ToBase64String(utf8.GetBytes(QuoteSingleArgument(a))))
+                );
             } else {
-                args = string.Join(" ", arguments.Where(a => a != null));
+                args = string.Join("|", arguments
+                    .Where(a => a != null)
+                    .Select(a => Convert.ToBase64String(utf8.GetBytes(a)))
+                );
             }
-            psi.Arguments = string.Format("/S /C \"{0} {1} >>{2} 2>>{3}\"",
-                QuoteSingleArgument(filename),
-                args,
-                QuoteSingleArgument(outFile),
-                QuoteSingleArgument(errFile)
-            );
-            psi.WorkingDirectory = workingDirectory;
-            psi.CreateNoWindow = true;
-            psi.UseShellExecute = true;
+
+            var fullEnv = env != null ?
+                string.Join("|", env.Select(kv => kv.Key + "=" + Convert.ToBase64String(utf8.GetBytes(kv.Value)))) :
+                "";
+
+            listener.Start();
+            listener.AcceptTcpClientAsync().ContinueWith(t => {
+                listener.Stop();
+                var client = t.Result;
+                using (var writer = new StreamWriter(client.GetStream(), utf8, 4096, true)) {
+                    writer.WriteLine(filename);
+                    writer.WriteLine(args);
+                    writer.WriteLine(workingDirectory);
+                    writer.WriteLine(fullEnv);
+                    writer.WriteLine(outputEncoding?.WebName ?? "");
+                    writer.WriteLine(errorEncoding?.WebName ?? "");
+                }
+
+                if (redirector != null) {
+                    var reader = new StreamReader(client.GetStream(), utf8, false, 4096, true);
+                    Task.Run(() => {
+                        try {
+                            for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
+                                if (line.StartsWith("OUT:")) {
+                                    redirector.WriteLine(line.Substring(4));
+                                } else if (line.StartsWith("ERR:")) {
+                                    redirector.WriteErrorLine(line.Substring(4));
+                                } else {
+                                    redirector.WriteLine(line);
+                                }
+                            }
+                        } catch (IOException) {
+                        } catch (ObjectDisposedException) {
+                        }
+                    });
+                }
+            });
 
             var process = new Process();
             process.StartInfo = psi;
-            var result = new ProcessOutput(process, redirector);
-            if (redirector != null) {
-                result.Exited += (s, e) => {
-                    try {
-                        try {
-                            var lines = File.ReadAllLines(outFile, outputEncoding ?? Encoding.Default);
-                            foreach (var line in lines) {
-                                redirector.WriteLine(line);
-                            }
-                        } catch (Exception ex) when(!ex.IsCriticalException()) {
-                            redirector.WriteErrorLine("Failed to obtain standard output from elevated process.");
-#if DEBUG
-                            foreach (var line in SplitLines(ex.ToString())) {
-                                redirector.WriteErrorLine(line);
-                            }
-#else
-                            Trace.TraceError("Failed to obtain standard output from elevated process.");
-                            Trace.TraceError(ex.ToString());
-#endif
-                        }
-                        try {
-                            var lines = File.ReadAllLines(errFile, errorEncoding ?? outputEncoding ?? Encoding.Default);
-                            foreach (var line in lines) {
-                                redirector.WriteErrorLine(line);
-                            }
-                        } catch (Exception ex) when(!ex.IsCriticalException()) {
-                            redirector.WriteErrorLine("Failed to obtain standard error from elevated process.");
-#if DEBUG
-                            foreach (var line in SplitLines(ex.ToString())) {
-                                redirector.WriteErrorLine(line);
-                            }
-#else
-                            Trace.TraceError("Failed to obtain standard error from elevated process.");
-                            Trace.TraceError(ex.ToString());
-#endif
-                        }
-                    } finally {
-                        try {
-                            File.Delete(outFile);
-                        } catch { }
-                        try {
-                            File.Delete(errFile);
-                        } catch { }
-                    }
-                };
-            }
-            return result;
+
+            return new ProcessOutput(process, redirector);
         }
 
         internal static IEnumerable<string> SplitLines(string source) {
@@ -376,6 +434,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             if (_redirector == null) {
                 _output = new List<string>();
                 _error = new List<string>();
+                _redirector = new ListRedirector(_output, _error);
             }
 
             _process = process;
@@ -399,12 +458,8 @@ namespace Microsoft.PythonTools.Infrastructure {
             try {
                 _process.Start();
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                if (_redirector != null) {
-                    foreach (var line in SplitLines(ex.ToString())) {
-                        _redirector.WriteErrorLine(line);
-                    }
-                } else if (_error != null) {
-                    _error.AddRange(SplitLines(ex.ToString()));
+                foreach (var line in SplitLines(ex.ToString())) {
+                    _redirector.WriteErrorLine(line);
                 }
                 _process = null;
             }
@@ -416,7 +471,7 @@ namespace Microsoft.PythonTools.Infrastructure {
                 if (_process.StartInfo.RedirectStandardError) {
                     _process.BeginErrorReadLine();
                 }
-                
+
                 if (_process.StartInfo.RedirectStandardInput) {
                     // Close standard input so that we don't get stuck trying to read input from the user.
                     try {
@@ -444,9 +499,6 @@ namespace Microsoft.PythonTools.Infrastructure {
                 }
             } else if (!string.IsNullOrEmpty(e.Data)) {
                 foreach (var line in SplitLines(e.Data)) {
-                    if (_output != null) {
-                        _output.Add(line);
-                    }
                     if (_redirector != null) {
                         _redirector.WriteLine(line);
                     }
@@ -470,11 +522,8 @@ namespace Microsoft.PythonTools.Infrastructure {
                 }
             } else if (!string.IsNullOrEmpty(e.Data)) {
                 foreach (var line in SplitLines(e.Data)) {
-                    if (_error != null) {
-                        _error.Add(line);
-                    }
                     if (_redirector != null) {
-                        _redirector.WriteLine(line);
+                        _redirector.WriteErrorLine(line);
                     }
                 }
             }

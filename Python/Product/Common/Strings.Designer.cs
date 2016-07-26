@@ -371,6 +371,69 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &amp;Continue without Administrator privileges.
+        /// </summary>
+        public static string ElevateForInstallPackage_DoNotElevate {
+            get {
+                return ResourceManager.GetString("ElevateForInstallPackage_DoNotElevate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Package installation may fail if you do not have sufficient permissions.
+        /// </summary>
+        public static string ElevateForInstallPackage_DoNotElevate_Note {
+            get {
+                return ResourceManager.GetString("ElevateForInstallPackage_DoNotElevate_Note", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Elevate now.
+        /// </summary>
+        public static string ElevateForInstallPackage_Elevate {
+            get {
+                return ResourceManager.GetString("ElevateForInstallPackage_Elevate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You may be prompted for credentials.
+        /// </summary>
+        public static string ElevateForInstallPackage_Elevate_Note {
+            get {
+                return ResourceManager.GetString("ElevateForInstallPackage_Elevate_Note", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Always elevate when installing packages.
+        /// </summary>
+        public static string ElevateForInstallPackage_ElevateAlways {
+            get {
+                return ResourceManager.GetString("ElevateForInstallPackage_ElevateAlways", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This dialog will not be shown again.
+        /// </summary>
+        public static string ElevateForInstallPackage_ElevateAlways_Note {
+            get {
+                return ResourceManager.GetString("ElevateForInstallPackage_ElevateAlways_Note", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Administrator privileges may be required to install or update this package..
+        /// </summary>
+        public static string ElevateForInstallPackage_MainInstruction {
+            get {
+                return ResourceManager.GetString("ElevateForInstallPackage_MainInstruction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; will be removed from the project and the directory
         ///&apos;{1}&apos;
         ///and all its contents will be deleted from disk..

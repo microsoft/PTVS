@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis.Values {
-    internal class BuiltinMethodInfo : BuiltinNamespace<IPythonType> {
+    internal class BuiltinMethodInfo : BuiltinNamespace<IPythonType>, IHasRichDescription {
         private readonly IPythonFunction _function;
         private readonly PythonMemberType _memberType;
         internal readonly bool _fromFunction;
@@ -65,13 +65,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
             return _boundMethod.SelfSet;
         }
 
-        public override string Description {
-            get {
-                if (_function.IsBuiltin) {
-                    return "built-in method " + _function.Name;
-                }
-                return "method " + _function.Name;
-            }
+        public IEnumerable<KeyValuePair<string, string>> GetRichDescription() {
+            var def = _function.IsBuiltin ? "built-in method " : "method ";
+            return BuiltinFunctionInfo.GetRichDescription(def, _function, Documentation);
         }
 
         public IAnalysisSet ReturnTypes {

@@ -189,6 +189,7 @@ namespace PythonToolsMockTests {
         }
 
         public void Backspace() => VS.InvokeSync(() => View.Backspace());
+        public void Enter() => VS.InvokeSync(() => View.Enter());
         public void Clear() => VS.InvokeSync(() => View.Clear());
         public void MoveCaret(int line, int column) => View.MoveCaret(line, column);
         public void MemberList() => VS.InvokeSync(() => View.MemberList());

@@ -54,6 +54,8 @@ namespace Microsoft.PythonTools {
         public const uint cmdidInstallRequirementsTxt = 0x4033;
         public const uint cmdidGenerateRequirementsTxt = 0x4034;
 
+        public const uint cmdidOpenInteractiveScopeInEditor = 0x4035;
+
         public const uint comboIdReplScopes = 0x5000;
         public const uint comboIdReplScopesGetList = 0x5001;
         public const uint comboIdReplEvaluators = 0x5002;

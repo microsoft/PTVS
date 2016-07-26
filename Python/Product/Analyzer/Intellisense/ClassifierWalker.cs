@@ -240,7 +240,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public override bool Walk(FunctionDefinition node) {
             if (node.IsCoroutine) {
-                AddSpan(Tuple.Create("", new Span(node.StartIndex, 5)), Classifications.Keyword);
+                AddSpan(Tuple.Create("", new Span(node.DefIndex, 5)), Classifications.Keyword);
             }
 
             Debug.Assert(_head != null);

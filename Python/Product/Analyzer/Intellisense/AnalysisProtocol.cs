@@ -66,6 +66,12 @@ namespace Microsoft.PythonTools.Intellisense {
             public string error;
         }
 
+        public sealed class ExitRequest : GenericRequest {
+            public const string Command = "exit";
+
+            public override string command => Command;
+        }
+
         public sealed class GetReferencesResponse : Response {
             public ProjectReference[] references;
         }

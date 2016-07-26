@@ -533,7 +533,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                     foreach (var fact in factories) {
                         Assert.IsInstanceOfType(
                             fact,
-                            typeof(MSBuildProjectInterpreterFactoryProvider.NotFoundInterpreterFactory),
+                            typeof(NotFoundInterpreterFactory),
                             string.Format("{0} was not correct type", fact.Configuration.FullDescription)
                         );
                         Assert.IsFalse(fact.Configuration.IsAvailable(), string.Format("{0} was not unavailable", fact.Configuration.Description));

@@ -122,6 +122,45 @@ namespace Microsoft.VisualStudioTools {
         }
 
         /// <summary>
+        /// Executes the specified action on the UI thread. The task is
+        /// completed once the action completes.
+        /// </summary>
+        /// <remarks>
+        /// If called from the UI thread, the action is executed synchronously.
+        /// </remarks>
+        public override Task InvokeAsync(Action action, CancellationToken cancellationToken) {
+            var tcs = new TaskCompletionSource<object>();
+            if (InvokeRequired) {
+                return _factory.StartNew(action, cancellationToken);
+            } else {
+                // Action is run synchronously, but we still return the task.
+                cancellationToken.ThrowIfCancellationRequested();
+                InvokeAsyncHelper(action, tcs);
+            }
+            return tcs.Task;
+        }
+
+        /// <summary>
+        /// Evaluates the specified function on the UI thread. The task is
+        /// completed once the result is available.
+        /// </summary>
+        /// <remarks>
+        /// If called from the UI thread, the function is evaluated 
+        /// synchronously.
+        /// </remarks>
+        public override Task<T> InvokeAsync<T>(Func<T> func, CancellationToken cancellationToken) {
+            var tcs = new TaskCompletionSource<T>();
+            if (InvokeRequired) {
+                return _factory.StartNew(func, cancellationToken);
+            } else {
+                // Function is run synchronously, but we still return the task.
+                cancellationToken.ThrowIfCancellationRequested();
+                InvokeAsyncHelper(func, tcs);
+            }
+            return tcs.Task;
+        }
+        
+        /// <summary>
         /// Awaits the provided task on the UI thread. The function will be
         /// invoked on the UI thread to ensure the correct context is captured
         /// for any await statements within the task.

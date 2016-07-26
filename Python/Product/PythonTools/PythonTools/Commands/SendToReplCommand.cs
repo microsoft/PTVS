@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.PythonTools.Interpreter;
@@ -30,6 +31,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudioTools;
 using IServiceProvider = System.IServiceProvider;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -119,13 +121,10 @@ namespace Microsoft.PythonTools.Commands {
                 repl.Show(focusRepl);
 
                 var inputs = repl.InteractiveWindow.Properties.GetOrCreateSingletonProperty(
-                    () => new InteractiveInputs(repl.InteractiveWindow, _serviceProvider)
+                    () => new InteractiveInputs(repl.InteractiveWindow, _serviceProvider, alwaysSubmit)
                 );
 
-                inputs.Enqueue(input);
-                if (alwaysSubmit) {
-                    inputs.SubmitIfNotEmpty();
-                }
+                await inputs.EnqueueAsync(input);
             }
 
             // Take focus back if REPL window has stolen it and we're in line-by-line mode.
@@ -187,23 +186,19 @@ namespace Microsoft.PythonTools.Commands {
             private readonly LinkedList<string> _pendingInputs = new LinkedList<string>();
             private readonly IServiceProvider _serviceProvider;
             private readonly IInteractiveWindow _window;
+            private readonly bool _submitAtEnd;
 
-            public InteractiveInputs(IInteractiveWindow window, IServiceProvider serviceProvider) {
+            public InteractiveInputs(IInteractiveWindow window, IServiceProvider serviceProvider, bool submitAtEnd) {
                 _window = window;
                 _serviceProvider = serviceProvider;
-                _window.ReadyForInput += ProcessQueuedInput;
+                _window.ReadyForInput += () => ProcessQueuedInputAsync().DoNotWait();
+                _submitAtEnd = submitAtEnd;
             }
 
-            public void Enqueue(string input) {
+            public async Task EnqueueAsync(string input) {
                 _pendingInputs.AddLast(input);
                 if (!_window.IsRunning) {
-                    ProcessQueuedInput();
-                }
-            }
-
-            public void SubmitIfNotEmpty() {
-                if (_window.CurrentLanguageBuffer.CurrentSnapshot.Length > 0) {
-                    _window.Operations.ExecuteInput();
+                    await ProcessQueuedInputAsync();
                 }
             }
 
@@ -211,7 +206,7 @@ namespace Microsoft.PythonTools.Commands {
             /// Pends the next input line to the current input buffer, optionally executing it
             /// if it forms a complete statement.
             /// </summary>
-            private async void ProcessQueuedInput() {
+            private async Task ProcessQueuedInputAsync() {
                 var textView = _window.TextView;
                 var eval = _window.GetPythonEvaluator();
 
@@ -258,6 +253,10 @@ namespace Microsoft.PythonTools.Commands {
                         }
 
                         _window.InsertCode(textView.Options.GetNewLineCharacter());
+
+                        if (_submitAtEnd && _pendingInputs.First == null) {
+                            _window.Operations.ExecuteInput();
+                        }
                     }
                 }
             }

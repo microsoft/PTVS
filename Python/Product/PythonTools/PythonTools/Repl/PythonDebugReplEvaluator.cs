@@ -187,25 +187,9 @@ namespace Microsoft.PythonTools.Repl {
             }
         }
 
-        public string CurrentScopeName {
-            get {
-                if (_activeEvaluator != null) {
-                    return _activeEvaluator.CurrentScopeName;
-                } else {
-                    return string.Empty;
-                }
-            }
-        }
-
-        public bool EnableMultipleScopes {
-            get {
-                if (_activeEvaluator != null) {
-                    return _activeEvaluator.EnableMultipleScopes;
-                } else {
-                    return false;
-                }
-            }
-        }
+        public string CurrentScopeName => _activeEvaluator?.CurrentScopeName ?? "";
+        public string CurrentScopePath => _activeEvaluator?.CurrentScopePath ?? "";
+        public bool EnableMultipleScopes => _activeEvaluator?.EnableMultipleScopes ?? false;
 
         public bool LiveCompletionsOnly {
             get { return CurrentOptions.LiveCompletionsOnly; }
@@ -222,12 +206,12 @@ namespace Microsoft.PythonTools.Repl {
 
         public string DisplayName => Strings.DebugReplDisplayName;
 
-        public IEnumerable<KeyValuePair<string, bool>> GetAvailableScopesAndKind() {
+        public IEnumerable<KeyValuePair<string, string>> GetAvailableScopesAndPaths() {
             if (_activeEvaluator != null) {
-                return _activeEvaluator.GetAvailableScopesAndKind();
+                return _activeEvaluator.GetAvailableScopesAndPaths();
             }
 
-            return new KeyValuePair<string, bool>[0];
+            return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
         public CompletionResult[] GetMemberNames(string text) {

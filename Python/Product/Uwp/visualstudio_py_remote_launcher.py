@@ -25,7 +25,7 @@ the second argument.
 import os
 import sys
 import ptvsd
-import visualstudio_py_debugger as vspd
+import ptvsd.visualstudio_py_debugger as vspd
 
 def debug_remote(
     file, 

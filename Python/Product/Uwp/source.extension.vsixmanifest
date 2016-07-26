@@ -24,5 +24,6 @@
     <Asset Type="DebuggerEngineExtension" Path="RemoteDebugger.vsdconfig" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Uwp.Interpreter;_GetTargetPath|" AssemblyName="|Uwp.Interpreter;_GetAssemblyName|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Uwp.Interpreter;_GetTargetPath|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|Uwp.Wizards;_GetTargetPath|" AssemblyName="|Uwp.Wizards;_GetAssemblyName|" />
   </Assets>
 </PackageManifest>

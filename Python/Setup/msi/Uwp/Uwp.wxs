@@ -7,7 +7,7 @@
 
     <?foreach key in VS;WD;VWD?>
     <DirectoryRef Id="Dir_$(var.key)UwpProjectTemplates">
-      <Directory Id="Dir_$(var.key)UwpProjectTemplates_BackgroundService" Name="BackgroundService" />
+      <Directory Id="Dir_$(var.key)ProjectTemplates_UwpProjectTemplates_BackgroundService" Name="BackgroundService" />
     </DirectoryRef>
     <?endforeach?>
 

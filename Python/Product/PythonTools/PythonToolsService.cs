@@ -36,6 +36,7 @@ using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
+using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
@@ -200,13 +201,13 @@ namespace Microsoft.PythonTools {
             }
 
             _container.GetUIThread().InvokeAsync(() => {
-                if (_analyzer != null) {
-                    var analyzer = CreateAnalyzer();
-
-                    if (_analyzer != null) {
-                        analyzer.SwitchAnalyzers(_analyzer);
+                var analyzer = CreateAnalyzer();
+                var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
+                if (oldAnalyzer != null) {
+                    analyzer.SwitchAnalyzers(oldAnalyzer);
+                    if (oldAnalyzer.RemoveUser()) {
+                        oldAnalyzer.Dispose();
                     }
-                    _analyzer = analyzer;
                 }
             }).DoNotWait();
         }
@@ -714,8 +715,8 @@ namespace Microsoft.PythonTools {
 
         #region Intellisense
 
-        public CompletionAnalysis GetCompletions(ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
-            return VsProjectAnalyzer.GetCompletions(_container, view, snapshot, span, point, options);
+        public CompletionAnalysis GetCompletions(ICompletionSession session, ITextView view, ITextSnapshot snapshot, ITrackingSpan span, ITrackingPoint point, CompletionOptions options) {
+            return VsProjectAnalyzer.GetCompletions(_container, session, view, snapshot, span, point, options);
         }
 
         public SignatureAnalysis GetSignatures(ITextView view, ITextSnapshot snapshot, ITrackingSpan span) {

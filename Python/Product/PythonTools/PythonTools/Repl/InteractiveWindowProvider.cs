@@ -207,10 +207,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal static void Close(object obj) {
-            var vwnd = obj as IVsInteractiveWindow;
-            if (vwnd != null) {
-                vwnd.InteractiveWindow.Close();
-            }
+            var frame = ((obj as ToolWindowPane)?.Frame as IVsWindowFrame);
+            frame?.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
         }
     }
 }

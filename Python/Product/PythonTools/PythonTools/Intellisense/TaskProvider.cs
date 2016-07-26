@@ -571,9 +571,10 @@ namespace Microsoft.PythonTools.Intellisense {
                     if (changed) {
                         var currentTime = DateTime.Now;
                         if ((currentTime - lastUpdateTime).TotalMilliseconds > 1000) {
-                            Refresh();
-                            lastUpdateTime = currentTime;
-                            changed = false;
+                            if (Refresh()) {
+                                lastUpdateTime = currentTime;
+                                changed = false;
+                            }
                         }
                     }
                 }
@@ -595,19 +596,34 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.WriteLine(string.Format("Done flushing... {0}", DateTime.Now));
         }
 
-        private void Refresh() {
-            if (_taskList != null || _errorProvider != null) {
-                _serviceProvider.GetUIThread().MustNotBeCalledFromUIThread();
-                RefreshAsync().WaitAndHandleAllExceptions(_serviceProvider, GetType());
+        private bool Refresh() {
+            if (_taskList == null && _errorProvider == null) {
+                return true;
             }
+            _serviceProvider.GetUIThread().MustNotBeCalledFromUIThread();
+
+            // Allow 1 second to get onto the UI thread for the update
+            // Otherwise abort and we'll try again later
+            var cts = new CancellationTokenSource(1000);
+            try {
+                RefreshAsync(cts.Token).WaitAndUnwrapExceptions();
+            } catch (OperationCanceledException) {
+                return false;
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                ex.ReportUnhandledException(_serviceProvider, GetType());
+            } finally {
+                cts.Dispose();
+            }
+            return true;
         }
 
-        private async Task RefreshAsync() {
+        private async Task RefreshAsync(CancellationToken cancellationToken) {
             var buffers = new HashSet<ITextBuffer>();
             var bufferToErrorList = new Dictionary<ITextBuffer, List<TaskProviderItem>>();
 
             if (_errorProvider != null) {
                 lock (_errorSources) {
+                    cancellationToken.ThrowIfCancellationRequested();
                     foreach (var kv in _errorSources) {
                         List<TaskProviderItem> items;
                         buffers.UnionWith(kv.Value);
@@ -668,7 +684,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                     }
                 }
-            });
+            }, cancellationToken);
         }
 
         private void SendMessage(WorkerMessage message) {

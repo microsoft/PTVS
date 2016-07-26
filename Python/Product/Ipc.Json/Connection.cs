@@ -87,7 +87,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
                         arguments = r.Request,
                         seq = seq,
                         type = PacketType.Request
-                    }
+                    },
+                    cancellationToken
                 ).ConfigureAwait(false);
 
                 res = await r._task.Task.ConfigureAwait(false);
@@ -117,7 +118,8 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     body = eventValue,
                     seq = seq,
                     type = PacketType.Event
-                }
+                },
+                CancellationToken.None
             );
         }
 
@@ -145,10 +147,12 @@ namespace Microsoft.PythonTools.Ipc.Json {
                         packet = JsonConvert.DeserializeObject<JObject>(line);
                     } catch (JsonSerializationException ex) {
                         message = ": " + ex.Message;
+                    } catch (JsonReaderException ex) {
+                        message = ": " + ex.Message;
                     }
 
                     if (packet == null) {
-                        if (reader.EndOfStream) {
+                        if (reader.EndOfStream || !reader.BaseStream.CanRead) {
                             return;
                         }
                         await WriteError("Failed to parse packet" + message).ConfigureAwait(false);
@@ -172,6 +176,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     }
 
                 }
+            } catch (OperationCanceledException) {
             } catch (ObjectDisposedException) {
             }
         }
@@ -245,12 +250,14 @@ namespace Microsoft.PythonTools.Ipc.Json {
             try {
                 await _requestHandler(
                     new RequestArgs(command, request),
-                    result => SendResponseAsync(seq.Value, command, success, message, result)
+                    result => SendResponseAsync(seq.Value, command, success, message, result, CancellationToken.None)
                 );
+            } catch (OperationCanceledException) {
+                throw;
             } catch (Exception e) {
                 success = false;
                 message = e.ToString();
-                await SendResponseAsync(seq.Value, command, success, message, null).ConfigureAwait(false);
+                await SendResponseAsync(seq.Value, command, success, message, null, CancellationToken.None).ConfigureAwait(false);
             }
         }
 
@@ -307,7 +314,14 @@ namespace Microsoft.PythonTools.Ipc.Json {
             return new string(buffer);
         }
 
-        private async Task SendResponseAsync(int sequence, string command, bool success, string message, Response response) {
+        private async Task SendResponseAsync(
+            int sequence,
+            string command,
+            bool success,
+            string message,
+            Response response,
+            CancellationToken cancel
+        ) {
             int newSeq = Interlocked.Increment(ref _seq);
             Debug.WriteLine("Sending response {0}", newSeq);
             await SendMessage(
@@ -319,24 +333,25 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     body = response,
                     seq = newSeq,
                     type = PacketType.Response
-                }
+                },
+                cancel
             ).ConfigureAwait(false);
         }
 
         /// <summary>
         /// Sends a single message across the wire.
         /// </summary>
-        private async Task SendMessage(ProtocolMessage packet) {
+        private async Task SendMessage(ProtocolMessage packet, CancellationToken cancel) {
             var str = JsonConvert.SerializeObject(packet);
             var bytes = Encoding.UTF8.GetBytes(str);
-            await _writeLock.WaitAsync().ConfigureAwait(false);
+            await _writeLock.WaitAsync(cancel).ConfigureAwait(false);
             try {
                 var contentLengthStr = "Content-Length: " + bytes.Length + "\n\n";
                 var contentLength = Encoding.UTF8.GetBytes(contentLengthStr);
 
                 await _writer.WriteAsync(contentLength, 0, contentLength.Length).ConfigureAwait(false);
                 await _writer.WriteAsync(bytes, 0, bytes.Length).ConfigureAwait(false);
-                await _writer.FlushAsync().ConfigureAwait(false);
+                await _writer.FlushAsync(cancel).ConfigureAwait(false);
             } finally {
                 _writeLock.Release();
             }
@@ -346,14 +361,19 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// Writes an error on a malformed request.
         /// </summary>
         private async Task WriteError(string message) {
-            await SendMessage(
-                new ErrorMessage() {
-                    seq = Interlocked.Increment(ref _seq),
-                    type = PacketType.Error,
-                    body = new Dictionary<string, object>() { { "message", message } }
-                }
-            );
-            throw new InvalidOperationException(message);
+            try {
+                await SendMessage(
+                    new ErrorMessage() {
+                        seq = Interlocked.Increment(ref _seq),
+                        type = PacketType.Error,
+                        body = new Dictionary<string, object>() { { "message", message } }
+                    },
+                    CancellationToken.None
+                );
+                throw new InvalidOperationException(message);
+            } catch (ObjectDisposedException) {
+            } catch (IOException) {
+            }
         }
 
         /// <summary>

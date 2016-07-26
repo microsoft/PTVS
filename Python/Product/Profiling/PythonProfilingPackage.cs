@@ -96,6 +96,12 @@ namespace Microsoft.PythonTools.Profiling {
             Trace.WriteLine(string.Format(CultureInfo.CurrentCulture, "Entering Initialize() of: {0}", this.ToString()));
             base.Initialize();
 
+            // Ensure Python Tools package is loaded
+            var shell = (IVsShell)GetService(typeof(SVsShell));
+            var ptvsPackage = GuidList.guidPythonToolsPackage;
+            IVsPackage pkg;
+            ErrorHandler.ThrowOnFailure(shell.LoadPackage(ptvsPackage, out pkg));
+
             // Add our command handlers for menu (commands must exist in the .vsct file)
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
             if (null != mcs) {
@@ -107,7 +113,6 @@ namespace Microsoft.PythonTools.Profiling {
                 // Create the command for the menu item.
                 menuCommandID = new CommandID(GuidList.guidPythonProfilingCmdSet, (int)PkgCmdIDList.cmdidPerfExplorer);
                 var oleMenuItem = new OleMenuCommand(ShowPeformanceExplorer, menuCommandID);
-                oleMenuItem.BeforeQueryStatus += ShowPerfQueryStatus;
                 mcs.AddCommand(oleMenuItem);
 
                 menuCommandID = new CommandID(GuidList.guidPythonProfilingCmdSet, (int)PkgCmdIDList.cmdidAddPerfSession);
@@ -170,6 +175,11 @@ namespace Microsoft.PythonTools.Profiling {
         /// the OleMenuCommandService service and the MenuCommand class.
         /// </summary>
         private void StartProfilingWizard(object sender, EventArgs e) {
+            if (!IsProfilingInstalled()) {
+                MessageBox.Show("Profiling support seems to be missing or corrupt. Try repairing your Visual Studio installation.");
+                return;
+            }
+
             var targetView = new ProfilingTargetView(this);
             var dialog = new LaunchProfiling(this, targetView);
             var res = dialog.ShowModal() ?? false;
@@ -329,10 +339,17 @@ namespace Microsoft.PythonTools.Profiling {
         /// the OleMenuCommandService service and the MenuCommand class.
         /// </summary>
         private void ShowPeformanceExplorer(object sender, EventArgs e) {
-            ShowPerformanceExplorer();
+            try {
+                ShowPerformanceExplorer();
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                MessageBox.Show("Profiling support seems to be missing or corrupt. Try repairing your Visual Studio installation.");
+            }
         }
 
         internal PerfToolWindow ShowPerformanceExplorer() {
+            if (!IsProfilingInstalled()) {
+                throw new InvalidOperationException();
+            }
             var pane = this.FindToolWindow(typeof(PerfToolWindow), 0, true);
             if (pane == null) {
                 throw new InvalidOperationException();
@@ -385,18 +402,6 @@ namespace Microsoft.PythonTools.Profiling {
                 oleMenu.Enabled = true;
             } else {
                 oleMenu.Enabled = false;
-            }
-        }
-
-        private void ShowPerfQueryStatus(object sender, EventArgs args) {
-            var oleMenu = sender as OleMenuCommand;
-
-            if (IsProfilingInstalled()) {
-                oleMenu.Enabled = true;
-                oleMenu.Visible = true;
-            } else {
-                oleMenu.Enabled = false;
-                oleMenu.Visible = false;
             }
         }
 

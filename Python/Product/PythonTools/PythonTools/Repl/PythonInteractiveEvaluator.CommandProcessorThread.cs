@@ -183,9 +183,11 @@ namespace Microsoft.PythonTools.Repl {
             private AutoResetEvent _completionResultEvent = new AutoResetEvent(false);
             private OverloadDoc[] _overloads;
             private Dictionary<string, string> _fileToModuleName;
-            private Dictionary<string, bool> _allModules;
+            private Dictionary<string, string> _moduleToFileName;
             private StringBuilder _preConnectionOutput;
             private string _currentScope = "__main__";
+            private string _currentScopeFileName;
+            private string _currentWorkingDirectory;
             private MemberResults _memberResults;
 
             private CommandProcessorThread(PythonInteractiveEvaluator evaluator, Process process) {
@@ -201,6 +203,7 @@ namespace Microsoft.PythonTools.Repl {
             ) {
                 var thread = new CommandProcessorThread(evaluator, process);
                 thread._listenerSocket = listenerSocket;
+                thread._currentWorkingDirectory = process.StartInfo.WorkingDirectory;
                 thread.StartOutputThread(process.StartInfo.RedirectStandardOutput);
                 return thread;
             }
@@ -211,6 +214,8 @@ namespace Microsoft.PythonTools.Repl {
             ) {
                 var thread = new CommandProcessorThread(evaluator, null);
                 thread._stream = stream;
+                // Should be quickly replaced, but it's the best guess we have
+                thread._currentWorkingDirectory = Environment.CurrentDirectory;
                 thread.StartOutputThread(false);
                 return thread;
             }
@@ -224,6 +229,8 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             public string CurrentScope => _currentScope;
+            public string CurrentScopeFileName => _currentScopeFileName;
+            public string CurrentWorkingDirectory => _currentWorkingDirectory;
 
             public bool IsProcessExpectedToExit { get; set; }
 
@@ -361,6 +368,7 @@ namespace Microsoft.PythonTools.Repl {
                                 case "DETC": HandleDebuggerDetach(); break;
                                 case "DPNG": HandleDisplayPng(); break;
                                 case "DXAM": HandleDisplayXaml(); break;
+                                case "CHWD": HandleWorkingDirectoryChanged(); break;
                                 case "EXIT":
                                     // REPL has exited
                                     _stream.Write(ExitCommandBytes);
@@ -465,6 +473,12 @@ namespace Microsoft.PythonTools.Repl {
                 _receivedPrompts.TrySetResult(null);
             }
 
+            private void HandleWorkingDirectoryChanged() {
+                Debug.Assert(Monitor.IsEntered(_streamLock));
+
+                _currentWorkingDirectory = _stream.ReadString();
+            }
+
             public async Task<bool> GetSupportsMultipleStatementsAsync() {
                 await _receivedPrompts.Task;
                 return _supportsMultipleStatements;
@@ -521,21 +535,19 @@ namespace Microsoft.PythonTools.Repl {
                 Debug.Assert(Monitor.IsEntered(_streamLock));
 
                 int moduleCount = _stream.ReadInt32();
-                var moduleNames = new Dictionary<string, string>();
-                var allModules = new Dictionary<string, bool>();
+                var fileToModule = new Dictionary<string, string>();
+                var moduleToFile = new Dictionary<string, string>();
                 for (int i = 0; i < moduleCount; i++) {
                     string name = _stream.ReadString();
                     string filename = _stream.ReadString();
-                    if (!String.IsNullOrWhiteSpace(filename)) {
-                        moduleNames[filename] = name;
-                        allModules[name] = true;
-                    } else {
-                        allModules[name] = false;
+                    if (!string.IsNullOrEmpty(filename)) {
+                        fileToModule[filename] = name;
                     }
+                    moduleToFile[name] = filename;
                 }
 
-                _fileToModuleName = moduleNames;
-                _allModules = allModules;
+                _fileToModuleName = fileToModule;
+                _moduleToFileName = moduleToFile;
                 _completionResultEvent.Set();
             }
 
@@ -662,26 +674,25 @@ namespace Microsoft.PythonTools.Repl {
                         if (_listenerSocket != null) {
                             Trace.TraceInformation("Deferred executing text because connection is not fully established yet.");
                             _deferredExecute = send;
-                            _completion = new TaskCompletionSource<ExecutionResult>();
-                            return _completion.Task;
                         } else {
                             _eval.WriteError(Strings.ReplDisconnectedReset);
                             return ExecutionResult.Failed;
                         }
-                    }
-
-                    try {
-                        send();
-                    } catch (IOException) {
-                        _eval.WriteError(Strings.ReplDisconnectedReset);
-                        return ExecutionResult.Failed;
+                    } else {
+                        try {
+                            send();
+                        } catch (IOException) {
+                            _eval.WriteError(Strings.ReplDisconnectedReset);
+                            return ExecutionResult.Failed;
+                        }
                     }
                 }
 
+                var tcs = new TaskCompletionSource<ExecutionResult>();
                 lock (_completionLock) {
-                    _completion = new TaskCompletionSource<ExecutionResult>();
-                    return _completion.Task;
+                    _completion = tcs;
                 }
+                return tcs.Task;
             }
 
             public async Task<bool> ExecuteFile(string filename, string extraArgs, string fileType) {
@@ -701,25 +712,23 @@ namespace Microsoft.PythonTools.Repl {
                         // If we're still waiting for debuggee to connect to us, postpone the actual execution until we have the command stream.
                         if (_listenerSocket != null) {
                             _deferredExecute = send;
-                            _completion = new TaskCompletionSource<ExecutionResult>();
-                            return (await _completion.Task).IsSuccessful;
                         } else {
                             _eval.WriteError(Strings.ReplDisconnectedReset);
                             return false;
                         }
-                    }
-
-                    try {
-                        send();
-                    } catch (IOException) {
-                        _eval.WriteError(Strings.ReplDisconnectedReset);
-                        return false;
+                    } else {
+                        try {
+                            send();
+                        } catch (IOException) {
+                            _eval.WriteError(Strings.ReplDisconnectedReset);
+                            return false;
+                        }
                     }
                 }
 
-                TaskCompletionSource<ExecutionResult> tcs;
+                var tcs = new TaskCompletionSource<ExecutionResult>();
                 lock (_completionLock) {
-                    _completion = tcs = new TaskCompletionSource<ExecutionResult>();
+                    _completion = tcs;
                 }
                 return (await tcs.Task).IsSuccessful;
             }
@@ -737,6 +746,7 @@ namespace Microsoft.PythonTools.Repl {
                     _stream.WriteInt32(frame);
                     _stream.WriteInt32((int)frameKind);
                     _currentScope = "<CurrentFrame>";
+                    _currentScopeFileName = null;
                 }
             }
 
@@ -817,10 +827,10 @@ namespace Microsoft.PythonTools.Repl {
             }
 
             public async Task<string> GetScopeByFilenameAsync(string path) {
-                await GetAvailableScopesAndKindAsync();
+                await GetAvailableScopesAndPathsAsync();
 
                 string res;
-                if (_fileToModuleName.TryGetValue(path, out res)) {
+                if (_fileToModuleName != null && _fileToModuleName.TryGetValue(path, out res)) {
                     return res;
                 }
                 return null;
@@ -833,6 +843,9 @@ namespace Microsoft.PythonTools.Repl {
                             _stream.Write(SetModuleCommandBytes);
                             SendString(scopeName);
                             _currentScope = scopeName;
+                            if (!(_moduleToFileName?.TryGetValue(scopeName, out _currentScopeFileName) ?? false)) {
+                                _currentScopeFileName = null;
+                            }
 
                             _eval.WriteOutput(Strings.ReplModuleChanged.FormatUI(scopeName));
                         } else {
@@ -854,7 +867,7 @@ namespace Microsoft.PythonTools.Repl {
                             evt = _completionResultEvent;
                         }
                         evt.WaitOne(timeout);
-                        return _fileToModuleName?.Values.AsEnumerable();
+                        return _moduleToFileName?.Keys.AsEnumerable();
                     } catch (IOException) {
                     }
 
@@ -862,7 +875,7 @@ namespace Microsoft.PythonTools.Repl {
                 });
             }
 
-            public Task<IEnumerable<KeyValuePair<string, bool>>> GetAvailableScopesAndKindAsync(int timeout = -1) {
+            public Task<IEnumerable<KeyValuePair<string, string>>> GetAvailableScopesAndPathsAsync(int timeout = -1) {
                 return Task.Run(() => {
                     try {
                         AutoResetEvent evt;
@@ -871,7 +884,7 @@ namespace Microsoft.PythonTools.Repl {
                             evt = _completionResultEvent;
                         }
                         evt.WaitOne(timeout);
-                        return _allModules.AsEnumerable();
+                        return _moduleToFileName.AsEnumerable();
                     } catch (IOException) {
                     }
 

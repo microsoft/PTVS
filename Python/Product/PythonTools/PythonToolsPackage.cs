@@ -50,7 +50,6 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Adornments;
 using Microsoft.VisualStudio.TextManager.Interop;
-using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
@@ -426,7 +425,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             try {
                 pyService = _pyService = new PythonToolsService(services);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                ex.ReportUnhandledException(services, GetType());
+                ex.ReportUnhandledException(services, GetType(), allowUI: false);
                 throw;
             }
 
@@ -503,16 +502,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             var interpreters = ComponentModel.GetService<IInterpreterRegistryService>();
             var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
-
-            //var loadedProjectProvider = interpreterService.KnownProviders
-            //    .OfType<LoadedProjectInterpreterFactoryProvider>()
-            //    .FirstOrDefault();
-            //// Ensure the provider is available - if not, you probably need to
-            //// rebuild or clean your experimental hive.
-            //Debug.Assert(loadedProjectProvider != null, "Expected LoadedProjectInterpreterFactoryProvider");
-            //if (loadedProjectProvider != null) {
-            //    loadedProjectProvider.SetSolution((IVsSolution)GetService(typeof(SVsSolution)));
-            //}
 
             // The variable is inherited by child processes backing Test Explorer, and is used in PTVS
             // test discoverer and test executor to connect back to VS.

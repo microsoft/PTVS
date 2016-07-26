@@ -207,12 +207,15 @@ async def f():
 class F:
     async def f(self): pass
 
+@F
+async def f():
+    pass
 ";
 
             using (var helper = new ClassifierHelper(code, PythonLanguageVersion.V35)) {
-                helper.CheckAstClassifierSpans("ii i+i iki:k ikiki:k iki(): ii iki:k ikiki:k ki: iki(i): k");
+                helper.CheckAstClassifierSpans("ii i+i iki:k ikiki:k iki(): ii iki:k ikiki:k ki: iki(i): k @iiki():k");
                 // "await f" does not highlight "f", but "await + f" does
-                helper.CheckAnalysisClassifierSpans("fff k<async>f k<await>f k<async>f k<async>f c<F> k<async>fp");
+                helper.CheckAnalysisClassifierSpans("fff k<async>f k<await>f k<async>f k<async>f c<F> k<async>fp c<F>k<async>f");
             }
         }
 
@@ -330,6 +333,7 @@ def f() -> int:
                 { '+', PythonPredefinedClassificationTypeNames.Operator },
                 { ':', PythonPredefinedClassificationTypeNames.Operator },
                 { '=', PythonPredefinedClassificationTypeNames.Operator },
+                { '@', PythonPredefinedClassificationTypeNames.Operator },
                 { ',', PythonPredefinedClassificationTypeNames.Comma },
                 { '.', PythonPredefinedClassificationTypeNames.Dot },
             };
