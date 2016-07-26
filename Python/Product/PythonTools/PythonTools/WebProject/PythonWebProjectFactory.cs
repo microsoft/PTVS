@@ -16,21 +16,19 @@
 
 using System;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Flavor;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Project.Web {
     [Guid(PythonConstants.WebProjectFactoryGuid)]
     internal class PythonWebProjectFactory : FlavoredProjectFactoryBase {
-        private PythonToolsPackage _package;
+        private readonly IServiceProvider _site;
 
-        internal PythonWebProjectFactory(PythonToolsPackage package) {
-            _package = package;
+        internal PythonWebProjectFactory(IServiceProvider site) {
+            _site = site;
         }
 
         protected override object PreCreateForOuter(IntPtr outerProjectIUnknown) {
-            return new PythonWebProject { Package = _package };
+            return new PythonWebProject(_site);
         }
     }
 }

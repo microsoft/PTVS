@@ -82,9 +82,6 @@ namespace Microsoft.PythonTools.Project {
         private readonly PythonProject _pythonProject;
 
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
-            // This will ensure that our package is loaded
-            var pyService = serviceProvider.GetPythonToolsService();
-
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
             ActiveInterpreterChanged += OnActiveInterpreterChanged;

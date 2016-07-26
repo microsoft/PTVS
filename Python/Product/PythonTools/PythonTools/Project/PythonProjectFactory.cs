@@ -85,6 +85,9 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override ProjectNode/*!*/ CreateProject() {
+            // Ensure our package is properly loaded
+            var pyService = Site.GetPythonToolsService();
+
             return new PythonProjectNode(Site);
         }
 
@@ -144,20 +147,27 @@ namespace Microsoft.PythonTools.Project {
                 return ProjectUpgradeState.OneWayUpgrade;
             }
 
+            var imports = new HashSet<string>(projectXml.Imports.Select(p => p.Project), StringComparer.OrdinalIgnoreCase);
+            // Only importing the Common targets and/or props.
+            if (imports.Contains(CommonProps) || imports.Contains(CommonTargets) && imports.Count == 1) {
+                return ProjectUpgradeState.OneWayUpgrade;
+            }
+
             // Includes imports from PTVS 2.2
             if (projectXml.Properties.Any(IsPtvsTargetsFileProperty)) {
                 return ProjectUpgradeState.SafeRepair;
             }
 
-            var imports = new HashSet<string>(projectXml.Imports.Select(p => p.Project), StringComparer.OrdinalIgnoreCase);
-            // Importing a targets file from 2.1 Beta
-            if (imports.Contains(Ptvs21BetaBottleTargets) || imports.Contains(Ptvs21BetaFlaskTargets)) {
+            // Uses web or Django launcher and has no WebBrowserUrl property
+            if (projectXml.Properties.Where(p => p.Name == "LaunchProvider")
+                    .Any(p => p.Value == "Web launcher" || p.Value == "Django launcher") &&
+                !projectXml.Properties.Any(p => p.Name == "WebBrowserUrl")) {
                 return ProjectUpgradeState.SafeRepair;
             }
 
-            // Only importing the Common targets and/or props.
-            if (imports.Contains(CommonProps) || imports.Contains(CommonTargets) && imports.Count == 1) {
-                return ProjectUpgradeState.OneWayUpgrade;
+            // Importing a targets file from 2.1 Beta
+            if (imports.Contains(Ptvs21BetaBottleTargets) || imports.Contains(Ptvs21BetaFlaskTargets)) {
+                return ProjectUpgradeState.SafeRepair;
             }
 
             // ToolsVersion less than 4.0 (or unspecified) is not supported, so
@@ -193,10 +203,28 @@ namespace Microsoft.PythonTools.Project {
 
             // Importing a targets file from 2.1 Beta
             ProcessImportsFrom21b(projectXml, log);
+
+            // Add missing WebBrowserUrl property
+            ProcessMissingWebBrowserUrl(projectXml, log);
         }
 
         private static bool IsPtvsTargetsFileProperty(ProjectPropertyElement p) {
             return p.Name == "PtvsTargetsFile";
+        }
+
+        private static void ProcessMissingWebBrowserUrl(ProjectRootElement projectXml, Action<__VSUL_ERRORLEVEL, string> log) {
+            var launcher = projectXml.Properties.LastOrDefault(p => p.Name == "LaunchProvider");
+            if (launcher == null ||
+                launcher.Value != "Web launcher" ||
+                launcher.Value != "Django launcher") {
+                return;
+            }
+
+            //<WebBrowserUrl>http://localhost</WebBrowserUrl>
+            var prop = projectXml.CreatePropertyElement("WebBrowserUrl");
+            prop.Value = "http://localhost";
+            launcher.Parent.InsertAfterChild(launcher, prop);
+            log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedWebBrowserUrlProperty);
         }
 
         private static void ProcessImportsFrom22(ProjectRootElement projectXml, Action<__VSUL_ERRORLEVEL, string> log) {
