@@ -131,9 +131,10 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public object GetProperty(string id, string propName) {
-            if (propName == "ProjectMoniker") {
-                var moniker = id.Substring(id.LastIndexOf('|') + 1);
-                return PathUtils.IsValidPath(moniker) ? moniker : null;
+            switch (propName) {
+                case "ProjectMoniker":
+                    var moniker = id.Substring(id.LastIndexOf('|') + 1);
+                    return PathUtils.IsValidPath(moniker) ? moniker : null;
             }
             return null;
         }

@@ -15,9 +15,13 @@
 // permissions and limitations under the License.
 
 
+using System.Collections.Generic;
+
 namespace Microsoft.PythonTools.Options {
     interface IPythonToolsOptionsService {
         void SaveString(string name, string category, string value);
         string LoadString(string name, string category);
+        IList<string> GetSubcategories(string category);
+        void DeleteCategory(string category);
     }
 }

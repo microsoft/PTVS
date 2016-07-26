@@ -46,6 +46,8 @@ namespace Microsoft.PythonTools.Repl {
         private string _evaluatorId;
         private IInteractiveWindow _window;
 
+        private readonly string _settingsCategory;
+
         public event EventHandler EvaluatorChanged;
         public event EventHandler AvailableEvaluatorsChanged;
 
@@ -55,7 +57,8 @@ namespace Microsoft.PythonTools.Repl {
         public SelectableReplEvaluator(
             IServiceProvider serviceProvider,
             IEnumerable<IInteractiveEvaluatorProvider> providers,
-            string initialReplId
+            string initialReplId,
+            string windowId
         ) {
             _serviceProvider = serviceProvider;
 
@@ -63,9 +66,23 @@ namespace Microsoft.PythonTools.Repl {
             foreach (var provider in _providers) {
                 provider.EvaluatorsChanged += Provider_EvaluatorsChanged;
             }
+
+            _settingsCategory = GetSettingsCategory(windowId);
+
             if (!string.IsNullOrEmpty(initialReplId)) {
                 _evaluatorId = initialReplId;
+
+                if (!string.IsNullOrEmpty(_settingsCategory)) {
+                    _serviceProvider.GetPythonToolsService().SaveString("Id", _settingsCategory, initialReplId);
+                }
             }
+        }
+
+        internal static string GetSettingsCategory(string windowId) {
+            if (string.IsNullOrEmpty(windowId)) {
+                return null;
+            }
+            return "InteractiveWindows\\" + windowId;
         }
 
         private void Provider_EvaluatorsChanged(object sender, EventArgs e) {
@@ -116,6 +133,10 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
             UpdateCaption();
+
+            if (!string.IsNullOrEmpty(_settingsCategory)) {
+                _serviceProvider.GetPythonToolsService().SaveString("Id", _settingsCategory, id);
+            }
 
             EvaluatorChanged?.Invoke(this, EventArgs.Empty);
             AttachMultipleScopeHandling(eval);
@@ -178,7 +199,15 @@ namespace Microsoft.PythonTools.Repl {
         public IInteractiveWindow CurrentWindow {
             get { return _window; }
             set {
+                var oldWindow = InteractiveWindowProvider.GetVsInteractiveWindow(_window);
+                if (oldWindow != null) {
+                    var events = InteractiveWindowEvents.TryGet(oldWindow);
+                    events.Closed -= InteractiveWindow_Closed;
+                }
+
                 _window = value;
+                var newWindow = InteractiveWindowProvider.GetVsInteractiveWindow(value);
+
                 var eval = _evaluator;
                 if (eval != null && eval.CurrentWindow != value) {
                     eval.CurrentWindow = value;
@@ -187,6 +216,17 @@ namespace Microsoft.PythonTools.Repl {
                     }
                 }
                 UpdateCaption();
+            }
+        }
+
+        internal void ProvideInteractiveWindowEvents(InteractiveWindowEvents events) {
+            events.Closed += InteractiveWindow_Closed;
+        }
+
+        private void InteractiveWindow_Closed(object sender, EventArgs e) {
+            if (!string.IsNullOrEmpty(_settingsCategory)) {
+                var service = _serviceProvider.GetPythonToolsService();
+                service.DeleteCategory(_settingsCategory);
             }
         }
 

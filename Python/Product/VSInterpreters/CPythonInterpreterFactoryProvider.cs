@@ -402,6 +402,8 @@ namespace Microsoft.PythonTools.Interpreter {
                         }
                     }
                     break;
+                case "PersistInteractive":
+                    return true;
             }
 
             return null;

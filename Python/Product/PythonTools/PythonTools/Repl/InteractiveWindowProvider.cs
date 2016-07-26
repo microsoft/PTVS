@@ -19,16 +19,15 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Imaging;
+using System.Text;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.PythonTools.InteractiveWindow.Shell;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(InteractiveWindowProvider))]
@@ -47,6 +46,8 @@ namespace Microsoft.PythonTools.Repl {
 
         private static readonly object VsInteractiveWindowKey = new object();
 
+        private const string SavedWindowsCategoryBase = "InteractiveWindows\\";
+
         [ImportingConstructor]
         public InteractiveWindowProvider(
             [Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider,
@@ -60,6 +61,84 @@ namespace Microsoft.PythonTools.Repl {
             _pythonContentType = contentTypeService.GetContentType(PythonCoreConstants.ContentType);
         }
 
+        private static string GetCategory(string evaluatorId) {
+            return SavedWindowsCategoryBase + Convert.ToBase64String(Encoding.UTF8.GetBytes(evaluatorId));
+        }
+
+        private static bool ShouldSave(IInterpreterRegistryService registry, IInteractiveEvaluator evaluator) {
+            var pyEval = evaluator as PythonInteractiveEvaluator;
+            if (pyEval == null || pyEval.Configuration == null) {
+                // Not our evaluator - don't serialize it
+                return false;
+            }
+            if (!string.IsNullOrEmpty(pyEval.ProjectMoniker)) {
+                // Directly related to a project - don't serialize it
+                return false;
+            }
+            var id = pyEval.Configuration.Interpreter.Id;
+            if (string.IsNullOrEmpty(id)) {
+                // Invalid as it has no id - don't serialize it
+                return false;
+            }
+
+            // Only serialize it if the interpreter promises to be available
+            // next time.
+            var obj = registry.GetProperty(id, "PersistInteractive");
+            return obj is bool && (bool)obj || (obj as string).IsTrue();
+        }
+
+        public void OpenPreviousWindows() {
+            var service = _serviceProvider.GetPythonToolsService();
+            var registry = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+
+            foreach (var category in service.GetSubcategories(SavedWindowsCategoryBase)) {
+                var eval = service.LoadString("Evaluator", category);
+
+                var wnd = OpenOrCreate(eval);
+                var frame = (wnd as ToolWindowPane)?.Frame as IVsWindowFrame;
+                if (frame == null) {
+                    continue;
+                }
+            }
+        }
+
+        public void SaveAndCloseCurrentWindows() {
+            foreach (var wnd in AllOpenWindows) {
+                var frame = (wnd as ToolWindowPane)?.Frame as IVsWindowFrame;
+                if (frame == null) {
+                    continue;
+                }
+                var service = _serviceProvider.GetPythonToolsService();
+                var registry = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+                var eval = wnd.InteractiveWindow?.Evaluator as SelectableReplEvaluator;
+                if (eval == null) {
+                    continue;
+                }
+
+                if (ShouldSave(registry, eval.Evaluator)) {
+                    //VSSETFRAMEPOS[] pos = new VSSETFRAMEPOS[1];
+                    //Guid rel;
+                    //int x, y, cx, cy;
+                    //if (ErrorHandler.Failed(frame.GetFramePos(pos, out rel, out x, out y, out cx, out cy))) {
+                    //    continue;
+                    //}
+
+                    var category = GetCategory(eval.CurrentEvaluator);
+                    service.SaveString("Evaluator", category, eval.CurrentEvaluator);
+                    //var posMode = (pos[0] & VSSETFRAMEPOS.SFP_maskFrameMode);
+                    //if (posMode == VSSETFRAMEPOS.SFP_fFloat) {
+                    //    service.SaveInt("X", category, x);
+                    //    service.SaveInt("Y", category, y);
+                    //    service.SaveInt("Width", category, cx);
+                    //    service.SaveInt("Height", category, cy);
+                    //} else if (posMode == VSSETFRAMEPOS.SFP_fTab) {
+                    //    service.SaveString("Tab", category, rel.ToString("B"));
+                    //}
+                }
+                frame.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
+            }
+        }
+
         public IEnumerable<IVsInteractiveWindow> AllOpenWindows {
             get {
                 lock (_windows) {
@@ -70,8 +149,15 @@ namespace Microsoft.PythonTools.Repl {
 
         private int GetNextId() {
             lock (_windows) {
-                return _nextId++;
+                do {
+                    var curId = _nextId++;
+                    if (!_windows.ContainsKey(curId)) {
+                        return curId;
+                    }
+                } while (_nextId < int.MaxValue);
             }
+            throw new InvalidOperationException("Congratulations, you opened over 2 billion interactive windows this " +
+                "session! Now you need to restart Visual Studio to open any more.");
         }
 
         public IVsInteractiveWindow OpenOrCreate(string replId) {
@@ -91,13 +177,15 @@ namespace Microsoft.PythonTools.Repl {
             return wnd;
         }
 
-        public IVsInteractiveWindow Create(string replId) {
-            int curId = GetNextId();
+        public IVsInteractiveWindow Create(string replId, int curId = -1) {
+            if (curId < 0) {
+                curId = GetNextId();
+            }
 
             var window = CreateInteractiveWindowInternal(
-                new SelectableReplEvaluator(_serviceProvider, _evaluators, replId),
+                new SelectableReplEvaluator(_serviceProvider, _evaluators, replId, curId.ToString()),
                 _pythonContentType,
-                false,
+                true,
                 curId,
                 Strings.ReplCaptionNoEvaluator,
                 typeof(Navigation.PythonLanguageInfo).GUID,
@@ -197,6 +285,11 @@ namespace Microsoft.PythonTools.Repl {
             }
             replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, contentType);
             replWindow.InteractiveWindow.InitializeAsync();
+
+            var selectEval = evaluator as SelectableReplEvaluator;
+            if (selectEval != null) {
+                selectEval.ProvideInteractiveWindowEvents(InteractiveWindowEvents.GetOrCreate(replWindow));
+            }
 
             return replWindow;
         }
