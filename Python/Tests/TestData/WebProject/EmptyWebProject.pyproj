@@ -15,6 +15,7 @@
     <InterpreterId></InterpreterId>
     <InterpreterVersion></InterpreterVersion>
     <LaunchProvider>Web launcher</LaunchProvider>
+    <WebBrowserUrl></WebBrowserUrl>
     <OutputPath>.</OutputPath>
     <PythonWebFramework></PythonWebFramework>
   </PropertyGroup>

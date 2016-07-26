@@ -13,6 +13,7 @@
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <LaunchProvider>Web launcher</LaunchProvider>
+    <WebBrowserUrl></WebBrowserUrl>
     <OutputPath>.</OutputPath>
     <PythonWsgiHandler>app.wsgi_app</PythonWsgiHandler>
     <Name>WebRole1</Name>

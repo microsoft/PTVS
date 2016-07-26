@@ -16,10 +16,11 @@
 
 using System;
 using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.VisualStudioTools.Infrastructure;
 using Microsoft.VisualStudioTools.Project.Automation;
 
 namespace Microsoft.VisualStudioTools.Project {
@@ -42,11 +43,16 @@ namespace Microsoft.VisualStudioTools.Project {
         public string StartupFile {
             get {
                 return Node.Site.GetUIThread().Invoke(() => {
-                    var res = Node.ProjectMgr.GetProjectProperty(CommonConstants.StartupFile, true);
-                    if (res != null && !Path.IsPathRooted(res)) {
-                        res = CommonUtils.GetAbsoluteFilePath(Node.ProjectMgr.ProjectHome, res);
+                    try {
+                        var res = Node.ProjectMgr.GetProjectProperty(CommonConstants.StartupFile, true);
+                        if (res != null && !Path.IsPathRooted(res)) {
+                            res = CommonUtils.GetAbsoluteFilePath(Node.ProjectMgr.ProjectHome, res);
+                        }
+                        return res;
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        Debug.Fail(ex.ToString());
+                        return "(unknown)";
                     }
-                    return res;
                 });
             }
             set {
@@ -71,7 +77,12 @@ namespace Microsoft.VisualStudioTools.Project {
         public string WorkingDirectory {
             get {
                 return Node.Site.GetUIThread().Invoke(() => {
-                    return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.WorkingDirectory, true);
+                    try {
+                        return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.WorkingDirectory, true);
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        Debug.Fail(ex.ToString());
+                        return "(unknown)";
+                    }
                 });
             }
             set {
@@ -88,7 +99,12 @@ namespace Microsoft.VisualStudioTools.Project {
         public string PublishUrl {
             get {
                 return Node.Site.GetUIThread().Invoke(() => {
-                    return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.PublishUrl, true);
+                    try {
+                        return this.Node.ProjectMgr.GetProjectProperty(CommonConstants.PublishUrl, true);
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        Debug.Fail(ex.ToString());
+                        return "(unknown)";
+                    }
                 });
             }
             set {
