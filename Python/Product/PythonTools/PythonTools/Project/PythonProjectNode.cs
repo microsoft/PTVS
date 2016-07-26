@@ -1404,6 +1404,10 @@ namespace Microsoft.PythonTools.Project {
             if (!string.IsNullOrEmpty(str)) {
                 config.LaunchOptions[PythonConstants.WebBrowserPortSetting] = str;
             }
+            str = GetProjectProperty(PythonConstants.EnableNativeCodeDebugging);
+            if (!string.IsNullOrEmpty(str)) {
+                config.LaunchOptions[PythonConstants.EnableNativeCodeDebugging] = str;
+            }
 
             if (!File.Exists(config.GetInterpreterPath())) {
                 throw new MissingInterpreterException(
