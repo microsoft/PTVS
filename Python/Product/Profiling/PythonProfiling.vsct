@@ -91,7 +91,7 @@
     <Buttons>
       <!-- Analyze menu items -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidStartPythonProfiling" priority="0x0100" type="Button">
-        <Parent guid="guidPerfMenuGroup" id="IDG_PERF_BAR_GENERAL" />
+        <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
         <Strings>
           <ButtonText>Launch &amp;Python Profiling...</ButtonText>
           <LocCanonicalName>.Python.LaunchProfiling</LocCanonicalName>
@@ -100,9 +100,9 @@
       
       <!-- View->Other Windows items -->
       <Button guid="guidPythonProfilingCmdSet" id="cmdidPerfExplorer" priority="0x8000" type="Button">
-        <Parent guid="guidDiagMenuGroup" id="IDG_VIEW_OTHERWINDOWS_DIAG_MENU"/>
-        <CommandFlag>DynamicVisibility</CommandFlag>
-        <CommandFlag>DefaultInvisible</CommandFlag>
+        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
+        <Icon guid="ImageCatalogGuid" id="Performance"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Performance Explorer</ButtonText>
           <LocCanonicalName>.Python.PerformanceExplorer</LocCanonicalName>
@@ -187,10 +187,16 @@
 
   <CommandPlacements>
     <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidStartPythonProfiling" priority="0x10">
+      <Parent guid="guidPerfMenuGroup" id="IDG_PERF_BAR_GENERAL" />
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidStartPythonProfiling" priority="0x10">
       <Parent guid="guidPerfMenuGroup" id="IDG_PERF_TOPLEVEL"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidPerfExplorer" priority="0x10">
       <Parent guid="guidDiagMenuGroup" id="IDG_DIAG_WINDOWS_MENU"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidPerfExplorer" priority="0x8000">
+      <Parent guid="guidDiagMenuGroup" id="IDG_VIEW_OTHERWINDOWS_DIAG_MENU"/>
     </CommandPlacement>
     <CommandPlacement guid="guidPythonProfilingCmdSet" id="cmdidReportsCompareReports" priority="0x10">
       <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
@@ -256,8 +262,13 @@
     </GuidSymbol>
 
     <GuidSymbol name="guidDiagMenuGroup" value="{CD68F8E6-2842-4F7E-AF7b-5A019631CEB5}">
-      <IDSymbol name="IDG_DIAG_WINDOWS_MENU"      value="0x1003"/>
+      <IDSymbol name="IDG_DIAG_WINDOWS_MENU" value="0x1003"/>
       <IDSymbol name="IDG_VIEW_OTHERWINDOWS_DIAG_MENU" value="0x2002"/>
+    </GuidSymbol>
+
+    <GuidSymbol name="guidPythonToolsCmdSet" value="{bdfa79d2-2cd2-474a-a82a-ce8694116825}">
+      <IDSymbol name="ToolsGroup" value="0x1012" />
+      <IDSymbol name="WindowCommandsGroup" value="0x1014" />
     </GuidSymbol>
   </Symbols>
 
