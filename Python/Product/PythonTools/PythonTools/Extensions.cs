@@ -155,7 +155,13 @@ namespace Microsoft.PythonTools {
             }
 
             if (position > lastToken.Span.Start) {
-                if (lastToken.CanComplete()) {
+                if (lastToken.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String)) {
+                    // Handle "'contents of strin|g"
+                    var text = lastToken.Span.GetText();
+                    var span = StringLiteralCompletionList.GetStringContentSpan(text, lastToken.Span.Start) ?? lastToken.Span;
+
+                    return snapshot.CreateTrackingSpan(span, SpanTrackingMode.EdgeInclusive);
+                } else if (lastToken.CanComplete()) {
                     // Handle "fo|o"
                     return snapshot.CreateTrackingSpan(lastToken.Span, SpanTrackingMode.EdgeInclusive);
                 } else {
