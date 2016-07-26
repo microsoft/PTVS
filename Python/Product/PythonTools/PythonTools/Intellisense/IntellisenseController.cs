@@ -21,23 +21,21 @@ using System.IO;
 using System.Linq;
 using System.Windows.Input;
 using Microsoft.PythonTools.Editor.Core;
+using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
-using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Editor;
-using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Differencing;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using IServiceProvider = System.IServiceProvider;
 using VSConstants = Microsoft.VisualStudio.VSConstants;
-using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Intellisense {
 
@@ -56,7 +54,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly HashSet<ITextBuffer> _subjectBuffers = new HashSet<ITextBuffer>();
         private static string[] _allStandardSnippetTypes = { ExpansionClient.Expansion, ExpansionClient.SurroundsWith };
         private static string[] _surroundsWithSnippetTypes = { ExpansionClient.SurroundsWith, ExpansionClient.SurroundsWithStatement };
-
 
         /// <summary>
         /// Attaches events for invoking Statement completion 
@@ -279,8 +276,18 @@ namespace Microsoft.PythonTools.Intellisense {
                             UpdateCurrentParameter();
                         }
                         break;
+                    case '\\':
+                    case '/':
+                        if (ShouldTriggerStringCompletionSession()) {
+                            TriggerCompletionSession(false);
+                        }
+                        break;
                     default:
-                        if (IsIdentifierFirstChar(ch) &&
+                        if (ShouldTriggerStringCompletionSession()) {
+                            if (_activeSession?.IsDismissed ?? true) {
+                                TriggerCompletionSession(false);
+                            }
+                        } else if (IsIdentifierFirstChar(ch) &&
                             (_activeSession == null || _activeSession.CompletionSets.Count == 0)) {
                             bool commitByDefault;
                             if (ShouldTriggerIdentifierCompletionSession(out commitByDefault)) {
@@ -292,6 +299,26 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        private bool ShouldTriggerStringCompletionSession() {
+            if (!_provider.PythonService.LangPrefs.AutoListMembers) {
+                return false;
+            }
+
+            var pyCaret = _textView.GetPythonCaret();
+            var classifier = pyCaret?.Snapshot.TextBuffer.GetPythonClassifier();
+            if (classifier == null) {
+                return false;
+            }
+
+            var spans = classifier.GetClassificationSpans(new SnapshotSpan(pyCaret.Value.GetContainingLine().Start, pyCaret.Value));
+            var token = spans.LastOrDefault();
+            if (!(token?.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String) ?? false)) {
+                return false;
+            }
+
+            return StringLiteralCompletionList.CanComplete(token.Span.GetText());
+        }
+
         private bool ShouldTriggerIdentifierCompletionSession(out bool commitByDefault) {
             commitByDefault = true;
 
@@ -300,12 +327,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 return false;
             }
 
-            SnapshotPoint? caretPoint = _textView.BufferGraph.MapDownToFirstMatch(
-                _textView.Caret.Position.BufferPosition,
-                PointTrackingMode.Positive,
-                EditorExtensions.IsPythonContent,
-                PositionAffinity.Predecessor
-            );
+            var caretPoint = _textView.GetPythonCaret();
             if (!caretPoint.HasValue) {
                 return false;
             }
@@ -371,14 +393,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool Walk(ErrorExpression node) {
-                int quote = node.VerbatimImage.IndexOfAny(new[] { '"', '\'' });
-                if (quote >= 0) {
-                    var dir = node.VerbatimImage.Substring(quote + 1);
-                    if (Directory.Exists(dir) || Directory.Exists(PathUtils.GetParent(dir))) {
-                        CanComplete = true;
-                        CommitByDefault = true;
-                    }
-                }
                 return false;
             }
 
@@ -619,13 +633,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             public override bool Walk(ConstantExpression node) {
-                var str = node.Value as string;
-                if (str != null) {
-                    if (Directory.Exists(str) || Directory.Exists(PathUtils.GetParent(str))) {
-                        CanComplete = true;
-                        CommitByDefault = true;
-                    }
-                }
                 return false;
             }
         }
@@ -930,7 +937,15 @@ namespace Microsoft.PythonTools.Intellisense {
                     if (_activeSession.SelectedCompletionSet != null &&
                         _activeSession.SelectedCompletionSet.SelectionStatus.IsSelected &&
                         _provider.PythonService.AdvancedOptions.CompletionCommittedBy.IndexOf(ch) != -1) {
-                        _activeSession.Commit();
+
+                        if ((ch == '\\' || ch == '/') && _activeSession.SelectedCompletionSet.Moniker == "PythonFilenames") {
+                            // We want to dismiss filename completions on slashes
+                            // rather than committing them. Then it will probably
+                            // be retriggered after the slash is inserted.
+                            _activeSession.Dismiss();
+                        } else {
+                            _activeSession.Commit();
+                        }
                     } else if (!IsIdentifierChar(ch)) {
                         _activeSession.Dismiss();
                     }
