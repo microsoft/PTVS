@@ -463,7 +463,7 @@ permissions and limitations under the License.
       </Button>
 
       <Button guid="guidPythonToolsCmdSet" id="cmdidDebugReplWindow" priority="0x0950" type="Button">
-        <Parent guid="guidPythonToolsCmdSet" id="PythonDebugMenuGroup"/>
+        <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
         <Icon guid="ImageCatalogGuid" id="PYInteractiveWindow" />
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
