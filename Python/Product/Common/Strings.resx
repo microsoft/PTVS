@@ -809,6 +809,6 @@ modified from these scripts.</value>
     <value>Administrator privileges may be required to install or update this package.</value>
   </data>
   <data name="UpgradedWebBrowserUrlProperty" xml:space="preserve">
-    <value>The web browser URL property has been set a a default value. It may be modified through Project Properties.</value>
+    <value>The web browser URL property has been set to a default value. It may be modified through Project Properties.</value>
   </data>
 </root>

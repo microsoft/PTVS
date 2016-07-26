@@ -1911,7 +1911,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The web browser URL property has been set a a default value. It may be modified through Project Properties..
+        ///   Looks up a localized string similar to The web browser URL property has been set to a default value. It may be modified through Project Properties..
         /// </summary>
         public static string UpgradedWebBrowserUrlProperty {
             get {
