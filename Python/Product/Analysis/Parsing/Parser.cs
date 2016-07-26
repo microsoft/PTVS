@@ -1794,8 +1794,9 @@ namespace Microsoft.PythonTools.Parsing {
             if (isCoroutine) {
                 preWhitespace = _tokenWhiteSpace;
             }
+
             Eat(TokenKind.KeywordDef);
-            
+
             if (isCoroutine) {
                 afterAsyncWhitespace = _tokenWhiteSpace;
             } else {
@@ -1868,6 +1869,9 @@ namespace Microsoft.PythonTools.Parsing {
 
             ret.SetBody(body);
             ret.ReturnAnnotation = returnAnnotation;
+            // StartIndex may be adjusted later, but we want to keep the def (or
+            // async) index.
+            ret.DefIndex = start;
             ret.HeaderIndex = mid;
             if (_verbatim) {
                 AddPreceedingWhiteSpace(ret, preWhitespace);
@@ -2262,7 +2266,7 @@ namespace Microsoft.PythonTools.Parsing {
 
             FunctionDefinition func = new FunctionDefinition(null, parameters ?? new Parameter[0]); // new Parameter[0] for error handling of incomplete lambda
             func.HeaderIndex = mid;
-            func.StartIndex = start;
+            func.DefIndex = func.StartIndex = start;
 
             // Push the lambda function on the stack so that it's available for any yield expressions to mark it as a generator.
             PushFunction(func);
