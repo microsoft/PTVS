@@ -15,13 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Settings;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Options {
     class PythonToolsOptionsService : IPythonToolsOptionsService {
@@ -54,16 +48,6 @@ namespace Microsoft.PythonTools.Options {
                 return null;
             }
             return _settingsStore.GetString(path, name, "");
-        }
-
-        public IList<string> GetSubcategories(string category) {
-            var path = GetCollectionPath(category.TrimEnd('\\'));
-            if (!_settingsStore.CollectionExists(path)) {
-                return Array.Empty<string>();
-            }
-            return _settingsStore.GetSubCollectionNames(path)
-                .Select(n => category + "\\" + n)
-                .ToList();
         }
 
         public void DeleteCategory(string category) {

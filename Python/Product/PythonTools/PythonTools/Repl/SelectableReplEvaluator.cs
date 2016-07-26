@@ -23,6 +23,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.PythonTools.InteractiveWindow.Commands;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Utilities;
 using Task = System.Threading.Tasks.Task;
@@ -71,10 +72,6 @@ namespace Microsoft.PythonTools.Repl {
 
             if (!string.IsNullOrEmpty(initialReplId)) {
                 _evaluatorId = initialReplId;
-
-                if (!string.IsNullOrEmpty(_settingsCategory)) {
-                    _serviceProvider.GetPythonToolsService().SaveString("Id", _settingsCategory, initialReplId);
-                }
             }
         }
 
@@ -83,6 +80,53 @@ namespace Microsoft.PythonTools.Repl {
                 return null;
             }
             return "InteractiveWindows\\" + windowId;
+        }
+
+        private void ClearPersistedEvaluator() {
+            if (string.IsNullOrEmpty(_settingsCategory)) {
+                return;
+            }
+
+            _serviceProvider.GetPythonToolsService().DeleteCategory(_settingsCategory);
+        }
+
+        private void PersistEvaluator() {
+            if (string.IsNullOrEmpty(_settingsCategory)) {
+                return;
+            }
+
+            var pyEval = _evaluator as PythonInteractiveEvaluator;
+            if (pyEval == null) {
+                // Assume we can restore the evaluator next time
+                _serviceProvider.GetPythonToolsService().SaveString("Id", _settingsCategory, _evaluatorId);
+                return;
+            }
+            if (pyEval.Configuration == null) {
+                // Invalid configuration - don't serialize it
+                ClearPersistedEvaluator();
+                return;
+            }
+            if (!string.IsNullOrEmpty(pyEval.ProjectMoniker)) {
+                // Directly related to a project - don't serialize it
+                ClearPersistedEvaluator();
+                return;
+            }
+            var id = pyEval.Configuration.Interpreter.Id;
+            if (string.IsNullOrEmpty(id)) {
+                // Invalid as it has no id - don't serialize it
+                ClearPersistedEvaluator();
+                return;
+            }
+
+            // Only serialize it if the interpreter promises to be available
+            // next time.
+            var registry = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+            var obj = registry.GetProperty(id, "PersistInteractive");
+            if (obj is bool && (bool)obj || (obj as string).IsTrue()) {
+                _serviceProvider.GetPythonToolsService().SaveString("Id", _settingsCategory, _evaluatorId);
+            } else {
+                ClearPersistedEvaluator();
+            }
         }
 
         private void Provider_EvaluatorsChanged(object sender, EventArgs e) {
@@ -133,10 +177,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
             UpdateCaption();
-
-            if (!string.IsNullOrEmpty(_settingsCategory)) {
-                _serviceProvider.GetPythonToolsService().SaveString("Id", _settingsCategory, id);
-            }
+            PersistEvaluator();
 
             EvaluatorChanged?.Invoke(this, EventArgs.Empty);
             AttachMultipleScopeHandling(eval);
@@ -224,10 +265,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void InteractiveWindow_Closed(object sender, EventArgs e) {
-            if (!string.IsNullOrEmpty(_settingsCategory)) {
-                var service = _serviceProvider.GetPythonToolsService();
-                service.DeleteCategory(_settingsCategory);
-            }
+            ClearPersistedEvaluator();
         }
 
         #region Multiple Scope Support
