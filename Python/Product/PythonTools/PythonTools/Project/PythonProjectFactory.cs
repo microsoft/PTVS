@@ -214,13 +214,11 @@ namespace Microsoft.PythonTools.Project {
 
         private static void ProcessMissingWebBrowserUrl(ProjectRootElement projectXml, Action<__VSUL_ERRORLEVEL, string> log) {
             var launcher = projectXml.Properties.LastOrDefault(p => p.Name == "LaunchProvider");
-            if (launcher == null ||
-                launcher.Value != "Web launcher" ||
-                launcher.Value != "Django launcher") {
+            if (launcher?.Value != "Web launcher" && launcher?.Value != "Django launcher") {
                 return;
             }
 
-            //<WebBrowserUrl>http://localhost</WebBrowserUrl>
+            // <WebBrowserUrl>http://localhost</WebBrowserUrl>
             var prop = projectXml.CreatePropertyElement("WebBrowserUrl");
             prop.Value = "http://localhost";
             launcher.Parent.InsertAfterChild(launcher, prop);
