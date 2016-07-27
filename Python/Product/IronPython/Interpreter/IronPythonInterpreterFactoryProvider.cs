@@ -176,6 +176,8 @@ namespace Microsoft.IronPythonTools.Interpreter {
                     return "IronPython team";
                 case "SupportUrl":
                     return "http://ironpython.net/";
+                case "PersistInteractive":
+                    return true;
             }
             return null;
         }

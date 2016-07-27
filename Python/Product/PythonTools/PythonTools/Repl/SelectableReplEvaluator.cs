@@ -23,6 +23,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.PythonTools.InteractiveWindow.Commands;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Utilities;
 using Task = System.Threading.Tasks.Task;
@@ -46,6 +47,8 @@ namespace Microsoft.PythonTools.Repl {
         private string _evaluatorId;
         private IInteractiveWindow _window;
 
+        private readonly string _settingsCategory;
+
         public event EventHandler EvaluatorChanged;
         public event EventHandler AvailableEvaluatorsChanged;
 
@@ -55,7 +58,8 @@ namespace Microsoft.PythonTools.Repl {
         public SelectableReplEvaluator(
             IServiceProvider serviceProvider,
             IEnumerable<IInteractiveEvaluatorProvider> providers,
-            string initialReplId
+            string initialReplId,
+            string windowId
         ) {
             _serviceProvider = serviceProvider;
 
@@ -63,8 +67,65 @@ namespace Microsoft.PythonTools.Repl {
             foreach (var provider in _providers) {
                 provider.EvaluatorsChanged += Provider_EvaluatorsChanged;
             }
+
+            _settingsCategory = GetSettingsCategory(windowId);
+
             if (!string.IsNullOrEmpty(initialReplId)) {
                 _evaluatorId = initialReplId;
+            }
+        }
+
+        internal static string GetSettingsCategory(string windowId) {
+            if (string.IsNullOrEmpty(windowId)) {
+                return null;
+            }
+            return "InteractiveWindows\\" + windowId;
+        }
+
+        private void ClearPersistedEvaluator() {
+            if (string.IsNullOrEmpty(_settingsCategory)) {
+                return;
+            }
+
+            _serviceProvider.GetPythonToolsService().DeleteCategory(_settingsCategory);
+        }
+
+        private void PersistEvaluator() {
+            if (string.IsNullOrEmpty(_settingsCategory)) {
+                return;
+            }
+
+            var pyEval = _evaluator as PythonInteractiveEvaluator;
+            if (pyEval == null) {
+                // Assume we can restore the evaluator next time
+                _serviceProvider.GetPythonToolsService().SaveString("Id", _settingsCategory, _evaluatorId);
+                return;
+            }
+            if (pyEval.Configuration == null) {
+                // Invalid configuration - don't serialize it
+                ClearPersistedEvaluator();
+                return;
+            }
+            if (!string.IsNullOrEmpty(pyEval.ProjectMoniker)) {
+                // Directly related to a project - don't serialize it
+                ClearPersistedEvaluator();
+                return;
+            }
+            var id = pyEval.Configuration.Interpreter.Id;
+            if (string.IsNullOrEmpty(id)) {
+                // Invalid as it has no id - don't serialize it
+                ClearPersistedEvaluator();
+                return;
+            }
+
+            // Only serialize it if the interpreter promises to be available
+            // next time.
+            var registry = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+            var obj = registry.GetProperty(id, "PersistInteractive");
+            if (obj is bool && (bool)obj || (obj as string).IsTrue()) {
+                _serviceProvider.GetPythonToolsService().SaveString("Id", _settingsCategory, _evaluatorId);
+            } else {
+                ClearPersistedEvaluator();
             }
         }
 
@@ -116,6 +177,7 @@ namespace Microsoft.PythonTools.Repl {
                 }
             }
             UpdateCaption();
+            PersistEvaluator();
 
             EvaluatorChanged?.Invoke(this, EventArgs.Empty);
             AttachMultipleScopeHandling(eval);
@@ -178,7 +240,15 @@ namespace Microsoft.PythonTools.Repl {
         public IInteractiveWindow CurrentWindow {
             get { return _window; }
             set {
+                var oldWindow = InteractiveWindowProvider.GetVsInteractiveWindow(_window);
+                if (oldWindow != null) {
+                    var events = InteractiveWindowEvents.TryGet(oldWindow);
+                    events.Closed -= InteractiveWindow_Closed;
+                }
+
                 _window = value;
+                var newWindow = InteractiveWindowProvider.GetVsInteractiveWindow(value);
+
                 var eval = _evaluator;
                 if (eval != null && eval.CurrentWindow != value) {
                     eval.CurrentWindow = value;
@@ -188,6 +258,14 @@ namespace Microsoft.PythonTools.Repl {
                 }
                 UpdateCaption();
             }
+        }
+
+        internal void ProvideInteractiveWindowEvents(InteractiveWindowEvents events) {
+            events.Closed += InteractiveWindow_Closed;
+        }
+
+        private void InteractiveWindow_Closed(object sender, EventArgs e) {
+            ClearPersistedEvaluator();
         }
 
         #region Multiple Scope Support

@@ -124,6 +124,8 @@ namespace Microsoft.PythonTools.Repl {
         internal virtual void OnDetach() { }
 
         private PythonProjectNode GetAssociatedPythonProject(InterpreterConfiguration interpreter = null) {
+            _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
+
             var moniker = ProjectMoniker;
             if (interpreter == null) {
                 interpreter = Configuration?.Interpreter;

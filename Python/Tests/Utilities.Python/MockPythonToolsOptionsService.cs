@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -42,6 +43,12 @@ namespace TestUtilities.Python {
             }
 
             return res;
+        }
+
+        public void DeleteCategory(string category) {
+            foreach (var key in _options.Keys.Where(k => k.StartsWith(category + "\\") || k == category).ToList()) {
+                _options.Remove(key);
+            }
         }
     }
 }

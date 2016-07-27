@@ -390,6 +390,7 @@
     <Compile Include="PythonTools\PythonAnalysisClassifierProvider.cs" />
     <Compile Include="PythonTools\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="PythonTools\PeekableEnumerator.cs" />
+    <Compile Include="PythonTools\Repl\InteractiveWindowEvents.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebPropertyPageControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -797,6 +798,8 @@
       <VSIXSubPath>.</VSIXSubPath>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </_ThemePkgDef>
+    <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v14.0.pkgdef" />
+    <Content Include="Theme\Repl\Microsoft.PythonTools.Repl.theme.v15.0.pkgdef" />
     <Content Include="visualstudio_py_debugger.py">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
