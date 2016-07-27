@@ -39,7 +39,16 @@ if (-not $uninstall) {
     Copy -Recurse "$source\Microsoft.PythonTools.IronPython\*"  (mkdir "$ext\IronPython" -Force)
     Copy -Recurse "$source\Microsoft.PythonTools.Profiling\*"   (mkdir "$ext\Profiling" -Force)
     Copy -Recurse "$source\Microsoft.PythonTools.Uwp\*"         (mkdir "$ext\Uwp" -Force)
+    
+    "Targets to $vs\MSBuild"
     Move (gci -Recurse "$ext\*.targets") (mkdir "$vs\MSBuild\Microsoft\VisualStudio\v15.0\Python Tools" -Force)
+    Move (gci -Recurse `
+        "$ext\Core\Microsoft.PythonTools.AzureSetup.*", `
+        "$ext\Core\Microsoft.PythonTools.WebRole.*", `
+        "$ext\Core\web_config.xml" , `
+        "$ext\Core\web_debug_config.xml" , `
+        "$ext\Core\wfastcgi.py" `
+    ) (mkdir "$vs\MSBuild\Microsoft\VisualStudio\v15.0\Python Tools" -Force)
 
     "Templates to $vs\Common7\IDE\ProjectTemplates\Python"
     Copy -Recurse "$source\Microsoft.PythonTools.Templates\ProjectTemplates\Python\*"       (mkdir "$vs\Common7\IDE\ProjectTemplates\Python" -Force)
