@@ -243,19 +243,27 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
                 }
             }
 
+            private static ProjectInfo CreateFromMSBuildProject(object context, IProjectContextProvider contextProvider) {
+                var projContext = context as MSBuild.Project;
+                if (projContext == null) {
+                    var projectFile = context as string;
+                    if (projectFile != null && projectFile.EndsWith(".pyproj", StringComparison.OrdinalIgnoreCase)) {
+                        projContext = new MSBuild.Project(projectFile);
+                    }
+                }
+
+                if (projContext != null) {
+                    return new MSBuildProjectInfo(projContext, contextProvider);
+                }
+                return null;
+            }
+
             static public ProjectInfo CreateFromProjectContext(object context, IProjectContextProvider contextProvider) {
                 if (!_skipMSBuild) {
                     try {
-                        var projContext = context as MSBuild.Project;
-                        if (projContext == null) {
-                            var projectFile = context as string;
-                            if (projectFile != null && projectFile.EndsWith(".pyproj", StringComparison.OrdinalIgnoreCase)) {
-                                projContext = new MSBuild.Project(projectFile);
-                            }
-                        }
-
-                        if (projContext != null) {
-                            return new MSBuildProjectInfo(projContext, contextProvider);
+                        var msBuild = CreateFromMSBuildProject(context, contextProvider);
+                        if (msBuild != null) {
+                            return msBuild;
                         }
                     } catch (FileNotFoundException) {
                         _skipMSBuild = true;
