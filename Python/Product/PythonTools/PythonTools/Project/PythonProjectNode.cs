@@ -651,6 +651,16 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override int QueryService(ref Guid guidService, out object result) {
+#if DEV15
+            // Sometimes this service is requested from us and it always seems
+            // to lead to infinite recursion. All callers seem to handle the
+            // failure case, so let's just bail immediately.
+            if (guidService == typeof(SVSMDTypeResolutionService).GUID) {
+                result = null;
+                return VSConstants.E_FAIL;
+            }
+#endif
+
             var model = GetService(typeof(SComponentModel)) as IComponentModel;
             var designerSupport = model?.GetService<IXamlDesignerSupport>();
 
@@ -661,16 +671,6 @@ namespace Microsoft.PythonTools.Project {
                 }
                 return VSConstants.S_OK;
             }
-
-#if DEV15
-            // Sometimes this service is requested from us and it always seems
-            // to lead to infinite recursion. All callers seem to handle the
-            // failure case, so let's just bail immediately.
-            if (guidService == typeof(SVSMDTypeResolutionService).GUID) {
-                result = null;
-                return VSConstants.E_FAIL;
-            }
-#endif
 
             return base.QueryService(ref guidService, out result);
         }
