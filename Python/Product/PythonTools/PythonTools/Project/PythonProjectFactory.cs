@@ -49,6 +49,8 @@ namespace Microsoft.PythonTools.Project {
             new Guid("{587EF8DD-BE2D-4792-AE5F-8AE0A49AC1A5}")
         };
 
+        internal const string UwpProjectGuid = @"{2b557614-1a2b-4903-b9df-ed20d7b63f3a}";
+
         // These targets files existed in PTVS 2.1 Beta but were removed. We
         // want to replace them with some properties and Web.targets.
         // Some intermediate builds of PTVS have different paths that will not
@@ -63,6 +65,7 @@ namespace Microsoft.PythonTools.Project {
 
         internal const string PtvsTargets = @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets";
         internal const string WebTargets = @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets";
+        internal const string UwpTargets = @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Uwp.targets";
 
 #if DEV15
         internal const string ToolsVersion = "15.1";
@@ -78,6 +81,7 @@ namespace Microsoft.PythonTools.Project {
             { new Guid("{9A7A9026-48C1-4688-9D5D-E5699D47D074}"), "Global|PythonCore|{0}|x64" },
             { new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), "IronPython|{0}-32" },
             { new Guid("{FCC291AA-427C-498C-A4D7-4502D6449B8C}"), "IronPython|{0}-64" },
+            { new Guid("{86767848-40B4-4007-8BCC-A3835EDF0E69}"), "PythonUwpIoT|{0}|$(MSBuildProjectFullPath)" },
         };
 
         public PythonProjectFactory(IServiceProvider/*!*/ package)
@@ -245,10 +249,15 @@ namespace Microsoft.PythonTools.Project {
             //
             // With:
             // <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
-            foreach (var p in projectXml.Imports.Where(i => i.Condition.Contains("$(PtvsTargetsFile)")).ToArray()) {
+            foreach (var p in projectXml.Imports.Where(i => i.Condition.Contains("$(PtvsTargetsFile)") || i.Project.Equals("$(PtvsTargetsFile)")).ToArray()) {
                 p.Parent.RemoveChild(p);
             }
-            projectXml.AddImport(PtvsTargets);
+
+            if (ContainsProjectTypeGuid(projectXml, UwpProjectGuid)) {
+                projectXml.AddImport(UwpTargets);
+            } else {
+                projectXml.AddImport(PtvsTargets);
+            }
 
             if (anyUpdated) {
                 log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedImportsFor30);
@@ -323,7 +332,9 @@ namespace Microsoft.PythonTools.Project {
                 var newId = MapInterpreterId(interpreterId.Value, interpreterVersion.Value, msbuildInterpreters);
                 if (newId != null) {
                     interpreterId.Value = newId;
-                    interpreterVersion.Parent.RemoveChild(interpreterVersion);
+                    if (!ContainsProjectTypeGuid(projectXml, UwpProjectGuid)) {
+                        interpreterVersion.Parent.RemoveChild(interpreterVersion);
+                    }
                     interpreterChanged = true;
                 }
             }
@@ -386,6 +397,10 @@ namespace Microsoft.PythonTools.Project {
             }
 
             return null;
+        }
+
+        private static bool ContainsProjectTypeGuid(ProjectRootElement projectXml, string guid) {
+            return projectXml.Properties.Where(p => p.Name == ProjectFileConstants.ProjectTypeGuids).Any(p => p.Value.Contains(guid));
         }
     }
 }
