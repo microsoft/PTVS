@@ -19,16 +19,15 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Imaging;
+using System.Text;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.PythonTools.InteractiveWindow.Shell;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(InteractiveWindowProvider))]
@@ -46,6 +45,8 @@ namespace Microsoft.PythonTools.Repl {
         private readonly IContentType _pythonContentType;
 
         private static readonly object VsInteractiveWindowKey = new object();
+
+        private const string SavedWindowsCategoryBase = "InteractiveWindows\\";
 
         [ImportingConstructor]
         public InteractiveWindowProvider(
@@ -70,8 +71,15 @@ namespace Microsoft.PythonTools.Repl {
 
         private int GetNextId() {
             lock (_windows) {
-                return _nextId++;
+                do {
+                    var curId = _nextId++;
+                    if (!_windows.ContainsKey(curId)) {
+                        return curId;
+                    }
+                } while (_nextId < int.MaxValue);
             }
+            throw new InvalidOperationException("Congratulations, you opened over 2 billion interactive windows this " +
+                "session! Now you need to restart Visual Studio to open any more.");
         }
 
         public IVsInteractiveWindow OpenOrCreate(string replId) {
@@ -91,13 +99,15 @@ namespace Microsoft.PythonTools.Repl {
             return wnd;
         }
 
-        public IVsInteractiveWindow Create(string replId) {
-            int curId = GetNextId();
+        public IVsInteractiveWindow Create(string replId, int curId = -1) {
+            if (curId < 0) {
+                curId = GetNextId();
+            }
 
             var window = CreateInteractiveWindowInternal(
-                new SelectableReplEvaluator(_serviceProvider, _evaluators, replId),
+                new SelectableReplEvaluator(_serviceProvider, _evaluators, replId, curId.ToString()),
                 _pythonContentType,
-                false,
+                true,
                 curId,
                 Strings.ReplCaptionNoEvaluator,
                 typeof(Navigation.PythonLanguageInfo).GUID,
@@ -197,6 +207,11 @@ namespace Microsoft.PythonTools.Repl {
             }
             replWindow.SetLanguage(GuidList.guidPythonLanguageServiceGuid, contentType);
             replWindow.InteractiveWindow.InitializeAsync();
+
+            var selectEval = evaluator as SelectableReplEvaluator;
+            if (selectEval != null) {
+                selectEval.ProvideInteractiveWindowEvents(InteractiveWindowEvents.GetOrCreate(replWindow));
+            }
 
             return replWindow;
         }

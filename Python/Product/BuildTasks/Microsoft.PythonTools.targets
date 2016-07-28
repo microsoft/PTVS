@@ -193,6 +193,8 @@ permissions and limitations under the License.
   <Target Name="GetTargetFrameworkDirectories" Returns="" />
   <Target Name="GetTargetFrameworkMoniker" Returns="" />
   <Target Name="GetTargetFrameworkMonikerDisplayName" Returns="" />
+  <Target Name="ResolveAssemblyReferences" />
+  <Target Name="GetReferenceAssemblyPaths" />
 
   <Target Name="GenerateManifests" Returns="" />
   <Target Name="AddDatabasesToSourceManifest" Returns="" />

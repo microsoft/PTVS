@@ -54,6 +54,7 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
+using Microsoft.PythonTools.Repl;
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -167,10 +168,7 @@ namespace Microsoft.PythonTools {
     [ProvideDiffSupportedContentType(".py;.pyw", "")]
     [ProvideCodeExpansions(GuidList.guidPythonLanguageService, false, 106, "Python", @"Snippets\%LCID%\SnippetsIndex.xml", @"Snippets\%LCID%\Python\")]
     [ProvideCodeExpansionPath("Python", "Test", @"Snippets\%LCID%\Test\")]
-#if DEV14
-    // TODO: Restore attribute and remove entry from Repl.v15.0.pkgdef
     [ProvideInteractiveWindow(GuidList.guidPythonInteractiveWindow, Style = VsDockStyle.Linked, Orientation = ToolWindowOrientation.none, Window = ToolWindowGuids80.Outputwindow)]
-#endif
     [ProvideBraceCompletion(PythonCoreConstants.ContentType)]
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "Object is owned by VS and cannot be disposed")]
@@ -241,6 +239,26 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 }
             }
             return false;
+        }
+
+        protected override int CreateToolWindow(ref Guid toolWindowType, int id) {
+            if (toolWindowType == GuidList.guidPythonInteractiveWindowGuid) {
+                var pyService = this.GetPythonToolsService();
+                var category = SelectableReplEvaluator.GetSettingsCategory(id.ToString());
+                string replId;
+                try {
+                    replId = pyService.LoadString("Id", category);
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    Debug.Fail("Could not load settings for interactive window.", ex.ToString());
+                    pyService.DeleteCategory(category);
+                    return VSConstants.S_OK;
+                }
+
+                pyService.ComponentModel.GetService<InteractiveWindowProvider>().Create(replId, id);
+                return VSConstants.S_OK;
+            }
+
+            return base.CreateToolWindow(ref toolWindowType, id);
         }
 
         internal static void NavigateTo(System.IServiceProvider serviceProvider, string filename, Guid docViewGuidType, int line, int col) {

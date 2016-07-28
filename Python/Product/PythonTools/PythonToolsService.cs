@@ -588,6 +588,10 @@ namespace Microsoft.PythonTools {
 
         #region Registry Persistance
 
+        internal void DeleteCategory(string category) {
+            _optionsService.DeleteCategory(category);
+        }
+
         internal void SaveBool(string name, string category, bool value) {
             SaveString(name, category, value.ToString());
         }

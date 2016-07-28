@@ -213,16 +213,20 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private static void ProcessMissingWebBrowserUrl(ProjectRootElement projectXml, Action<__VSUL_ERRORLEVEL, string> log) {
-            var launcher = projectXml.Properties.LastOrDefault(p => p.Name == "LaunchProvider");
-            if (launcher?.Value != "Web launcher" && launcher?.Value != "Django launcher") {
+            foreach (var g in projectXml.PropertyGroupsReversed) {
+                var launcher = g.PropertiesReversed.FirstOrDefault(p => p.Name == "LaunchProvider");
+                if (launcher == null) {
+                    continue;
+                }
+                if (launcher.Value != "Web launcher" && launcher.Value != "Django launcher") {
+                    return;
+                }
+
+                // <WebBrowserUrl>http://localhost</WebBrowserUrl>
+                g.AddProperty("WebBrowserUrl", "http://localhost");
+                log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedWebBrowserUrlProperty);
                 return;
             }
-
-            // <WebBrowserUrl>http://localhost</WebBrowserUrl>
-            var prop = projectXml.CreatePropertyElement("WebBrowserUrl");
-            prop.Value = "http://localhost";
-            launcher.Parent.InsertAfterChild(launcher, prop);
-            log(__VSUL_ERRORLEVEL.VSUL_INFORMATIONAL, Strings.UpgradedWebBrowserUrlProperty);
         }
 
         private static void ProcessImportsFrom22(ProjectRootElement projectXml, Action<__VSUL_ERRORLEVEL, string> log) {
