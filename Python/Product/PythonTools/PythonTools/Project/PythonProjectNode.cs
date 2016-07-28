@@ -1503,7 +1503,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async void Reanalyze(VsProjectAnalyzer newAnalyzer) {
-            foreach (var child in AllVisibleDescendants.OfType<FileNode>()) {
+            foreach (var child in AllVisibleDescendants.OfType<PythonFileNode>()) {
                 await newAnalyzer.AnalyzeFileAsync(child.Url);
             }
 
