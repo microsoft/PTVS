@@ -37,25 +37,15 @@ namespace Microsoft.PythonTools.Project.Web {
         IVsProject,
         IVsFilterAddProjectItemDlg
     {
-        private PythonToolsPackage _package;
+        private readonly IServiceProvider _site;
         internal IVsProject _innerProject;
         internal IVsProject3 _innerProject3;
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
         private static Guid PythonProjectGuid = new Guid(PythonConstants.ProjectFactoryGuid);
         private IOleCommandTarget _menuService;
 
-        public PythonWebProject() {
-        }
-
-        internal PythonToolsPackage Package {
-            get { return _package; }
-            set {
-                Debug.Assert(_package == null);
-                if (_package != null) {
-                    throw new InvalidOperationException("PythonWebProject.Package must only be set once");
-                }
-                _package = value;
-            }
+        public PythonWebProject(IServiceProvider site) {
+            _site = site;
         }
 
         #region IVsAggregatableProject
@@ -107,9 +97,8 @@ namespace Microsoft.PythonTools.Project.Web {
             _innerProject3 = inner as IVsProject3;
             _innerVsHierarchy = inner as IVsHierarchy;
 
-            // Ensure we have a service provider as this is required for menu items to work
-            if (this.serviceProvider == null) {
-                this.serviceProvider = (IServiceProvider)Package;
+            if (serviceProvider == null) {
+                serviceProvider = _site;
             }
 
             // Now let the base implementation set the inner object
@@ -241,7 +230,7 @@ namespace Microsoft.PythonTools.Project.Web {
                 dlgOwner = IntPtr.Zero;
             }
 
-            var fullTemplate = ((EnvDTE80.Solution2)_package.DTE.Solution).GetProjectItemTemplate(
+            var fullTemplate = ((EnvDTE80.Solution2)this.GetDTE().Solution).GetProjectItemTemplate(
                 "AzureCSWebRole.zip",
                 PythonConstants.LanguageName
             );

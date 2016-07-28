@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Intellisense {
             : base(serviceProvider, session, view, span, textBuffer, options) {
         }
 
-        private static readonly char[] QuoteChars = new[] { '"', '\'' };
+        internal static readonly char[] QuoteChars = new[] { '"', '\'' };
         private static readonly char[] SepChars = new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
 
         private static bool PathStartsWith(string path, string prefix) {
@@ -78,24 +78,53 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal static IEnumerable<EntryInfo> GetEntryInfo(string text, string cwd, string user) {
-            var dir = text;
+        internal static Span? GetStringContentSpan(string text, int globalStart = 0) {
+            int firstQuote = text.IndexOfAny(QuoteChars);
+            int lastQuote = text.LastIndexOfAny(QuoteChars) - 1;
+            if (firstQuote < 0 || lastQuote < 0) {
+                return null;
+            }
+            if (firstQuote + 2 < text.Length &&
+                text[firstQuote + 1] == text[firstQuote] && text[firstQuote + 2] == text[firstQuote]) {
+                firstQuote += 2;
 
-            int start = text.IndexOfAny(QuoteChars);
-            if (start >= 0) {
-                var quote = text[start];
-                dir = text.Substring(start + 1);
-                if (string.IsNullOrEmpty(dir)) {
-                    return Enumerable.Empty<EntryInfo>();
-                }
-                if (dir[dir.Length - 1] == quote) {
-                    dir = dir.Remove(dir.Length - 1);
-                }
+                lastQuote -= 2;
             }
 
-            string prefix = "", prefixReplacement = "";
+            return new Span(
+                globalStart + firstQuote + 1,
+                ((lastQuote >= firstQuote) ? lastQuote : text.Length) - firstQuote
+            );
+        }
 
-            if (Path.IsPathRooted(dir)) {
+        internal static bool CanComplete(string text) {
+            if (string.IsNullOrEmpty(text)) {
+                return false;
+            }
+
+            var span = GetStringContentSpan(text) ?? new Span(0, text.Length);
+            text = text.Substring(span.Start, span.Length);
+
+            return (Path.IsPathRooted(text) && text.IndexOfAny(SepChars) > 0) ||
+                PathStartsWith(text, ".") ||
+                PathStartsWith(text, "~");
+        }
+
+        internal static bool GetDirectoryAndPrefix(
+            string text,
+            string cwd,
+            string user,
+            out string dir,
+            out string prefix,
+            out string prefixReplacement
+        ) {
+            prefix = "";
+            prefixReplacement = "";
+
+            var span = GetStringContentSpan(text) ?? new Span(0, text.Length);
+            dir = text.Substring(span.Start, span.Length);
+
+            if (Path.IsPathRooted(dir) && dir.IndexOfAny(SepChars) > 0) {
             } else if (PathStartsWith(dir, ".")) {
                 prefixReplacement = ".\\";
                 prefix = PathUtils.EnsureEndSeparator(cwd);
@@ -105,26 +134,38 @@ namespace Microsoft.PythonTools.Intellisense {
                 prefix = PathUtils.EnsureEndSeparator(user);
                 dir = prefix + dir.Substring(2);
             } else {
-                return Enumerable.Empty<EntryInfo>();
+                return false;
             }
             if (!Directory.Exists(dir)) {
+                if (PathUtils.HasEndSeparator(dir)) {
+                    return false;
+                }
                 dir = PathUtils.GetParent(dir);
                 if (!Directory.Exists(dir)) {
-                    return Enumerable.Empty<EntryInfo>();
+                    return false;
                 }
+            }
+
+            return true;
+        }
+
+        internal static IEnumerable<EntryInfo> GetEntryInfo(string text, string cwd, string user) {
+            string dir, prefix, prefixReplacement;
+            if (!GetDirectoryAndPrefix(text, cwd, user, out dir, out prefix, out prefixReplacement)) {
+                return Enumerable.Empty<EntryInfo>();
             }
 
             var dirs = PathUtils.EnumerateDirectories(dir, recurse: false, fullPaths: true)
                 .Select(d => new EntryInfo {
                     Caption = PathUtils.GetFileOrDirectoryName(d),
-                    InsertionText = "r\"" + RestorePrefix(d, prefix, prefixReplacement) + "\\\"",
+                    InsertionText = RestorePrefix(d, prefix, prefixReplacement) + "\\",
                     Tooltip = d,
                     IsFile = false
                 });
             var files = PathUtils.EnumerateFiles(dir, recurse: false, fullPaths: true)
                 .Select(f => new EntryInfo {
                     Caption = PathUtils.GetFileOrDirectoryName(f),
-                    InsertionText = "r\"" + RestorePrefix(f, prefix, prefixReplacement) + "\"",
+                    InsertionText = RestorePrefix(f, prefix, prefixReplacement),
                     Tooltip = f,
                     IsFile = true
                 });
@@ -136,6 +177,14 @@ namespace Microsoft.PythonTools.Intellisense {
             var snapshot = TextBuffer.CurrentSnapshot;
             var span = snapshot.GetApplicableSpan(Span.GetStartPoint(snapshot));
             var text = span.GetText(snapshot);
+
+            var classifier = snapshot.TextBuffer.GetPythonClassifier();
+            var token = classifier.GetClassificationSpans(span.GetSpan(snapshot)).LastOrDefault();
+            bool quoteBackslash = !token.Span.GetText().TakeWhile(c => !QuoteChars.Contains(c)).Any(c => c == 'r' || c == 'R');
+
+            if (quoteBackslash) {
+                text = text.Replace("\\\\", "\\");
+            }
 
             string cwd;
             var replEval = TextBuffer.GetInteractiveWindow()?.GetPythonEvaluator();
@@ -150,7 +199,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var completions = GetEntryInfo(text, cwd, Environment.GetFolderPath(Environment.SpecialFolder.UserProfile))
                 .Select(e => new DynamicallyVisibleCompletion(
                     e.Caption,
-                    e.InsertionText,
+                    quoteBackslash ? e.InsertionText.Replace("\\", "\\\\") : e.InsertionText,
                     e.Tooltip,
                     glyphService.GetGlyph(
                         e.IsFile ? StandardGlyphGroup.GlyphLibrary : StandardGlyphGroup.GlyphClosedFolder,
@@ -163,8 +212,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 return null;
             }
 
-            Session.Committed += Session_Committed;
-
             return new FuzzyCompletionSet(
                 "PythonFilenames",
                 "Files",
@@ -174,10 +221,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 CompletionComparer.UnderscoresLast,
                 matchInsertionText: true
             );
-        }
-
-        private void Session_Committed(object sender, EventArgs e) {
-            View.Caret.MoveTo(View.Caret.Position.BufferPosition.Subtract(1));
         }
     }
 }

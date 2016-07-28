@@ -1911,6 +1911,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The web browser URL property has been set to a default value. It may be modified through Project Properties..
+        /// </summary>
+        public static string UpgradedWebBrowserUrlProperty {
+            get {
+                return ResourceManager.GetString("UpgradedWebBrowserUrlProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to create or add the virtual environment. See the Output window for details..
         /// </summary>
         public static string VirtualEnvAddFailed {

@@ -11,6 +11,7 @@
     </SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <LaunchProvider>Django launcher</LaunchProvider>
+    <WebBrowserUrl></WebBrowserUrl>
     <OutputPath>.</OutputPath>
     <Name>DjangoApplication1</Name>
     <RootNamespace>DjangoApplication1</RootNamespace>

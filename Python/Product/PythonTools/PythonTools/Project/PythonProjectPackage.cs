@@ -57,6 +57,11 @@ namespace Microsoft.PythonTools.Project {
     public class PythonProjectPackage : CommonProjectPackage {
         internal const string PythonFileFilter = "Python Project Files (*.pyproj);*.pyproj";
 
+        protected override void Initialize() {
+            base.Initialize();
+            RegisterProjectFactory(new PythonWebProjectFactory(this));
+        }
+
         public override ProjectFactory CreateProjectFactory() {
             return new PythonProjectFactory(this);
         }
