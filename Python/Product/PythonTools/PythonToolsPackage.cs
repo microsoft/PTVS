@@ -413,10 +413,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-        internal static SettingsManager GetSettings(System.IServiceProvider serviceProvider) {
-            return SettingsManagerCreator.GetSettingsManager(serviceProvider);
-        }
-
         /////////////////////////////////////////////////////////////////////////////
         // Overriden Package Implementation
 
@@ -431,8 +427,7 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             var services = (IServiceContainer)this;
 
             // register our options service which provides registry access for various options
-            var optionsService = new PythonToolsOptionsService(this);
-            services.AddService(typeof(IPythonToolsOptionsService), optionsService, promote: true);
+            services.AddService(typeof(IPythonToolsOptionsService), PythonToolsOptionsService.CreateService, promote: true);
 
             services.AddService(typeof(IClipboardService), new ClipboardService(), promote: true);
 

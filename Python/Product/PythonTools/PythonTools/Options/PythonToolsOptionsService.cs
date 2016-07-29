@@ -15,15 +15,24 @@
 // permissions and limitations under the License.
 
 using System;
+using System.ComponentModel.Design;
 using Microsoft.VisualStudio.Settings;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Options {
     class PythonToolsOptionsService : IPythonToolsOptionsService {
         private const string _optionsKey = "Options";
         private readonly WritableSettingsStore _settingsStore;
 
-        public PythonToolsOptionsService(IServiceProvider serviceProvider) {
-            var settingsManager = PythonToolsPackage.GetSettings(serviceProvider);
+        public static object CreateService(IServiceContainer container, Type serviceType) {
+            if (serviceType.IsEquivalentTo(typeof(IPythonToolsOptionsService))) {
+                return new PythonToolsOptionsService(container);
+            }
+            return null;
+        }
+
+        private PythonToolsOptionsService(IServiceProvider serviceProvider) {
+            var settingsManager = SettingsManagerCreator.GetSettingsManager(serviceProvider);
             _settingsStore = settingsManager.GetWritableSettingsStore(SettingsScope.UserSettings);
         }
 

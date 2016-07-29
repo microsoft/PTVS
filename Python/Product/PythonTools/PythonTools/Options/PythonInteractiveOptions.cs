@@ -41,6 +41,7 @@ namespace Microsoft.PythonTools.Options {
             _completionMode = ReplIntellisenseMode.DontEvaluateCalls;
             _smartHistory = true;
             _scripts = string.Empty;
+            Load();
         }
 
         internal ReplIntellisenseMode CompletionMode {
