@@ -51,6 +51,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools {
     public static class Extensions {
@@ -824,6 +825,51 @@ namespace Microsoft.PythonTools {
                 value = default(T);
                 return false;
             }
+        }
+
+        internal static bool IsShellInitialized(this IServiceProvider provider) {
+            bool isInitialized;
+            return provider.TryGetShellProperty((__VSSPROPID)__VSSPROPID4.VSSPROPID_ShellInitialized, out isInitialized) &&
+                isInitialized;
+        }
+
+        class ShellInitializedNotification : IVsShellPropertyEvents {
+            private readonly IVsShell _shell;
+            private readonly uint _cookie;
+            private readonly TaskCompletionSource<object> _tcs;
+
+            public ShellInitializedNotification(IVsShell shell) {
+                _shell = shell;
+                _tcs = new TaskCompletionSource<object>();
+                ErrorHandler.ThrowOnFailure(_shell.AdviseShellPropertyChanges(this, out _cookie));
+            }
+
+            public Task Task => _tcs.Task;
+
+            int IVsShellPropertyEvents.OnShellPropertyChange(int propid, object var) {
+                if (propid == (int)__VSSPROPID4.VSSPROPID_ShellInitialized) {
+                    if (var is bool && (bool)var) {
+                        _shell.UnadviseShellPropertyChanges(_cookie);
+                        _tcs.SetResult(null);
+                    }
+                } else if (propid == (int)__VSSPROPID6.VSSPROPID_ShutdownStarted) {
+                    _shell.UnadviseShellPropertyChanges(_cookie);
+                    _tcs.TrySetCanceled();
+                }
+                return VSConstants.S_OK;
+            }
+        }
+
+        internal static Task WaitForShellInitializedAsync(this IServiceProvider provider) {
+            if (provider.IsShellInitialized()) {
+                return Task.FromResult<object>(null);
+            }
+            return new ShellInitializedNotification(provider.GetShell()).Task;
+        }
+
+        [Conditional("DEBUG")]
+        internal static void AssertShellIsInitialized(this IServiceProvider provider) {
+            Debug.Assert(provider.IsShellInitialized(), "Shell is not yet initialized");
         }
 
         internal static IVsDebugger GetShellDebugger(this IServiceProvider provider) {

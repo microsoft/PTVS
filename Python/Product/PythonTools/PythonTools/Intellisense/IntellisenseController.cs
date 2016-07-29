@@ -17,9 +17,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Input;
+using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
 using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.PythonTools.Parsing;
@@ -238,6 +240,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // we receive a "," and we close sig help when we receive a ")".
 
             if (!_incSearch.IsActive) {
+                var prefs = _provider.PythonService.LangPrefs;
                 switch (ch) {
                     case '@':
                         if (!string.IsNullOrWhiteSpace(GetTextBeforeCaret(-1))) {
@@ -246,12 +249,12 @@ namespace Microsoft.PythonTools.Intellisense {
                         goto case '.';
                     case '.':
                     case ' ':
-                        if (_provider.PythonService.LangPrefs.AutoListMembers) {
+                        if (prefs.AutoListMembers) {
                             TriggerCompletionSession(false);
                         }
                         break;
                     case '(':
-                        if (_provider.PythonService.LangPrefs.AutoListParams) {
+                        if (prefs.AutoListParams) {
                             OpenParenStartSignatureSession();
                         }
                         break;
@@ -261,7 +264,7 @@ namespace Microsoft.PythonTools.Intellisense {
                             _sigHelpSession = null;
                         }
 
-                        if (_provider.PythonService.LangPrefs.AutoListParams) {
+                        if (prefs.AutoListParams) {
                             // trigger help for outer call if there is one
                             TriggerSignatureHelp();
                         }
@@ -269,7 +272,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     case '=':
                     case ',':
                         if (_sigHelpSession == null) {
-                            if (_provider.PythonService.LangPrefs.AutoListParams) {
+                            if (prefs.AutoListParams) {
                                 CommaStartSignatureSession();
                             }
                         } else {
@@ -278,16 +281,16 @@ namespace Microsoft.PythonTools.Intellisense {
                         break;
                     case '\\':
                     case '/':
-                        if (ShouldTriggerStringCompletionSession()) {
+                        if (ShouldTriggerStringCompletionSession(prefs)) {
                             TriggerCompletionSession(false);
                         }
                         break;
                     default:
-                        if (ShouldTriggerStringCompletionSession()) {
+                        if (ShouldTriggerStringCompletionSession(prefs)) {
                             if (_activeSession?.IsDismissed ?? true) {
                                 TriggerCompletionSession(false);
                             }
-                        } else if (IsIdentifierFirstChar(ch) &&
+                        } else if (Tokenizer.IsIdentifierStartChar(ch) &&
                             (_activeSession == null || _activeSession.CompletionSets.Count == 0)) {
                             bool commitByDefault;
                             if (ShouldTriggerIdentifierCompletionSession(out commitByDefault)) {
@@ -299,8 +302,8 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private bool ShouldTriggerStringCompletionSession() {
-            if (!_provider.PythonService.LangPrefs.AutoListMembers) {
+        private bool ShouldTriggerStringCompletionSession(LanguagePreferences prefs) {
+            if (!prefs.AutoListMembers) {
                 return false;
             }
 
@@ -946,7 +949,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         } else {
                             _activeSession.Commit();
                         }
-                    } else if (!IsIdentifierChar(ch)) {
+                    } else if (!Tokenizer.IsIdentifierChar(ch)) {
                         _activeSession.Dismiss();
                     }
                 }
@@ -1146,13 +1149,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return _provider._adaptersFactory.GetViewAdapter(_textView);
         }
 
-        private static bool IsIdentifierFirstChar(char ch) {
-            return ch == '_' || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z');
-        }
-
-        private static bool IsIdentifierChar(char ch) {
-            return IsIdentifierFirstChar(ch) || (ch >= '0' && ch <= '9');
-        }
 
         private bool EnterOnCompleteText() {
             SnapshotPoint? point = _activeSession.GetTriggerPoint(_textView.TextBuffer.CurrentSnapshot);

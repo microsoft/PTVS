@@ -51,7 +51,7 @@ namespace Microsoft.PythonTools {
     /// </summary>
     public sealed class PythonToolsService : IDisposable {
         private readonly IServiceContainer _container;
-        private LanguagePreferences _langPrefs;
+        private readonly Lazy<LanguagePreferences> _langPrefs;
         private IPythonToolsOptionsService _optionsService;
         internal readonly IInterpreterRegistryService _interpreterRegistry;
         internal readonly IInterpreterOptionsService _interpreterOptionsService;
@@ -69,7 +69,6 @@ namespace Microsoft.PythonTools {
         private readonly IdleManager _idleManager;
         private Func<CodeFormattingOptions> _optionsFactory;
         private const string _formattingCat = "Formatting";
-        private uint _langPrefsTextManagerCookie;
 
         private readonly Dictionary<IVsCodeWindow, CodeWindowManager> _codeWindowManagers = new Dictionary<IVsCodeWindow, CodeWindowManager>();
 
@@ -90,18 +89,7 @@ namespace Microsoft.PythonTools {
             var langService = new PythonLanguageInfo(container);
             _container.AddService(langService.GetType(), langService, true);
 
-            IVsTextManager textMgr = (IVsTextManager)container.GetService(typeof(SVsTextManager));
-            if (textMgr != null) {
-                var langPrefs = new LANGPREFERENCES[1];
-                langPrefs[0].guidLang = typeof(PythonLanguageInfo).GUID;
-                ErrorHandler.ThrowOnFailure(textMgr.GetUserPreferences(null, null, langPrefs, null));
-                _langPrefs = new LanguagePreferences(this, langPrefs[0]);
-
-                Guid guid = typeof(IVsTextManagerEvents2).GUID;
-                IConnectionPoint connectionPoint;
-                ((IConnectionPointContainer)textMgr).FindConnectionPoint(ref guid, out connectionPoint);
-                connectionPoint.Advise(_langPrefs, out _langPrefsTextManagerCookie);
-            }
+            _langPrefs = new Lazy<LanguagePreferences>(() => new LanguagePreferences(this, typeof(PythonLanguageInfo).GUID));
 
             _optionsService = (IPythonToolsOptionsService)container.GetService(typeof(IPythonToolsOptionsService));
             var compModel = (IComponentModel)container.GetService(typeof(SComponentModel));
@@ -140,14 +128,8 @@ namespace Microsoft.PythonTools {
 
             IDisposable disposable;
 
-            if (_langPrefs != null && _langPrefsTextManagerCookie != 0) {
-                IVsTextManager textMgr = (IVsTextManager)_container.GetService(typeof(SVsTextManager));
-                if (textMgr != null) {
-                    Guid guid = typeof(IVsTextManagerEvents2).GUID;
-                    IConnectionPoint connectionPoint;
-                    ((IConnectionPointContainer)textMgr).FindConnectionPoint(ref guid, out connectionPoint);
-                    connectionPoint.Unadvise(_langPrefsTextManagerCookie);
-                }
+            if (_langPrefs.IsValueCreated) {
+                _langPrefs.Value.Dispose();
             }
 
             if (_interpreterRegistry != null) {
@@ -579,12 +561,15 @@ namespace Microsoft.PythonTools {
 
         internal System.IServiceProvider Site => _container;
 
-        internal LanguagePreferences LangPrefs {
-            get {
-                return _langPrefs;
-            }
-        }
+        internal LanguagePreferences LangPrefs => _langPrefs.Value;
 
+        internal async Task<LanguagePreferences> GetLangPrefsAsync() {
+            if (_langPrefs.IsValueCreated) {
+                return _langPrefs.Value;
+            }
+            await _container.WaitForShellInitializedAsync();
+            return _langPrefs.Value;
+        }
 
         #region Registry Persistance
 
