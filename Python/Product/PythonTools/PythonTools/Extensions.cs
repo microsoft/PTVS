@@ -842,20 +842,37 @@ namespace Microsoft.PythonTools {
                 _shell = shell;
                 _tcs = new TaskCompletionSource<object>();
                 ErrorHandler.ThrowOnFailure(_shell.AdviseShellPropertyChanges(this, out _cookie));
+
+                // Check again in case we raised with initialization
+                object value;
+                if (ErrorHandler.Succeeded(_shell.GetProperty((int)__VSSPROPID4.VSSPROPID_ShellInitialized, out value)) &&
+                    CheckProperty((int)__VSSPROPID4.VSSPROPID_ShellInitialized, value)) {
+                    return;
+                }
+
+                if (ErrorHandler.Succeeded(_shell.GetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, out value)) &&
+                    CheckProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, value)) {
+                    return;
+                }
+            }
+
+            private bool CheckProperty(int propid, object var) {
+                if (propid == (int)__VSSPROPID4.VSSPROPID_ShellInitialized && var is bool && (bool)var) {
+                    _shell.UnadviseShellPropertyChanges(_cookie);
+                    _tcs.TrySetResult(null);
+                    return true;
+                } else if (propid == (int)__VSSPROPID6.VSSPROPID_ShutdownStarted && var is bool && (bool)var) {
+                    _shell.UnadviseShellPropertyChanges(_cookie);
+                    _tcs.TrySetCanceled();
+                    return true;
+                }
+                return false;
             }
 
             public Task Task => _tcs.Task;
 
             int IVsShellPropertyEvents.OnShellPropertyChange(int propid, object var) {
-                if (propid == (int)__VSSPROPID4.VSSPROPID_ShellInitialized) {
-                    if (var is bool && (bool)var) {
-                        _shell.UnadviseShellPropertyChanges(_cookie);
-                        _tcs.SetResult(null);
-                    }
-                } else if (propid == (int)__VSSPROPID6.VSSPROPID_ShutdownStarted) {
-                    _shell.UnadviseShellPropertyChanges(_cookie);
-                    _tcs.TrySetCanceled();
-                }
+                CheckProperty(propid, var);
                 return VSConstants.S_OK;
             }
         }
