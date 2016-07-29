@@ -60,7 +60,7 @@ namespace Microsoft.PythonTools.Navigation {
                 ((IVsCodeWindowEvents)this).OnNewView(textView);
             }
 
-            AddDropDownBarAsync(_pyService).DoNotWait();
+            AddDropDownBarAsync(_pyService).SilenceException<OperationCanceledException>().DoNotWait();
 
             return VSConstants.S_OK;
         }
