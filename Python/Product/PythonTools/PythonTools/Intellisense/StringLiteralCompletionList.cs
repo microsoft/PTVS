@@ -105,7 +105,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var span = GetStringContentSpan(text) ?? new Span(0, text.Length);
             text = text.Substring(span.Start, span.Length);
 
-            return (Path.IsPathRooted(text) && text.IndexOfAny(SepChars) > 0) ||
+            return (PathUtils.IsValidPath(text) && Path.IsPathRooted(text) && text.IndexOfAny(SepChars) > 0) ||
                 PathStartsWith(text, ".") ||
                 PathStartsWith(text, "~");
         }
@@ -123,6 +123,10 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var span = GetStringContentSpan(text) ?? new Span(0, text.Length);
             dir = text.Substring(span.Start, span.Length);
+
+            if (!PathUtils.IsValidPath(dir)) {
+                return false;
+            }
 
             if (Path.IsPathRooted(dir) && dir.IndexOfAny(SepChars) > 0) {
             } else if (PathStartsWith(dir, ".")) {
