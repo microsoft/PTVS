@@ -423,7 +423,7 @@ namespace Microsoft.PythonTools.InterpreterList {
                 }
             }
 
-            config.LaunchOptions["NeverPauseOnExit"] = "true";
+            config.LaunchOptions[PythonConstants.NeverPauseOnExit] = "true";
 
             Process.Start(DebugLaunchHelper.CreateProcessStartInfo(_site, config)).Dispose();
         }

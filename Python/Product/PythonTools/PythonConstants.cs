@@ -131,6 +131,9 @@ namespace Microsoft.PythonTools {
         // Mixed-mode debugging project property
         public const string EnableNativeCodeDebugging = "EnableNativeCodeDebugging";
 
+        // Launch option to ignore pause on exist settings
+        internal const string NeverPauseOnExit = "NeverPauseOnExit";
+
         public const string WorkingDirectorySetting = "WorkingDirectory";
         public const string ProjectHomeSetting = "ProjectHome";
 

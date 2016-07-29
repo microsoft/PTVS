@@ -194,7 +194,7 @@ namespace Microsoft.PythonTools.Debugger {
             var pyService = provider.GetPythonToolsService();
             // Pause if the user has requested it.
             string pauseCommand = null;
-            if (config.GetLaunchOption("NeverPauseOnExit").IsTrue()) {
+            if (config.GetLaunchOption(PythonConstants.NeverPauseOnExit).IsTrue()) {
                 // Do nothing
             } else if (pyService.DebuggerOptions.WaitOnAbnormalExit && pyService.DebuggerOptions.WaitOnNormalExit) {
                 pauseCommand = "pause";
