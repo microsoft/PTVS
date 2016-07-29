@@ -563,6 +563,15 @@ namespace Microsoft.PythonTools {
 
         internal LanguagePreferences LangPrefs => _langPrefs.Value;
 
+        /// <summary>
+        /// Ensures the shell is loaded before returning language preferences,
+        /// as obtaining them while the shell is initializing can corrupt
+        /// settings.
+        /// </summary>
+        /// <remarks>
+        /// Should only be called from the UI thread, and you must not
+        /// synchronously wait on the returned task.
+        /// </remarks>
         internal async Task<LanguagePreferences> GetLangPrefsAsync() {
             if (_langPrefs.IsValueCreated) {
                 return _langPrefs.Value;
