@@ -451,6 +451,10 @@ namespace Microsoft.PythonTools.Repl {
                 return await cmdRes;
             }
 
+            if (string.IsNullOrWhiteSpace(text)) {
+                return ExecutionResult.Success;
+            }
+
             var thread = await EnsureConnectedAsync();
             if (thread != null) {
                 ExecutionResult result = await thread.ExecuteText(text);
