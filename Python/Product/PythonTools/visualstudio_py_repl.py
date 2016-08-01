@@ -619,25 +619,25 @@ due to the exec, so we do it here"""
     def execute_code_work_item(self):
         _debug_write('Executing: ' + repr(self.current_code))
         stripped_code = self.current_code.strip()
+        if stripped_code:
+            if sys.platform == 'cli':
+                code_to_send = ''
+                for line in stripped_code.split('\n'):
+                    stripped = line.strip()
+                    if (stripped.startswith('#') or not stripped) and not code_to_send:
+                        continue
+                    code_to_send += line + '\n'
 
-        if sys.platform == 'cli':
-            code_to_send = ''
-            for line in stripped_code.split('\n'):
-                stripped = line.strip()
-                if (stripped.startswith('#') or not stripped) and not code_to_send:
-                    continue
-                code_to_send += line + '\n'
-
-            code = python_context.CreateSnippet(code_to_send, None, SourceCodeKind.InteractiveCode)
-            dispatcher = clr.GetCurrentRuntime().GetLanguage(PythonContext).GetCommandDispatcher()
-            if dispatcher is not None:
-                dispatcher(self.python_executor(code))
+                code = python_context.CreateSnippet(code_to_send, None, SourceCodeKind.InteractiveCode)
+                dispatcher = clr.GetCurrentRuntime().GetLanguage(PythonContext).GetCommandDispatcher()
+                if dispatcher is not None:
+                    dispatcher(self.python_executor(code))
+                else:
+                    code.Execute(self.exec_mod)
             else:
-                code.Execute(self.exec_mod)
-        else:
-            code = compile(self.current_code, '<stdin>', 'single', self.code_flags)
-            self.code_flags |= (code.co_flags & BasicReplBackend.future_bits)
-            exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__)
+                code = compile(self.current_code, '<stdin>', 'single', self.code_flags)
+                self.code_flags |= (code.co_flags & BasicReplBackend.future_bits)
+                exec(code, self.exec_mod.__dict__, self.exec_mod.__dict__)
         self.current_code = None
 
     def run_one_command(self, cur_modules, cur_ps1, cur_ps2):
@@ -1098,7 +1098,8 @@ class DebugReplBackend(BasicReplBackend):
             BasicReplBackend.execute_code_work_item(self)
         else:
             try:
-                self.debugger.execute_code_no_report(self.current_code, self.thread_id, self.frame_id, self.frame_kind)
+                if self.current_code and not self.current_code.isspace():
+                    self.debugger.execute_code_no_report(self.current_code, self.thread_id, self.frame_id, self.frame_kind)
             finally:
                 self.current_code = None
 
