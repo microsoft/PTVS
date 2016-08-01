@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Repl {
         public IEnumerable<KeyValuePair<string, string>> GetEvaluators() {
             foreach (var interpreter in _interpreterService.Configurations) {
                 yield return new KeyValuePair<string, string>(
-                    interpreter.FullDescription,
+                    interpreter.Description,
                     GetEvaluatorId(interpreter)
                 );
             }
@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Repl {
         internal static string GetEvaluatorId(InterpreterConfiguration config) {
             return "{0};env;{1};{2}".FormatInvariant(
                 _prefix,
-                config.FullDescription,
+                config.Description,
                 config.Id
             );
         }

@@ -264,8 +264,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             var factory = view == null ? null : view.Factory as IPythonInterpreterFactoryWithDatabase;
             e.CanExecute = factory != null &&
                 !view.IsRefreshingDB &&
-                File.Exists(factory.Configuration.InterpreterPath) &&
-                Directory.Exists(factory.Configuration.LibraryPath);
+                File.Exists(factory.Configuration.InterpreterPath);
         }
 
         private async void StartRefreshDB_Executed(object sender, ExecutedRoutedEventArgs e) {
@@ -314,7 +313,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
                 _environments.Merge(
                     _interpreters.Interpreters
-                    .Distinct()
                     .Where(f => f.IsUIVisible())
                     .Select(f => {
                         var view = new EnvironmentView(_service, _interpreters, f, null);
@@ -442,7 +440,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             const string baseName = "New Environment";
             string name = baseName;
             int count = 2;
-            while (_interpreters.FindConfiguration(CPythonInterpreterFactoryConstants.GetInterpreterId("VisualStudio", ProcessorArchitecture.X86, name)) != null) {
+            while (_interpreters.FindConfiguration(CPythonInterpreterFactoryConstants.GetInterpreterId("VisualStudio", name)) != null) {
                 name = baseName + " " + count++;
             }
 
@@ -453,7 +451,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     name,
                     "",
                     "python\\python.exe",
-                    arch : ProcessorArchitecture.X86
+                    arch : InterpreterArchitecture.x86
                 )
             );
 

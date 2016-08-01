@@ -2692,7 +2692,7 @@ namespace AnalysisTests {
 
         private static string StdLibWorker(PythonVersion curVersion) {
             var files = new List<string>();
-            CollectFiles(curVersion.LibPath, files, new[] { "site-packages" });
+            CollectFiles(Path.Combine(curVersion.PrefixPath, "Lib"), files, new[] { "site-packages" });
 
             var skippedFiles = new HashSet<string>(new[] {
                     "py3_test_grammar.py",  // included in 2x distributions but includes 3x grammar

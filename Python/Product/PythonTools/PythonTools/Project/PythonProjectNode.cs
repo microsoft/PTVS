@@ -289,63 +289,63 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         /// <param name="factory">The factory to add.</param>
         // TODO: Can this be entirely configuration based?
-        public void AddInterpreter(IPythonInterpreterFactory factory, bool disposeInterpreter = false) {
-            if (factory == null) {
-                throw new ArgumentNullException("factory");
-            }
+        //public void AddInterpreter(IPythonInterpreterFactory factory, bool disposeInterpreter = false) {
+        //    if (factory == null) {
+        //        throw new ArgumentNullException("factory");
+        //    }
 
-            if (_validFactories.Contains(factory.Configuration.Id)) {
-                return;
-            }
+        //    if (_validFactories.Contains(factory.Configuration.Id)) {
+        //        return;
+        //    }
 
-            MSBuild.ProjectItem item;
-            var compModel = Site.GetComponentModel();
-            var derived = factory as DerivedInterpreterFactory;
-            if (derived != null) {
-                var projectHome = PathUtils.GetAbsoluteDirectoryPath(BuildProject.DirectoryPath, BuildProject.GetPropertyValue("ProjectHome"));
-                var rootPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
+        //    MSBuild.ProjectItem item;
+        //    var compModel = Site.GetComponentModel();
+        //    var derived = factory as DerivedInterpreterFactory;
+        //    if (derived != null) {
+        //        var projectHome = PathUtils.GetAbsoluteDirectoryPath(BuildProject.DirectoryPath, BuildProject.GetPropertyValue("ProjectHome"));
+        //        var rootPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
 
-                item = BuildProject.AddItem(MSBuildConstants.InterpreterItem,
-                    PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
-                    new Dictionary<string, string> {
-                        { MSBuildConstants.IdKey, MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(derived.Configuration.Id) },
-                        { MSBuildConstants.BaseInterpreterKey, derived.BaseInterpreter.Configuration.Id  },
-                        { MSBuildConstants.VersionKey, derived.BaseInterpreter.Configuration.Version.ToString() },
-                        { MSBuildConstants.DescriptionKey, derived.Configuration.Description },
-                        { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, derived.Configuration.InterpreterPath) },
-                        { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, derived.Configuration.WindowsInterpreterPath) },
-                        { MSBuildConstants.LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, derived.Configuration.LibraryPath) },
-                        { MSBuildConstants.PathEnvVarKey, derived.Configuration.PathEnvironmentVariable },
-                        { MSBuildConstants.ArchitectureKey, derived.Configuration.Architecture.ToString() }
-                    }).FirstOrDefault();
-            } else if (InterpreterRegistry.FindInterpreter(factory.Configuration.Id) != null) {
-                // The interpreter exists globally, so add a reference.
-                item = BuildProject.AddItem(MSBuildConstants.InterpreterReferenceItem,
-                    string.Format("{0:B}\\{1}", factory.Configuration.Id, factory.Configuration.Version)
-                    ).FirstOrDefault();
-            } else {
-                // Can't find the interpreter anywhere else, so add its
-                // configuration to the project file.
-                var projectHome = PathUtils.GetAbsoluteDirectoryPath(BuildProject.DirectoryPath, BuildProject.GetPropertyValue("ProjectHome"));
-                var rootPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
+        //        item = BuildProject.AddItem(MSBuildConstants.InterpreterItem,
+        //            PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
+        //            new Dictionary<string, string> {
+        //                { MSBuildConstants.IdKey, MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(derived.Configuration.Id) },
+        //                { MSBuildConstants.BaseInterpreterKey, derived.BaseInterpreter.Configuration.Id  },
+        //                { MSBuildConstants.VersionKey, derived.BaseInterpreter.Configuration.Version.ToString() },
+        //                { MSBuildConstants.DescriptionKey, derived.Configuration.Description },
+        //                { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, derived.Configuration.InterpreterPath) },
+        //                { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, derived.Configuration.WindowsInterpreterPath) },
+        //                { MSBuildConstants.LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, derived.Configuration.LibraryPath) },
+        //                { MSBuildConstants.PathEnvVarKey, derived.Configuration.PathEnvironmentVariable },
+        //                { MSBuildConstants.ArchitectureKey, derived.Configuration.Architecture.ToString() }
+        //            }).FirstOrDefault();
+        //    } else if (InterpreterRegistry.FindInterpreter(factory.Configuration.Id) != null) {
+        //        // The interpreter exists globally, so add a reference.
+        //        item = BuildProject.AddItem(MSBuildConstants.InterpreterReferenceItem,
+        //            string.Format("{0:B}\\{1}", factory.Configuration.Id, factory.Configuration.Version)
+        //            ).FirstOrDefault();
+        //    } else {
+        //        // Can't find the interpreter anywhere else, so add its
+        //        // configuration to the project file.
+        //        var projectHome = PathUtils.GetAbsoluteDirectoryPath(BuildProject.DirectoryPath, BuildProject.GetPropertyValue("ProjectHome"));
+        //        var rootPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
 
-                item = BuildProject.AddItem(MSBuildConstants.InterpreterItem,
-                    PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
-                    new Dictionary<string, string> {
-                        { MSBuildConstants.IdKey, MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(factory.Configuration.Id) },
-                        { MSBuildConstants.VersionKey, factory.Configuration.Version.ToString() },
-                        { MSBuildConstants.DescriptionKey, factory.Configuration.Description },
-                        { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, factory.Configuration.InterpreterPath) },
-                        { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, factory.Configuration.WindowsInterpreterPath) },
-                        { MSBuildConstants.LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, factory.Configuration.LibraryPath) },
-                        { MSBuildConstants.PathEnvVarKey, factory.Configuration.PathEnvironmentVariable },
-                        { MSBuildConstants.ArchitectureKey, factory.Configuration.Architecture.ToString() }
-                    }).FirstOrDefault();
-            }
+        //        item = BuildProject.AddItem(MSBuildConstants.InterpreterItem,
+        //            PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
+        //            new Dictionary<string, string> {
+        //                { MSBuildConstants.IdKey, MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(factory.Configuration.Id) },
+        //                { MSBuildConstants.VersionKey, factory.Configuration.Version.ToString() },
+        //                { MSBuildConstants.DescriptionKey, factory.Configuration.Description },
+        //                { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, factory.Configuration.InterpreterPath) },
+        //                { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, factory.Configuration.WindowsInterpreterPath) },
+        //                { MSBuildConstants.LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, factory.Configuration.LibraryPath) },
+        //                { MSBuildConstants.PathEnvVarKey, factory.Configuration.PathEnvironmentVariable },
+        //                { MSBuildConstants.ArchitectureKey, factory.Configuration.Architecture.ToString() }
+        //            }).FirstOrDefault();
+        //    }
 
-            string id = factory.Configuration.Id;
-            AddInterpreter(id);
-        }
+        //    string id = factory.Configuration.Id;
+        //    AddInterpreter(id);
+        //}
 
         public void AddInterpreter(string id) {
             lock (_validFactories) {
@@ -367,7 +367,7 @@ namespace Microsoft.PythonTools.Project {
             InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public void AddInterpreterReference(InterpreterConfiguration config, string baseId) {
+        public void AddInterpreterReference(InterpreterConfiguration config) {
             lock(_validFactories) {
                 if (_validFactories.Contains(config.Id)) {
                     return;
@@ -380,15 +380,13 @@ namespace Microsoft.PythonTools.Project {
             BuildProject.AddItem(MSBuildConstants.InterpreterItem,
                 PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
                 new Dictionary<string, string> {
-                        { MSBuildConstants.IdKey, MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(config.Id) },
-                        { MSBuildConstants.BaseInterpreterKey, baseId },
-                        { MSBuildConstants.VersionKey, config.Version.ToString() },
-                        { MSBuildConstants.DescriptionKey, config.Description },
-                        { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, config.InterpreterPath) },
-                        { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, config.WindowsInterpreterPath) },
-                        { MSBuildConstants.LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, config.LibraryPath) },
-                        { MSBuildConstants.PathEnvVarKey, config.PathEnvironmentVariable },
-                        { MSBuildConstants.ArchitectureKey, config.Architecture.ToString() }
+                    { MSBuildConstants.IdKey, MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(config.Id) },
+                    { MSBuildConstants.VersionKey, config.Version.ToString() },
+                    { MSBuildConstants.DescriptionKey, config.Description },
+                    { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, config.InterpreterPath) },
+                    { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, config.WindowsInterpreterPath) },
+                    { MSBuildConstants.PathEnvVarKey, config.PathEnvironmentVariable },
+                    { MSBuildConstants.ArchitectureKey, config.Architecture.ToString() }
                 });
 
             lock (_validFactories) {
@@ -1348,7 +1346,7 @@ namespace Microsoft.PythonTools.Project {
 
             if (!fact.Configuration.IsAvailable()) {
                 throw new MissingInterpreterException(
-                    Strings.MissingEnvironment.FormatUI(fact.Configuration.FullDescription, fact.Configuration.Version)
+                    Strings.MissingEnvironment.FormatUI(fact.Configuration.Description, fact.Configuration.Version)
                 );
             } else if (IsActiveInterpreterGlobalDefault && 
                 !String.IsNullOrWhiteSpace(BuildProject.GetPropertyValue(MSBuildConstants.InterpreterIdProperty))) {
@@ -1825,7 +1823,7 @@ namespace Microsoft.PythonTools.Project {
 
                 config = InterpreterConfigurations.FirstOrDefault(
                     // Description is a localized string, hence CCIC
-                    c => description.Equals(c.FullDescription, StringComparison.CurrentCultureIgnoreCase)
+                    c => description.Equals(c.Description, StringComparison.CurrentCultureIgnoreCase)
                 );
                 if (config != null) {
                     factory = service.FindInterpreter(config.Id);
@@ -1833,7 +1831,7 @@ namespace Microsoft.PythonTools.Project {
 
                 if (factory == null) {
                     config = service.Configurations.FirstOrDefault(
-                        c => description.Equals(c.FullDescription, StringComparison.CurrentCultureIgnoreCase)
+                        c => description.Equals(c.Description, StringComparison.CurrentCultureIgnoreCase)
                     );
                     if (config != null) {
                         factory = service.FindInterpreter(config.Id);
@@ -2123,7 +2121,7 @@ namespace Microsoft.PythonTools.Project {
             var name = "-r " + ProcessOutput.QuoteSingleArgument(txt);
             if (args != null && !args.ContainsKey("y")) {
                 if (!ShouldInstallRequirementsTxt(
-                    selectedInterpreterFactory.Configuration.FullDescription,
+                    selectedInterpreterFactory.Configuration.Description,
                     txt,
                     elevated
                 )) {
@@ -2364,13 +2362,13 @@ namespace Microsoft.PythonTools.Project {
             HashSet<string> items = null;
 
             try {
-                items = await Pip.Freeze(factory);
+                items = await Pip.Freeze(factory?.Configuration);
             } catch (FileNotFoundException ex) {
                 // Other exceptions should not occur, so let them propagate
                 var dlg = TaskDialog.ForException(
                     Site,
                     ex,
-                    Strings.MissingEnvironment.FormatUI(factory.Configuration.FullDescription, factory.Configuration.Version),
+                    Strings.MissingEnvironment.FormatUI(factory.Configuration.Description, factory.Configuration.Version),
                     IssueTrackerUrl
                 );
                 dlg.Title = Strings.ProductTitle;
@@ -2633,7 +2631,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             try {
-                AddInterpreterReference(config, baseInterp.Configuration.Id);
+                AddInterpreterReference(config);
             } catch (ArgumentException ex) {
                 TaskDialog.ForException(Site, ex, issueTrackerUrl: IssueTrackerUrl).ShowModal();
                 return null;

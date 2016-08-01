@@ -275,9 +275,16 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns a sequence of ModulePaths for all modules importable from
         /// the specified library.
         /// </summary>
+        /// <remarks>
+        /// Where possible, callers should use the methods from
+        /// <see cref="PythonTypeDatabase"/> instead, as those are more accurate
+        /// in the presence of non-standard Python installations. This function
+        /// makes many assumptions about the install layout and may miss some
+        /// modules.
+        /// </remarks>
         public static IEnumerable<ModulePath> GetModulesInLib(
             string interpreterPath,
-            string libraryPath,
+            string libraryPath = null,
             string sitePath = null,
             bool requireInitPyFiles = true
         ) {
@@ -285,7 +292,7 @@ namespace Microsoft.PythonTools.Analysis {
                 interpreterPath = Path.GetDirectoryName(interpreterPath);
             }
             if (!Directory.Exists(libraryPath)) {
-                return Enumerable.Empty<ModulePath>();
+                libraryPath = Path.Combine(interpreterPath, "Lib");
             }
             if (string.IsNullOrEmpty(sitePath)) {
                 sitePath = Path.Combine(libraryPath, "site-packages");
@@ -343,12 +350,12 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns a sequence of ModulePaths for all modules importable by the
         /// provided factory.
         /// </summary>
-        public static IEnumerable<ModulePath> GetModulesInLib(IPythonInterpreterFactory factory) {
+        public static IEnumerable<ModulePath> GetModulesInLib(InterpreterConfiguration config) {
             return GetModulesInLib(
-                factory.Configuration.InterpreterPath,
-                factory.Configuration.LibraryPath,
+                config.InterpreterPath,
+                null,   // default library path
                 null,   // default site-packages path
-                PythonVersionRequiresInitPyFiles(factory.Configuration.Version)
+                PythonVersionRequiresInitPyFiles(config.Version)
             );
         }
 

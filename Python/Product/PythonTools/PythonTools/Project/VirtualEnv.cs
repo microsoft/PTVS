@@ -132,7 +132,7 @@ namespace Microsoft.PythonTools.Project {
             if (!hasVirtualEnv) {
                 if (!hasPip) {
                     bool elevate = provider.GetPythonToolsService().GeneralOptions.ElevatePip;
-                    await Pip.InstallPip(provider, factory, elevate, output);
+                    await Pip.InstallPip(provider, factory.Configuration, elevate, output);
                 }
                 if (!await Install(provider, factory, output)) {
                     throw new InvalidOperationException(Strings.VirtualEnvCreationFailed.FormatUI(path));
@@ -149,10 +149,10 @@ namespace Microsoft.PythonTools.Project {
             IPythonInterpreterFactory baseInterpreter = null
         ) {
 
-            var libPath = DerivedInterpreterFactory.FindLibPath(prefixPath);
+            var libPath = FindLibPath(prefixPath);
 
             if (baseInterpreter == null) {
-                baseInterpreter = DerivedInterpreterFactory.FindBaseInterpreterFromVirtualEnv(
+                baseInterpreter = FindBaseInterpreterFromVirtualEnv(
                     prefixPath,
                     libPath,
                     service
@@ -174,29 +174,90 @@ namespace Microsoft.PythonTools.Project {
 
             return new InterpreterConfiguration(
                 id ?? baseInterpreter.Configuration.Id,
-                description,
+                baseInterpreter == null ? description : string.Format("{0} ({1})", description, baseInterpreter.Configuration.Description),
                 prefixPath,
                 interpExe,
                 winterpExe,
-                libPath,
                 pathVar,
                 baseInterpreter.Configuration.Architecture,
                 baseInterpreter.Configuration.Version,
-                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase,
-                baseInterpreter != null ? string.Format("({0})", baseInterpreter.Configuration.FullDescription) : ""
+                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase
             );
         }
+        public static IPythonInterpreterFactory FindBaseInterpreterFromVirtualEnv(
+            string prefixPath,
+            string libPath,
+            IInterpreterRegistryService service
+        ) {
+            string basePath = PathUtils.TrimEndSeparator(GetOrigPrefixPath(prefixPath, libPath));
 
-        // This helper function is not yet needed, but may be useful at some point.
+            if (Directory.Exists(basePath)) {
+                return service.Interpreters.FirstOrDefault(interp =>
+                    PathUtils.IsSamePath(PathUtils.TrimEndSeparator(interp.Configuration.PrefixPath), basePath)
+                );
+            }
+            return null;
+        }
 
-        //public static string FindLibPathFromInterpreter(string interpreterPath) {
-        //    using (var output = ProcessOutput.RunHiddenAndCapture(interpreterPath, "-c", "import site; print(site.__file__)")) {
-        //        output.Wait();
-        //        return output.StandardOutputLines
-        //            .Where(PathUtils.IsValidPath)
-        //            .Select(line => Path.GetDirectoryName(line))
-        //            .LastOrDefault(dir => Directory.Exists(dir));
-        //    }
-        //}
+        public static string GetOrigPrefixPath(string prefixPath, string libPath = null) {
+            string basePath = null;
+
+            if (!Directory.Exists(prefixPath)) {
+                return null;
+            }
+
+            var cfgFile = Path.Combine(prefixPath, "pyvenv.cfg");
+            if (File.Exists(cfgFile)) {
+                try {
+                    var lines = File.ReadAllLines(cfgFile);
+                    basePath = lines
+                        .Select(line => Regex.Match(line, @"^home\s*=\s*(?<path>.+)$", RegexOptions.IgnoreCase))
+                        .Where(m => m != null && m.Success)
+                        .Select(m => m.Groups["path"])
+                        .Where(g => g != null && g.Success)
+                        .Select(g => g.Value)
+                        .FirstOrDefault(PathUtils.IsValidPath);
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                } catch (System.Security.SecurityException) {
+                }
+            }
+
+            if (string.IsNullOrEmpty(libPath)) {
+                libPath = FindLibPath(prefixPath);
+            }
+
+            if (!Directory.Exists(libPath)) {
+                return null;
+            }
+
+            var prefixFile = Path.Combine(libPath, "orig-prefix.txt");
+            if (basePath == null && File.Exists(prefixFile)) {
+                try {
+                    var lines = File.ReadAllLines(prefixFile);
+                    basePath = lines.FirstOrDefault(PathUtils.IsValidPath);
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                } catch (System.Security.SecurityException) {
+                }
+            }
+            return basePath;
+        }
+
+        public static string FindLibPath(string prefixPath) {
+            // Find site.py to find the library
+            var libPath = PathUtils.FindFile(prefixPath, "site.py", firstCheck: new[] { "Lib" });
+            if (!File.Exists(libPath)) {
+                // Python 3.3 venv does not add site.py, but always puts the
+                // library in prefixPath\Lib
+                libPath = Path.Combine(prefixPath, "Lib");
+                if (!Directory.Exists(libPath)) {
+                    return null;
+                }
+            } else {
+                libPath = Path.GetDirectoryName(libPath);
+            }
+            return libPath;
+        }
     }
 }

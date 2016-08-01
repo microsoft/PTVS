@@ -20,7 +20,6 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -38,15 +37,15 @@ namespace Microsoft.PythonTools.Project {
         private static readonly Version SupportsDashMPip = new Version(2, 7);
 
         private static ProcessOutput Run(
-            IPythonInterpreterFactory factory,
+            InterpreterConfiguration config,
             Redirector output,
             bool elevate,
             params string[] cmd
         ) {
-            factory.ThrowIfNotRunnable("factory");
+            config.ThrowIfNotRunnable("config");
 
             IEnumerable<string> args;
-            if (factory.Configuration.Version >= SupportsDashMPip) {
+            if (config.Version >= SupportsDashMPip) {
                 args = new[] { "-m", "pip" }.Concat(cmd);
             } else {
                 // Manually quote the code, since we are passing false to
@@ -55,9 +54,9 @@ namespace Microsoft.PythonTools.Project {
             }
 
             return ProcessOutput.Run(
-                factory.Configuration.InterpreterPath,
+                config.InterpreterPath,
                 args,
-                factory.Configuration.PrefixPath,
+                config.PrefixPath,
                 UnbufferedEnv,
                 false,
                 output,
@@ -67,7 +66,9 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public static async Task<HashSet<string>> List(IPythonInterpreterFactory factory) {
-            using (var proc = Run(factory, null, false, "list")) {
+            factory.ThrowIfNotRunnable("factory");
+
+            using (var proc = Run(factory.Configuration, null, false, "list")) {
                 if (await proc == 0) {
                     return new HashSet<string>(proc.StandardOutputLines
                         .Select(line => Regex.Match(line, "(?<name>.+?) \\((?<version>.+?)\\)"))
@@ -81,25 +82,27 @@ namespace Microsoft.PythonTools.Project {
             }
 
             // Pip failed, so return a directory listing
-            var packagesPath = Path.Combine(factory.Configuration.LibraryPath, "site-packages");
-            HashSet<string> result = null;
-            if (Directory.Exists(packagesPath)) {
-                result = await Task.Run(() => new HashSet<string>(
-                    PathUtils.EnumerateDirectories(packagesPath, recurse: false)
+            var withDb = factory as PythonInterpreterFactoryWithDatabase;
+            if (withDb != null) {
+                var paths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(withDb.DatabasePath) ??
+                    (await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(factory.Configuration.InterpreterPath));
+
+                return await Task.Run(() => new HashSet<string>(
+                    paths.Where(p => !p.IsStandardLibrary)
+                        .SelectMany(p => PathUtils.EnumerateDirectories(p.Path, recurse: false))
                         .Select(path => Path.GetFileName(path))
                         .Select(name => PackageNameRegex.Match(name))
                         .Where(match => match.Success)
                         .Select(match => match.Groups["name"].Value)
                     )
-                )
-                    .HandleAllExceptions(null, typeof(Pip));
+                ).HandleAllExceptions(null, typeof(Pip));
             }
 
-            return result ?? new HashSet<string>();
+            return new HashSet<string>();
         }
 
-        public static async Task<HashSet<string>> Freeze(IPythonInterpreterFactory factory) {
-            using (var proc = Run(factory, null, false, "freeze")) {
+        public static async Task<HashSet<string>> Freeze(InterpreterConfiguration config) {
+            using (var proc = Run(config, null, false, "freeze")) {
                 if (await proc == 0) {
                     return new HashSet<string>(proc.StandardOutputLines);
                 }
@@ -116,15 +119,15 @@ namespace Microsoft.PythonTools.Project {
         /// include the required SSL support by default. No detection is done to
         /// determine whether the support has been added separately.
         /// </summary>
-        public static bool IsSecureInstall(IPythonInterpreterFactory factory) {
-            return factory.Configuration.Version > new Version(2, 5);
+        public static bool IsSecureInstall(InterpreterConfiguration config) {
+            return config.Version > new Version(2, 5);
         }
 
         private static string GetInsecureArg(
-            IPythonInterpreterFactory factory,
+            InterpreterConfiguration config,
             Redirector output = null
         ) {
-            if (!IsSecureInstall(factory)) {
+            if (!IsSecureInstall(config)) {
                 // Python 2.5 does not include ssl, and so the --insecure
                 // option is required to use pip.
                 if (output != null) {
@@ -145,9 +148,9 @@ namespace Microsoft.PythonTools.Project {
             factory.ThrowIfNotRunnable("factory");
 
             if (!(await factory.FindModulesAsync("pip")).Any()) {
-                await InstallPip(provider, factory, elevate, output);
+                await InstallPip(provider, factory.Configuration, elevate, output);
             }
-            using (var proc = Run(factory, output, elevate, "install", GetInsecureArg(factory, output), package)) {
+            using (var proc = Run(factory.Configuration, output, elevate, "install", GetInsecureArg(factory.Configuration, output), package)) {
                 await proc;
                 return proc.ExitCode == 0;
             }
@@ -171,7 +174,7 @@ namespace Microsoft.PythonTools.Project {
                         return false;
                     }
                 } else {
-                    await InstallPip(provider, factory, elevate, output);
+                    await InstallPip(provider, factory.Configuration, elevate, output);
                 }
             }
 
@@ -184,7 +187,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            using (var proc = Run(factory, output, elevate, "install", GetInsecureArg(factory, output), package)) {
+            using (var proc = Run(factory.Configuration, output, elevate, "install", GetInsecureArg(factory.Configuration, output), package)) {
                 var exitCode = await proc;
 
                 if (output != null) {
@@ -221,7 +224,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            using (var proc = Run(factory, output, elevate, "uninstall", "-y", package)) {
+            using (var proc = Run(factory.Configuration, output, elevate, "uninstall", "-y", package)) {
                 var exitCode = await proc;
 
                 if (output != null) {
@@ -240,8 +243,8 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public static async Task InstallPip(IServiceProvider provider, IPythonInterpreterFactory factory, bool elevate, Redirector output = null) {
-            factory.ThrowIfNotRunnable("factory");
+        public static async Task InstallPip(IServiceProvider provider, InterpreterConfiguration config, bool elevate, Redirector output = null) {
+            config.ThrowIfNotRunnable("config");
 
             var pipDownloaderPath = PythonToolsInstallPath.GetFile("pip_downloader.py");
 
@@ -254,9 +257,9 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
             using (var proc = ProcessOutput.Run(
-                factory.Configuration.InterpreterPath,
+                config.InterpreterPath,
                 new[] { pipDownloaderPath },
-                factory.Configuration.PrefixPath,
+                config.PrefixPath,
                 null,
                 false,
                 output,
@@ -322,7 +325,7 @@ namespace Microsoft.PythonTools.Project {
                 throw new OperationCanceledException();
             }
 
-            await InstallPip(site, factory, elevate, output);
+            await InstallPip(site, factory.Configuration, elevate, output);
         }
 
         /// <summary>
@@ -338,16 +341,16 @@ namespace Microsoft.PythonTools.Project {
         /// packages and verify their versions. If setuptools is not available,
         /// the method will always return <c>false</c> for any package name.
         /// </remarks>
-        public static async Task<bool> IsInstalled(IPythonInterpreterFactory factory, string package) {
-            if (!factory.IsRunnable()) {
+        public static async Task<bool> IsInstalled(InterpreterConfiguration config, string package) {
+            if (!config.IsRunnable()) {
                 return false;
             }
 
             var code = string.Format("import pkg_resources; pkg_resources.require('{0}')", package);
             using (var proc = ProcessOutput.Run(
-                factory.Configuration.InterpreterPath,
+                config.InterpreterPath,
                 new[] { "-c", code  },
-                factory.Configuration.PrefixPath,
+                config.PrefixPath,
                 UnbufferedEnv,
                 visible: false,
                 redirector: null,

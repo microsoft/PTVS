@@ -43,13 +43,12 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private static InterpreterConfiguration GetConfiguration(Version version, params string[] databasePaths) {
             return new InterpreterConfiguration(
                 "AnalysisOnly;" + version.ToString() + ";" + String.Join(";", databasePaths.ToArray()), 
-                "Analysis", 
+                string.Format("Analysis {0}", version),
                 null,
                 null,
                 null,
                 null,
-                null,
-                ProcessorArchitecture.None,
+                InterpreterArchitecture.Unknown,
                 version,
                 InterpreterUIMode.SupportsDatabase
             );

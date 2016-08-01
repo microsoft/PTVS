@@ -2860,9 +2860,8 @@ namespace Microsoft.VisualStudioTools.Project {
             var solutionBuild = (IVsSolutionBuildManager)GetService(typeof(SVsSolutionBuildManager));
 
             IVsProjectCfg[] cfg = new IVsProjectCfg[1];
-            ErrorHandler.ThrowOnFailure(
-                solutionBuild.FindActiveProjectCfg(IntPtr.Zero, IntPtr.Zero, GetOuterHierarchy(), cfg)
-            );
+            int hr = solutionBuild.FindActiveProjectCfg(IntPtr.Zero, IntPtr.Zero, GetOuterHierarchy(), cfg);
+            ErrorHandler.ThrowOnFailure(hr);
 
             string name;
             ErrorHandler.ThrowOnFailure(cfg[0].get_CanonicalName(out name));

@@ -47,18 +47,16 @@ namespace Microsoft.PythonTools.Project {
         private readonly string _caption;
         private readonly string _packageName;
 
-        public InterpretersPackageNode(PythonProjectNode project, string name)
+        public InterpretersPackageNode(PythonProjectNode project, string name, string version)
             : base(project, new VirtualProjectElement(project)) {
             ExcludeNodeFromScc = true;
             _packageName = name;
-            var match = PipFreezeRegex.Match(name);
-            if (match.Success) {
-                var namePart = match.Groups["name"].Value;
-                _caption = string.Format("{0} ({1})", namePart, match.Groups["version"]);
-                _canUninstall = !CannotUninstall.Contains(namePart);
-            } else {
+            if (string.IsNullOrEmpty(version)) {
                 _caption = name;
                 _canUninstall = false;
+            } else {
+                _caption = string.Format("{0} ({1})", name, version);
+                _canUninstall = !CannotUninstall.Contains(name);
             }
         }
 
@@ -95,13 +93,13 @@ namespace Microsoft.PythonTools.Project {
                 if (nodes.Count == 1) {
                     message = Strings.UninstallPackage.FormatUI(
                         Caption,
-                        Parent._factory.Configuration.FullDescription,
+                        Parent._factory.Configuration.Description,
                         Parent._factory.Configuration.PrefixPath
                     );
                 } else {
                     message = Strings.UninstallPackages.FormatUI(
                         string.Join(Environment.NewLine, nodes.Select(n => n.Caption)),
-                        Parent._factory.Configuration.FullDescription,
+                        Parent._factory.Configuration.Description,
                         Parent._factory.Configuration.PrefixPath
                     );
                 }

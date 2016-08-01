@@ -109,24 +109,4 @@ namespace Microsoft.PythonTools.Project {
             return "Environment Properties";
         }
     }
-
-    [ComVisible(true)]
-    [Guid(PythonConstants.InterpretersWithBaseInterpreterPropertiesGuid)]
-    public class InterpretersNodeWithBaseInterpreterProperties : InterpretersNodeProperties {
-        [SRCategory(SR.Misc)]
-        [SRDisplayName("BaseInterpreterDisplayName")]
-        [SRDescription("BaseInterpreterDescription")]
-        [AutomationBrowsable(true)]
-        public string BaseInterpreter {
-            get {
-                var fact = Factory as DerivedInterpreterFactory;
-                return fact != null ? 
-                    fact.BaseInterpreter.Configuration.FullDescription :
-                    SR.GetString(SR.UnknownInParentheses);
-            }
-        }
-
-        internal InterpretersNodeWithBaseInterpreterProperties(HierarchyNode node)
-            : base(node) { }
-    }
 }

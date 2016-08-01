@@ -183,5 +183,9 @@ namespace TestUtilities.Python {
             _properties?.TryGetValue(propName, out value);
             return value;
         }
+
+        public IEnumerable<string> GetUpToDateModules() {
+            yield break;
+        }
     }
 }

@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Project {
                 if (map.TryGetValue(interp, out view)) {
                     view.IsSelected = true;
                 } else {
-                    view = new InterpreterView(interp, interp.Configuration.FullDescription, false);
+                    view = new InterpreterView(interp, interp.Configuration.Description, false);
                     view.IsSelected = true;
                     Interpreters.Add(view);
                 }
@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Project {
             }
             var def = _project.ActiveInterpreter;
             Interpreters.Merge(
-                _project.InterpreterFactories.Select(i => new InterpreterView(i, i.Configuration.FullDescription, i == def)),
+                _project.InterpreterFactories.Select(i => new InterpreterView(i, i.Configuration.Description, i == def)),
                 InterpreterView.EqualityComparer,
                 InterpreterView.Comparer
             );

@@ -70,9 +70,6 @@ namespace Microsoft.PythonTools.BuildTasks {
         public string WindowsInterpreterPath { get; private set; }
 
         [Output]
-        public string LibraryPath { get; private set; }
-
-        [Output]
         public string Architecture { get; private set; }
 
         [Output]
@@ -150,7 +147,7 @@ namespace Microsoft.PythonTools.BuildTasks {
                     if (factory == null) {
                         _log.LogError(
                             "The environment '{0}' is not available. Check your project configuration and try again.",
-                            factory.Configuration.FullDescription
+                            factory.Configuration.Description
                         );
                         return false;
                     } else {
@@ -162,10 +159,9 @@ namespace Microsoft.PythonTools.BuildTasks {
                         }
                         InterpreterPath = factory.Configuration.InterpreterPath;
                         WindowsInterpreterPath = factory.Configuration.WindowsInterpreterPath;
-                        LibraryPath = PathUtils.EnsureEndSeparator(factory.Configuration.LibraryPath);
                         Architecture = factory.Configuration.Architecture.ToString();
                         PathEnvironmentVariable = factory.Configuration.PathEnvironmentVariable;
-                        Description = factory.Configuration.FullDescription;
+                        Description = factory.Configuration.Description;
                         MajorVersion = factory.Configuration.Version.Major.ToString();
                         MinorVersion = factory.Configuration.Version.Minor.ToString();
 

@@ -26,38 +26,34 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase {
-        public IronPythonInterpreterFactory(ProcessorArchitecture arch = ProcessorArchitecture.X86)
-            : base(
-                GetConfiguration(arch),
-                true) { }
+        public IronPythonInterpreterFactory(InterpreterArchitecture arch)
+            : base(GetConfiguration(arch), true) { }
 
-        private static string GetInterpreterId(ProcessorArchitecture arch) {
-            return arch == ProcessorArchitecture.Amd64 ? "IronPython|2.7-64" : "IronPython|2.7-32";
+        private static string GetInterpreterId(InterpreterArchitecture arch) {
+            if (arch == InterpreterArchitecture.x64) {
+                return "IronPython|2.7-64";
+            } else {
+                return "IronPython|2.7-32";
+            }
         }
 
-        internal static InterpreterConfiguration GetConfiguration(ProcessorArchitecture arch) {
+        internal static InterpreterConfiguration GetConfiguration(InterpreterArchitecture arch) {
             var prefixPath = IronPythonResolver.GetPythonInstallDir();
             return new InterpreterConfiguration(
                 GetInterpreterId(arch),
-                "IronPython",
+                string.Format("IronPython 2.7{0: ()}", arch),
                 prefixPath,
-                Path.Combine(prefixPath, arch == ProcessorArchitecture.Amd64 ? "ipy64.exe" : "ipy.exe"),
-                Path.Combine(prefixPath, arch == ProcessorArchitecture.Amd64 ? "ipyw64.exe" : "ipyw.exe"),
-                Path.Combine(prefixPath, "Lib"),
+                Path.Combine(prefixPath, arch == InterpreterArchitecture.x64 ? "ipy64.exe" : "ipy.exe"),
+                Path.Combine(prefixPath, arch == InterpreterArchitecture.x64 ? "ipyw64.exe" : "ipyw.exe"),
                 "IRONPYTHONPATH",
                 arch,
                 new Version(2, 7),
-                InterpreterUIMode.SupportsDatabase);
+                InterpreterUIMode.SupportsDatabase
+            );
         }
 
         public override IPythonInterpreter MakeInterpreter(PythonInterpreterFactoryWithDatabase factory) {
             return new IronPythonInterpreter(factory);
-        }
-
-        public override bool AssumeSimpleLibraryLayout {
-            get {
-                return false;
-            }
         }
     }
 }

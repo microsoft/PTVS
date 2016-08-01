@@ -422,24 +422,17 @@ namespace Microsoft.PythonTools {
                     }
 
                     if (option.IsConfigurable) {
-                        ProcessorArchitecture arch = ProcessorArchitecture.X86;
-                        switch (option.Architecture) {
-                            case "x86": arch = ProcessorArchitecture.X86; break;
-                            case "x64": arch = ProcessorArchitecture.Amd64; break;
-                        }
-
                         // save configurable interpreter options
                         var actualFactory = _interpreterOptionsService.AddConfigurableInterpreter(
                             option.Description,
                             new InterpreterConfiguration(
                                 option.Id,
                                 option.Description,
-                                !String.IsNullOrWhiteSpace(option.LibraryPath) ? Path.GetDirectoryName(option.LibraryPath) : "",
+                                !String.IsNullOrWhiteSpace(option.InterpreterPath) ? PathUtils.GetParent(option.InterpreterPath) : "",
                                 option.InterpreterPath ?? "",
                                 option.WindowsInterpreterPath ?? "",
-                                option.LibraryPath ?? "",
                                 option.PathEnvironmentVariable ?? "",
-                                arch,
+                                InterpreterArchitecture.TryParse(option.Architecture),
                                 Version.Parse(option.Version) ?? new Version(2, 7)
                             )
                         );

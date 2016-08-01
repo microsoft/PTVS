@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.Project {
         ) {
             _view = new InstallPythonPackageView(
                 serviceProvider,
-                !Pip.IsSecureInstall(factory),
+                !Pip.IsSecureInstall(factory.Configuration),
                 Conda.CanInstall(factory, service)
             );
             DataContext = _view;

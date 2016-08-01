@@ -44,9 +44,9 @@ namespace Microsoft.PythonTools {
                 .Interpreters
                 .Where(p => !p.Configuration.Id.StartsWith("MSBuild|"))
                 .Where(PythonInterpreterFactoryExtensions.IsUIVisible)
-                .OrderBy(fact => fact.Configuration.FullDescription)
+                .OrderBy(fact => fact.Configuration.Description)
                 .ThenBy(fact => fact.Configuration.Version)
-                .Select(i => new InterpreterView(i, i.Configuration.FullDescription, i == project.ActiveInterpreter));
+                .Select(i => new InterpreterView(i, i.Configuration.Description, i == project.ActiveInterpreter));
         }
 
         public InterpreterView(IPythonInterpreterFactory interpreter, string name, PythonProjectNode project)
@@ -66,8 +66,7 @@ namespace Microsoft.PythonTools {
 
             var withDb = interpreter as IPythonInterpreterFactoryWithDatabase;
             if (withDb != null) {
-                CanRefresh = File.Exists(interpreter.Configuration.InterpreterPath) &&
-                    Directory.Exists(interpreter.Configuration.LibraryPath);
+                CanRefresh = File.Exists(interpreter.Configuration.InterpreterPath);
                 withDb.IsCurrentChanged += Interpreter_IsCurrentChanged;
                 IsCurrent = withDb.IsCurrent;
                 IsCurrentReason = withDb.GetFriendlyIsCurrentReason(CultureInfo.CurrentUICulture);

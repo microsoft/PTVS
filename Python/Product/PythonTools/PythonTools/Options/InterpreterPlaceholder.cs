@@ -29,8 +29,7 @@ namespace Microsoft.PythonTools.Options {
                 null,
                 null,
                 null,
-                null,
-                ProcessorArchitecture.None,
+                InterpreterArchitecture.Unknown,
                 new Version(),
                 InterpreterUIMode.Normal
             );

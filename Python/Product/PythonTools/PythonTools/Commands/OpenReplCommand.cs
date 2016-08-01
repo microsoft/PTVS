@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Commands {
                         var service = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
                         config = service.Configurations.FirstOrDefault(
                             // Descriptions are localized strings, hence CCIC
-                            f => description.Equals(f.FullDescription, StringComparison.CurrentCultureIgnoreCase)
+                            f => description.Equals(f.Description, StringComparison.CurrentCultureIgnoreCase)
                         );
                     }
                 }

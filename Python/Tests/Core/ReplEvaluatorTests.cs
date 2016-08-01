@@ -220,7 +220,7 @@ g()",
                     WindowInterpreterPath = _pythonWinExe,
                     LibraryPath = _pythonLib,
                     PathEnvironmentVariableName = "PYTHONPATH",
-                    Architecture = ProcessorArchitecture.X86,
+                    Architecture = InterpreterArchitecture.x86,
                     WatchLibraryForNewModules = false
                 });
             }

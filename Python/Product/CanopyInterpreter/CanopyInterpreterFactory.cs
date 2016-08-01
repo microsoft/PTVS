@@ -52,7 +52,6 @@ namespace CanopyInterpreter {
         ) {
             var interpPath = FindFile(basePath, CanopyInterpreterFactoryConstants.ConsoleExecutable);
             var winInterpPath = FindFile(basePath, CanopyInterpreterFactoryConstants.WindowsExecutable);
-            var libPath = Path.Combine(basePath, CanopyInterpreterFactoryConstants.LibrarySubPath);
 
             if (!File.Exists(interpPath)) {
                 throw new FileNotFoundException(interpPath);
@@ -60,27 +59,19 @@ namespace CanopyInterpreter {
             if (!File.Exists(winInterpPath)) {
                 throw new FileNotFoundException(winInterpPath);
             }
-            if (!Directory.Exists(libPath)) {
-                throw new DirectoryNotFoundException(libPath);
-            }
 
             // Detect the architecture and select the appropriate id
-            var arch = NativeMethods.GetBinaryType(interpPath);
-            var id = (arch == ProcessorArchitecture.Amd64) ?
+            var arch = new InterpreterArchitecture(NativeMethods.GetBinaryType(interpPath));
+            var id = (arch == InterpreterArchitecture.x64) ?
                 CanopyInterpreterFactoryConstants.BaseGuid64 :
                 CanopyInterpreterFactoryConstants.BaseGuid32;
 
             // Make the description string look like "Base Canopy 1.1.0.46 (2.7 32-bit)"
-            var description = "Base Canopy";
+            var versionPart = "";
             if (!string.IsNullOrEmpty(canopyVersion)) {
-                description += " " + canopyVersion;
+                versionPart = " " + canopyVersion;
             }
-            description += string.Format(" ({0} ", languageVersion);
-            if (arch == ProcessorArchitecture.Amd64) {
-                description += " 64-bit)";
-            } else {
-                description += " 32-bit)";
-            }
+            var description = string.Format("Base Canopy{0} ({1}{2})", versionPart, languageVersion, arch);
 
             return InterpreterFactoryCreator.CreateInterpreterFactory(
                 new InterpreterConfiguration(
@@ -89,7 +80,6 @@ namespace CanopyInterpreter {
                     basePath,
                     interpPath,
                     winInterpPath,
-                    libPath,
                     CanopyInterpreterFactoryConstants.PathEnvironmentVariableName,
                     arch,
                     languageVersion,
@@ -117,7 +107,6 @@ namespace CanopyInterpreter {
         ) {
             var interpPath = FindFile(userPath, CanopyInterpreterFactoryConstants.ConsoleExecutable);
             var winInterpPath = FindFile(userPath, CanopyInterpreterFactoryConstants.WindowsExecutable);
-            var libPath = Path.Combine(userPath, CanopyInterpreterFactoryConstants.LibrarySubPath);
 
             if (!File.Exists(interpPath)) {
                 throw new FileNotFoundException(interpPath);
@@ -125,21 +114,13 @@ namespace CanopyInterpreter {
             if (!File.Exists(winInterpPath)) {
                 throw new FileNotFoundException(winInterpPath);
             }
-            if (!Directory.Exists(libPath)) {
-                throw new DirectoryNotFoundException(libPath);
-            }
 
             // Make the description string look like "Canopy 1.1.0.46 (2.7 32-bit)"
-            var description = "Canopy ";
+            var versionPart = "";
             if (!string.IsNullOrEmpty(canopyVersion)) {
-                description += " " + canopyVersion;
+                versionPart = " " + canopyVersion;
             }
-            description += string.Format(" ({0} ", baseFactory.Configuration.Version);
-            if (baseFactory.Configuration.Architecture == ProcessorArchitecture.Amd64) {
-                description += " 64-bit)";
-            } else {
-                description += " 32-bit)";
-            }
+            var description = string.Format("Canopy{0} ({1}{2})", versionPart, baseFactory.Configuration.Version, baseFactory.Configuration.Architecture);
 
             var config = new InterpreterConfiguration(
                 userPath,
@@ -147,7 +128,6 @@ namespace CanopyInterpreter {
                 userPath,
                 interpPath,
                 winInterpPath,
-                libPath,
                 CanopyInterpreterFactoryConstants.PathEnvironmentVariableName,
                 baseFactory.Configuration.Architecture,
                 baseFactory.Configuration.Version,
@@ -231,10 +211,6 @@ namespace CanopyInterpreter {
         /// interpreter needs regenerating, it will also be regenerated.
         /// </summary>
         public override void GenerateDatabase(GenerateDatabaseOptions options, Action<int> onExit = null) {
-            if (!Directory.Exists(Configuration.LibraryPath)) {
-                return;
-            }
-
             var req = new PythonTypeDatabaseCreationRequest {
                 Factory = this,
                 OutputPath = DatabasePath,
@@ -307,7 +283,7 @@ namespace CanopyInterpreter {
             } else if (!_base.IsCurrent) {
                 return string.Format(culture,
                     "{0} is out of date:{1}{2}",
-                    _base.Configuration.FullDescription,
+                    _base.Configuration.Description,
                     Environment.NewLine,
                     _base.GetIsCurrentReason(culture));
             }

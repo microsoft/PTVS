@@ -4694,7 +4694,7 @@ min(a, D())
             bool anyTested = false;
 
             foreach (var ver in PythonPaths.Versions) {
-                var azureDir = Path.Combine(ver.LibPath, "site-packages", "azure");
+                var azureDir = Path.Combine(ver.PrefixPath, "Lib", "site-packages", "azure");
                 if (Directory.Exists(azureDir)) {
                     anyTested = true;
                     AnalyzeDirLeak(azureDir);
@@ -4793,7 +4793,7 @@ min(a, D())
 
             var cancelSource = new CancellationTokenSource();
             var task = Task.Run(() => {
-                new AnalysisTest().AnalyzeDir(ver.LibPath, ver.Version, cancel: cancelSource.Token);
+                new AnalysisTest().AnalyzeDir(Path.Combine(ver.PrefixPath, "Lib"), ver.Version, cancel: cancelSource.Token);
             }, cancelSource.Token);
 
             // Allow 10 seconds for parsing to complete and analysis to start

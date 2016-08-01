@@ -336,17 +336,7 @@ namespace PythonToolsTests {
             path.AssertInstalled();
 
             var factory = InterpreterFactoryCreator.CreateInterpreterFactory(
-                new InterpreterConfiguration(
-                    path.Id,
-                    "Test Interpreter",
-                    path.PrefixPath,
-                    path.InterpreterPath,
-                    path.InterpreterPath,
-                    path.LibPath,
-                    "PYTHONPATH",
-                    path.Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
-                    path.Version.ToVersion()
-                ),
+                path.Configuration,
                 new InterpreterFactoryCreationOptions {
                     WatchLibraryForNewModules = false
                 }

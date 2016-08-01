@@ -23,7 +23,7 @@ namespace Microsoft.PythonTools.Interpreter {
     /// </summary>
     public sealed class InterpreterFactoryCreationOptions {
         public InterpreterFactoryCreationOptions() {
-            Architecture = ProcessorArchitecture.X86;
+            Architecture = InterpreterArchitecture.Unknown;
         }
 
         /// <summary>
@@ -99,30 +99,17 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Specifies the processor architecture of the Python interpreter.
         /// The default is X86.
         /// </summary>
-        public ProcessorArchitecture Architecture { get; set; }
+        public InterpreterArchitecture Architecture { get; set; }
 
         /// <summary>
         /// Gets or sets the architecture as either "x86" or "x64".
         /// </summary>
         public string ArchitectureString {
             get {
-                switch(Architecture) {
-                    case ProcessorArchitecture.Amd64:
-                        return "x64";
-                    case ProcessorArchitecture.X86:
-                        return "x86";
-                    default:
-                        return string.Empty;
-                }
+                return Architecture.ToString("x");
             }
             set {
-                if (string.IsNullOrEmpty(value)) {
-                    Architecture = ProcessorArchitecture.None;
-                } else if (value.Equals("x64", StringComparison.InvariantCultureIgnoreCase)) {
-                    Architecture = ProcessorArchitecture.Amd64;
-                } else {
-                    Architecture = ProcessorArchitecture.X86;
-                }
+                Architecture = InterpreterArchitecture.TryParse(value);
             }
         }
     }

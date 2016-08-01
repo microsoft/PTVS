@@ -446,9 +446,6 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
             var windowInterpreterPath = string.IsNullOrEmpty(config.WindowsInterpreterPath) ?
                 string.Empty :
                 PathUtils.GetRelativeFilePath(prefixPath, config.WindowsInterpreterPath);
-            var libraryPath = string.IsNullOrEmpty(config.LibraryPath) ?
-                string.Empty :
-                PathUtils.GetRelativeDirectoryPath(prefixPath, config.LibraryPath);
             prefixPath = PathUtils.GetRelativeDirectoryPath(sourcePath, prefixPath);
 
             return project.AddItem(
@@ -460,7 +457,6 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                     { MSBuildConstants.BaseInterpreterKey, config.Id },
                     { MSBuildConstants.InterpreterPathKey, interpreterPath },
                     { MSBuildConstants.WindowsPathKey, windowInterpreterPath },
-                    { MSBuildConstants.LibraryPathKey, libraryPath },
                     { MSBuildConstants.VersionKey, config.Version.ToString() },
                     { MSBuildConstants.ArchitectureKey, config.Architecture.ToString() },
                     { MSBuildConstants.PathEnvVarKey, config.PathEnvironmentVariable }
@@ -499,7 +495,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 
                 try {
                     if (virtualEnvPaths != null) {
-                        var origPrefix = DerivedInterpreterFactory.GetOrigPrefixPath(dir);
+                        var origPrefix = VirtualEnv.GetOrigPrefixPath(dir);
                         if (!string.IsNullOrEmpty(origPrefix)) {
                             virtualEnvPaths.Add(dir);
                             skipDirectories.Add(PathUtils.TrimEndSeparator(dir));

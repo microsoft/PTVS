@@ -44,11 +44,11 @@ namespace AnalysisTests {
                 Console.WriteLine("Seed == " + seed);
 
 
-                Console.WriteLine("Testing version {0} {1}", Version.Version, Version.LibPath);
+                Console.WriteLine("Testing version {0} {1}", Version.Version, Path.Combine(Version.PrefixPath, "Lib"));
                 int ran = 0, succeeded = 0;
                 string[] files;
                 try {
-                    files = Directory.GetFiles(Version.LibPath);
+                    files = Directory.GetFiles(Path.Combine(Version.PrefixPath, "Lib"));
                 } catch (DirectoryNotFoundException) {
                     continue;
                 }

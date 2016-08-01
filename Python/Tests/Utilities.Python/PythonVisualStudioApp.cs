@@ -287,7 +287,7 @@ namespace TestUtilities.UI.Python {
 
             try {
                 if (!string.IsNullOrEmpty(installPackages)) {
-                    Pip.InstallPip(ServiceProvider, factory, false).Wait();
+                    Pip.InstallPip(ServiceProvider, factory.Configuration, false).Wait();
                     foreach (var package in installPackages.Split(' ', ',', ';').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s))) {
                         Pip.Install(ServiceProvider, factory, package, false).Wait();
                     }
@@ -335,20 +335,7 @@ namespace TestUtilities.UI.Python {
                 using (var createVenv = AutomationDialog.FromDte(this, "Python.AddVirtualEnvironment")) {
                     envPath = new TextBox(createVenv.FindByAutomationId("VirtualEnvPath")).GetValue();
                     var baseInterp = new ComboBox(createVenv.FindByAutomationId("BaseInterpreter")).GetSelectedItemName();
-
-                    var baseConfig = ComponentModel.GetService<IInterpreterRegistryService>().Configurations
-                        .FirstOrDefault(c => c.FullDescription == baseInterp);
-
-                    if (baseConfig == null) {
-                        envName = "{0} ({1})".FormatUI(envPath, baseInterp);
-                    } else {
-                        envName = "{0} {1} {2} ({3})".FormatUI(
-                            envPath,
-                            baseConfig.Architecture == System.Reflection.ProcessorArchitecture.Amd64 ? "64-bit" : "32-bit",
-                            baseConfig.Version,
-                            baseInterp
-                        );
-                    }
+                    envName = "{0} ({1})".FormatUI(envPath, baseInterp);
 
                     Console.WriteLine("Expecting environment named: {0}", envName);
 

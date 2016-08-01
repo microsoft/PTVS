@@ -59,6 +59,9 @@
     <Compile Include="AggregateProjectEntry.cs" />
     <Compile Include="AnalysisDictionary.cs" />
     <Compile Include="IHasRichDescription.cs" />
+    <Compile Include="Interpreter\InterpreterArchitecture.cs" />
+    <Compile Include="Interpreter\IPythonInterpreterFactoryWithPackages.cs" />
+    <Compile Include="Interpreter\PackageSpec.cs" />
     <Compile Include="Projects\AnalysisExtensionNameAttribute.cs" />
     <Compile Include="AnalysisExtensions.cs" />
     <Compile Include="AnalysisHashSet.cs" />

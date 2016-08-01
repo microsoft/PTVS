@@ -385,7 +385,7 @@ namespace Microsoft.PythonTools.Project {
 
             var packagesToInstall = new List<string>();
             foreach (var pkg in startInfo.RequiredPackages) {
-                if (!await Pip.IsInstalled(interpFactory, pkg)) {
+                if (!await Pip.IsInstalled(interpFactory.Configuration, pkg)) {
                     packagesToInstall.Add(pkg);
                 }
             }

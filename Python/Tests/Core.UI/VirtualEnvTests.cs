@@ -394,7 +394,7 @@ namespace PythonToolsUITests {
                     Pip.Uninstall(app.ServiceProvider, dis.CurrentDefault, "virtualenv", false).Wait();
                 }
 
-                Assert.AreEqual(0, Microsoft.PythonTools.Analysis.ModulePath.GetModulesInLib(dis.CurrentDefault)
+                Assert.AreEqual(0, Microsoft.PythonTools.Analysis.ModulePath.GetModulesInLib(dis.CurrentDefault.Configuration)
                     .Count(mp => mp.FullName == "virtualenv"),
                     string.Format("Failed to uninstall 'virtualenv' from {0}", dis.CurrentDefault.Configuration.PrefixPath)
                 );
@@ -406,9 +406,9 @@ namespace PythonToolsUITests {
                 var env = app.CreateVirtualEnvironment(project, out envName, out envPath);
                 Assert.IsNotNull(env);
                 Assert.IsNotNull(env.Element);
-                Assert.AreEqual(string.Format("env (Python {0}3.{1})",
-                    dis.CurrentDefault.Configuration.Architecture == ProcessorArchitecture.Amd64 ? "64-bit " : "",
-                    dis.CurrentDefault.Configuration.Version.Minor
+                Assert.AreEqual(string.Format("env (Python {0} {1})",
+                    dis.CurrentDefault.Configuration.Version,
+                    dis.CurrentDefault.Configuration.Architecture
                 ), envName);
             }
         }
@@ -527,19 +527,19 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
 
                     var factories = provider.GetInterpreterFactories().ToList();
                     foreach (var fact in factories) {
-                        Console.WriteLine("{0}: {1}", fact.GetType().FullName, fact.Configuration.FullDescription);
+                        Console.WriteLine("{0}: {1}", fact.GetType().FullName, fact.Configuration.Description);
                     }
 
                     foreach (var fact in factories) {
                         Assert.IsInstanceOfType(
                             fact,
                             typeof(NotFoundInterpreterFactory),
-                            string.Format("{0} was not correct type", fact.Configuration.FullDescription)
+                            string.Format("{0} was not correct type", fact.Configuration.Description)
                         );
                         Assert.IsFalse(fact.Configuration.IsAvailable(), string.Format("{0} was not unavailable", fact.Configuration.Description));
                     }
 
-                    AssertUtil.AreEqual(factories.Select(f => f.Configuration.FullDescription),
+                    AssertUtil.AreEqual(factories.Select(f => f.Configuration.Description),
                         "Invalid BaseInterpreter 2.7 (unavailable)",
                         "Invalid InterpreterPath 2.7 (unavailable)",
                         "Invalid WindowsInterpreterPath 2.7 (unavailable)",
@@ -600,7 +600,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                     pp.AddInterpreter(dis.CurrentDefault.Configuration.Id);
                 });
 
-                var envName = dis.CurrentDefault.Configuration.FullDescription;
+                var envName = dis.CurrentDefault.Configuration.Description;
                 var sln = app.OpenSolutionExplorer();
                 var env = sln.FindChildOfProject(project, Strings.Environments, envName);
 

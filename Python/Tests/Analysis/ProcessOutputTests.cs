@@ -18,12 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
@@ -31,6 +28,12 @@ using TestUtilities.Python;
 namespace AnalysisTests {
     [TestClass]
     public class ProcessOutputTests {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy(includeTestData: false);
+        }
+
         [TestMethod, Priority(1)]
         public void ArgumentQuoting() {
             foreach (var testCase in new[] {
@@ -82,20 +85,8 @@ namespace AnalysisTests {
 
         private static IEnumerable<IPythonInterpreterFactory> Factories {
             get {
-                foreach (var interp in PythonPaths.Versions.Where(p => File.Exists(p.InterpreterPath))) {
-                    yield return new MockPythonInterpreterFactory(
-                        new InterpreterConfiguration(
-                            "Mock;" + Guid.NewGuid().ToString(),
-                            "Test Interpreter",
-                            Path.GetDirectoryName(interp.InterpreterPath), 
-                            interp.InterpreterPath, 
-                            "", 
-                            "", 
-                            "",
-                            interp.Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
-                            interp.Version.ToVersion()
-                        )
-                    );
+                foreach (var interp in PythonPaths.Versions) {
+                    yield return new MockPythonInterpreterFactory(interp.Configuration);
                 }
             }
         }
@@ -104,7 +95,7 @@ namespace AnalysisTests {
         public void RunInterpreterOutput() {
             foreach (var fact in Factories) {
                 using (var output = fact.Run("-c", "import sys; print(sys.version)")) {
-                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.FullDescription + " exceeded timeout");
+                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.Description + " exceeded timeout");
 
                     foreach (var line in output.StandardOutputLines) {
                         Console.WriteLine(line);
@@ -128,7 +119,7 @@ namespace AnalysisTests {
             foreach(var fact in Factories) {
                 using (var output = fact.Run("-c", "assert False")) {
                     Console.WriteLine(output.Arguments);
-                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.FullDescription + " exceeded timeout");
+                    Assert.IsTrue(output.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.Description + " exceeded timeout");
 
                     foreach (var line in output.StandardOutputLines) {
                         Console.WriteLine(line);
@@ -189,14 +180,14 @@ namespace AnalysisTests {
                 quoteArgs: true,
                 elevate: false      // don't really elevate for the test
             )) {
-                Assert.IsTrue(process.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.FullDescription + " exceeded timeout");
+                Assert.IsTrue(process.Wait(TimeSpan.FromSeconds(30)), "Running " + fact.Configuration.Description + " exceeded timeout");
 
                 Console.WriteLine(string.Join(Environment.NewLine, output));
 
                 Assert.AreEqual(7, process.ExitCode);
                 AssertUtil.AreEqual(output,
                     fact.Configuration.Version.ToString(),
-                    fact.Configuration.PrefixPath,
+                    PathUtils.TrimEndSeparator(fact.Configuration.PrefixPath),
                     "TEST_VALUE"
                 );
             }

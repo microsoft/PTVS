@@ -70,12 +70,13 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="CPythonInterpreterFactoryConstants.cs" />
     <Compile Include="CPythonInterpreterFactoryProvider.cs" />
-    <Compile Include="DerivedInterpreterFactory.cs" />
     <Compile Include="IInterpreterOptionsService.cs" />
     <Compile Include="InterpreterOptionsService.cs" />
     <Compile Include="MSBuildConstants.cs" />
     <Compile Include="MSBuildProjectInterpreterFactoryProvider.cs" />
     <Compile Include="NotFoundInterpreterFactory.cs" />
+    <Compile Include="PythonInterpreterInformation.cs" />
+    <Compile Include="PythonRegistrySearch.cs" />
     <Compile Include="RegistryWatcher.cs" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />

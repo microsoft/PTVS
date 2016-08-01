@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Interpreter {
             get {
                 return GetConfigurations()
                     .Values
-                    .OrderBy(config => config.FullDescription)
+                    .OrderBy(config => config.Description)
                     .ThenBy(config => config.Version);
             }
         }

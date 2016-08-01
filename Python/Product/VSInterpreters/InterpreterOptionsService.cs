@@ -20,7 +20,6 @@ using System.ComponentModel.Composition.Primitives;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
@@ -43,8 +42,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private const string PathKey = "ExecutablePath";
         private const string WindowsPathKey = "WindowedExecutablePath";
-        private const string LibraryPathKey = "LibraryPath";
-        private const string ArchitectureKey = "Architecture";
+        private const string ArchitectureKey = "SysArchitecture";
         private const string VersionKey = "SysVersion";
         private const string PathEnvVarKey = "PathEnvironmentVariable";
         private const string DescriptionKey = "Description";
@@ -224,11 +222,26 @@ namespace Microsoft.PythonTools.Interpreter {
         public string AddConfigurableInterpreter(string name, InterpreterConfiguration config) {
             var collection = PythonInterpreterKey + "\\" + name;
             using (var key = Registry.CurrentUser.CreateSubKey(collection, true)) {
-                key.SetValue(LibraryPathKey, config.LibraryPath ?? string.Empty);
-                key.SetValue(ArchitectureKey, config.ArchitectureString);
-                key.SetValue(VersionKey, config.Version?.ToString() ?? "2.7");
-                key.SetValue(PathEnvVarKey, config.PathEnvironmentVariable ?? string.Empty);
-                key.SetValue(DescriptionKey, config.Description ?? string.Empty);
+                if (config.Architecture != InterpreterArchitecture.Unknown) {
+                    key.SetValue(ArchitectureKey, config.Architecture.ToPEP514());
+                } else {
+                    key.DeleteValue(ArchitectureKey, false);
+                }
+                if (config.Version != new Version()) {
+                    key.SetValue(VersionKey, config.Version.ToString());
+                } else {
+                    key.DeleteValue(VersionKey, false);
+                }
+                if (!string.IsNullOrEmpty(config.PathEnvironmentVariable)) {
+                    key.SetValue(PathEnvVarKey, config.PathEnvironmentVariable);
+                } else {
+                    key.DeleteValue(PathEnvVarKey, false);
+                }
+                if (!string.IsNullOrEmpty(config.Description)) {
+                    key.SetValue(DescriptionKey, config.Description);
+                } else {
+                    key.DeleteValue(DescriptionKey, false);
+                }
                 using (var installPath = key.CreateSubKey("InstallPath")) {
                     string exePath = config.InterpreterPath ?? config.WindowsInterpreterPath ?? "";
                     if (!String.IsNullOrWhiteSpace(exePath)) {
@@ -242,25 +255,20 @@ namespace Microsoft.PythonTools.Interpreter {
             // ensure we're up to date...
             _cpythonProvider.Value.DiscoverInterpreterFactories();
 
-            return CPythonInterpreterFactoryConstants.GetInterpreterId(
-                "VisualStudio",
-                config.Architecture,
-                name
-            );
+            return CPythonInterpreterFactoryConstants.GetInterpreterId("VisualStudio", name);
 
         }
 
         public void RemoveConfigurableInterpreter(string id) {
-            if (id.StartsWith("Global|VisualStudio|")) {
-                var key = id.Split(new[] { '|' } , 4);
-                if (key.Length == 4) {
-                    var collection = PythonInterpreterKey + "\\" + key[2];
-                    try {
-                        Registry.CurrentUser.DeleteSubKeyTree(collection);
+            string company, tag;
+            if (CPythonInterpreterFactoryConstants.TryParseInterpreterId(id, out company, out tag) &&
+                company == "VisualStudio") {
+                var collection = PythonInterpreterKey + "\\" + tag;
+                try {
+                    Registry.CurrentUser.DeleteSubKeyTree(collection);
 
-                        _cpythonProvider.Value.DiscoverInterpreterFactories();
-                    } catch (ArgumentException) {
-                    }
+                    _cpythonProvider.Value.DiscoverInterpreterFactories();
+                } catch (ArgumentException) {
                 }
             }
         }

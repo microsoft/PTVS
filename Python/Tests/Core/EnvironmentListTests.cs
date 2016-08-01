@@ -25,16 +25,14 @@ using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
-using System.Windows.Threading;
-using Microsoft.PythonTools;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.Win32;
 using TestUtilities;
 using TestUtilities.Mocks;
 using TestUtilities.Python;
@@ -59,7 +57,7 @@ namespace PythonToolsUITests {
 
 
         private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version, InterpreterUIMode uiMode) {
-            return new InterpreterConfiguration(Guid.NewGuid().ToString(), description, null, null, null, null, null, ProcessorArchitecture.None, version, uiMode);
+            return new InterpreterConfiguration(Guid.NewGuid().ToString(), description, null, null, null, null, InterpreterArchitecture.Unknown, version, uiMode);
         }
 
         private static InterpreterConfiguration MockInterpreterConfiguration(string description, Version version) {
@@ -67,7 +65,7 @@ namespace PythonToolsUITests {
         }
 
         private static InterpreterConfiguration MockInterpreterConfiguration(string path) {
-            return new InterpreterConfiguration(path, path, Path.GetDirectoryName(path), path, "", "", "", ProcessorArchitecture.None, new Version(2, 7));
+            return new InterpreterConfiguration(path, path, Path.GetDirectoryName(path), path, "", "", InterpreterArchitecture.Unknown, new Version(2, 7));
         }
 
         [TestMethod, Priority(1)]
@@ -96,12 +94,12 @@ namespace PythonToolsUITests {
                 Assert.AreEqual(6, environments.Count);
                 AssertUtil.ContainsExactly(
                     wpf.Invoke(() => environments.Select(ev => ev.Description).ToList()),
-                    "Test Factory 1 2.7",
-                    "Test Factory 2 3.0",
-                    "Test Factory 3 3.3",
-                    "Test Factory 4 2.7",
-                    "Test Factory 5 3.0",
-                    "Test Factory 6 3.3"
+                    "Test Factory 1",
+                    "Test Factory 2",
+                    "Test Factory 3",
+                    "Test Factory 4",
+                    "Test Factory 5",
+                    "Test Factory 6"
                 );
             }
         }
@@ -216,7 +214,9 @@ namespace PythonToolsUITests {
 
                     AssertUtil.AreEqual(
                         wpf.Invoke(() => environments.Select(ev => ev.Description).ToList()),
-                        "Test Factory 1 2.7", "Test Factory 2 3.0", "Test Factory 3 3.3"
+                        "Test Factory 1",
+                        "Test Factory 2",
+                        "Test Factory 3"
                     );
                     // TF 1 and 3 can be set as default
                     AssertUtil.AreEqual(
@@ -283,8 +283,7 @@ namespace PythonToolsUITests {
                             invalidPath,
                             "",
                             "",
-                            "",
-                            ProcessorArchitecture.None,
+                            InterpreterArchitecture.Unknown,
                             new Version(2, 7)
                         )
                     ));
@@ -411,8 +410,8 @@ namespace PythonToolsUITests {
                 Console.WriteLine("Actual - Expected: " + string.Join(", ", actual.Except(expected).OrderBy(s => s)));
 
                 AssertUtil.ContainsExactly(
-                    expected,
-                    actual
+                    actual,
+                    expected
                 );
             }
         }
@@ -434,15 +433,22 @@ namespace PythonToolsUITests {
                 ));
 
                 var id = Guid.NewGuid().ToString();
-                var fact = list.Service.AddConfigurableInterpreter(
-                    id,
-                    new InterpreterConfiguration(
-                        "", 
-                        "Blah",
-                        "",
-                        TestData.GetPath("HelloWorld\\HelloWorld.pyproj")
-                    )
-                );
+                string fact;
+
+                try {
+                    fact = list.Service.AddConfigurableInterpreter(
+                        id,
+                        new InterpreterConfiguration(
+                            "",
+                            "Blah",
+                            "",
+                            TestData.GetPath("HelloWorld\\HelloWorld.pyproj")
+                        )
+                    );
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    Registry.CurrentUser.DeleteSubKeyTree("Software\\Python\\VisualStudio\\" + id);
+                    throw;
+                }
 
                 try {
                     var afterAdd = wpf.Invoke(() => new HashSet<string>(
@@ -484,7 +490,10 @@ namespace PythonToolsUITests {
                     list.Environments.Select(ev => (string)ev.InterpreterPath),
                     StringComparer.OrdinalIgnoreCase
                 ));
-                AssertUtil.ContainsExactly(afterRemove, before);
+                AssertUtil.ContainsExactly(
+                    afterRemove,
+                    before
+                );
             }
         }
 
@@ -542,7 +551,7 @@ namespace PythonToolsUITests {
                         var environment = list.Environments.FirstOrDefault(ev =>
                             ev.Factory == interpreter
                         );
-                        Assert.IsNotNull(environment, string.Format("Did not find {0}", interpreter.Configuration.FullDescription));
+                        Assert.IsNotNull(environment, string.Format("Did not find {0}", interpreter.Configuration.Description));
 
                         list.Execute(EnvironmentView.MakeGlobalDefault, environment);
                         Assert.IsTrue(defaultChanged.WaitOne(TimeSpan.FromSeconds(10.0)), "Setting default took too long");
@@ -550,8 +559,8 @@ namespace PythonToolsUITests {
                         Assert.AreEqual(interpreter, service.DefaultInterpreter,
                             string.Format(
                                 "Failed to change default from {0} to {1}",
-                                service.DefaultInterpreter.Configuration.FullDescription,
-                                interpreter.Configuration.FullDescription
+                                service.DefaultInterpreter.Configuration.Description,
+                                interpreter.Configuration.Description
                         ));
                     }
                 } finally {
@@ -730,7 +739,7 @@ namespace PythonToolsUITests {
 
         private MockInterpreterOptionsService MakeEmptyVEnv() {
             var python = PythonPaths.Versions.FirstOrDefault(p =>
-                p.IsCPython && Directory.Exists(Path.Combine(p.LibPath, "venv"))
+                p.IsCPython && Directory.Exists(Path.Combine(p.PrefixPath, "Lib", "venv"))
             );
             if (python == null) {
                 Assert.Inconclusive("Requires Python with venv");
@@ -766,9 +775,8 @@ namespace PythonToolsUITests {
                     env,
                     PathUtils.FindFile(env, "python.exe"),
                     PathUtils.FindFile(env, "python.exe"),
-                    Path.GetDirectoryName(PathUtils.FindFile(env, "site.py", 3)),
                     "PYTHONPATH",
-                    python.Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
+                    python.Architecture,
                     python.Version.ToVersion()
                 )
             ));

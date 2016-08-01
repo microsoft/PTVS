@@ -259,8 +259,8 @@ namespace DjangoTests {
                 if (_version == null) {
                     _version = PythonPaths.Versions.Reverse().FirstOrDefault(v =>
                         v != null &&
-                        Directory.Exists(v.LibPath) &&
-                        Directory.EnumerateDirectories(Path.Combine(v.LibPath, "site-packages")).Any(d =>
+                        Directory.Exists(Path.Combine(v.PrefixPath, "Lib")) &&
+                        Directory.EnumerateDirectories(Path.Combine(v.PrefixPath, "Lib", "site-packages")).Any(d =>
                             Path.GetFileName(d).StartsWith("django")
                         )
                     );

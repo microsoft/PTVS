@@ -264,11 +264,9 @@ namespace Microsoft.PythonTools.Interpreter {
         private bool DiscoverInterpreters(ProjectInfo projectInfo) {
             // <Interpreter Include="InterpreterDirectory">
             //   <Id>factoryProviderId;interpreterFactoryId</Id>
-            //   <BaseInterpreter>factoryProviderId;interpreterFactoryId</BaseInterpreter>
             //   <Version>...</Version>
             //   <InterpreterPath>...</InterpreterPath>
             //   <WindowsInterpreterPath>...</WindowsInterpreterPath>
-            //   <LibraryPath>...</LibraryPath>
             //   <PathEnvironmentVariable>...</PathEnvironmentVariable>
             //   <Description>...</Description>
             // </Interpreter>
@@ -315,8 +313,6 @@ namespace Microsoft.PythonTools.Interpreter {
                     description = PathUtils.CreateFriendlyDirectoryPath(projectHome, dir);
                 }
 
-                var baseInterpId = GetValue(item, MSBuildConstants.BaseInterpreterKey);
-
                 var path = GetValue(item, MSBuildConstants.InterpreterPathKey);
                 if (!PathUtils.IsValidPath(path)) {
                     Log("Interpreter {0} has invalid value for '{1}': {2}", dir, MSBuildConstants.InterpreterPathKey, path);
@@ -333,55 +329,12 @@ namespace Microsoft.PythonTools.Interpreter {
                     winPath = PathUtils.GetAbsoluteFilePath(dir, winPath);
                 }
 
-                var libPath = GetValue(item, MSBuildConstants.LibraryPathKey);
-                if (string.IsNullOrEmpty(libPath)) {
-                    libPath = "lib";
-                }
-                if (!PathUtils.IsValidPath(libPath)) {
-                    Log("Interpreter {0} has invalid value for '{1}': {2}", dir, MSBuildConstants.LibraryPathKey, libPath);
-                    hasError = true;
-                } else if (!hasError) {
-                    libPath = PathUtils.GetAbsoluteDirectoryPath(dir, libPath);
-                }
-
-                InterpreterConfiguration baseInterp = null;
-                if (!string.IsNullOrEmpty(baseInterpId)) {
-                    // It's a valid GUID, so find a suitable base. If we
-                    // don't find one now, we'll try and figure it out from
-                    // the pyvenv.cfg/orig-prefix.txt files later.
-                    // Using an empty GUID will always go straight to the
-                    // later lookup.
-                    baseInterp = FindConfiguration(baseInterpId);
-                }
-
                 var pathVar = GetValue(item, MSBuildConstants.PathEnvVarKey);
                 if (string.IsNullOrEmpty(pathVar)) {
-                    if (baseInterp != null) {
-                        pathVar = baseInterp.PathEnvironmentVariable;
-                    } else {
-                        pathVar = "PYTHONPATH";
-                    }
+                    pathVar = "PYTHONPATH";
                 }
 
-                string arch = null;
-
-                if (baseInterp == null) {
-                    arch = GetValue(item, MSBuildConstants.ArchitectureKey);
-                    if (string.IsNullOrEmpty(arch)) {
-                        arch = "x86";
-                    }
-                }
-
-                if (baseInterp == null && !hasError) {
-                    // Only thing missing is the base interpreter, so let's try
-                    // to find it using paths
-                    baseInterp = FindBaseInterpreterFromVirtualEnv(dir, libPath);
-
-                    if (baseInterp == null) {
-                        Log("Interpreter {0} has invalid value for '{1}': {2}", dir, MSBuildConstants.BaseInterpreterKey, baseInterpId ?? "(null)");
-                        hasError = true;
-                    }
-                }
+                var arch = InterpreterArchitecture.TryParse(GetValue(item, MSBuildConstants.ArchitectureKey));
 
                 string fullId = GetInterpreterId(projectInfo.FullPath, id);
 
@@ -389,25 +342,17 @@ namespace Microsoft.PythonTools.Interpreter {
                 if (hasError) {
                     info = new ErrorFactoryInfo(fullId, ver, description, dir);
                 } else {
-                    Debug.Assert(baseInterp != null, "we reported an error if we didn't have a base interpreter");
-
-                    info = new ConfiguredFactoryInfo(
-                        this,
-                        baseInterp,
-                        new InterpreterConfiguration(
-                            fullId,
-                            description,
-                            dir,
-                            path,
-                            winPath,
-                            libPath,
-                            pathVar,
-                            baseInterp.Architecture,
-                            baseInterp.Version,
-                            InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase,
-                            baseInterp != null ? string.Format("({0})", baseInterp.FullDescription) : null
-                        )
-                    );
+                    info = new ConfiguredFactoryInfo(this, new InterpreterConfiguration(
+                        fullId,
+                        description,
+                        dir,
+                        path,
+                        winPath,
+                        pathVar,
+                        arch,
+                        ver,
+                        InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase
+                    ));
                 }
 
                 MergeFactory(projectInfo, factories, info);
@@ -474,24 +419,6 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public InterpreterConfiguration FindBaseInterpreterFromVirtualEnv(
-            string prefixPath,
-            string libPath
-        ) {
-            string basePath = DerivedInterpreterFactory.GetOrigPrefixPath(prefixPath, libPath);
-
-            if (Directory.Exists(basePath)) {
-                foreach (var provider in GetProvidersAndMetadata()) {
-                    foreach (var config in provider.Key.GetInterpreterConfigurations()) {
-                        if (PathUtils.IsSamePath(config.PrefixPath, basePath)) {
-                            return config;
-                        }
-                    }
-                }
-            }
-            return null;
-        }
-
         private static string GetValue(Dictionary<string, string> from, string name) {
             string res;
             if (!from.TryGetValue(name, out res)) {
@@ -522,47 +449,31 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         sealed class ConfiguredFactoryInfo : FactoryInfo, IDisposable {
-            private readonly InterpreterConfiguration _baseConfig;
             private readonly MSBuildProjectInterpreterFactoryProvider _factoryProvider;
 
-            public ConfiguredFactoryInfo(MSBuildProjectInterpreterFactoryProvider factoryProvider, InterpreterConfiguration baseConfig, InterpreterConfiguration config) : base(config) {
+            public ConfiguredFactoryInfo(MSBuildProjectInterpreterFactoryProvider factoryProvider, InterpreterConfiguration config) : base(config) {
                 _factoryProvider = factoryProvider;
-                _baseConfig = baseConfig;
             }
 
             protected override void CreateFactory() {
-                if (_baseConfig != null) {
-                    var baseInterp = _factoryProvider.FindInterpreter(_baseConfig.Id) as PythonInterpreterFactoryWithDatabase;
-                    if (baseInterp != null) {
-                        _factory = new DerivedInterpreterFactory(
-                            baseInterp,
-                            Config,
-                            new InterpreterFactoryCreationOptions {
-                                WatchLibraryForNewModules = true,
-                            }
-                        );
+                _factory = InterpreterFactoryCreator.CreateInterpreterFactory(
+                    Config,
+                    new InterpreterFactoryCreationOptions {
+                        WatchLibraryForNewModules = true
                     }
-                }
-                if (_factory == null) {
-                    _factory = InterpreterFactoryCreator.CreateInterpreterFactory(
-                        Config,
-                        new InterpreterFactoryCreationOptions {
-                            WatchLibraryForNewModules = true
-                        }
-                    );
-                }
+                );
             }
 
             public override bool Equals(object obj) {
                 ConfiguredFactoryInfo other = obj as ConfiguredFactoryInfo;
                 if (other != null) {
-                    return other.Config == Config && other._baseConfig == _baseConfig;
+                    return other.Config == Config;
                 }
                 return false;
             }
 
             public override int GetHashCode() {
-                return Config.GetHashCode() ^ _baseConfig?.GetHashCode() ?? 0;
+                return Config.GetHashCode();
             }
 
             public void Dispose() {

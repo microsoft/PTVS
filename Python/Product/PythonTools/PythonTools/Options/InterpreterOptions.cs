@@ -52,25 +52,16 @@ namespace Microsoft.PythonTools.Options {
             var configurable = _pyService._interpreterOptionsService;
             Debug.Assert(configurable != null);
 
-            Display = _config.FullDescription;
+            Display = _config.Description;
             Description = _config.Description;
             Id = _config.Id;
             InterpreterPath = _config.InterpreterPath;
             WindowsInterpreterPath = _config.WindowsInterpreterPath;
-            LibraryPath = _config.LibraryPath;
             Version = _config.Version.ToString();
-            Architecture = FormatArchitecture(_config.Architecture);
+            Architecture = _config.Architecture.ToString("x", null, "Unknown");
             PathEnvironmentVariable = _config.PathEnvironmentVariable;
             IsConfigurable = configurable != null && configurable.IsConfigurable(_config.Id);
             SupportsCompletionDb = _config.UIMode.HasFlag(InterpreterUIMode.SupportsDatabase);
-        }
-
-        private static string FormatArchitecture(ProcessorArchitecture arch) {
-            switch (arch) {
-                case ProcessorArchitecture.Amd64: return "x64";
-                case ProcessorArchitecture.X86: return "x86";
-                default: return "Unknown";
-            }
         }
     }
 }

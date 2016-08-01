@@ -83,9 +83,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         /// <remarks>New in 2.0</remarks>
         bool IsCheckingDatabase { get; }
-    }
 
-    public interface IPythonInterpreterFactoryWithDatabase2 : IPythonInterpreterFactoryWithDatabase {
         /// <summary>
         /// Returns a list of module names that appear to have current entries
         /// in the database.

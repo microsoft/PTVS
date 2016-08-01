@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
@@ -52,6 +53,16 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         /// <returns>The names of the modules that were found.</returns>
         public static async Task<HashSet<string>> FindModulesAsync(this IPythonInterpreterFactory factory, params string[] moduleNames) {
+            var withPackages = factory as IPackageManager;
+            if (withPackages != null) {
+                var res = new HashSet<string>();
+                foreach (var m in moduleNames) {
+                    if ((await withPackages.GetInstalledPackageAsync(m, CancellationToken.None)).IsValid) {
+                        res.Add(m);
+                    }
+                }
+            }
+
             var withDb = factory as PythonInterpreterFactoryWithDatabase;
             if (withDb != null && withDb.IsCurrent) {
                 var db = withDb.GetCurrentDatabase();
@@ -73,7 +84,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
             return await Task.Run(() => {
                 var result = new HashSet<string>();
-                foreach (var mp in ModulePath.GetModulesInLib(factory)) {
+                foreach (var mp in ModulePath.GetModulesInLib(factory.Configuration)) {
                     if (expected.Count == 0) {
                         break;
                     }

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -380,10 +381,8 @@ namespace Microsoft.PythonTools.Interpreter {
         public static async Task<int> GenerateAsync(PythonTypeDatabaseCreationRequest request) {
             var fact = request.Factory;
             var evt = request.OnExit;
-            if (fact == null || !Directory.Exists(fact.Configuration.LibraryPath)) {
-                if (evt != null) {
-                    evt(NotSupportedExitCode);
-                }
+            if (fact == null) {
+                evt?.Invoke(NotSupportedExitCode);
                 return NotSupportedExitCode;
             }
             var outPath = request.OutputPath;
@@ -405,8 +404,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 "/id", fact.Configuration.Id,
                 "/version", fact.Configuration.Version.ToString(),
                 "/python", fact.Configuration.InterpreterPath,
-                request.DetectLibraryPath ? null : "/library",
-                request.DetectLibraryPath ? null : fact.Configuration.LibraryPath,
                 "/outdir", outPath,
                 "/basedb", baseDb,
                 (request.SkipUnchanged ? null : "/all"),  // null will be filtered out; empty strings are quoted
@@ -649,6 +646,28 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
+        /// Gets the set of search paths for the specified factory as
+        /// efficiently as possible. This may involve executing the
+        /// interpreter, and may cache the paths for retrieval later.
+        /// </summary>
+        public static async Task<List<PythonLibraryPath>> GetDatabaseSearchPathsAsync(IPythonInterpreterFactory factory) {
+            List<PythonLibraryPath> paths;
+            var withDb = factory as PythonInterpreterFactoryWithDatabase;
+            if (withDb != null) {
+                paths = GetCachedDatabaseSearchPaths(withDb.DatabasePath);
+                if (paths != null) {
+                    return paths;
+                }
+            }
+
+            paths = await GetUncachedDatabaseSearchPathsAsync(factory.Configuration.InterpreterPath);
+            if (withDb != null) {
+                WriteDatabaseSearchPaths(withDb.DatabasePath, paths);
+            }
+            return paths;
+        }
+
+        /// <summary>
         /// Gets the set of search paths by running the interpreter.
         /// </summary>
         /// <param name="interpreter">Path to the interpreter.</param>
@@ -675,7 +694,12 @@ namespace Microsoft.PythonTools.Interpreter {
                     false,
                     null
                 )) {
-                    if (await proc != 0) {
+                    int exitCode = -1;
+                    try {
+                        exitCode = await proc;
+                    } catch (OperationCanceledException) {
+                    }
+                    if (exitCode != 0) {
                         throw new InvalidOperationException(string.Format(
                             "Cannot obtain list of paths{0}{1}",
                             Environment.NewLine,

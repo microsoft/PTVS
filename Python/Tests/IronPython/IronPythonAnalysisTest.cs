@@ -63,7 +63,7 @@ namespace IronPythonTests {
         }
 
         public IronPythonAnalysisTest()
-            : base(new IronPythonInterpreterFactory(ProcessorArchitecture.X86), CreateInterpreter()) {
+            : base(new IronPythonInterpreterFactory(InterpreterArchitecture.x86), CreateInterpreter()) {
             var objectType = Interpreter.GetBuiltinType(BuiltinTypeId.Object);
             _objectMembersClr = objectType.GetMemberNames(IronPythonModuleContext.ShowClrInstance).ToArray();
             var stringType = Interpreter.GetBuiltinType(BuiltinTypeId.Str);

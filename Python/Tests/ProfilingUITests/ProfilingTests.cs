@@ -109,7 +109,7 @@ namespace ProfilingUITests {
                     foreach (var interpreter in service.Interpreters) {
                         options.DefaultInterpreter = interpreter;
                         using (var dialog = app.LaunchPythonProfiling()) {
-                            Assert.AreEqual(interpreter.Configuration.FullDescription, dialog.SelectedInterpreter);
+                            Assert.AreEqual(interpreter.Configuration.Description, dialog.SelectedInterpreter);
                         }
                         app.WaitForDialogDismissed();
                     }
@@ -1368,8 +1368,8 @@ namespace ProfilingUITests {
             IPythonProfiling profiling;
             using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app, profiling, interp.InterpreterPath,
-                    Path.Combine(interp.LibPath, "test\\pystone.py"),
-                    Path.Combine(interp.LibPath, "test"),
+                    Path.Combine(interp.PrefixPath, "Lib", "test", "pystone.py"),
+                    Path.Combine(interp.PrefixPath, "Lib", "test"),
                     "",
                     false
                 );
