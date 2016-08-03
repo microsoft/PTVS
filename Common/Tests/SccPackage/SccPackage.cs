@@ -41,7 +41,7 @@ namespace Microsoft.TestSccPackage
     [PackageRegistration(UseManagedResourcesOnly = true)]
     [Guid(Guids.guidSccPackagePkgString)]
     [ProvideService(typeof(TestSccProvider), ServiceName="Test Source Provider")]
-    [ProvideSourceControlProvider("Test Source Provider", Guids.guidSccPackageCmdSetString, typeof(SccPackage), typeof(TestSccProvider))]
+    [@ProvideSourceControlProvider("Test Source Provider", Guids.guidSccPackageCmdSetString, typeof(SccPackage), typeof(TestSccProvider))]
     [ProvideMenuResource(1000, 1)]                              // This attribute is needed to let the shell know that this package exposes some menus.
     public sealed class SccPackage : Package
     {
