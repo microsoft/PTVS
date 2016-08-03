@@ -281,10 +281,14 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var interpreter = factory.CreateInterpreter();
             if (interpreter != null) {
-                _pyAnalyzer = PythonAnalyzer.Create(factory, interpreter);
-                ReloadTask = _pyAnalyzer.ReloadModulesAsync()/*.HandleAllExceptions(_serviceProvider, GetType())*/;
-                ReloadTask.ContinueWith(_ => ReloadTask = null);
-                interpreter.ModuleNamesChanged += OnModulesChanged;
+                try {
+                    _pyAnalyzer = PythonAnalyzer.Create(factory, interpreter);
+                    ReloadTask = _pyAnalyzer.ReloadModulesAsync()/*.HandleAllExceptions(_serviceProvider, GetType())*/;
+                    ReloadTask.ContinueWith(_ => ReloadTask = null);
+                    interpreter.ModuleNamesChanged += OnModulesChanged;
+                } catch (InvalidOperationException ex) {
+                    error = ex.ToString();
+                }
             }
 
             return new AP.InitializeResponse() {
