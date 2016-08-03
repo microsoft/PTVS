@@ -617,11 +617,24 @@ namespace Microsoft.PythonTools.Uwp.Project {
 
             IVsAppContainerBootstrapper4 bootstrapper = (IVsAppContainerBootstrapper4)ServiceProvider.GlobalProvider.GetService(typeof(SVsAppContainerProjectDeploy));
             VsBootstrapperPackageInfo[] packagesToDeployList = new VsBootstrapperPackageInfo[] {
+#if DEV15
+                new VsBootstrapperPackageInfo { PackageName = "8B426345-3B98-4111-819A-46533C393CE5" }, // NativeMsVsMon
+                new VsBootstrapperPackageInfo { PackageName = "973CA972-0C5F-4F19-B436-814CF773A102" }  // ManagedMsVsMon
+#elif DEV14
                 new VsBootstrapperPackageInfo { PackageName = "EB22551A-7F66-465F-B53F-E5ABA0C0574E" }, // NativeMsVsMon
                 new VsBootstrapperPackageInfo { PackageName = "62B807E2-6539-46FB-8D67-A73DC9499940" } // ManagedMsVsMon
+#else
+                #error Unsupported version of Visual Studio
+#endif
             };
             VsBootstrapperPackageInfo[] optionalPackagesToDeploy = new VsBootstrapperPackageInfo[] {
+#if DEV15
+                new VsBootstrapperPackageInfo { PackageName = "92063DB3-36E3-434E-840C-DEE8DA2AD4B7" }, // NativeMsVsMonDependency
+#elif DEV14
                 new VsBootstrapperPackageInfo { PackageName = "FEC73B34-86DE-4EA8-BFF4-3600A0443E9C" }, // NativeMsVsMonDependency
+#else
+                #error Unsupported version of Visual Studio
+#endif
                 new VsBootstrapperPackageInfo { PackageName = "B968CC6A-D2C8-4197-88E3-11662042C291" }, // XamlUIDebugging
                 new VsBootstrapperPackageInfo { PackageName = "8CDEABEF-33E1-4A23-A13F-94A49FF36E84" }  // XamlUIDebuggingDependency
             };
