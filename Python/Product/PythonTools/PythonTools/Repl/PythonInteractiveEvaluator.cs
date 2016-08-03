@@ -456,7 +456,7 @@ namespace Microsoft.PythonTools.Repl {
                 ExecutionResult result = await thread.ExecuteText(text);
 
                 try {
-                    await _serviceProvider.RefreshVariableViews();
+                    await _serviceProvider.GetUIThread().InvokeTask(() => _serviceProvider.RefreshVariableViews());
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     Debug.Fail(ex.ToString());
                 }

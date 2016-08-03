@@ -893,7 +893,8 @@ namespace Microsoft.PythonTools {
             return (IVsDebugger)provider.GetService(typeof(SVsShellDebugger));
         }
 
-        internal static async System.Threading.Tasks.Task RefreshVariableViews(this IServiceProvider serviceProvider) {
+        internal static async Task RefreshVariableViews(this IServiceProvider serviceProvider) {
+            serviceProvider.GetUIThread().MustBeCalledFromUIThread();
             EnvDTE.Debugger debugger = serviceProvider.GetDTE().Debugger;
             AD7Engine engine = AD7Engine.GetEngineForProcess(debugger.CurrentProcess);
             if (engine != null) {
