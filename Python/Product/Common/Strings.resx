@@ -814,4 +814,46 @@ modified from these scripts.</value>
   <data name="NoInterpretersDescription" xml:space="preserve">
     <value>No interpreters</value>
   </data>
+  <data name="InstallationFailed" xml:space="preserve">
+    <value>Installation failed</value>
+    <comment>Used as exception text</comment>
+  </data>
+  <data name="InstallingPackageFailed" xml:space="preserve">
+    <value>----- Failed to install '{0}' -----
+
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="InstallingPackageStarted" xml:space="preserve">
+    <value>----- Installing '{0}' -----
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="InstallingPackageSuccess" xml:space="preserve">
+    <value>----- Successfully installed '{0}' -----
+
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="InstallingPipFailed" xml:space="preserve">
+    <value>----- Failed to install pip -----
+
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="InstallingPipStarted" xml:space="preserve">
+    <value>----- Installing pip -----
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="InstallingPipSuccess" xml:space="preserve">
+    <value>----- Successfully installed pip -----
+
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="MisconfiguredEnvironment" xml:space="preserve">
+    <value>Operation cannot be started because the environment is not configured.</value>
+    <comment>Used as exception text</comment>
+  </data>
 </root>

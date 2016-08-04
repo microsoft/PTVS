@@ -36,6 +36,19 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </exception>
         void SetInterpreterFactory(IPythonInterpreterFactory factory);
 
+        /// <summary>
+        /// True if the package manager is ready for use. This may return false
+        /// if a tool needs to be installed, for example.
+        /// </summary>
+        bool IsReady { get; }
+
+        /// <summary>
+        /// Prepares the package manager for use. This only needs to be called
+        /// if <see cref="IsReady"/> is false. After successful completion,
+        /// <see cref="IsReady"/> should be true.
+        /// </summary>
+        Task PrepareAsync(IPackageManagerUI ui, CancellationToken cancellationToken);
+
         Task<IList<PackageSpec>> GetInstalledPackagesAsync(CancellationToken cancellationToken);
 
         Task<PackageSpec> GetInstalledPackageAsync(string name, CancellationToken cancellationToken);

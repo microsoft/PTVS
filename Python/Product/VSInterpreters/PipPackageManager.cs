@@ -32,6 +32,9 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly List<FileSystemWatcher> _libWatchers;
         private readonly List<PackageSpec> _packages;
         private CancellationTokenSource _currentRefresh;
+
+        private readonly SemaphoreSlim _working = new SemaphoreSlim(1);
+
         private int _suppressCount;
         private bool _isDisposed;
 
@@ -99,65 +102,136 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public event EventHandler InstalledPackagesChanged;
-        public event EventHandler InstalledFilesChanged;
+        private void AbortOnInvalidConfiguration() {
+            if (_factory == null || _factory.Configuration == null ||
+                string.IsNullOrEmpty(_factory.Configuration.InterpreterPath)) {
+                throw new InvalidOperationException(Strings.MisconfiguredEnvironment);
+            }
+        }
 
-        private bool SupportsDashMPip => _factory.Configuration.Version > new Version(2, 7);
+        public bool IsReady { get; private set; }
 
-        private async Task CacheInstalledPackagesAsync(CancellationToken cancellationToken) {
-            List<PackageSpec> packages = null;
-
-            await _concurrencyLock.WaitAsync();
-
-            try {
+        private async Task UpdateIsReady(CancellationToken cancellationToken) {
+            using (await _working.LockAsync(cancellationToken)) {
                 using (var proc = ProcessOutput.Run(
                     _factory.Configuration.InterpreterPath,
-                    new[] {
-                    SupportsDashMPip ? "-m" : "-c",
-                    SupportsDashMPip ? "pip" : "import pip; pip.main()",
-                    "list"
-                    },
+                    new[] { "-E", "-c", "import pip" },
                     _factory.Configuration.PrefixPath,
                     UnbufferedEnv,
                     false,
                     null
                 )) {
                     try {
-                        if (await proc == 0) {
-                            packages = proc.StandardOutputLines
-                                .Select(i => PackageSpec.FromPipList(i))
-                                .Where(p => p.IsValid)
-                                .OrderBy(p => p.Name)
-                                .ToList();
-                        }
+                        IsReady = (await proc == 0);
                     } catch (OperationCanceledException) {
-                        // Process failed to run
-                        Debug.WriteLine("Failed to run pip to collect packages");
-                        Debug.WriteLine(string.Join(Environment.NewLine, proc.StandardOutputLines));
+                        IsReady = false;
+                        return;
+                    }
+                }
+            }
+        }
+
+        public async Task PrepareAsync(IPackageManagerUI ui, CancellationToken cancellationToken) {
+            if (IsReady) {
+                return;
+            }
+
+            AbortOnInvalidConfiguration();
+
+            using (await _working.LockAsync(cancellationToken)) {
+                ui?.WriteOutput(Strings.InstallingPipStarted);
+
+                using (var proc = ProcessOutput.Run(
+                    _factory.Configuration.InterpreterPath,
+                    new[] { "-E", PythonToolsInstallPath.GetFile("pip_downloader.py", GetType().Assembly) },
+                    _factory.Configuration.PrefixPath,
+                    UnbufferedEnv,
+                    false,
+                    PackageManagerUIRedirector.Get(ui),
+                    elevate: ui?.ShouldElevate() ?? false
+                )) {
+                    try {
+                        IsReady = (await proc == 0);
+                    } catch (OperationCanceledException) {
+                        IsReady = false;
                     }
                 }
 
-                if (packages == null) {
-                    // Pip failed, so return a directory listing
-                    var paths = await PythonTypeDatabase.GetDatabaseSearchPathsAsync(_factory);
-
-                    packages = await Task.Run(() => paths.Where(p => !p.IsStandardLibrary)
-                        .SelectMany(p => PathUtils.EnumerateDirectories(p.Path, recurse: false))
-                        .Select(path => Path.GetFileName(path))
-                        .Select(name => PackageNameRegex.Match(name))
-                        .Where(match => match.Success)
-                        .Select(match => new PackageSpec(match.Groups["name"].Value))
-                        .Where(p => p.IsValid)
-                        .OrderBy(p => p.Name)
-                        .ToList());
+                if (IsReady) {
+                    ui?.WriteOutput(Strings.InstallingPipSuccess);
+                } else {
+                    ui?.WriteError(Strings.InstallingPipFailed);
                 }
-            } finally {
-                _concurrencyLock.Release();
+            }
+        }
+
+        public event EventHandler InstalledPackagesChanged;
+        public event EventHandler InstalledFilesChanged;
+
+        private bool SupportsDashMPip => _factory.Configuration.Version > new Version(2, 7);
+
+        private async Task CacheInstalledPackagesAsync(CancellationToken cancellationToken) {
+            if (!IsReady) {
+                await UpdateIsReady(cancellationToken);
+                if (!IsReady) {
+                    return;
+                }
             }
 
-            lock (_packages) {
-                _packages.Clear();
-                _packages.AddRange(packages);
+            List<PackageSpec> packages = null;
+
+            using (await _working.LockAsync(cancellationToken)) {
+                using (await _concurrencyLock.LockAsync(cancellationToken)) {
+                    using (var proc = ProcessOutput.Run(
+                        _factory.Configuration.InterpreterPath,
+                        new[] {
+                            "-E",
+                            SupportsDashMPip ? "-m" : "-c",
+                            SupportsDashMPip ? "pip" : "import pip; pip.main()",
+                            "list"
+                        },
+                        _factory.Configuration.PrefixPath,
+                        UnbufferedEnv,
+                        false,
+                        null
+                    )) {
+                        try {
+                            if (await proc == 0) {
+                                packages = proc.StandardOutputLines
+                                    .Select(i => PackageSpec.FromPipList(i))
+                                    .Where(p => p.IsValid)
+                                    .OrderBy(p => p.Name)
+                                    .ToList();
+                            }
+                        } catch (OperationCanceledException) {
+                            // Process failed to run
+                            Debug.WriteLine("Failed to run pip to collect packages");
+                            Debug.WriteLine(string.Join(Environment.NewLine, proc.StandardOutputLines));
+                        }
+                    }
+
+                    if (packages == null) {
+                        // Pip failed, so return a directory listing
+                        var paths = await PythonTypeDatabase.GetDatabaseSearchPathsAsync(_factory);
+
+                        packages = await Task.Run(() => paths.Where(p => !p.IsStandardLibrary)
+                            .SelectMany(p => PathUtils.EnumerateDirectories(p.Path, recurse: false))
+                            .Select(path => Path.GetFileName(path))
+                            .Select(name => PackageNameRegex.Match(name))
+                            .Where(match => match.Success)
+                            .Select(match => new PackageSpec(match.Groups["name"].Value))
+                            .Where(p => p.IsValid)
+                            .OrderBy(p => p.Name)
+                            .ToList());
+                    }
+                }
+
+                // Outside of concurrency lock, still in working lock
+
+                lock (_packages) {
+                    _packages.Clear();
+                    _packages.AddRange(packages);
+                }
             }
 
             InstalledPackagesChanged?.Invoke(this, EventArgs.Empty);

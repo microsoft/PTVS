@@ -181,10 +181,10 @@
     <value>PyPI</value>
   </data>
   <data name="PipExtensionDisplayName" xml:space="preserve">
-    <value>pip</value>
+    <value>Packages</value>
   </data>
   <data name="PipExtensionHelpContent" xml:space="preserve">
-    <value>These packages can be managed using pip. Type in the search box to install new packages, or use the buttons on the right to manage those that are already installed.</value>
+    <value>These packages can be managed using your environment's package manager. Type in the search box to install new packages, or use the buttons on the right to manage those that are already installed.</value>
   </data>
   <data name="PythonToolsForVisualStudio" xml:space="preserve">
     <value>Python Tools for Visual Studio</value>

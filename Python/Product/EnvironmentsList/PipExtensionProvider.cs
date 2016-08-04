@@ -28,11 +28,11 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
-    public sealed class PipExtensionProvider : IEnvironmentViewExtension, IDisposable {
+    public sealed class PipExtensionProvider : IEnvironmentViewExtension, IPackageManagerUI, IDisposable {
         private readonly IPythonInterpreterFactory _factory;
+        private readonly IPackageManager _packageManager;
         private readonly Uri _index;
         private readonly string _indexName;
-        private readonly Redirector _output;
         private FrameworkElement _wpfObject;
 
         private bool? _isPipInstalled;
@@ -66,7 +66,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             string indexName = null
         ) {
             _factory = factory;
-            _output = new PipRedirector(this);
+            _packageManager = _factory.PackageManager;
+            if (_packageManager == null) {
+                throw new NotSupportedException();
+            }
+
             if (!string.IsNullOrEmpty(index) && Uri.TryCreate(index, UriKind.Absolute, out _index)) {
                 _indexName = string.IsNullOrEmpty(indexName) ? _index.Host : indexName;
             }
@@ -122,18 +126,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             IDisposable result = null;
             try {
                 if (newValue == 1) {
-                    var evt = UpdateStarted;
-                    if (evt != null) {
-                        evt(this, EventArgs.Empty);
-                    }
+                    UpdateStarted?.Invoke(this, EventArgs.Empty);
                 }
                 result = new CallOnDispose(() => {
                     try {
                         if (Interlocked.Decrement(ref _pipLockWaitCount) == 0) {
-                            var evt = UpdateComplete;
-                            if (evt != null) {
-                                evt(this, EventArgs.Empty);
-                            }
+                            UpdateComplete?.Invoke(this, EventArgs.Empty);
                         }
                     } finally {
                         _pipLock.Release();
@@ -238,8 +236,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public event EventHandler<QueryShouldElevateEventArgs> QueryShouldElevate;
 
-        private bool ShouldElevate(string targetPath) {
-            var e = new QueryShouldElevateEventArgs(targetPath);
+        public bool ShouldElevate() {
+            var e = new QueryShouldElevateEventArgs(_factory.Configuration.PrefixPath);
             QueryShouldElevate?.Invoke(this, e);
             if (e.Cancel) {
                 throw new OperationCanceledException();
@@ -247,64 +245,17 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             return e.Elevate;
         }
 
-        public bool CanExecute {
-            get {
-                if (_factory == null || _factory.Configuration == null ||
-                    string.IsNullOrEmpty(_factory.Configuration.InterpreterPath)) {
-                    return false;
-                }
-
-                return true;
-            }
-        }
+        public bool CanExecute => _packageManager != null;
 
         private void AbortOnInvalidConfiguration() {
-            if (_factory == null || _factory.Configuration == null ||
-                string.IsNullOrEmpty(_factory.Configuration.InterpreterPath)) {
+            if (_packageManager == null) {
                 throw new InvalidOperationException(Resources.MisconfiguredEnvironment);
             }
         }
 
         public async Task InstallPip() {
             AbortOnInvalidConfiguration();
-            
-            using (await WaitAndLockPip()) {
-                OnOperationStarted(Resources.InstallingPipStarted);
-                using (var output = ProcessOutput.Run(
-                    _factory.Configuration.InterpreterPath,
-                    new[] { PythonToolsInstallPath.GetFile("pip_downloader.py") },
-                    _factory.Configuration.PrefixPath,
-                    UnbufferedEnv,
-                    false,
-                    _output,
-                    elevate: ShouldElevate(_factory.Configuration.PrefixPath)
-                )) {
-                    bool success = true;
-                    try {
-                        var exitCode = await output;
-                        if (exitCode != 0) {
-                            success = false;
-                            throw new PipException(Resources.InstallationFailed);
-                        }
-                    } catch (OperationCanceledException) {
-                        success = false;
-                    } catch (Exception ex) {
-                        success = false;
-                        if (ex.IsCriticalException()) {
-                            throw;
-                        }
-                        ToolWindow.UnhandledException.Execute(ExceptionDispatchInfo.Capture(ex), WpfObject);
-                    } finally {
-                        if (success) {
-                            IsPipInstalled = true;
-                        }
-
-                        OnOperationFinished(
-                            success ? Resources.InstallingPipSuccess : Resources.InstallingPipFailed
-                        );
-                    }
-                }
-            }
+            await _packageManager.PrepareAsync(this, _cancelAll.Token);
         }
 
         private static IEnumerable<string> QuotedArgumentsWithPackageName(IEnumerable<string> args, string package) {
@@ -345,9 +296,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                         _factory.Configuration.PrefixPath,
                         UnbufferedEnv,
                         false,
-                        _output,
+                        PackageManagerUIRedirector.Get(this),
                         quoteArgs: false,
-                        elevate: ShouldElevate(_factory.Configuration.PrefixPath)
+                        elevate: ShouldElevate()
                     )) {
                         if (!output.IsStarted) {
                             return;
@@ -392,9 +343,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                         _factory.Configuration.PrefixPath,
                         UnbufferedEnv,
                         false,
-                        _output,
+                        PackageManagerUIRedirector.Get(this),
                         quoteArgs: false,
-                        elevate: ShouldElevate(_factory.Configuration.PrefixPath)
+                        elevate: ShouldElevate()
                     )) {
                         if (!output.IsStarted) {
                             return;
@@ -428,42 +379,26 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public event EventHandler<OutputEventArgs> OutputTextReceived;
 
-        private void OnOutputTextReceived(string text) {
+        public void OnOutputTextReceived(string text) {
             OutputTextReceived?.Invoke(this, new OutputEventArgs(text));
         }
 
         public event EventHandler<OutputEventArgs> ErrorTextReceived;
 
-        private void OnErrorTextReceived(string text) {
+        public void OnErrorTextReceived(string text) {
             ErrorTextReceived?.Invoke(this, new OutputEventArgs(text));
         }
 
         public event EventHandler<OutputEventArgs> OperationStarted;
 
-        private void OnOperationStarted(string operation) {
+        public void OnOperationStarted(string operation) {
             OperationStarted?.Invoke(this, new OutputEventArgs(operation));
         }
 
         public event EventHandler<OutputEventArgs> OperationFinished;
 
-        private void OnOperationFinished(string operation) {
+        public void OnOperationFinished(string operation) {
             OperationFinished?.Invoke(this, new OutputEventArgs(operation));
-        }
-
-        sealed class PipRedirector : Redirector {
-            private readonly PipExtensionProvider _provider;
-
-            public PipRedirector(PipExtensionProvider provider) {
-                _provider = provider;
-            }
-
-            public override void WriteLine(string line) {
-                _provider.OnOutputTextReceived(line);
-            }
-
-            public override void WriteErrorLine(string line) {
-                _provider.OnErrorTextReceived(line);
-            }
         }
 
         sealed class CallOnDispose : IDisposable {

@@ -16,6 +16,7 @@
 
 using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Infrastructure {
@@ -91,6 +92,40 @@ namespace Microsoft.PythonTools.Infrastructure {
                     return default(U);
                 }
             });
+        }
+
+        private sealed class SemaphoreLock : IDisposable {
+            private SemaphoreSlim _semaphore;
+
+            public SemaphoreLock(SemaphoreSlim semaphore) {
+                _semaphore = semaphore;
+            }
+
+            public void Reset() {
+                _semaphore = null;
+            }
+
+            void IDisposable.Dispose() {
+                _semaphore?.Release();
+                _semaphore = null;
+                GC.SuppressFinalize(this);
+            }
+
+            ~SemaphoreLock() {
+                _semaphore?.Release();
+            }
+        }
+
+        public static async Task<IDisposable> LockAsync(this SemaphoreSlim semaphore, CancellationToken cancellationToken) {
+            var res = new SemaphoreLock(semaphore);
+            try {
+                await semaphore.WaitAsync(cancellationToken);
+                var res2 = res;
+                res = null;
+                return res2;
+            } finally {
+                res?.Reset();
+            }
         }
     }
 }
