@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,11 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-
-namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase {
-        public CPythonInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options) :
-            base(configuration, options) { }
+namespace Microsoft.PythonTools.Interpreter {
+    public static class BuiltInPackageManagers {
+        /// <summary>
+        /// Gets an instance of a package manager based on pip.
+        /// </summary>
+        public static IPackageManager Pip => new PipPackageManager();
     }
 }

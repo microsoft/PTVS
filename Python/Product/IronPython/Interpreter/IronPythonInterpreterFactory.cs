@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Interpreter;
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase {
         public IronPythonInterpreterFactory(InterpreterArchitecture arch)
-            : base(GetConfiguration(arch), watchFileSystem: true) { }
+            : base(GetConfiguration(arch), new InterpreterFactoryCreationOptions()) { }
 
         private static string GetInterpreterId(InterpreterArchitecture arch) {
             if (arch == InterpreterArchitecture.x64) {

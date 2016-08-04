@@ -35,6 +35,9 @@ namespace Microsoft.PythonTools.Interpreter {
         private int _suppressCount;
         private bool _isDisposed;
 
+        // Prevent too many concurrent executions to avoid exhausting disk IO
+        private static readonly SemaphoreSlim _concurrencyLock = new SemaphoreSlim(4);
+
         private static readonly KeyValuePair<string, string>[] UnbufferedEnv = new[] {
             new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
         };
@@ -104,46 +107,52 @@ namespace Microsoft.PythonTools.Interpreter {
         private async Task CacheInstalledPackagesAsync(CancellationToken cancellationToken) {
             List<PackageSpec> packages = null;
 
-            using (var proc = ProcessOutput.Run(
-                _factory.Configuration.InterpreterPath,
-                new[] {
+            await _concurrencyLock.WaitAsync();
+
+            try {
+                using (var proc = ProcessOutput.Run(
+                    _factory.Configuration.InterpreterPath,
+                    new[] {
                     SupportsDashMPip ? "-m" : "-c",
                     SupportsDashMPip ? "pip" : "import pip; pip.main()",
                     "list"
-                },
-                _factory.Configuration.PrefixPath,
-                UnbufferedEnv,
-                false,
-                null
-            )) {
-                try {
-                    if (await proc == 0) {
-                        packages = proc.StandardOutputLines
-                            .Select(i => new PackageSpec(i))
-                            .Where(p => p.IsValid)
-                            .OrderBy(p => p.Name)
-                            .ToList();
+                    },
+                    _factory.Configuration.PrefixPath,
+                    UnbufferedEnv,
+                    false,
+                    null
+                )) {
+                    try {
+                        if (await proc == 0) {
+                            packages = proc.StandardOutputLines
+                                .Select(i => PackageSpec.FromPipList(i))
+                                .Where(p => p.IsValid)
+                                .OrderBy(p => p.Name)
+                                .ToList();
+                        }
+                    } catch (OperationCanceledException) {
+                        // Process failed to run
+                        Debug.WriteLine("Failed to run pip to collect packages");
+                        Debug.WriteLine(string.Join(Environment.NewLine, proc.StandardOutputLines));
                     }
-                } catch (OperationCanceledException) {
-                    // Process failed to run
-                    Debug.WriteLine("Failed to run pip to collect packages");
-                    Debug.WriteLine(string.Join(Environment.NewLine, proc.StandardOutputLines));
                 }
-            }
 
-            if (packages == null) {
-                // Pip failed, so return a directory listing
-                var paths = await PythonTypeDatabase.GetDatabaseSearchPathsAsync(_factory);
+                if (packages == null) {
+                    // Pip failed, so return a directory listing
+                    var paths = await PythonTypeDatabase.GetDatabaseSearchPathsAsync(_factory);
 
-                packages = await Task.Run(() => paths.Where(p => !p.IsStandardLibrary)
-                    .SelectMany(p => PathUtils.EnumerateDirectories(p.Path, recurse: false))
-                    .Select(path => Path.GetFileName(path))
-                    .Select(name => PackageNameRegex.Match(name))
-                    .Where(match => match.Success)
-                    .Select(match => new PackageSpec(match.Groups["name"].Value))
-                    .Where(p => p.IsValid)
-                    .OrderBy(p => p.Name)
-                    .ToList());
+                    packages = await Task.Run(() => paths.Where(p => !p.IsStandardLibrary)
+                        .SelectMany(p => PathUtils.EnumerateDirectories(p.Path, recurse: false))
+                        .Select(path => Path.GetFileName(path))
+                        .Select(name => PackageNameRegex.Match(name))
+                        .Where(match => match.Success)
+                        .Select(match => new PackageSpec(match.Groups["name"].Value))
+                        .Where(p => p.IsValid)
+                        .OrderBy(p => p.Name)
+                        .ToList());
+                }
+            } finally {
+                _concurrencyLock.Release();
             }
 
             lock (_packages) {

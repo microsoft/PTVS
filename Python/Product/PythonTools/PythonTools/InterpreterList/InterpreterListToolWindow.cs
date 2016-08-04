@@ -230,7 +230,7 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             view.Extensions.Add(pep);
             var _withDb = view.Factory as PythonInterpreterFactoryWithDatabase;
-            if (_withDb != null) {
+            if (_withDb != null && !string.IsNullOrEmpty(_withDb.DatabasePath)) {
                 view.Extensions.Add(new DBExtensionProvider(_withDb));
             }
 

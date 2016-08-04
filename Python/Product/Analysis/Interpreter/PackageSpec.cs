@@ -29,6 +29,17 @@ namespace Microsoft.PythonTools.Interpreter {
             )", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace
         );
 
+        private static readonly Regex PipListRegex = new Regex(@"
+            (?<!\#.*)       # ensure we are not in a comment
+            (?<=\s|\A)      # ensure we are preceded by a space/start of the line
+            (?<spec>        # <spec> includes name, version and whitespace
+                (?<name>[^\s\#<>=!\-][^\s\#<>=!]*)  # just the name, no whitespace
+                \s*
+                (\((?<exact_ver>[^\s\#]+)\))?
+                [^\#]*
+            )", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace
+        );
+
         public static readonly PackageSpec Empty = new PackageSpec();
 
         private readonly Lazy<Match> _match;
@@ -38,6 +49,15 @@ namespace Microsoft.PythonTools.Interpreter {
         public PackageSpec(string fullSpec) {
             Spec = fullSpec;
             _match = new Lazy<Match>(() => FindRequirementRegex.Match(fullSpec));
+        }
+
+        private PackageSpec(string fullSpec, Regex regex) {
+            Spec = fullSpec;
+            _match = new Lazy<Match>(() => regex.Match(fullSpec));
+        }
+
+        public static PackageSpec FromPipList(string line) {
+            return new PackageSpec(line, PipListRegex);
         }
 
         public bool IsValid => _match?.Value.Success ?? false;

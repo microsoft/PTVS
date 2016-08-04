@@ -103,16 +103,11 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void InstalledPackagesChanged(object sender, EventArgs e) {
-            var withPackages = _factory as IPackageManager;
-            if (withPackages == null) {
-                return;
-            }
-
-            RefreshPackagesAsync(withPackages).HandleAllExceptions(ProjectMgr.Site, GetType()).DoNotWait();
+            RefreshPackages();
         }
 
         private void RefreshPackages() {
-            RefreshPackagesAsync(_factory as IPackageManager)
+            RefreshPackagesAsync(_factory.PackageManager)
                 .HandleAllExceptions(ProjectMgr.Site, GetType())
                 .DoNotWait();
         }

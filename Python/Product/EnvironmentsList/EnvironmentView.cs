@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             new Lazy<IEnumerable<EnvironmentView>>(() => new[] { OnlineHelpView.Value });
 
         // Names of properties that will be requested from interpreter configurations
-        internal const string VendorKey = "Vendor";
+        internal const string CompanyKey = "Company";
         internal const string SupportUrlKey = "SupportUrl";
 
         /// <summary>
@@ -112,8 +112,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
             CanBeDefault = Factory.CanBeDefault();
 
-            Vendor = _registry.GetProperty(Factory.Configuration.Id, "Vendor") as string;
-            SupportUrl = _registry.GetProperty(Factory.Configuration.Id, "SupportUrl") as string;
+            Company = _registry.GetProperty(Factory.Configuration.Id, CompanyKey) as string ?? "";
+            SupportUrl = _registry.GetProperty(Factory.Configuration.Id, SupportUrlKey) as string ?? "";
         }
 
         public override string ToString() {
@@ -249,15 +249,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         #region Extra Information Dependency Properties
 
-        private static readonly DependencyPropertyKey VendorPropertyKey = DependencyProperty.RegisterReadOnly("Vendor", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
+        private static readonly DependencyPropertyKey CompanyPropertyKey = DependencyProperty.RegisterReadOnly("Company", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
         private static readonly DependencyPropertyKey SupportUrlPropertyKey = DependencyProperty.RegisterReadOnly("SupportUrl", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
 
-        public static readonly DependencyProperty VendorProperty = VendorPropertyKey.DependencyProperty;
+        public static readonly DependencyProperty CompanyProperty = CompanyPropertyKey.DependencyProperty;
         public static readonly DependencyProperty SupportUrlProperty = SupportUrlPropertyKey.DependencyProperty;
 
-        public string Vendor {
-            get { return Factory == null ? string.Empty : (string)GetValue(VendorProperty); }
-            set { if (Factory != null) { SetValue(VendorPropertyKey, value); } }
+        public string Company {
+            get { return Factory == null ? string.Empty : (string)GetValue(CompanyProperty); }
+            set { if (Factory != null) { SetValue(CompanyPropertyKey, value); } }
         }
 
         public string SupportUrl {

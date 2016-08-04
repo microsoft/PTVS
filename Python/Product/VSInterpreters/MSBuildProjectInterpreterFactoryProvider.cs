@@ -456,7 +456,18 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             protected override void CreateFactory() {
-                _factory = InterpreterFactoryCreator.CreateInterpreterFactory(Config);
+                var dbPath = PathUtils.GetAbsoluteDirectoryPath(
+                    Config.PrefixPath,
+                    ".ptvs"
+                );
+
+                _factory = InterpreterFactoryCreator.CreateInterpreterFactory(
+                    Config,
+                    new InterpreterFactoryCreationOptions {
+                        PackageManager = new PipPackageManager(),
+                        DatabasePath = dbPath
+                    }
+                );
             }
 
             public override bool Equals(object obj) {

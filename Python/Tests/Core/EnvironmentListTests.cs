@@ -682,7 +682,7 @@ namespace PythonToolsUITests {
             var supportUrl = new MockPythonInterpreterFactory(MockInterpreterConfiguration("3 SupportUrl", v));
             var bothInfo = new MockPythonInterpreterFactory(MockInterpreterConfiguration("4 Both Info", v));
 
-            bothInfo.Properties[EnvironmentView.VendorKey] = vendor.Properties[EnvironmentView.VendorKey] = "Vendor Name";
+            bothInfo.Properties[EnvironmentView.CompanyKey] = vendor.Properties[EnvironmentView.CompanyKey] = "Vendor Name";
             bothInfo.Properties[EnvironmentView.SupportUrlKey] = supportUrl.Properties[EnvironmentView.SupportUrlKey] = "http://example.com";
 
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider", noInfo, vendor, supportUrl, bothInfo));
@@ -695,7 +695,7 @@ namespace PythonToolsUITests {
 
                 Assert.AreEqual(4, environments.Count);
                 AssertUtil.AreEqual(
-                    wpf.Invoke(() => environments.Select(ev => ev.Vendor).ToList()),
+                    wpf.Invoke(() => environments.Select(ev => ev.Company).ToList()),
                     null,
                     "Vendor Name",
                     null,
@@ -812,7 +812,7 @@ namespace PythonToolsUITests {
             private void Window_ViewCreated(object sender, EnvironmentViewEventArgs e) {
                 if (CreateDBExtension) {
                     var withDb = e.View.Factory as PythonInterpreterFactoryWithDatabase;
-                    if (withDb != null) {
+                    if (withDb != null && !string.IsNullOrEmpty(withDb.DatabasePath)) {
                         e.View.Extensions.Add(new DBExtensionProvider(withDb));
                     }
                 }

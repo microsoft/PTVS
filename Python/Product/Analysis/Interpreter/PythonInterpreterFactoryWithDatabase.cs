@@ -65,13 +65,17 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </remarks>
         public PythonInterpreterFactoryWithDatabase(
             InterpreterConfiguration config,
-            IPackageManager packageManager = null,
-            bool watchFileSystem = true
+            InterpreterFactoryCreationOptions options
         ) {
             if (config == null) {
                 throw new ArgumentNullException("config");
             }
+            if (options == null) {
+                options = new InterpreterFactoryCreationOptions();
+            }
             Configuration = config;
+
+            DatabasePath = options.DatabasePath;
 
             // Avoid creating a interpreter with an unsupported version.
             // https://github.com/Microsoft/PTVS/issues/706
@@ -81,7 +85,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 throw new ArgumentException(ex.Message, ex);
             }
 
-            if (watchFileSystem) {
+            if (options.WatchFileSystem && !string.IsNullOrEmpty(DatabasePath)) {
                 // Assume the database is valid if the version is up to date, then
                 // switch to invalid after we've checked.
                 _isValid = PythonTypeDatabase.IsDatabaseVersionCurrent(DatabasePath);
@@ -100,7 +104,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 _isValid = true;
             }
 
-            PackageManager = packageManager ?? new NoPackageManager();
+            PackageManager = options.PackageManager ?? new NoPackageManager();
             PackageManager.SetInterpreterFactory(this);
             PackageManager.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
         }
@@ -181,7 +185,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <see cref="CreateInterpreter"/>.
         /// </remarks>
         public virtual PythonTypeDatabase MakeTypeDatabase(string databasePath, bool includeSitePackages = true) {
-            if (!IsGenerating && PythonTypeDatabase.IsDatabaseVersionCurrent(databasePath)) {
+            if (!string.IsNullOrEmpty(databasePath) && !IsGenerating && PythonTypeDatabase.IsDatabaseVersionCurrent(databasePath)) {
                 var paths = new List<string>();
                 paths.Add(databasePath);
                 if (includeSitePackages) {
@@ -199,6 +203,11 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public virtual void GenerateDatabase(GenerateDatabaseOptions options, Action<int> onExit = null) {
+            if (string.IsNullOrEmpty(DatabasePath)) {
+                onExit?.Invoke(PythonTypeDatabase.NotSupportedExitCode);
+                return;
+            }
+
             var req = new PythonTypeDatabaseCreationRequest {
                 Factory = this,
                 OutputPath = DatabasePath,
@@ -242,6 +251,8 @@ namespace Microsoft.PythonTools.Interpreter {
         public bool IsGenerating => _generating != null;
 
         private void OnDatabaseVerChanged(object sender, FileSystemEventArgs e) {
+            Debug.Assert(!string.IsNullOrEmpty(DatabasePath));
+
             if ((!e.Name.Equals("database.ver", StringComparison.OrdinalIgnoreCase) &&
                 !e.Name.Equals("database.pid", StringComparison.OrdinalIgnoreCase)) ||
                 !PathUtils.IsSubpathOf(DatabasePath, e.FullPath)) {
@@ -279,16 +290,13 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public virtual string DatabasePath {
-            get {
-                return Path.Combine(
-                    PythonTypeDatabase.CompletionDatabasePath,
-                    Configuration.Id.Replace('|', '\\').ToString()
-                );
-            }
-        }
+        public virtual string DatabasePath { get; }
 
         public string GetAnalysisLogContent(IFormatProvider culture) {
+            if (string.IsNullOrEmpty(DatabasePath)) {
+                return "No log for this interpreter";
+            }
+
             var analysisLog = Path.Combine(DatabasePath, "AnalysisLog.txt");
             if (File.Exists(analysisLog)) {
                 try {
@@ -316,6 +324,15 @@ namespace Microsoft.PythonTools.Interpreter {
             // will assert.
             _hasEverCheckedDatabase = true;
 #endif
+
+            if (string.IsNullOrEmpty(DatabasePath)) {
+                _isCheckingDatabase = false;
+                _isValid = true;
+                _missingModules = null;
+                _isCurrentException = null;
+                OnIsCurrentChanged();
+                return;
+            }
 
             try {
                 if (!_isCurrentSemaphore.Wait(0)) {
@@ -419,6 +436,8 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private static HashSet<string> GetExistingDatabase(string databasePath) {
+            Debug.Assert(!string.IsNullOrEmpty(databasePath));
+
             return new HashSet<string>(
                 PathUtils.EnumerateFiles(databasePath, "*.idb").Select(f => Path.GetFileNameWithoutExtension(f)),
                 StringComparer.InvariantCultureIgnoreCase
@@ -440,6 +459,8 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private string[] GetMissingModules(HashSet<string> existingDatabase) {
+            Debug.Assert(!string.IsNullOrEmpty(DatabasePath));
+
             var searchPaths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(DatabasePath);
 
             if (searchPaths == null) {
@@ -484,6 +505,10 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public virtual string GetFriendlyIsCurrentReason(IFormatProvider culture) {
+            if (string.IsNullOrEmpty(DatabasePath)) {
+                return "Interpreter has no database";
+            }
+
             var missingModules = _missingModules;
             if (_isCurrentException != null) {
                 return "An error occurred. Click Copy to get full details.";
@@ -531,6 +556,10 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public virtual string GetIsCurrentReason(IFormatProvider culture) {
+            if (string.IsNullOrEmpty(DatabasePath)) {
+                return "Interpreter has no database";
+            }
+
             var missingModules = _missingModules;
             var reason = "Database at " + DatabasePath;
             if (_isCurrentException != null) {
@@ -599,6 +628,7 @@ namespace Microsoft.PythonTools.Interpreter {
         #region Directory watchers
 
         private FileSystemWatcher CreateDatabaseDirectoryWatcher() {
+            Debug.Assert(!string.IsNullOrEmpty(DatabasePath));
             FileSystemWatcher watcher = null;
 
             lock (_verWatcherLock) {
@@ -642,6 +672,8 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private FileSystemWatcher CreateDatabaseVerWatcher() {
+            Debug.Assert(!string.IsNullOrEmpty(DatabasePath));
+
             FileSystemWatcher watcher = null;
 
             lock (_verWatcherLock) {

@@ -16,7 +16,7 @@
 
 using System;
 using System.IO;
-using System.Reflection;
+using System.Text;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter.Default;
 
@@ -30,24 +30,19 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Creates a new interpreter factory with the specified options. This
         /// interpreter always includes a cached completion database.
         /// </summary>
-        public static PythonInterpreterFactoryWithDatabase CreateInterpreterFactory(InterpreterFactoryCreationOptions options, bool allowFileSystemWatchers = true) {
-            var opts = options.Clone();
-            opts.LanguageVersion = opts.LanguageVersion ?? new Version(2, 7);
-            opts.Description = opts.Description ?? "Unknown Python {0}".FormatUI(opts.LanguageVersion);
-            if (string.IsNullOrEmpty(opts.PrefixPath) && !string.IsNullOrEmpty(opts.InterpreterPath)) {
-                opts.PrefixPath = PathUtils.GetParent(opts.InterpreterPath);
+        public static PythonInterpreterFactoryWithDatabase CreateInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options = null) {
+            options = options?.Clone() ?? new InterpreterFactoryCreationOptions();
+
+            if (string.IsNullOrEmpty(options.DatabasePath)) {
+                var subpath = configuration.Id.Replace('|', '\\');
+                if (!PathUtils.IsValidPath(subpath)) {
+                    subpath = Convert.ToBase64String(new UTF8Encoding(false).GetBytes(configuration.Id));
+                }
+                options.DatabasePath = Path.Combine(PythonTypeDatabase.CompletionDatabasePath, subpath);
             }
 
-            var fact = new CPythonInterpreterFactory(opts, watchFileSystem: allowFileSystemWatchers);
-            if (allowFileSystemWatchers) {
-                fact.BeginRefreshIsCurrent();
-            }
-            return fact;
-        }
-
-        public static PythonInterpreterFactoryWithDatabase CreateInterpreterFactory(InterpreterConfiguration configuration, bool allowFileSystemWatchers = true) {
-            var fact = new CPythonInterpreterFactory(configuration, watchFileSystem: allowFileSystemWatchers);
-            if (allowFileSystemWatchers) {
+            var fact = new CPythonInterpreterFactory(configuration, options);
+            if (options.WatchFileSystem) {
                 fact.BeginRefreshIsCurrent();
             }
             return fact;

@@ -20,29 +20,45 @@
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
                         <RowDefinition Height="auto" />
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0" Grid.Column="0"
                           VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
-                          Margin="1"
+                          Margin="3 3 3 0"
                           DataContext="{Binding Description,Mode=OneWay}">
                         <TextBlock x:Name="Name_IsDefault"
                                    Text="{Binding}"
                                    TextTrimming="CharacterEllipsis"
                                    FontWeight="Bold"
+                                   Margin="0"
                                    Visibility="Hidden" />
                         <TextBlock x:Name="Name_IsNotDefault"
                                    Text="{Binding}"
                                    TextTrimming="CharacterEllipsis"
+                                   Margin="0"
                                    Visibility="Visible" />
                     </Grid>
 
+                    <Grid x:Name="Company"
+                          Grid.Row="1" Grid.Column="0"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Stretch"
+                          Margin="5 0 3 3"
+                          DataContext="{Binding Company,Mode=OneWay}">
+                        <TextBlock Text="{Binding}"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="0"
+                                   Foreground="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}" />
+                    </Grid>
+
                     <ProgressBar x:Name="RefreshDBProgress"
-                                 Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                                 Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
                                  HorizontalAlignment="Stretch"
-                                 Height="3"
+                                 Height="5"
+                                 Margin="2"
                                  BorderBrush="Transparent"
                                  BorderThickness="0"
                                  Focusable="False"
@@ -55,7 +71,7 @@
                     </ProgressBar>
 
                     <Button x:Name="Icon_NeedRefresh"
-                            Grid.Column="1"
+                            Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
                             IsHitTestVisible="True"
                             VerticalAlignment="Stretch"
                             Cursor="Hand"
@@ -70,7 +86,7 @@
                     </Button>
 
                     <Button x:Name="InteractiveWindowButton"
-                            Grid.Column="2"
+                            Grid.Row="0" Grid.Column="2" Grid.RowSpan="2"
                             Style="{StaticResource {x:Type Button}}"
                             Cursor="Hand"
                             Margin="1"
@@ -90,6 +106,9 @@
                     </DataTrigger>
                     <DataTrigger Binding="{Binding IsCurrent}" Value="False">
                         <Setter TargetName="Icon_NeedRefresh" Property="Visibility" Value="Visible" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Company,Mode=OneWay}" Value="">
+                        <Setter TargetName="Company" Property="Visibility" Value="Collapsed" />
                     </DataTrigger>
                     <DataTrigger Binding="{Binding IsCheckingDatabase}" Value="True">
                         <Setter TargetName="Icon_NeedRefresh" Property="Visibility" Value="Hidden" />

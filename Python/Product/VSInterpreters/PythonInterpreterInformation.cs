@@ -38,7 +38,13 @@ namespace Microsoft.PythonTools.Interpreter {
             if (Factory == null) {
                 lock (this) {
                     if (Factory == null) {
-                        Factory = InterpreterFactoryCreator.CreateInterpreterFactory(Configuration);
+                        Factory = InterpreterFactoryCreator.CreateInterpreterFactory(
+                            Configuration,
+                            new InterpreterFactoryCreationOptions {
+                                PackageManager = new PipPackageManager(),
+                                WatchFileSystem = true
+                            }
+                        );
                     }
                 }
             }
