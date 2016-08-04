@@ -335,12 +335,7 @@ namespace PythonToolsTests {
             var path = PythonPaths.Versions.LastOrDefault(p => p != null && p.IsCPython);
             path.AssertInstalled();
 
-            var factory = InterpreterFactoryCreator.CreateInterpreterFactory(
-                path.Configuration,
-                new InterpreterFactoryCreationOptions {
-                    WatchLibraryForNewModules = false
-                }
-            );
+            var factory = InterpreterFactoryCreator.CreateInterpreterFactory(path.Configuration);
 
             var tcs = new TaskCompletionSource<int>();
             var beforeProc = Process.GetProcessesByName("Microsoft.PythonTools.Analyzer");

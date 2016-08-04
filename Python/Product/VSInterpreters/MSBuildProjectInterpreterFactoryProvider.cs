@@ -456,12 +456,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             protected override void CreateFactory() {
-                _factory = InterpreterFactoryCreator.CreateInterpreterFactory(
-                    Config,
-                    new InterpreterFactoryCreationOptions {
-                        WatchLibraryForNewModules = true
-                    }
-                );
+                _factory = InterpreterFactoryCreator.CreateInterpreterFactory(Config);
             }
 
             public override bool Equals(object obj) {

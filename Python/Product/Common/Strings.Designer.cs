@@ -956,6 +956,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No interpreters.
+        /// </summary>
+        public static string NoInterpretersDescription {
+            get {
+                return ResourceManager.GetString("NoInterpretersDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Your project needs a Python script marked as the startup file to perform this operation..
         /// </summary>
         public static string NoStartupFileAvailable {

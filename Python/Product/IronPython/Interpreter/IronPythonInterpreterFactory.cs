@@ -15,19 +15,13 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase {
         public IronPythonInterpreterFactory(InterpreterArchitecture arch)
-            : base(GetConfiguration(arch), true) { }
+            : base(GetConfiguration(arch), watchFileSystem: true) { }
 
         private static string GetInterpreterId(InterpreterArchitecture arch) {
             if (arch == InterpreterArchitecture.x64) {

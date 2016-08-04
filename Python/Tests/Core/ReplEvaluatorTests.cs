@@ -221,8 +221,7 @@ g()",
                     LibraryPath = _pythonLib,
                     PathEnvironmentVariableName = "PYTHONPATH",
                     Architecture = InterpreterArchitecture.x86,
-                    WatchLibraryForNewModules = false
-                });
+                }, allowFileSystemWatchers: false);
             }
 
             public IEnumerable<InterpreterConfiguration> GetInterpreterConfigurations() {

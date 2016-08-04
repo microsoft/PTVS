@@ -21,12 +21,44 @@ using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter {
     public interface IPackageManager {
+        /// <summary>
+        /// Called once to initialize the interpreter factory associated with
+        /// a package manager instance.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">
+        /// factory is null.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// SetInterpreterFactory has already been called.
+        /// </exception>
+        /// <exception cref="NotSupportedException">
+        /// factory is not supported by the package manager.
+        /// </exception>
+        void SetInterpreterFactory(IPythonInterpreterFactory factory);
+
         Task<IList<PackageSpec>> GetInstalledPackagesAsync(CancellationToken cancellationToken);
 
         Task<PackageSpec> GetInstalledPackageAsync(string name, CancellationToken cancellationToken);
 
+        /// <summary>
+        /// Raised when the result of calling
+        /// <see cref="GetInstalledPackagesAsync"/> is known to have changed.
+        /// </summary>
         event EventHandler InstalledPackagesChanged;
 
+        /// <summary>
+        /// Raised when the contents of any of the watched directories have
+        /// changed. This event will not be raised more than once per second.
+        /// </summary>
+        event EventHandler InstalledFilesChanged;
+
         IDisposable SuppressNotifications();
+
+        /// <summary>
+        /// Called to inform the package manager that its packages may have
+        /// changed. Package managers have no obligation to use this information
+        /// in any way.
+        /// </summary>
+        void NotifyPackagesChanged();
     }
 }

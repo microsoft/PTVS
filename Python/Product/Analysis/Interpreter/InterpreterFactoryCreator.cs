@@ -17,6 +17,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter.Default;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -25,36 +26,31 @@ namespace Microsoft.PythonTools.Interpreter {
     /// executable file and cached completion database.
     /// </summary>
     public static class InterpreterFactoryCreator {
-        public static readonly Guid AnalysisOnlyFactoryGuid = new Guid("{3E2D2684-58F3-47E2-B121-58A602EA2382}");
-
         /// <summary>
         /// Creates a new interpreter factory with the specified options. This
         /// interpreter always includes a cached completion database.
         /// </summary>
-        public static PythonInterpreterFactoryWithDatabase CreateInterpreterFactory(InterpreterFactoryCreationOptions options) {
-            var ver = options.LanguageVersion ?? new Version(2, 7);
-            var description = options.Description ?? string.Format("Unknown Python {0}", ver);
-            var prefixPath = options.PrefixPath;
-            if (string.IsNullOrEmpty(prefixPath) && !string.IsNullOrEmpty(options.InterpreterPath)) {
-                prefixPath = Path.GetDirectoryName(options.InterpreterPath);
+        public static PythonInterpreterFactoryWithDatabase CreateInterpreterFactory(InterpreterFactoryCreationOptions options, bool allowFileSystemWatchers = true) {
+            var opts = options.Clone();
+            opts.LanguageVersion = opts.LanguageVersion ?? new Version(2, 7);
+            opts.Description = opts.Description ?? "Unknown Python {0}".FormatUI(opts.LanguageVersion);
+            if (string.IsNullOrEmpty(opts.PrefixPath) && !string.IsNullOrEmpty(opts.InterpreterPath)) {
+                opts.PrefixPath = PathUtils.GetParent(opts.InterpreterPath);
             }
 
-            return new CPythonInterpreterFactory(
-                ver,
-                options.Id,
-                description,
-                prefixPath ?? string.Empty,
-                options.InterpreterPath ?? string.Empty,
-                options.WindowInterpreterPath ?? string.Empty,
-                options.LibraryPath ?? string.Empty,
-                options.PathEnvironmentVariableName ?? "PYTHONPATH",
-                options.Architecture,
-                options.WatchLibraryForNewModules
-            );
+            var fact = new CPythonInterpreterFactory(opts, watchFileSystem: allowFileSystemWatchers);
+            if (allowFileSystemWatchers) {
+                fact.BeginRefreshIsCurrent();
+            }
+            return fact;
         }
 
-        public static PythonInterpreterFactoryWithDatabase CreateInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options) {
-            return new CPythonInterpreterFactory(configuration, options);
+        public static PythonInterpreterFactoryWithDatabase CreateInterpreterFactory(InterpreterConfiguration configuration, bool allowFileSystemWatchers = true) {
+            var fact = new CPythonInterpreterFactory(configuration, watchFileSystem: allowFileSystemWatchers);
+            if (allowFileSystemWatchers) {
+                fact.BeginRefreshIsCurrent();
+            }
+            return fact;
         }
 
         /// <summary>

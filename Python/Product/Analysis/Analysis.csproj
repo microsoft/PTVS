@@ -61,6 +61,8 @@
     <Compile Include="IHasRichDescription.cs" />
     <Compile Include="Interpreter\InterpreterArchitecture.cs" />
     <Compile Include="Interpreter\IPackageManager.cs" />
+    <Compile Include="Interpreter\NoInterpretersFactory.cs" />
+    <Compile Include="Interpreter\NoPackageManager.cs" />
     <Compile Include="Interpreter\PackageSpec.cs" />
     <Compile Include="Interpreter\PipPackageManager.cs" />
     <Compile Include="Projects\AnalysisExtensionNameAttribute.cs" />

@@ -18,32 +18,21 @@ using System;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase {
-        public CPythonInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options) :
-            base(configuration, options.WatchLibraryForNewModules) {            
+        public CPythonInterpreterFactory(InterpreterConfiguration configuration, IPackageManager packageManager = null, bool watchFileSystem = true) :
+            base(configuration, packageManager ?? new PipPackageManager(watchFileSystem), watchFileSystem) {
         }
 
-        public CPythonInterpreterFactory(
-            Version version,
-            string newId,
-            string description,
-            string prefixPath,
-            string pythonPath,
-            string pythonwPath,
-            string libPath,
-            string pathEnvVar,
-            InterpreterArchitecture arch,
-            bool watchForNewModules)
-            : base(
-                new InterpreterConfiguration(
-                    newId,
-                    description,
-                    prefixPath,
-                    pythonPath,
-                    pythonwPath,
-                    pathEnvVar,
-                    arch,
-                    version,
-                    InterpreterUIMode.SupportsDatabase),
-                watchForNewModules) { }
+        public CPythonInterpreterFactory(InterpreterFactoryCreationOptions options, IPackageManager packageManager = null, bool watchFileSystem = true) :
+            this(new InterpreterConfiguration(
+                options.Id,
+                options.Description,
+                options.PrefixPath,
+                options.InterpreterPath,
+                options.WindowInterpreterPath,
+                options.PathEnvironmentVariableName,
+                options.Architecture,
+                options.LanguageVersion,
+                InterpreterUIMode.SupportsDatabase
+            ), packageManager, watchFileSystem) { }
     }
 }

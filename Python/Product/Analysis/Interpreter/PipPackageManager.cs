@@ -1,20 +1,39 @@
-﻿using System;
+﻿// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
-    class PipPackageManager : IPackageManager {
-        private readonly IPythonInterpreterFactory _factory;
+    class PipPackageManager : IPackageManager, IDisposable {
+        private IPythonInterpreterFactory _factory;
+        private readonly Timer _refreshIsCurrentTrigger;
         private readonly List<FileSystemWatcher> _libWatchers;
         private readonly List<PackageSpec> _packages;
+        private CancellationTokenSource _currentRefresh;
         private int _suppressCount;
+        private bool _isDisposed;
 
         private static readonly KeyValuePair<string, string>[] UnbufferedEnv = new[] {
             new KeyValuePair<string, string>("PYTHONUNBUFFERED", "1")
@@ -25,17 +44,60 @@ namespace Microsoft.PythonTools.Interpreter {
             RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
 
-        public PipPackageManager(IPythonInterpreterFactory factory) {
-            _factory = factory;
-            _libWatchers = new List<FileSystemWatcher>();
+        public PipPackageManager(bool allowFileSystemWatchers = true) {
             _packages = new List<PackageSpec>();
+
+            if (allowFileSystemWatchers) {
+                _libWatchers = new List<FileSystemWatcher>();
+                _refreshIsCurrentTrigger = new Timer(RefreshIsCurrentTimer_Elapsed);
+            }
+        }
+
+        public void SetInterpreterFactory(IPythonInterpreterFactory factory) {
+            if (factory == null) {
+                throw new ArgumentNullException("factory");
+            }
+            if (!File.Exists(factory.Configuration?.InterpreterPath)) {
+                throw new NotSupportedException();
+            }
+
+            _factory = factory;
+            if (_libWatchers != null) {
+                CreateLibraryWatchers().DoNotWait();
+            }
+            _refreshIsCurrentTrigger?.Change(1000, Timeout.Infinite);
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~PipPackageManager() {
+            Dispose(false);
+        }
+
+        protected void Dispose(bool disposing) {
+            if (_isDisposed) {
+                return;
+            }
+            _isDisposed = true;
+
+            if (disposing) {
+                if (_libWatchers != null) {
+                    lock (_libWatchers) {
+                        foreach (var w in _libWatchers) {
+                            w.EnableRaisingEvents = false;
+                            w.Dispose();
+                        }
+                    }
+                }
+                _refreshIsCurrentTrigger?.Dispose();
+            }
         }
 
         public event EventHandler InstalledPackagesChanged;
-
-        private void OnInstalledPackagesChanged() {
-            InstalledPackagesChanged?.Invoke(this, EventArgs.Empty);
-        }
+        public event EventHandler InstalledFilesChanged;
 
         private bool SupportsDashMPip => _factory.Configuration.Version > new Version(2, 7);
 
@@ -89,7 +151,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 _packages.AddRange(packages);
             }
 
-            OnInstalledPackagesChanged();
+            InstalledPackagesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public async Task<IList<PackageSpec>> GetInstalledPackagesAsync(CancellationToken cancellationToken) {
@@ -126,11 +188,18 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private bool WatchingLibrary {
             get {
+                if (_libWatchers == null) {
+                    return false;
+                }
                 lock (_libWatchers) {
                     return _libWatchers.Any(w => w.EnableRaisingEvents);
                 }
             }
             set {
+                if (_libWatchers == null) {
+                    return;
+                }
+
                 lock (_libWatchers) {
                     bool clearAll = false;
 
@@ -160,5 +229,92 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
+        private async Task CreateLibraryWatchers() {
+            Debug.Assert(_libWatchers != null, "Should not create watchers when suppressed");
+
+            List<PythonLibraryPath> paths;
+            try {
+                paths = await PythonTypeDatabase.GetDatabaseSearchPathsAsync(_factory);
+            } catch (InvalidOperationException) {
+                return;
+            }
+
+            paths = paths.OrderBy(p => p.Path.Length).ToList();
+
+            var watching = new List<string>();
+            var watchers = new List<FileSystemWatcher>();
+
+            foreach (var path in paths) {
+                if (watching.Any(p => PathUtils.IsSubpathOf(p, path.Path))) {
+                    continue;
+                }
+
+                FileSystemWatcher watcher = null;
+                try {
+                    watcher = new FileSystemWatcher {
+                        IncludeSubdirectories = true,
+                        Path = path.Path,
+                        NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
+                    };
+                    watcher.Created += OnChanged;
+                    watcher.Deleted += OnChanged;
+                    watcher.Changed += OnChanged;
+                    watcher.Renamed += OnRenamed;
+                    watcher.EnableRaisingEvents = true;
+
+                    watching.Add(path.Path);
+                    watchers.Add(watcher);
+                } catch (IOException) {
+                    // Raced with directory deletion. We normally handle the
+                    // library being deleted by disposing the watcher, but this
+                    // occurs in response to an event from the watcher. Because
+                    // we never got to start watching, we will just dispose
+                    // immediately.
+                    watcher?.Dispose();
+                } catch (ArgumentException ex) {
+                    watcher?.Dispose();
+                    Debug.WriteLine("Error starting FileSystemWatcher:\r\n{0}", ex);
+                }
+            }
+
+            List<FileSystemWatcher> oldWatchers;
+            lock (_libWatchers) {
+                oldWatchers = _libWatchers.ToList();
+                _libWatchers.Clear();
+                _libWatchers.AddRange(watchers);
+            }
+
+            foreach (var oldWatcher in oldWatchers) {
+                oldWatcher.EnableRaisingEvents = false;
+                oldWatcher.Dispose();
+            }
+        }
+
+        private void RefreshIsCurrentTimer_Elapsed(object state) {
+            if (_isDisposed) {
+                return;
+            }
+
+            InstalledFilesChanged?.Invoke(this, EventArgs.Empty);
+
+            var cts = new CancellationTokenSource();
+            var oldCts = Interlocked.Exchange(ref _currentRefresh, cts);
+            oldCts?.Cancel();
+            oldCts?.Dispose();
+
+            CacheInstalledPackagesAsync(cts.Token).DoNotWait();
+        }
+
+        public void NotifyPackagesChanged() {
+            _refreshIsCurrentTrigger.Change(100, Timeout.Infinite);
+        }
+
+        private void OnRenamed(object sender, RenamedEventArgs e) {
+            _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+        }
+
+        private void OnChanged(object sender, FileSystemEventArgs e) {
+            _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+        }
     }
 }

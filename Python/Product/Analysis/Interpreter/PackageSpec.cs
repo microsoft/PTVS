@@ -15,11 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter {
     public struct PackageSpec {
@@ -32,6 +28,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 (?<constraint>(==\s*(?<exact_ver>[^\s\#]+))?[^\#]*)
             )", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace
         );
+
+        public static readonly PackageSpec Empty = new PackageSpec();
 
         private readonly Lazy<Match> _match;
 

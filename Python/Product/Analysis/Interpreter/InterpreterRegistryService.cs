@@ -130,17 +130,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public IPythonInterpreterFactory NoInterpretersValue {
             get {
                 if (_noInterpretersValue == null) {
-                    try {
-                        _noInterpretersValue = InterpreterFactoryCreator.CreateInterpreterFactory(
-                            new InterpreterFactoryCreationOptions {
-                                Id = InterpreterRegistryConstants.NoInterpretersFactoryProvider,
-                                Description = "No Interpreters",
-                                LanguageVersion = new Version(2, 7)
-                            }
-                        );
-                    } catch (Exception ex) {
-                        Trace.TraceError("Failed to create NoInterpretersValue:\n{0}", ex);
-                    }
+                    _noInterpretersValue = new NoInterpretersFactory();
                 }
                 return _noInterpretersValue;
             }

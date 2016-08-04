@@ -329,6 +329,10 @@ namespace Microsoft.PythonTools.Interpreter {
             return new PythonTypeDatabase(factory, BaselineDatabasePath, isDefaultDatabase: true);
         }
 
+        internal static PythonTypeDatabase CreateDefaultTypeDatabase() {
+            return CreateDefaultTypeDatabase(new Version(2, 7));
+        }
+
         internal static PythonTypeDatabase CreateDefaultTypeDatabase(Version languageVersion) {
             return new PythonTypeDatabase(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(languageVersion),
                 BaselineDatabasePath, isDefaultDatabase: true);
@@ -652,17 +656,17 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         public static async Task<List<PythonLibraryPath>> GetDatabaseSearchPathsAsync(IPythonInterpreterFactory factory) {
             List<PythonLibraryPath> paths;
-            var withDb = factory as PythonInterpreterFactoryWithDatabase;
-            if (withDb != null) {
-                paths = GetCachedDatabaseSearchPaths(withDb.DatabasePath);
+            var dbPath = (factory as PythonInterpreterFactoryWithDatabase)?.DatabasePath;
+            if (!string.IsNullOrEmpty(dbPath)) {
+                paths = GetCachedDatabaseSearchPaths(dbPath);
                 if (paths != null) {
                     return paths;
                 }
             }
 
             paths = await GetUncachedDatabaseSearchPathsAsync(factory.Configuration.InterpreterPath);
-            if (withDb != null) {
-                WriteDatabaseSearchPaths(withDb.DatabasePath, paths);
+            if (!string.IsNullOrEmpty(dbPath)) {
+                WriteDatabaseSearchPaths(dbPath, paths);
             }
             return paths;
         }
@@ -779,10 +783,27 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <returns>The cached list of search paths.</returns>
         /// <remarks>Added in 2.2</remarks>
         public static List<PythonLibraryPath> GetCachedDatabaseSearchPaths(string databasePath) {
+            var cacheFile = Path.Combine(databasePath, "database.path");
+            if (!File.Exists(cacheFile)) {
+                return null;
+            }
+            if (!IsDatabaseVersionCurrent(databasePath)) {
+                // Cache file with no database is only valid for one hour
+                try {
+                    var time = File.GetLastWriteTimeUtc(cacheFile);
+                    if (time.AddHours(1) < DateTime.UtcNow) {
+                        File.Delete(cacheFile);
+                        return null;
+                    }
+                } catch (IOException) {
+                    return null;
+                }
+            }
+
+
             try {
                 var result = new List<PythonLibraryPath>();
-
-                using (var file = File.OpenText(Path.Combine(databasePath, "database.path"))) {
+                using (var file = File.OpenText(cacheFile)) {
                     string line;
                     while ((line = file.ReadLine()) != null) {
                         try {
@@ -806,6 +827,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <param name="paths">The list of search paths.</param>
         /// <remarks>Added in 2.2</remarks>
         public static void WriteDatabaseSearchPaths(string databasePath, IEnumerable<PythonLibraryPath> paths) {
+            Directory.CreateDirectory(databasePath);
             using (var file = new StreamWriter(Path.Combine(databasePath, "database.path"))) {
                 foreach (var path in paths) {
                     file.WriteLine(path.ToString());

@@ -36,13 +36,18 @@ namespace TestUtilities.Python {
         public const string InvalidReason = "Database is invalid";
         public const string MissingModulesReason = "Database is missing modules";
 
-        public MockPythonInterpreterFactory(InterpreterConfiguration config, bool withStatusUpdater = false) {
+        public MockPythonInterpreterFactory(
+            InterpreterConfiguration config,
+            bool withStatusUpdater = false,
+            IPackageManager packageManager = null
+        ) {
             _config = config;
 
             _isCurrent = false;
             IsCurrentReason = NoDatabaseReason;
 
             _useUpdater = withStatusUpdater;
+            PackageManager = packageManager;
         }
 
         public void Dispose() {
@@ -61,6 +66,8 @@ namespace TestUtilities.Python {
         public IPythonInterpreter CreateInterpreter() {
             return new MockPythonInterpreter(this);
         }
+
+        public IPackageManager PackageManager { get; }
 
         public void GenerateDatabase(GenerateDatabaseOptions options, Action<int> onExit = null) {
             IsCurrentReason = GeneratingReason;

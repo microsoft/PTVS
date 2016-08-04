@@ -811,4 +811,7 @@ modified from these scripts.</value>
   <data name="UpgradedWebBrowserUrlProperty" xml:space="preserve">
     <value>The web browser URL property has been set to a default value. It may be modified through Project Properties.</value>
   </data>
+  <data name="NoInterpretersDescription" xml:space="preserve">
+    <value>No interpreters</value>
+  </data>
 </root>

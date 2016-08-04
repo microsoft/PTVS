@@ -435,20 +435,23 @@ namespace PythonToolsUITests {
                 var id = Guid.NewGuid().ToString();
                 string fact;
 
-                try {
-                    fact = list.Service.AddConfigurableInterpreter(
-                        id,
-                        new InterpreterConfiguration(
-                            "",
-                            "Blah",
-                            "",
-                            TestData.GetPath("HelloWorld\\HelloWorld.pyproj")
-                        )
-                    );
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    Registry.CurrentUser.DeleteSubKeyTree("Software\\Python\\VisualStudio\\" + id);
-                    throw;
+                using (new AssertInterpretersChanged(interpreters, TimeSpan.FromSeconds(5))) {
+                    try {
+                        fact = list.Service.AddConfigurableInterpreter(
+                            id,
+                            new InterpreterConfiguration(
+                                "",
+                                "Blah",
+                                "",
+                                TestData.GetPath("HelloWorld\\HelloWorld.pyproj")
+                            )
+                        );
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        Registry.CurrentUser.DeleteSubKeyTree("Software\\Python\\VisualStudio\\" + id);
+                        throw;
+                    }
                 }
+
 
                 try {
                     var afterAdd = wpf.Invoke(() => new HashSet<string>(
@@ -462,15 +465,17 @@ namespace PythonToolsUITests {
                         TestData.GetPath("HelloWorld\\HelloWorld.pyproj")
                     );
 
-                    list.Service.AddConfigurableInterpreter(
-                        id,
-                        new InterpreterConfiguration(
-                            "", 
-                            "test", 
-                            "",
-                            TestData.GetPath("HelloWorld2\\HelloWorld.pyproj")
-                        )
-                    );
+                    using (new AssertInterpretersChanged(interpreters, TimeSpan.FromSeconds(5))) {
+                        list.Service.AddConfigurableInterpreter(
+                            id,
+                            new InterpreterConfiguration(
+                                "",
+                                "test",
+                                "",
+                                TestData.GetPath("HelloWorld2\\HelloWorld.pyproj")
+                            )
+                        );
+                    }
 
                     var afterUpdate = wpf.Invoke(() => new HashSet<string>(
                         list.Environments.Select(ev => (string)ev.InterpreterPath),
@@ -882,6 +887,30 @@ namespace PythonToolsUITests {
             sp.Services[typeof(SVsSettingsManager).GUID] = settings;
 
             return InterpreterCatalog.CreateContainer(typeof(IInterpreterRegistryService), typeof(IInterpreterOptionsService));
+        }
+
+        sealed class AssertInterpretersChanged : IDisposable {
+            private readonly ManualResetEvent _evt;
+            private readonly IInterpreterRegistryService _service;
+            private readonly TimeSpan _timeout;
+
+            public AssertInterpretersChanged(IInterpreterRegistryService service, TimeSpan timeout) {
+                _service = service;
+                _evt = new ManualResetEvent(false);
+                _timeout = timeout;
+                _service.InterpretersChanged += Service_InterpretersChanged;
+            }
+
+            private void Service_InterpretersChanged(object sender, EventArgs e) {
+                _evt.Set();
+            }
+
+            public void Dispose() {
+                bool changed = _evt.WaitOne((int)_timeout.TotalMilliseconds);
+                _service.InterpretersChanged -= Service_InterpretersChanged;
+                _evt.Dispose();
+                Assert.IsTrue(changed, "No change observed");
+            }
         }
 
         #endregion

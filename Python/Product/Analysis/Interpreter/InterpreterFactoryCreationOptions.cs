@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Reflection;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -24,6 +23,10 @@ namespace Microsoft.PythonTools.Interpreter {
     public sealed class InterpreterFactoryCreationOptions {
         public InterpreterFactoryCreationOptions() {
             Architecture = InterpreterArchitecture.Unknown;
+        }
+
+        public InterpreterFactoryCreationOptions Clone() {
+            return (InterpreterFactoryCreationOptions)MemberwiseClone();
         }
 
         /// <summary>
@@ -81,13 +84,6 @@ namespace Microsoft.PythonTools.Interpreter {
         /// a directory.
         /// </summary>
         public string PrefixPath { get; set; }
-
-        /// <summary>
-        /// If true, a file system watcher is used to monitor the library path
-        /// for changes. These may affect the IsCurrent property of the created
-        /// interpreter.
-        /// </summary>
-        public bool WatchLibraryForNewModules { get; set; }
 
         /// <summary>
         /// Specifies the environment variable used for setting sys.path. Value

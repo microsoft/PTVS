@@ -25,18 +25,15 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         readonly PythonTypeDatabase _actualDatabase;
 
         public AnalysisOnlyInterpreterFactory(Version version, string description = null)
-            : base(
-                GetConfiguration(version),
-                false
-        ) { }
+            : base(GetConfiguration(version)) { }
 
         public AnalysisOnlyInterpreterFactory(Version version, IEnumerable<string> databasePaths, string description = null)
-            : base(GetConfiguration(version, databasePaths?.ToArray() ?? Array.Empty<string>()), false) {
+            : base(GetConfiguration(version, databasePaths?.ToArray() ?? Array.Empty<string>())) {
             _actualDatabasePaths = databasePaths?.ToList();
         }
 
         public AnalysisOnlyInterpreterFactory(Version version, PythonTypeDatabase database, string description = null)
-            : base(GetConfiguration(version, database.DatabaseDirectory), false) {
+            : base(GetConfiguration(version, database.DatabaseDirectory)) {
             _actualDatabase = database;
         }
 

@@ -20,10 +20,8 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
@@ -42,9 +40,11 @@ namespace Microsoft.PythonTools.Interpreter {
         private PythonTypeDatabase _typeDb, _typeDbWithoutPackages;
         private IDisposable _generating;
         private bool _isValid, _isCheckingDatabase, _disposed;
+#if DEBUG
+        private bool _hasEverCheckedDatabase;
+#endif
         private string[] _missingModules;
         private string _isCurrentException;
-        private readonly Timer _refreshIsCurrentTrigger;
         private FileSystemWatcher _verWatcher;
         private FileSystemWatcher _verDirWatcher;
         private readonly object _verWatcherLock = new object();
@@ -56,11 +56,17 @@ namespace Microsoft.PythonTools.Interpreter {
         // saturation when multiple threads refresh simultaneously.
         private static readonly SemaphoreSlim _sharedIsCurrentSemaphore = new SemaphoreSlim(4);
 
-        [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors",
-            Justification = "breaking change")]
+        /// <summary>
+        /// Creates a new interpreter factory backed by a type database.
+        /// </summary>
+        /// <remarks>
+        /// <see cref="RefreshIsCurrent"/> must be called after creation to
+        /// ensure the database state is correctly reflected.
+        /// </remarks>
         public PythonInterpreterFactoryWithDatabase(
             InterpreterConfiguration config,
-            bool watchLibraryForChanges
+            IPackageManager packageManager = null,
+            bool watchFileSystem = true
         ) {
             if (config == null) {
                 throw new ArgumentNullException("config");
@@ -75,23 +81,39 @@ namespace Microsoft.PythonTools.Interpreter {
                 throw new ArgumentException(ex.Message, ex);
             }
 
-            // Assume the database is valid if the directory exists, then switch
-            // to invalid after we've checked.
-            _isValid = Directory.Exists(DatabasePath);
-
-            PackageManager = new PipPackageManager(this);
-
-            if (watchLibraryForChanges) {
-                _refreshIsCurrentTrigger = new Timer(RefreshIsCurrentTimer_Elapsed);
-
-                CreateLibraryWatchers().DoNotWait();
-
+            if (watchFileSystem) {
+                // Assume the database is valid if the version is up to date, then
+                // switch to invalid after we've checked.
+                _isValid = PythonTypeDatabase.IsDatabaseVersionCurrent(DatabasePath);
                 _isCheckingDatabase = true;
-                _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+#if DEBUG
+                var creationStack = new StackTrace(true).ToString();
+                Task.Delay(1000).ContinueWith(t => {
+                    Debug.Assert(_hasEverCheckedDatabase, "Database check was not triggered", creationStack);
+                });
+#endif
 
                 _verWatcher = CreateDatabaseVerWatcher();
                 _verDirWatcher = CreateDatabaseDirectoryWatcher();
+            } else {
+                // Assume the database is valid
+                _isValid = true;
             }
+
+            PackageManager = packageManager ?? new NoPackageManager();
+            PackageManager.SetInterpreterFactory(this);
+            PackageManager.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+        }
+
+        public virtual void BeginRefreshIsCurrent() {
+#if DEBUG
+            _hasEverCheckedDatabase = true;
+#endif
+            Task.Run(() => RefreshIsCurrent()).DoNotWait();
+        }
+
+        private void PackageManager_InstalledFilesChanged(object sender, EventArgs e) {
+            BeginRefreshIsCurrent();
         }
 
         public InterpreterConfiguration Configuration { get; }
@@ -289,6 +311,12 @@ namespace Microsoft.PythonTools.Interpreter {
         /// raised, regardless of whether the values were changed.
         /// </summary>
         public virtual void RefreshIsCurrent() {
+#if DEBUG
+            // Indicate that we've arrived here at least once. Otherwise we
+            // will assert.
+            _hasEverCheckedDatabase = true;
+#endif
+
             try {
                 if (!_isCurrentSemaphore.Wait(0)) {
                     // Another thread is working on our state, so we will wait for
@@ -313,8 +341,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 _sharedIsCurrentSemaphore.Wait();
 
                 try {
-                    PackageManager.CacheInstalledPackagesAsync(CancellationToken.None).DoNotWait();
-
                     if (PythonTypeDatabase.IsDatabaseRegenerating(DatabasePath) ||
                         !PythonTypeDatabase.IsDatabaseVersionCurrent(DatabasePath)) {
                         // Skip the rest of the checks, because we know we're
@@ -390,7 +416,6 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             OnIsCurrentChanged();
-            OnInstalledPackagesChanged();
         }
 
         private static HashSet<string> GetExistingDatabase(string databasePath) {
@@ -425,7 +450,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     .ToArray();
             }
             
-            return PythonTypeDatabase.GetDatabaseExpectedModules(_config.Version, searchPaths)
+            return PythonTypeDatabase.GetDatabaseExpectedModules(Configuration.Version, searchPaths)
                 .SelectMany()
                 .Select(mp => mp.ModuleName)
                 .Concat(RequiredBuiltinModules)
@@ -434,31 +459,12 @@ namespace Microsoft.PythonTools.Interpreter {
                 .ToArray();
         }
 
-        private void RefreshIsCurrentTimer_Elapsed(object state) {
-            if (_disposed) {
-                return;
-            }
-
-            RefreshIsCurrent();
-        }
-
-        private void OnRenamed(object sender, RenamedEventArgs e) {
-            _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
-        }
-
-        private void OnChanged(object sender, FileSystemEventArgs e) {
-            _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
-        }
-
         public event EventHandler IsCurrentChanged;
 
         public event EventHandler NewDatabaseAvailable;
 
         protected void OnIsCurrentChanged() {
-            var evt = IsCurrentChanged;
-            if (evt != null) {
-                evt(this, EventArgs.Empty);
-            }
+            IsCurrentChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -469,10 +475,7 @@ namespace Microsoft.PythonTools.Interpreter {
             _typeDb = null;
             _typeDbWithoutPackages = null;
 
-            var evt = NewDatabaseAvailable;
-            if (evt != null) {
-                evt(this, EventArgs.Empty);
-            }
+            NewDatabaseAvailable?.Invoke(this, EventArgs.Empty);
         }
 
         static string GetPackageName(string fullName) {
@@ -480,21 +483,13 @@ namespace Microsoft.PythonTools.Interpreter {
             return (firstDot > 0) ? fullName.Remove(firstDot) : fullName;
         }
 
-        private bool AnyWatchers {
-            get {
-                lock (_libWatchers) {
-                    return _libWatchers.Any();
-                }
-            }
-        }
-
         public virtual string GetFriendlyIsCurrentReason(IFormatProvider culture) {
             var missingModules = _missingModules;
             if (_isCurrentException != null) {
                 return "An error occurred. Click Copy to get full details.";
-            } else if (_generating) {
+            } else if (_generating != null) {
                 return "Currently regenerating";
-            } else if (!AnyWatchers) {
+            } else if (PackageManager == null) {
                 return "Interpreter has no library";
             } else if (!Directory.Exists(DatabasePath)) {
                 return "Database has never been generated";
@@ -540,9 +535,9 @@ namespace Microsoft.PythonTools.Interpreter {
             var reason = "Database at " + DatabasePath;
             if (_isCurrentException != null) {
                 return reason + " raised an exception while refreshing:" + Environment.NewLine + _isCurrentException;
-            } else if (_generating) {
+            } else if (_generating != null) {
                 return reason + " is regenerating";
-            } else if (!AnyWatchers) {
+            } else if (PackageManager == null) {
                 return "Interpreter has no library";
             } else if (!Directory.Exists(DatabasePath)) {
                 return reason + " does not exist";
@@ -588,17 +583,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
 
-                lock (_libWatchers) {
-                    foreach (var w in _libWatchers) {
-                        w.EnableRaisingEvents = false;
-                        w.Dispose();
-                    }
-                    _libWatchers.Clear();
-                }
-
-                if (_refreshIsCurrentTrigger != null) {
-                    _refreshIsCurrentTrigger.Dispose();
-                }
+                (PackageManager as IDisposable)?.Dispose();
 
                 _isCurrentSemaphore.Dispose();
             }
@@ -612,66 +597,6 @@ namespace Microsoft.PythonTools.Interpreter {
         #endregion
 
         #region Directory watchers
-
-        private async Task CreateLibraryWatchers() {
-            List<PythonLibraryPath> paths;
-            try {
-                paths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(DatabasePath) ??
-                    (await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(_config.InterpreterPath));
-            } catch (InvalidOperationException) {
-                return;
-            }
-
-            paths = paths.OrderBy(p => p.Path.Length).ToList();
-
-            var watching = new List<string>();
-            var watchers = new List<FileSystemWatcher>();
-
-            foreach (var path in paths) {
-                if (watching.Any(p => PathUtils.IsSubpathOf(p, path.Path))) {
-                    continue;
-                }
-
-                FileSystemWatcher watcher = null;
-                try {
-                    watcher = new FileSystemWatcher {
-                        IncludeSubdirectories = true,
-                        Path = path.Path,
-                        NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
-                    };
-                    watcher.Created += OnChanged;
-                    watcher.Deleted += OnChanged;
-                    watcher.Changed += OnChanged;
-                    watcher.Renamed += OnRenamed;
-                    watcher.EnableRaisingEvents = true;
-
-                    watching.Add(path.Path);
-                    watchers.Add(watcher);
-                } catch (IOException) {
-                    // Raced with directory deletion. We normally handle the
-                    // library being deleted by disposing the watcher, but this
-                    // occurs in response to an event from the watcher. Because
-                    // we never got to start watching, we will just dispose
-                    // immediately.
-                    watcher?.Dispose();
-                } catch (ArgumentException ex) {
-                    watcher?.Dispose();
-                    Debug.WriteLine("Error starting FileSystemWatcher:\r\n{0}", ex);
-                }
-            }
-
-            List<FileSystemWatcher> oldWatchers;
-            lock (_libWatchers) {
-                oldWatchers = _libWatchers.ToList();
-                _libWatchers.Clear();
-                _libWatchers.AddRange(watchers);
-            }
-
-            foreach (var oldWatcher in oldWatchers) {
-                oldWatcher.EnableRaisingEvents = false;
-                oldWatcher.Dispose();
-            }
-        }
 
         private FileSystemWatcher CreateDatabaseDirectoryWatcher() {
             FileSystemWatcher watcher = null;

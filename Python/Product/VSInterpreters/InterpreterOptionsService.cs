@@ -244,7 +244,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
                 using (var installPath = key.CreateSubKey("InstallPath")) {
                     string exePath = config.InterpreterPath ?? config.WindowsInterpreterPath ?? "";
-                    if (!String.IsNullOrWhiteSpace(exePath)) {
+                    if (!string.IsNullOrEmpty(config.PrefixPath)) {
+                        installPath.SetValue("", config.PrefixPath);
+                    } else if (!string.IsNullOrWhiteSpace(exePath)) {
                         installPath.SetValue("", Path.GetDirectoryName(exePath));
                     }
                     installPath.SetValue(WindowsPathKey, config.WindowsInterpreterPath ?? string.Empty);

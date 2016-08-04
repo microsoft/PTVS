@@ -24,6 +24,12 @@ using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter {
     class PythonRegistrySearch {
+        public const string PythonCoreCompanyDisplayName = "Python Software Foundation";
+        public const string PythonCoreSupportUrl = "https://www.python.org/";
+
+        public const string CompanyPropertyKey = "Company";
+        public const string SupportUrlPropertyKey = "SupportUrl";
+
         private readonly HashSet<string> _seenIds;
         private readonly List<PythonInterpreterInformation> _info;
 
@@ -73,8 +79,15 @@ namespace Microsoft.PythonTools.Interpreter {
                         continue;
                     }
 
-                    var companyDisplay = companyKey.GetValue("DisplayName") as string ?? company;
+                    var companyDisplay = companyKey.GetValue("DisplayName") as string;
                     var companySupportUrl = companyKey.GetValue("SupportUrl") as string;
+
+                    if (pythonCore) {
+                        companyDisplay = companyDisplay ?? PythonCoreCompanyDisplayName;
+                        companySupportUrl = companySupportUrl ?? PythonCoreSupportUrl;
+                    } else {
+                        companyDisplay = companyDisplay ?? company;
+                    }
 
                     var tags = GetSubkeys(companyKey);
                     foreach (var tag in tags) {

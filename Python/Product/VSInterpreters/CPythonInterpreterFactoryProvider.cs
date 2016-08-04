@@ -210,14 +210,14 @@ namespace Microsoft.PythonTools.Interpreter {
             PythonInterpreterInformation info;
 
             switch (propName) {
-                case "Vendor":
+                case PythonRegistrySearch.CompanyPropertyKey:
                     lock (_factories) {
                         if (_factories.TryGetValue(id, out info)) {
                             return info.Vendor;
                         }
                     }
                     break;
-                case "SupportUrl":
+                case PythonRegistrySearch.SupportUrlPropertyKey:
                     lock (_factories) {
                         if (_factories.TryGetValue(id, out info)) {
                             return info.SupportUrl;

@@ -16,6 +16,7 @@
 
 using System;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
@@ -38,16 +39,27 @@ namespace PythonToolsTests {
             var provider = InterpFactory;
             var factories = provider.GetInterpreterFactories().ToArray();
 
+            Console.WriteLine("Discovered:");
             foreach (var factory in factories) {
-                if (factory.Configuration.Id.StartsWith("Global|")) {
-                    Assert.IsTrue(factory.Configuration.Description.StartsWith("Python"), "non 'Python' interpreter");
-                    Assert.IsTrue(factory.Configuration.Version.Major == 2 || factory.Configuration.Version.Major == 3, "unknown 32-bit version");
-                    Assert.IsNotNull(factory.CreateInterpreter(), "32-bit failed to create interpreter");
-                    if (factory.Configuration.Architecture == InterpreterArchitecture.x64) {
-                        Assert.IsTrue(factory.Configuration.Description.EndsWith("64-bit"), "non 'Python 64-bit' interpreter");
-                    }
-                } else {
-                    Assert.Fail("Expected Global interpreter ID");
+                var id = factory.Configuration.Id;
+                Console.WriteLine("  {0} - {1}".FormatInvariant(id, factory.Configuration.Description));
+
+
+                Assert.IsTrue(id.StartsWith("Global|"), "Expected 'Global' prefix on '{0}'".FormatInvariant(factory.Configuration.Id));
+
+                var sysVersion = factory.Configuration.Version;
+                Assert.IsTrue(sysVersion.Major == 2 || sysVersion.Major == 3, "unknown SysVersion '{0}'".FormatInvariant(factory.Configuration.Version));
+
+                Assert.IsNotNull(factory.CreateInterpreter(), "failed to create interpreter");
+
+                if (id.StartsWith("Global|PythonCore|")) {
+                    var description = factory.Configuration.Description;
+                    var sysArch = factory.Configuration.Architecture;
+
+                    AssertUtil.Contains(description, "Python", sysVersion.ToString(), sysArch.ToString());
+
+                    Assert.AreEqual(PythonRegistrySearch.PythonCoreCompanyDisplayName, provider.GetProperty(id, PythonRegistrySearch.CompanyPropertyKey));
+                    Assert.AreEqual(PythonRegistrySearch.PythonCoreSupportUrl, provider.GetProperty(id, PythonRegistrySearch.SupportUrlPropertyKey));
                 }
             }
         }
