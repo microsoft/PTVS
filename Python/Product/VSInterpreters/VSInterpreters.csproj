@@ -76,6 +76,7 @@
     <Compile Include="MSBuildConstants.cs" />
     <Compile Include="MSBuildProjectInterpreterFactoryProvider.cs" />
     <Compile Include="NotFoundInterpreterFactory.cs" />
+    <Compile Include="PackageManagerUIRedirector.cs" />
     <Compile Include="PipPackageManager.cs" />
     <Compile Include="PythonInterpreterInformation.cs" />
     <Compile Include="PythonRegistrySearch.cs" />
