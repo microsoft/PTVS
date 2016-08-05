@@ -856,4 +856,21 @@ modified from these scripts.</value>
     <value>Operation cannot be started because the environment is not configured.</value>
     <comment>Used as exception text</comment>
   </data>
+  <data name="ExecutingCommandFailed" xml:space="preserve">
+    <value>----- Failed to run '{0}' -----
+
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="ExecutingCommandStarted" xml:space="preserve">
+    <value>----- Running '{0}' -----
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="ExecutingCommandSucceeded" xml:space="preserve">
+    <value>----- Successfully ran '{0}' -----
+
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
 </root>

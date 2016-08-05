@@ -633,6 +633,38 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ----- Failed to run &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string ExecutingCommandFailed {
+            get {
+                return ResourceManager.GetString("ExecutingCommandFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Running &apos;{0}&apos; -----
+        ///.
+        /// </summary>
+        public static string ExecutingCommandStarted {
+            get {
+                return ResourceManager.GetString("ExecutingCommandStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully ran &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string ExecutingCommandSucceeded {
+            get {
+                return ResourceManager.GetString("ExecutingCommandSucceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Extract Method.
         /// </summary>
         public static string ExtractMethod {

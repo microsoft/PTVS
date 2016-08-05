@@ -27,11 +27,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using System.Xml.XPath;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudioTools;
 
-namespace Microsoft.PythonTools.EnvironmentsList {
+namespace Microsoft.PythonTools.Interpreter {
     class PipPackageCache : IDisposable {
         private static readonly Dictionary<string, PipPackageCache> _knownCaches =
             new Dictionary<string, PipPackageCache>();
@@ -42,7 +40,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private readonly string _cachePath;
 
         protected readonly SemaphoreSlim _cacheLock = new SemaphoreSlim(1);
-        protected readonly Dictionary<string, PipPackageView> _cache;
+        protected readonly Dictionary<string, PackageSpec> _cache;
         protected DateTime _cacheAge;
 
         protected int _userCount; // protected by _knownCachesLock
@@ -67,7 +65,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _index = index;
             _indexName = indexName;
             _cachePath = cachePath;
-            _cache = new Dictionary<string, PipPackageView>();
+            _cache = new Dictionary<string, PackageSpec>();
         }
 
         public static PipPackageCache GetCache(Uri index = null, string indexName = null) {
@@ -126,7 +124,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
 
-        public async Task<IList<PipPackageView>> GetAllPackagesAsync(CancellationToken cancel) {
+        public async Task<IList<PackageSpec>> GetAllPackagesAsync(CancellationToken cancel) {
             await _cacheLock.WaitAsync(cancel).ConfigureAwait(false);
             try {
                 if (!_cache.Any()) {
@@ -170,14 +168,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             return false;
         }
 
-        public async Task UpdatePackageInfoAsync(PipPackageView package, CancellationToken cancel) {
+        public async Task UpdatePackageInfoAsync(PackageSpec entry, CancellationToken cancel) {
             string description = null;
             List<string> versions = null;
 
             using (var client = new WebClient()) {
                 Stream data;
                 try {
-                    data = await client.OpenReadTaskAsync(new Uri(_index ?? DefaultIndex, package.Name + "/json"));
+                    data = await client.OpenReadTaskAsync(new Uri(_index ?? DefaultIndex, entry.Name + "/json"));
                 } catch (WebException) {
                     // No net access
                     return;
@@ -218,9 +216,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
             await _cacheLock.WaitAsync();
             try {
-                PipPackageView inCache;
-                if (!_cache.TryGetValue(package.Name, out inCache)) {
-                    inCache = _cache[package.Name] = new PipPackageView(this, package.Name, null, null);
+                PackageSpec inCache;
+                if (!_cache.TryGetValue(entry.Name, out inCache)) {
+                    inCache = _cache[entry.Name] = new PackageSpec(entry.Name);
                 }
 
                 if (!string.IsNullOrEmpty(description)) {
@@ -237,7 +235,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     }
 
                     inCache.Description = firstLine;
-                    package.Description = firstLine;
+                    entry.Description = firstLine;
                     changed = true;
                 }
 
@@ -246,8 +244,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                         .Where(v => v.IsFinalRelease)
                         .OrderByDescending(v => v)
                         .FirstOrDefault();
-                    inCache.UpgradeVersion = updateVersion;
-                    package.UpgradeVersion = updateVersion;
+                    inCache.ExactVersion = updateVersion;
+                    entry.ExactVersion = updateVersion;
                     changed = true;
                 }
             } finally {
@@ -321,7 +319,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
                 if (!toRemove.Remove(package)) {
                     try {
-                        _cache[package] = new PipPackageView(this, package);
+                        _cache[package] = new PackageSpec(package);
                         changed = true;
                     } catch (FormatException) {
                     }
@@ -372,7 +370,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 using (var file = new StreamWriter(_cachePath, false, Encoding.UTF8)) {
                     foreach (var keyValue in _cache) {
                         cancel.ThrowIfCancellationRequested();
-                        await file.WriteLineAsync(keyValue.Value.GetPackageSpec(false, true));
+                        await file.WriteLineAsync("{0}=={1}:{2}".FormatUI(
+                            keyValue.Value.Name,
+                            keyValue.Value.ExactVersion,
+                            keyValue.Value.Description ?? ""
+                        ));
                     }
                 }
             } catch (IOException ex) {
@@ -385,7 +387,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             Debug.Assert(_cacheLock.CurrentCount == 0, "Cache must be locked before calling ReadCacheFromDiskAsync");
 
             var newCacheAge = DateTime.Now;
-            var newCache = new Dictionary<string, PipPackageView>();
+            var newCache = new Dictionary<string, PackageSpec>();
             using (await LockFile(_cachePath + ".lock", cancel).ConfigureAwait(false))
             using (var file = new StreamReader(_cachePath, Encoding.UTF8)) {
                 try {
@@ -397,7 +399,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 while ((spec = await file.ReadLineAsync()) != null) {
                     cancel.ThrowIfCancellationRequested();
                     try {
-                        var pv = new PipPackageView(this, spec, versionIsInstalled: false);
+                        var pv = new PackageSpec(spec);
                         newCache[pv.Name] = pv;
                     } catch (FormatException) {
                     }

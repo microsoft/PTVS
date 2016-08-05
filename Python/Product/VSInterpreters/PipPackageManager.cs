@@ -28,10 +28,13 @@ using Microsoft.PythonTools.Infrastructure;
 namespace Microsoft.PythonTools.Interpreter {
     class PipPackageManager : IPackageManager, IDisposable {
         private IPythonInterpreterFactory _factory;
+        private string _indexUrl;
+        private PipPackageCache _cache;
         private readonly Timer _refreshIsCurrentTrigger;
         private readonly List<FileSystemWatcher> _libWatchers;
         private readonly List<PackageSpec> _packages;
         private CancellationTokenSource _currentRefresh;
+        private bool _isReady;
 
         private readonly SemaphoreSlim _working = new SemaphoreSlim(1);
 
@@ -52,6 +55,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public PipPackageManager(bool allowFileSystemWatchers = true) {
             _packages = new List<PackageSpec>();
+            _indexUrl = indexUrl;
 
             if (allowFileSystemWatchers) {
                 _libWatchers = new List<FileSystemWatcher>();
@@ -68,6 +72,11 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             _factory = factory;
+
+            // TODO: Get index from factory
+            _indexUrl = "https://pypi.python.org/pypi/";
+            _cache = PipPackageCache.GetCache(new Uri(_indexUrl));
+
             if (_libWatchers != null) {
                 CreateLibraryWatchers().DoNotWait();
             }
@@ -109,7 +118,25 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public bool IsReady { get; private set; }
+        private async Task AbortIfNotReady(CancellationToken cancellationToken) {
+            if (!IsReady) {
+                await UpdateIsReady(cancellationToken);
+                if (!IsReady) {
+                    throw new InvalidOperationException(Strings.MisconfiguredEnvironment);
+                }
+            }
+        }
+
+        public bool IsReady {
+            get { return _isReady; }
+            private set {
+                if (_isReady != value) {
+                    _isReady = value;
+                    IsReadyChanged?.Invoke(this, EventArgs.Empty);
+                }
+            }
+        }
+        public event EventHandler IsReadyChanged;
 
         private async Task UpdateIsReady(CancellationToken cancellationToken) {
             using (await _working.LockAsync(cancellationToken)) {
@@ -138,8 +165,13 @@ namespace Microsoft.PythonTools.Interpreter {
 
             AbortOnInvalidConfiguration();
 
+            await UpdateIsReady(cancellationToken);
+            if (IsReady) {
+                return;
+            }
+
             using (await _working.LockAsync(cancellationToken)) {
-                ui?.WriteOutput(Strings.InstallingPipStarted);
+                ui?.OnOperationStarted(Strings.InstallingPipStarted);
 
                 using (var proc = ProcessOutput.Run(
                     _factory.Configuration.InterpreterPath,
@@ -158,10 +190,184 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 if (IsReady) {
-                    ui?.WriteOutput(Strings.InstallingPipSuccess);
+                    ui?.OnOperationFinished(Strings.InstallingPipSuccess);
                 } else {
-                    ui?.WriteError(Strings.InstallingPipFailed);
+                    ui?.OnOperationFinished(Strings.InstallingPipFailed);
                 }
+            }
+        }
+
+        public async Task ExecuteAsync(string command, IPackageManagerUI ui, CancellationToken cancellationToken) {
+            AbortOnInvalidConfiguration();
+            await AbortIfNotReady(cancellationToken);
+
+            using (await _working.LockAsync(cancellationToken)) {
+                ui?.OnOperationStarted(Strings.ExecutingCommandStarted.FormatUI(command));
+
+                bool success = false;
+                List<string> args;
+
+                if (SupportsDashMPip) {
+                    args = new List<string> { "-c", "import pip; pip.main()", "install" };
+                } else {
+                    args = new List<string> { "-m", "pip", "install" };
+                }
+
+                if (!string.IsNullOrEmpty(_indexUrl)) {
+                    args.Add("--index-url");
+                    args.Add(_indexUrl);
+                }
+
+                if (Directory.Exists(command) || File.Exists(command)) {
+                    // Command is a path, so add it before quoting everything
+                    args.Add(command);
+                    args = args.Select(ProcessOutput.QuoteSingleArgument).ToList();
+                } else {
+                    // Command is not a path, so quote everything and then add
+                    // it.
+                    args = args.Select(ProcessOutput.QuoteSingleArgument).ToList();
+                    args.Add(command);
+                }
+
+                try {
+                    using (var output = ProcessOutput.Run(
+                        _factory.Configuration.InterpreterPath,
+                        args,
+                        _factory.Configuration.PrefixPath,
+                        UnbufferedEnv,
+                        false,
+                        PackageManagerUIRedirector.Get(ui),
+                        quoteArgs: false,
+                        elevate: ui?.ShouldElevate() ?? false
+                    )) {
+                        if (!output.IsStarted) {
+                            return;
+                        }
+                        var exitCode = await output;
+                        success = exitCode == 0;
+                    }
+                } catch (IOException) {
+                } finally {
+                    if (!success) {
+                        // Check whether we failed because pip is missing
+                        UpdateIsReady(CancellationToken.None).DoNotWait();
+                    }
+
+                    var msg = success ? Strings.ExecutingCommandSucceeded : Strings.ExecutingCommandFailed;
+                    ui?.OnOperationFinished(msg.FormatUI(command));
+                }
+            }
+        }
+
+        public async Task InstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
+            AbortOnInvalidConfiguration();
+            await AbortIfNotReady(cancellationToken);
+
+            using (await _working.LockAsync(cancellationToken)) {
+                ui?.OnOperationStarted(Strings.InstallingPackageStarted.FormatUI(package.Name));
+
+                bool success = false;
+                List<string> args;
+
+                if (SupportsDashMPip) {
+                    args = new List<string> { "-c", "import pip; pip.main()", "install" };
+                } else {
+                    args = new List<string> { "-m", "pip", "install" };
+                }
+
+                if (!string.IsNullOrEmpty(_indexUrl)) {
+                    args.Add("--index-url");
+                    args.Add(_indexUrl);
+                }
+
+                args.Add(package.FullSpec);
+
+                try {
+                    using (var output = ProcessOutput.Run(
+                        _factory.Configuration.InterpreterPath,
+                        args,
+                        _factory.Configuration.PrefixPath,
+                        UnbufferedEnv,
+                        false,
+                        PackageManagerUIRedirector.Get(ui),
+                        elevate: ui?.ShouldElevate() ?? false
+                    )) {
+                        if (!output.IsStarted) {
+                            return;
+                        }
+                        var exitCode = await output;
+                        success = exitCode == 0;
+                    }
+                } catch (IOException) {
+                } finally {
+                    if (!success) {
+                        // Check whether we failed because pip is missing
+                        UpdateIsReady(CancellationToken.None).DoNotWait();
+                    }
+
+                    var msg = success ? Strings.InstallingPackageSuccess : Strings.InstallingPackageFailed;
+                    ui?.OnOperationFinished(msg.FormatUI(package));
+                }
+            }
+        }
+
+        public async Task UninstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
+            AbortOnInvalidConfiguration();
+            await AbortIfNotReady(cancellationToken);
+
+            bool success = false;
+            List<string> args;
+
+            if (SupportsDashMPip) {
+                args = new List<string> { "-c", "import pip; pip.main()", "uninstall", "-y" };
+            } else {
+                args = new List<string> { "-m", "pip", "uninstall", "-y" };
+            }
+
+            args.Add(package.Name);
+
+            try {
+                using (await _working.LockAsync(cancellationToken)) {
+                    ui?.OnOperationStarted(Strings.InstallingPackageStarted.FormatUI(package.Name));
+
+                    using (var output = ProcessOutput.Run(
+                        _factory.Configuration.InterpreterPath,
+                        args,
+                        _factory.Configuration.PrefixPath,
+                        UnbufferedEnv,
+                        false,
+                        PackageManagerUIRedirector.Get(ui),
+                        elevate: ui?.ShouldElevate() ?? false
+                    )) {
+                        if (!output.IsStarted) {
+                            return;
+                        }
+                        var exitCode = await output;
+                        success = exitCode == 0;
+                    }
+                }
+            } catch (IOException) {
+            } finally {
+                if (!success) {
+                    // Check whether we failed because pip is missing
+                    UpdateIsReady(CancellationToken.None).DoNotWait();
+                }
+
+                if (IsReady) {
+                    await CacheInstalledPackagesAsync(cancellationToken);
+                    if (!success) {
+                        // Double check whether the package has actually
+                        // been uninstalled, to avoid reporting errors 
+                        // where, for all practical purposes, there is no
+                        // error.
+                        if (!(await GetInstalledPackageAsync(package, cancellationToken)).IsValid) {
+                            success = true;
+                        }
+                    }
+                }
+
+                var msg = success ? Strings.InstallingPackageSuccess : Strings.InstallingPackageFailed;
+                ui?.OnOperationFinished(msg.FormatUI(package));
             }
         }
 
@@ -243,10 +449,29 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public async Task<PackageSpec> GetInstalledPackageAsync(string name, CancellationToken cancellationToken) {
-            lock (_packages) {
-                return _packages.FirstOrDefault(p => p.Name == name);
+        public async Task<PackageSpec> GetInstalledPackageAsync(PackageSpec package, CancellationToken cancellationToken) {
+            if (!package.IsValid) {
+                return package;
             }
+            lock (_packages) {
+                return _packages.FirstOrDefault(p => p.Name == package.Name) ?? new PackageSpec(null);
+            }
+        }
+
+        public Task<IList<PackageSpec>> GetInstallablePackagesAsync(CancellationToken cancellationToken) {
+            if (_cache == null) {
+                return Task.FromResult<IList<PackageSpec>>(Array.Empty<PackageSpec>());
+            }
+            return _cache.GetAllPackagesAsync(cancellationToken);
+        }
+
+        public async Task<PackageSpec> GetInstallablePackageAsync(PackageSpec package, CancellationToken cancellationToken) {
+            if (!package.IsValid) {
+                return package;
+            }
+            var p = new PackageSpec(package.Name);
+            await _cache.UpdatePackageInfoAsync(p, cancellationToken);
+            return p;
         }
 
         private sealed class Suppressed : IDisposable {

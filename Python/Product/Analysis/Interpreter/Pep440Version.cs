@@ -20,10 +20,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
-namespace Microsoft.PythonTools.EnvironmentsList {
-    struct Pep440Version : IComparable<Pep440Version>, IEquatable<Pep440Version> {
+namespace Microsoft.PythonTools.Interpreter {
+    public struct Pep440Version : IComparable<Pep440Version>, IEquatable<Pep440Version> {
         public static readonly Pep440Version Empty = new Pep440Version(new int[0]);
 
         private static readonly Regex LocalVersionRegex = new Regex(@"^[a-zA-Z0-9][a-zA-Z0-9.]*(?<=[a-zA-Z0-9])$");
@@ -76,11 +75,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public string OriginalForm { get; set; }
 
-        public bool IsEmpty {
-            get {
-                return Release == null || Release.Count == 0;
-            }
-        }
+        public bool IsEmpty => Release == null || Release.Count == 0;
 
         public bool IsFinalRelease {
             get {
@@ -425,7 +420,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
     }
 
-    enum Pep440PreReleaseName {
+    public enum Pep440PreReleaseName {
         None = 0,
         Alpha = 1,
         Beta = 2,

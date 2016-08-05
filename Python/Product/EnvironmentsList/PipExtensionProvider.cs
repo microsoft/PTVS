@@ -35,7 +35,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private readonly string _indexName;
         private FrameworkElement _wpfObject;
 
-        private bool? _isPipInstalled;
         private PipPackageCache _cache;
 
         private readonly CancellationTokenSource _cancelAll = new CancellationTokenSource();
@@ -45,10 +44,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         };
 
         private static readonly Version SupportsDashMPip = new Version(2, 7);
-
-        private int _pipLockWaitCount;
-        private readonly SemaphoreSlim _pipLock = new SemaphoreSlim(1);
-        private CancellationTokenSource _pipCancel = new CancellationTokenSource();
 
         /// <summary>
         /// Creates a provider for managing packages through pip.
@@ -80,11 +75,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public void Dispose() {
             _cancelAll.Cancel();
             _cancelAll.Dispose();
-            _pipLock.Dispose();
-            var pipCancel = _pipCancel;
-            if (pipCancel != null) {
-                pipCancel.Dispose();
-            }
         }
 
         public int SortPriority {
@@ -112,124 +102,39 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-        #region Pip Locking
-
-        public bool IsWorking {
-            get { return Volatile.Read(ref _pipLockWaitCount) == 0; }
-        }
-
-        private async Task<IDisposable> WaitAndLockPip() {
-            int newValue = Interlocked.Increment(ref _pipLockWaitCount);
-
-            await _pipLock.WaitAsync(_pipCancel.Token);
-
-            IDisposable result = null;
-            try {
-                if (newValue == 1) {
-                    UpdateStarted?.Invoke(this, EventArgs.Empty);
-                }
-                result = new CallOnDispose(() => {
-                    try {
-                        if (Interlocked.Decrement(ref _pipLockWaitCount) == 0) {
-                            UpdateComplete?.Invoke(this, EventArgs.Empty);
-                        }
-                    } finally {
-                        _pipLock.Release();
-                    }
-                });
-            } finally {
-                if (result == null) {
-                    _pipLock.Release();
-                }
-            }
-            return result;
-        }
-
-        public event EventHandler UpdateStarted;
-        public event EventHandler UpdateComplete;
-
-        #endregion
-
         internal async Task<IList<PipPackageView>> GetInstalledPackagesAsync() {
-            string[] args;
-
-            if (!CanExecute) {
-                // Invalid configuration, so assume no packages
-                return null;
+            if (_packageManager == null) {
+                return Array.Empty<PipPackageView>();
             }
 
-            if (_factory.Configuration.Version < SupportsDashMPip) {
-                args = new [] { "-c", "import pip; pip.main()", "list", "--no-index" };
-            } else {
-                args = new [] { "-m", "pip", "list", "--no-index" };
-            }
-
-            PipPackageView[] packages = null;
-
-            try {
-                using (var output = ProcessOutput.RunHiddenAndCapture(_factory.Configuration.InterpreterPath, args)) {
-                    if ((await output) != 0) {
-                        throw new PipException(Resources.ListFailed);
-                    }
-
-                    packages = output.StandardOutputLines
-                        .Select(s => new PipPackageView(_cache, s))
-                        .ToArray();
-                }
-            } catch (IOException) {
-            } finally {
-                if (packages == null) {
-                    // pip is obviously not installed
-                    IsPipInstalled = false;
-                } else {
-                    // pip is obviously installed
-                    IsPipInstalled = true;
-                }
-            }
-
-            return packages;
+            return (await _packageManager.GetInstalledPackagesAsync(_cancelAll.Token))
+                .Where(p => p.IsValid)
+                .Select(p => new PipPackageView(_packageManager, p, true))
+                .ToArray();
         }
 
         internal async Task<IList<PipPackageView>> GetAvailablePackagesAsync() {
-            return await _cache.GetAllPackagesAsync(_cancelAll.Token);
+            if (_packageManager == null) {
+                return Array.Empty<PipPackageView>();
+            }
+
+            return (await _cache.GetAllPackagesAsync(_cancelAll.Token))
+                .Where(p => p.IsValid)
+                .Select(p => new PipPackageView(_packageManager, p, false))
+                .ToArray();
         }
 
-        internal bool? IsPipInstalled {
-            get {
-                if (!CanExecute) {
-                    return false;
-                }
-                return _isPipInstalled;
-            }
-            private set {
-                if (_isPipInstalled != value) {
-                    _isPipInstalled = value;
+        internal bool? IsPipInstalled => _packageManager?.IsReady;
 
-                    IsPipInstalledChanged?.Invoke(this, EventArgs.Empty);
+        internal event EventHandler IsPipInstalledChanged {
+            add {
+                if (_packageManager != null) {
+                    _packageManager.IsReadyChanged += value;
                 }
             }
-        }
-
-        internal event EventHandler IsPipInstalledChanged;
-
-        internal async Task CheckPipInstalledAsync() {
-            if (!CanExecute) {
-                // Don't cache the result in case our configuration gets fixed
-                return;
-            }
-
-            if (!_isPipInstalled.HasValue) {
-                try {
-                    using (var output = ProcessOutput.RunHiddenAndCapture(
-                        _factory.Configuration.InterpreterPath,
-                        "-E", "-c", "import pip"
-                    )) {
-                        IsPipInstalled = (await output) == 0;
-                    }
-                } catch (IOException) {
-                    IsPipInstalled = false;
-                } catch (OperationCanceledException) {
-                    IsPipInstalled = false;
+            remove {
+                if (_packageManager != null) {
+                    _packageManager.IsReadyChanged -= value;
                 }
             }
         }
@@ -237,7 +142,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public event EventHandler<QueryShouldElevateEventArgs> QueryShouldElevate;
 
         public bool ShouldElevate() {
-            var e = new QueryShouldElevateEventArgs(_factory.Configuration.PrefixPath);
+            var e = new QueryShouldElevateEventArgs(_factory.Configuration);
             QueryShouldElevate?.Invoke(this, e);
             if (e.Cancel) {
                 throw new OperationCanceledException();
@@ -258,123 +163,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             await _packageManager.PrepareAsync(this, _cancelAll.Token);
         }
 
-        private static IEnumerable<string> QuotedArgumentsWithPackageName(IEnumerable<string> args, string package) {
-            var quotedArgs = string.Join(" ", args.Select(a => ProcessOutput.QuoteSingleArgument(a))) + " ";
 
-            if (Directory.Exists(package) || File.Exists(package)) {
-                yield return quotedArgs + ProcessOutput.QuoteSingleArgument(package);
-            } else {
-                yield return quotedArgs + package;
-            }
+        public async Task InstallPackage(PackageSpec package) {
+            AbortOnInvalidConfiguration();
+            await _packageManager.InstallAsync(package, this, _cancelAll.Token);
         }
 
-        public async Task InstallPackage(string package, bool upgrade) {
-            List<string> args;
-
-            if (_factory.Configuration.Version < SupportsDashMPip) {
-                args = new List<string> { "-c", "import pip; pip.main()", "install" };
-            } else {
-                args = new List<string> { "-m", "pip", "install" };
-            }
-
-            if (upgrade) {
-                args.Add("-U");
-            }
-
-            if (_index != null) {
-                args.Add("--index-url");
-                args.Add(_index.AbsoluteUri);
-            }
-
-            using (await WaitAndLockPip()) {
-                bool success = false;
-                OnOperationStarted(string.Format(Resources.InstallingPackageStarted, package));
-                try {
-                    using (var output = ProcessOutput.Run(
-                        _factory.Configuration.InterpreterPath,
-                        QuotedArgumentsWithPackageName(args, package),
-                        _factory.Configuration.PrefixPath,
-                        UnbufferedEnv,
-                        false,
-                        PackageManagerUIRedirector.Get(this),
-                        quoteArgs: false,
-                        elevate: ShouldElevate()
-                    )) {
-                        if (!output.IsStarted) {
-                            return;
-                        }
-                        var exitCode = await output;
-                        if (exitCode != 0) {
-                            throw new PipException(Resources.InstallationFailed);
-                        }
-                        success = true;
-                    }
-                } catch (IOException) {
-                } finally {
-                    if (!success) {
-                        // Check whether we failed because pip is missing
-                        CheckPipInstalledAsync().DoNotWait();
-                    }
-
-                    OnOperationFinished(string.Format(
-                        success ? Resources.InstallingPackageSuccess : Resources.InstallingPackageFailed,
-                        package
-                    ));
-                }
-            }
-        }
-
-        public async Task UninstallPackage(string package) {
-            List<string> args;
-
-            if (_factory.Configuration.Version < SupportsDashMPip) {
-                args = new List<string> { "-c", "import pip; pip.main()", "uninstall", "-y" };
-            } else {
-                args = new List<string> { "-m", "pip", "uninstall", "-y" };
-            }
-
-            using (await WaitAndLockPip()) {
-                OnOperationStarted(string.Format(Resources.UninstallingPackageStarted, package));
-                bool success = false;
-                try {
-                    using (var output = ProcessOutput.Run(
-                        _factory.Configuration.InterpreterPath,
-                        QuotedArgumentsWithPackageName(args, package),
-                        _factory.Configuration.PrefixPath,
-                        UnbufferedEnv,
-                        false,
-                        PackageManagerUIRedirector.Get(this),
-                        quoteArgs: false,
-                        elevate: ShouldElevate()
-                    )) {
-                        if (!output.IsStarted) {
-                            return;
-                        }
-                        var exitCode = await output;
-                        if (exitCode != 0) {
-                            // Double check whether the package has actually
-                            // been uninstalled, to avoid reporting errors 
-                            // where, for all practical purposes, there is no
-                            // error.
-                            if ((await GetInstalledPackagesAsync()).Any(p => p.Name == package)) {
-                                throw new PipException(Resources.UninstallationFailed);
-                            }
-                        }
-                        success = true;
-                    }
-                } catch (IOException) {
-                } finally {
-                    if (!success) {
-                        // Check whether we failed because pip is missing
-                        CheckPipInstalledAsync().DoNotWait();
-                    }
-
-                    OnOperationFinished(string.Format(
-                        success ? Resources.UninstallingPackageSuccess : Resources.UninstallingPackageFailed,
-                        package
-                    ));
-                }
-            }
+        public async Task UninstallPackage(PackageSpec package) {
+            AbortOnInvalidConfiguration();
+            await _packageManager.UninstallAsync(package, this, _cancelAll.Token);
         }
 
         public event EventHandler<OutputEventArgs> OutputTextReceived;
@@ -422,10 +219,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
     public sealed class QueryShouldElevateEventArgs : EventArgs {
         public bool Cancel { get; set; }
         public bool Elevate { get; set; }
-        public string TargetDirectory { get; }
+        public InterpreterConfiguration Configuration { get; }
 
-        public QueryShouldElevateEventArgs(string targetDirectory) {
-            TargetDirectory = targetDirectory;
+        public QueryShouldElevateEventArgs(InterpreterConfiguration configuration) {
+            Configuration = configuration;
         }
     }
 

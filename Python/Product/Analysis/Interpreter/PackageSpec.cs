@@ -16,9 +16,10 @@
 
 using System;
 using System.Text.RegularExpressions;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
-    public struct PackageSpec {
+    public class PackageSpec {
         private static readonly Regex FindRequirementRegex = new Regex(@"
             (?<!\#.*)       # ensure we are not in a comment
             (?<=\s|\A)      # ensure we are preceded by a space/start of the line
@@ -40,29 +41,64 @@ namespace Microsoft.PythonTools.Interpreter {
             )", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace
         );
 
-        public static readonly PackageSpec Empty = new PackageSpec();
+        private string _fullSpec;
+        private string _constraint;
 
-        private readonly Lazy<Match> _match;
+        public string FullSpec {
+            get {
+                if (!string.IsNullOrEmpty(_fullSpec)) {
+                    return _fullSpec;
+                }
+                return "{0}{1}".FormatInvariant(Name, Constraint);
+            }
+        }
+        public string Name { get; set; }
 
-        public string Spec { get; }
-
-        public PackageSpec(string fullSpec) {
-            Spec = fullSpec;
-            _match = new Lazy<Match>(() => FindRequirementRegex.Match(fullSpec));
+        public string Constraint {
+            get {
+                if (!string.IsNullOrEmpty(_constraint)) {
+                    return _constraint;
+                }
+                if (ExactVersion.IsEmpty) {
+                    return "";
+                }
+                return "=={0}".FormatInvariant(ExactVersion);
+            }
+            set { _constraint = value; }
         }
 
-        private PackageSpec(string fullSpec, Regex regex) {
-            Spec = fullSpec;
-            _match = new Lazy<Match>(() => regex.Match(fullSpec));
+        public Pep440Version ExactVersion { get; set; }
+        public string Description { get; set; }
+        public bool IsValid => !string.IsNullOrEmpty(Name);
+
+        public PackageSpec(string name, string exactVersion = null, string constraint = null, string fullSpec = null) {
+            _fullSpec = fullSpec ?? "";
+            Name = name ?? "";
+
+            Pep440Version ver;
+            if (!Pep440Version.TryParse(exactVersion, out ver)) {
+                ExactVersion = Pep440Version.Empty;
+            } else {
+                ExactVersion = ver;
+            }
+
+            Constraint = constraint;
+        }
+
+        public static PackageSpec FromRequirement(string fullSpec) {
+            var match = FindRequirementRegex.Match(fullSpec);
+            return new PackageSpec(
+                match.Groups["name"].Value,
+                match.Groups["exact_ver"].Value,
+                match.Groups["constraint"].Value,
+                match.Groups["spec"].Value
+            );
         }
 
         public static PackageSpec FromPipList(string line) {
-            return new PackageSpec(line, PipListRegex);
+            var match = PipListRegex.Match(line);
+            return new PackageSpec(match.Groups["name"].Value, match.Groups["exact_ver"].Value);
         }
 
-        public bool IsValid => _match?.Value.Success ?? false;
-        public string Name => _match?.Value.Groups["name"].Value;
-        public string Constraint => _match?.Value.Groups["constraint"].Value;
-        public string Version => _match?.Value.Groups["exact_ver"].Value;
     }
 }

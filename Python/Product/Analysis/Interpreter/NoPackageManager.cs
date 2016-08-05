@@ -21,8 +21,10 @@ using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter {
     class NoPackageManager : IPackageManager {
-        public event EventHandler InstalledFilesChanged { add { }remove { } }
-        public event EventHandler InstalledPackagesChanged { add { }remove { } }
+        public bool IsReady => true;
+
+        public event EventHandler InstalledFilesChanged { add { } remove { } }
+        public event EventHandler InstalledPackagesChanged { add { } remove { } }
 
         public Task<PackageSpec> GetInstalledPackageAsync(string name, CancellationToken cancellationToken) {
             return Task.FromResult(PackageSpec.Empty);
@@ -42,7 +44,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public IDisposable SuppressNotifications() => NoSuppression.Instance;
 
-        public void SetInterpreterFactory(IPythonInterpreterFactory factory) {
+        public void SetInterpreterFactory(IPythonInterpreterFactory factory) { }
+
+        public Task PrepareAsync(IPackageManagerUI ui, CancellationToken cancellationToken) {
+            return Task.FromResult<object>(null);
         }
     }
 }

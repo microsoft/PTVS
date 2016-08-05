@@ -281,7 +281,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             try {
                 // Create a test file and delete it immediately to ensure we can do it.
                 // If this fails, prompt the user to see whether they want to elevate.
-                var testFile = PathUtils.GetAvailableFilename(e.TargetDirectory, "access-test", ".txt");
+                var testFile = PathUtils.GetAvailableFilename(e.Configuration, "access-test", ".txt");
                 using (new FileStream(testFile, FileMode.CreateNew, FileAccess.Write, FileShare.Delete, 4096, FileOptions.DeleteOnClose)) { }
                 e.Elevate = false;
                 return;

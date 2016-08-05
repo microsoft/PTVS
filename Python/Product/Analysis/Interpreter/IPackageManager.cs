@@ -42,6 +42,8 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         bool IsReady { get; }
 
+        event EventHandler IsReadyChanged;
+
         /// <summary>
         /// Prepares the package manager for use. This only needs to be called
         /// if <see cref="IsReady"/> is false. After successful completion,
@@ -49,9 +51,39 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         Task PrepareAsync(IPackageManagerUI ui, CancellationToken cancellationToken);
 
+        /// <summary>
+        /// Executes an arbitrary command using the package manager. This may
+        /// not be supported by all implementations.
+        /// </summary>
+        /// <exception cref="NotSupportedException">
+        /// The command cannot be run.
+        /// </exception>
+        Task ExecuteAsync(string arguments, IPackageManagerUI ui, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Installs the specified package. Not all fields
+        /// </summary>
+        Task InstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken);
+
         Task<IList<PackageSpec>> GetInstalledPackagesAsync(CancellationToken cancellationToken);
 
-        Task<PackageSpec> GetInstalledPackageAsync(string name, CancellationToken cancellationToken);
+        /// <summary>
+        /// Returns a new package spec with all information filled in from the
+        /// current installation. If the parameter is not valid or the package
+        /// is non currently installed, an invalid package spec will be
+        /// returned.
+        /// </summary>
+        Task<PackageSpec> GetInstalledPackageAsync(PackageSpec package, CancellationToken cancellationToken);
+
+        Task<IList<PackageSpec>> GetInstallablePackagesAsync(CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Returns a new package spec with all information filled in from the
+        /// installable package. If the parameter is not valid or the package
+        /// is non currently installed, an invalid package spec will be
+        /// returned.
+        /// </summary>
+        Task<PackageSpec> GetInstallablePackageAsync(PackageSpec package, CancellationToken cancellationToken);
 
         /// <summary>
         /// Raised when the result of calling
