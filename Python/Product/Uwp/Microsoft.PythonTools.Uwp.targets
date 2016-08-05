@@ -27,12 +27,18 @@
     <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft Corporation\Python Tools for Visual Studio\3.0</_PythonToolsPath>
     <_PythonToolsPath Condition="!HasTrailingSlash('$(_PythonToolsPath)')">$(_PythonToolsPath)\</_PythonToolsPath>
 
+    <_PythonToolsUwpPath Condition="!Exists($(_PythonToolsUwpPath))">$(_PythonToolsPath)..\Uwp\</_PythonToolsUwpPath>
+    <_PythonToolsUwpPath Condition="!Exists($(_PythonToolsUwpPath))">$(_PythonToolsPath)..\..\Python Tools for Visual Studio - UWP\3.0\</_PythonToolsUwpPath>
+    <_PythonToolsUwpPath Condition="!HasTrailingSlash('$(_PythonToolsUwpPath)')">$(_PythonToolsUwpPath)\</_PythonToolsUwpPath>
+
     <PythonArguments Condition="'$(PythonArguments)'==''">$(StartupFile)</PythonArguments>
   </PropertyGroup>
 
   <ItemGroup>
     <PtvsdFiles Include="$(_PythonToolsPath)ptvsd\**\*" />
-    <VisualStudioPyFiles Include="$(MSBuildThisFileDirectory)visualstudio_py_*.py" />
+    <VisualStudioPyFiles Include="$(_PythonToolsUwpPath)\visualstudio_py_*.py">
+      <RootFolder>$(_PythonToolsUwpPath)</RootFolder>
+    </VisualStudioPyFiles>
   </ItemGroup>
   
   <Target Name="CustomOutputGroupForPackaging" Returns="@(CustomOutputGroupForPackagingOutput)">
@@ -48,7 +54,7 @@
     <AssignTargetPath Files="@(PtvsdFiles->'%(FullPath)')" RootFolder="$(_PythonToolsPath)" Condition="Exists('$(_PythonToolsPath)')">
       <Output TaskParameter="AssignedFiles" ItemName="CustomOutputGroupForPackagingOutput" />
     </AssignTargetPath>
-    <AssignTargetPath Files="@(VisualStudioPyFiles->'%(FullPath)')" RootFolder="$(MSBuildThisFileDirectory)">
+    <AssignTargetPath Files="@(VisualStudioPyFiles->'%(FullPath)')" RootFolder="@(VisualStudioPyFiles->'%(RootFolder)')">
       <Output TaskParameter="AssignedFiles" ItemName="CustomOutputGroupForPackagingOutput" />
     </AssignTargetPath>
     <AssignTargetPath Files="@(OutputReferences->'%(FullPath)')" RootFolder="$(OutputPath)references" Condition="Exists('$(OutputPath)references')">

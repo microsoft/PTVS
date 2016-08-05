@@ -32,6 +32,7 @@ namespace Microsoft.PythonTools.Options {
             _pyService = pyService;
             _interpreters = interpreters;
             _interpreterOptions = interpreterOptions;
+            Load();
         }
 
         internal string DefaultInterpreter {

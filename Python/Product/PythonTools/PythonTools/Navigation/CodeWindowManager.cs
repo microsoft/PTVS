@@ -15,24 +15,20 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Language;
-using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Editor;
-using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.Operations;
 using Microsoft.VisualStudio.TextManager.Interop;
 using Microsoft.VisualStudioTools;
 using IServiceProvider = System.IServiceProvider;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Navigation {
     class CodeWindowManager : IVsCodeWindowManager, IVsCodeWindowEvents {
@@ -64,11 +60,16 @@ namespace Microsoft.PythonTools.Navigation {
                 ((IVsCodeWindowEvents)this).OnNewView(textView);
             }
 
-            if (_pyService.LangPrefs.NavigationBar) {
-                return AddDropDownBar();
-            }
+            AddDropDownBarAsync(_pyService).SilenceException<OperationCanceledException>().DoNotWait();
 
             return VSConstants.S_OK;
+        }
+
+        private async Task AddDropDownBarAsync(PythonToolsService service) {
+            var prefs = await _pyService.GetLangPrefsAsync();
+            if (prefs.NavigationBar) {
+                AddDropDownBar();
+            }
         }
 
         private int AddDropDownBar() {

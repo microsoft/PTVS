@@ -1500,7 +1500,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
                                 return target;
                             }
                         }
-                    } else {
+                    } else if (target.Process != null) {
                         if ((target.Process.Id == process.ProcessID) && (Guid.Parse(process2.Transport.ID) == DebuggerConstants.guidLocalPortSupplier)) {
                             return target;
                         }

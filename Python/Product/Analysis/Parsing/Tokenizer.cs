@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.IO;
 using System.Numerics;
 using System.Text;
@@ -770,11 +771,83 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private static bool IsNameStart(int ch) {
-            return Char.IsLetter((char)ch) || ch == '_';
+            if (ch < 0) {
+                return false;
+            }
+            return IsIdentifierStartChar((char)ch);
         }
 
         private static bool IsNamePart(int ch) {
-            return Char.IsLetterOrDigit((char)ch) || ch == '_';
+            if (ch < 0) {
+                return false;
+            }
+            return IsIdentifierChar((char)ch);
+        }
+
+        public static bool IsIdentifierStartChar(char ch) {
+            // Identifiers determined according to PEP 3131
+
+            switch (ch) {
+                // Underscore is explicitly allowed to start an identifier
+                case '_':
+                    return true;
+                // Characters with the Other_ID_Start property
+                case '\x1885':
+                case '\x1886':
+                case '\x2118':
+                case '\x212E':
+                case '\x309B':
+                case '\x309C':
+                    return true;
+            }
+
+            var cat = char.GetUnicodeCategory(ch);
+            switch (cat) {
+                // Supported categories for starting an identifier
+                case UnicodeCategory.UppercaseLetter:
+                case UnicodeCategory.LowercaseLetter:
+                case UnicodeCategory.TitlecaseLetter:
+                case UnicodeCategory.ModifierLetter:
+                case UnicodeCategory.OtherLetter:
+                case UnicodeCategory.LetterNumber:
+                    return true;
+            }
+
+            return false;
+        }
+
+        public static bool IsIdentifierChar(char ch) {
+            if (IsIdentifierStartChar(ch)) {
+                return true;
+            }
+
+            switch (ch) {
+                // Characters with the Other_ID_Continue property
+                case '\x00B7':
+                case '\x0387':
+                case '\x1369':
+                case '\x136A':
+                case '\x136B':
+                case '\x136C':
+                case '\x136D':
+                case '\x136E':
+                case '\x136F':
+                case '\x1370':
+                case '\x1371':
+                case '\x19DA':
+                    return true;
+            }
+
+            switch (char.GetUnicodeCategory(ch)) {
+                // Supported categories for continuing an identifier
+                case UnicodeCategory.NonSpacingMark:
+                case UnicodeCategory.SpacingCombiningMark:
+                case UnicodeCategory.DecimalDigitNumber:
+                case UnicodeCategory.ConnectorPunctuation:
+                    return true;
+            }
+
+            return false;
         }
 
         private Token ReadString(char quote, bool isRaw, bool isUni, bool isBytes) {

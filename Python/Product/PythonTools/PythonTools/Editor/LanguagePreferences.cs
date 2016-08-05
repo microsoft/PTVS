@@ -15,19 +15,64 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using Microsoft.PythonTools.Navigation;
 using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.TextManager.Interop;
 
 namespace Microsoft.PythonTools.Editor {
-    class LanguagePreferences : IVsTextManagerEvents2 {
-        PythonToolsService _service;
-        LANGPREFERENCES _preferences;
+    class LanguagePreferences : IVsTextManagerEvents2, IDisposable {
+        private readonly PythonToolsService _service;
+        private readonly IVsTextManager _textMgr;
+        private readonly uint _cookie;
+        private LANGPREFERENCES _preferences;
+        private bool _isDisposed;
 
-        public LanguagePreferences(PythonToolsService service, LANGPREFERENCES preferences) {
-            _preferences = preferences;
+        public LanguagePreferences(PythonToolsService service, Guid languageGuid) {
             _service = service;
+            _service.Site.AssertShellIsInitialized();
+
+            _textMgr = (IVsTextManager)service.Site.GetService(typeof(SVsTextManager));
+            if (_textMgr == null) {
+                throw new NotSupportedException("");
+            }
+
+            var langPrefs = new LANGPREFERENCES[1];
+            langPrefs[0].guidLang = languageGuid;
+            ErrorHandler.ThrowOnFailure(_textMgr.GetUserPreferences(null, null, langPrefs, null));
+            _preferences = langPrefs[0];
+
+            var guid = typeof(IVsTextManagerEvents2).GUID;
+            IConnectionPoint connectionPoint = null;
+            (_textMgr as IConnectionPointContainer)?.FindConnectionPoint(ref guid, out connectionPoint);
+            if (connectionPoint != null) {
+                connectionPoint.Advise(this, out _cookie);
+            }
+        }
+
+        ~LanguagePreferences() {
+            Dispose(false);
+        }
+
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected void Dispose(bool disposing) {
+            if (_isDisposed) {
+                return;
+            }
+
+            if (disposing) {
+                if (_cookie != 0 && _textMgr != null) {
+                    Guid guid = typeof(IVsTextManagerEvents2).GUID;
+                    IConnectionPoint connectionPoint;
+                    (_textMgr as IConnectionPointContainer).FindConnectionPoint(ref guid, out connectionPoint);
+                    connectionPoint.Unadvise(_cookie);
+                }
+            }
+
+            _isDisposed = true;
         }
 
         #region IVsTextManagerEvents2 Members

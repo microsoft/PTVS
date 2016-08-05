@@ -127,7 +127,7 @@ namespace Microsoft.PythonTools.Debugger {
 
                 var args = string.Join(" ", new[] {
                     config.InterpreterArguments,
-                    ProcessOutput.QuoteSingleArgument(config.ScriptName),
+                    config.ScriptName == null ? "" : ProcessOutput.QuoteSingleArgument(config.ScriptName),
                     config.ScriptArguments
                 }.Where(s => !string.IsNullOrEmpty(s)));
 
@@ -164,7 +164,7 @@ namespace Microsoft.PythonTools.Debugger {
                 FileName = config.GetInterpreterPath(),
                 Arguments = string.Join(" ", new[] {
                     config.InterpreterArguments,
-                    ProcessOutput.QuoteSingleArgument(config.ScriptName),
+                    config.ScriptName == null ? "" : ProcessOutput.QuoteSingleArgument(config.ScriptName),
                     config.ScriptArguments
                 }.Where(s => !string.IsNullOrEmpty(s))),
                 WorkingDirectory = config.WorkingDirectory,
@@ -194,7 +194,9 @@ namespace Microsoft.PythonTools.Debugger {
             var pyService = provider.GetPythonToolsService();
             // Pause if the user has requested it.
             string pauseCommand = null;
-            if (pyService.DebuggerOptions.WaitOnAbnormalExit && pyService.DebuggerOptions.WaitOnNormalExit) {
+            if (config.GetLaunchOption(PythonConstants.NeverPauseOnExit).IsTrue()) {
+                // Do nothing
+            } else if (pyService.DebuggerOptions.WaitOnAbnormalExit && pyService.DebuggerOptions.WaitOnNormalExit) {
                 pauseCommand = "pause";
             } else if (pyService.DebuggerOptions.WaitOnAbnormalExit && !pyService.DebuggerOptions.WaitOnNormalExit) {
                 pauseCommand = "if errorlevel 1 pause";

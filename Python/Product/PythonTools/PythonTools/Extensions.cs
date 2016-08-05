@@ -51,6 +51,7 @@ using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools {
     public static class Extensions {
@@ -826,11 +827,74 @@ namespace Microsoft.PythonTools {
             }
         }
 
+        internal static bool IsShellInitialized(this IServiceProvider provider) {
+            bool isInitialized;
+            return provider.TryGetShellProperty((__VSSPROPID)__VSSPROPID4.VSSPROPID_ShellInitialized, out isInitialized) &&
+                isInitialized;
+        }
+
+        class ShellInitializedNotification : IVsShellPropertyEvents {
+            private readonly IVsShell _shell;
+            private readonly uint _cookie;
+            private readonly TaskCompletionSource<object> _tcs;
+
+            public ShellInitializedNotification(IVsShell shell) {
+                _shell = shell;
+                _tcs = new TaskCompletionSource<object>();
+                ErrorHandler.ThrowOnFailure(_shell.AdviseShellPropertyChanges(this, out _cookie));
+
+                // Check again in case we raised with initialization
+                object value;
+                if (ErrorHandler.Succeeded(_shell.GetProperty((int)__VSSPROPID4.VSSPROPID_ShellInitialized, out value)) &&
+                    CheckProperty((int)__VSSPROPID4.VSSPROPID_ShellInitialized, value)) {
+                    return;
+                }
+
+                if (ErrorHandler.Succeeded(_shell.GetProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, out value)) &&
+                    CheckProperty((int)__VSSPROPID6.VSSPROPID_ShutdownStarted, value)) {
+                    return;
+                }
+            }
+
+            private bool CheckProperty(int propid, object var) {
+                if (propid == (int)__VSSPROPID4.VSSPROPID_ShellInitialized && var is bool && (bool)var) {
+                    _shell.UnadviseShellPropertyChanges(_cookie);
+                    _tcs.TrySetResult(null);
+                    return true;
+                } else if (propid == (int)__VSSPROPID6.VSSPROPID_ShutdownStarted && var is bool && (bool)var) {
+                    _shell.UnadviseShellPropertyChanges(_cookie);
+                    _tcs.TrySetCanceled();
+                    return true;
+                }
+                return false;
+            }
+
+            public Task Task => _tcs.Task;
+
+            int IVsShellPropertyEvents.OnShellPropertyChange(int propid, object var) {
+                CheckProperty(propid, var);
+                return VSConstants.S_OK;
+            }
+        }
+
+        internal static Task WaitForShellInitializedAsync(this IServiceProvider provider) {
+            if (provider.IsShellInitialized()) {
+                return Task.FromResult<object>(null);
+            }
+            return new ShellInitializedNotification(provider.GetShell()).Task;
+        }
+
+        [Conditional("DEBUG")]
+        internal static void AssertShellIsInitialized(this IServiceProvider provider) {
+            Debug.Assert(provider.IsShellInitialized(), "Shell is not yet initialized");
+        }
+
         internal static IVsDebugger GetShellDebugger(this IServiceProvider provider) {
             return (IVsDebugger)provider.GetService(typeof(SVsShellDebugger));
         }
 
-        internal static async System.Threading.Tasks.Task RefreshVariableViews(this IServiceProvider serviceProvider) {
+        internal static async Task RefreshVariableViews(this IServiceProvider serviceProvider) {
+            serviceProvider.GetUIThread().MustBeCalledFromUIThread();
             EnvDTE.Debugger debugger = serviceProvider.GetDTE().Debugger;
             AD7Engine engine = AD7Engine.GetEngineForProcess(debugger.CurrentProcess);
             if (engine != null) {

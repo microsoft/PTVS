@@ -47,6 +47,7 @@
     <ManagedFiles Include="
         Microsoft.PythonTools.Uwp.dll;
         Microsoft.PythonTools.Uwp.Interpreter.dll;
+        Microsoft.PythonTools.Uwp.Wizards.dll;
     " Condition="$(IncludeUwp)" />
 
     <UnmanagedFiles Include="
