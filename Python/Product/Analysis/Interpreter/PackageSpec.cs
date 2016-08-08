@@ -71,6 +71,8 @@ namespace Microsoft.PythonTools.Interpreter {
         public string Description { get; set; }
         public bool IsValid => !string.IsNullOrEmpty(Name);
 
+        public PackageSpec() { }
+
         public PackageSpec(string name, string exactVersion = null, string constraint = null, string fullSpec = null) {
             _fullSpec = fullSpec ?? "";
             Name = name ?? "";
@@ -83,6 +85,10 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             Constraint = constraint;
+        }
+
+        public PackageSpec Clone() {
+            return (PackageSpec)MemberwiseClone();
         }
 
         public static PackageSpec FromRequirement(string fullSpec) {

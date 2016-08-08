@@ -23,14 +23,12 @@ using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Windows.Input;
-using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.Imaging;
-using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -221,14 +219,18 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void List_ViewCreated(object sender, EnvironmentViewEventArgs e) {
             var view = e.View;
-            var pep = new PipExtensionProvider(view.Factory);
-            pep.QueryShouldElevate += PipExtensionProvider_QueryShouldElevate;
-            pep.OperationStarted += PipExtensionProvider_OperationStarted;
-            pep.OutputTextReceived += PipExtensionProvider_OutputTextReceived;
-            pep.ErrorTextReceived += PipExtensionProvider_ErrorTextReceived;
-            pep.OperationFinished += PipExtensionProvider_OperationFinished;
 
-            view.Extensions.Add(pep);
+            try {
+                var pep = new PipExtensionProvider(view.Factory);
+                pep.QueryShouldElevate += PipExtensionProvider_QueryShouldElevate;
+                pep.OperationStarted += PipExtensionProvider_OperationStarted;
+                pep.OutputTextReceived += PipExtensionProvider_OutputTextReceived;
+                pep.ErrorTextReceived += PipExtensionProvider_ErrorTextReceived;
+                pep.OperationFinished += PipExtensionProvider_OperationFinished;
+                view.Extensions.Add(pep);
+            } catch (NotSupportedException) {
+            }
+
             var _withDb = view.Factory as PythonInterpreterFactoryWithDatabase;
             if (_withDb != null && !string.IsNullOrEmpty(_withDb.DatabasePath)) {
                 view.Extensions.Add(new DBExtensionProvider(_withDb));
@@ -281,7 +283,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             try {
                 // Create a test file and delete it immediately to ensure we can do it.
                 // If this fails, prompt the user to see whether they want to elevate.
-                var testFile = PathUtils.GetAvailableFilename(e.Configuration, "access-test", ".txt");
+                var testFile = PathUtils.GetAvailableFilename(e.Configuration.PrefixPath, "access-test", ".txt");
                 using (new FileStream(testFile, FileMode.CreateNew, FileAccess.Write, FileShare.Delete, 4096, FileOptions.DeleteOnClose)) { }
                 e.Elevate = false;
                 return;
@@ -319,7 +321,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             }
         }
 
-        private void PipExtensionProvider_OperationStarted(object sender, EnvironmentsList.OutputEventArgs e) {
+        private void PipExtensionProvider_OperationStarted(object sender, OutputEventArgs e) {
             _outputWindow.WriteLine(e.Data);
             if (_statusBar != null) {
                 _statusBar.SetText(e.Data);
@@ -329,19 +331,15 @@ namespace Microsoft.PythonTools.InterpreterList {
             }
         }
 
-        private void PipExtensionProvider_OutputTextReceived(object sender, EnvironmentsList.OutputEventArgs e) {
+        private void PipExtensionProvider_OutputTextReceived(object sender, OutputEventArgs e) {
             _outputWindow.WriteLine(e.Data);
         }
 
-        private void PipExtensionProvider_ErrorTextReceived(object sender, EnvironmentsList.OutputEventArgs e) {
+        private void PipExtensionProvider_ErrorTextReceived(object sender, OutputEventArgs e) {
             _outputWindow.WriteErrorLine(e.Data);
         }
 
-        private void PipExtensionProvider_OperationFinished(object sender, EnvironmentsList.OutputEventArgs e) {
-            _outputWindow.WriteLine(e.Data);
-            if (_statusBar != null) {
-                _statusBar.SetText(e.Data);
-            }
+        private void PipExtensionProvider_OperationFinished(object sender, OperationFinishedEventArgs e) {
             if (_pyService.GeneralOptions.ShowOutputWindowForPackageInstallation) {
                 _outputWindow.ShowAndActivate();
             }
@@ -354,13 +352,8 @@ namespace Microsoft.PythonTools.InterpreterList {
         private void UnhandledException_Executed(object sender, ExecutedRoutedEventArgs e) {
             var ex = (ExceptionDispatchInfo)e.Parameter;
             Debug.Assert(ex != null, "Unhandled exception with no exception object");
-            if (ex.SourceException is PipException) {
-                // Don't report Pip exceptions. The output messages have
-                // already been handled.
-                return;
-            }
 
-            var td = TaskDialog.ForException(_site, ex.SourceException, String.Empty, PythonConstants.IssueTrackerUrl);
+            var td = TaskDialog.ForException(_site, ex.SourceException, string.Empty, PythonConstants.IssueTrackerUrl);
             td.Title = Strings.ProductTitle;
             td.ShowModal();
         }
@@ -425,7 +418,7 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             config.LaunchOptions[PythonConstants.NeverPauseOnExit] = "true";
 
-            Process.Start(DebugLaunchHelper.CreateProcessStartInfo(_site, config)).Dispose();
+            Process.Start(Debugger.DebugLaunchHelper.CreateProcessStartInfo(_site, config)).Dispose();
         }
 
         private void OnlineHelp_CanExecute(object sender, CanExecuteRoutedEventArgs e) {

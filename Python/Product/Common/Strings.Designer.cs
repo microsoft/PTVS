@@ -1912,6 +1912,36 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ----- Error while uninstalling &apos;{0}&apos; -----
+        ///&apos;{0}&apos; may not have been uninstalled completely.
+        ///.
+        /// </summary>
+        public static string UninstallingPackageFailed {
+            get {
+                return ResourceManager.GetString("UninstallingPackageFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Uninstalling &apos;{0}&apos; -----.
+        /// </summary>
+        public static string UninstallingPackageStarted {
+            get {
+                return ResourceManager.GetString("UninstallingPackageStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully uninstalled &apos;{0}&apos; -----
+        ///.
+        /// </summary>
+        public static string UninstallingPackageSuccess {
+            get {
+                return ResourceManager.GetString("UninstallingPackageSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; will be uninstalled from {1} ({2})..
         /// </summary>
         public static string UninstallPackage {

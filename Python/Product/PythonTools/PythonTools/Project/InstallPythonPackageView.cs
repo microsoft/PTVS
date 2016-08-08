@@ -74,11 +74,11 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public IEnumerable<string> InstallUsingOptions {
             get {
-                if (_supportsConda) {
-                    yield return "conda";
-                }
+                //if (_supportsConda) {
+                //    yield return "conda";
+                //}
                 yield return "pip";
-                yield return "easy_install";
+                //yield return "easy_install";
             }
         }
 

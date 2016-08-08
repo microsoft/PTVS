@@ -370,10 +370,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 using (var file = new StreamWriter(_cachePath, false, Encoding.UTF8)) {
                     foreach (var keyValue in _cache) {
                         cancel.ThrowIfCancellationRequested();
-                        await file.WriteLineAsync("{0}=={1}:{2}".FormatUI(
+                        await file.WriteLineAsync("{0}=={1} #{2}".FormatUI(
                             keyValue.Value.Name,
                             keyValue.Value.ExactVersion,
-                            keyValue.Value.Description ?? ""
+                            Uri.EscapeDataString(keyValue.Value.Description ?? "")
                         ));
                     }
                 }
@@ -399,8 +399,15 @@ namespace Microsoft.PythonTools.Interpreter {
                 while ((spec = await file.ReadLineAsync()) != null) {
                     cancel.ThrowIfCancellationRequested();
                     try {
-                        var pv = new PackageSpec(spec);
-                        newCache[pv.Name] = pv;
+                        int descriptionStart = spec.IndexOf(" #");
+                        if (descriptionStart > 0) {
+                            var pv = new PackageSpec(spec.Remove(descriptionStart));
+                            pv.Description = Uri.UnescapeDataString(spec.Substring(descriptionStart + 2));
+                            newCache[pv.Name] = pv;
+                        } else {
+                            var pv = new PackageSpec(spec);
+                            newCache[pv.Name] = pv;
+                        }
                     } catch (FormatException) {
                     }
                 }

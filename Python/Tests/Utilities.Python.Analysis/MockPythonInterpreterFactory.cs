@@ -67,7 +67,7 @@ namespace TestUtilities.Python {
             return new MockPythonInterpreter(this);
         }
 
-        public IPackageManager PackageManager { get; }
+        public IPackageManager PackageManager { get; set; }
 
         public void GenerateDatabase(GenerateDatabaseOptions options, Action<int> onExit = null) {
             IsCurrentReason = GeneratingReason;

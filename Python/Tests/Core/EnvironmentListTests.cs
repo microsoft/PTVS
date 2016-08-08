@@ -402,7 +402,9 @@ namespace PythonToolsUITests {
                     StringComparer.OrdinalIgnoreCase
                 );
                 var actual = wpf.Invoke(() => new HashSet<string>(
-                    list.Environments.Select(ev => (string)ev.InterpreterPath),
+                    list.Environments
+                        .Where(ev => ev.Factory.Configuration.Id.StartsWith("Global|PythonCore|"))
+                        .Select(ev => ev.InterpreterPath),
                     StringComparer.OrdinalIgnoreCase
                 ));
 
@@ -574,10 +576,24 @@ namespace PythonToolsUITests {
             }
         }
 
+        private static Task WaitForEvent(CancellationToken cancellationToken, Action<EventHandler> add, Action<EventHandler> remove) {
+            var tcs = new TaskCompletionSource<object>();
+            if (cancellationToken.CanBeCanceled) {
+                cancellationToken.Register(() => tcs.TrySetCanceled());
+            }
+            EventHandler evt = (s, e) => { tcs.SetResult(null); };
+            var mre = new ManualResetEventSlim();
+            add(evt);
+            tcs.Task.ContinueWith(t => {
+                remove(evt);
+            });
+            return tcs.Task;
+        }
+
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
-        public void PipExtension() {
-            var service = MakeEmptyVEnv();
+        public async Task PipExtension() {
+            var service = MakeEmptyVEnv(usePipPackageManager: true);
 
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
@@ -586,28 +602,33 @@ namespace PythonToolsUITests {
                 list.Interpreters = service;
 
                 var environment = list.Environments.Single();
-                var pip = (PipExtensionProvider)list.GetExtensionOrAssert<PipExtensionProvider>(environment);
+                var pip = list.GetExtensionOrAssert<PipExtensionProvider>(environment);
 
-                pip.CheckPipInstalledAsync().GetAwaiter().GetResult();
+                // Allow the initial scan to complete
+                var ppm = (PipPackageManager)pip._packageManager;
+                await Task.Delay(500);
+                await ppm._working.WaitAsync(1500);
+                ppm._working.Release();
+
                 Assert.AreEqual(false, pip.IsPipInstalled, "venv should not install pip");
-                var task = wpf.Invoke(() => pip.InstallPip().ContinueWith<bool>(LogException));
+                var task = wpf.Invoke(() => pip.InstallPip().ContinueWith(LogException));
                 Assert.IsTrue(task.Wait(TimeSpan.FromSeconds(120.0)), "pip install timed out");
                 Assert.IsTrue(task.Result, "pip install failed");
                 Assert.AreEqual(true, pip.IsPipInstalled, "pip was not installed");
 
-                var packages = pip.GetInstalledPackagesAsync().GetAwaiter().GetResult();
+                var packages = await pip.GetInstalledPackagesAsync();
                 AssertUtil.ContainsAtLeast(packages.Select(pv => pv.Name), "pip", "setuptools");
 
-                task = wpf.Invoke(() => pip.InstallPackage("ptvsd", true).ContinueWith<bool>(LogException));
+                task = wpf.Invoke(() => pip.InstallPackage(new PackageSpec("ptvsd")).ContinueWith(LogException));
                 Assert.IsTrue(task.Wait(TimeSpan.FromSeconds(60.0)), "pip install ptvsd timed out");
                 Assert.IsTrue(task.Result, "pip install ptvsd failed");
-                packages = pip.GetInstalledPackagesAsync().GetAwaiter().GetResult();
+                packages = await pip.GetInstalledPackagesAsync();
                 AssertUtil.ContainsAtLeast(packages.Select(pv => pv.Name), "ptvsd");
 
-                task = wpf.Invoke(() => pip.UninstallPackage("ptvsd").ContinueWith<bool>(LogException));
+                task = wpf.Invoke(() => pip.UninstallPackage(new PackageSpec("ptvsd")).ContinueWith(LogException));
                 Assert.IsTrue(task.Wait(TimeSpan.FromSeconds(60.0)), "pip uninstall ptvsd timed out");
                 Assert.IsTrue(task.Result, "pip uninstall ptvsd failed");
-                packages = pip.GetInstalledPackagesAsync().GetAwaiter().GetResult();
+                packages = await pip.GetInstalledPackagesAsync();
                 AssertUtil.DoesntContain(packages.Select(pv => pv.Name), "ptvsd");
             }
         }
@@ -618,18 +639,12 @@ namespace PythonToolsUITests {
             using (var cache = new TestPipPackageCache(cachePath)) {
                 AssertUtil.ContainsExactly(await cache.TestGetAllPackageNamesAsync());
 
-                var p = await cache.TestInjectPackageAsync("azure==0.9");
-                p.Description = "azure description";
+                await cache.TestInjectPackageAsync("azure==0.9", "azure description");
+                await cache.TestInjectPackageAsync("ptvsd==1.0", "ptvsd description");
 
-                p = await cache.TestInjectPackageAsync("ptvsd==1.0");
-                p.Description = "ptvsd description";
-                p.UpgradeVersion = p.Version;
-
-                // Descriptions are URL encoded
-                // Only UpgradeVersion is stored
                 AssertUtil.ContainsExactly(await cache.TestGetAllPackageSpecsAsync(),
-                    "azure:azure%20description",
-                    "ptvsd==1.0:ptvsd%20description"
+                    "azure==0.9 #azure description",
+                    "ptvsd==1.0 #ptvsd description"
                 );
 
                 await cache.TestWriteCacheToDiskAsync();
@@ -640,10 +655,9 @@ namespace PythonToolsUITests {
 
                 await cache.TestReadCacheFromDiskAsync();
 
-                // Descriptions are not cached
                 AssertUtil.ContainsExactly(await cache.TestGetAllPackageSpecsAsync(),
-                    "azure",
-                    "ptvsd==1.0"
+                    "azure==0.9 #azure description",
+                    "ptvsd==1.0 #ptvsd description"
                 );
 
             }
@@ -651,23 +665,29 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(1)]
         public async Task UpdatePackageInfo() {
-            using (var cache = new TestPipPackageCache()) {
-                AssertUtil.ContainsExactly(await cache.TestGetAllPackageNamesAsync());
+            var pm = new MockPackageManager();
+            
+            var pv = new PipPackageView(pm, PackageSpec.FromRequirement("ptvsd==0.9"), true);
 
-                var p = await cache.TestInjectPackageAsync("ptvsd==1.0");
+            var changes = new List<string>();
+            pv.PropertyChanged += (s, e) => { changes.Add(e.PropertyName); };
+            var desc = pv.Description;
+            var ver = pv.UpgradeVersion;
 
-                AssertUtil.ContainsExactly(await cache.TestGetAllPackageNamesAsync(), "ptvsd");
+            AssertUtil.ContainsExactly(changes);
+            Assert.AreNotEqual("ptvsd description", desc);
+            Assert.IsTrue(ver.IsEmpty, "Expected empty version, not {0}".FormatInvariant(ver));
 
-                var changes = new List<string>();
-                p.PropertyChanged += (s, e) => { changes.Add(e.PropertyName); };
+            pm.AddInstallable(new PackageSpec("ptvsd", "1.0") { Description = "ptvsd description" });
+            var desc2 = pv.Description;
 
-                await cache.UpdatePackageInfoAsync(p, CancellationToken.None);
+            await Task.Delay(10);
 
-                AssertUtil.ContainsExactly(changes, "Description", "UpgradeVersion");
-                Assert.IsTrue(p.UpgradeVersion.CompareTo(p.Version) > 0,
-                    string.Format("Expected {0} > {1}", p.UpgradeVersion, p.Version)
-                );
-            }
+            AssertUtil.ContainsExactly(changes, "Description", "UpgradeVersion");
+            Assert.AreNotEqual(desc, pv.Description);
+            Assert.IsTrue(pv.UpgradeVersion.CompareTo(pv.Version) > 0,
+                string.Format("Expected {0} > {1}", pv.UpgradeVersion, pv.Version)
+            );
         }
 
         [TestMethod, Priority(1)]
@@ -696,15 +716,15 @@ namespace PythonToolsUITests {
                 Assert.AreEqual(4, environments.Count);
                 AssertUtil.AreEqual(
                     wpf.Invoke(() => environments.Select(ev => ev.Company).ToList()),
-                    null,
+                    "",
                     "Vendor Name",
-                    null,
+                    "",
                     "Vendor Name"
                 );
                 AssertUtil.AreEqual(
                     wpf.Invoke(() => environments.Select(ev => ev.SupportUrl).ToList()),
-                    null,
-                    null,
+                    "",
+                    "",
                     "http://example.com",
                     "http://example.com"
                 );
@@ -742,7 +762,7 @@ namespace PythonToolsUITests {
             return true;
         }
 
-        private MockInterpreterOptionsService MakeEmptyVEnv() {
+        private MockInterpreterOptionsService MakeEmptyVEnv(bool usePipPackageManager = false) {
             var python = PythonPaths.Versions.FirstOrDefault(p =>
                 p.IsCPython && Directory.Exists(Path.Combine(p.PrefixPath, "Lib", "venv"))
             );
@@ -773,7 +793,7 @@ namespace PythonToolsUITests {
 
             var service = new MockInterpreterOptionsService();
             var provider = new MockPythonInterpreterFactoryProvider("VEnv Provider");
-            provider.AddFactory(new MockPythonInterpreterFactory(
+            var factory = new MockPythonInterpreterFactory(
                 new InterpreterConfiguration(
                     "Mock;" + Guid.NewGuid().ToString(),
                     Path.GetFileName(PathUtils.TrimEndSeparator(env)),
@@ -784,7 +804,12 @@ namespace PythonToolsUITests {
                     python.Architecture,
                     python.Version.ToVersion()
                 )
-            ));
+            );
+            if (usePipPackageManager) {
+                factory.PackageManager = new PipPackageManager(false);
+                factory.PackageManager.SetInterpreterFactory(factory);
+            }
+            provider.AddFactory(factory);
             service.AddProvider(provider);
             return service;
         }
@@ -816,9 +841,10 @@ namespace PythonToolsUITests {
                         e.View.Extensions.Add(new DBExtensionProvider(withDb));
                     }
                 }
-                if (CreatePipExtension) {
+                if (CreatePipExtension && e.View.Factory.PackageManager != null) {
                     var pip = new PipExtensionProvider(e.View.Factory);
-                    pip.OutputTextReceived += (s, e2) => Console.WriteLine(e2.Data);
+                    pip.OutputTextReceived += (s, e2) => Console.Write("OUT: "+ e2.Data);
+                    pip.ErrorTextReceived += (s, e2) => Console.Write("ERR: " + e2.Data);
                     e.View.Extensions.Add(pip);
                 }
             }
@@ -924,10 +950,11 @@ namespace PythonToolsUITests {
             _userCount = 1;
         }
 
-        internal async Task<PipPackageView> TestInjectPackageAsync(string packageSpec) {
+        internal async Task<PackageSpec> TestInjectPackageAsync(string packageSpec, string description) {
             await _cacheLock.WaitAsync();
             try {
-                var p = new PipPackageView(this, packageSpec);
+                var p = PackageSpec.FromRequirement(packageSpec);
+                p.Description = description;
                 _cache[p.Name] = p;
                 _cacheAge = DateTime.Now;
                 return p;
@@ -958,7 +985,7 @@ namespace PythonToolsUITests {
         internal async Task<List<string>> TestGetAllPackageSpecsAsync() {
             await _cacheLock.WaitAsync();
             try {
-                return _cache.Values.Select(p => p.GetPackageSpec(true, true)).ToList();
+                return _cache.Values.Select(p => "{0} #{1}".FormatInvariant(p.FullSpec, p.Description)).ToList();
             } finally {
                 _cacheLock.Release();
             }

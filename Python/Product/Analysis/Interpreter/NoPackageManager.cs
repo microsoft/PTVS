@@ -26,12 +26,14 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler InstalledFilesChanged { add { } remove { } }
         public event EventHandler InstalledPackagesChanged { add { } remove { } }
 
+        public event EventHandler IsReadyChanged { add { } remove { } }
+
         public Task<PackageSpec> GetInstalledPackageAsync(string name, CancellationToken cancellationToken) {
-            return Task.FromResult(PackageSpec.Empty);
+            return Task.FromResult(new PackageSpec());
         }
 
         public Task<IList<PackageSpec>> GetInstalledPackagesAsync(CancellationToken cancellationToken) {
-            return Task.FromResult<IList<PackageSpec>>(new List<PackageSpec>());
+            return Task.FromResult<IList<PackageSpec>>(Array.Empty<PackageSpec>());
         }
 
         public void NotifyPackagesChanged() { }
@@ -48,6 +50,30 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public Task PrepareAsync(IPackageManagerUI ui, CancellationToken cancellationToken) {
             return Task.FromResult<object>(null);
+        }
+
+        public Task<bool> ExecuteAsync(string arguments, IPackageManagerUI ui, CancellationToken cancellationToken) {
+            throw new NotSupportedException();
+        }
+
+        public Task<bool> InstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
+            throw new NotSupportedException();
+        }
+
+        public Task<bool> UninstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
+            throw new NotSupportedException();
+        }
+
+        public Task<PackageSpec> GetInstalledPackageAsync(PackageSpec package, CancellationToken cancellationToken) {
+            return Task.FromResult(new PackageSpec());
+        }
+
+        public Task<IList<PackageSpec>> GetInstallablePackagesAsync(CancellationToken cancellationToken) {
+            return Task.FromResult<IList<PackageSpec>>(Array.Empty<PackageSpec>());
+        }
+
+        public Task<PackageSpec> GetInstallablePackageAsync(PackageSpec package, CancellationToken cancellationToken) {
+            return Task.FromResult(new PackageSpec());
         }
     }
 }

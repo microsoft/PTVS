@@ -104,9 +104,13 @@ namespace Microsoft.PythonTools.Interpreter {
                 _isValid = true;
             }
 
-            PackageManager = options.PackageManager ?? new NoPackageManager();
-            PackageManager.SetInterpreterFactory(this);
-            PackageManager.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+            try {
+                var pm = options.PackageManager ?? new NoPackageManager();
+                pm.SetInterpreterFactory(this);
+                pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+                PackageManager = pm;
+            } catch (NotSupportedException) {
+            }
         }
 
         public virtual void BeginRefreshIsCurrent() {

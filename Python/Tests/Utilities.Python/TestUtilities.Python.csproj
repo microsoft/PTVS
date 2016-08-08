@@ -100,6 +100,7 @@
     <Compile Include="DefaultInterpreterSetter.cs" />
     <Compile Include="Django\NewAppDialog.cs" />
     <Compile Include="MockInteractiveWindowCommandsFactory.cs" />
+    <Compile Include="MockPackageManager.cs" />
     <Compile Include="MockPythonToolsOptionsService.cs" />
     <Compile Include="MockUIThread.cs" />
     <Compile Include="PythonProjectDebugProperties.cs" />

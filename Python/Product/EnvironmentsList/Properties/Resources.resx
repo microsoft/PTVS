@@ -193,19 +193,4 @@
     <value>Uninstallation failed</value>
     <comment>Used as exception text</comment>
   </data>
-  <data name="UninstallingPackageFailed" xml:space="preserve">
-    <value>----- Error while uninstalling '{0}' -----
-'{0}' may not have been uninstalled completely.
-</value>
-    <comment>Displayed in the output window</comment>
-  </data>
-  <data name="UninstallingPackageStarted" xml:space="preserve">
-    <value>----- Uninstalling '{0}' -----</value>
-    <comment>Displayed in the output window</comment>
-  </data>
-  <data name="UninstallingPackageSuccess" xml:space="preserve">
-    <value>----- Successfully uninstalled '{0}' -----
-</value>
-    <comment>Displayed in the output window</comment>
-  </data>
 </root>

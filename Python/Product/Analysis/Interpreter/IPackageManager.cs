@@ -55,15 +55,26 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Executes an arbitrary command using the package manager. This may
         /// not be supported by all implementations.
         /// </summary>
+        /// <param name="arguments">
+        /// A list of arguments. Each may contain embedded spaces - the
+        /// implementation is responsible for correct quoting.
+        /// </param>
         /// <exception cref="NotSupportedException">
         /// The command cannot be run.
         /// </exception>
-        Task ExecuteAsync(string arguments, IPackageManagerUI ui, CancellationToken cancellationToken);
+        Task<bool> ExecuteAsync(string arguments, IPackageManagerUI ui, CancellationToken cancellationToken);
 
         /// <summary>
-        /// Installs the specified package. Not all fields
+        /// Installs the specified package. Not all fields of the package spec
+        /// need to be specified.
         /// </summary>
-        Task InstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken);
+        Task<bool> InstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Uninstalls the specified package. Not all fields of the package spec
+        /// need to be specified.
+        /// </summary>
+        Task<bool> UninstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken);
 
         Task<IList<PackageSpec>> GetInstalledPackagesAsync(CancellationToken cancellationToken);
 

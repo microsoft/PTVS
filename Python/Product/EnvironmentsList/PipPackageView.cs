@@ -39,16 +39,21 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             if (_upgradeVersion.HasValue && !string.IsNullOrEmpty(_package.Description)) {
                 return;
             }
+            if (_provider == null) {
+                return;
+            }
 
             try {
                 var p = await _provider.GetInstallablePackageAsync(_package, CancellationToken.None);
-                if (!p.ExactVersion.IsEmpty && (!_upgradeVersion.HasValue || !_upgradeVersion.Value.Equals(p.ExactVersion))) {
-                    _upgradeVersion = p.ExactVersion;
-                    OnPropertyChanged("UpgradeVersion");
-                }
-                if (p.Description != _package.Description) {
-                    _package.Description = p.Description;
-                    OnPropertyChanged("Description");
+                if (p.IsValid) {
+                    if (!p.ExactVersion.IsEmpty && (!_upgradeVersion.HasValue || !_upgradeVersion.Value.Equals(p.ExactVersion))) {
+                        _upgradeVersion = p.ExactVersion;
+                        OnPropertyChanged("UpgradeVersion");
+                    }
+                    if (p.Description != _package.Description) {
+                        _package.Description = p.Description;
+                        OnPropertyChanged("Description");
+                    }
                 }
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 Debug.Fail("Unhandled exception: " + ex.ToString());
@@ -56,6 +61,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 // avoid bringing down the whole process.
             }
         }
+
+        public PackageSpec Package => _package;
 
         public string PackageSpec {
             get {

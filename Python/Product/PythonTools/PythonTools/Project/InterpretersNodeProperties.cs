@@ -16,11 +16,9 @@
 
 using System;
 using System.ComponentModel;
-using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
@@ -45,7 +43,7 @@ namespace Microsoft.PythonTools.Project {
 
         [SRCategory(SR.Misc)]
         [SRDisplayName(SR.FolderName)]
-        [SRDescriptionAttribute(SR.FolderNameDescription)]
+        [SRDescription(SR.FolderNameDescription)]
         [AutomationBrowsable(false)]
         public string FolderName {
             get {
@@ -53,9 +51,9 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        [SRCategoryAttribute(SR.Misc)]
+        [SRCategory(SR.Misc)]
         [SRDisplayName(SR.FullPath)]
-        [SRDescriptionAttribute(SR.FullPathDescription)]
+        [SRDescription(SR.FullPathDescription)]
         [AutomationBrowsable(true)]
         public string FullPath {
             get {
@@ -108,5 +106,6 @@ namespace Microsoft.PythonTools.Project {
         public override string GetClassName() {
             return "Environment Properties";
         }
+
     }
 }

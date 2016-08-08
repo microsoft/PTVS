@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -27,11 +26,9 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using Microsoft.PythonTools.EnvironmentsList.Properties;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudioTools;
+using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
     internal sealed partial class PipExtension : UserControl {
@@ -69,12 +66,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private async void UninstallPackage_Executed(object sender, ExecutedRoutedEventArgs e) {
             try {
                 var view = (PipPackageView)e.Parameter;
-                await _provider.UninstallPackage(view.PackageSpec);
+                await _provider.UninstallPackage(view.Package);
             } catch (OperationCanceledException) {
-            } catch (Exception ex) {
-                if (ErrorHandler.IsCriticalException(ex)) {
-                    throw;
-                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 ToolWindow.SendUnhandledException(this, ExceptionDispatchInfo.Capture(ex));
             }
         }
@@ -101,12 +95,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 var view = (PipPackageView)e.Parameter;
                 // Provide Name, not PackageSpec, or we'll upgrade to our
                 // current version.
-                await _provider.InstallPackage(view.Name, true);
+                await _provider.InstallPackage(new PackageSpec(view.Name));
             } catch (OperationCanceledException) {
-            } catch (Exception ex) {
-                if (ErrorHandler.IsCriticalException(ex)) {
-                    throw;
-                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 ToolWindow.SendUnhandledException(this, ExceptionDispatchInfo.Capture(ex));
             }
         }
@@ -118,12 +109,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private async void InstallPackage_Executed(object sender, ExecutedRoutedEventArgs e) {
             try {
-                await _provider.InstallPackage((string)e.Parameter, true);
+                await _provider.InstallPackage(new PackageSpec((string)e.Parameter));
             } catch (OperationCanceledException) {
-            } catch (Exception ex) {
-                if (ErrorHandler.IsCriticalException(ex)) {
-                    throw;
-                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 ToolWindow.SendUnhandledException(this, ExceptionDispatchInfo.Capture(ex));
             }
         }
@@ -137,10 +125,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             try {
                 await _provider.InstallPip();
             } catch (OperationCanceledException) {
-            } catch (Exception ex) {
-                if (ErrorHandler.IsCriticalException(ex)) {
-                    throw;
-                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 ToolWindow.SendUnhandledException(this, ExceptionDispatchInfo.Capture(ex));
             }
         }
@@ -191,8 +176,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         ) {
             _view = view;
             _provider = provider;
-            _provider.UpdateStarted += PipExtensionProvider_UpdateStarted;
-            _provider.UpdateComplete += PipExtensionProvider_UpdateComplete;
+            _provider.OperationStarted += PipExtensionProvider_UpdateStarted;
+            _provider.OperationFinished += PipExtensionProvider_UpdateComplete;
             _provider.IsPipInstalledChanged += PipExtensionProvider_IsPipInstalledChanged;
             _installCommandView = new InstallPackageView(this);
 
@@ -231,17 +216,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             try {
                 await RefreshPackages();
             } catch (OperationCanceledException) {
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 ToolWindow.SendUnhandledException(_provider.WpfObject, ExceptionDispatchInfo.Capture(ex));
             }
         }
 
         public void Dispose() {
-            _provider.UpdateStarted -= PipExtensionProvider_UpdateStarted;
-            _provider.UpdateComplete -= PipExtensionProvider_UpdateComplete;
+            _provider.OperationStarted -= PipExtensionProvider_UpdateStarted;
+            _provider.OperationFinished -= PipExtensionProvider_UpdateComplete;
             _provider.IsPipInstalledChanged -= PipExtensionProvider_IsPipInstalledChanged;
             _installableViewRefreshTimer.Dispose();
         }
@@ -257,10 +239,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private async void PipExtensionProvider_UpdateStarted(object sender, EventArgs e) {
             try {
                 await Dispatcher.InvokeAsync(() => { IsListRefreshing = true; });
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 ToolWindow.SendUnhandledException(_provider.WpfObject, ExceptionDispatchInfo.Capture(ex));
             }
         }
@@ -268,10 +247,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private async void PipExtensionProvider_UpdateComplete(object sender, EventArgs e) {
             try {
                 await RefreshPackages();
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 ToolWindow.SendUnhandledException(_provider.WpfObject, ExceptionDispatchInfo.Capture(ex));
             }
         }
@@ -321,10 +297,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 query = await Dispatcher.InvokeAsync(() => SearchQuery);
             } catch (OperationCanceledException) {
                 return;
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 ToolWindow.SendUnhandledException(_provider.WpfObject, ExceptionDispatchInfo.Capture(ex));
             }
 
@@ -347,10 +320,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     _installableView.View.Refresh();
                 });
             } catch (OperationCanceledException) {
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 ToolWindow.SendUnhandledException(_provider.WpfObject, ExceptionDispatchInfo.Capture(ex));
             }
         }

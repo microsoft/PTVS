@@ -16,21 +16,17 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
-using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.PythonTools.EnvironmentsList.Properties;
-using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
     public sealed class PipExtensionProvider : IEnvironmentViewExtension, IPackageManagerUI, IDisposable {
         private readonly IPythonInterpreterFactory _factory;
-        private readonly IPackageManager _packageManager;
+        internal readonly IPackageManager _packageManager;
         private readonly Uri _index;
         private readonly string _indexName;
         private FrameworkElement _wpfObject;
@@ -141,13 +137,16 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public event EventHandler<QueryShouldElevateEventArgs> QueryShouldElevate;
 
-        public bool ShouldElevate() {
+        public Task<bool> ShouldElevateAsync(string operation) {
             var e = new QueryShouldElevateEventArgs(_factory.Configuration);
             QueryShouldElevate?.Invoke(this, e);
+            if (e.ElevateAsync != null) {
+                return e.ElevateAsync;
+            }
             if (e.Cancel) {
                 throw new OperationCanceledException();
             }
-            return e.Elevate;
+            return Task.FromResult(e.Elevate);
         }
 
         public bool CanExecute => _packageManager != null;
@@ -192,10 +191,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             OperationStarted?.Invoke(this, new OutputEventArgs(operation));
         }
 
-        public event EventHandler<OutputEventArgs> OperationFinished;
+        public event EventHandler<OperationFinishedEventArgs> OperationFinished;
 
-        public void OnOperationFinished(string operation) {
-            OperationFinished?.Invoke(this, new OutputEventArgs(operation));
+        public void OnOperationFinished(string operation, bool success) {
+            OperationFinished?.Invoke(this, new OperationFinishedEventArgs(operation, success));
         }
 
         sealed class CallOnDispose : IDisposable {
@@ -205,20 +204,34 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
     }
 
-    [Serializable]
-    public class PipException : Exception {
-        public PipException() { }
-        public PipException(string message) : base(message) { }
-        public PipException(string message, Exception inner) : base(message, inner) { }
-        protected PipException(
-          System.Runtime.Serialization.SerializationInfo info,
-          System.Runtime.Serialization.StreamingContext context)
-            : base(info, context) { }
-    }
-
     public sealed class QueryShouldElevateEventArgs : EventArgs {
+        /// <summary>
+        /// On return, if this is true then the operation is aborted.
+        /// </summary>
+        /// <remarks>
+        /// If <see cref="ElevateAsync"/> is set this value is ignored.
+        /// </remarks>
         public bool Cancel { get; set; }
+
+        /// <summary>
+        /// On return, if this is true then the operation will continue with
+        /// elevation.
+        /// </summary>
+        /// <remarks>
+        /// If <see cref="ElevateAsync"/> is set this value is ignored.
+        /// </remarks>
         public bool Elevate { get; set; }
+
+        /// <summary>
+        /// On return, if this is not null then the task is awaited and the
+        /// result is used for <see cref="Elevate"/>. If the task is cancelled,
+        /// the operation is cancelled.
+        /// </summary>
+        public Task<bool> ElevateAsync { get; set; }
+
+        /// <summary>
+        /// The configuration of the interpreter that may require elevation.
+        /// </summary>
         public InterpreterConfiguration Configuration { get; }
 
         public QueryShouldElevateEventArgs(InterpreterConfiguration configuration) {
@@ -231,6 +244,16 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public OutputEventArgs(string data) {
             Data = data;
+        }
+    }
+
+    public sealed class OperationFinishedEventArgs : EventArgs {
+        public string Operation { get; }
+        public bool Success { get; }
+
+        public OperationFinishedEventArgs(string operation, bool success) {
+            Operation = operation;
+            Success = success;
         }
     }
 }

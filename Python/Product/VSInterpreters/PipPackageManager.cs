@@ -34,9 +34,9 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly List<FileSystemWatcher> _libWatchers;
         private readonly List<PackageSpec> _packages;
         private CancellationTokenSource _currentRefresh;
-        private bool _isReady;
+        private bool _isReady, _everCached;
 
-        private readonly SemaphoreSlim _working = new SemaphoreSlim(1);
+        internal readonly SemaphoreSlim _working = new SemaphoreSlim(1);
 
         private int _suppressCount;
         private bool _isDisposed;
@@ -55,7 +55,6 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public PipPackageManager(bool allowFileSystemWatchers = true) {
             _packages = new List<PackageSpec>();
-            _indexUrl = indexUrl;
 
             if (allowFileSystemWatchers) {
                 _libWatchers = new List<FileSystemWatcher>();
@@ -120,11 +119,15 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private async Task AbortIfNotReady(CancellationToken cancellationToken) {
             if (!IsReady) {
-                await UpdateIsReady(cancellationToken);
+                await UpdateIsReadyAsync(false, cancellationToken);
                 if (!IsReady) {
                     throw new InvalidOperationException(Strings.MisconfiguredEnvironment);
                 }
             }
+        }
+
+        private Task<bool> ShouldElevate(IPackageManagerUI ui, string operation) {
+            return ui == null ? Task.FromResult(false) : ui.ShouldElevateAsync(operation);
         }
 
         public bool IsReady {
@@ -138,8 +141,9 @@ namespace Microsoft.PythonTools.Interpreter {
         }
         public event EventHandler IsReadyChanged;
 
-        private async Task UpdateIsReady(CancellationToken cancellationToken) {
-            using (await _working.LockAsync(cancellationToken)) {
+        private async Task UpdateIsReadyAsync(bool alreadyHasLock, CancellationToken cancellationToken) {
+            var workingLock = alreadyHasLock ? null : await _working.LockAsync(cancellationToken);
+            try {
                 using (var proc = ProcessOutput.Run(
                     _factory.Configuration.InterpreterPath,
                     new[] { "-E", "-c", "import pip" },
@@ -155,6 +159,8 @@ namespace Microsoft.PythonTools.Interpreter {
                         return;
                     }
                 }
+            } finally {
+                workingLock?.Dispose();
             }
         }
 
@@ -165,13 +171,15 @@ namespace Microsoft.PythonTools.Interpreter {
 
             AbortOnInvalidConfiguration();
 
-            await UpdateIsReady(cancellationToken);
+            await UpdateIsReadyAsync(false, cancellationToken);
             if (IsReady) {
                 return;
             }
 
+            var operation = "pip_downloader.py";
             using (await _working.LockAsync(cancellationToken)) {
-                ui?.OnOperationStarted(Strings.InstallingPipStarted);
+                ui?.OnOperationStarted(operation);
+                ui?.OnOutputTextReceived(Strings.InstallingPipStarted);
 
                 using (var proc = ProcessOutput.Run(
                     _factory.Configuration.InterpreterPath,
@@ -180,7 +188,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     UnbufferedEnv,
                     false,
                     PackageManagerUIRedirector.Get(ui),
-                    elevate: ui?.ShouldElevate() ?? false
+                    elevate: await ShouldElevate(ui, operation)
                 )) {
                     try {
                         IsReady = (await proc == 0);
@@ -189,45 +197,35 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
 
-                if (IsReady) {
-                    ui?.OnOperationFinished(Strings.InstallingPipSuccess);
-                } else {
-                    ui?.OnOperationFinished(Strings.InstallingPipFailed);
-                }
+                ui?.OnOutputTextReceived(IsReady ? Strings.InstallingPipSuccess : Strings.InstallingPackageFailed);
+                ui?.OnOperationFinished(operation, IsReady);
             }
         }
 
-        public async Task ExecuteAsync(string command, IPackageManagerUI ui, CancellationToken cancellationToken) {
+        public async Task<bool> ExecuteAsync(string arguments, IPackageManagerUI ui, CancellationToken cancellationToken) {
             AbortOnInvalidConfiguration();
             await AbortIfNotReady(cancellationToken);
 
             using (await _working.LockAsync(cancellationToken)) {
-                ui?.OnOperationStarted(Strings.ExecutingCommandStarted.FormatUI(command));
-
                 bool success = false;
                 List<string> args;
 
                 if (SupportsDashMPip) {
-                    args = new List<string> { "-c", "import pip; pip.main()", "install" };
+                    args = new List<string> { "-c", "\"import pip; pip.main()\"", "install" };
                 } else {
                     args = new List<string> { "-m", "pip", "install" };
                 }
 
                 if (!string.IsNullOrEmpty(_indexUrl)) {
                     args.Add("--index-url");
-                    args.Add(_indexUrl);
+                    args.Add(ProcessOutput.QuoteSingleArgument(_indexUrl));
                 }
 
-                if (Directory.Exists(command) || File.Exists(command)) {
-                    // Command is a path, so add it before quoting everything
-                    args.Add(command);
-                    args = args.Select(ProcessOutput.QuoteSingleArgument).ToList();
-                } else {
-                    // Command is not a path, so quote everything and then add
-                    // it.
-                    args = args.Select(ProcessOutput.QuoteSingleArgument).ToList();
-                    args.Add(command);
-                }
+                args.Add(arguments);
+
+                var operation = string.Join(" ", args);
+                ui?.OnOutputTextReceived(operation);
+                ui?.OnOperationStarted(Strings.ExecutingCommandStarted.FormatUI(string.Join(" ", arguments)));
 
                 try {
                     using (var output = ProcessOutput.Run(
@@ -238,34 +236,36 @@ namespace Microsoft.PythonTools.Interpreter {
                         false,
                         PackageManagerUIRedirector.Get(ui),
                         quoteArgs: false,
-                        elevate: ui?.ShouldElevate() ?? false
+                        elevate: await ShouldElevate(ui, operation)
                     )) {
                         if (!output.IsStarted) {
-                            return;
+                            return false;
                         }
                         var exitCode = await output;
                         success = exitCode == 0;
                     }
+                    return success;
                 } catch (IOException) {
+                    return false;
                 } finally {
                     if (!success) {
                         // Check whether we failed because pip is missing
-                        UpdateIsReady(CancellationToken.None).DoNotWait();
+                        UpdateIsReadyAsync(true, CancellationToken.None).DoNotWait();
                     }
 
                     var msg = success ? Strings.ExecutingCommandSucceeded : Strings.ExecutingCommandFailed;
-                    ui?.OnOperationFinished(msg.FormatUI(command));
+                    ui?.OnOutputTextReceived(msg.FormatUI(string.Join(" ", arguments)));
+                    ui?.OnOperationFinished(operation, success);
+                    await CacheInstalledPackagesAsync(true, cancellationToken);
                 }
             }
         }
 
-        public async Task InstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
+        public async Task<bool> InstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
             AbortOnInvalidConfiguration();
             await AbortIfNotReady(cancellationToken);
 
             using (await _working.LockAsync(cancellationToken)) {
-                ui?.OnOperationStarted(Strings.InstallingPackageStarted.FormatUI(package.Name));
-
                 bool success = false;
                 List<string> args;
 
@@ -282,6 +282,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 args.Add(package.FullSpec);
 
+                var operation = string.Join(" ", args);
+                ui?.OnOperationStarted(operation);
+                ui?.OnOutputTextReceived(Strings.InstallingPackageStarted.FormatUI(package.Name));
+
                 try {
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
@@ -290,28 +294,32 @@ namespace Microsoft.PythonTools.Interpreter {
                         UnbufferedEnv,
                         false,
                         PackageManagerUIRedirector.Get(ui),
-                        elevate: ui?.ShouldElevate() ?? false
+                        elevate: await ShouldElevate(ui, operation)
                     )) {
                         if (!output.IsStarted) {
-                            return;
+                            return false;
                         }
                         var exitCode = await output;
                         success = exitCode == 0;
                     }
+                    return success;
                 } catch (IOException) {
+                    return false;
                 } finally {
                     if (!success) {
                         // Check whether we failed because pip is missing
-                        UpdateIsReady(CancellationToken.None).DoNotWait();
+                        UpdateIsReadyAsync(true, CancellationToken.None).DoNotWait();
                     }
 
                     var msg = success ? Strings.InstallingPackageSuccess : Strings.InstallingPackageFailed;
-                    ui?.OnOperationFinished(msg.FormatUI(package));
+                    ui?.OnOutputTextReceived(msg.FormatUI(package.Name));
+                    ui?.OnOperationFinished(operation, success);
+                    await CacheInstalledPackagesAsync(true, cancellationToken);
                 }
             }
         }
 
-        public async Task UninstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
+        public async Task<bool> UninstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
             AbortOnInvalidConfiguration();
             await AbortIfNotReady(cancellationToken);
 
@@ -325,10 +333,12 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             args.Add(package.Name);
+            var operation = string.Join(" ", args);
 
             try {
                 using (await _working.LockAsync(cancellationToken)) {
-                    ui?.OnOperationStarted(Strings.InstallingPackageStarted.FormatUI(package.Name));
+                    ui?.OnOperationStarted(operation);
+                    ui?.OnOutputTextReceived(Strings.InstallingPackageStarted.FormatUI(package.Name));
 
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
@@ -337,24 +347,27 @@ namespace Microsoft.PythonTools.Interpreter {
                         UnbufferedEnv,
                         false,
                         PackageManagerUIRedirector.Get(ui),
-                        elevate: ui?.ShouldElevate() ?? false
+                        elevate: await ShouldElevate(ui, operation)
                     )) {
                         if (!output.IsStarted) {
-                            return;
+                            // The finally block handles output
+                            return false;
                         }
                         var exitCode = await output;
                         success = exitCode == 0;
                     }
+                    return success;
                 }
             } catch (IOException) {
+                return false;
             } finally {
                 if (!success) {
                     // Check whether we failed because pip is missing
-                    UpdateIsReady(CancellationToken.None).DoNotWait();
+                    UpdateIsReadyAsync(false, CancellationToken.None).DoNotWait();
                 }
 
                 if (IsReady) {
-                    await CacheInstalledPackagesAsync(cancellationToken);
+                    await CacheInstalledPackagesAsync(false, cancellationToken);
                     if (!success) {
                         // Double check whether the package has actually
                         // been uninstalled, to avoid reporting errors 
@@ -366,8 +379,9 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
 
-                var msg = success ? Strings.InstallingPackageSuccess : Strings.InstallingPackageFailed;
-                ui?.OnOperationFinished(msg.FormatUI(package));
+                var msg = success ? Strings.UninstallingPackageSuccess : Strings.UninstallingPackageFailed;
+                ui?.OnOutputTextReceived(msg.FormatUI(package.Name));
+                ui?.OnOperationFinished(operation, success);
             }
         }
 
@@ -376,9 +390,9 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private bool SupportsDashMPip => _factory.Configuration.Version > new Version(2, 7);
 
-        private async Task CacheInstalledPackagesAsync(CancellationToken cancellationToken) {
+        private async Task CacheInstalledPackagesAsync(bool alreadyHasLock, CancellationToken cancellationToken) {
             if (!IsReady) {
-                await UpdateIsReady(cancellationToken);
+                await UpdateIsReadyAsync(alreadyHasLock, cancellationToken);
                 if (!IsReady) {
                     return;
                 }
@@ -386,7 +400,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
             List<PackageSpec> packages = null;
 
-            using (await _working.LockAsync(cancellationToken)) {
+            var workingLock = alreadyHasLock ? null : await _working.LockAsync(cancellationToken);
+            try {
                 using (await _concurrencyLock.LockAsync(cancellationToken)) {
                     using (var proc = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
@@ -434,17 +449,21 @@ namespace Microsoft.PythonTools.Interpreter {
 
                 // Outside of concurrency lock, still in working lock
 
-                lock (_packages) {
-                    _packages.Clear();
-                    _packages.AddRange(packages);
-                }
+                _packages.Clear();
+                _packages.AddRange(packages);
+                _everCached = true;
+            } finally {
+                workingLock?.Dispose();
             }
 
             InstalledPackagesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public async Task<IList<PackageSpec>> GetInstalledPackagesAsync(CancellationToken cancellationToken) {
-            lock (_packages) {
+            using (await _working.LockAsync(cancellationToken)) {
+                if (!_everCached) {
+                    await CacheInstalledPackagesAsync(true, cancellationToken);
+                }
                 return _packages.ToArray();
             }
         }
@@ -453,7 +472,10 @@ namespace Microsoft.PythonTools.Interpreter {
             if (!package.IsValid) {
                 return package;
             }
-            lock (_packages) {
+            using (await _working.LockAsync(cancellationToken)) {
+                if (!_everCached) {
+                    await CacheInstalledPackagesAsync(true, cancellationToken);
+                }
                 return _packages.FirstOrDefault(p => p.Name == package.Name) ?? new PackageSpec(null);
             }
         }
@@ -610,7 +632,9 @@ namespace Microsoft.PythonTools.Interpreter {
             oldCts?.Cancel();
             oldCts?.Dispose();
 
-            CacheInstalledPackagesAsync(cts.Token).DoNotWait();
+            CacheInstalledPackagesAsync(false, cts.Token)
+                .SilenceException<OperationCanceledException>()
+                .DoNotWait();
         }
 
         public void NotifyPackagesChanged() {

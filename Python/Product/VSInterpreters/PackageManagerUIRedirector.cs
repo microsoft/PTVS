@@ -33,11 +33,11 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public override void WriteErrorLine(string line) {
-            _ui.OnOutputTextReceived(line + Environment.NewLine);
+            _ui.OnErrorTextReceived(line + Environment.NewLine);
         }
 
         public override void WriteLine(string line) {
-            _ui.OnErrorTextReceived(line + Environment.NewLine);
+            _ui.OnOutputTextReceived(line + Environment.NewLine);
         }
     }
 }

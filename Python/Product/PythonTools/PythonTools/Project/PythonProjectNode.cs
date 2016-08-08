@@ -61,7 +61,8 @@ namespace Microsoft.PythonTools.Project {
         IPythonProject,
         IAzureRoleProject,
         IProjectInterpreterDbChanged,
-        IPythonProjectProvider {
+        IPythonProjectProvider
+    {
         // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
         // about the directory from the search path that referenced them in IProjectEntry.Properties[_searchPathEntryKey], so that
         // they can be located and removed when that directory is removed from the path.
@@ -2092,8 +2093,7 @@ namespace Microsoft.PythonTools.Project {
                     selectedInterpreterFactory,
                     Site,
                     name,
-                    elevated,
-                    node: selectedInterpreter
+                    elevated ? new VsPackageManagerUI(Site, true) : null
                 )
                     .SilenceException<OperationCanceledException>()
                     .HandleAllExceptions(Site)
@@ -2102,8 +2102,7 @@ namespace Microsoft.PythonTools.Project {
                 // Prompt the user
                 InstallNewPackageAsync(
                     selectedInterpreterFactory,
-                    Site,
-                    selectedInterpreter
+                    Site
                 )
                     .SilenceException<OperationCanceledException>()
                     .HandleAllExceptions(Site)
@@ -2116,110 +2115,63 @@ namespace Microsoft.PythonTools.Project {
             InterpretersNode selectedInterpreter;
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
+            if (selectedInterpreterFactory == null || selectedInterpreterFactory.PackageManager == null) {
+                return VSConstants.E_INVALIDARG;
+            }
+
             var txt = PathUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt");
-            var elevated = Site.GetPythonToolsService().GeneralOptions.ElevatePip;
             var name = "-r " + ProcessOutput.QuoteSingleArgument(txt);
             if (args != null && !args.ContainsKey("y")) {
                 if (!ShouldInstallRequirementsTxt(
                     selectedInterpreterFactory.Configuration.Description,
                     txt,
-                    elevated
+                    Site.GetPythonToolsService().GeneralOptions.ElevatePip
                 )) {
                     return VSConstants.S_OK;
                 }
             }
 
-            InstallNewPackageAsync(
-                selectedInterpreterFactory,
-                Site,
-                name,
-                elevated,
-                node: selectedInterpreter
-            )
-                .SilenceException<OperationCanceledException>()
-                .HandleAllExceptions(Site)
-                .DoNotWait();
+            selectedInterpreterFactory.PackageManager.ExecuteAsync(
+                "install -r " + ProcessOutput.QuoteSingleArgument(txt),
+                new VsPackageManagerUI(Site),
+                CancellationToken.None
+            ).SilenceException<OperationCanceledException>()
+             .HandleAllExceptions(Site, GetType())
+             .DoNotWait();
 
             return VSConstants.S_OK;
         }
 
 
-        internal static void BeginUninstallPackage(
-            IPythonInterpreterFactory factory,
-            IServiceProvider provider,
-            string name,
-            InterpretersNode node = null
-        ) {
-            UninstallPackageAsync(factory, provider, name, node)
-                .SilenceException<OperationCanceledException>()
-                .HandleAllExceptions(provider, typeof(PythonProjectNode))
-                .DoNotWait();
-        }
-
         internal static async Task InstallNewPackageAsync(
             IPythonInterpreterFactory factory,
             IServiceProvider provider,
-            InterpretersNode node = null
+            string name = null,
+            IPackageManagerUI ui = null
         ) {
             var service = provider.GetComponentModel().GetService<IInterpreterRegistryService>();
-            var view = InstallPythonPackage.ShowDialog(provider, factory, service);
-            if (view == null) {
-                throw new OperationCanceledException();
+            if (string.IsNullOrEmpty(name)) {
+                var view = InstallPythonPackage.ShowDialog(provider, factory, service);
+                if (view == null) {
+                    throw new OperationCanceledException();
+                }
+                name = view.Name;
             }
 
-            Func<string, bool, Redirector, Task<bool>> f;
-            if (view.InstallUsingConda) {
-                f = (n, e, r) => Conda.Install(provider, factory, service, n, r);
-            } else if (view.InstallUsingEasyInstall) {
-                f = (n, e, r) => EasyInstall.Install(provider, factory, n, provider, e, r);
-            } else {
-                f = (n, e, r) => Pip.Install(provider, factory, n, provider, e, r);
-            }
-
-            await InstallNewPackageAsync(factory, provider, view.Name, view.InstallElevated, f, node);
-        }
-
-        internal static async Task InstallNewPackageAsync(
-            IPythonInterpreterFactory factory,
-            IServiceProvider provider,
-            string name,
-            bool elevate,
-            Func<string, bool, Redirector, Task<bool>> action = null,
-            InterpretersNode node = null
-        ) {
             var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
 
-            var service = provider.GetComponentModel().GetService<IInterpreterRegistryService>();
-            object cookie = null;
-            if (service != null) {
-                cookie = await service.LockInterpreterAsync(
-                    factory,
-                    InterpretersNode.InstallPackageLockMoniker,
-                    TimeSpan.MaxValue
-                );
-            }
-
             try {
-                if (cookie != null && node != null) {
-                    // don't process events while we're installing, we'll
-                    // rescan once we're done
-                    node.StopWatching();
-                }
-
                 var redirector = OutputWindowRedirector.GetGeneral(provider);
                 statusBar.SetText(Strings.PackageInstallingSeeOutputWindow.FormatUI(name));
 
-                Task<bool> task;
-                if (action != null) {
-                    task = action(name, elevate, redirector);
-                } else {
-                    task = Pip.Install(provider, factory, name, elevate, redirector);
+                if (File.Exists(name) || Directory.Exists(name)) {
+                    // Ensure paths are quoted
+                    name = ProcessOutput.QuoteSingleArgument(name);
                 }
 
-                bool success = await task;
-                statusBar.SetText((success ? Strings.PackageInstallSucceeded : Strings.PackageInstallFailed).FormatUI(
-                    name
-                ));
+                var success = await factory.PackageManager.ExecuteAsync("install " + name, ui ?? new VsPackageManagerUI(provider), CancellationToken.None);
+
+                statusBar.SetText((success ? Strings.PackageInstallSucceeded : Strings.PackageInstallFailed).FormatUI(name));
 
                 var packageInfo = FindRequirementRegex.Match(name.ToLower());
 
@@ -2233,75 +2185,15 @@ namespace Microsoft.PythonTools.Project {
                         factory.Configuration.Version.ToString(),
                         factory.Configuration.Architecture.ToString(),
                         String.Empty, //Installer if we tracked it
-                        elevate,
+                        false,
                         success ? 0 : 1);
 
                     provider.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.PackageInstalled, packageDetails);
                 }
-
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 statusBar.SetText(Strings.PackageInstallFailed.FormatUI(name));
-            } finally {
-                if (service != null && cookie != null) {
-                    bool lastOne = service.UnlockInterpreter(cookie);
-                    if (lastOne && node != null) {
-                        node.ResumeWatching();
-                    }
-                }
             }
         }
-
-        internal static async Task UninstallPackageAsync(
-            IPythonInterpreterFactory factory,
-            IServiceProvider provider,
-            string name,
-            InterpretersNode node = null) {
-            var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
-
-            var service = provider.GetComponentModel().GetService<IInterpreterRegistryService>();
-            object cookie = null;
-            if (service != null) {
-                cookie = await service.LockInterpreterAsync(
-                    factory,
-                    InterpretersNode.InstallPackageLockMoniker,
-                    TimeSpan.MaxValue
-                );
-            }
-
-            try {
-                if (cookie != null && node != null) {
-                    // don't process events while we're installing, we'll
-                    // rescan once we're done
-                    node.StopWatching();
-                }
-
-                var redirector = OutputWindowRedirector.GetGeneral(provider);
-                statusBar.SetText(Strings.PackageUninstallingSeeOutputWindow.FormatUI(name));
-
-                bool elevate = provider.GetPythonToolsService().GeneralOptions.ElevatePip;
-
-                bool success = await Pip.Uninstall(provider, factory, name, elevate, redirector);
-                statusBar.SetText((success ? Strings.PackageUninstallSucceeded : Strings.PackageUninstallFailed).FormatUI(
-                    name
-                ));
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
-                statusBar.SetText(Strings.PackageUninstallFailed.FormatUI(name));
-            } finally {
-                if (service != null && cookie != null) {
-                    bool lastOne = service.UnlockInterpreter(cookie);
-                    if (lastOne && node != null) {
-                        node.ResumeWatching();
-                    }
-                }
-            }
-        }
-
 
         private bool ShouldInstallRequirementsTxt(
             string targetLabel,

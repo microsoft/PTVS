@@ -72,9 +72,8 @@ namespace Microsoft.PythonTools.Project {
             _canRemove = canRemove.HasValue ? canRemove.Value : !isGlobalDefault;
             _captionSuffix = isGlobalDefault ? Strings.GlobalDefaultSuffix : "";
 
-            var withPackages = _factory as IPackageManager;
-            if (withPackages != null) {
-                withPackages.InstalledPackagesChanged += InstalledPackagesChanged;
+            if (_factory.PackageManager != null) {
+                _factory.PackageManager.InstalledPackagesChanged += InstalledPackagesChanged;
             }
         }
 
@@ -92,9 +91,8 @@ namespace Microsoft.PythonTools.Project {
 
         public override void Close() {
             if (!_disposed) {
-                var withPackages = _factory as IPackageManager;
-                if (withPackages != null) {
-                    withPackages.InstalledPackagesChanged -= InstalledPackagesChanged;
+                if (_factory.PackageManager != null) {
+                    _factory.PackageManager.InstalledPackagesChanged -= InstalledPackagesChanged;
                 }
             }
             _disposed = true;
@@ -125,7 +123,7 @@ namespace Microsoft.PythonTools.Project {
 
             var packages = new Dictionary<string, PackageSpec>();
             foreach (var p in await factory.GetInstalledPackagesAsync(CancellationToken.None)) {
-                packages[p.Name] = p;
+                packages[p.FullSpec] = p;
             }
 
             await ProjectMgr.Site.GetUIThread().InvokeAsync(() => {
@@ -134,11 +132,11 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 bool anyChanges = false;
-                var existing = AllChildren.ToDictionary(c => c.Url);
+                var existing = AllChildren.OfType<InterpretersPackageNode>().ToDictionary(c => c.Url);
 
                 // remove the nodes which were uninstalled.
                 foreach (var keyValue in existing) {
-                    if (!packages.ContainsKey(keyValue.Key)) {
+                    if (!packages.Remove(keyValue.Key)) {
                         RemoveChild(keyValue.Value);
                         anyChanges = true;
                     }
@@ -146,7 +144,7 @@ namespace Microsoft.PythonTools.Project {
 
                 // add the new nodes
                 foreach (var p in packages.OrderBy(kv => kv.Key)) {
-                    AddChild(new InterpretersPackageNode(ProjectMgr, p.Key, p.Value.Version));
+                    AddChild(new InterpretersPackageNode(ProjectMgr, p.Value));
                     anyChanges = true;
                 }
                 _checkingItems = false;

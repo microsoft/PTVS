@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Interpreter {
             if (withPackages != null) {
                 var res = new HashSet<string>();
                 foreach (var m in moduleNames) {
-                    if ((await withPackages.GetInstalledPackageAsync(m, CancellationToken.None)).IsValid) {
+                    if ((await withPackages.GetInstalledPackageAsync(new PackageSpec(m), CancellationToken.None)).IsValid) {
                         res.Add(m);
                     }
                 }

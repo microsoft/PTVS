@@ -160,7 +160,6 @@
     </Compile>
     <Compile Include="FileNameEllipsisConverter.cs" />
     <Compile Include="IEnvironmentViewExtensionProvider.cs" />
-    <Compile Include="Pep440Version.cs" />
     <Compile Include="PipExtension.xaml.cs">
       <DependentUpon>PipExtension.xaml</DependentUpon>
     </Compile>
@@ -170,7 +169,6 @@
     <Compile Include="EnvironmentView.cs" />
     <Compile Include="IEnvironmentViewExtension.cs" />
     <Compile Include="PipExtensionProvider.cs" />
-    <Compile Include="PipPackageCache.cs" />
     <Compile Include="PipPackageView.cs" />
     <Compile Include="ToolWindow.xaml.cs">
       <DependentUpon>ToolWindow.xaml</DependentUpon>

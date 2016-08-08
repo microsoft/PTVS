@@ -62,9 +62,12 @@
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
@@ -77,6 +80,7 @@
     <Compile Include="MSBuildProjectInterpreterFactoryProvider.cs" />
     <Compile Include="NotFoundInterpreterFactory.cs" />
     <Compile Include="PackageManagerUIRedirector.cs" />
+    <Compile Include="PipPackageCache.cs" />
     <Compile Include="PipPackageManager.cs" />
     <Compile Include="PythonInterpreterInformation.cs" />
     <Compile Include="PythonRegistrySearch.cs" />
