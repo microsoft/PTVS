@@ -988,7 +988,7 @@ namespace Microsoft.VisualStudioTools.Project {
                 if (isLink) {
                     // links we just want to update the link node for...
                     if (existingChild != null) {
-                        if (ComUtilities.IsSameComObject(Project, project)) {
+                        if (Utilities.IsSameComObject(Project, project)) {
                             if (DropEffect != DropEffect.Move) {
                                 Utilities.ShowMessageBox(
                                         Project.Site,
