@@ -407,6 +407,7 @@ namespace Microsoft.PythonTools.Project {
 
                 var selectedButton = taskDialog.ShowModal();
                 if (selectedButton == installMissingButton) {
+                    await interpFactory.PackageManager
                     await Pip.Install(
                         project.Site,
                         interpFactory,

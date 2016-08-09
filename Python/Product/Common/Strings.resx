@@ -888,4 +888,9 @@ modified from these scripts.</value>
 </value>
     <comment>Displayed in the output window</comment>
   </data>
+  <data name="PackageManagementNotSupported_Package" xml:space="preserve">
+    <value>Unable to install {0} because the selected environment does not support package management.
+</value>
+    <comment>{0} is a package name</comment>
+  </data>
 </root>
