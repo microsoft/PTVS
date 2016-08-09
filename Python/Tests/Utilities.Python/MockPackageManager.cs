@@ -24,7 +24,7 @@ namespace TestUtilities.Python {
             _factory = factory;
         }
 
-        public Task ExecuteAsync(IEnumerable<string> arguments, IPackageManagerUI ui, CancellationToken cancellationToken) {
+        public Task<bool> ExecuteAsync(string arguments, IPackageManagerUI ui, CancellationToken cancellationToken) {
             throw new NotImplementedException();
         }
 
@@ -52,12 +52,13 @@ namespace TestUtilities.Python {
             return Task.FromResult<IList<PackageSpec>>(_installed);
         }
 
-        public async Task InstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
+        public async Task<bool> InstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
             ui?.OnOperationStarted("install " + package.FullSpec);
             _installed.Add(package);
             await Task.Delay(100, cancellationToken);
             _seenChange = true;
             ui?.OnOperationFinished("install " + package.FullSpec, true);
+            return true;
         }
 
         public void AddInstallable(PackageSpec package) {
@@ -79,7 +80,7 @@ namespace TestUtilities.Python {
             return NoPackageManager.NoSuppression.Instance;
         }
 
-        public Task UninstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
+        public Task<bool> UninstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
             throw new NotImplementedException();
         }
     }

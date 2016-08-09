@@ -101,6 +101,7 @@ namespace TestUtilities {
 
         private static PythonVersion GetCPythonVersion(PythonLanguageVersion version, InterpreterArchitecture arch) {
             var res = _foundInRegistry.FirstOrDefault(ii => 
+                ii.Configuration.Id.StartsWith("Global|PythonCore|") &&
                 ii.Configuration.Architecture == arch &&
                 ii.Configuration.Version == version.ToVersion()
             );

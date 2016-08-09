@@ -654,21 +654,31 @@ namespace Microsoft.PythonTools.Interpreter {
         /// efficiently as possible. This may involve executing the
         /// interpreter, and may cache the paths for retrieval later.
         /// </summary>
-        public static async Task<List<PythonLibraryPath>> GetDatabaseSearchPathsAsync(IPythonInterpreterFactory factory) {
-            List<PythonLibraryPath> paths;
+        public static async Task<IList<PythonLibraryPath>> GetDatabaseSearchPathsAsync(IPythonInterpreterFactory factory) {
             var dbPath = (factory as PythonInterpreterFactoryWithDatabase)?.DatabasePath;
             if (!string.IsNullOrEmpty(dbPath)) {
-                paths = GetCachedDatabaseSearchPaths(dbPath);
+                var paths = GetCachedDatabaseSearchPaths(dbPath);
                 if (paths != null) {
                     return paths;
                 }
             }
 
-            paths = await GetUncachedDatabaseSearchPathsAsync(factory.Configuration.InterpreterPath);
-            if (!string.IsNullOrEmpty(dbPath)) {
-                WriteDatabaseSearchPaths(dbPath, paths);
+            try {
+                var paths = await GetUncachedDatabaseSearchPathsAsync(factory.Configuration.InterpreterPath);
+                if (!string.IsNullOrEmpty(dbPath)) {
+                    WriteDatabaseSearchPaths(dbPath, paths);
+                }
+                return paths;
+            } catch (InvalidOperationException) {
+                // Failed to get paths
             }
-            return paths;
+
+            var ospy = PathUtils.FindFile(factory.Configuration.PrefixPath, "os.py", firstCheck: new[] { "Lib" });
+            if (!string.IsNullOrEmpty(ospy)) {
+                return GetDefaultDatabaseSearchPaths(PathUtils.GetParent(ospy));
+            }
+
+            return Array.Empty<PythonLibraryPath>();
         }
 
         /// <summary>

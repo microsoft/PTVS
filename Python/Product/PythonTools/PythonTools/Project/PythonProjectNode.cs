@@ -189,7 +189,6 @@ namespace Microsoft.PythonTools.Project {
 
         public IPythonInterpreterFactory ActiveInterpreter {
             get {
-                
                 return _active ?? InterpreterOptions.DefaultInterpreter;
             }
             internal set {
@@ -470,26 +469,16 @@ namespace Microsoft.PythonTools.Project {
                 return _active == null;
             }
         }
+
         internal IEnumerable<InterpreterConfiguration> InterpreterConfigurations {
             get {
                 var compModel = Site.GetComponentModel();
                 var registry = compModel.GetService<IInterpreterRegistryService>();
-                if (_validFactories.Count == 0) {
-                    // all non-project specific configs are valid...
-                    var configs = registry.Configurations;
-                    var vsProjContext = compModel.GetService<VsProjectContextProvider>();
-                    foreach (var config in configs) {
-                        if (!vsProjContext.IsProjectSpecific(config)) {
-                            yield return config;
-                        }
-                    }
-                } else {
-                    // we have a list of registered factories, only include those...
-                    foreach (var config in _validFactories) {
-                        var value = registry.FindConfiguration(config);
-                        if (value != null) {
-                            yield return value;
-                        }
+
+                foreach (var config in _validFactories) {
+                    var value = registry.FindConfiguration(config);
+                    if (value != null) {
+                        yield return value;
                     }
                 }
             }
@@ -1946,6 +1935,7 @@ namespace Microsoft.PythonTools.Project {
 
             return base.DisableCmdInCurrentMode(cmdGroup, cmd);
         }
+
         private int ExecActivateEnvironment(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
             InterpretersNode selectedInterpreter;
             IPythonInterpreterFactory selectedInterpreterFactory;
@@ -2131,8 +2121,8 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            selectedInterpreterFactory.PackageManager.ExecuteAsync(
-                "install -r " + ProcessOutput.QuoteSingleArgument(txt),
+            selectedInterpreterFactory.PackageManager.InstallAsync(
+                PackageSpec.FromArguments(name),
                 new VsPackageManagerUI(Site),
                 CancellationToken.None
             ).SilenceException<OperationCanceledException>()
@@ -2169,7 +2159,11 @@ namespace Microsoft.PythonTools.Project {
                     name = ProcessOutput.QuoteSingleArgument(name);
                 }
 
-                var success = await factory.PackageManager.ExecuteAsync("install " + name, ui ?? new VsPackageManagerUI(provider), CancellationToken.None);
+                var success = await factory.PackageManager.InstallAsync(
+                    PackageSpec.FromArguments(name),
+                    ui ?? new VsPackageManagerUI(provider),
+                    CancellationToken.None
+                );
 
                 statusBar.SetText((success ? Strings.PackageInstallSucceeded : Strings.PackageInstallFailed).FormatUI(name));
 

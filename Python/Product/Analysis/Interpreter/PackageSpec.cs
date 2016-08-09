@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Infrastructure;
 
@@ -106,5 +105,12 @@ namespace Microsoft.PythonTools.Interpreter {
             return new PackageSpec(match.Groups["name"].Value, match.Groups["exact_ver"].Value);
         }
 
+        /// <summary>
+        /// Returns a package spec containing the specified string as the 
+        /// <see cref="FullSpec"/>. However, <see cref="IsValid"/> may be false.
+        /// </summary>
+        public static PackageSpec FromArguments(string arguments) {
+            return new PackageSpec(null, fullSpec: arguments);
+        }
     }
 }

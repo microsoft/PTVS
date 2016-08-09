@@ -493,7 +493,8 @@ namespace Microsoft.PythonTools.Interpreter {
         sealed class ErrorFactoryInfo : FactoryInfo {
             private string _dir;
 
-            public ErrorFactoryInfo(string id, Version ver, string description, string dir) : base(new InterpreterConfiguration(id, description, version: ver)) {
+            public ErrorFactoryInfo(string id, Version ver, string description, string dir) :
+                base(new InterpreterConfiguration(id, "{0} (unavailable)".FormatInvariant(description), version: ver)) {
                 _dir = dir;
             }
 
@@ -549,10 +550,8 @@ namespace Microsoft.PythonTools.Interpreter {
                         { MSBuildConstants.IdKey,              interp.GetMetadataValue(MSBuildConstants.IdKey) },
                         { MSBuildConstants.VersionKey,         interp.GetMetadataValue(MSBuildConstants.VersionKey) },
                         { MSBuildConstants.DescriptionKey,     interp.GetMetadataValue(MSBuildConstants.DescriptionKey) },
-                        { MSBuildConstants.BaseInterpreterKey, interp.GetMetadataValue(MSBuildConstants.BaseInterpreterKey) },
                         { MSBuildConstants.InterpreterPathKey, interp.GetMetadataValue(MSBuildConstants.InterpreterPathKey) },
                         { MSBuildConstants.WindowsPathKey,     interp.GetMetadataValue(MSBuildConstants.WindowsPathKey) },
-                        { MSBuildConstants.LibraryPathKey,     interp.GetMetadataValue(MSBuildConstants.LibraryPathKey) },
                         { MSBuildConstants.PathEnvVarKey,      interp.GetMetadataValue(MSBuildConstants.PathEnvVarKey) },
                         { MSBuildConstants.ArchitectureKey,    interp.GetMetadataValue(MSBuildConstants.ArchitectureKey) }
                     }

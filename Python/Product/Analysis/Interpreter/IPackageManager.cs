@@ -56,8 +56,8 @@ namespace Microsoft.PythonTools.Interpreter {
         /// not be supported by all implementations.
         /// </summary>
         /// <param name="arguments">
-        /// A list of arguments. Each may contain embedded spaces - the
-        /// implementation is responsible for correct quoting.
+        /// The full command. The caller is responsible for quoting individual
+        /// arguments according to the current platform's rules.
         /// </param>
         /// <exception cref="NotSupportedException">
         /// The command cannot be run.

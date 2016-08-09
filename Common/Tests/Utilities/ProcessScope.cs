@@ -57,31 +57,35 @@ namespace TestUtilities {
         public void Dispose() {
             var end = DateTime.Now + TimeSpan.FromSeconds(30.0);
             while (DateTime.Now < end) {
-                var newProcesses = _names
-                    .SelectMany(n => Process.GetProcessesByName(n))
-                    .Where(p => !_alreadyRunning.Contains(p.Id));
-                bool anyLeft = false;
-                foreach (var p in newProcesses) {
-                    if (!p.HasExited) {
-                        anyLeft = true;
-                        try {
-                            p.Kill();
-                        } catch (Exception ex) {
-                            Trace.TraceWarning("Failed to kill {0} ({1}).{2}{3}",
-                                p.ProcessName,
-                                p.Id,
-                                Environment.NewLine,
-                                ex.ToString()
-                            );
-                        }
-                    }
-                }
-                if (!anyLeft) {
+                if (ExitNewProcesses()) {
                     return;
                 }
                 Thread.Sleep(100);
             }
             Assert.Fail("Failed to close all processes");
+        }
+
+        public bool ExitNewProcesses() {
+            var newProcesses = _names
+                .SelectMany(n => Process.GetProcessesByName(n))
+                .Where(p => !_alreadyRunning.Contains(p.Id));
+            bool allGone = true;
+            foreach (var p in newProcesses) {
+                if (!p.HasExited) {
+                    allGone = false;
+                    try {
+                        p.Kill();
+                    } catch (Exception ex) {
+                        Trace.TraceWarning("Failed to kill {0} ({1}).{2}{3}",
+                            p.ProcessName,
+                            p.Id,
+                            Environment.NewLine,
+                            ex.ToString()
+                        );
+                    }
+                }
+            }
+            return allGone;
         }
     }
 }

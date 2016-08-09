@@ -283,16 +283,16 @@ namespace Microsoft.PythonTools.Analysis {
         /// modules.
         /// </remarks>
         public static IEnumerable<ModulePath> GetModulesInLib(
-            string interpreterPath,
+            string prefixPath,
             string libraryPath = null,
             string sitePath = null,
             bool requireInitPyFiles = true
         ) {
-            if (File.Exists(interpreterPath)) {
-                interpreterPath = Path.GetDirectoryName(interpreterPath);
+            if (File.Exists(prefixPath)) {
+                prefixPath = Path.GetDirectoryName(prefixPath);
             }
             if (!Directory.Exists(libraryPath)) {
-                libraryPath = Path.Combine(interpreterPath, "Lib");
+                libraryPath = Path.Combine(prefixPath, "Lib");
             }
             if (string.IsNullOrEmpty(sitePath)) {
                 sitePath = Path.Combine(libraryPath, "site-packages");
@@ -320,11 +320,11 @@ namespace Microsoft.PythonTools.Analysis {
             // Get modules in interpreter directory
             IEnumerable<ModulePath> modulesInExePath;
 
-            if (Directory.Exists(interpreterPath)) {
-                modulesInDllsPath = GetModulesInPath(Path.Combine(interpreterPath, "DLLs"), true, false);
-                modulesInExePath = GetModulesInPath(interpreterPath, true, false);
-                excludedPthDirs.Add(interpreterPath);
-                excludedPthDirs.Add(Path.Combine(interpreterPath, "DLLs"));
+            if (Directory.Exists(prefixPath)) {
+                modulesInDllsPath = GetModulesInPath(Path.Combine(prefixPath, "DLLs"), true, false);
+                modulesInExePath = GetModulesInPath(prefixPath, true, false);
+                excludedPthDirs.Add(prefixPath);
+                excludedPthDirs.Add(Path.Combine(prefixPath, "DLLs"));
             } else {
                 modulesInDllsPath = Enumerable.Empty<ModulePath>();
                 modulesInExePath = Enumerable.Empty<ModulePath>();
@@ -352,7 +352,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public static IEnumerable<ModulePath> GetModulesInLib(InterpreterConfiguration config) {
             return GetModulesInLib(
-                config.InterpreterPath,
+                config.PrefixPath,
                 null,   // default library path
                 null,   // default site-packages path
                 PythonVersionRequiresInitPyFiles(config.Version)

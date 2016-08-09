@@ -531,7 +531,11 @@ namespace Microsoft.PythonTools.Infrastructure {
             int depthLimit = 2,
             IEnumerable<string> firstCheck = null
         ) {
-            var candidate = Path.Combine(root, file);
+            if (!Directory.Exists(root)) {
+                return null;
+            }
+
+            var candidate = GetAbsoluteFilePath(root, file);
             if (File.Exists(candidate)) {
                 return candidate;
             }

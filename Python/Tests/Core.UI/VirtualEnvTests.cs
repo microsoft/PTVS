@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -29,20 +28,20 @@ using analysis::Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using TestUtilities;
-using TestUtilities.Mocks;
 using TestUtilities.Python;
 using TestUtilities.UI;
 using TestUtilities.UI.Python;
 using Path = System.IO.Path;
-using Task = System.Threading.Tasks.Task;
 
 namespace PythonToolsUITests {
     [TestClass]
     public class VirtualEnvTests {
+        const string TestPackageSpec = "ptvsd==2.2.0";
+        const string TestPackageDisplay = "ptvsd (2.2.0)";
+
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
@@ -93,7 +92,7 @@ namespace PythonToolsUITests {
 
                 using (var installPackage = AutomationDialog.FromDte(app, "Python.InstallPackage")) {
                     var packageName = new TextBox(installPackage.FindByAutomationId("Name"));
-                    packageName.SetValue("azure==0.6.2");
+                    packageName.SetValue(TestPackageSpec);
                     installPackage.ClickButtonAndClose("OK", nameIsAutomationId: true);
                 }
 
@@ -101,7 +100,7 @@ namespace PythonToolsUITests {
                     project,
                     Strings.Environments,
                     envName,
-                    "azure (0.6.2)"
+                    TestPackageDisplay
                 );
 
                 azure.Select();
@@ -114,7 +113,7 @@ namespace PythonToolsUITests {
                     project,
                     Strings.Environments,
                     envName,
-                    "azure (0.6.2)"
+                    TestPackageDisplay
                 );
             }
         }
@@ -127,7 +126,7 @@ namespace PythonToolsUITests {
                 var project = CreateTemporaryProject(app);
 
                 var projectHome = project.GetPythonProject().ProjectHome;
-                File.WriteAllText(Path.Combine(projectHome, "requirements.txt"), "azure==0.6.2");
+                File.WriteAllText(Path.Combine(projectHome, "requirements.txt"), TestPackageSpec);
 
                 string envName;
                 var env = app.CreateVirtualEnvironment(project, out envName);
@@ -137,7 +136,7 @@ namespace PythonToolsUITests {
                     project,
                     Strings.Environments,
                     envName,
-                    "azure (0.6.2)"
+                    TestPackageDisplay
                 );
             }
         }
@@ -162,7 +161,7 @@ namespace PythonToolsUITests {
                 }
 
                 var requirementsTxt = Path.Combine(Path.GetDirectoryName(project.FullName), "requirements.txt");
-                File.WriteAllText(requirementsTxt, "azure==0.6.2");
+                File.WriteAllText(requirementsTxt, TestPackageSpec);
 
                 app.ExecuteCommand("Python.InstallRequirementsTxt", "/y");
 
@@ -170,7 +169,7 @@ namespace PythonToolsUITests {
                     project,
                     Strings.Environments,
                     envName,
-                    "azure (0.6.2)"
+                    TestPackageDisplay
                 );
 
                 File.Delete(requirementsTxt);
@@ -184,7 +183,7 @@ namespace PythonToolsUITests {
                 
                 AssertUtil.ContainsAtLeast(
                     File.ReadAllLines(requirementsTxt).Select(s => s.Trim()),
-                    "azure==0.6.2"
+                    TestPackageSpec
                 );
             }
         }
@@ -280,6 +279,7 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void DeleteVirtualEnv() {
             using (var app = new PythonVisualStudioApp())
+            using (var procs = new ProcessScope("Microsoft.PythonTools.Analyzer"))
             using (var dis = Init(app)) {
                 var options = app.GetService<PythonToolsService>().GeneralOptions;
                 var oldAutoAnalyze = options.AutoAnalyzeStandardLibrary;
@@ -294,6 +294,10 @@ namespace PythonToolsUITests {
 
                 // Need to wait some more for the database to be loaded.
                 app.WaitForNoDialog(TimeSpan.FromSeconds(10.0));
+
+                if (!procs.ExitNewProcesses()) {
+                    Console.WriteLine("Failed to close all analyzer processes");
+                }
 
                 env.Select();
                 using (var removeDeleteDlg = RemoveItemDialog.FromDte(app)) {
@@ -433,7 +437,7 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                 Assert.IsNotNull(env);
                 Assert.IsNotNull(env.Element);
                 Assert.AreEqual(
-                    string.Format("venv (Python 3.{0})", python.Version.ToVersion().Minor),
+                    string.Format("venv (Python 32-bit 3.{0})", python.Version.ToVersion().Minor),
                     envName
                 );
             }
@@ -518,11 +522,8 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                         .Select(s => s.Trim()),
                         @"Interpreter $env\ has invalid value for 'Id':",
                         @"Interpreter $env\ has invalid value for 'Version': INVALID VERSION",
-                        @"Interpreter $env\ has invalid value for 'BaseInterpreter': INVALID BASE",
                         @"Interpreter $env\ has invalid value for 'InterpreterPath': INVALID<>PATH",
-                        @"Interpreter $env\ has invalid value for 'WindowsInterpreterPath': INVALID<>PATH",
-                        @"Interpreter $env\ has invalid value for 'LibraryPath': INVALID<>PATH",
-                        @"Interpreter $env\ has invalid value for 'BaseInterpreter': {98512745-4ac7-4abb-9f33-120af32edc77}"
+                        @"Interpreter $env\ has invalid value for 'WindowsInterpreterPath': INVALID<>PATH"
                     );
 
                     var factories = provider.GetInterpreterFactories().ToList();
@@ -540,11 +541,8 @@ version = 3.{1}.0", python.PrefixPath, python.Version.ToVersion().Minor));
                     }
 
                     AssertUtil.AreEqual(factories.Select(f => f.Configuration.Description),
-                        "Invalid BaseInterpreter 2.7 (unavailable)",
-                        "Invalid InterpreterPath 2.7 (unavailable)",
-                        "Invalid WindowsInterpreterPath 2.7 (unavailable)",
-                        "Invalid LibraryPath 2.7 (unavailable)",
-                        "Absent BaseInterpreter 2.7 (unavailable)"
+                        "Invalid InterpreterPath (unavailable)",
+                        "Invalid WindowsInterpreterPath (unavailable)"
                     );
                 }
             } finally {

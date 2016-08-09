@@ -208,24 +208,79 @@ namespace Microsoft.PythonTools.Interpreter {
 
             using (await _working.LockAsync(cancellationToken)) {
                 bool success = false;
-                List<string> args;
+                string args;
 
                 if (SupportsDashMPip) {
-                    args = new List<string> { "-c", "\"import pip; pip.main()\"", "install" };
+                    args = "-c \"import pip; pip.main()\" ";
                 } else {
-                    args = new List<string> { "-m", "pip", "install" };
+                    args = "-m pip ";
                 }
 
-                if (!string.IsNullOrEmpty(_indexUrl)) {
-                    args.Add("--index-url");
-                    args.Add(ProcessOutput.QuoteSingleArgument(_indexUrl));
-                }
+                args += arguments;
 
-                args.Add(arguments);
-
-                var operation = string.Join(" ", args);
+                var operation = args;
                 ui?.OnOutputTextReceived(operation);
-                ui?.OnOperationStarted(Strings.ExecutingCommandStarted.FormatUI(string.Join(" ", arguments)));
+                ui?.OnOperationStarted(Strings.ExecutingCommandStarted.FormatUI(arguments));
+
+                try {
+                    using (var output = ProcessOutput.Run(
+                        _factory.Configuration.InterpreterPath,
+                        new[] { args },
+                        _factory.Configuration.PrefixPath,
+                        UnbufferedEnv,
+                        false,
+                        PackageManagerUIRedirector.Get(ui),
+                        quoteArgs: false,
+                        elevate: await ShouldElevate(ui, operation)
+                    )) {
+                        if (!output.IsStarted) {
+                            return false;
+                        }
+                        var exitCode = await output;
+                        success = exitCode == 0;
+                    }
+                    return success;
+                } catch (IOException) {
+                    return false;
+                } finally {
+                    if (!success) {
+                        // Check whether we failed because pip is missing
+                        UpdateIsReadyAsync(true, CancellationToken.None).DoNotWait();
+                    }
+
+                    var msg = success ? Strings.ExecutingCommandSucceeded : Strings.ExecutingCommandFailed;
+                    ui?.OnOutputTextReceived(msg.FormatUI(arguments));
+                    ui?.OnOperationFinished(operation, success);
+                    await CacheInstalledPackagesAsync(true, cancellationToken);
+                }
+            }
+        }
+
+        public async Task<bool> InstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
+            AbortOnInvalidConfiguration();
+            await AbortIfNotReady(cancellationToken);
+
+            bool success = false;
+            List<string> args;
+
+            if (SupportsDashMPip) {
+                args = new List<string> { "-c", "\"import pip; pip.main()\"", "install" };
+            } else {
+                args = new List<string> { "-m", "pip", "install" };
+            }
+
+            if (!string.IsNullOrEmpty(_indexUrl)) {
+                args.Add("--index-url");
+                args.Add(ProcessOutput.QuoteSingleArgument(_indexUrl));
+            }
+
+            args.Add(package.FullSpec);
+            var name = string.IsNullOrEmpty(package.Name) ? package.FullSpec : package.Name;
+            var operation = string.Join(" ", args);
+
+            using (await _working.LockAsync(cancellationToken)) {
+                ui?.OnOperationStarted(operation);
+                ui?.OnOutputTextReceived(Strings.InstallingPackageStarted.FormatUI(name));
 
                 try {
                     using (var output = ProcessOutput.Run(
@@ -253,66 +308,8 @@ namespace Microsoft.PythonTools.Interpreter {
                         UpdateIsReadyAsync(true, CancellationToken.None).DoNotWait();
                     }
 
-                    var msg = success ? Strings.ExecutingCommandSucceeded : Strings.ExecutingCommandFailed;
-                    ui?.OnOutputTextReceived(msg.FormatUI(string.Join(" ", arguments)));
-                    ui?.OnOperationFinished(operation, success);
-                    await CacheInstalledPackagesAsync(true, cancellationToken);
-                }
-            }
-        }
-
-        public async Task<bool> InstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
-            AbortOnInvalidConfiguration();
-            await AbortIfNotReady(cancellationToken);
-
-            using (await _working.LockAsync(cancellationToken)) {
-                bool success = false;
-                List<string> args;
-
-                if (SupportsDashMPip) {
-                    args = new List<string> { "-c", "import pip; pip.main()", "install" };
-                } else {
-                    args = new List<string> { "-m", "pip", "install" };
-                }
-
-                if (!string.IsNullOrEmpty(_indexUrl)) {
-                    args.Add("--index-url");
-                    args.Add(_indexUrl);
-                }
-
-                args.Add(package.FullSpec);
-
-                var operation = string.Join(" ", args);
-                ui?.OnOperationStarted(operation);
-                ui?.OnOutputTextReceived(Strings.InstallingPackageStarted.FormatUI(package.Name));
-
-                try {
-                    using (var output = ProcessOutput.Run(
-                        _factory.Configuration.InterpreterPath,
-                        args,
-                        _factory.Configuration.PrefixPath,
-                        UnbufferedEnv,
-                        false,
-                        PackageManagerUIRedirector.Get(ui),
-                        elevate: await ShouldElevate(ui, operation)
-                    )) {
-                        if (!output.IsStarted) {
-                            return false;
-                        }
-                        var exitCode = await output;
-                        success = exitCode == 0;
-                    }
-                    return success;
-                } catch (IOException) {
-                    return false;
-                } finally {
-                    if (!success) {
-                        // Check whether we failed because pip is missing
-                        UpdateIsReadyAsync(true, CancellationToken.None).DoNotWait();
-                    }
-
                     var msg = success ? Strings.InstallingPackageSuccess : Strings.InstallingPackageFailed;
-                    ui?.OnOutputTextReceived(msg.FormatUI(package.Name));
+                    ui?.OnOutputTextReceived(msg.FormatUI(name));
                     ui?.OnOperationFinished(operation, success);
                     await CacheInstalledPackagesAsync(true, cancellationToken);
                 }
@@ -332,13 +329,14 @@ namespace Microsoft.PythonTools.Interpreter {
                 args = new List<string> { "-m", "pip", "uninstall", "-y" };
             }
 
-            args.Add(package.Name);
+            args.Add(package.FullSpec);
+            var name = string.IsNullOrEmpty(package.Name) ? package.FullSpec : package.Name;
             var operation = string.Join(" ", args);
 
             try {
                 using (await _working.LockAsync(cancellationToken)) {
                     ui?.OnOperationStarted(operation);
-                    ui?.OnOutputTextReceived(Strings.InstallingPackageStarted.FormatUI(package.Name));
+                    ui?.OnOutputTextReceived(Strings.InstallingPackageStarted.FormatUI(name));
 
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
@@ -380,7 +378,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 var msg = success ? Strings.UninstallingPackageSuccess : Strings.UninstallingPackageFailed;
-                ui?.OnOutputTextReceived(msg.FormatUI(package.Name));
+                ui?.OnOutputTextReceived(msg.FormatUI(name));
                 ui?.OnOperationFinished(operation, success);
             }
         }
@@ -562,7 +560,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private async Task CreateLibraryWatchers() {
             Debug.Assert(_libWatchers != null, "Should not create watchers when suppressed");
 
-            List<PythonLibraryPath> paths;
+            IList<PythonLibraryPath> paths;
             try {
                 paths = await PythonTypeDatabase.GetDatabaseSearchPathsAsync(_factory);
             } catch (InvalidOperationException) {

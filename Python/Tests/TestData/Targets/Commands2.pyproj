@@ -13,16 +13,16 @@
     <Name>Commands2</Name>
     <RootNamespace>Commands2</RootNamespace>
     <OutputPath>.</OutputPath>
-    <InterpreterId>Global|PythonCore|2.7|x86</InterpreterId>
+    <InterpreterId>Global|PythonCore|2.7-32</InterpreterId>
     <PythonCommands>Command1</PythonCommands>
   </PropertyGroup>
   <ItemGroup>
-    <InterpreterReference Include="Global|PythonCore|2.6|x86" />
-    <InterpreterReference Include="Global|PythonCore|2.7|x86" />
-    <InterpreterReference Include="Global|PythonCore|3.5|x86" />
-    <InterpreterReference Include="Global|PythonCore|2.6|x64" />
-    <InterpreterReference Include="Global|PythonCore|2.7|x64" />
-    <InterpreterReference Include="Global|PythonCore|3.5|x64" />
+    <InterpreterReference Include="Global|PythonCore|2.6-32" />
+    <InterpreterReference Include="Global|PythonCore|2.7-32" />
+    <InterpreterReference Include="Global|PythonCore|3.5-32" />
+    <InterpreterReference Include="Global|PythonCore|2.6" />
+    <InterpreterReference Include="Global|PythonCore|2.7" />
+    <InterpreterReference Include="Global|PythonCore|3.5" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.py" />

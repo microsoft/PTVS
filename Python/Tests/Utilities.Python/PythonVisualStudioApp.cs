@@ -293,6 +293,8 @@ namespace TestUtilities.UI.Python {
                     }
                 }
 
+                Assert.AreEqual(factory.Configuration.Id, OptionsService.DefaultInterpreterId);
+
                 var result = defaultInterpreterSetter;
                 defaultInterpreterSetter = null;
                 return result;

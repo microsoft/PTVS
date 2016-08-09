@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -61,6 +62,9 @@ namespace Microsoft.PythonTools.Interpreter {
                         res.Add(m);
                     }
                 }
+                if (res.Count == moduleNames.Length) {
+                    return res;
+                }
             }
 
             var withDb = factory as PythonInterpreterFactoryWithDatabase;
@@ -73,13 +77,16 @@ namespace Microsoft.PythonTools.Interpreter {
             var expected = new HashSet<string>(moduleNames);
 
             if (withDb != null) {
-                var paths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(withDb.DatabasePath) ??
-                    await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(withDb.Configuration.InterpreterPath).ConfigureAwait(false);
-                var db = PythonTypeDatabase.GetDatabaseExpectedModules(withDb.Configuration.Version, paths)
-                    .SelectMany()
-                    .Select(g => g.ModuleName);
-                expected.IntersectWith(db);
-                return expected;
+                try {
+                    var paths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(withDb.DatabasePath) ??
+                        await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(withDb.Configuration.InterpreterPath).ConfigureAwait(false);
+                    var db = PythonTypeDatabase.GetDatabaseExpectedModules(withDb.Configuration.Version, paths)
+                        .SelectMany()
+                        .Select(g => g.ModuleName);
+                    expected.IntersectWith(db);
+                    return expected;
+                } catch (InvalidOperationException) {
+                }
             }
 
             return await Task.Run(() => {
