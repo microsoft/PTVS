@@ -121,12 +121,16 @@ namespace Microsoft.PythonTools.TestAdapter {
             if (entry == null) {
                 yield break;
             }
+            var analysis = entry.Analysis;
+            if (analysis == null || !entry.IsAnalyzed) {
+                yield break;
+            }
 
-            foreach (var classValue in GetTestCaseClasses(entry)) {
+            foreach (var classValue in GetTestCaseClasses(analysis)) {
                 // Check the name of all functions on the class using the
                 // analyzer. This will return functions defined on this
                 // class and base classes
-                foreach (var member in GetTestCaseMembers(entry, classValue)) {
+                foreach (var member in GetTestCaseMembers(analysis, classValue)) {
                     // Find the definition to get the real location of the
                     // member. Otherwise decorators will confuse us.
                     var definition = entry.Analysis
@@ -140,11 +144,11 @@ namespace Microsoft.PythonTools.TestAdapter {
                     int endLine = location?.EndLine ?? location?.StartLine ?? 0;
 
                     yield return new TestCaseInfo(
-                        classValue.DeclaringModule.FilePath,
+                        classValue.DeclaringModule?.FilePath,
                         classValue.Name,
                         member.Key,
-                        location.StartLine,
-                        location.StartColumn,
+                        location?.StartLine ?? 0,
+                        location?.StartColumn ?? 1,
                         endLine
                     );
                 }
@@ -168,10 +172,10 @@ namespace Microsoft.PythonTools.TestAdapter {
         /// all) the runTest overridden method
         /// </summary>
         private static IEnumerable<KeyValuePair<string, IAnalysisSet>> GetTestCaseMembers(
-            IPythonProjectEntry entry,
+            ModuleAnalysis analysis,
             AnalysisValue classValue
         ) {
-            var methodFunctions = classValue.GetAllMembers(entry.Analysis.InterpreterContext)
+            var methodFunctions = classValue.GetAllMembers(analysis.InterpreterContext)
                 .Where(v => v.Value.Any(m => m.MemberType == PythonMemberType.Function || m.MemberType == PythonMemberType.Method));
 
             var tests = methodFunctions.Where(v => v.Key.StartsWith("test"));
@@ -184,15 +188,11 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-        private static IEnumerable<AnalysisValue> GetTestCaseClasses(IPythonProjectEntry entry) {
-            if (entry.IsAnalyzed) {
-                return entry.Analysis.GetAllAvailableMembersByIndex(0)
-                    .SelectMany(m => entry.Analysis.GetValuesByIndex(m.Name, 0))
-                    .Where(v => v.MemberType == PythonMemberType.Class)
-                    .Where(v => v.Mro.SelectMany(v2 => v2).Any(IsTestCaseClass));
-            } else {
-                return Enumerable.Empty<AnalysisValue>();
-            }
+        private static IEnumerable<AnalysisValue> GetTestCaseClasses(ModuleAnalysis analysis) {
+            return analysis.GetAllAvailableMembersByIndex(0)
+                .SelectMany(m => analysis.GetValuesByIndex(m.Name, 0))
+                .Where(v => v.MemberType == PythonMemberType.Class)
+                .Where(v => v.Mro.SelectMany(v2 => v2).Any(IsTestCaseClass));
         }
     }
 }

@@ -32,6 +32,7 @@ using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Utilities;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Repl {
     [InteractiveWindowRole("Debug")]
@@ -371,15 +372,21 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         private void OnEngineAttached(object sender, AD7EngineEventArgs e) {
-            AttachProcess(e.Engine.Process, e.Engine);
+            _serviceProvider.GetUIThread().InvokeAsync(() => {
+                AttachProcess(e.Engine.Process, e.Engine);
+            }).DoNotWait();
         }
 
         private void OnEngineDetaching(object sender, AD7EngineEventArgs e) {
-            DetachProcess(e.Engine.Process);
+            _serviceProvider.GetUIThread().InvokeAsync(() => {
+                DetachProcess(e.Engine.Process);
+            }).DoNotWait();
         }
 
         private void OnProcessExited(object sender, ProcessExitedEventArgs e) {
-            DetachProcess((PythonProcess)sender);
+            _serviceProvider.GetUIThread().InvokeAsync(() => {
+                DetachProcess((PythonProcess)sender);
+            }).DoNotWait();
         }
 
         internal void SwitchProcess(PythonProcess process, bool verbose) {
