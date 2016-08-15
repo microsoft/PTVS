@@ -456,8 +456,10 @@ namespace Microsoft.PythonTools {
         }
 
         private void InterpretersChanged(object sender, EventArgs e) {
-            GlobalInterpreterOptions.Load();
-            LoadInterpreterOptions();
+            _container.GetUIThread().InvokeAsync(() => {
+                GlobalInterpreterOptions.Load();
+                LoadInterpreterOptions();
+            }).HandleAllExceptions(_container, GetType()).DoNotWait();
         }
 
         internal InterpreterOptions GetInterpreterOptions(string id) {
