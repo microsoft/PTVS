@@ -152,7 +152,7 @@ namespace Microsoft.VisualStudioTools {
                 // TODO: Report error
                 return null;
             }
-
+#if DEV11_OR_LATER
             if (docView is IVsDifferenceCodeWindow) {
                 var diffWindow = (IVsDifferenceCodeWindow)docView;
                 switch (diffWindow.DifferenceViewer.ActiveViewType) {
@@ -165,7 +165,7 @@ namespace Microsoft.VisualStudioTools {
                 }
                 return null;
             }
-
+#endif
             if (docView is IVsCodeWindow) {
                 IVsTextView textView;
                 if (ErrorHandler.Failed(((IVsCodeWindow)docView).GetPrimaryView(out textView))) {
