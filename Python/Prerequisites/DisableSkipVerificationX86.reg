@@ -34,6 +34,7 @@ Windows Registry Editor Version 5.00
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.RunElevated,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.TestAdapter,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.TestAdapter.Analysis,B03F5F7F11D50A3A]
+[-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.TestAdapter.Executor,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.Uwp,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.Uwp.Interpreter,B03F5F7F11D50A3A]
 [-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\StrongName\Verification\Microsoft.PythonTools.Uwp.Wizards,B03F5F7F11D50A3A]
