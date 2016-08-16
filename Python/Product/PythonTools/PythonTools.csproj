@@ -110,6 +110,7 @@
     <ProjectReference2 Include="..\ProjectWizards\ProjectWizards.csproj" />
     <ProjectReference2 Include="..\TestAdapter\TestAdapter.csproj" />
     <ProjectReference2 Include="..\TestAdapter.Analysis\TestAdapter.Analysis.csproj" />
+    <ProjectReference2 Include="..\TestAdapter.Executor\TestAdapter.Executor.csproj" />
     <ProjectReference2 Include="..\XamlDesignerSupport\XamlDesignerSupport.csproj" />
     <Reference Include="Microsoft.PythonTools.InteractiveWindow" />
     <Reference Include="Microsoft.PythonTools.VsInteractiveWindow" />

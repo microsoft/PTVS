@@ -213,6 +213,7 @@
     <!-- Unit Test Adapter -->
     <File Include="!(bindpath.bin)\Microsoft.PythonTools.TestAdapter.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.TestAdapter.Analysis.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.TestAdapter.Executor.dll;
                    visualstudio_py_testlauncher.py" />
     <ItemTemplate Include="$(BuildRoot)Python\Templates\Core\ItemTemplates\Python\UnitTestFile\*">
       <TemplateName>UnitTestFile</TemplateName>
