@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -17,39 +17,30 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Xml.XPath;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
-using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-using Microsoft.VisualStudioTools;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.TestAdapter {
-    [FileExtension(".py")]
-    [DefaultExecutorUri(TestExecutor.ExecutorUriString)]
-    class TestDiscoverer : ITestDiscoverer {
-        public void DiscoverTests(IEnumerable<string> sources, IDiscoveryContext discoveryContext, IMessageLogger logger, ITestCaseDiscoverySink discoverySink) {
-            ValidateArg.NotNull(sources, "sources");
-            ValidateArg.NotNull(discoverySink, "discoverySink");
-
-            var settings = discoveryContext.RunSettings;
-            
-            DiscoverTests(sources, logger, discoverySink, settings);
+    static class TestReader {
+        public struct TestCase {
+            public string DisplayName;
+            public string FullyQualifiedName;
+            public string FileName;
+            public string SourceFile;
+            public int LineNo;
         }
 
-        public static void DiscoverTests(IEnumerable<string> sources, IMessageLogger logger, ITestCaseDiscoverySink discoverySink, IRunSettings settings) {
-            HashSet<string> sourcesSet = new HashSet<string>(sources);
-
-            // Test list is sent to us via our run settings which we use to smuggle the
-            // data we have in our analysis process.
-            var doc = new XPathDocument(new StringReader(settings.SettingsXml));
+        public static IEnumerable<TestCase> ReadTests(
+            XPathDocument doc,
+            HashSet<string> validSources,
+            Action<string> warning
+        ) {
             XPathNodeIterator nodes = doc.CreateNavigator().Select("/RunSettings/Python/TestCases/Project/Test");
             foreach (XPathNavigator test in nodes) {
                 var className = test.GetAttribute("className", "");
                 var file = test.GetAttribute("file", "");
 
-                if (!sources.Contains(file)) {
+                if (!validSources.Contains(file)) {
                     continue;
                 }
 
@@ -69,36 +60,32 @@ namespace Microsoft.PythonTools.TestAdapter {
                     !String.IsNullOrWhiteSpace(className) &&
                     !String.IsNullOrWhiteSpace(methodName) &&
                     !String.IsNullOrWhiteSpace(file)) {
-                    var moduleName = CommonUtils.CreateFriendlyFilePath(projectHome, file);
+                    var moduleName = PathUtils.CreateFriendlyFilePath(projectHome, file);
                     var fullyQualifiedName = MakeFullyQualifiedTestName(moduleName, className, methodName);
 
                     // If this is a runTest test we should provide a useful display name
                     var displayName = methodName == "runTest" ? className : methodName;
 
-                    var tc = new TestCase(fullyQualifiedName, new Uri(TestExecutor.ExecutorUriString), file) {
+                    yield return new TestCase {
+                        FileName = PathUtils.GetAbsoluteFilePath(projectHome, file),
                         DisplayName = displayName,
-                        LineNumber = lineNo,
-                        CodeFilePath = CommonUtils.GetAbsoluteFilePath(projectHome, file)
+                        LineNo = lineNo,
+                        FullyQualifiedName = fullyQualifiedName,
+                        SourceFile = file
                     };
-
-                    discoverySink.SendTestCase(tc);
-                } else if (logger != null) {
-                    logger.SendMessage(
-                        TestMessageLevel.Warning,
-                        String.Format(
-                            "Bad test case: {0} {1} {2} {3} {4}",
-                            className,
-                            methodName,
-                            file,
-                            line,
-                            column
-                        )
-                    );
+                } else {
+                    warning?.Invoke("Bad test case: {0} {1} {2} {3} {4}".FormatUI(
+                        className,
+                        methodName,
+                        file,
+                        line,
+                        column
+                    ));
                 }
             }
         }
 
-        internal static string MakeFullyQualifiedTestName(string modulePath, string className, string methodName) {
+        public static string MakeFullyQualifiedTestName(string modulePath, string className, string methodName) {
             return modulePath + "::" + className + "::" + methodName;
         }
 

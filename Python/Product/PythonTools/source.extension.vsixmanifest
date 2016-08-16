@@ -41,7 +41,7 @@
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|Microsoft.PythonTools.VSInterpreters;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|TestAdapter;_GetTargetPath|" />
     <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|XamlDesignerSupport;_GetTargetPath|" />
-    <Asset Type="UnitTestExtension" Path="|TestAdapter;_GetTargetPath|" />
+    <Asset Type="UnitTestExtension" Path="|TestAdapter.Executor;_GetTargetPath|" />
     <Asset Type="DebuggerEngineExtension" Path="DkmDebugger.vsdconfig" />
     <Asset Type="NativeVisualizer" Path="PythonDkm.natvis" />
     <Asset Type="Microsoft.VisualStudio.Assembly" d:Source="File" Path="Newtonsoft.Json.dll" AssemblyName="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed" />

@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools {
     public static class PythonConstants {
@@ -148,5 +147,6 @@ namespace Microsoft.PythonTools {
         public const string DontShowUpgradeDialogAgainCollection = "PythonTools\\Dialogs";
 
         internal const string PythonToolsProcessIdEnvironmentVariable = "_PTVS_PID";
+        internal const string TestExecutorUriString = "executor://PythonTestExecutor/v1";
     }
 }

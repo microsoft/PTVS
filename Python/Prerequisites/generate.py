@@ -40,6 +40,7 @@ ASSEMBLIES = sorted([
     "Microsoft.PythonTools.RunElevated",
     "Microsoft.PythonTools.TestAdapter",
     "Microsoft.PythonTools.TestAdapter.Analysis",
+    "Microsoft.PythonTools.TestAdapter.Executor",
     "Microsoft.PythonTools.Uwp",
     "Microsoft.PythonTools.Uwp.Interpreter",
     "Microsoft.PythonTools.Uwp.Wizards",

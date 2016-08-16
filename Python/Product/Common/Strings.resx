@@ -811,4 +811,26 @@ modified from these scripts.</value>
   <data name="UpgradedWebBrowserUrlProperty" xml:space="preserve">
     <value>The web browser URL property has been set to a default value. It may be modified through Project Properties.</value>
   </data>
+  <data name="Test_ErrorConnecting" xml:space="preserve">
+    <value>Error occurred connecting to debuggee.</value>
+  </data>
+  <data name="Test_FailedToAttachExited" xml:space="preserve">
+    <value>Failed to attach debugger because the process has already exited.</value>
+  </data>
+  <data name="Test_InterpreterDoesNotExist" xml:space="preserve">
+    <value>Interpreter path does not exist: {0}</value>
+  </data>
+  <data name="Test_NoCoverageProduced" xml:space="preserve">
+    <value>Code coverage file not produced...  have you installed coverage.py? http://go.microsoft.com/fwlink/?LinkId=808238</value>
+  </data>
+  <data name="Test_NoTestFinishedNotification" xml:space="preserve">
+    <value>Failed to receive test finish notification.  One or more test results may be missing.</value>
+  </data>
+  <data name="Test_UnableToDetermineInterpreter" xml:space="preserve">
+    <value>Unable to determine interpreter to use for {0}</value>
+  </data>
+  <data name="Test_UnexpectedResult" xml:space="preserve">
+    <value>Unexpected test result: {0}.{1}</value>
+    <comment>{0} is a class name from user code, {1} is a method name from user code</comment>
+  </data>
 </root>

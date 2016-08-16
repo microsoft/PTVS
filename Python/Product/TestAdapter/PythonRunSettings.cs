@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Threading;
 using System.Xml.XPath;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
@@ -126,10 +127,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                             if (config == null) {
                                 log.Log(
                                     MessageLevel.Warning,
-                                    String.Format(
-                                        Strings.TestDiscoveryFailedMissingLaunchConfiguration,
-                                        project.Key.ProjectHome
-                                    )
+                                    Strings.TestDiscoveryFailedMissingLaunchConfiguration.FormatUI(project.Key.ProjectHome)
                                 );
                                 continue;
                             }
