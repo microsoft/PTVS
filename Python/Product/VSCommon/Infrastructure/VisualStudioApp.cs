@@ -19,13 +19,12 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using EnvDTE;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio.OLE.Interop;
 using Process = System.Diagnostics.Process;
 
-namespace Microsoft.VisualStudioTools {
-    public sealed class VisualStudioProxy : IDisposable {
+namespace Microsoft.PythonTools.Infrastructure {
+    sealed class VisualStudioProxy : IDisposable {
         private static readonly Dictionary<int, VisualStudioProxy> _knownInstances = new Dictionary<int, VisualStudioProxy>();
         private readonly int _processId;
 
@@ -98,8 +97,7 @@ namespace Microsoft.VisualStudioTools {
                 rot.EnumRunning(out enumMonikers);
 
                 IMoniker[] moniker = new IMoniker[1];
-                uint numberFetched = 0;
-                while (enumMonikers.Next(1, moniker, out numberFetched) == 0) {
+                while (enumMonikers.Next(1, moniker, IntPtr.Zero) == 0) {
                     IMoniker runningObjectMoniker = moniker[0];
 
                     string name = null;

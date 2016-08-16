@@ -32,22 +32,20 @@ using System.Xml.XPath;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Ipc.Json;
-using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-using Microsoft.VisualStudioTools;
 using TP = Microsoft.PythonTools.TestAdapter.TestProtocol;
 
 namespace Microsoft.PythonTools.TestAdapter {
     [SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable",
         Justification = "object owned by VS")]
-    [ExtensionUri(TestExecutor.ExecutorUriString)]
+    [ExtensionUri(PythonConstants.TestExecutorUriString)]
     class TestExecutor : ITestExecutor {
-        public const string ExecutorUriString = "executor://PythonTestExecutor/v1";
         private static readonly Guid PythonRemoteDebugPortSupplierUnsecuredId = new Guid("{FEB76325-D127-4E02-B59D-B16D93D46CF5}");
         private static readonly Guid PythonDebugEngineGuid = new Guid("EC1375B7-E2CE-43E8-BF75-DC638DE1F1F9");
+        private static readonly Guid NativeDebugEngineGuid = new Guid("3B476D35-A401-11D2-AAD4-00C04F990171");
+
         private static readonly string TestLauncherPath = PythonToolsInstallPath.GetFile("visualstudio_py_testlauncher.py");
         internal static Uri PythonCodeCoverageUri = new Uri("datacollector://Microsoft/PythonCodeCoverage/1.0");
 
@@ -70,15 +68,24 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             _cancelRequested.Reset();
 
-            var receiver = new TestReceiver();
-
-            TestDiscoverer.DiscoverTests(sources, frameworkHandle, receiver, runContext.RunSettings);
+            var executorUri = new Uri(PythonConstants.TestExecutorUriString);
+            var tests = new List<TestCase>();
+            var doc = new XPathDocument(new StringReader(runContext.RunSettings.SettingsXml));
+            foreach (var t in TestReader.ReadTests(doc, new HashSet<string>(sources, StringComparer.OrdinalIgnoreCase), m => {
+                frameworkHandle?.SendMessage(TestMessageLevel.Warning, m);
+            })) {
+                tests.Add(new TestCase(t.FullyQualifiedName, executorUri, t.SourceFile) {
+                    DisplayName = t.DisplayName,
+                    LineNumber = t.LineNo,
+                    CodeFilePath = t.SourceFile
+                });
+            }
 
             if (_cancelRequested.WaitOne(0)) {
                 return;
             }
 
-            RunTestCases(receiver.Tests, runContext, frameworkHandle);
+            RunTestCases(tests, runContext, frameworkHandle);
         }
 
         private Dictionary<string, PythonProjectSettings> GetSourceToSettings(IRunSettings settings) {
@@ -180,7 +187,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                     File.Delete(covPath);
                 } else {
-                    frameworkHandle.SendMessage(TestMessageLevel.Warning, Resources.NoCoverageProduced);
+                    frameworkHandle.SendMessage(TestMessageLevel.Warning, Strings.Test_NoCoverageProduced);
                 }
             }
         }
@@ -195,7 +202,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             // go to the top level directory...  If all else fails we do "pycov".
             foreach (var test in tests) {
                 string testFile, testClass, testMethod;
-                TestDiscoverer.ParseFullyQualifiedTestName(
+                TestReader.ParseFullyQualifiedTestName(
                     test.FullyQualifiedName,
                     out testFile,
                     out testClass,
@@ -290,7 +297,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             private readonly VisualStudioProxy _app;
             private readonly string _searchPaths;
             private readonly Dictionary<string, string> _env;
-            private readonly EnvDTE.DTE _dte;
             private readonly string _debugSecret;
             private readonly int _debugPort;
             private readonly ManualResetEvent _cancelRequested;
@@ -317,9 +323,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _settings = settings;
                 _app = app;
                 _cancelRequested = cancelRequested;
-                if (_app != null) {
-                    _dte = _app.GetDTE();
-                }
 
                 _env = new Dictionary<string, string>();
 
@@ -382,14 +385,14 @@ namespace Microsoft.PythonTools.TestAdapter {
                         _curTest = null;
                         foreach (var test in _tests) {
                             string testFile, testClass, testMethod;
-                            TestDiscoverer.ParseFullyQualifiedTestName(
+                            TestReader.ParseFullyQualifiedTestName(
                                 test.FullyQualifiedName,
                                 out testFile,
                                 out testClass,
                                 out testMethod
                             );
 
-                            string testFilePath = CommonUtils.GetAbsoluteFilePath(_settings.ProjectHome, test.CodeFilePath);
+                            string testFilePath = PathUtils.GetAbsoluteFilePath(_settings.ProjectHome, test.CodeFilePath);
                             var modulePath = ModulePath.FromFullPath(testFilePath);
 
                             if (start.test == modulePath.ModuleName + "." + testClass + "." + testMethod) { 
@@ -401,13 +404,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                         if (_curTest != null) {
                             _frameworkHandle.RecordStart(_curTest);
                         } else {
-                            Warning(
-                                string.Format(
-                                    "Unexpected test result: {0} {1} {2}",
-                                    start.classname,
-                                    start.method
-                                )
-                            );
+                            Warning(Strings.Test_UnexpectedResult.FormatUI(start.classname, start.method));
                         }
                         break;
                     case TP.StdErrEvent.Name:
@@ -429,7 +426,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 HashSet<string> knownModulePaths = new HashSet<string>();
                 foreach (var test in tests) {
-                    string testFilePath = CommonUtils.GetAbsoluteFilePath(settings.ProjectHome, test.CodeFilePath);
+                    string testFilePath = PathUtils.GetAbsoluteFilePath(settings.ProjectHome, test.CodeFilePath);
                     var modulePath = ModulePath.FromFullPath(testFilePath);
                     if (knownModulePaths.Add(modulePath.LibraryPath)) {
                         paths.Insert(0, modulePath.LibraryPath);
@@ -476,7 +473,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
             public void Run() {
                 if (!File.Exists(_settings.InterpreterPath)) {
-                    Error(String.Format(Resources.InterpreterDoesNotExist, _settings.InterpreterPath));
+                    Error(Strings.Test_InterpreterDoesNotExist.FormatUI(_settings.InterpreterPath));
                     return;
                 }
                 try {
@@ -506,7 +503,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                         if (_debugMode != PythonDebugMode.None) {
                             if (proc.ExitCode.HasValue) {
                                 // Process has already exited
-                                Error(Resources.FailedToAttachExited);
+                                Error(Strings.Test_FailedToAttachExited);
                                 if (proc.StandardErrorLines.Any()) {
                                     Error("Standard error from Python:");
                                     foreach (var line in proc.StandardErrorLines) {
@@ -524,7 +521,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                                         }
                                     }
                                 } else {
-                                    var engines = new[] { PythonDebugEngineGuid, VSConstants.DebugEnginesGuids.NativeOnly_guid };
+                                    var engines = new[] { PythonDebugEngineGuid, NativeDebugEngineGuid };
                                     while (!_app.AttachToProcess(proc, engines)) {
                                         if (proc.Wait(TimeSpan.FromMilliseconds(500))) {
                                             break;
@@ -533,7 +530,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                                 }
 
                             } catch (COMException ex) {
-                                Error(Resources.ErrorConnecting);
+                                Error(Strings.Test_ErrorConnecting);
                                 DebugError(ex.ToString());
                                 try {
                                     proc.Kill();
@@ -570,7 +567,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                                     // to be flushed...
                                     handles = new WaitHandle[] { _cancelRequested, _done };
                                     if (WaitHandle.WaitAny(handles, 10000) != 1) {
-                                        Warning(Resources.NoTestFinishedNotification);
+                                        Warning(Strings.Test_NoTestFinishedNotification);
                                     }
                                     break;
                                 case 2:
@@ -619,19 +616,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                 var pythonPathVar = _settings.PathEnv;
                 var pythonPath = _searchPaths;
                 if (!string.IsNullOrWhiteSpace(pythonPathVar)) {
-                    if (_app != null) {
-                        var settingsManager = SettingsManagerCreator.GetSettingsManager(_dte);
-                        if (settingsManager != null) {
-                            var store = settingsManager.GetReadOnlySettingsStore(SettingsScope.UserSettings);
-                            if (store != null && store.CollectionExists(@"PythonTools\Options\General")) {
-                                var settingStr = store.GetString(@"PythonTools\Options\General", "ClearGlobalPythonPath", "True");
-                                bool settingBool;
-                                if (bool.TryParse(settingStr, out settingBool) && !settingBool) {
-                                    pythonPath += ";" + Environment.GetEnvironmentVariable(pythonPathVar);
-                                }
-                            }
-                        }
-                    }
                     _env[pythonPathVar] = pythonPath;
                 }
 
@@ -647,14 +631,14 @@ namespace Microsoft.PythonTools.TestAdapter {
                 foreach (var test in _tests) {
                     arguments.Add("-t");
                     string testFile, testClass, testMethod;
-                    TestDiscoverer.ParseFullyQualifiedTestName(
+                    TestReader.ParseFullyQualifiedTestName(
                         test.FullyQualifiedName,
                         out testFile,
                         out testClass,
                         out testMethod
                     );
 
-                    string testFilePath = CommonUtils.GetAbsoluteFilePath(_settings.ProjectHome, testFile);
+                    string testFilePath = PathUtils.GetAbsoluteFilePath(_settings.ProjectHome, testFile);
                     var module = ModulePath.FromFullPath(testFilePath);
 
                     arguments.Add(

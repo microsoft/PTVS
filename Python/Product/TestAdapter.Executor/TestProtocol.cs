@@ -40,6 +40,8 @@ namespace Microsoft.PythonTools.TestAdapter {
             return all;
         }
 
+#pragma warning disable 0649
+
         public class StdOutEvent : Event {
             public const string Name = "stdout";
             public string content;
@@ -74,5 +76,6 @@ namespace Microsoft.PythonTools.TestAdapter {
             public override string name => Name;
         }
 
+#pragma warning restore 0649
     }
 }

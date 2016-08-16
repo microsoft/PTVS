@@ -1894,6 +1894,69 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error occurred connecting to debuggee..
+        /// </summary>
+        public static string Test_ErrorConnecting {
+            get {
+                return ResourceManager.GetString("Test_ErrorConnecting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to attach debugger because the process has already exited..
+        /// </summary>
+        public static string Test_FailedToAttachExited {
+            get {
+                return ResourceManager.GetString("Test_FailedToAttachExited", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interpreter path does not exist: {0}.
+        /// </summary>
+        public static string Test_InterpreterDoesNotExist {
+            get {
+                return ResourceManager.GetString("Test_InterpreterDoesNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Code coverage file not produced...  have you installed coverage.py? http://go.microsoft.com/fwlink/?LinkId=808238.
+        /// </summary>
+        public static string Test_NoCoverageProduced {
+            get {
+                return ResourceManager.GetString("Test_NoCoverageProduced", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to receive test finish notification.  One or more test results may be missing..
+        /// </summary>
+        public static string Test_NoTestFinishedNotification {
+            get {
+                return ResourceManager.GetString("Test_NoTestFinishedNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to determine interpreter to use for {0}.
+        /// </summary>
+        public static string Test_UnableToDetermineInterpreter {
+            get {
+                return ResourceManager.GetString("Test_UnableToDetermineInterpreter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected test result: {0}.{1}.
+        /// </summary>
+        public static string Test_UnexpectedResult {
+            get {
+                return ResourceManager.GetString("Test_UnexpectedResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to get launch configuration for project stored in {0}, tests cannot be discovered..
         /// </summary>
         public static string TestDiscoveryFailedMissingLaunchConfiguration {
