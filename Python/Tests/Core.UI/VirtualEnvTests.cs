@@ -395,7 +395,7 @@ namespace PythonToolsUITests {
             using (var app = new PythonVisualStudioApp())
             using (var dis = Init3(app)) {
                 if (dis.CurrentDefault.FindModules("virtualenv").Contains("virtualenv")) {
-                    Pip.Uninstall(app.ServiceProvider, dis.CurrentDefault, "virtualenv", false).Wait();
+                    dis.CurrentDefault.PipUninstall("virtualenv");
                 }
 
                 Assert.AreEqual(0, Microsoft.PythonTools.Analysis.ModulePath.GetModulesInLib(dis.CurrentDefault.Configuration)

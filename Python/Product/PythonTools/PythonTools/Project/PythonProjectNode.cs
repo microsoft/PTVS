@@ -2088,11 +2088,10 @@ namespace Microsoft.PythonTools.Project {
             if (args != null && args.TryGetValue("p", out name)) {
                 // Don't prompt, just install
                 bool elevated = args.ContainsKey("a");
-                InstallNewPackageAsync(
-                    selectedInterpreterFactory,
-                    Site,
-                    name,
-                    elevated ? new VsPackageManagerUI(Site, true) : null
+                selectedInterpreterFactory.PackageManager.InstallAsync(
+                    PackageSpec.FromArguments(name),
+                    new VsPackageManagerUI(Site, elevated),
+                    CancellationToken.None
                 )
                     .SilenceException<OperationCanceledException>()
                     .HandleAllExceptions(Site)
@@ -2139,62 +2138,6 @@ namespace Microsoft.PythonTools.Project {
             return VSConstants.S_OK;
         }
 
-
-        internal static async Task InstallNewPackageAsync(
-            IPythonInterpreterFactory factory,
-            IServiceProvider provider,
-            string name,
-            IPackageManagerUI ui
-        ) {
-            var service = provider.GetComponentModel().GetService<IInterpreterRegistryService>();
-            if (string.IsNullOrEmpty(name)) {
-                var view = InstallPythonPackage.ShowDialog(provider, factory, service);
-                if (view == null) {
-                    throw new OperationCanceledException();
-                }
-                name = view.Name;
-            }
-
-            var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
-
-            try {
-                var redirector = OutputWindowRedirector.GetGeneral(provider);
-                statusBar.SetText(Strings.PackageInstallingSeeOutputWindow.FormatUI(name));
-
-                if (File.Exists(name) || Directory.Exists(name)) {
-                    // Ensure paths are quoted
-                    name = ProcessOutput.QuoteSingleArgument(name);
-                }
-
-                var success = await factory.PackageManager.InstallAsync(
-                    PackageSpec.FromArguments(name),
-                    ui ?? new VsPackageManagerUI(provider),
-                    CancellationToken.None
-                );
-
-                statusBar.SetText((success ? Strings.PackageInstallSucceeded : Strings.PackageInstallFailed).FormatUI(name));
-
-                var packageInfo = FindRequirementRegex.Match(name.ToLower());
-
-                //If we fail to parse the package name then just skip logging it
-                if (packageInfo.Groups["name"].Success) {
-                    //Log the details of the Installation
-                    var packageDetails = new Logging.PackageInstallDetails(
-                        packageInfo.Groups["name"].Value,
-                        packageInfo.Groups["ver"].Success ? packageInfo.Groups["ver"].Value : String.Empty,
-                        factory.GetType().Name,
-                        factory.Configuration.Version.ToString(),
-                        factory.Configuration.Architecture.ToString(),
-                        String.Empty, //Installer if we tracked it
-                        false,
-                        success ? 0 : 1);
-
-                    provider.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.PackageInstalled, packageDetails);
-                }
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
-                statusBar.SetText(Strings.PackageInstallFailed.FormatUI(name));
-            }
-        }
 
         private bool ShouldInstallRequirementsTxt(
             string targetLabel,
@@ -2252,10 +2195,10 @@ namespace Microsoft.PythonTools.Project {
             var projectHome = ProjectHome;
             var txt = PathUtils.GetAbsoluteFilePath(projectHome, "requirements.txt");
 
-            HashSet<string> items = null;
+            IList<PackageSpec> items = null;
 
             try {
-                items = await Pip.Freeze(factory?.Configuration);
+                items = await factory?.PackageManager?.GetInstalledPackagesAsync(CancellationToken.None);
             } catch (FileNotFoundException ex) {
                 // Other exceptions should not occur, so let them propagate
                 var dlg = TaskDialog.ForException(
@@ -2379,19 +2322,19 @@ namespace Microsoft.PythonTools.Project {
 
         internal static IEnumerable<string> MergeRequirements(
             IEnumerable<string> original,
-            IEnumerable<string> updates,
+            IEnumerable<PackageSpec> updates,
             bool addNew
         ) {
             if (original == null) {
-                foreach (var req in updates.OrderBy(r => r)) {
-                    yield return req;
+                foreach (var req in updates.OrderBy(r => r.FullSpec)) {
+                    yield return req.FullSpec;
                 }
                 yield break;
             }
 
             var existing = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-            foreach (var m in updates.SelectMany(req => FindRequirementRegex.Matches(req).Cast<Match>())) {
-                existing[m.Groups["name"].Value] = m.Value;
+            foreach (var p in updates) {
+                existing[p.Name] = p.FullSpec;
             }
 
             var seen = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
@@ -2488,19 +2431,9 @@ namespace Microsoft.PythonTools.Project {
             bool preferVEnv = false
         ) {
             if (create && preferVEnv) {
-                await VirtualEnv.CreateWithVEnv(
-                    Site,
-                    baseInterp,
-                    path,
-                    OutputWindowRedirector.GetGeneral(Site)
-                );
+                await VirtualEnv.CreateWithVEnv(Site, baseInterp, path);
             } else if (create) {
-                await VirtualEnv.CreateAndInstallDependencies(
-                    Site,
-                    baseInterp,
-                    path,
-                    OutputWindowRedirector.GetGeneral(Site)
-                );
+                await VirtualEnv.CreateAndInstallDependencies(Site, baseInterp, path);
             }
 
             var rootPath = PathUtils.GetAbsoluteDirectoryPath(ProjectHome, path);

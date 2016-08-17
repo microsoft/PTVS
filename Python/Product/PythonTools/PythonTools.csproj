@@ -391,7 +391,6 @@
     </Compile>
     <Compile Include="PythonTools\Commands\ImportWizardCommand.cs" />
     <Compile Include="PythonTools\Project\LoadedProjectInterpreterFactoryProvider.cs" />
-    <Compile Include="PythonTools\Project\Pip.cs" />
     <Compile Include="PythonTools\Project\PythonProjectImageName.cs" />
     <Compile Include="PythonTools\Project\VirtualEnv.cs" />
     <Compile Include="PythonTools\PythonAnalysisClassifier.cs" />
@@ -416,10 +415,6 @@
     <Compile Include="PythonTools\WebProject\PythonWebProject.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebProjectConfig.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebProjectFactory.cs" />
-    <Compile Include="PythonTools\Project\InstallPythonPackage.xaml.cs">
-      <DependentUpon>InstallPythonPackage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Project\InstallPythonPackageView.cs" />
     <Compile Include="PythonTools\Project\PythonInterpreterView.cs" />
     <Compile Include="PythonTools\Project\InterpretersContainerNode.cs" />
     <Compile Include="PythonTools\Project\InterpretersContainerNodeProperties.cs" />
@@ -1007,10 +1002,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="PythonTools\Project\ImportWizard\ImportWizardDictionary.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="PythonTools\Project\InstallPythonPackage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

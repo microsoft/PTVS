@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -34,17 +35,15 @@ namespace Microsoft.PythonTools.Project {
         /// Installs virtualenv. If pip is not installed, the returned task will
         /// succeed but error text will be passed to the redirector.
         /// </summary>
-        public static Task<bool> Install(IServiceProvider provider, IPythonInterpreterFactory factory, Redirector output = null) {
-            bool elevate = provider.GetPythonToolsService().GeneralOptions.ElevatePip;
+        public static Task<bool> Install(IServiceProvider provider, IPythonInterpreterFactory factory) {
+            var ui = new VsPackageManagerUI(provider);
             if (factory.Configuration.Version < new Version(2, 5)) {
-                if (output != null) {
-                    output.WriteErrorLine("Python versions earlier than 2.5 are not supported by PTVS.");
-                }
+                ui.OnErrorTextReceived("Python versions earlier than 2.5 are not supported by PTVS.\n");
                 throw new OperationCanceledException();
             } else if (factory.Configuration.Version == new Version(2, 5)) {
-                return Pip.Install(provider, factory, "https://go.microsoft.com/fwlink/?LinkID=317970", elevate, output);
+                return factory.PackageManager.InstallAsync(PackageSpec.FromArguments("https://go.microsoft.com/fwlink/?LinkID=317970"), ui, CancellationToken.None);
             } else {
-                return Pip.Install(provider, factory, "https://go.microsoft.com/fwlink/?LinkID=317969", elevate, output);
+                return factory.PackageManager.InstallAsync(PackageSpec.FromArguments("https://go.microsoft.com/fwlink/?LinkID=317969"), ui, CancellationToken.None);
             }
         }
 
@@ -108,9 +107,9 @@ namespace Microsoft.PythonTools.Project {
         /// the task will succeed but error text will be passed to the
         /// redirector.
         /// </summary>
-        public static Task CreateWithVEnv(IServiceProvider provider, IPythonInterpreterFactory factory, string path, Redirector output = null) {
+        public static Task CreateWithVEnv(IServiceProvider provider, IPythonInterpreterFactory factory, string path) {
             factory.ThrowIfNotRunnable();
-            return ContinueCreate(provider, factory, path, true, output);
+            return ContinueCreate(provider, factory, path, true, OutputWindowRedirector.GetGeneral(provider));
         }
 
         /// <summary>
@@ -120,26 +119,30 @@ namespace Microsoft.PythonTools.Project {
         public static async Task CreateAndInstallDependencies(
             IServiceProvider provider,
             IPythonInterpreterFactory factory,
-            string path,
-            Redirector output = null
+            string path
         ) {
             factory.ThrowIfNotRunnable("factory");
 
-            var modules = await factory.FindModulesAsync("pip", "virtualenv", "venv");
-            bool hasPip = modules.Contains("pip");
-            bool hasVirtualEnv = modules.Contains("virtualenv") || modules.Contains("venv");
-
-            if (!hasVirtualEnv) {
-                if (!hasPip) {
-                    bool elevate = provider.GetPythonToolsService().GeneralOptions.ElevatePip;
-                    await Pip.InstallPip(provider, factory.Configuration, elevate, output);
-                }
-                if (!await Install(provider, factory, output)) {
+            var cancel = CancellationToken.None;
+            var ui = new VsPackageManagerUI(provider);
+            var pm = factory.PackageManager;
+            if (!pm.IsReady) {
+                await pm.PrepareAsync(ui, cancel);
+                if (!pm.IsReady) {
                     throw new InvalidOperationException(Strings.VirtualEnvCreationFailed.FormatUI(path));
                 }
             }
 
-            await ContinueCreate(provider, factory, path, false, output);
+            var modules = await factory.FindModulesAsync("virtualenv", "venv");
+            bool hasVirtualEnv = modules.Contains("virtualenv") || modules.Contains("venv");
+
+            if (!hasVirtualEnv) {
+                if (!await Install(provider, factory)) {
+                    throw new InvalidOperationException(Strings.VirtualEnvCreationFailed.FormatUI(path));
+                }
+            }
+
+            await ContinueCreate(provider, factory, path, false, PackageManagerUIRedirector.Get(ui));
         }
 
         public static InterpreterConfiguration FindInterpreterConfiguration(

@@ -415,8 +415,7 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectInstallOnNew() {
             using (var app = new PythonVisualStudioApp()) {
-                Pip.Uninstall(app.ServiceProvider, app.OptionsService.DefaultInterpreter, "bottle", false)
-                    .WaitAndUnwrapExceptions();
+                app.OptionsService.DefaultInterpreter.PipUninstall("bottle");
 
                 var t = Task.Run(() => app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
@@ -443,8 +442,7 @@ namespace PythonToolsUITests {
                 }
                 AssertUtil.ContainsExactly(project.GetPythonProject().ActiveInterpreter.FindModules("bottle"), "bottle");
 
-                Pip.Uninstall(app.ServiceProvider, app.OptionsService.DefaultInterpreter, "bottle", false)
-                    .WaitAndUnwrapExceptions();
+                app.OptionsService.DefaultInterpreter.PipUninstall("bottle");
             }
         }
 
@@ -771,10 +769,7 @@ namespace PythonToolsUITests {
         }
 
         internal static void InstallWebFramework(VisualStudioApp app, string moduleName, string packageName, IPythonInterpreterFactory factory) {
-            var redirector = new TraceRedirector("pip install " + packageName);
-            var task = app.ServiceProvider.GetUIThread().InvokeTask(() =>
-                Pip.Install(app.ServiceProvider, factory, packageName, false, redirector)
-            );
+            var task = app.ServiceProvider.GetUIThread().InvokeTask(() => factory.PipInstallAsync(packageName));
             try {
                 Assert.IsTrue(task.Wait(TimeSpan.FromMinutes(3.0)), "Timed out waiting for install " + packageName);
             } catch (AggregateException ex) {

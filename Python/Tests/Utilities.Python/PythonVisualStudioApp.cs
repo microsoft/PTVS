@@ -287,9 +287,9 @@ namespace TestUtilities.UI.Python {
 
             try {
                 if (!string.IsNullOrEmpty(installPackages)) {
-                    Pip.InstallPip(ServiceProvider, factory.Configuration, false).Wait();
+                    factory.InstallPip();
                     foreach (var package in installPackages.Split(' ', ',', ';').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s))) {
-                        Pip.Install(ServiceProvider, factory, package, false).Wait();
+                        factory.PipInstall(package);
                     }
                 }
 
