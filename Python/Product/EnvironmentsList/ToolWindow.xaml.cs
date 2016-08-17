@@ -37,9 +37,9 @@ using Microsoft.VisualStudio.ComponentModelHost;
 namespace Microsoft.PythonTools.EnvironmentsList {
     public partial class ToolWindow : UserControl, IDisposable {
         internal readonly ObservableCollection<EnvironmentView> _environments;
-        private readonly object _environmentsLock = new object();
+        internal readonly ObservableCollection<object> _extensions;
 
-        private readonly CollectionViewSource _environmentsView;
+        private readonly CollectionViewSource _environmentsView, _extensionsView;
         private readonly HashSet<IPythonInterpreterFactory> _currentlyRefreshing;
         private IInterpreterRegistryService _interpreters;
         private IInterpreterOptionsService _service;
@@ -53,15 +53,45 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private bool _isDisposed;
 
         public static readonly RoutedCommand UnhandledException = new RoutedCommand();
+        private static readonly object[] EmptyObjectArray = new object[0];
 
         public ToolWindow() {
             _environments = new ObservableCollection<EnvironmentView>();
+            _extensions = new ObservableCollection<object>();
             _environmentsView = new CollectionViewSource { Source = _environments };
+            _extensionsView = new CollectionViewSource { Source = _extensions };
+            _extensionsView.SortDescriptions.Add(new SortDescription("SortPriority", ListSortDirection.Ascending));
+            _extensionsView.SortDescriptions.Add(new SortDescription("LocalizedDisplayName", ListSortDirection.Ascending));
+            _environmentsView.View.CurrentChanged += EnvironmentsView_CurrentChanged;
             _currentlyRefreshing = new HashSet<IPythonInterpreterFactory>();
             DataContext = this;
             InitializeComponent();
             CreateListener();
             SizeChanged += ToolWindow_SizeChanged;
+        }
+
+        private void EnvironmentsView_CurrentChanged(object sender, EventArgs e) {
+            var item = _environmentsView.View.CurrentItem as EnvironmentView;
+            if (item == null) {
+                lock (_extensions) {
+                    _extensions.Clear();
+                }
+                return;
+            }
+            var oldSelect = _extensionsView.View.CurrentItem?.GetType();
+            var newSelect = oldSelect == null ? null :
+                item.Extensions?.FirstOrDefault(ext => ext != null && ext.GetType().IsEquivalentTo(oldSelect));
+            lock (_extensions) {
+                _extensions.Clear();
+                foreach (var ext in item.Extensions) {
+                    _extensions.Add(ext);
+                }
+                if (newSelect != null) {
+                    _extensionsView.View.MoveCurrentTo(newSelect);
+                } else {
+                    _extensionsView.View.MoveCurrentToFirst();
+                }
+            }
         }
 
         public IServiceProvider Site {
@@ -116,7 +146,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             BindingOperations.ClearBinding(ContentView_Vertical, ContentControl.ContentProperty);
             BindingOperations.SetBinding(ContentView_Horizontal, ContentControl.ContentProperty, new Binding {
                 Path = new PropertyPath("CurrentItem.WpfObject"),
-                Source = FindResource("SortedExtensions")
+                Source = Extensions
             });
             HorizontalLayout.Visibility = Visibility.Visible;
             UpdateLayout();
@@ -130,7 +160,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             BindingOperations.ClearBinding(ContentView_Horizontal, ContentControl.ContentProperty);
             BindingOperations.SetBinding(ContentView_Vertical, ContentControl.ContentProperty, new Binding {
                 Path = new PropertyPath("CurrentItem.WpfObject"),
-                Source = FindResource("SortedExtensions")
+                Source = Extensions
             });
             VerticalLayout.Visibility = Visibility.Visible;
             UpdateLayout();
@@ -175,9 +205,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-        public ICollectionView Environments {
-            get { return _environmentsView.View; }
-        }
+        public ICollectionView Environments => _environmentsView.View;
+        public ICollectionView Extensions => _extensionsView.View;
 
         private void MakeGlobalDefault_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as EnvironmentView;
@@ -191,7 +220,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private async void Listener_ProgressUpdate(Dictionary<string, AnalysisProgress> status) {
             bool anyUpdates = status.Any();
             if (!anyUpdates) {
-                lock (_environmentsLock) {
+                lock (_environments) {
                     anyUpdates = _currentlyRefreshing.Count != 0;
                 }
             }
@@ -199,7 +228,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             if (anyUpdates) {
                 var updates = new List<DispatcherOperation>();
 
-                lock (_environmentsLock) {
+                lock (_environments) {
                     foreach (var env in _environments) {
                         if (env.Factory == null) {
                             continue;
@@ -292,20 +321,20 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             // an asynchronous update arrives, we will still reset the state.
             // If an update has arrived, this causes a benign refresh of the
             // command state.
-            lock (_environmentsLock) {
+            lock (_environments) {
                 _currentlyRefreshing.Add(view.Factory);
             }
         }
 
         private void UpdateEnvironments(string select = null) {
             if (_service == null) {
-                lock (_environmentsLock) {
+                lock (_environments) {
                     _environments.Clear();
                 }
                 return;
             }
 
-            lock (_environmentsLock) {
+            lock (_environments) {
                 if (select == null) {
                     var selectView = _environmentsView.View.CurrentItem as EnvironmentView;
                     select = selectView?.Factory?.Configuration.Id;
@@ -406,7 +435,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             var newDefault = _service.DefaultInterpreter;
             try {
                 await Dispatcher.InvokeAsync(() => {
-                    lock (_environmentsLock) {
+                    lock (_environments) {
                         foreach (var view in _environments) {
                             if (view.Factory == newDefault) {
                                 view.IsDefault = true;

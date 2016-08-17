@@ -2098,14 +2098,12 @@ namespace Microsoft.PythonTools.Project {
                     .HandleAllExceptions(Site)
                     .DoNotWait();
             } else {
-                // Prompt the user
-                InstallNewPackageAsync(
+                // Open the install UI
+                InterpreterList.InterpreterListToolWindow.OpenAt(
+                    Site,
                     selectedInterpreterFactory,
-                    Site
-                )
-                    .SilenceException<OperationCanceledException>()
-                    .HandleAllExceptions(Site)
-                    .DoNotWait();
+                    typeof(EnvironmentsList.PipExtensionProvider)
+                );
             }
             return VSConstants.S_OK;
         }
@@ -2145,8 +2143,8 @@ namespace Microsoft.PythonTools.Project {
         internal static async Task InstallNewPackageAsync(
             IPythonInterpreterFactory factory,
             IServiceProvider provider,
-            string name = null,
-            IPackageManagerUI ui = null
+            string name,
+            IPackageManagerUI ui
         ) {
             var service = provider.GetComponentModel().GetService<IInterpreterRegistryService>();
             if (string.IsNullOrEmpty(name)) {

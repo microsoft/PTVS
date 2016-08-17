@@ -314,6 +314,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 null;
         }
 
+        ToolWindowPane IPythonToolsToolWindowService.GetWindowPane(Type windowType, bool create) {
+            return FindWindowPane(windowType, 0, create) as ToolWindowPane;
+        }
+
         void IPythonToolsToolWindowService.ShowWindowPane(Type windowType, bool focus) {
             var window = FindWindowPane(windowType, 0, true) as ToolWindowPane;
             if (window != null) {

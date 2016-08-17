@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
+using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Input;
 using Microsoft.PythonTools.EnvironmentsList;
@@ -28,6 +29,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -495,6 +497,32 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void OpenInBrowser_Executed(object sender, ExecutedRoutedEventArgs e) {
             PythonToolsPackage.OpenVsWebBrowser(_site, (string)e.Parameter);
+        }
+
+        internal static void OpenAt(IServiceProvider site, IPythonInterpreterFactory interpreter, Type extension = null) {
+            var wnd = (site?.GetService(typeof(IPythonToolsToolWindowService)) as IPythonToolsToolWindowService)
+                ?.GetWindowPane(typeof(InterpreterListToolWindow), true) as InterpreterListToolWindow;
+            var envs = wnd?.Content as ToolWindow;
+            if (envs == null) {
+                Debug.Fail("Failed to get environment list window");
+                return;
+            }
+
+            var select = envs.Environments.OfType<EnvironmentView>().FirstOrDefault(e => e.Factory == interpreter);
+            var ext = extension == null ?
+                null :
+                select.Extensions.FirstOrDefault(e => e != null && extension.IsEquivalentTo(e.GetType()));
+
+            if (select != null) {
+                ErrorHandler.ThrowOnFailure((wnd.Frame as IVsWindowFrame)?.Show() ?? 0);
+                envs.Environments.MoveCurrentTo(select);
+                if (ext != null) {
+                    var exts = envs.Extensions;
+                    if (exts != null && exts.Contains(ext)) {
+                        exts.MoveCurrentTo(ext);
+                    }
+                }
+            }
         }
     }
 }

@@ -51,6 +51,9 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly static Regex IndexNameSanitizerRegex = new Regex(@"\W");
         private static readonly Regex SimpleListRegex = new Regex(@"a href=['""](?<package>[^'""]+)");
 
+        // When files return 404 from PyPI, we put them in here to avoid trying
+        // to request them again.
+        private static HashSet<string> NotOnPyPI = new HashSet<string>();
 
         // These constants are substituted where necessary, but are not stored
         // in instance variables so we can differentiate between set and unset.
@@ -172,11 +175,23 @@ namespace Microsoft.PythonTools.Interpreter {
             string description = null;
             List<string> versions = null;
 
+            lock (NotOnPyPI) {
+                if (NotOnPyPI.Contains(entry.Name)) {
+                    return;
+                }
+            }
+
             using (var client = new WebClient()) {
                 Stream data;
                 try {
                     data = await client.OpenReadTaskAsync(new Uri(_index ?? DefaultIndex, entry.Name + "/json"));
-                } catch (WebException) {
+                } catch (WebException ex) {
+                    if ((ex.Response as HttpWebResponse)?.StatusCode == HttpStatusCode.NotFound) {
+                        lock (NotOnPyPI) {
+                            NotOnPyPI.Add(entry.Name);
+                        }
+                    }
+
                     // No net access
                     return;
                 }
@@ -432,7 +447,7 @@ namespace Microsoft.PythonTools.Interpreter {
 #if DEBUG
                     "Debug",
 #endif
-                    AssemblyVersionInfo.VSVersion
+                    AssemblyVersionInfo.Version
                 );
             }
         }
