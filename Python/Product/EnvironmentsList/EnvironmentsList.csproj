@@ -159,6 +159,7 @@
       <DependentUpon>DBExtension.xaml</DependentUpon>
     </Compile>
     <Compile Include="FileNameEllipsisConverter.cs" />
+    <Compile Include="ICanFocus.cs" />
     <Compile Include="IEnvironmentViewExtensionProvider.cs" />
     <Compile Include="PipExtension.xaml.cs">
       <DependentUpon>PipExtension.xaml</DependentUpon>

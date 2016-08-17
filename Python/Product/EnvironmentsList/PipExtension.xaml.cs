@@ -26,12 +26,13 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
-    internal sealed partial class PipExtension : UserControl {
+    internal sealed partial class PipExtension : UserControl, ICanFocus {
         public static readonly ICommand InstallPackage = new RoutedCommand();
         public static readonly ICommand UpgradePackage = new RoutedCommand();
         public static readonly ICommand UninstallPackage = new RoutedCommand();
@@ -43,6 +44,25 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _provider = provider;
             DataContextChanged += PackageExtension_DataContextChanged;
             InitializeComponent();
+        }
+
+        void ICanFocus.Focus() {
+            Dispatcher.BeginInvoke((Action)(() => {
+                try {
+                    Focus();
+                    if (SearchQueryText.IsVisible) {
+                        Keyboard.Focus(SearchQueryText);
+                    } else {
+                        SearchQueryText.IsVisibleChanged += SearchQueryText_IsVisibleChanged;
+                    }
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                }
+            }), DispatcherPriority.Loaded);
+        }
+
+        private void SearchQueryText_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) {
+            SearchQueryText.IsVisibleChanged -= SearchQueryText_IsVisibleChanged;
+            Keyboard.Focus(SearchQueryText);
         }
 
         private void PackageExtension_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e) {

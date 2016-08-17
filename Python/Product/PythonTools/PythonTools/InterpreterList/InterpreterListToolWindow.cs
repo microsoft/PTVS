@@ -21,8 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
-using System.Windows.Data;
-using System.Windows.Forms;
+using System.Windows;
 using System.Windows.Input;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
@@ -387,7 +386,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             try {
                 window = service.OpenOrCreate(replId);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                MessageBox.Show(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex), Strings.ProductTitle);
+                TaskDialog.ForException(_site, ex, Strings.ErrorOpeningInteractiveWindow, PythonConstants.IssueTrackerUrl).ShowModal();
                 return;
             }
 
@@ -520,6 +519,7 @@ namespace Microsoft.PythonTools.InterpreterList {
                     var exts = envs.Extensions;
                     if (exts != null && exts.Contains(ext)) {
                         exts.MoveCurrentTo(ext);
+                        ((ext as IEnvironmentViewExtension)?.WpfObject as ICanFocus)?.Focus();
                     }
                 }
             }
