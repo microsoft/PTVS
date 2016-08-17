@@ -317,7 +317,7 @@ namespace PythonToolsUITests {
                 nodeCount = objectBrowser.TypeNavigatorPane.Nodes.Count;
                 Assert.AreEqual(2, nodeCount, "Node Count: " + nodeCount.ToString());
                 str = objectBrowser.TypeNavigatorPane.Nodes[0].Value;
-                Assert.IsTrue(str.Trim().StartsWith("def __init__(self"), str);
+                Assert.IsTrue(str.Trim().StartsWith("__init__ (alias of def "), str);
                 str = objectBrowser.TypeNavigatorPane.Nodes[1].Value;
                 Assert.AreEqual("def tell(self)", str.Trim(), "");
 

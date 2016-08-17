@@ -73,8 +73,9 @@ namespace Microsoft.PythonTools.Interpreter {
             _factory = factory;
 
             // TODO: Get index from factory
-            _indexUrl = "https://pypi.python.org/pypi/";
-            _cache = PipPackageCache.GetCache(new Uri(_indexUrl));
+            //_indexUrl = "https://pypi.python.org/pypi/";
+            _indexUrl = null;
+            _cache = PipPackageCache.GetCache(new Uri("https://pypi.python.org/pypi/"));
 
             if (_libWatchers != null) {
                 CreateLibraryWatchers().DoNotWait();

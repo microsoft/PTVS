@@ -597,6 +597,7 @@ namespace PythonToolsUITests {
                 EndToEndLog("Aborted analysis");
 
                 app.ServiceProvider.GetUIThread().Invoke(() => {
+                    pyProj.SetProjectProperty("WebBrowserUrl", "");
                     pyProj.SetProjectProperty("WebBrowserPort", "23457");
                 });
                 EndToEndLog("Set WebBrowserPort to 23457");
@@ -604,6 +605,7 @@ namespace PythonToolsUITests {
                 EndToEndLog("Verified without debugging");
 
                 app.ServiceProvider.GetUIThread().Invoke(() => {
+                    pyProj.SetProjectProperty("WebBrowserUrl", "");
                     pyProj.SetProjectProperty("WebBrowserPort", "23456");
                 });
                 EndToEndLog("Set WebBrowserPort to 23456");
@@ -676,6 +678,7 @@ namespace PythonToolsUITests {
                     app.ServiceProvider.GetUIThread().Invoke(() => {
                         EndToEndLog("Building");
                         app.Dte.Solution.SolutionBuild.Build(true);
+                        EndToEndLog("Build output: {0}", app.GetOutputWindowText("Build"));
                         EndToEndLog("Updating settings");
                         prevNormal = app.GetService<PythonToolsService>().DebuggerOptions.WaitOnNormalExit;
                         prevAbnormal = app.GetService<PythonToolsService>().DebuggerOptions.WaitOnAbnormalExit;
@@ -734,7 +737,7 @@ namespace PythonToolsUITests {
                     service,
                     true,
                     Path.Combine(pyProj.ProjectHome, "env"),
-                    service.FindInterpreter("Global|PythonCore|" + pythonVersion + "|x86"),
+                    service.FindInterpreter("Global|PythonCore|" + pythonVersion + "-32"),
                     Version.Parse(pythonVersion) >= new Version(3, 3)
                 );
             });

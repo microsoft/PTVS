@@ -804,6 +804,18 @@ namespace TestUtilities.UI {
             bool setStartupItem = true,
             Func<AutomationDialog, bool> onDialog = null
         ) {
+            var solution = GetService<IVsSolution>(typeof(SVsSolution));
+            var solution4 = solution as IVsSolution4;
+            Assert.IsNotNull(solution, "Failed to obtain SVsSolution service");
+            Assert.IsNotNull(solution4, "Failed to obtain IVsSolution4 interface");
+
+            // Close any open solution
+            string slnDir, slnFile, slnOpts;
+            if (ErrorHandler.Succeeded(solution.GetSolutionInfo(out slnDir, out slnFile, out slnOpts))) {
+                Console.WriteLine("Closing {0}", slnFile);
+                solution.CloseSolutionElement(0, null, 0);
+            }
+
             string fullPath = TestData.GetPath(projName);
             Assert.IsTrue(File.Exists(fullPath), "Cannot find " + fullPath);
             Console.WriteLine("Opening {0}", fullPath);
@@ -822,11 +834,6 @@ namespace TestUtilities.UI {
                 }
             }
             
-            var solution = GetService<IVsSolution>(typeof(SVsSolution));
-            var solution4 = solution as IVsSolution4;
-            Assert.IsNotNull(solution, "Failed to obtain SVsSolution service");
-            Assert.IsNotNull(solution4, "Failed to obtain IVsSolution4 interface");
-
             var t = Task.Run(() => {
                 ErrorHandler.ThrowOnFailure(solution.OpenSolutionFile((uint)0, fullPath));
                 // Force all projects to load before running any tests.

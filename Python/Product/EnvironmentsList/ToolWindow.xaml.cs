@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 item.Extensions?.FirstOrDefault(ext => ext != null && ext.GetType().IsEquivalentTo(oldSelect));
             lock (_extensions) {
                 _extensions.Clear();
-                foreach (var ext in item.Extensions) {
+                foreach (var ext in item.Extensions.MaybeEnumerate()) {
                     _extensions.Add(ext);
                 }
                 if (newSelect != null) {

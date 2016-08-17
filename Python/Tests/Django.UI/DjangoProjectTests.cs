@@ -94,7 +94,7 @@ namespace DjangoUITests {
                 }
 
                 using (var dis = new DefaultInterpreterSetter(envWithDjango)) {
-                    var project = app.OpenProject("TestData\\DjangoApplication1\\DjangoApplication1.sln");
+                    var project = app.OpenProject(@"TestData\DjangoApplication.sln");
                     app.SolutionExplorerTreeView.SelectProject(project);
 
                     app.Dte.ExecuteCommand("Project.CollectStaticFiles");

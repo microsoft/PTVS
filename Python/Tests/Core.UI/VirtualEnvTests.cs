@@ -51,20 +51,47 @@ namespace PythonToolsUITests {
         public TestContext TestContext { get; set; }
 
         static DefaultInterpreterSetter Init(PythonVisualStudioApp app) {
-            return app.SelectDefaultInterpreter(PythonPaths.Python27 ?? PythonPaths.Python27_x64, "virtualenv");
+            var dis = app.SelectDefaultInterpreter(PythonPaths.Python27 ?? PythonPaths.Python27_x64);
+            try {
+                dis.CurrentDefault.PipInstall("-U virtualenv");
+                var r = dis;
+                dis = null;
+                return r;
+            } finally {
+                dis?.Dispose();
+            }
         }
 
         static DefaultInterpreterSetter Init(PythonVisualStudioApp app, PythonVersion interp, bool install) {
-            return app.SelectDefaultInterpreter(interp, install ? "virtualenv" : null);
+            var dis = app.SelectDefaultInterpreter(interp);
+            try {
+                if (install) {
+                    dis.CurrentDefault.PipInstall("-U virtualenv");
+                }
+                var r = dis;
+                dis = null;
+                return r;
+            } finally {
+                dis?.Dispose();
+            }
         }
 
         static DefaultInterpreterSetter Init3(PythonVisualStudioApp app, bool installVirtualEnv = false) {
-            return app.SelectDefaultInterpreter(
+            var dis = app.SelectDefaultInterpreter(
                 PythonPaths.Python35 ?? PythonPaths.Python35_x64 ??
                 PythonPaths.Python34 ?? PythonPaths.Python34_x64 ??
-                PythonPaths.Python33 ?? PythonPaths.Python33_x64,
-                installVirtualEnv ? "virtualenv" : null
+                PythonPaths.Python33 ?? PythonPaths.Python33_x64
             );
+            try {
+                if (installVirtualEnv) {
+                    dis.CurrentDefault.PipInstall("-U virtualenv");
+                }
+                var r = dis;
+                dis = null;
+                return r;
+            } finally {
+                dis?.Dispose();
+            }
         }
 
         private EnvDTE.Project CreateTemporaryProject(VisualStudioApp app) {
@@ -90,11 +117,7 @@ namespace PythonToolsUITests {
                 var env = app.CreateVirtualEnvironment(project, out envName);
                 env.Select();
 
-                using (var installPackage = AutomationDialog.FromDte(app, "Python.InstallPackage")) {
-                    var packageName = new TextBox(installPackage.FindByAutomationId("Name"));
-                    packageName.SetValue(TestPackageSpec);
-                    installPackage.ClickButtonAndClose("OK", nameIsAutomationId: true);
-                }
+                app.ExecuteCommand("Python.InstallPackage", "/p:" + TestPackageSpec);
 
                 var azure = app.SolutionExplorerTreeView.WaitForChildOfProject(
                     project,
@@ -411,8 +434,8 @@ namespace PythonToolsUITests {
                 Assert.IsNotNull(env);
                 Assert.IsNotNull(env.Element);
                 Assert.AreEqual(string.Format("env (Python {0} {1})",
-                    dis.CurrentDefault.Configuration.Version,
-                    dis.CurrentDefault.Configuration.Architecture
+                    dis.CurrentDefault.Configuration.Architecture,
+                    dis.CurrentDefault.Configuration.Version
                 ), envName);
             }
         }

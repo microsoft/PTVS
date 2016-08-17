@@ -289,7 +289,7 @@ namespace TestUtilities.UI.Python {
                 if (!string.IsNullOrEmpty(installPackages)) {
                     factory.InstallPip();
                     foreach (var package in installPackages.Split(' ', ',', ';').Select(s => s.Trim()).Where(s => !string.IsNullOrEmpty(s))) {
-                        factory.PipInstall(package);
+                        factory.PipInstall("-U " + package);
                     }
                 }
 

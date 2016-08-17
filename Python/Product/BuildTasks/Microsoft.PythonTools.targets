@@ -85,7 +85,6 @@ permissions and limitations under the License.
     <Output TaskParameter="ProjectRelativePrefixPath" PropertyName="ProjectRelativePrefixPath" />
     <Output TaskParameter="InterpreterPath" PropertyName="InterpreterPath" />
     <Output TaskParameter="WindowsInterpreterPath" PropertyName="WindowsInterpreterPath" />
-    <Output TaskParameter="LibraryPath" PropertyName="LibraryPath" />
     <Output TaskParameter="Architecture" PropertyName="Architecture" />
     <Output TaskParameter="PathEnvironmentVariable" PropertyName="PathEnvironmentVariable" />
     <Output TaskParameter="Description" PropertyName="Description" />

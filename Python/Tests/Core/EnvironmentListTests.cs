@@ -529,15 +529,25 @@ namespace PythonToolsUITests {
 
                 Assert.IsTrue(list.Service.IsConfigurable(newEnv.Configuration.Id), "Did not add a configurable environment");
 
-                // To remove the environment, we need to trigger the Remove
-                // command on the ConfigurationExtensionProvider's control
-                var view = wpf.Invoke(() => list.Environments.First(ev => ev.Factory == newEnv));
-                var extView = wpf.Invoke(() => view.Extensions.OfType<ConfigurationExtensionProvider>().First().WpfObject);
-                var confView = wpf.Invoke(() => (ConfigurationEnvironmentView)((System.Windows.Controls.Grid)extView.FindName("Subcontext")).DataContext);
-                await wpf.Execute((RoutedCommand)ConfigurationExtension.Remove, extView, confView);
+                try {
+                    // To remove the environment, we need to trigger the Remove
+                    // command on the ConfigurationExtensionProvider's control
+                    var view = wpf.Invoke(() => list.Environments.First(ev => ev.Factory == newEnv));
+                    var extView = wpf.Invoke(() => view.Extensions.OfType<ConfigurationExtensionProvider>().First().WpfObject);
+                    var confView = wpf.Invoke(() => (ConfigurationEnvironmentView)((System.Windows.Controls.Grid)extView.FindName("Subcontext")).DataContext);
+                    await wpf.Execute((RoutedCommand)ConfigurationExtension.Remove, extView, confView);
+                    await Task.Delay(500);
 
-                var afterRemove = wpf.Invoke(() => new HashSet<string>(list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Configuration.Id)));
-                AssertUtil.ContainsExactly(afterRemove, before);
+                    var afterRemove = wpf.Invoke(() => new HashSet<string>(list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Configuration.Id)));
+                    AssertUtil.ContainsExactly(afterRemove, before);
+                } finally {
+                    // Just in case, we want to clean up the registration
+                    string company, tag;
+                    if (CPythonInterpreterFactoryConstants.TryParseInterpreterId(newEnv.Configuration.Id, out company, out tag) &&
+                        company == "VisualStudio") {
+                        Registry.CurrentUser.DeleteSubKeyTree("Software\\Python\\VisualStudio\\" + tag, false);
+                    }
+                }
             }
         }
 

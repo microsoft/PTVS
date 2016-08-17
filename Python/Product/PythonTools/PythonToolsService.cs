@@ -730,10 +730,9 @@ namespace Microsoft.PythonTools {
             // Start with global environment, add configured environment,
             // then add search paths.
             var baseEnv = Environment.GetEnvironmentVariables();
-            if (GeneralOptions.ClearGlobalPythonPath) {
-                // Clear search paths from the global environment
-                baseEnv[config.Interpreter.PathEnvironmentVariable] = string.Empty;
-            }
+            // Clear search paths from the global environment. The launch
+            // configuration should include the existing value
+            baseEnv[config.Interpreter.PathEnvironmentVariable] = string.Empty;
             var env = PathUtils.MergeEnvironments(
                 baseEnv.AsEnumerable<string, string>(),
                 config.GetEnvironmentVariables(),

@@ -20,8 +20,26 @@ using Microsoft.PythonTools.Interpreter;
 
 namespace TestUtilities.Python {
     class TestPackageManagerUI : IPackageManagerUI {
+        private static string RemoveNewline(string text) {
+            if (string.IsNullOrEmpty(text)) {
+                return string.Empty;
+            }
+
+            if (text[text.Length - 1] == '\n') {
+                if (text.Length >= 2 && text[text.Length - 2] == '\r') {
+                    return text.Remove(text.Length - 2);
+                }
+                return text.Remove(text.Length - 1);
+            }
+            return text;
+        }
+
+        public void OnOutputTextReceived(string text) {
+            Trace.TraceInformation(RemoveNewline(text));
+        }
+
         public void OnErrorTextReceived(string text) {
-            Trace.TraceError(text);
+            Trace.TraceError(RemoveNewline(text));
         }
 
         public void OnOperationFinished(string operation, bool success) {
@@ -30,10 +48,6 @@ namespace TestUtilities.Python {
 
         public void OnOperationStarted(string operation) {
             Trace.TraceInformation("{0} started.", operation);
-        }
-
-        public void OnOutputTextReceived(string text) {
-            Trace.TraceInformation(text);
         }
 
         public Task<bool> ShouldElevateAsync(string operation) {

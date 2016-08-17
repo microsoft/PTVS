@@ -15,13 +15,10 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using EnvDTE;
 using Microsoft.PythonTools;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.VSTestHost;
 using TestUtilities;
 using TestUtilities.Python;
@@ -36,16 +33,21 @@ namespace PythonToolsUITests {
         [TestInitialize]
         public void UpdateSettings() {
             // TODO: Update tests to use PythonVisualStudioApp and remove this
-            var props = VSTestContext.ServiceProvider.GetPythonToolsService().AdvancedOptions;
-            _previousALI = props.AutoListIdentifiers;
-            props.AutoListIdentifiers = false;
+            AssertListener.Initialize();
+            VSTestContext.ServiceProvider.GetUIThread().Invoke(() => {
+                var props = VSTestContext.ServiceProvider.GetPythonToolsService().AdvancedOptions;
+                _previousALI = props.AutoListIdentifiers;
+                props.AutoListIdentifiers = false;
+            });
         }
 
         [TestCleanup]
         public void RestoreSettings() {
             // TODO: Update tests to use PythonVisualStudioApp and remove this
-            var props = VSTestContext.ServiceProvider.GetPythonToolsService().AdvancedOptions;
-            props.AutoListIdentifiers = _previousALI;
+            VSTestContext.ServiceProvider.GetUIThread().Invoke(() => {
+                var props = VSTestContext.ServiceProvider.GetPythonToolsService().AdvancedOptions;
+                props.AutoListIdentifiers = _previousALI;
+            });
         }
 
         private static ProjectDefinition BasicProject = Project(

@@ -26,7 +26,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 (?<name>[^\s\#<>=!\-][^\s\#<>=!]*)  # just the name, no whitespace
                 \s*
                 (?<constraint>(==\s*(?<exact_ver>[^\s\#]+))?[^\#]*)
-            )", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace
+            )$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace
         );
 
         private static readonly Regex PipListRegex = new Regex(@"
@@ -37,7 +37,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 \s*
                 (\((?<exact_ver>[^\s\#]+)\))?
                 [^\#]*
-            )", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace
+            )$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.IgnorePatternWhitespace
         );
 
         private string _fullSpec;
@@ -92,6 +92,9 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public static PackageSpec FromRequirement(string fullSpec) {
             var match = FindRequirementRegex.Match(fullSpec);
+            if (!match.Success) {
+                return new PackageSpec();
+            }
             return new PackageSpec(
                 match.Groups["name"].Value,
                 match.Groups["exact_ver"].Value,
@@ -102,6 +105,9 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public static PackageSpec FromPipList(string line) {
             var match = PipListRegex.Match(line);
+            if (!match.Success) {
+                return new PackageSpec();
+            }
             return new PackageSpec(match.Groups["name"].Value, match.Groups["exact_ver"].Value);
         }
 

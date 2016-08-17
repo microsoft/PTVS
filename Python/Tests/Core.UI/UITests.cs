@@ -101,7 +101,7 @@ namespace PythonToolsUITests {
                 var window = app.SolutionExplorerTreeView;
 
                 // find Program.py, send copy & paste, verify copy of file is there
-                var programPy = window.WaitForItem("Solution 'AbsolutePath' (1 project)", "AbsolutePath", "Program.py");
+                var programPy = window.WaitForChildOfProject(project, "Program.py");
                 Assert.IsNotNull(programPy);
             }
         }
@@ -920,9 +920,8 @@ namespace PythonToolsUITests {
                 app.WaitForDialogDismissed();
 
                 // make sure the reference got added
-                var spamItem = solutionTree.WaitForItem(
-                    "Solution 'ExtensionReference' (1 project)",
-                    "ExtensionReference",
+                var spamItem = solutionTree.WaitForChildOfProject(
+                    project,
                     Strings.ReferencesNodeName,
                     "spam.pyd"
                 );

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using EnvDTE;
@@ -68,7 +69,7 @@ namespace PythonToolsUITests {
                 // check that braces get not autocompleted in comments and strings
                 AutoBraceCompetionTest(app, project, "\"foo(\"", "\"foo(\"");
                 AutoBraceCompetionTest(app, project, "#foo(", "#foo(");
-                AutoBraceCompetionTest(app, project, "\"\"\"\rfoo(\r\"\"\"\"", "\"\"\"\r\nfoo(\r\n\"\"\"\"");
+                AutoBraceCompetionTest(app, project, "\"\"\"\rfoo(\r\"\"\"\"", "\"\"\"foo(\r\n\"\"\"\"");
 
                 // check that end braces gets skiped
                 AutoBraceCompetionTest(app, project, "foo(bar)", "foo(bar)");
@@ -271,6 +272,9 @@ namespace PythonToolsUITests {
 
                 using (var sh = doc.WaitForSession<ISignatureHelpSession>()) {
                     var session = sh.Session;
+                    Assert.IsNotNull(session, "No session active");
+                    Assert.IsNotNull(session.SelectedSignature, "No signature selected");
+
                     Assert.AreEqual("a", session.SelectedSignature.CurrentParameter.Name);
 
                     Keyboard.Type("b=");
@@ -603,13 +607,16 @@ pass");
             var window = item.Open();
             window.Activate();
 
+            expectedText = Regex.Replace(expectedText, "^\\s+$", "", RegexOptions.Multiline);
+
             Keyboard.Type(typedText);
 
             var doc = app.GetDocument(item.Document.FullName);
 
             string actual = null;
             for (int i = 0; i < 100; i++) {
-                actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
+                actual = Regex.Replace(doc.TextView.TextBuffer.CurrentSnapshot.GetText(),
+                    "^\\s+$", "", RegexOptions.Multiline);
 
                 if (expectedText == actual) {
                     break;
