@@ -141,7 +141,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     await RefreshCacheAsync(cancel).ConfigureAwait(false);
                 }
 
-                return _cache.Values.ToList();
+                return _cache.Values.Select(p => p.Clone()).ToList();
             } finally {
                 _cacheLock.Release();
             }
@@ -171,13 +171,13 @@ namespace Microsoft.PythonTools.Interpreter {
             return false;
         }
 
-        public async Task UpdatePackageInfoAsync(PackageSpec entry, CancellationToken cancel) {
+        public async Task<PackageSpec> GetPackageInfoAsync(PackageSpec entry, CancellationToken cancel) {
             string description = null;
             List<string> versions = null;
 
             lock (NotOnPyPI) {
                 if (NotOnPyPI.Contains(entry.Name)) {
-                    return;
+                    return new PackageSpec();
                 }
             }
 
@@ -192,8 +192,8 @@ namespace Microsoft.PythonTools.Interpreter {
                         }
                     }
 
-                    // No net access
-                    return;
+                    // No net access or no such package
+                    return new PackageSpec();
                 }
 
                 try {
@@ -225,15 +225,12 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
-            cancel.ThrowIfCancellationRequested();
-
             bool changed = false;
+            PackageSpec result;
 
-            await _cacheLock.WaitAsync();
-            try {
-                PackageSpec inCache;
-                if (!_cache.TryGetValue(entry.Name, out inCache)) {
-                    inCache = _cache[entry.Name] = new PackageSpec(entry.Name);
+            using (await _cacheLock.LockAsync(cancel)) {
+                if (!_cache.TryGetValue(entry.Name, out result)) {
+                    result = _cache[entry.Name] = new PackageSpec(entry.Name);
                 }
 
                 if (!string.IsNullOrEmpty(description)) {
@@ -249,8 +246,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         firstLine = string.Empty;
                     }
 
-                    inCache.Description = firstLine;
-                    entry.Description = firstLine;
+                    result.Description = firstLine;
                     changed = true;
                 }
 
@@ -259,17 +255,16 @@ namespace Microsoft.PythonTools.Interpreter {
                         .Where(v => v.IsFinalRelease)
                         .OrderByDescending(v => v)
                         .FirstOrDefault();
-                    inCache.ExactVersion = updateVersion;
-                    entry.ExactVersion = updateVersion;
+                    result.ExactVersion = updateVersion;
                     changed = true;
                 }
-            } finally {
-                _cacheLock.Release();
             }
 
             if (changed) {
                 TriggerWriteCacheToDisk();
             }
+
+            return result.Clone();
         }
 
         #region Cache File Management
@@ -385,9 +380,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 using (var file = new StreamWriter(_cachePath, false, Encoding.UTF8)) {
                     foreach (var keyValue in _cache) {
                         cancel.ThrowIfCancellationRequested();
-                        await file.WriteLineAsync("{0}=={1} #{2}".FormatUI(
+                        await file.WriteLineAsync("{0}{1}{2}{3}".FormatUI(
                             keyValue.Value.Name,
-                            keyValue.Value.ExactVersion,
+                            keyValue.Value.Constraint,
+                            string.IsNullOrEmpty(keyValue.Value.Description) ? "" : " #",
                             Uri.EscapeDataString(keyValue.Value.Description ?? "")
                         ));
                     }
@@ -416,11 +412,11 @@ namespace Microsoft.PythonTools.Interpreter {
                     try {
                         int descriptionStart = spec.IndexOf(" #");
                         if (descriptionStart > 0) {
-                            var pv = new PackageSpec(spec.Remove(descriptionStart));
+                            var pv = PackageSpec.FromRequirement(spec.Remove(descriptionStart));
                             pv.Description = Uri.UnescapeDataString(spec.Substring(descriptionStart + 2));
                             newCache[pv.Name] = pv;
                         } else {
-                            var pv = new PackageSpec(spec);
+                            var pv = PackageSpec.FromRequirement(spec);
                             newCache[pv.Name] = pv;
                         }
                     } catch (FormatException) {

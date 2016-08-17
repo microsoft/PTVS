@@ -477,44 +477,39 @@ namespace Microsoft.PythonTools.EnvironmentsList {
     }
 
     class InstallPackageView {
-        private readonly PipEnvironmentView _view;
-
         public InstallPackageView(PipEnvironmentView view) {
-            _view = view;
+            View = view;
         }
 
-        public PipEnvironmentView View {
-            get { return _view; }
-        }
+        public PipEnvironmentView View { get; }
 
-        public string IndexName {
-            get { return _view._provider.IndexName; }
-        }
+        public string IndexName => View._provider.IndexName;
     }
 
-    class PackageResultView {
-        private readonly PipEnvironmentView _view;
-        private readonly PipPackageView _package;
-
+    class PackageResultView : INotifyPropertyChanged {
         public PackageResultView(PipEnvironmentView view, PipPackageView package) {
-            _view = view;
-            _package = package;
+            View = view;
+            Package = package;
+            Package.PropertyChanged += Package_PropertyChanged;
         }
 
-        public PipEnvironmentView View {
-            get { return _view; }
+        private void Package_PropertyChanged(object sender, PropertyChangedEventArgs e) {
+            switch (e.PropertyName) {
+                case "Description":
+                case "DisplayName":
+                    PropertyChanged?.Invoke(this, e);
+                    break;
+            }
         }
 
-        public string PackageSpec {
-            get { return _package.PackageSpec; }
-        }
+        public event PropertyChangedEventHandler PropertyChanged;
 
-        public string IndexName {
-            get { return _view._provider.IndexName; }
-        }
+        public PipEnvironmentView View { get; }
+        public PipPackageView Package { get; }
 
-        public PipPackageView Package {
-            get { return _package; }
-        }
+        public string PackageSpec => Package.PackageSpec;
+        public string IndexName => View._provider.IndexName;
+        public string DisplayName => Package.DisplayName;
+        public string Description => Package.Description;
     }
 }

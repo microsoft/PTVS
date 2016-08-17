@@ -177,6 +177,9 @@
     <value>Operation cannot be started because the environment is not configured.</value>
     <comment>Used as exception text</comment>
   </data>
+  <data name="NoDescription" xml:space="preserve">
+    <value>(No description)</value>
+  </data>
   <data name="PipDefaultIndexName" xml:space="preserve">
     <value>PyPI</value>
   </data>

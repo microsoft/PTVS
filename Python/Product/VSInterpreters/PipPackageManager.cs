@@ -489,9 +489,7 @@ namespace Microsoft.PythonTools.Interpreter {
             if (!package.IsValid) {
                 return package;
             }
-            var p = new PackageSpec(package.Name);
-            await _cache.UpdatePackageInfoAsync(p, cancellationToken);
-            return p;
+            return await _cache.GetPackageInfoAsync(package, cancellationToken);
         }
 
         private sealed class Suppressed : IDisposable {

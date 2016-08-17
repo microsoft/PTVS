@@ -44,6 +44,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
 
             try {
+                var oldDescription = _package.Description;
                 var p = await _provider.GetInstallablePackageAsync(_package, CancellationToken.None);
                 if (p.IsValid) {
                     if (!p.ExactVersion.IsEmpty && (!_upgradeVersion.HasValue || !_upgradeVersion.Value.Equals(p.ExactVersion))) {
@@ -52,6 +53,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     }
                     if (p.Description != _package.Description) {
                         _package.Description = p.Description;
+                        OnPropertyChanged("Description");
+                    } else if (string.IsNullOrEmpty(p.Description)) {
+                        _package.Description = string.Empty;
                         OnPropertyChanged("Description");
                     }
                 }
@@ -87,6 +91,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 if (_package.Description == null) {
                     TriggerUpdate();
                     return Resources.LoadingDescription;
+                } else if (string.IsNullOrEmpty(_package.Description)) {
+                    return Resources.NoDescription;
                 }
                 return _package.Description;
             }

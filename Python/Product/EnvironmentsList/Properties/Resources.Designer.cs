@@ -209,6 +209,15 @@ namespace Microsoft.PythonTools.EnvironmentsList.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (No description).
+        /// </summary>
+        internal static string NoDescription {
+            get {
+                return ResourceManager.GetString("NoDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to PyPI.
         /// </summary>
         internal static string PipDefaultIndexName {
