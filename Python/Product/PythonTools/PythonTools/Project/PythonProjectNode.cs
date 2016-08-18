@@ -29,13 +29,13 @@ using System.Xml;
 using System.Xml.XPath;
 using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Navigation;
+using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -48,7 +48,6 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using IServiceProvider = System.IServiceProvider;
 using MessageBox = System.Windows.Forms.MessageBox;
-using MSBuild = Microsoft.Build.Evaluation;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using Task = System.Threading.Tasks.Task;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
@@ -280,73 +279,6 @@ namespace Microsoft.PythonTools.Project {
 
         internal event EventHandler InterpreterFactoriesChanged;
 
-        /// <summary>
-        /// Adds the specified factory to the project. If the factory was
-        /// created by this provider, it will be added as an Interpreter element
-        /// with full details. If the factory was not created by this provider,
-        /// it will be added as an InterpreterReference element with only the
-        /// ID and version.
-        /// </summary>
-        /// <param name="factory">The factory to add.</param>
-        // TODO: Can this be entirely configuration based?
-        //public void AddInterpreter(IPythonInterpreterFactory factory, bool disposeInterpreter = false) {
-        //    if (factory == null) {
-        //        throw new ArgumentNullException("factory");
-        //    }
-
-        //    if (_validFactories.Contains(factory.Configuration.Id)) {
-        //        return;
-        //    }
-
-        //    MSBuild.ProjectItem item;
-        //    var compModel = Site.GetComponentModel();
-        //    var derived = factory as DerivedInterpreterFactory;
-        //    if (derived != null) {
-        //        var projectHome = PathUtils.GetAbsoluteDirectoryPath(BuildProject.DirectoryPath, BuildProject.GetPropertyValue("ProjectHome"));
-        //        var rootPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
-
-        //        item = BuildProject.AddItem(MSBuildConstants.InterpreterItem,
-        //            PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
-        //            new Dictionary<string, string> {
-        //                { MSBuildConstants.IdKey, MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(derived.Configuration.Id) },
-        //                { MSBuildConstants.BaseInterpreterKey, derived.BaseInterpreter.Configuration.Id  },
-        //                { MSBuildConstants.VersionKey, derived.BaseInterpreter.Configuration.Version.ToString() },
-        //                { MSBuildConstants.DescriptionKey, derived.Configuration.Description },
-        //                { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, derived.Configuration.InterpreterPath) },
-        //                { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, derived.Configuration.WindowsInterpreterPath) },
-        //                { MSBuildConstants.LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, derived.Configuration.LibraryPath) },
-        //                { MSBuildConstants.PathEnvVarKey, derived.Configuration.PathEnvironmentVariable },
-        //                { MSBuildConstants.ArchitectureKey, derived.Configuration.Architecture.ToString() }
-        //            }).FirstOrDefault();
-        //    } else if (InterpreterRegistry.FindInterpreter(factory.Configuration.Id) != null) {
-        //        // The interpreter exists globally, so add a reference.
-        //        item = BuildProject.AddItem(MSBuildConstants.InterpreterReferenceItem,
-        //            string.Format("{0:B}\\{1}", factory.Configuration.Id, factory.Configuration.Version)
-        //            ).FirstOrDefault();
-        //    } else {
-        //        // Can't find the interpreter anywhere else, so add its
-        //        // configuration to the project file.
-        //        var projectHome = PathUtils.GetAbsoluteDirectoryPath(BuildProject.DirectoryPath, BuildProject.GetPropertyValue("ProjectHome"));
-        //        var rootPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
-
-        //        item = BuildProject.AddItem(MSBuildConstants.InterpreterItem,
-        //            PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
-        //            new Dictionary<string, string> {
-        //                { MSBuildConstants.IdKey, MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(factory.Configuration.Id) },
-        //                { MSBuildConstants.VersionKey, factory.Configuration.Version.ToString() },
-        //                { MSBuildConstants.DescriptionKey, factory.Configuration.Description },
-        //                { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, factory.Configuration.InterpreterPath) },
-        //                { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, factory.Configuration.WindowsInterpreterPath) },
-        //                { MSBuildConstants.LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, factory.Configuration.LibraryPath) },
-        //                { MSBuildConstants.PathEnvVarKey, factory.Configuration.PathEnvironmentVariable },
-        //                { MSBuildConstants.ArchitectureKey, factory.Configuration.Architecture.ToString() }
-        //            }).FirstOrDefault();
-        //    }
-
-        //    string id = factory.Configuration.Id;
-        //    AddInterpreter(id);
-        //}
-
         public void AddInterpreter(string id) {
             lock (_validFactories) {
                 if (!_validFactories.Add(id)) {
@@ -377,10 +309,15 @@ namespace Microsoft.PythonTools.Project {
             var projectHome = PathUtils.GetAbsoluteDirectoryPath(BuildProject.DirectoryPath, BuildProject.GetPropertyValue("ProjectHome"));
             var rootPath = PathUtils.EnsureEndSeparator(config.PrefixPath);
 
+            var id = MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(BuildProject.FullPath, config.Id);
+            if (string.IsNullOrEmpty(id)) {
+                throw new InvalidOperationException("Adding project environment {0} to wrong project {1}".FormatInvariant(config.Id, BuildProject.FullPath));
+            }
+
             BuildProject.AddItem(MSBuildConstants.InterpreterItem,
                 PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
                 new Dictionary<string, string> {
-                    { MSBuildConstants.IdKey, MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(config.Id) },
+                    { MSBuildConstants.IdKey, id },
                     { MSBuildConstants.VersionKey, config.Version.ToString() },
                     { MSBuildConstants.DescriptionKey, config.Description },
                     { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, config.InterpreterPath) },
@@ -396,9 +333,7 @@ namespace Microsoft.PythonTools.Project {
                     BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, config.Id);
                 }
             }
-            Site.GetComponentModel().GetService<VsProjectContextProvider>().OnProjectChanged(
-                BuildProject
-            );
+            Site.GetComponentModel().GetService<VsProjectContextProvider>().OnProjectChanged(BuildProject);
             UpdateActiveInterpreter();
             InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -424,15 +359,22 @@ namespace Microsoft.PythonTools.Project {
                 throw new ArgumentNullException("factory");
             }
 
-            if (!_validFactories.Contains(factory.Configuration.Id)) {
-                return;
+            lock (_validFactories) {
+                if (!_validFactories.Contains(factory.Configuration.Id)) {
+                    return;
+                }
             }
 
-            foreach (var item in BuildProject.GetItems(MSBuildConstants.InterpreterItem)) {
-                if (item.GetMetadataValue(MSBuildConstants.IdKey) == factory.Configuration.Id) {
-                    BuildProject.RemoveItem(item);
-                    BuildProject.MarkDirty();
-                    break;
+            var subid = MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(BuildProject.FullPath, factory.Configuration.Id);
+
+            if (!string.IsNullOrEmpty(subid)) {
+                foreach (var item in BuildProject.GetItems(MSBuildConstants.InterpreterItem)) {
+                    if (item.GetMetadataValue(MSBuildConstants.IdKey) == subid) {
+                        BuildProject.RemoveItem(item);
+                        BuildProject.MarkDirty();
+                        Site.GetComponentModel().GetService<VsProjectContextProvider>().OnProjectChanged(BuildProject);
+                        break;
+                    }
                 }
             }
 
@@ -441,11 +383,17 @@ namespace Microsoft.PythonTools.Project {
                 if (id == factory.Configuration.Id) {
                     BuildProject.RemoveItem(item);
                     BuildProject.MarkDirty();
+                    Site.GetComponentModel().GetService<VsProjectContextProvider>().OnProjectChanged(BuildProject);
                     break;
                 }
             }
 
-            _validFactories.Remove(factory.Configuration.Id);
+            lock (_validFactories) {
+                if (!_validFactories.Remove(factory.Configuration.Id)) {
+                    // Wasn't removed, so don't update anything
+                    return;
+                }
+            }
             UpdateActiveInterpreter();
             InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -2467,9 +2415,9 @@ namespace Microsoft.PythonTools.Project {
 
         private string GetNewEnvironmentName(string path) {
             string id = MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(
-                            BuildProject.FullPath,
-                            Path.GetFileName(PathUtils.TrimEndSeparator(path))
-                        );
+                BuildProject.FullPath,
+                Path.GetFileName(PathUtils.TrimEndSeparator(path))
+            );
 
             var interpReg = Site.GetComponentModel().GetService<IInterpreterRegistryService>();
 
@@ -2500,13 +2448,20 @@ namespace Microsoft.PythonTools.Project {
             var path = factory.Configuration.PrefixPath;
             if (removeFromStorage && Directory.Exists(path)) {
                 var t = Task.Run(() => {
-                    try {
-                        Directory.Delete(path, true);
-                        return true;
-                    } catch (IOException) {
-                    } catch (UnauthorizedAccessException) {
+                    for (int retries = 5; Directory.Exists(path) && retries > 0; --retries) {
+                        try {
+                            Directory.Delete(path, true);
+                            return true;
+                        } catch (DirectoryNotFoundException) {
+                            return true;
+                        } catch (IOException) {
+                        } catch (UnauthorizedAccessException) {
+                        }
+                        // Allow some time for operations to fail and release
+                        // locks before trying to delete the directory again.
+                        Thread.Sleep(100);
                     }
-                    return false;
+                    return !Directory.Exists(path);
                 }).HandleAllExceptions(Site, GetType());
 
                 if (!await t) {

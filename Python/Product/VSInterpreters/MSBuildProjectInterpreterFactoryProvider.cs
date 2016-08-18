@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using MSBuild = Microsoft.Build.Evaluation;
@@ -50,6 +51,10 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string InterpreterFactoryIdMetadata = "InterpreterFactoryId";
         private bool _initialized;
         private bool _skipMSBuild;
+
+        private static readonly Regex InterpreterIdRegex = new Regex(
+            @"MSBuild\|(?<id>.+?)\|(?<moniker>.+)$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant
+        );
 
         [ImportingConstructor]
         public MSBuildProjectInterpreterFactoryProvider(
@@ -114,18 +119,18 @@ namespace Microsoft.PythonTools.Interpreter {
         public IPythonInterpreterFactory GetInterpreterFactory(string id) {
             EnsureInitialized();
 
-            var pathAndId = id.Split(new[] { '|' }, 3);
-            if (pathAndId.Length == 3) {
-                var path = pathAndId[2];
+            var m = InterpreterIdRegex.Match(id);
+            if (!m.Success) {
+                return null;
+            }
 
-                // see if the project is loaded
-                ProjectInfo project;
-                FactoryInfo factInfo;
-                if (_projects.TryGetValue(path, out project) &&
-                    project.Factories != null &&
-                    project.Factories.TryGetValue(id, out factInfo)) {
-                    return factInfo.Factory;
-                }
+            // see if the project is loaded
+            ProjectInfo project;
+            FactoryInfo factInfo;
+            if (_projects.TryGetValue(m.Groups["moniker"].Value, out project) &&
+                project.Factories != null &&
+                project.Factories.TryGetValue(id, out factInfo)) {
+                return factInfo.Factory;
             }
             return null;
         }
@@ -133,8 +138,11 @@ namespace Microsoft.PythonTools.Interpreter {
         public object GetProperty(string id, string propName) {
             switch (propName) {
                 case "ProjectMoniker":
-                    var moniker = id.Substring(id.LastIndexOf('|') + 1);
-                    return PathUtils.IsValidPath(moniker) ? moniker : null;
+                    var m = InterpreterIdRegex.Match(id);
+                    if (m.Success && PathUtils.IsValidPath(m.Groups["moniker"].Value)) {
+                        return m.Groups["moniker"].Value;
+                    }
+                    break;
             }
             return null;
         }
@@ -143,8 +151,12 @@ namespace Microsoft.PythonTools.Interpreter {
             return String.Join("|", MSBuildProviderName, id, file);
         }
 
-        public static string GetProjectiveRelativeId(string interpreterId) {
-            return interpreterId.Split(new[] { '|' }, 3)[1];
+        public static string GetProjectiveRelativeId(string file, string id) {
+            var m = InterpreterIdRegex.Match(id);
+            if (m.Success && (m.Groups["moniker"].Value?.Equals(file, StringComparison.OrdinalIgnoreCase) ?? false)) {
+                return m.Groups["id"].Value;
+            }
+            return null;
         }
 
         private void HandleMSBuildProject(
