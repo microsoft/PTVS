@@ -5606,7 +5606,7 @@ If the files in the existing folder have the same names as files in the folder y
         internal HierarchyNode GetParentFolderForPath(string path) {
             var parentDir = CommonUtils.GetParent(path);
             HierarchyNode parent;
-            if (CommonUtils.IsSamePath(parentDir, ProjectHome)) {
+            if (CommonUtils.IsSameDirectory(parentDir, ProjectHome)) {
                 parent = this;
             } else {
                 parent = FindNodeByFullPath(parentDir);
