@@ -318,8 +318,9 @@ namespace PythonToolsUITests {
                 // Need to wait some more for the database to be loaded.
                 app.WaitForNoDialog(TimeSpan.FromSeconds(10.0));
 
-                if (!procs.ExitNewProcesses()) {
-                    Console.WriteLine("Failed to close all analyzer processes");
+                for (int retries = 3; !procs.ExitNewProcesses() && retries >= 0; --retries) {
+                    Thread.Sleep(1000);
+                    Console.WriteLine("Failed to close all analyzer processes (remaining retries {0})", retries);
                 }
 
                 env.Select();

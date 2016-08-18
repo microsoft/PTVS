@@ -29,7 +29,7 @@
     <InterpreterReference Include="Global|PythonCore|3.5" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Program.py" />
+    <Compile Include="__init__.py" />
   </ItemGroup>
 
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />

@@ -211,7 +211,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 bool success = false;
                 string args;
 
-                if (SupportsDashMPip) {
+                if (!SupportsDashMPip) {
                     args = "-c \"import pip; pip.main()\" ";
                 } else {
                     args = "-m pip ";
@@ -264,7 +264,7 @@ namespace Microsoft.PythonTools.Interpreter {
             bool success = false;
             List<string> args;
 
-            if (SupportsDashMPip) {
+            if (!SupportsDashMPip) {
                 args = new List<string> { "-c", "\"import pip; pip.main()\"", "install" };
             } else {
                 args = new List<string> { "-m", "pip", "install" };
@@ -324,7 +324,7 @@ namespace Microsoft.PythonTools.Interpreter {
             bool success = false;
             List<string> args;
 
-            if (SupportsDashMPip) {
+            if (!SupportsDashMPip) {
                 args = new List<string> { "-c", "import pip; pip.main()", "uninstall", "-y" };
             } else {
                 args = new List<string> { "-m", "pip", "uninstall", "-y" };
@@ -401,15 +401,17 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var workingLock = alreadyHasLock ? null : await _working.LockAsync(cancellationToken);
             try {
+                string[] args;
+                if (!SupportsDashMPip) {
+                    args = new[] { "-E", "-c", "import pip; pip.main()", "list" };
+                } else {
+                    args = new[] { "-E", "-m", "pip", "list" };
+                }
+
                 using (await _concurrencyLock.LockAsync(cancellationToken)) {
                     using (var proc = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
-                        new[] {
-                            "-E",
-                            SupportsDashMPip ? "-m" : "-c",
-                            SupportsDashMPip ? "pip" : "import pip; pip.main()",
-                            "list"
-                        },
+                        args,
                         _factory.Configuration.PrefixPath,
                         UnbufferedEnv,
                         false,

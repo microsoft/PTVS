@@ -1814,7 +1814,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 );
 
-                if (navigations != null && navigations.version != -1) {
+                if (navigations != null && navigations.version != -1 && navigations.version >= lastVersion.VersionNumber) {
                     List<NavigationInfo> bufferNavs = new List<NavigationInfo>();
 
                     LocationTracker translator = new LocationTracker(

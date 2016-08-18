@@ -387,7 +387,7 @@ namespace Microsoft.PythonTools.Project {
             var packagesToInstall = new List<string>();
             var pm = interpFactory.PackageManager;
             foreach (var pkg in startInfo.RequiredPackages) {
-                if (null == await pm.GetInstalledPackageAsync(new PackageSpec(pkg), CancellationToken.None)) {
+                if (!(await pm.GetInstalledPackageAsync(new PackageSpec(pkg), CancellationToken.None)).IsValid) {
                     packagesToInstall.Add(pkg);
                 }
             }

@@ -658,7 +658,10 @@ namespace Microsoft.PythonTools.Language {
                             var line = pyPoint.Value.GetContainingLine();
                             var lineText = line.GetText();
                             int comment = lineText.IndexOf('#');
-                            if (comment >= 0 && pyPoint.Value < line.End && line.Start + comment < pyPoint.Value) {
+                            if (comment >= 0 &&
+                                pyPoint.Value < line.End &&
+                                line.Start + comment < pyPoint.Value &&
+                                string.IsNullOrWhiteSpace(lineText.Remove(comment))) {
                                 _editorOps.InsertNewLine();
                                 _editorOps.InsertText(lineText.Substring(0, comment + 1));
                                 return VSConstants.S_OK;

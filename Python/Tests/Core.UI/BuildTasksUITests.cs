@@ -306,13 +306,20 @@ namespace PythonToolsUITests {
                 items = app.WaitForErrorListItems(3);
                 Assert.AreEqual(expectedItems.Length, items.Count);
 
+                items.Sort(Comparer<IVsTaskItem>.Create((x, y) => {
+                    int lx, ly;
+                    x.Line(out lx);
+                    y.Line(out ly);
+                    return lx.CompareTo(ly);
+                }));
+
                 for (int i = 0; i < expectedItems.Length; ++i) {
                     var item = items[i];
                     var expectedItem = expectedItems[i];
 
                     string document, message;
-                    item.Document(out document);
                     item.get_Text(out message);
+                    item.Document(out document);
 
                     int line, column;
                     item.Line(out line);
@@ -435,8 +442,12 @@ namespace PythonToolsUITests {
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CustomCommandsSearchPath() {
-            var expectedSearchPath = string.Format("['{0}', '{1}']",
+            var expectedSearchPath = string.Format("['{0}', '{1}', '{2}']",
+                // Includes CWD (ProjectHome) first
+                TestData.GetPath(@"TestData\Targets\Package\Subpackage").Replace("\\", "\\\\"),
+                // Specified as '..\..' from ProjectHome
                 TestData.GetPath(@"TestData\Targets").Replace("\\", "\\\\"),
+                // Specified as '..' from ProjectHome
                 TestData.GetPath(@"TestData\Targets\Package").Replace("\\", "\\\\")
             );
            

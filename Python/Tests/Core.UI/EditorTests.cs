@@ -69,7 +69,7 @@ namespace PythonToolsUITests {
                 // check that braces get not autocompleted in comments and strings
                 AutoBraceCompetionTest(app, project, "\"foo(\"", "\"foo(\"");
                 AutoBraceCompetionTest(app, project, "#foo(", "#foo(");
-                AutoBraceCompetionTest(app, project, "\"\"\"\rfoo(\r\"\"\"\"", "\"\"\"foo(\r\n\"\"\"\"");
+                AutoBraceCompetionTest(app, project, "\"\"\"\rfoo(\r\"\"\"\"", "\"\"\"\r\nfoo(\r\n\"\"\"\"");
 
                 // check that end braces gets skiped
                 AutoBraceCompetionTest(app, project, "foo(bar)", "foo(bar)");

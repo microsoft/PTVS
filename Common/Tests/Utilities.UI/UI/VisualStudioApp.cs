@@ -93,7 +93,8 @@ namespace TestUtilities.UI {
                         try {
                             _dte.Solution.Close(false);
                             break;
-                        } catch {
+                        } catch (Exception ex) {
+                            Debug.WriteLine(ex.ToString());
                             _dte.Documents.CloseAll(EnvDTE.vsSaveChanges.vsSaveChangesNo);
                             System.Threading.Thread.Sleep(200);
                         }

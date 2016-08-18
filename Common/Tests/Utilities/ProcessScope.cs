@@ -72,10 +72,10 @@ namespace TestUtilities {
             bool allGone = true;
             foreach (var p in newProcesses) {
                 if (!p.HasExited) {
-                    allGone = false;
                     try {
                         p.Kill();
                     } catch (Exception ex) {
+                        allGone = false;
                         Trace.TraceWarning("Failed to kill {0} ({1}).{2}{3}",
                             p.ProcessName,
                             p.Id,

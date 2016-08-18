@@ -534,7 +534,12 @@ namespace PythonToolsUITests {
                     // command on the ConfigurationExtensionProvider's control
                     var view = wpf.Invoke(() => list.Environments.First(ev => ev.Factory == newEnv));
                     var extView = wpf.Invoke(() => view.Extensions.OfType<ConfigurationExtensionProvider>().First().WpfObject);
-                    var confView = wpf.Invoke(() => (ConfigurationEnvironmentView)((System.Windows.Controls.Grid)extView.FindName("Subcontext")).DataContext);
+                    var confView = wpf.Invoke(() => {
+                        // Extension is not sited in the tool window, so we need
+                        // to set the DataContext in order to get the Subcontext
+                        extView.DataContext = view;
+                        return (ConfigurationEnvironmentView)((System.Windows.Controls.Grid)extView.FindName("Subcontext")).DataContext;
+                    });
                     await wpf.Execute((RoutedCommand)ConfigurationExtension.Remove, extView, confView);
                     await Task.Delay(500);
 
