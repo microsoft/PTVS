@@ -270,6 +270,12 @@ namespace TestUtilities.UI {
 
             string windowName = Path.GetFileName(filename);
             var elem = GetDocumentTab(windowName);
+            for (int retries = 5; retries > 0 && elem == null; retries -= 1) {
+                System.Threading.Thread.Sleep(500);
+                elem = GetDocumentTab(windowName);
+            }
+
+            Assert.IsNotNull(elem, "Unable to find window '{0}'", windowName);
 
             elem = elem.FindFirst(TreeScope.Descendants,
                 new PropertyCondition(

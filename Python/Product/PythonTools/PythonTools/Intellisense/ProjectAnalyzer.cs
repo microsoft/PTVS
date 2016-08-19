@@ -1008,6 +1008,18 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
+        internal bool WaitForAnalysisStarted(TimeSpan timeout) {
+            var mre = new ManualResetEventSlim();
+            EventHandler evt = (s, e) => mre.Set();
+            AnalysisStarted += evt;
+            try {
+                return mre.Wait(timeout);
+            } finally {
+                AnalysisStarted -= evt;
+                mre.Dispose();
+            }
+        }
+
         internal void WaitForCompleteAnalysis(Func<int, bool> itemsLeftUpdated) {
             if (IsAnalyzing) {
                 while (IsAnalyzing) {
