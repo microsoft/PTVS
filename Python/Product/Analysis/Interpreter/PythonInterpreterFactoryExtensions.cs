@@ -62,7 +62,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         res.Add(m);
                     }
                 }
-                if (res.Count == moduleNames.Length) {
+                if (res.SetEquals(moduleNames)) {
                     return res;
                 }
             }

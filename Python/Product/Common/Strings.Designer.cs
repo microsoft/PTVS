@@ -1167,6 +1167,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The selected environment does not support package management..
+        /// </summary>
+        public static string PackageManagementNotSupported {
+            get {
+                return ResourceManager.GetString("PackageManagementNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unable to install {0} because the selected environment does not support package management.
         ///.
         /// </summary>

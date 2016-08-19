@@ -110,8 +110,8 @@ namespace Microsoft.PythonTools.Project {
                 .DoNotWait();
         }
 
-        private async Task RefreshPackagesAsync(IPackageManager factory) {
-            if (_suppressPackageRefresh || factory == null) {
+        private async Task RefreshPackagesAsync(IPackageManager packageManager) {
+            if (_suppressPackageRefresh || packageManager == null) {
                 return;
             }
 
@@ -122,7 +122,7 @@ namespace Microsoft.PythonTools.Project {
             _checkedItems = true;
 
             var packages = new Dictionary<string, PackageSpec>();
-            foreach (var p in await factory.GetInstalledPackagesAsync(CancellationToken.None)) {
+            foreach (var p in await packageManager.GetInstalledPackagesAsync(CancellationToken.None)) {
                 packages[p.FullSpec] = p;
             }
 

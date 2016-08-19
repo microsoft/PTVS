@@ -32,8 +32,22 @@ namespace Microsoft.PythonTools.Project {
             _alwaysElevate = alwaysElevate;
         }
 
+        private static string RemoveLastNewline(string text) {
+            if (string.IsNullOrEmpty(text)) {
+                return string.Empty;
+            }
+
+            if (text[text.Length - 1] == '\n') {
+                if (text.Length >= 2 && text[text.Length - 2] == '\r') {
+                    return text.Remove(text.Length - 2);
+                }
+                return text.Remove(text.Length - 1);
+            }
+            return text;
+        }
+
         public void OnErrorTextReceived(string text) {
-            _outputWindow.WriteErrorLine(text);
+            _outputWindow.WriteErrorLine(RemoveLastNewline(text));
         }
 
         public void OnOperationFinished(string operation, bool success) {
@@ -49,7 +63,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public void OnOutputTextReceived(string text) {
-            _outputWindow.WriteLine(text);
+            _outputWindow.WriteLine(RemoveLastNewline(text));
         }
 
         public Task<bool> ShouldElevateAsync(string operation) {

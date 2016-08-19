@@ -68,7 +68,7 @@ namespace Microsoft.PythonTools.Interpreter {
             InterpreterFactoryCreationOptions options
         ) {
             if (config == null) {
-                throw new ArgumentNullException("config");
+                throw new ArgumentNullException(nameof(config));
             }
             if (options == null) {
                 options = new InterpreterFactoryCreationOptions();
@@ -105,10 +105,12 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             try {
-                var pm = options.PackageManager ?? new NoPackageManager();
-                pm.SetInterpreterFactory(this);
-                pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
-                PackageManager = pm;
+                var pm = options.PackageManager;
+                if (pm != null) {
+                    pm.SetInterpreterFactory(this);
+                    pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+                    PackageManager = pm;
+                }
             } catch (NotSupportedException) {
             }
         }
@@ -222,7 +224,10 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         protected virtual void GenerateDatabase(PythonTypeDatabaseCreationRequest request, Action<int> onExit = null) {
-            var generating = _generating = PackageManager.SuppressNotifications();
+            // Use the NoPackageManager instance if we don't have a package
+            // manager, so that we still get a valid disposable object while we
+            // are generating.
+            var generating = _generating = (request.Factory.PackageManager ?? NoPackageManager.Instance).SuppressNotifications();
 
             PythonTypeDatabase.GenerateAsync(request).ContinueWith(t => {
                 int exitCode;

@@ -66,7 +66,7 @@ namespace Microsoft.PythonTools.Interpreter {
             set { _constraint = value; }
         }
 
-        public Pep440Version ExactVersion { get; set; }
+        public PackageVersion ExactVersion { get; set; }
         public string Description { get; set; }
         public bool IsValid => !string.IsNullOrEmpty(Name);
 
@@ -76,9 +76,9 @@ namespace Microsoft.PythonTools.Interpreter {
             _fullSpec = fullSpec ?? "";
             Name = name ?? "";
 
-            Pep440Version ver;
-            if (!Pep440Version.TryParse(exactVersion, out ver)) {
-                ExactVersion = Pep440Version.Empty;
+            PackageVersion ver;
+            if (!PackageVersion.TryParse(exactVersion, out ver)) {
+                ExactVersion = PackageVersion.Empty;
             } else {
                 ExactVersion = ver;
             }

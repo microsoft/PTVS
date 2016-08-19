@@ -21,15 +21,21 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// Called when output text should be displayed to the user.
         /// </summary>
-        /// <param name="text">The text to display.</param>
+        /// <param name="text">
+        /// The text to display. Trailing newlines will be included.
+        /// </param>
+        /// <remarks>This function may be called from any thread.</remarks>
         void OnOutputTextReceived(string text);
 
         /// <summary>
         /// Called when error text should be displayed to the user.
         /// </summary>
-        /// <param name="text">The text to display.</param>
+        /// <param name="text">
+        /// The text to display. Trailing newlines will be included.
+        /// </param>
+        /// <remarks>This function may be called from any thread.</remarks>
         void OnErrorTextReceived(string text);
-        
+
         /// <summary>
         /// Called when an operation starts.
         /// </summary>
@@ -37,6 +43,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// An operation identifier. This is intended for logging rather than
         /// user information.
         /// </param>
+        /// <remarks>This function may be called from any thread.</remarks>
         void OnOperationStarted(string operation);
 
         /// <summary>
@@ -47,6 +54,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// user information.
         /// </param>
         /// <param name="success">True if the operation was successful.</param>
+        /// <remarks>This function may be called from any thread.</remarks>
         void OnOperationFinished(string operation, bool success);
 
         /// <summary>
@@ -56,6 +64,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         /// <param name="operation">The current operation identifier.</param>
         /// <returns>True if the operation should elevate.</returns>
+        /// <remarks>This function may be called from any thread.</remarks>
         Task<bool> ShouldElevateAsync(string operation);
     }
 }

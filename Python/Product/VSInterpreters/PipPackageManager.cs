@@ -28,7 +28,6 @@ using Microsoft.PythonTools.Infrastructure;
 namespace Microsoft.PythonTools.Interpreter {
     class PipPackageManager : IPackageManager, IDisposable {
         private IPythonInterpreterFactory _factory;
-        private string _indexUrl;
         private PipPackageCache _cache;
         private readonly Timer _refreshIsCurrentTrigger;
         private readonly List<FileSystemWatcher> _libWatchers;
@@ -64,7 +63,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public void SetInterpreterFactory(IPythonInterpreterFactory factory) {
             if (factory == null) {
-                throw new ArgumentNullException("factory");
+                throw new ArgumentNullException(nameof(factory));
             }
             if (!File.Exists(factory.Configuration?.InterpreterPath)) {
                 throw new NotSupportedException();
@@ -72,9 +71,6 @@ namespace Microsoft.PythonTools.Interpreter {
 
             _factory = factory;
 
-            // TODO: Get index from factory
-            //_indexUrl = "https://pypi.python.org/pypi/";
-            _indexUrl = null;
             _cache = PipPackageCache.GetCache(new Uri("https://pypi.python.org/pypi/"));
 
             if (_libWatchers != null) {
@@ -268,11 +264,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 args = new List<string> { "-c", "\"import pip; pip.main()\"", "install" };
             } else {
                 args = new List<string> { "-m", "pip", "install" };
-            }
-
-            if (!string.IsNullOrEmpty(_indexUrl)) {
-                args.Add("--index-url");
-                args.Add(ProcessOutput.QuoteSingleArgument(_indexUrl));
             }
 
             args.Add(package.FullSpec);

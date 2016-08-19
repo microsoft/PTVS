@@ -22,8 +22,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Microsoft.PythonTools.Interpreter {
-    public struct Pep440Version : IComparable<Pep440Version>, IEquatable<Pep440Version> {
-        public static readonly Pep440Version Empty = new Pep440Version(new int[0]);
+    public struct PackageVersion : IComparable<PackageVersion>, IEquatable<PackageVersion> {
+        public static readonly PackageVersion Empty = new PackageVersion(new int[0]);
 
         private static readonly Regex LocalVersionRegex = new Regex(@"^[a-zA-Z0-9][a-zA-Z0-9.]*(?<=[a-zA-Z0-9])$");
         private static readonly Regex FullVersionRegex = new Regex(@"^
@@ -38,10 +38,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private string _normalized;
 
-        private Pep440Version(
+        private PackageVersion(
             IEnumerable<int> release,
             int epoch = 0,
-            Pep440PreReleaseName preReleaseName = Pep440PreReleaseName.None,
+            PackageVersionPreReleaseName preReleaseName = PackageVersionPreReleaseName.None,
             int preRelease = 0,
             int postRelease = 0,
             int devRelease = 0,
@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Interpreter {
             Epoch = epoch;
             Release = release.ToArray();
             PreReleaseName = preReleaseName;
-            PreRelease = preReleaseName != Pep440PreReleaseName.None ? preRelease : 0;
+            PreRelease = preReleaseName != PackageVersionPreReleaseName.None ? preRelease : 0;
             PostRelease = postRelease;
             DevRelease = devRelease;
             LocalVersion = localVersion;
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public IList<int> Release { get; private set; }
 
-        public Pep440PreReleaseName PreReleaseName { get; set; }
+        public PackageVersionPreReleaseName PreReleaseName { get; set; }
 
         public int PreRelease { get; set; }
 
@@ -79,7 +79,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public bool IsFinalRelease {
             get {
-                return PreReleaseName == Pep440PreReleaseName.None &&
+                return PreReleaseName == PackageVersionPreReleaseName.None &&
                     DevRelease == 0 &&
                     string.IsNullOrEmpty(LocalVersion);
             }
@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 error = new FormatException("All components of Release must be 0 or greater");
                 return false;
             }
-            if (PreReleaseName == Pep440PreReleaseName.None) {
+            if (PreReleaseName == PackageVersionPreReleaseName.None) {
                 if (PreRelease != 0) {
                     error = new FormatException("PreRelease must be 0 when PreReleaseName is None");
                     return false;
@@ -138,15 +138,15 @@ namespace Microsoft.PythonTools.Interpreter {
                     } else {
                         sb.Append(string.Join(".", Release.Select(i => i.ToString())));
                     }
-                    if (PreReleaseName != Pep440PreReleaseName.None) {
+                    if (PreReleaseName != PackageVersionPreReleaseName.None) {
                         switch (PreReleaseName) {
-                            case Pep440PreReleaseName.Alpha:
+                            case PackageVersionPreReleaseName.Alpha:
                                 sb.Append('a');
                                 break;
-                            case Pep440PreReleaseName.Beta:
+                            case PackageVersionPreReleaseName.Beta:
                                 sb.Append('b');
                                 break;
-                            case Pep440PreReleaseName.RC:
+                            case PackageVersionPreReleaseName.RC:
                                 sb.Append("rc");
                                 break;
                             default:
@@ -175,13 +175,13 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public override bool Equals(object obj) {
-            if (obj is Pep440Version) {
-                return CompareTo((Pep440Version)obj) == 0;
+            if (obj is PackageVersion) {
+                return CompareTo((PackageVersion)obj) == 0;
             }
             return false;
         }
 
-        public bool Equals(Pep440Version other) {
+        public bool Equals(PackageVersion other) {
             return CompareTo(other) == 0;
         }
 
@@ -189,7 +189,7 @@ namespace Microsoft.PythonTools.Interpreter {
             return NormalizedForm.GetHashCode();
         }
 
-        public int CompareTo(Pep440Version other) {
+        public int CompareTo(PackageVersion other) {
             Exception error;
             if (!Validate(out error)) {
                 throw error;
@@ -220,9 +220,9 @@ namespace Microsoft.PythonTools.Interpreter {
 
             if (PreReleaseName != other.PreReleaseName) {
                 // Regular comparison mishandles None
-                if (PreReleaseName == Pep440PreReleaseName.None) {
+                if (PreReleaseName == PackageVersionPreReleaseName.None) {
                     return 1;
-                } else if (other.PreReleaseName == Pep440PreReleaseName.None) {
+                } else if (other.PreReleaseName == PackageVersionPreReleaseName.None) {
                     return -1;
                 }
                 // Neither value is None, so CompareTo will be correct
@@ -298,22 +298,22 @@ namespace Microsoft.PythonTools.Interpreter {
             return 0;
         }
 
-        public static IEnumerable<Pep440Version> TryParseAll(IEnumerable<string> versions) {
+        public static IEnumerable<PackageVersion> TryParseAll(IEnumerable<string> versions) {
             foreach (var s in versions) {
-                Pep440Version value;
+                PackageVersion value;
                 if (TryParse(s, out value)) {
                     yield return value;
                 }
             }
         }
 
-        public static bool TryParse(string s, out Pep440Version value) {
+        public static bool TryParse(string s, out PackageVersion value) {
             Exception error;
             return ParseInternal(s, out value, out error);
         }
 
-        public static Pep440Version Parse(string s) {
-            Pep440Version value;
+        public static PackageVersion Parse(string s) {
+            PackageVersion value;
             Exception error;
             if (!ParseInternal(s, out value, out error)) {
                 throw error;
@@ -321,8 +321,8 @@ namespace Microsoft.PythonTools.Interpreter {
             return value;
         }
 
-        private static bool ParseInternal(string s, out Pep440Version value, out Exception error) {
-            value = default(Pep440Version);
+        private static bool ParseInternal(string s, out PackageVersion value, out Exception error) {
+            value = default(PackageVersion);
             error = null;
 
             if (string.IsNullOrEmpty(s)) {
@@ -357,22 +357,22 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
-            var preName = Pep440PreReleaseName.None;
+            var preName = PackageVersionPreReleaseName.None;
             if (m.Groups["preName"].Success) {
                 switch(m.Groups["preName"].Value.ToLowerInvariant()) {
                     case "a":
                     case "alpha":
-                        preName = Pep440PreReleaseName.Alpha;
+                        preName = PackageVersionPreReleaseName.Alpha;
                         break;
                     case "b":
                     case "beta":
-                        preName = Pep440PreReleaseName.Beta;
+                        preName = PackageVersionPreReleaseName.Beta;
                         break;
                     case "rc":
                     case "c":
                     case "pre":
                     case "preview":
-                        preName = Pep440PreReleaseName.RC;
+                        preName = PackageVersionPreReleaseName.RC;
                         break;
                     default:
                         error = new FormatException(string.Format("'{0}' is not a valid prerelease name", preName));
@@ -405,7 +405,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 local = Regex.Replace(m.Groups["local"].Value, "[^a-zA-Z0-9.]", ".");
             }
 
-            value = new Pep440Version(
+            value = new PackageVersion(
                 release,
                 epoch,
                 preName,
@@ -420,7 +420,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
     }
 
-    public enum Pep440PreReleaseName {
+    public enum PackageVersionPreReleaseName {
         None = 0,
         Alpha = 1,
         Beta = 2,

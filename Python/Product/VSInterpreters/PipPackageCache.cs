@@ -251,7 +251,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 if (versions != null) {
-                    var updateVersion = Pep440Version.TryParseAll(versions)
+                    var updateVersion = PackageVersion.TryParseAll(versions)
                         .Where(v => v.IsFinalRelease)
                         .OrderByDescending(v => v)
                         .FirstOrDefault();

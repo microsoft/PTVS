@@ -162,7 +162,14 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             if (arch == InterpreterArchitecture.Unknown && File.Exists(exePath)) {
-                arch = new InterpreterArchitecture(NativeMethods.GetBinaryType(exePath));
+                switch (NativeMethods.GetBinaryType(exePath)) {
+                    case System.Reflection.ProcessorArchitecture.X86:
+                        arch = InterpreterArchitecture.x86;
+                        break;
+                    case System.Reflection.ProcessorArchitecture.Amd64:
+                        arch = InterpreterArchitecture.x64;
+                        break;
+                }
             }
 
             if (pythonCoreCompatibility && sysVersion != null && sysVersion < new Version(3, 5) && arch == InterpreterArchitecture.x86) {

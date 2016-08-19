@@ -913,4 +913,7 @@ modified from these scripts.</value>
 </value>
     <comment>{0} is a package name</comment>
   </data>
+  <data name="PackageManagementNotSupported" xml:space="preserve">
+    <value>The selected environment does not support package management.</value>
+  </data>
 </root>

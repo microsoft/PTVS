@@ -40,6 +40,9 @@ namespace Microsoft.PythonTools.Project {
             if (factory.Configuration.Version < new Version(2, 5)) {
                 ui.OnErrorTextReceived("Python versions earlier than 2.5 are not supported by PTVS.\n");
                 throw new OperationCanceledException();
+            } else if (factory.PackageManager == null) {
+                ui.OnErrorTextReceived(Strings.PackageManagementNotSupported_Package.FormatUI("virtualenv"));
+                throw new OperationCanceledException();
             } else if (factory.Configuration.Version == new Version(2, 5)) {
                 return factory.PackageManager.InstallAsync(PackageSpec.FromArguments("https://go.microsoft.com/fwlink/?LinkID=317970"), ui, CancellationToken.None);
             } else {
@@ -126,6 +129,9 @@ namespace Microsoft.PythonTools.Project {
             var cancel = CancellationToken.None;
             var ui = new VsPackageManagerUI(provider);
             var pm = factory.PackageManager;
+            if (pm == null) {
+                throw new InvalidOperationException(Strings.PackageManagementNotSupported);
+            }
             if (!pm.IsReady) {
                 await pm.PrepareAsync(ui, cancel);
                 if (!pm.IsReady) {

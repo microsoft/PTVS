@@ -1602,13 +1602,22 @@ namespace Microsoft.PythonTools.Project {
 
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+                IPythonInterpreterFactory factory;
                 switch ((int)cmd) {
                     case PythonConstants.OpenInteractiveForEnvironment:
+                        factory = GetInterpreterFactory();
+                        if (factory.IsRunnable()) {
+                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        } else {
+                            result |= QueryStatusResult.INVISIBLE;
+                        }
+                        return VSConstants.S_OK;
+
                     case PythonConstants.InstallPythonPackage:
                     case PythonConstants.InstallRequirementsTxt:
                     case PythonConstants.GenerateRequirementsTxt:
-                        var factory = GetInterpreterFactory();
-                        if (factory.IsRunnable()) {
+                        factory = GetInterpreterFactory();
+                        if (factory.IsRunnable() && factory.PackageManager != null) {
                             result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         } else {
                             result |= QueryStatusResult.INVISIBLE;
@@ -2032,6 +2041,14 @@ namespace Microsoft.PythonTools.Project {
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
 
+            if (selectedInterpreterFactory?.PackageManager == null) {
+                if (Utilities.IsInAutomationFunction(Site)) {
+                    return VSConstants.E_INVALIDARG;
+                }
+                MessageBox.Show(Strings.PackageManagementNotSupported, Strings.ProductTitle, MessageBoxButtons.OK);
+                return VSConstants.S_OK;
+            }
+
             string name;
             if (args != null && args.TryGetValue("p", out name)) {
                 // Don't prompt, just install
@@ -2060,7 +2077,11 @@ namespace Microsoft.PythonTools.Project {
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
             if (selectedInterpreterFactory == null || selectedInterpreterFactory.PackageManager == null) {
-                return VSConstants.E_INVALIDARG;
+                if (Utilities.IsInAutomationFunction(Site)) {
+                    return VSConstants.E_INVALIDARG;
+                }
+                MessageBox.Show(Strings.PackageManagementNotSupported, Strings.ProductTitle, MessageBoxButtons.OK);
+                return VSConstants.S_OK;
             }
 
             var txt = PathUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt");
@@ -2130,12 +2151,18 @@ namespace Microsoft.PythonTools.Project {
             InterpretersNode selectedInterpreter;
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
-            if (selectedInterpreterFactory != null) {
-                GenerateRequirementsTxtAsync(selectedInterpreterFactory)
-                    .SilenceException<OperationCanceledException>()
-                    .HandleAllExceptions(Site, GetType())
-                    .DoNotWait();
+            if (selectedInterpreterFactory?.PackageManager == null) {
+                if (Utilities.IsInAutomationFunction(Site)) {
+                    return VSConstants.E_INVALIDARG;
+                }
+                MessageBox.Show(Strings.PackageManagementNotSupported, Strings.ProductTitle, MessageBoxButtons.OK);
+                return VSConstants.S_OK;
             }
+
+            GenerateRequirementsTxtAsync(selectedInterpreterFactory)
+                .SilenceException<OperationCanceledException>()
+                .HandleAllExceptions(Site, GetType())
+                .DoNotWait();
             return VSConstants.S_OK;
         }
 
@@ -2146,17 +2173,9 @@ namespace Microsoft.PythonTools.Project {
             IList<PackageSpec> items = null;
 
             try {
-                items = await factory?.PackageManager?.GetInstalledPackagesAsync(CancellationToken.None);
-            } catch (FileNotFoundException ex) {
-                // Other exceptions should not occur, so let them propagate
-                var dlg = TaskDialog.ForException(
-                    Site,
-                    ex,
-                    Strings.MissingEnvironment.FormatUI(factory.Configuration.Description, factory.Configuration.Version),
-                    IssueTrackerUrl
-                );
-                dlg.Title = Strings.ProductTitle;
-                dlg.ShowModal();
+                items = await factory.PackageManager.GetInstalledPackagesAsync(CancellationToken.None);
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                ex.ReportUnhandledException(Site, GetType(), allowUI: Utilities.IsInAutomationFunction(Site));
                 return;
             }
 

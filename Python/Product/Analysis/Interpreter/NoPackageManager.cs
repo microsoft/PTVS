@@ -21,6 +21,10 @@ using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Interpreter {
     class NoPackageManager : IPackageManager {
+        public static readonly IPackageManager Instance = new NoPackageManager();
+
+        private NoPackageManager() { }
+
         public bool IsReady => true;
 
         public event EventHandler InstalledFilesChanged { add { } remove { } }

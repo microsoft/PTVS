@@ -655,6 +655,10 @@ namespace Microsoft.PythonTools.Language {
                     case VSConstants.VSStd2KCmdID.RETURN:
                         pyPoint = _textView.GetPythonCaret();
                         if (pyPoint != null) {
+                            // https://github.com/Microsoft/PTVS/issues/241
+                            // If the current line is a full line comment and we
+                            // are splitting the text, automatically insert the
+                            // comment marker on the new line.
                             var line = pyPoint.Value.GetContainingLine();
                             var lineText = line.GetText();
                             int comment = lineText.IndexOf('#');

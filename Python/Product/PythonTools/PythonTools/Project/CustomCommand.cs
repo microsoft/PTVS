@@ -386,9 +386,11 @@ namespace Microsoft.PythonTools.Project {
 
             var packagesToInstall = new List<string>();
             var pm = interpFactory.PackageManager;
-            foreach (var pkg in startInfo.RequiredPackages) {
-                if (!(await pm.GetInstalledPackageAsync(new PackageSpec(pkg), CancellationToken.None)).IsValid) {
-                    packagesToInstall.Add(pkg);
+            if (pm != null) {
+                foreach (var pkg in startInfo.RequiredPackages) {
+                    if (!(await pm.GetInstalledPackageAsync(new PackageSpec(pkg), CancellationToken.None)).IsValid) {
+                        packagesToInstall.Add(pkg);
+                    }
                 }
             }
 
@@ -421,7 +423,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (startInfo.TargetType == PythonCommandTask.TargetTypePip) {
-                if (startInfo.ExecuteInOutput) {
+                if (startInfo.ExecuteInOutput && pm != null) {
                     var ui = new VsPackageManagerUI(project.Site);
                     if (!pm.IsReady) {
                         await pm.PrepareAsync(ui, CancellationToken.None);

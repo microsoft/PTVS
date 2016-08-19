@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
@@ -119,7 +120,11 @@ namespace TestUtilities {
             }) {
                 var prefixPath = Path.Combine(Environment.GetEnvironmentVariable("SystemDrive"), "\\", path);
                 var exePath = Path.Combine(prefixPath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
-                if (arch.Value == Microsoft.PythonTools.Infrastructure.NativeMethods.GetBinaryType(path)) {
+                var procArch = (arch == InterpreterArchitecture.x86) ? ProcessorArchitecture.X86 :
+                    (arch == InterpreterArchitecture.x64) ? ProcessorArchitecture.Amd64 :
+                    ProcessorArchitecture.None;
+
+                if (procArch == Microsoft.PythonTools.Infrastructure.NativeMethods.GetBinaryType(path)) {
                     return new PythonVersion(new InterpreterConfiguration(
                         CPythonInterpreterFactoryConstants.GetInterpreterId("PythonCore", tag),
                         "Python {0} {1}".FormatInvariant(arch, ver),

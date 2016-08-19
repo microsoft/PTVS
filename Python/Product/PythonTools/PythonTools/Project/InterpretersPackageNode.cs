@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
@@ -131,13 +132,19 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private async System.Threading.Tasks.Task RemoveAsync() {
+            var pm = Parent._factory.PackageManager;
+            if (pm == null) {
+                Debug.Fail("Should not be able to remove a package without a package manager");
+                return;
+            }
+
             var provider = ProjectMgr.Site;
             var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
 
             try {
                 statusBar.SetText(Strings.PackageUninstallingSeeOutputWindow.FormatUI(_packageName));
 
-                bool success = await Parent._factory.PackageManager.UninstallAsync(
+                bool success = await pm.UninstallAsync(
                     _package,
                     new VsPackageManagerUI(provider),
                     CancellationToken.None

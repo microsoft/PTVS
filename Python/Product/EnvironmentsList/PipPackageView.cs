@@ -27,7 +27,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private readonly IPackageManager _provider;
         private readonly PackageSpec _package;
         private readonly bool _isInstalled;
-        private Pep440Version? _upgradeVersion;
+        private PackageVersion? _upgradeVersion;
 
         internal PipPackageView(IPackageManager provider, PackageSpec package, bool isInstalled) {
             _provider = provider;
@@ -82,7 +82,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public string Name => _package.Name;
 
-        public Pep440Version Version => _package.ExactVersion;
+        public PackageVersion Version => _package.ExactVersion;
 
         public string DisplayName => Version.IsEmpty ? Name : "{0} ({1})".FormatInvariant(Name, Version);
 
@@ -98,12 +98,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-        public Pep440Version UpgradeVersion {
+        public PackageVersion UpgradeVersion {
             get {
                 if (!_isInstalled) {
                     // Package is not installed, so the latest version is always
                     // shown.
-                    return Pep440Version.Empty;
+                    return PackageVersion.Empty;
                 }
 
                 if (!_upgradeVersion.HasValue) {
