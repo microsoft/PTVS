@@ -15,11 +15,12 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Intellisense;
+using System.Diagnostics;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.PythonTools.Commands {
     /// <summary>
@@ -36,15 +37,37 @@ namespace Microsoft.PythonTools.Commands {
 
         public override async void DoCommand(object sender, EventArgs args) {
             var view = CommonPackage.GetActiveTextView(_serviceProvider);
-            var analyzer = view.GetAnalyzerAtCaret(_serviceProvider);
-            var pythonCaret = view.GetPythonCaret().Value; // QueryStatus guarantees we have a valid caret
+            var analyzer = view?.GetAnalyzerAtCaret(_serviceProvider);
 
-            await analyzer.RemoveImportsAsync(view, pythonCaret.Snapshot.TextBuffer, pythonCaret.Position, _allScopes);
+            if (analyzer == null) {
+                // Can sometimes race with initializing the analyzer (probably
+                // only in tests), so delay slightly until we get an analyzer
+                for (int retries = 10; retries > 0 && analyzer == null; --retries) {
+                    await Task.Delay(10);
+                    view = CommonPackage.GetActiveTextView(_serviceProvider);
+                    analyzer = view?.GetAnalyzerAtCaret(_serviceProvider);
+                }
+            }
+
+            var pythonCaret = view?.GetPythonCaret();
+            if (analyzer == null || !pythonCaret.HasValue) {
+                Debug.Fail("Executed RemoveImportsCommand with invalid view");
+                return;
+            }
+
+            await analyzer.RemoveImportsAsync(
+                view,
+                pythonCaret.Value.Snapshot.TextBuffer,
+                pythonCaret.Value.Position,
+                _allScopes
+            );
         }
 
         public override int? EditFilterQueryStatus(ref VisualStudio.OLE.Interop.OLECMD cmd, IntPtr pCmdText) {
-            var activeView = CommonPackage.GetActiveTextView(_serviceProvider);
-            if (activeView != null && activeView.GetPythonBufferAtCaret() != null) {                
+            var view = CommonPackage.GetActiveTextView(_serviceProvider);
+            var analyzer = view?.GetAnalyzerAtCaret(_serviceProvider);
+            var pythonCaret = view?.GetPythonCaret();
+            if (view != null && analyzer != null && pythonCaret.HasValue) {
                 cmd.cmdf = (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED);
             } else {
                 cmd.cmdf = (uint)(OLECMDF.OLECMDF_INVISIBLE);
