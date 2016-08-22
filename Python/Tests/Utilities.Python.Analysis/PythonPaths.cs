@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -27,30 +27,32 @@ using Microsoft.Win32;
 
 namespace TestUtilities {
     public class PythonPaths {
-        const string PythonCorePath = "SOFTWARE\\Python\\PythonCore";
+        private static readonly List<PythonInterpreterInformation> _foundInRegistry = PythonRegistrySearch
+            .PerformDefaultSearch()
+            .Where(pii => pii.Configuration.Id.Contains("PythonCore|"))
+            .ToList();
 
-        public static readonly Guid CPythonGuid = new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}");
-        public static readonly Guid CPython64Guid = new Guid("{9A7A9026-48C1-4688-9D5D-E5699D47D074}");
-
-        public static readonly PythonVersion Python25 = GetCPythonVersion(PythonLanguageVersion.V25);
-        public static readonly PythonVersion Python26 = GetCPythonVersion(PythonLanguageVersion.V26);
-        public static readonly PythonVersion Python27 = GetCPythonVersion(PythonLanguageVersion.V27);
-        public static readonly PythonVersion Python30 = GetCPythonVersion(PythonLanguageVersion.V30);
-        public static readonly PythonVersion Python31 = GetCPythonVersion(PythonLanguageVersion.V31);
-        public static readonly PythonVersion Python32 = GetCPythonVersion(PythonLanguageVersion.V32);
-        public static readonly PythonVersion Python33 = GetCPythonVersion(PythonLanguageVersion.V33);
-        public static readonly PythonVersion Python34 = GetCPythonVersion(PythonLanguageVersion.V34);
-        public static readonly PythonVersion Python35 = GetCPythonVersion(PythonLanguageVersion.V35);
+        public static readonly PythonVersion Python25 = GetCPythonVersion(PythonLanguageVersion.V25, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python26 = GetCPythonVersion(PythonLanguageVersion.V26, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python27 = GetCPythonVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python30 = GetCPythonVersion(PythonLanguageVersion.V30, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python31 = GetCPythonVersion(PythonLanguageVersion.V31, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python32 = GetCPythonVersion(PythonLanguageVersion.V32, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python33 = GetCPythonVersion(PythonLanguageVersion.V33, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python34 = GetCPythonVersion(PythonLanguageVersion.V34, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python35 = GetCPythonVersion(PythonLanguageVersion.V35, InterpreterArchitecture.x86);
+        public static readonly PythonVersion Python36 = GetCPythonVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x86);
         public static readonly PythonVersion IronPython27 = GetIronPythonVersion(false);
-        public static readonly PythonVersion Python25_x64 = GetCPythonVersion(PythonLanguageVersion.V25, true);
-        public static readonly PythonVersion Python26_x64 = GetCPythonVersion(PythonLanguageVersion.V26, true);
-        public static readonly PythonVersion Python27_x64 = GetCPythonVersion(PythonLanguageVersion.V27, true);
-        public static readonly PythonVersion Python30_x64 = GetCPythonVersion(PythonLanguageVersion.V30, true);
-        public static readonly PythonVersion Python31_x64 = GetCPythonVersion(PythonLanguageVersion.V31, true);
-        public static readonly PythonVersion Python32_x64 = GetCPythonVersion(PythonLanguageVersion.V32, true);
-        public static readonly PythonVersion Python33_x64 = GetCPythonVersion(PythonLanguageVersion.V33, true);
-        public static readonly PythonVersion Python34_x64 = GetCPythonVersion(PythonLanguageVersion.V34, true);
-        public static readonly PythonVersion Python35_x64 = GetCPythonVersion(PythonLanguageVersion.V35, true);
+        public static readonly PythonVersion Python25_x64 = GetCPythonVersion(PythonLanguageVersion.V25, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python26_x64 = GetCPythonVersion(PythonLanguageVersion.V26, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python27_x64 = GetCPythonVersion(PythonLanguageVersion.V27, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python30_x64 = GetCPythonVersion(PythonLanguageVersion.V30, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python31_x64 = GetCPythonVersion(PythonLanguageVersion.V31, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python32_x64 = GetCPythonVersion(PythonLanguageVersion.V32, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python33_x64 = GetCPythonVersion(PythonLanguageVersion.V33, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python34_x64 = GetCPythonVersion(PythonLanguageVersion.V34, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python35_x64 = GetCPythonVersion(PythonLanguageVersion.V35, InterpreterArchitecture.x64);
+        public static readonly PythonVersion Python36_x64 = GetCPythonVersion(PythonLanguageVersion.V36, InterpreterArchitecture.x64);
         public static readonly PythonVersion IronPython27_x64 = GetIronPythonVersion(true);
 
         public static readonly PythonVersion Jython27 = GetJythonVersion(PythonLanguageVersion.V27);
@@ -67,12 +69,15 @@ namespace TestUtilities {
                                 var res = installPath.GetValue("") as string;
                                 if (res != null) {
                                     return new PythonVersion(
-                                        Path.Combine(res, exeName),
-                                        PythonLanguageVersion.V27,
-                                        x64 ? "IronPython|2.7-64" : "IronPython|2.7-32",
-                                        x64,
-                                        true,
-                                        false
+                                        new InterpreterConfiguration(
+                                            x64 ? "IronPython|2.7-64" : "IronPython|2.7-32",
+                                            string.Format("IronPython {0} 2.7", x64 ? "64-bit" : "32-bit"),
+                                            res,
+                                            Path.Combine(res, exeName),
+                                            arch: x64 ? InterpreterArchitecture.x64 : InterpreterArchitecture.x86,
+                                            version: new Version(2, 7)
+                                        ),
+                                        ironPython: true
                                     );
                                 }
                             }
@@ -81,138 +86,54 @@ namespace TestUtilities {
                 }
             }
 
-            var ver = new PythonVersion(
-                "C:\\Program Files (x86)\\IronPython 2.7\\" + exeName, 
-                PythonLanguageVersion.V27,
+            var ver = new PythonVersion(new InterpreterConfiguration(
                 "IronPython|2.7-32",
-                false,
-                true,
-                false
-            );
+                "IronPython 32-bit 2.7",
+                "C:\\Program Files (x86)\\IronPython 2.7\\",
+                "C:\\Program Files (x86)\\IronPython 2.7\\" + exeName, 
+                arch: InterpreterArchitecture.x86,
+                version: new Version(2, 7)
+            ), ironPython: true);
             if (File.Exists(ver.InterpreterPath)) {
                 return ver;
             }
             return null;
         }
 
-        private static PythonVersion GetCPythonVersion(PythonLanguageVersion version, bool x64 = false) {
-            if (!x64) {
-                foreach (var baseKey in new[] { Registry.LocalMachine, Registry.CurrentUser }) {
-                    using (var python = baseKey.OpenSubKey(PythonCorePath)) {
-                        var res = TryGetCPythonPath(version, python, x64);
-                        if (res != null) {
-                            return res;
-                        }
-                    }
-                }
+        private static PythonVersion GetCPythonVersion(PythonLanguageVersion version, InterpreterArchitecture arch) {
+            var res = _foundInRegistry.FirstOrDefault(ii => 
+                ii.Configuration.Id.StartsWith("Global|PythonCore|") &&
+                ii.Configuration.Architecture == arch &&
+                ii.Configuration.Version == version.ToVersion()
+            );
+            if (res != null) {
+                return new PythonVersion(res.Configuration, cPython: true);
             }
 
-            if (Environment.Is64BitOperatingSystem && x64) {
-                foreach (var baseHive in new[] { RegistryHive.LocalMachine, RegistryHive.CurrentUser }) {
-                    var python64 = RegistryKey.OpenBaseKey(baseHive, RegistryView.Registry64).OpenSubKey(PythonCorePath);
-                    var res = TryGetCPythonPath(version, python64, x64);
-                    if (res != null) {
-                        return res;
-                    }
-                }
-            }
+            var ver = version.ToVersion();
+            var tag = ver + (arch == InterpreterArchitecture.x86 ? "-32" : "");
+            foreach (var path in new[] {
+                string.Format("Python{0}{1}", ver.Major, ver.Minor),
+                string.Format("Python{0}{1}_{2}", ver.Major, ver.Minor, arch.ToString("x")),
+                string.Format("Python{0}{1}-{2}", ver.Major, ver.Minor, arch.ToString("#")),
+                string.Format("Python{0}{1}_{2}", ver.Major, ver.Minor, arch.ToString("#")),
+            }) {
+                var prefixPath = Path.Combine(Environment.GetEnvironmentVariable("SystemDrive"), "\\", path);
+                var exePath = Path.Combine(prefixPath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
+                var procArch = (arch == InterpreterArchitecture.x86) ? ProcessorArchitecture.X86 :
+                    (arch == InterpreterArchitecture.x64) ? ProcessorArchitecture.Amd64 :
+                    ProcessorArchitecture.None;
 
-            var path = "C:\\Python" + version.ToString().Substring(1) + "\\python.exe";
-            var arch = NativeMethods.GetBinaryType(path);
-            if (arch == ProcessorArchitecture.X86 && !x64) {
-                return new PythonVersion(path, version, 
-                    CPythonInterpreterFactoryConstants.GetInterpreterId(
-                        "PythonCore",
-                        arch,
-                        version.ToVersion().ToString()
-                    ),
-                    false,
-                    false,
-                    true
-                );
-            } else if (arch == ProcessorArchitecture.Amd64 && x64) {
-                return new PythonVersion(
-                    path, 
-                    version,
-                    CPythonInterpreterFactoryConstants.GetInterpreterId(
-                        "PythonCore",
-                        arch,
-                        version.ToVersion().ToString()
-                    ),
-                    true,
-                    false,
-                    true
-                );
-            }
-
-            if (x64) {
-                path = "C:\\Python" + version.ToString().Substring(1) + "_x64\\python.exe";
-                arch = NativeMethods.GetBinaryType(path);
-                if (arch == ProcessorArchitecture.Amd64) {
-                    return new PythonVersion(
-                        path, 
-                        version,
-                        CPythonInterpreterFactoryConstants.GetInterpreterId(
-                            "PythonCore",
-                            arch,
-                            version.ToVersion().ToString()
-                        ),
-                        true,
-                        false,
-                        true
-
-                    );
-                }
-            }
-
-            return null;
-        }
-
-        private static PythonVersion TryGetCPythonPath(PythonLanguageVersion version, RegistryKey python, bool x64) {
-            if (python != null) {
-                string versionStr = version.ToString().Substring(1);
-                string id = versionStr = versionStr[0] + "." + versionStr[1];
-                if (!x64 && version >= PythonLanguageVersion.V35) {
-                    versionStr += "-32";
-                }
-
-                using (var versionKey = python.OpenSubKey(versionStr + "\\InstallPath")) {
-                    if (versionKey != null) {
-                        var installPath = versionKey.GetValue("");
-                        if (installPath != null) {
-                            var path = Path.Combine(installPath.ToString(), "python.exe");
-                            var arch = NativeMethods.GetBinaryType(path);
-                            if (arch == ProcessorArchitecture.X86) {
-                                return x64 ? null : new PythonVersion(
-                                    path, 
-                                    version, 
-                                    CPythonInterpreterFactoryConstants.GetInterpreterId(
-                                        "PythonCore",
-                                        arch,
-                                        id
-                                    ),
-                                    false,
-                                    false,
-                                    true
-                                );
-                            } else if (arch == ProcessorArchitecture.Amd64) {
-                                return x64 ? new PythonVersion(
-                                    path, 
-                                    version,
-                                    CPythonInterpreterFactoryConstants.GetInterpreterId(
-                                        "PythonCore",
-                                        arch,
-                                        id
-                                    ),
-                                    true,
-                                    false,
-                                    true
-                                ) : null;
-                            } else {
-                                return null;
-                            }
-                        }
-                    }
+                if (procArch == Microsoft.PythonTools.Infrastructure.NativeMethods.GetBinaryType(path)) {
+                    return new PythonVersion(new InterpreterConfiguration(
+                        CPythonInterpreterFactoryConstants.GetInterpreterId("PythonCore", tag),
+                        "Python {0} {1}".FormatInvariant(arch, ver),
+                        prefixPath,
+                        exePath,
+                        pathVar: CPythonInterpreterFactoryConstants.PathEnvironmentVariableName,
+                        arch: arch,
+                        version: ver
+                    ));
                 }
             }
             return null;
@@ -244,18 +165,16 @@ namespace TestUtilities {
                 if (libPath == null || !libPath.EnumerateFiles("site.py").Any()) {
                     continue;
                 }
-                return new PythonVersion(
-                    interpreter.FullName, 
-                    version,
+                return new PythonVersion(new InterpreterConfiguration(
                     CPythonInterpreterFactoryConstants.GetInterpreterId(
                         "Jython",
-                        ProcessorArchitecture.X86,
                         version.ToVersion().ToString()
                     ),
-                    false,
-                    false,
-                    true
-                );
+                    string.Format("Jython {0}", version.ToVersion()),
+                    dir.FullName,
+                    interpreter.FullName,
+                    version: version.ToVersion()
+                ));
             }
             return null;
         }
@@ -271,6 +190,7 @@ namespace TestUtilities {
                 if (Python33 != null) yield return Python33;
                 if (Python34 != null) yield return Python34;
                 if (Python35 != null) yield return Python35;
+                if (Python36 != null) yield return Python36;
                 if (IronPython27 != null) yield return IronPython27;
                 if (Python25_x64 != null) yield return Python25_x64;
                 if (Python26_x64 != null) yield return Python26_x64;
@@ -281,98 +201,31 @@ namespace TestUtilities {
                 if (Python33_x64 != null) yield return Python33_x64;
                 if (Python34_x64 != null) yield return Python34_x64;
                 if (Python35_x64 != null) yield return Python35_x64;
+                if (Python36_x64 != null) yield return Python36_x64;
                 if (IronPython27_x64 != null) yield return IronPython27_x64;
                 if (Jython27 != null) yield return Jython27;
-            }
-        }
-
-        static class NativeMethods {
-            [DllImport("kernel32", EntryPoint = "GetBinaryTypeW", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Winapi)]
-            private static extern bool _GetBinaryType(string lpApplicationName, out GetBinaryTypeResult lpBinaryType);
-
-            private enum GetBinaryTypeResult : uint {
-                SCS_32BIT_BINARY = 0,
-                SCS_DOS_BINARY = 1,
-                SCS_WOW_BINARY = 2,
-                SCS_PIF_BINARY = 3,
-                SCS_POSIX_BINARY = 4,
-                SCS_OS216_BINARY = 5,
-                SCS_64BIT_BINARY = 6
-            }
-
-            public static ProcessorArchitecture GetBinaryType(string path) {
-                GetBinaryTypeResult result;
-
-                if (_GetBinaryType(path, out result)) {
-                    switch (result) {
-                        case GetBinaryTypeResult.SCS_32BIT_BINARY:
-                            return ProcessorArchitecture.X86;
-                        case GetBinaryTypeResult.SCS_64BIT_BINARY:
-                            return ProcessorArchitecture.Amd64;
-                        case GetBinaryTypeResult.SCS_DOS_BINARY:
-                        case GetBinaryTypeResult.SCS_WOW_BINARY:
-                        case GetBinaryTypeResult.SCS_PIF_BINARY:
-                        case GetBinaryTypeResult.SCS_POSIX_BINARY:
-                        case GetBinaryTypeResult.SCS_OS216_BINARY:
-                        default:
-                            break;
-                    }
-                }
-
-                return ProcessorArchitecture.None;
             }
         }
     }
 
     public class PythonVersion {
-        public readonly string InterpreterPath;
-        public readonly PythonLanguageVersion Version;
-        public string Id;
+        public readonly InterpreterConfiguration Configuration;
         public readonly bool IsCPython;
         public readonly bool IsIronPython;
-        public readonly bool Isx64;
 
-        public PythonVersion(string path, PythonLanguageVersion pythonLanguageVersion, string id, bool x64, bool ironPython, bool cPython) {
-            InterpreterPath = path;
-            Version = pythonLanguageVersion;
+        public PythonVersion(InterpreterConfiguration config, bool ironPython = false, bool cPython = false) {
+            Configuration = config;
             IsCPython = cPython;
-            Isx64 = x64;
             IsIronPython = ironPython;
-            Id = id;
         }
 
-        public override string ToString() {
-            return string.Format(
-                "{0}Python {1} {2}",
-                IsCPython ? "C" : IsIronPython ? "Iron" : "Other ",
-                Version,
-                Isx64 ? "x64" : "x86"
-            );
-        }
-
-        public string PrefixPath {
-            get {
-                return Path.GetDirectoryName(InterpreterPath);
-            }
-        }
-
-        public string LibPath {
-            get {
-                return Path.Combine(PrefixPath, "Lib");
-            }
-        }
-
-        public InterpreterConfiguration Configuration {
-            get {
-                return new InterpreterConfiguration(
-                    Id,
-                    "",
-                    PrefixPath, InterpreterPath, null, LibPath, "PYTHONPATH",
-                    Isx64 ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
-                    Version.ToVersion()
-                );
-            }
-        }
+        public override string ToString() => Configuration.Description;
+        public string PrefixPath => Configuration.PrefixPath;
+        public string InterpreterPath => Configuration.InterpreterPath;
+        public PythonLanguageVersion Version => Configuration.Version.ToLanguageVersion();
+        public string Id => Configuration.Id;
+        public bool Isx64 => Configuration.Architecture == InterpreterArchitecture.x64;
+        public InterpreterArchitecture Architecture => Configuration.Architecture;
     }
 
     public static class PythonVersionExtensions {

@@ -186,7 +186,7 @@ TRACE and will also log detailed analysis information to CSV file.
                 }
 
                 if (!RunOneTest(() => {
-                    new AnalysisTest().AnalyzeDir(ver.LibPath, ver.Version, new[] { "site-packages" }); 
+                    new AnalysisTest().AnalyzeDir(Path.Combine(ver.PrefixPath, "Lib"), ver.Version, new[] { "site-packages" }); 
                 }, ver.InterpreterPath)) {
                     failures += 1;
                 }
@@ -217,7 +217,7 @@ TRACE and will also log detailed analysis information to CSV file.
             int failures = 0;
 
             foreach (var ver in VERSIONS) {
-                var djangoPath = Path.Combine(ver.LibPath, "site-packages", "django");
+                var djangoPath = Path.Combine(ver.PrefixPath, "Lib", "site-packages", "django");
                 if (!Directory.Exists(djangoPath)) {
                     Trace.TraceInformation("Path {0} not found; skipping {1}", djangoPath, ver.Version);
                     continue;

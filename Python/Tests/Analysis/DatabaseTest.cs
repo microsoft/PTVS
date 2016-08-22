@@ -192,7 +192,7 @@ namespace AnalysisTests {
             // We can't assume anything else
             AssertUtil.ContainsAtLeast(paths.Select(p => p.Path.ToLowerInvariant().TrimEnd('\\')),
                 Python.PrefixPath.ToLowerInvariant().TrimEnd('\\'),
-                Python.LibPath.ToLowerInvariant().TrimEnd('\\')
+                Path.Combine(Python.PrefixPath, "Lib").ToLowerInvariant().TrimEnd('\\')
             );
             
             // All paths should exist

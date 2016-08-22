@@ -16,13 +16,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
+using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.TemplateWizard;
 using Microsoft.Win32;
 using Project = EnvDTE.Project;
 using ProjectItem = EnvDTE.ProjectItem;
-using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.ProjectWizards {
     public sealed class WindowsSDKWizard : IWizard {

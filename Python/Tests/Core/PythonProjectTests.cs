@@ -15,14 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Xml;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
@@ -58,7 +53,7 @@ namespace PythonToolsTests {
                     "c==0.3",
                     "e==4.0",
                     "x==0.8"
-                }, false),
+                }.Select(p => PackageSpec.FromRequirement(p)), false),
                 "a==0.2 # with a comment",
                 "b==0.1",
                 "# just a comment B==01234",
@@ -77,7 +72,7 @@ namespace PythonToolsTests {
                     "B==0.1",   // case is updated
                     "a==0.2",
                     "c==0.3"
-                }, true),
+                }.Select(p => PackageSpec.FromRequirement(p)), true),
                 "a==0.2 # with a comment",
                 "B==0.1",
                 "# just a comment B==01234",
@@ -90,7 +85,7 @@ namespace PythonToolsTests {
                     "b==0.2",
                     "a==0.1",
                     "c==0.3"
-                }, false),
+                }.Select(p => PackageSpec.FromRequirement(p)), false),
                 "a==0.1",
                 "b==0.2",
                 "c==0.3"
@@ -101,7 +96,7 @@ namespace PythonToolsTests {
             AssertUtil.AreEqual(
                 PythonProjectNode.MergeRequirements(
                     inequalities.Split('|').Select(s => "a " + s + " 1.2.3"),
-                    new[] { "a==0" },
+                    new[] { "a==0" }.Select(p => PackageSpec.FromRequirement(p)),
                     false
                 ),
                 inequalities.Split('|').Select(_ => "a==0").ToArray()
@@ -119,7 +114,7 @@ namespace PythonToolsTests {
                     "aaaAAA==0.1",
                     "bbbBBB==0.2",
                     "cccCCC==0.3"
-                }, false),
+                }.Select(p => PackageSpec.FromRequirement(p)), false),
                 "aaaAAA==0.1",
                 "bbbBBB==0.2",
                 "cccCCC==0.3"
@@ -139,7 +134,7 @@ namespace PythonToolsTests {
                     "jinja2==2.7.3",
                     "markupsafe==0.23",
                     "werkzeug==0.9.6"
-                }, false),
+                }.Select(p => PackageSpec.FromRequirement(p)), false),
                 "flask==0.10.1",
                 "itsdangerous==0.24",
                 "jinja2==2.7.3",

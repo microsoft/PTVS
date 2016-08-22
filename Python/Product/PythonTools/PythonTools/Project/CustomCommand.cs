@@ -21,6 +21,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using Microsoft.Build.Construction;
@@ -384,9 +385,12 @@ namespace Microsoft.PythonTools.Project {
             var startInfo = GetStartInfo(project);
 
             var packagesToInstall = new List<string>();
-            foreach (var pkg in startInfo.RequiredPackages) {
-                if (!await Pip.IsInstalled(interpFactory, pkg)) {
-                    packagesToInstall.Add(pkg);
+            var pm = interpFactory.PackageManager;
+            if (pm != null) {
+                foreach (var pkg in startInfo.RequiredPackages) {
+                    if (!(await pm.GetInstalledPackageAsync(new PackageSpec(pkg), CancellationToken.None)).IsValid) {
+                        packagesToInstall.Add(pkg);
+                    }
                 }
             }
 
@@ -407,35 +411,33 @@ namespace Microsoft.PythonTools.Project {
 
                 var selectedButton = taskDialog.ShowModal();
                 if (selectedButton == installMissingButton) {
-                    await Pip.Install(
-                        project.Site,
-                        interpFactory,
-                        string.Join(" ", packagesToInstall),
-                        false,
-                        OutputWindowRedirector.GetGeneral(project.Site));
+                    var ui = new VsPackageManagerUI(project.Site);
+                    if (!pm.IsReady) {
+                        await pm.PrepareAsync(ui, CancellationToken.None);
+                    }
+                    await pm.InstallAsync(PackageSpec.FromArguments(string.Join(" ", packagesToInstall)), ui, CancellationToken.None);
                 } else if (selectedButton == runAnywayButton) {
                 } else {
                     throw new TaskCanceledException();
                 }
             }
 
-            if (startInfo.TargetType == CreatePythonCommandItem.TargetTypePip) {
-                if (startInfo.ExecuteInOutput) {
-                    await Pip.Install(
-                        _project.Site,
-                        interpFactory,
-                        string.IsNullOrEmpty(startInfo.Arguments) ?
-                            startInfo.Filename :
-                            string.Format("{0} {1}", startInfo.Filename, startInfo.Arguments),
-                        project.Site,
-                        false,
-                        OutputWindowRedirector.GetGeneral(project.Site)
+            if (startInfo.TargetType == PythonCommandTask.TargetTypePip) {
+                if (startInfo.ExecuteInOutput && pm != null) {
+                    var ui = new VsPackageManagerUI(project.Site);
+                    if (!pm.IsReady) {
+                        await pm.PrepareAsync(ui, CancellationToken.None);
+                    }
+                    await pm.InstallAsync(
+                        PackageSpec.FromArguments(string.IsNullOrEmpty(startInfo.Arguments) ? startInfo.Filename : "{0} {1}".FormatUI(startInfo.Filename, startInfo.Arguments)),
+                        ui,
+                        CancellationToken.None
                     );
                     return;
                 }
 
                 // Rewrite start info to execute 
-                startInfo.TargetType = CreatePythonCommandItem.TargetTypeModule;
+                startInfo.TargetType = PythonCommandTask.TargetTypeModule;
                 startInfo.AddArgumentAtStart(startInfo.Filename);
                 startInfo.Filename = "pip";
             }

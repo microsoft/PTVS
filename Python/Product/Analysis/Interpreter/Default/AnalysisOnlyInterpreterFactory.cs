@@ -17,39 +17,38 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class AnalysisOnlyInterpreterFactory : PythonInterpreterFactoryWithDatabase {
         readonly IEnumerable<string> _actualDatabasePaths;
         readonly PythonTypeDatabase _actualDatabase;
 
+        private readonly static InterpreterFactoryCreationOptions CreationOptions = new InterpreterFactoryCreationOptions {
+            WatchFileSystem = false
+        };
+
         public AnalysisOnlyInterpreterFactory(Version version, string description = null)
-            : base(
-                GetConfiguration(version),
-                false
-        ) { }
+            : base(GetConfiguration(version), CreationOptions) { }
 
         public AnalysisOnlyInterpreterFactory(Version version, IEnumerable<string> databasePaths, string description = null)
-            : base(GetConfiguration(version, databasePaths?.ToArray() ?? Array.Empty<string>()), false) {
+            : base(GetConfiguration(version, databasePaths?.ToArray() ?? Array.Empty<string>()), CreationOptions) {
             _actualDatabasePaths = databasePaths?.ToList();
         }
 
         public AnalysisOnlyInterpreterFactory(Version version, PythonTypeDatabase database, string description = null)
-            : base(GetConfiguration(version, database.DatabaseDirectory), false) {
+            : base(GetConfiguration(version, database.DatabaseDirectory), CreationOptions) {
             _actualDatabase = database;
         }
 
         private static InterpreterConfiguration GetConfiguration(Version version, params string[] databasePaths) {
             return new InterpreterConfiguration(
-                "AnalysisOnly;" + version.ToString() + ";" + String.Join(";", databasePaths.ToArray()), 
-                "Analysis", 
+                "AnalysisOnly|" + version.ToString() + "|" + String.Join("|", databasePaths), 
+                string.Format("Analysis {0}", version),
                 null,
                 null,
                 null,
                 null,
-                null,
-                ProcessorArchitecture.None,
+                InterpreterArchitecture.Unknown,
                 version,
                 InterpreterUIMode.SupportsDatabase
             );

@@ -22,6 +22,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -212,16 +213,18 @@ g()",
             }
 
             public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
-                yield return InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
-                    Id = "Test Interpreter",
-                    LanguageVersion = new Version(2, 6),
-                    Description = "Python",
-                    InterpreterPath = _pythonExe,
-                    WindowInterpreterPath = _pythonWinExe,
-                    LibraryPath = _pythonLib,
-                    PathEnvironmentVariableName = "PYTHONPATH",
-                    Architecture = ProcessorArchitecture.X86,
-                    WatchLibraryForNewModules = false
+                yield return InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterConfiguration(
+                    "Test Interpreter",
+                    "Python 2.6 32-bit",
+                    PathUtils.GetParent(_pythonExe),
+                    _pythonExe,
+                    _pythonWinExe,
+                    "PYTHONPATH",
+                    InterpreterArchitecture.x86,
+                    new Version(2, 6),
+                    InterpreterUIMode.CannotBeDefault
+                ), new InterpreterFactoryCreationOptions {
+                    WatchFileSystem = false
                 });
             }
 

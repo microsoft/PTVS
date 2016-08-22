@@ -77,7 +77,7 @@ namespace Microsoft.PythonTools.Project {
                     }
 
                     view.ShowBrowsePathError = true;
-                    view.BrowseOrigPrefix = DerivedInterpreterFactory.GetOrigPrefixPath(path);
+                    view.BrowseOrigPrefix = VirtualEnv.GetOrigPrefixPath(path);
                 }
 
                 wnd.VirtualEnvPathTextBox.ScrollToEnd();

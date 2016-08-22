@@ -27,11 +27,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
-using System.Xml.XPath;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudioTools;
 
-namespace Microsoft.PythonTools.EnvironmentsList {
+namespace Microsoft.PythonTools.Interpreter {
     class PipPackageCache : IDisposable {
         private static readonly Dictionary<string, PipPackageCache> _knownCaches =
             new Dictionary<string, PipPackageCache>();
@@ -42,7 +40,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private readonly string _cachePath;
 
         protected readonly SemaphoreSlim _cacheLock = new SemaphoreSlim(1);
-        protected readonly Dictionary<string, PipPackageView> _cache;
+        protected readonly Dictionary<string, PackageSpec> _cache;
         protected DateTime _cacheAge;
 
         protected int _userCount; // protected by _knownCachesLock
@@ -53,6 +51,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private readonly static Regex IndexNameSanitizerRegex = new Regex(@"\W");
         private static readonly Regex SimpleListRegex = new Regex(@"a href=['""](?<package>[^'""]+)");
 
+        // When files return 404 from PyPI, we put them in here to avoid trying
+        // to request them again.
+        private static HashSet<string> NotOnPyPI = new HashSet<string>();
 
         // These constants are substituted where necessary, but are not stored
         // in instance variables so we can differentiate between set and unset.
@@ -67,7 +68,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _index = index;
             _indexName = indexName;
             _cachePath = cachePath;
-            _cache = new Dictionary<string, PipPackageView>();
+            _cache = new Dictionary<string, PackageSpec>();
         }
 
         public static PipPackageCache GetCache(Uri index = null, string indexName = null) {
@@ -126,7 +127,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
 
-        public async Task<IList<PipPackageView>> GetAllPackagesAsync(CancellationToken cancel) {
+        public async Task<IList<PackageSpec>> GetAllPackagesAsync(CancellationToken cancel) {
             await _cacheLock.WaitAsync(cancel).ConfigureAwait(false);
             try {
                 if (!_cache.Any()) {
@@ -140,7 +141,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     await RefreshCacheAsync(cancel).ConfigureAwait(false);
                 }
 
-                return _cache.Values.ToList();
+                return _cache.Values.Select(p => p.Clone()).ToList();
             } finally {
                 _cacheLock.Release();
             }
@@ -170,17 +171,29 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             return false;
         }
 
-        public async Task UpdatePackageInfoAsync(PipPackageView package, CancellationToken cancel) {
+        public async Task<PackageSpec> GetPackageInfoAsync(PackageSpec entry, CancellationToken cancel) {
             string description = null;
             List<string> versions = null;
+
+            lock (NotOnPyPI) {
+                if (NotOnPyPI.Contains(entry.Name)) {
+                    return new PackageSpec();
+                }
+            }
 
             using (var client = new WebClient()) {
                 Stream data;
                 try {
-                    data = await client.OpenReadTaskAsync(new Uri(_index ?? DefaultIndex, package.Name + "/json"));
-                } catch (WebException) {
-                    // No net access
-                    return;
+                    data = await client.OpenReadTaskAsync(new Uri(_index ?? DefaultIndex, entry.Name + "/json"));
+                } catch (WebException ex) {
+                    if ((ex.Response as HttpWebResponse)?.StatusCode == HttpStatusCode.NotFound) {
+                        lock (NotOnPyPI) {
+                            NotOnPyPI.Add(entry.Name);
+                        }
+                    }
+
+                    // No net access or no such package
+                    return new PackageSpec();
                 }
 
                 try {
@@ -212,15 +225,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 }
             }
 
-            cancel.ThrowIfCancellationRequested();
-
             bool changed = false;
+            PackageSpec result;
 
-            await _cacheLock.WaitAsync();
-            try {
-                PipPackageView inCache;
-                if (!_cache.TryGetValue(package.Name, out inCache)) {
-                    inCache = _cache[package.Name] = new PipPackageView(this, package.Name, null, null);
+            using (await _cacheLock.LockAsync(cancel)) {
+                if (!_cache.TryGetValue(entry.Name, out result)) {
+                    result = _cache[entry.Name] = new PackageSpec(entry.Name);
                 }
 
                 if (!string.IsNullOrEmpty(description)) {
@@ -236,27 +246,25 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                         firstLine = string.Empty;
                     }
 
-                    inCache.Description = firstLine;
-                    package.Description = firstLine;
+                    result.Description = firstLine;
                     changed = true;
                 }
 
                 if (versions != null) {
-                    var updateVersion = Pep440Version.TryParseAll(versions)
+                    var updateVersion = PackageVersion.TryParseAll(versions)
                         .Where(v => v.IsFinalRelease)
                         .OrderByDescending(v => v)
                         .FirstOrDefault();
-                    inCache.UpgradeVersion = updateVersion;
-                    package.UpgradeVersion = updateVersion;
+                    result.ExactVersion = updateVersion;
                     changed = true;
                 }
-            } finally {
-                _cacheLock.Release();
             }
 
             if (changed) {
                 TriggerWriteCacheToDisk();
             }
+
+            return result.Clone();
         }
 
         #region Cache File Management
@@ -321,7 +329,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
                 if (!toRemove.Remove(package)) {
                     try {
-                        _cache[package] = new PipPackageView(this, package);
+                        _cache[package] = new PackageSpec(package);
                         changed = true;
                     } catch (FormatException) {
                     }
@@ -372,7 +380,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 using (var file = new StreamWriter(_cachePath, false, Encoding.UTF8)) {
                     foreach (var keyValue in _cache) {
                         cancel.ThrowIfCancellationRequested();
-                        await file.WriteLineAsync(keyValue.Value.GetPackageSpec(false, true));
+                        await file.WriteLineAsync("{0}{1}{2}{3}".FormatUI(
+                            keyValue.Value.Name,
+                            keyValue.Value.Constraint,
+                            string.IsNullOrEmpty(keyValue.Value.Description) ? "" : " #",
+                            Uri.EscapeDataString(keyValue.Value.Description ?? "")
+                        ));
                     }
                 }
             } catch (IOException ex) {
@@ -385,7 +398,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             Debug.Assert(_cacheLock.CurrentCount == 0, "Cache must be locked before calling ReadCacheFromDiskAsync");
 
             var newCacheAge = DateTime.Now;
-            var newCache = new Dictionary<string, PipPackageView>();
+            var newCache = new Dictionary<string, PackageSpec>();
             using (await LockFile(_cachePath + ".lock", cancel).ConfigureAwait(false))
             using (var file = new StreamReader(_cachePath, Encoding.UTF8)) {
                 try {
@@ -397,8 +410,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 while ((spec = await file.ReadLineAsync()) != null) {
                     cancel.ThrowIfCancellationRequested();
                     try {
-                        var pv = new PipPackageView(this, spec, versionIsInstalled: false);
-                        newCache[pv.Name] = pv;
+                        int descriptionStart = spec.IndexOf(" #");
+                        if (descriptionStart > 0) {
+                            var pv = PackageSpec.FromRequirement(spec.Remove(descriptionStart));
+                            pv.Description = Uri.UnescapeDataString(spec.Substring(descriptionStart + 2));
+                            newCache[pv.Name] = pv;
+                        } else {
+                            var pv = PackageSpec.FromRequirement(spec);
+                            newCache[pv.Name] = pv;
+                        }
                     } catch (FormatException) {
                     }
                 }
@@ -423,7 +443,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 #if DEBUG
                     "Debug",
 #endif
-                    AssemblyVersionInfo.VSVersion
+                    AssemblyVersionInfo.Version
                 );
             }
         }

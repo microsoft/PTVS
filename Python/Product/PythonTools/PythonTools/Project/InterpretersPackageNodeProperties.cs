@@ -15,10 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
-using System.ComponentModel;
-using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
@@ -28,9 +25,9 @@ namespace Microsoft.PythonTools.Project {
         internal InterpretersPackageNodeProperties(HierarchyNode node)
             : base(node) { }
 
-        [SRCategoryAttribute(SR.Misc)]
+        [SRCategory(SR.Misc)]
         [SRDisplayName("PackageFullName")]
-        [SRDescriptionAttribute("PackageFullNameDescription")]
+        [SRDescription("PackageFullNameDescription")]
         [AutomationBrowsable(true)]
         public string FullPath {
             get {

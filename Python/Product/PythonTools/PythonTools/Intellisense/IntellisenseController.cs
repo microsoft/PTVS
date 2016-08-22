@@ -32,6 +32,7 @@ using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.IncrementalSearch;
 using Microsoft.VisualStudio.Text.Operations;
@@ -241,6 +242,15 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (!_incSearch.IsActive) {
                 var prefs = _provider.PythonService.LangPrefs;
+
+                var literalSpan = GetStringLiteralSpan();
+                if (literalSpan.HasValue &&
+                    ShouldTriggerStringCompletionSession(prefs, literalSpan.Value) &&
+                    (_activeSession?.IsDismissed ?? true)) {
+                    TriggerCompletionSession(false);
+                    return;
+                }
+
                 switch (ch) {
                     case '@':
                         if (!string.IsNullOrWhiteSpace(GetTextBeforeCaret(-1))) {
@@ -249,12 +259,12 @@ namespace Microsoft.PythonTools.Intellisense {
                         goto case '.';
                     case '.':
                     case ' ':
-                        if (prefs.AutoListMembers) {
+                        if (prefs.AutoListMembers && GetStringLiteralSpan() == null) {
                             TriggerCompletionSession(false);
                         }
                         break;
                     case '(':
-                        if (prefs.AutoListParams) {
+                        if (prefs.AutoListParams && GetStringLiteralSpan() == null) {
                             OpenParenStartSignatureSession();
                         }
                         break;
@@ -279,18 +289,8 @@ namespace Microsoft.PythonTools.Intellisense {
                             UpdateCurrentParameter();
                         }
                         break;
-                    case '\\':
-                    case '/':
-                        if (ShouldTriggerStringCompletionSession(prefs)) {
-                            TriggerCompletionSession(false);
-                        }
-                        break;
                     default:
-                        if (ShouldTriggerStringCompletionSession(prefs)) {
-                            if (_activeSession?.IsDismissed ?? true) {
-                                TriggerCompletionSession(false);
-                            }
-                        } else if (Tokenizer.IsIdentifierStartChar(ch) &&
+                        if (Tokenizer.IsIdentifierStartChar(ch) &&
                             (_activeSession == null || _activeSession.CompletionSets.Count == 0)) {
                             bool commitByDefault;
                             if (ShouldTriggerIdentifierCompletionSession(out commitByDefault)) {
@@ -302,24 +302,28 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private bool ShouldTriggerStringCompletionSession(LanguagePreferences prefs) {
-            if (!prefs.AutoListMembers) {
-                return false;
-            }
-
+        private SnapshotSpan? GetStringLiteralSpan() {
             var pyCaret = _textView.GetPythonCaret();
             var classifier = pyCaret?.Snapshot.TextBuffer.GetPythonClassifier();
             if (classifier == null) {
-                return false;
+                return null;
             }
 
             var spans = classifier.GetClassificationSpans(new SnapshotSpan(pyCaret.Value.GetContainingLine().Start, pyCaret.Value));
             var token = spans.LastOrDefault();
             if (!(token?.ClassificationType.IsOfType(PredefinedClassificationTypeNames.String) ?? false)) {
+                return null;
+            }
+
+            return token.Span;
+        }
+
+        private bool ShouldTriggerStringCompletionSession(LanguagePreferences prefs, SnapshotSpan span) {
+            if (!prefs.AutoListMembers) {
                 return false;
             }
 
-            return StringLiteralCompletionList.CanComplete(token.Span.GetText());
+            return StringLiteralCompletionList.CanComplete(span.GetText());
         }
 
         private bool ShouldTriggerIdentifierCompletionSession(out bool commitByDefault) {

@@ -48,7 +48,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             new Lazy<IEnumerable<EnvironmentView>>(() => new[] { OnlineHelpView.Value });
 
         // Names of properties that will be requested from interpreter configurations
-        internal const string VendorKey = "Vendor";
+        internal const string CompanyKey = "Company";
         internal const string SupportUrlKey = "SupportUrl";
 
         /// <summary>
@@ -56,12 +56,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// find interpreter executables.
         /// </summary>
         private static readonly string[] _likelyInterpreterPaths = new[] { "Scripts" };
-
-        /// <summary>
-        /// Used with <see cref="CommonUtils.FindFile"/> to more efficiently
-        /// find interpreter libraries.
-        /// </summary>
-        private static readonly string[] _likelyLibraryPaths = new[] { "Lib" };
 
         private readonly IInterpreterOptionsService _service;
         private readonly IInterpreterRegistryService _registry;
@@ -103,13 +97,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 IsConfigurable = true;
             }
 
-            Description = Factory.Configuration.FullDescription;
+            Description = Factory.Configuration.Description;
             IsDefault = (_service != null && _service.DefaultInterpreter == Factory);
 
             PrefixPath = Factory.Configuration.PrefixPath;
             InterpreterPath = Factory.Configuration.InterpreterPath;
             WindowsInterpreterPath = Factory.Configuration.WindowsInterpreterPath;
-            LibraryPath = Factory.Configuration.LibraryPath;
 
             Extensions = new ObservableCollection<object>();
             Extensions.Add(new EnvironmentPathsExtensionProvider());
@@ -119,14 +112,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
             CanBeDefault = Factory.CanBeDefault();
 
-            Vendor = _registry.GetProperty(Factory.Configuration.Id, "Vendor") as string;
-            SupportUrl = _registry.GetProperty(Factory.Configuration.Id, "SupportUrl") as string;
+            Company = _registry.GetProperty(Factory.Configuration.Id, CompanyKey) as string ?? "";
+            SupportUrl = _registry.GetProperty(Factory.Configuration.Id, SupportUrlKey) as string ?? "";
         }
 
         public override string ToString() {
             return string.Format(
                 "{{{0}:{1}}}", GetType().FullName,
-                _withDb == null ? "(null)" : _withDb.Configuration.FullDescription
+                _withDb == null ? "(null)" : _withDb.Configuration.Description
             );
         }
 
@@ -219,14 +212,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private static readonly DependencyPropertyKey PrefixPathPropertyKey = DependencyProperty.RegisterReadOnly("PrefixPath", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
         private static readonly DependencyPropertyKey InterpreterPathPropertyKey = DependencyProperty.RegisterReadOnly("InterpreterPath", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
         private static readonly DependencyPropertyKey WindowsInterpreterPathPropertyKey = DependencyProperty.RegisterReadOnly("WindowsInterpreterPath", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
-        private static readonly DependencyPropertyKey LibraryPathPropertyKey = DependencyProperty.RegisterReadOnly("LibraryPath", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
         private static readonly DependencyPropertyKey PathEnvironmentVariablePropertyKey = DependencyProperty.RegisterReadOnly("PathEnvironmentVariable", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
 
         public static readonly DependencyProperty DescriptionProperty = DescriptionPropertyKey.DependencyProperty;
         public static readonly DependencyProperty PrefixPathProperty = PrefixPathPropertyKey.DependencyProperty;
         public static readonly DependencyProperty InterpreterPathProperty = InterpreterPathPropertyKey.DependencyProperty;
         public static readonly DependencyProperty WindowsInterpreterPathProperty = WindowsInterpreterPathPropertyKey.DependencyProperty;
-        public static readonly DependencyProperty LibraryPathProperty = LibraryPathPropertyKey.DependencyProperty;
         public static readonly DependencyProperty PathEnvironmentVariableProperty = PathEnvironmentVariablePropertyKey.DependencyProperty;
 
         public string Description {
@@ -249,11 +240,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             set { if (Factory != null) { SetValue(WindowsInterpreterPathPropertyKey, value); } }
         }
 
-        public string LibraryPath {
-            get { return Factory == null ? string.Empty : (string)GetValue(LibraryPathProperty); }
-            set { if (Factory != null) { SetValue(LibraryPathPropertyKey, value); } }
-        }
-
         public string PathEnvironmentVariable {
             get { return Factory == null ? string.Empty : (string)GetValue(PathEnvironmentVariableProperty); }
             set { if (Factory != null) { SetValue(PathEnvironmentVariablePropertyKey, value); } }
@@ -263,15 +249,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         #region Extra Information Dependency Properties
 
-        private static readonly DependencyPropertyKey VendorPropertyKey = DependencyProperty.RegisterReadOnly("Vendor", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
+        private static readonly DependencyPropertyKey CompanyPropertyKey = DependencyProperty.RegisterReadOnly("Company", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
         private static readonly DependencyPropertyKey SupportUrlPropertyKey = DependencyProperty.RegisterReadOnly("SupportUrl", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
 
-        public static readonly DependencyProperty VendorProperty = VendorPropertyKey.DependencyProperty;
+        public static readonly DependencyProperty CompanyProperty = CompanyPropertyKey.DependencyProperty;
         public static readonly DependencyProperty SupportUrlProperty = SupportUrlPropertyKey.DependencyProperty;
 
-        public string Vendor {
-            get { return Factory == null ? string.Empty : (string)GetValue(VendorProperty); }
-            set { if (Factory != null) { SetValue(VendorPropertyKey, value); } }
+        public string Company {
+            get { return Factory == null ? string.Empty : (string)GetValue(CompanyProperty); }
+            set { if (Factory != null) { SetValue(CompanyPropertyKey, value); } }
         }
 
         public string SupportUrl {

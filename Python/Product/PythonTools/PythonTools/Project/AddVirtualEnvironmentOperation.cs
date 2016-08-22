@@ -16,12 +16,13 @@
 
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Project {
-    sealed class AddVirtualEnvironmentOperation {
+    sealed class AddVirtualEnvironmentOperation : IPackageManagerUI {
         private readonly PythonProjectNode _project;
         private readonly string _virtualEnvPath;
         private readonly IPythonInterpreterFactory _baseInterpreter;
@@ -86,13 +87,18 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
+            if (factory.PackageManager == null) {
+                WriteError(
+                    Strings.PackageManagementNotSupported_Package.FormatUI(PathUtils.GetFileOrDirectoryName(txt))
+                );
+                return;
+            }
+
             WriteOutput(Strings.RequirementsTxtInstalling.FormatUI(txt));
-            if (await Pip.Install(
-                _project.Site,
-                factory,
-                "-r " + ProcessOutput.QuoteSingleArgument(txt),
-                false,  // never elevate for a virtual environment
-                _output
+            if (await factory.PackageManager.InstallAsync(
+                PackageSpec.FromArguments("-r " + ProcessOutput.QuoteSingleArgument(txt)),
+                this,
+                CancellationToken.None
             )) {
                 WriteOutput(Strings.PackageInstallSucceeded.FormatUI(Path.GetFileName(txt)));
             } else {
@@ -100,5 +106,20 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        void IPackageManagerUI.OnOutputTextReceived(string text) {
+            _output.WriteLine(text.TrimEnd('\r', '\n'));
+        }
+
+        void IPackageManagerUI.OnErrorTextReceived(string text) {
+            _output.WriteErrorLine(text.TrimEnd('\r', '\n'));
+        }
+
+        void IPackageManagerUI.OnOperationStarted(string operation) { }
+
+        void IPackageManagerUI.OnOperationFinished(string operation, bool success) { }
+
+        Task<bool> IPackageManagerUI.ShouldElevateAsync(string operation) {
+            return Task.FromResult(_project.Site.GetPythonToolsService().GeneralOptions.ElevatePip);
+        }
     }
 }

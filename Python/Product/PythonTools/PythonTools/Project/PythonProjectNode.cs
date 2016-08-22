@@ -29,13 +29,13 @@ using System.Xml;
 using System.Xml.XPath;
 using Microsoft.Build.Execution;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Projects;
 using Microsoft.PythonTools.Commands;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
 using Microsoft.PythonTools.Navigation;
+using Microsoft.PythonTools.Projects;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Azure;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -48,7 +48,6 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using IServiceProvider = System.IServiceProvider;
 using MessageBox = System.Windows.Forms.MessageBox;
-using MSBuild = Microsoft.Build.Evaluation;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
 using Task = System.Threading.Tasks.Task;
 using VsCommands2K = Microsoft.VisualStudio.VSConstants.VSStd2KCmdID;
@@ -61,7 +60,8 @@ namespace Microsoft.PythonTools.Project {
         IPythonProject,
         IAzureRoleProject,
         IProjectInterpreterDbChanged,
-        IPythonProjectProvider {
+        IPythonProjectProvider
+    {
         // For files that are analyzed because they were directly or indirectly referenced in the search path, store the information
         // about the directory from the search path that referenced them in IProjectEntry.Properties[_searchPathEntryKey], so that
         // they can be located and removed when that directory is removed from the path.
@@ -188,7 +188,6 @@ namespace Microsoft.PythonTools.Project {
 
         public IPythonInterpreterFactory ActiveInterpreter {
             get {
-                
                 return _active ?? InterpreterOptions.DefaultInterpreter;
             }
             internal set {
@@ -280,73 +279,6 @@ namespace Microsoft.PythonTools.Project {
 
         internal event EventHandler InterpreterFactoriesChanged;
 
-        /// <summary>
-        /// Adds the specified factory to the project. If the factory was
-        /// created by this provider, it will be added as an Interpreter element
-        /// with full details. If the factory was not created by this provider,
-        /// it will be added as an InterpreterReference element with only the
-        /// ID and version.
-        /// </summary>
-        /// <param name="factory">The factory to add.</param>
-        // TODO: Can this be entirely configuration based?
-        public void AddInterpreter(IPythonInterpreterFactory factory, bool disposeInterpreter = false) {
-            if (factory == null) {
-                throw new ArgumentNullException("factory");
-            }
-
-            if (_validFactories.Contains(factory.Configuration.Id)) {
-                return;
-            }
-
-            MSBuild.ProjectItem item;
-            var compModel = Site.GetComponentModel();
-            var derived = factory as DerivedInterpreterFactory;
-            if (derived != null) {
-                var projectHome = PathUtils.GetAbsoluteDirectoryPath(BuildProject.DirectoryPath, BuildProject.GetPropertyValue("ProjectHome"));
-                var rootPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
-
-                item = BuildProject.AddItem(MSBuildConstants.InterpreterItem,
-                    PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
-                    new Dictionary<string, string> {
-                        { MSBuildConstants.IdKey, MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(derived.Configuration.Id) },
-                        { MSBuildConstants.BaseInterpreterKey, derived.BaseInterpreter.Configuration.Id  },
-                        { MSBuildConstants.VersionKey, derived.BaseInterpreter.Configuration.Version.ToString() },
-                        { MSBuildConstants.DescriptionKey, derived.Configuration.Description },
-                        { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, derived.Configuration.InterpreterPath) },
-                        { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, derived.Configuration.WindowsInterpreterPath) },
-                        { MSBuildConstants.LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, derived.Configuration.LibraryPath) },
-                        { MSBuildConstants.PathEnvVarKey, derived.Configuration.PathEnvironmentVariable },
-                        { MSBuildConstants.ArchitectureKey, derived.Configuration.Architecture.ToString() }
-                    }).FirstOrDefault();
-            } else if (InterpreterRegistry.FindInterpreter(factory.Configuration.Id) != null) {
-                // The interpreter exists globally, so add a reference.
-                item = BuildProject.AddItem(MSBuildConstants.InterpreterReferenceItem,
-                    string.Format("{0:B}\\{1}", factory.Configuration.Id, factory.Configuration.Version)
-                    ).FirstOrDefault();
-            } else {
-                // Can't find the interpreter anywhere else, so add its
-                // configuration to the project file.
-                var projectHome = PathUtils.GetAbsoluteDirectoryPath(BuildProject.DirectoryPath, BuildProject.GetPropertyValue("ProjectHome"));
-                var rootPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
-
-                item = BuildProject.AddItem(MSBuildConstants.InterpreterItem,
-                    PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
-                    new Dictionary<string, string> {
-                        { MSBuildConstants.IdKey, MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(factory.Configuration.Id) },
-                        { MSBuildConstants.VersionKey, factory.Configuration.Version.ToString() },
-                        { MSBuildConstants.DescriptionKey, factory.Configuration.Description },
-                        { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, factory.Configuration.InterpreterPath) },
-                        { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, factory.Configuration.WindowsInterpreterPath) },
-                        { MSBuildConstants.LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, factory.Configuration.LibraryPath) },
-                        { MSBuildConstants.PathEnvVarKey, factory.Configuration.PathEnvironmentVariable },
-                        { MSBuildConstants.ArchitectureKey, factory.Configuration.Architecture.ToString() }
-                    }).FirstOrDefault();
-            }
-
-            string id = factory.Configuration.Id;
-            AddInterpreter(id);
-        }
-
         public void AddInterpreter(string id) {
             lock (_validFactories) {
                 if (!_validFactories.Add(id)) {
@@ -367,7 +299,7 @@ namespace Microsoft.PythonTools.Project {
             InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        public void AddInterpreterReference(InterpreterConfiguration config, string baseId) {
+        public void AddInterpreterReference(InterpreterConfiguration config) {
             lock(_validFactories) {
                 if (_validFactories.Contains(config.Id)) {
                     return;
@@ -377,18 +309,21 @@ namespace Microsoft.PythonTools.Project {
             var projectHome = PathUtils.GetAbsoluteDirectoryPath(BuildProject.DirectoryPath, BuildProject.GetPropertyValue("ProjectHome"));
             var rootPath = PathUtils.EnsureEndSeparator(config.PrefixPath);
 
+            var id = MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(BuildProject.FullPath, config.Id);
+            if (string.IsNullOrEmpty(id)) {
+                throw new InvalidOperationException("Adding project environment {0} to wrong project {1}".FormatInvariant(config.Id, BuildProject.FullPath));
+            }
+
             BuildProject.AddItem(MSBuildConstants.InterpreterItem,
                 PathUtils.GetRelativeDirectoryPath(projectHome, rootPath),
                 new Dictionary<string, string> {
-                        { MSBuildConstants.IdKey, MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(config.Id) },
-                        { MSBuildConstants.BaseInterpreterKey, baseId },
-                        { MSBuildConstants.VersionKey, config.Version.ToString() },
-                        { MSBuildConstants.DescriptionKey, config.Description },
-                        { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, config.InterpreterPath) },
-                        { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, config.WindowsInterpreterPath) },
-                        { MSBuildConstants.LibraryPathKey, PathUtils.GetRelativeDirectoryPath(rootPath, config.LibraryPath) },
-                        { MSBuildConstants.PathEnvVarKey, config.PathEnvironmentVariable },
-                        { MSBuildConstants.ArchitectureKey, config.Architecture.ToString() }
+                    { MSBuildConstants.IdKey, id },
+                    { MSBuildConstants.VersionKey, config.Version.ToString() },
+                    { MSBuildConstants.DescriptionKey, config.Description },
+                    { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, config.InterpreterPath) },
+                    { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, config.WindowsInterpreterPath) },
+                    { MSBuildConstants.PathEnvVarKey, config.PathEnvironmentVariable },
+                    { MSBuildConstants.ArchitectureKey, config.Architecture.ToString() }
                 });
 
             lock (_validFactories) {
@@ -398,9 +333,7 @@ namespace Microsoft.PythonTools.Project {
                     BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, config.Id);
                 }
             }
-            Site.GetComponentModel().GetService<VsProjectContextProvider>().OnProjectChanged(
-                BuildProject
-            );
+            Site.GetComponentModel().GetService<VsProjectContextProvider>().OnProjectChanged(BuildProject);
             UpdateActiveInterpreter();
             InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -426,15 +359,22 @@ namespace Microsoft.PythonTools.Project {
                 throw new ArgumentNullException("factory");
             }
 
-            if (!_validFactories.Contains(factory.Configuration.Id)) {
-                return;
+            lock (_validFactories) {
+                if (!_validFactories.Contains(factory.Configuration.Id)) {
+                    return;
+                }
             }
 
-            foreach (var item in BuildProject.GetItems(MSBuildConstants.InterpreterItem)) {
-                if (item.GetMetadataValue(MSBuildConstants.IdKey) == factory.Configuration.Id) {
-                    BuildProject.RemoveItem(item);
-                    BuildProject.MarkDirty();
-                    break;
+            var subid = MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(BuildProject.FullPath, factory.Configuration.Id);
+
+            if (!string.IsNullOrEmpty(subid)) {
+                foreach (var item in BuildProject.GetItems(MSBuildConstants.InterpreterItem)) {
+                    if (item.GetMetadataValue(MSBuildConstants.IdKey) == subid) {
+                        BuildProject.RemoveItem(item);
+                        BuildProject.MarkDirty();
+                        Site.GetComponentModel().GetService<VsProjectContextProvider>().OnProjectChanged(BuildProject);
+                        break;
+                    }
                 }
             }
 
@@ -443,11 +383,17 @@ namespace Microsoft.PythonTools.Project {
                 if (id == factory.Configuration.Id) {
                     BuildProject.RemoveItem(item);
                     BuildProject.MarkDirty();
+                    Site.GetComponentModel().GetService<VsProjectContextProvider>().OnProjectChanged(BuildProject);
                     break;
                 }
             }
 
-            _validFactories.Remove(factory.Configuration.Id);
+            lock (_validFactories) {
+                if (!_validFactories.Remove(factory.Configuration.Id)) {
+                    // Wasn't removed, so don't update anything
+                    return;
+                }
+            }
             UpdateActiveInterpreter();
             InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -471,26 +417,16 @@ namespace Microsoft.PythonTools.Project {
                 return _active == null;
             }
         }
+
         internal IEnumerable<InterpreterConfiguration> InterpreterConfigurations {
             get {
                 var compModel = Site.GetComponentModel();
                 var registry = compModel.GetService<IInterpreterRegistryService>();
-                if (_validFactories.Count == 0) {
-                    // all non-project specific configs are valid...
-                    var configs = registry.Configurations;
-                    var vsProjContext = compModel.GetService<VsProjectContextProvider>();
-                    foreach (var config in configs) {
-                        if (!vsProjContext.IsProjectSpecific(config)) {
-                            yield return config;
-                        }
-                    }
-                } else {
-                    // we have a list of registered factories, only include those...
-                    foreach (var config in _validFactories) {
-                        var value = registry.FindConfiguration(config);
-                        if (value != null) {
-                            yield return value;
-                        }
+
+                foreach (var config in _validFactories) {
+                    var value = registry.FindConfiguration(config);
+                    if (value != null) {
+                        yield return value;
                     }
                 }
             }
@@ -1348,7 +1284,7 @@ namespace Microsoft.PythonTools.Project {
 
             if (!fact.Configuration.IsAvailable()) {
                 throw new MissingInterpreterException(
-                    Strings.MissingEnvironment.FormatUI(fact.Configuration.FullDescription, fact.Configuration.Version)
+                    Strings.MissingEnvironment.FormatUI(fact.Configuration.Description, fact.Configuration.Version)
                 );
             } else if (IsActiveInterpreterGlobalDefault && 
                 !String.IsNullOrWhiteSpace(BuildProject.GetPropertyValue(MSBuildConstants.InterpreterIdProperty))) {
@@ -1666,13 +1602,22 @@ namespace Microsoft.PythonTools.Project {
 
         internal override int QueryStatusOnNode(Guid cmdGroup, uint cmd, IntPtr pCmdText, ref QueryStatusResult result) {
             if (cmdGroup == GuidList.guidPythonToolsCmdSet) {
+                IPythonInterpreterFactory factory;
                 switch ((int)cmd) {
                     case PythonConstants.OpenInteractiveForEnvironment:
+                        factory = GetInterpreterFactory();
+                        if (factory.IsRunnable()) {
+                            result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
+                        } else {
+                            result |= QueryStatusResult.INVISIBLE;
+                        }
+                        return VSConstants.S_OK;
+
                     case PythonConstants.InstallPythonPackage:
                     case PythonConstants.InstallRequirementsTxt:
                     case PythonConstants.GenerateRequirementsTxt:
-                        var factory = GetInterpreterFactory();
-                        if (factory.IsRunnable()) {
+                        factory = GetInterpreterFactory();
+                        if (factory.IsRunnable() && factory.PackageManager != null) {
                             result |= QueryStatusResult.SUPPORTED | QueryStatusResult.ENABLED;
                         } else {
                             result |= QueryStatusResult.INVISIBLE;
@@ -1834,7 +1779,7 @@ namespace Microsoft.PythonTools.Project {
 
                 config = InterpreterConfigurations.FirstOrDefault(
                     // Description is a localized string, hence CCIC
-                    c => description.Equals(c.FullDescription, StringComparison.CurrentCultureIgnoreCase)
+                    c => description.Equals(c.Description, StringComparison.CurrentCultureIgnoreCase)
                 );
                 if (config != null) {
                     factory = service.FindInterpreter(config.Id);
@@ -1842,7 +1787,7 @@ namespace Microsoft.PythonTools.Project {
 
                 if (factory == null) {
                     config = service.Configurations.FirstOrDefault(
-                        c => description.Equals(c.FullDescription, StringComparison.CurrentCultureIgnoreCase)
+                        c => description.Equals(c.Description, StringComparison.CurrentCultureIgnoreCase)
                     );
                     if (config != null) {
                         factory = service.FindInterpreter(config.Id);
@@ -1956,6 +1901,7 @@ namespace Microsoft.PythonTools.Project {
 
             return base.DisableCmdInCurrentMode(cmdGroup, cmd);
         }
+
         private int ExecActivateEnvironment(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
             InterpretersNode selectedInterpreter;
             IPythonInterpreterFactory selectedInterpreterFactory;
@@ -2095,30 +2041,33 @@ namespace Microsoft.PythonTools.Project {
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
 
+            if (selectedInterpreterFactory?.PackageManager == null) {
+                if (Utilities.IsInAutomationFunction(Site)) {
+                    return VSConstants.E_INVALIDARG;
+                }
+                MessageBox.Show(Strings.PackageManagementNotSupported, Strings.ProductTitle, MessageBoxButtons.OK);
+                return VSConstants.S_OK;
+            }
+
             string name;
             if (args != null && args.TryGetValue("p", out name)) {
                 // Don't prompt, just install
                 bool elevated = args.ContainsKey("a");
-                InstallNewPackageAsync(
-                    selectedInterpreterFactory,
-                    Site,
-                    name,
-                    elevated,
-                    node: selectedInterpreter
+                selectedInterpreterFactory.PackageManager.InstallAsync(
+                    PackageSpec.FromArguments(name),
+                    new VsPackageManagerUI(Site, elevated),
+                    CancellationToken.None
                 )
                     .SilenceException<OperationCanceledException>()
                     .HandleAllExceptions(Site)
                     .DoNotWait();
             } else {
-                // Prompt the user
-                InstallNewPackageAsync(
-                    selectedInterpreterFactory,
+                // Open the install UI
+                InterpreterList.InterpreterListToolWindow.OpenAt(
                     Site,
-                    selectedInterpreter
-                )
-                    .SilenceException<OperationCanceledException>()
-                    .HandleAllExceptions(Site)
-                    .DoNotWait();
+                    selectedInterpreterFactory,
+                    typeof(EnvironmentsList.PipExtensionProvider)
+                );
             }
             return VSConstants.S_OK;
         }
@@ -2127,190 +2076,35 @@ namespace Microsoft.PythonTools.Project {
             InterpretersNode selectedInterpreter;
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
+            if (selectedInterpreterFactory == null || selectedInterpreterFactory.PackageManager == null) {
+                if (Utilities.IsInAutomationFunction(Site)) {
+                    return VSConstants.E_INVALIDARG;
+                }
+                MessageBox.Show(Strings.PackageManagementNotSupported, Strings.ProductTitle, MessageBoxButtons.OK);
+                return VSConstants.S_OK;
+            }
+
             var txt = PathUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt");
-            var elevated = Site.GetPythonToolsService().GeneralOptions.ElevatePip;
             var name = "-r " + ProcessOutput.QuoteSingleArgument(txt);
             if (args != null && !args.ContainsKey("y")) {
                 if (!ShouldInstallRequirementsTxt(
-                    selectedInterpreterFactory.Configuration.FullDescription,
+                    selectedInterpreterFactory.Configuration.Description,
                     txt,
-                    elevated
+                    Site.GetPythonToolsService().GeneralOptions.ElevatePip
                 )) {
                     return VSConstants.S_OK;
                 }
             }
 
-            InstallNewPackageAsync(
-                selectedInterpreterFactory,
-                Site,
-                name,
-                elevated,
-                node: selectedInterpreter
-            )
-                .SilenceException<OperationCanceledException>()
-                .HandleAllExceptions(Site)
-                .DoNotWait();
+            selectedInterpreterFactory.PackageManager.InstallAsync(
+                PackageSpec.FromArguments(name),
+                new VsPackageManagerUI(Site),
+                CancellationToken.None
+            ).SilenceException<OperationCanceledException>()
+             .HandleAllExceptions(Site, GetType())
+             .DoNotWait();
 
             return VSConstants.S_OK;
-        }
-
-
-        internal static void BeginUninstallPackage(
-            IPythonInterpreterFactory factory,
-            IServiceProvider provider,
-            string name,
-            InterpretersNode node = null
-        ) {
-            UninstallPackageAsync(factory, provider, name, node)
-                .SilenceException<OperationCanceledException>()
-                .HandleAllExceptions(provider, typeof(PythonProjectNode))
-                .DoNotWait();
-        }
-
-        internal static async Task InstallNewPackageAsync(
-            IPythonInterpreterFactory factory,
-            IServiceProvider provider,
-            InterpretersNode node = null
-        ) {
-            var service = provider.GetComponentModel().GetService<IInterpreterRegistryService>();
-            var view = InstallPythonPackage.ShowDialog(provider, factory, service);
-            if (view == null) {
-                throw new OperationCanceledException();
-            }
-
-            Func<string, bool, Redirector, Task<bool>> f;
-            if (view.InstallUsingConda) {
-                f = (n, e, r) => Conda.Install(provider, factory, service, n, r);
-            } else if (view.InstallUsingEasyInstall) {
-                f = (n, e, r) => EasyInstall.Install(provider, factory, n, provider, e, r);
-            } else {
-                f = (n, e, r) => Pip.Install(provider, factory, n, provider, e, r);
-            }
-
-            await InstallNewPackageAsync(factory, provider, view.Name, view.InstallElevated, f, node);
-        }
-
-        internal static async Task InstallNewPackageAsync(
-            IPythonInterpreterFactory factory,
-            IServiceProvider provider,
-            string name,
-            bool elevate,
-            Func<string, bool, Redirector, Task<bool>> action = null,
-            InterpretersNode node = null
-        ) {
-            var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
-
-            var service = provider.GetComponentModel().GetService<IInterpreterRegistryService>();
-            object cookie = null;
-            if (service != null) {
-                cookie = await service.LockInterpreterAsync(
-                    factory,
-                    InterpretersNode.InstallPackageLockMoniker,
-                    TimeSpan.MaxValue
-                );
-            }
-
-            try {
-                if (cookie != null && node != null) {
-                    // don't process events while we're installing, we'll
-                    // rescan once we're done
-                    node.StopWatching();
-                }
-
-                var redirector = OutputWindowRedirector.GetGeneral(provider);
-                statusBar.SetText(Strings.PackageInstallingSeeOutputWindow.FormatUI(name));
-
-                Task<bool> task;
-                if (action != null) {
-                    task = action(name, elevate, redirector);
-                } else {
-                    task = Pip.Install(provider, factory, name, elevate, redirector);
-                }
-
-                bool success = await task;
-                statusBar.SetText((success ? Strings.PackageInstallSucceeded : Strings.PackageInstallFailed).FormatUI(
-                    name
-                ));
-
-                var packageInfo = FindRequirementRegex.Match(name.ToLower());
-
-                //If we fail to parse the package name then just skip logging it
-                if (packageInfo.Groups["name"].Success) {
-                    //Log the details of the Installation
-                    var packageDetails = new Logging.PackageInstallDetails(
-                        packageInfo.Groups["name"].Value,
-                        packageInfo.Groups["ver"].Success ? packageInfo.Groups["ver"].Value : String.Empty,
-                        factory.GetType().Name,
-                        factory.Configuration.Version.ToString(),
-                        factory.Configuration.Architecture.ToString(),
-                        String.Empty, //Installer if we tracked it
-                        elevate,
-                        success ? 0 : 1);
-
-                    provider.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.PackageInstalled, packageDetails);
-                }
-
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
-                statusBar.SetText(Strings.PackageInstallFailed.FormatUI(name));
-            } finally {
-                if (service != null && cookie != null) {
-                    bool lastOne = service.UnlockInterpreter(cookie);
-                    if (lastOne && node != null) {
-                        node.ResumeWatching();
-                    }
-                }
-            }
-        }
-
-        internal static async Task UninstallPackageAsync(
-            IPythonInterpreterFactory factory,
-            IServiceProvider provider,
-            string name,
-            InterpretersNode node = null) {
-            var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
-
-            var service = provider.GetComponentModel().GetService<IInterpreterRegistryService>();
-            object cookie = null;
-            if (service != null) {
-                cookie = await service.LockInterpreterAsync(
-                    factory,
-                    InterpretersNode.InstallPackageLockMoniker,
-                    TimeSpan.MaxValue
-                );
-            }
-
-            try {
-                if (cookie != null && node != null) {
-                    // don't process events while we're installing, we'll
-                    // rescan once we're done
-                    node.StopWatching();
-                }
-
-                var redirector = OutputWindowRedirector.GetGeneral(provider);
-                statusBar.SetText(Strings.PackageUninstallingSeeOutputWindow.FormatUI(name));
-
-                bool elevate = provider.GetPythonToolsService().GeneralOptions.ElevatePip;
-
-                bool success = await Pip.Uninstall(provider, factory, name, elevate, redirector);
-                statusBar.SetText((success ? Strings.PackageUninstallSucceeded : Strings.PackageUninstallFailed).FormatUI(
-                    name
-                ));
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
-                statusBar.SetText(Strings.PackageUninstallFailed.FormatUI(name));
-            } finally {
-                if (service != null && cookie != null) {
-                    bool lastOne = service.UnlockInterpreter(cookie);
-                    if (lastOne && node != null) {
-                        node.ResumeWatching();
-                    }
-                }
-            }
         }
 
 
@@ -2357,12 +2151,18 @@ namespace Microsoft.PythonTools.Project {
             InterpretersNode selectedInterpreter;
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
-            if (selectedInterpreterFactory != null) {
-                GenerateRequirementsTxtAsync(selectedInterpreterFactory)
-                    .SilenceException<OperationCanceledException>()
-                    .HandleAllExceptions(Site, GetType())
-                    .DoNotWait();
+            if (selectedInterpreterFactory?.PackageManager == null) {
+                if (Utilities.IsInAutomationFunction(Site)) {
+                    return VSConstants.E_INVALIDARG;
+                }
+                MessageBox.Show(Strings.PackageManagementNotSupported, Strings.ProductTitle, MessageBoxButtons.OK);
+                return VSConstants.S_OK;
             }
+
+            GenerateRequirementsTxtAsync(selectedInterpreterFactory)
+                .SilenceException<OperationCanceledException>()
+                .HandleAllExceptions(Site, GetType())
+                .DoNotWait();
             return VSConstants.S_OK;
         }
 
@@ -2370,20 +2170,12 @@ namespace Microsoft.PythonTools.Project {
             var projectHome = ProjectHome;
             var txt = PathUtils.GetAbsoluteFilePath(projectHome, "requirements.txt");
 
-            HashSet<string> items = null;
+            IList<PackageSpec> items = null;
 
             try {
-                items = await Pip.Freeze(factory);
-            } catch (FileNotFoundException ex) {
-                // Other exceptions should not occur, so let them propagate
-                var dlg = TaskDialog.ForException(
-                    Site,
-                    ex,
-                    Strings.MissingEnvironment.FormatUI(factory.Configuration.FullDescription, factory.Configuration.Version),
-                    IssueTrackerUrl
-                );
-                dlg.Title = Strings.ProductTitle;
-                dlg.ShowModal();
+                items = await factory.PackageManager.GetInstalledPackagesAsync(CancellationToken.None);
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                ex.ReportUnhandledException(Site, GetType(), allowUI: Utilities.IsInAutomationFunction(Site));
                 return;
             }
 
@@ -2497,19 +2289,19 @@ namespace Microsoft.PythonTools.Project {
 
         internal static IEnumerable<string> MergeRequirements(
             IEnumerable<string> original,
-            IEnumerable<string> updates,
+            IEnumerable<PackageSpec> updates,
             bool addNew
         ) {
             if (original == null) {
-                foreach (var req in updates.OrderBy(r => r)) {
-                    yield return req;
+                foreach (var req in updates.OrderBy(r => r.FullSpec)) {
+                    yield return req.FullSpec;
                 }
                 yield break;
             }
 
             var existing = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
-            foreach (var m in updates.SelectMany(req => FindRequirementRegex.Matches(req).Cast<Match>())) {
-                existing[m.Groups["name"].Value] = m.Value;
+            foreach (var p in updates) {
+                existing[p.Name] = p.FullSpec;
             }
 
             var seen = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
@@ -2606,19 +2398,9 @@ namespace Microsoft.PythonTools.Project {
             bool preferVEnv = false
         ) {
             if (create && preferVEnv) {
-                await VirtualEnv.CreateWithVEnv(
-                    Site,
-                    baseInterp,
-                    path,
-                    OutputWindowRedirector.GetGeneral(Site)
-                );
+                await VirtualEnv.CreateWithVEnv(Site, baseInterp, path);
             } else if (create) {
-                await VirtualEnv.CreateAndInstallDependencies(
-                    Site,
-                    baseInterp,
-                    path,
-                    OutputWindowRedirector.GetGeneral(Site)
-                );
+                await VirtualEnv.CreateAndInstallDependencies(Site, baseInterp, path);
             }
 
             var rootPath = PathUtils.GetAbsoluteDirectoryPath(ProjectHome, path);
@@ -2642,7 +2424,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             try {
-                AddInterpreterReference(config, baseInterp.Configuration.Id);
+                AddInterpreterReference(config);
             } catch (ArgumentException ex) {
                 TaskDialog.ForException(Site, ex, issueTrackerUrl: IssueTrackerUrl).ShowModal();
                 return null;
@@ -2652,9 +2434,9 @@ namespace Microsoft.PythonTools.Project {
 
         private string GetNewEnvironmentName(string path) {
             string id = MSBuildProjectInterpreterFactoryProvider.GetInterpreterId(
-                            BuildProject.FullPath,
-                            Path.GetFileName(PathUtils.TrimEndSeparator(path))
-                        );
+                BuildProject.FullPath,
+                Path.GetFileName(PathUtils.TrimEndSeparator(path))
+            );
 
             var interpReg = Site.GetComponentModel().GetService<IInterpreterRegistryService>();
 
@@ -2685,13 +2467,20 @@ namespace Microsoft.PythonTools.Project {
             var path = factory.Configuration.PrefixPath;
             if (removeFromStorage && Directory.Exists(path)) {
                 var t = Task.Run(() => {
-                    try {
-                        Directory.Delete(path, true);
-                        return true;
-                    } catch (IOException) {
-                    } catch (UnauthorizedAccessException) {
+                    for (int retries = 5; Directory.Exists(path) && retries > 0; --retries) {
+                        try {
+                            Directory.Delete(path, true);
+                            return true;
+                        } catch (DirectoryNotFoundException) {
+                            return true;
+                        } catch (IOException) {
+                        } catch (UnauthorizedAccessException) {
+                        }
+                        // Allow some time for operations to fail and release
+                        // locks before trying to delete the directory again.
+                        Thread.Sleep(100);
                     }
-                    return false;
+                    return !Directory.Exists(path);
                 }).HandleAllExceptions(Site, GetType());
 
                 if (!await t) {

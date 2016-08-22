@@ -16,6 +16,7 @@
 
 using System;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -31,21 +32,34 @@ namespace Microsoft.PythonTools.Interpreter {
         public const string LibrarySubPath = "lib";
         public const string PathEnvironmentVariableName = "PYTHONPATH";
 
-        public static string GetInterpreterId(string vendor, ProcessorArchitecture? arch, string key) {
-            string archStr;
-            switch (arch) {
-                case ProcessorArchitecture.Amd64: archStr = "x64"; break;
-                case ProcessorArchitecture.X86: archStr = "x86"; break;
-                default: archStr = "unknown"; break;
-            }
+        private static readonly Regex IdParser = new Regex(
+            "^(?<provider>.+?)\\|(?<company>.+?)\\|(?<tag>.+?)$",
+            RegexOptions.None,
+            TimeSpan.FromSeconds(1)
+        );
 
+        public static string GetInterpreterId(string company, string tag) {
             return String.Join(
                 "|", 
                 CPythonInterpreterFactoryProvider.FactoryProviderName,
-                vendor,
-                key,
-                archStr
+                company,
+                tag
             );
+        }
+
+        public static bool TryParseInterpreterId(string id, out string company, out string tag) {
+            tag = company = null;
+            try {
+                var m = IdParser.Match(id);
+                if (m.Success && m.Groups["provider"].Value == CPythonInterpreterFactoryProvider.FactoryProviderName) {
+                    tag = m.Groups["tag"].Value;
+                    company = m.Groups["company"].Value;
+                    return true;
+                }
+                return false;
+            } catch (RegexMatchTimeoutException) {
+                return false;
+            }
         }
     }
 }

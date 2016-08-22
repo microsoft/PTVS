@@ -103,6 +103,10 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var span = GetStringContentSpan(text) ?? new Span(0, text.Length);
+            if (span.End > text.Length) {
+                return false;
+            }
+
             text = text.Substring(span.Start, span.Length);
 
             return (PathUtils.IsValidPath(text) && Path.IsPathRooted(text) && text.IndexOfAny(SepChars) > 0) ||

@@ -16,10 +16,13 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
+using System.Threading;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
@@ -44,21 +47,21 @@ namespace Microsoft.PythonTools.Project {
 
         private static readonly IEnumerable<string> CannotUninstall = new[] { "pip", "wsgiref" };
         private readonly bool _canUninstall;
+        private readonly PackageSpec _package;
         private readonly string _caption;
         private readonly string _packageName;
 
-        public InterpretersPackageNode(PythonProjectNode project, string name)
+        public InterpretersPackageNode(PythonProjectNode project, PackageSpec spec)
             : base(project, new VirtualProjectElement(project)) {
             ExcludeNodeFromScc = true;
-            _packageName = name;
-            var match = PipFreezeRegex.Match(name);
-            if (match.Success) {
-                var namePart = match.Groups["name"].Value;
-                _caption = string.Format("{0} ({1})", namePart, match.Groups["version"]);
-                _canUninstall = !CannotUninstall.Contains(namePart);
-            } else {
-                _caption = name;
+            _package = spec.Clone();
+            _packageName = spec.FullSpec;
+            if (spec.ExactVersion.IsEmpty) {
+                _caption = spec.Name;
                 _canUninstall = false;
+            } else {
+                _caption = string.Format("{0} ({1})", spec.Name, spec.ExactVersion);
+                _canUninstall = !CannotUninstall.Contains(spec.Name);
             }
         }
 
@@ -95,13 +98,13 @@ namespace Microsoft.PythonTools.Project {
                 if (nodes.Count == 1) {
                     message = Strings.UninstallPackage.FormatUI(
                         Caption,
-                        Parent._factory.Configuration.FullDescription,
+                        Parent._factory.Configuration.Description,
                         Parent._factory.Configuration.PrefixPath
                     );
                 } else {
                     message = Strings.UninstallPackages.FormatUI(
                         string.Join(Environment.NewLine, nodes.Select(n => n.Caption)),
-                        Parent._factory.Configuration.FullDescription,
+                        Parent._factory.Configuration.Description,
                         Parent._factory.Configuration.PrefixPath
                     );
                 }
@@ -121,8 +124,37 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override bool Remove(bool removeFromStorage) {
-            PythonProjectNode.BeginUninstallPackage(Parent._factory, ProjectMgr.Site, Url, Parent);
+            RemoveAsync()
+                .SilenceException<OperationCanceledException>()
+                .HandleAllExceptions(ProjectMgr.Site, GetType())
+                .DoNotWait();
             return true;
+        }
+
+        private async System.Threading.Tasks.Task RemoveAsync() {
+            var pm = Parent._factory.PackageManager;
+            if (pm == null) {
+                Debug.Fail("Should not be able to remove a package without a package manager");
+                return;
+            }
+
+            var provider = ProjectMgr.Site;
+            var statusBar = (IVsStatusbar)provider.GetService(typeof(SVsStatusbar));
+
+            try {
+                statusBar.SetText(Strings.PackageUninstallingSeeOutputWindow.FormatUI(_packageName));
+
+                bool success = await pm.UninstallAsync(
+                    _package,
+                    new VsPackageManagerUI(provider),
+                    CancellationToken.None
+                );
+                statusBar.SetText((success ? Strings.PackageUninstallSucceeded : Strings.PackageUninstallFailed).FormatUI(
+                    _packageName
+                ));
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                statusBar.SetText(Strings.PackageUninstallFailed.FormatUI(_packageName));
+            }
         }
 
         public new InterpretersNode Parent {

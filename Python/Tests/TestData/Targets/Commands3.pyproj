@@ -13,7 +13,7 @@
     <Name>Commands3</Name>
     <RootNamespace>Commands3</RootNamespace>
     <OutputPath>.</OutputPath>
-    <InterpreterId>Global|PythonCore|3.3|x86</InterpreterId>
+    <InterpreterId>Global|PythonCore|3.3-32</InterpreterId>
     <PythonCommands>PrintToRepl;PrintToOutput;PrintToConsole</PythonCommands>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
@@ -25,12 +25,12 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <InterpreterReference Include="Global|PythonCore|2.6|x86" />
-    <InterpreterReference Include="Global|PythonCore|2.7|x86" />
-    <InterpreterReference Include="Global|PythonCore|3.5|x86" />
-    <InterpreterReference Include="Global|PythonCore|2.6|x64" />
-    <InterpreterReference Include="Global|PythonCore|2.7|x64" />
-    <InterpreterReference Include="Global|PythonCore|3.5|x64" />
+    <InterpreterReference Include="Global|PythonCore|2.6-32" />
+    <InterpreterReference Include="Global|PythonCore|2.7-32" />
+    <InterpreterReference Include="Global|PythonCore|3.5-32" />
+    <InterpreterReference Include="Global|PythonCore|2.6" />
+    <InterpreterReference Include="Global|PythonCore|2.7" />
+    <InterpreterReference Include="Global|PythonCore|3.5" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.py" />

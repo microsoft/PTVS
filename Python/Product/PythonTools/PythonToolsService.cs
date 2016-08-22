@@ -422,24 +422,17 @@ namespace Microsoft.PythonTools {
                     }
 
                     if (option.IsConfigurable) {
-                        ProcessorArchitecture arch = ProcessorArchitecture.X86;
-                        switch (option.Architecture) {
-                            case "x86": arch = ProcessorArchitecture.X86; break;
-                            case "x64": arch = ProcessorArchitecture.Amd64; break;
-                        }
-
                         // save configurable interpreter options
                         var actualFactory = _interpreterOptionsService.AddConfigurableInterpreter(
                             option.Description,
                             new InterpreterConfiguration(
                                 option.Id,
                                 option.Description,
-                                !String.IsNullOrWhiteSpace(option.LibraryPath) ? Path.GetDirectoryName(option.LibraryPath) : "",
+                                !String.IsNullOrWhiteSpace(option.InterpreterPath) ? PathUtils.GetParent(option.InterpreterPath) : "",
                                 option.InterpreterPath ?? "",
                                 option.WindowsInterpreterPath ?? "",
-                                option.LibraryPath ?? "",
                                 option.PathEnvironmentVariable ?? "",
-                                arch,
+                                InterpreterArchitecture.TryParse(option.Architecture),
                                 Version.Parse(option.Version) ?? new Version(2, 7)
                             )
                         );
@@ -737,10 +730,9 @@ namespace Microsoft.PythonTools {
             // Start with global environment, add configured environment,
             // then add search paths.
             var baseEnv = Environment.GetEnvironmentVariables();
-            if (GeneralOptions.ClearGlobalPythonPath) {
-                // Clear search paths from the global environment
-                baseEnv[config.Interpreter.PathEnvironmentVariable] = string.Empty;
-            }
+            // Clear search paths from the global environment. The launch
+            // configuration should include the existing value
+            baseEnv[config.Interpreter.PathEnvironmentVariable] = string.Empty;
             var env = PathUtils.MergeEnvironments(
                 baseEnv.AsEnumerable<string, string>(),
                 config.GetEnvironmentVariables(),

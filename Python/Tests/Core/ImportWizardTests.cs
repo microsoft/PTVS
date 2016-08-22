@@ -208,20 +208,7 @@ namespace PythonToolsTests {
         ) {
             var mockService = new MockInterpreterOptionsService();
             mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider",
-                new MockPythonInterpreterFactory(
-                    new InterpreterConfiguration(
-                        python.Configuration.Id,
-                        "Test Python",
-                        python.Configuration.PrefixPath,
-                        python.Configuration.InterpreterPath,
-                        python.Configuration.WindowsInterpreterPath,
-                        python.Configuration.LibraryPath,
-                        python.Configuration.PathEnvironmentVariable,
-                        python.Configuration.Architecture,
-                        python.Configuration.Version,
-                        python.Configuration.UIMode
-                    )
-                )
+                new MockPythonInterpreterFactory(python.Configuration)
             ));
 
             using (var wpf = new WpfProxy()) {
@@ -306,7 +293,7 @@ namespace PythonToolsTests {
         public void ImportWizardVirtualEnv() {
             var python = PythonPaths.Versions.LastOrDefault(pv =>
                 pv.IsCPython &&
-                File.Exists(Path.Combine(pv.LibPath, "site-packages", "virtualenv.py")) &&
+                File.Exists(Path.Combine(pv.PrefixPath, "Lib", "site-packages", "virtualenv.py")) &&
                 // CPython 3.3.4 does not work correctly with virtualenv, so
                 // skip testing on 3.3 to avoid false failures
                 pv.Version != PythonLanguageVersion.V33
@@ -318,7 +305,7 @@ namespace PythonToolsTests {
         [TestMethod, Priority(1)]
         public void ImportWizardVEnv() {
             var python = PythonPaths.Versions.LastOrDefault(pv =>
-                pv.IsCPython && File.Exists(Path.Combine(pv.LibPath, "venv", "__main__.py"))
+                pv.IsCPython && File.Exists(Path.Combine(pv.PrefixPath, "Lib", "venv", "__main__.py"))
             );
 
             ImportWizardVirtualEnvWorker(python, "venv", "pyvenv.cfg", false);
@@ -329,7 +316,7 @@ namespace PythonToolsTests {
         public void ImportWizardBrokenVirtualEnv() {
             var python = PythonPaths.Versions.LastOrDefault(pv =>
                 pv.IsCPython &&
-                File.Exists(Path.Combine(pv.LibPath, "site-packages", "virtualenv.py")) &&
+                File.Exists(Path.Combine(pv.PrefixPath, "Lib", "site-packages", "virtualenv.py")) &&
                 // CPython 3.3.4 does not work correctly with virtualenv, so
                 // skip testing on 3.3 to avoid false failures
                 pv.Version != PythonLanguageVersion.V33
@@ -342,7 +329,7 @@ namespace PythonToolsTests {
         [TestCategory("10s")]
         public void ImportWizardBrokenVEnv() {
             var python = PythonPaths.Versions.LastOrDefault(pv =>
-                pv.IsCPython && File.Exists(Path.Combine(pv.LibPath, "venv", "__main__.py"))
+                pv.IsCPython && File.Exists(Path.Combine(pv.PrefixPath, "Lib", "venv", "__main__.py"))
             );
 
             ImportWizardVirtualEnvWorker(python, "venv", "pyvenv.cfg", true);

@@ -174,14 +174,13 @@ namespace Microsoft.PythonTools.Commands {
 
                         foreach (var factory in pyProj.InterpreterFactories) {
                             res.AppendLine();
-                            res.AppendLine("        Interpreter: " + factory.Configuration.FullDescription);
+                            res.AppendLine("        Interpreter: " + factory.Configuration.Description);
                             res.AppendLine("            Id: " + factory.Configuration.Id);
                             res.AppendLine("            Version: " + factory.Configuration.Version);
                             res.AppendLine("            Arch: " + factory.Configuration.Architecture);
                             res.AppendLine("            Prefix Path: " + factory.Configuration.PrefixPath ?? "(null)");
                             res.AppendLine("            Path: " + factory.Configuration.InterpreterPath ?? "(null)");
                             res.AppendLine("            Windows Path: " + factory.Configuration.WindowsInterpreterPath ?? "(null)");
-                            res.AppendLine("            Lib Path: " + factory.Configuration.LibraryPath ?? "(null)");
                             res.AppendLine(string.Format("            Path Env: {0}={1}{2}",
                                 factory.Configuration.PathEnvironmentVariable ?? "(null)",
                                 Environment.GetEnvironmentVariable(factory.Configuration.PathEnvironmentVariable ?? ""),
@@ -201,13 +200,12 @@ namespace Microsoft.PythonTools.Commands {
                 res.AppendLine("    " + provider.GetType().FullName);
                 foreach (var config in provider.GetInterpreterConfigurations()) {
                     res.AppendLine("        Id: " + config.Id);
-                    res.AppendLine("        Factory: " + config.FullDescription);
+                    res.AppendLine("        Factory: " + config.Description);
                     res.AppendLine("        Version: " + config.Version);
                     res.AppendLine("        Arch: " + config.Architecture);
                     res.AppendLine("        Prefix Path: " + config.PrefixPath ?? "(null)");
                     res.AppendLine("        Path: " + config.InterpreterPath ?? "(null)");
                     res.AppendLine("        Windows Path: " + config.WindowsInterpreterPath ?? "(null)");
-                    res.AppendLine("        Lib Path: " + config.LibraryPath ?? "(null)");
                     res.AppendLine("        Path Env: " + config.PathEnvironmentVariable ?? "(null)");
                     res.AppendLine();
                 }
@@ -293,7 +291,7 @@ namespace Microsoft.PythonTools.Commands {
             res.AppendLine("Environment Analysis Logs: ");
             foreach (var provider in knownProviders) {
                 foreach (var factory in provider.GetInterpreterFactories().OfType<IPythonInterpreterFactoryWithDatabase>()) {
-                    res.AppendLine(factory.Configuration.FullDescription);
+                    res.AppendLine(factory.Configuration.Description);
                     string analysisLog = factory.GetAnalysisLogContent(CultureInfo.InvariantCulture);
                     if (!string.IsNullOrEmpty(analysisLog)) {
                         res.AppendLine(analysisLog);

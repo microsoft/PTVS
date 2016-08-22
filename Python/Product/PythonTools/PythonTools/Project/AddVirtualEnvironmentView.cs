@@ -86,7 +86,7 @@ namespace Microsoft.PythonTools.Project {
             int i = 0;
             foreach (var interp in InterpreterView.GetInterpreters(_project.Site, _project).Select(x => x.Interpreter)) {
                 if (!existing.Remove(interp)) {
-                    Interpreters.Insert(i, new InterpreterView(interp, interp.Configuration.FullDescription, interp == def));
+                    Interpreters.Insert(i, new InterpreterView(interp, interp.Configuration.Description, interp == def));
                 }
                 i += 1;
             }
@@ -413,22 +413,19 @@ namespace Microsoft.PythonTools.Project {
                 //MayNotSupportVirtualEnv = !SupportsVirtualEnv.Contains(interp.Id);
                 RefreshCanCreateVirtualEnv(VirtualEnvPath);
 
-                var libPath = interp.Configuration.LibraryPath;
-                if (Directory.Exists(libPath)) {
-                    var installed = await interp.FindModulesAsync("pip", "virtualenv", "venv");
+                var installed = await interp.FindModulesAsync("pip", "virtualenv", "venv");
 
-                    if (installed.Contains("venv") || installed.Contains("virtualenv")) {
-                        WillInstallPip = false;
-                        WillInstallVirtualEnv = false;
-                        UseVEnv = !installed.Contains("virtualenv");
-                    } else {
-                        WillInstallPip = !installed.Contains("pip");
-                        WillInstallVirtualEnv = true;
-                        UseVEnv = false;
-                    }
-                    WillInstallElevated = (WillInstallPip || WillInstallVirtualEnv) &&
-                        _project.Site.GetPythonToolsService().GeneralOptions.ElevatePip;
+                if (installed.Contains("venv") || installed.Contains("virtualenv")) {
+                    WillInstallPip = false;
+                    WillInstallVirtualEnv = false;
+                    UseVEnv = !installed.Contains("virtualenv");
+                } else {
+                    WillInstallPip = !installed.Contains("pip");
+                    WillInstallVirtualEnv = true;
+                    UseVEnv = false;
                 }
+                WillInstallElevated = (WillInstallPip || WillInstallVirtualEnv) &&
+                    _project.Site.GetPythonToolsService().GeneralOptions.ElevatePip;
             } finally {
                 try {
                     _ready.Release();

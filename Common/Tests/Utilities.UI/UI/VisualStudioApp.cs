@@ -93,7 +93,8 @@ namespace TestUtilities.UI {
                         try {
                             _dte.Solution.Close(false);
                             break;
-                        } catch {
+                        } catch (Exception ex) {
+                            Debug.WriteLine(ex.ToString());
                             _dte.Documents.CloseAll(EnvDTE.vsSaveChanges.vsSaveChangesNo);
                             System.Threading.Thread.Sleep(200);
                         }
@@ -269,6 +270,12 @@ namespace TestUtilities.UI {
 
             string windowName = Path.GetFileName(filename);
             var elem = GetDocumentTab(windowName);
+            for (int retries = 5; retries > 0 && elem == null; retries -= 1) {
+                System.Threading.Thread.Sleep(500);
+                elem = GetDocumentTab(windowName);
+            }
+
+            Assert.IsNotNull(elem, "Unable to find window '{0}'", windowName);
 
             elem = elem.FindFirst(TreeScope.Descendants,
                 new PropertyCondition(
@@ -804,6 +811,18 @@ namespace TestUtilities.UI {
             bool setStartupItem = true,
             Func<AutomationDialog, bool> onDialog = null
         ) {
+            var solution = GetService<IVsSolution>(typeof(SVsSolution));
+            var solution4 = solution as IVsSolution4;
+            Assert.IsNotNull(solution, "Failed to obtain SVsSolution service");
+            Assert.IsNotNull(solution4, "Failed to obtain IVsSolution4 interface");
+
+            // Close any open solution
+            string slnDir, slnFile, slnOpts;
+            if (ErrorHandler.Succeeded(solution.GetSolutionInfo(out slnDir, out slnFile, out slnOpts))) {
+                Console.WriteLine("Closing {0}", slnFile);
+                solution.CloseSolutionElement(0, null, 0);
+            }
+
             string fullPath = TestData.GetPath(projName);
             Assert.IsTrue(File.Exists(fullPath), "Cannot find " + fullPath);
             Console.WriteLine("Opening {0}", fullPath);
@@ -822,11 +841,6 @@ namespace TestUtilities.UI {
                 }
             }
             
-            var solution = GetService<IVsSolution>(typeof(SVsSolution));
-            var solution4 = solution as IVsSolution4;
-            Assert.IsNotNull(solution, "Failed to obtain SVsSolution service");
-            Assert.IsNotNull(solution4, "Failed to obtain IVsSolution4 interface");
-
             var t = Task.Run(() => {
                 ErrorHandler.ThrowOnFailure(solution.OpenSolutionFile((uint)0, fullPath));
                 // Force all projects to load before running any tests.

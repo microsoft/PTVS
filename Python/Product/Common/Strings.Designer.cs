@@ -600,9 +600,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred opening this interactive window:
-        ///
-        ///{0}.
+        ///   Looks up a localized string similar to An error occurred opening this interactive window..
         /// </summary>
         public static string ErrorOpeningInteractiveWindow {
             get {
@@ -629,6 +627,38 @@ namespace Microsoft.PythonTools {
         public static string ErrorStartingInteractiveProcess {
             get {
                 return ResourceManager.GetString("ErrorStartingInteractiveProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Failed to run &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string ExecutingCommandFailed {
+            get {
+                return ResourceManager.GetString("ExecutingCommandFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Running &apos;{0}&apos; -----
+        ///.
+        /// </summary>
+        public static string ExecutingCommandStarted {
+            get {
+                return ResourceManager.GetString("ExecutingCommandStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully ran &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string ExecutingCommandSucceeded {
+            get {
+                return ResourceManager.GetString("ExecutingCommandSucceeded", resourceCulture);
             }
         }
         
@@ -799,6 +829,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Installation failed.
+        /// </summary>
+        public static string InstallationFailed {
+            get {
+                return ResourceManager.GetString("InstallationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to To install your Python package, we will install setuptools and the pip package manager.
         ///
         ///Continue?.
@@ -806,6 +845,70 @@ namespace Microsoft.PythonTools {
         public static string InstallEasyInstall {
             get {
                 return ResourceManager.GetString("InstallEasyInstall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Failed to install &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string InstallingPackageFailed {
+            get {
+                return ResourceManager.GetString("InstallingPackageFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Installing &apos;{0}&apos; -----
+        ///.
+        /// </summary>
+        public static string InstallingPackageStarted {
+            get {
+                return ResourceManager.GetString("InstallingPackageStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully installed &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string InstallingPackageSuccess {
+            get {
+                return ResourceManager.GetString("InstallingPackageSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Failed to install pip -----
+        ///
+        ///.
+        /// </summary>
+        public static string InstallingPipFailed {
+            get {
+                return ResourceManager.GetString("InstallingPipFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Installing pip -----
+        ///.
+        /// </summary>
+        public static string InstallingPipStarted {
+            get {
+                return ResourceManager.GetString("InstallingPipStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully installed pip -----
+        ///
+        ///.
+        /// </summary>
+        public static string InstallingPipSuccess {
+            get {
+                return ResourceManager.GetString("InstallingPipSuccess", resourceCulture);
             }
         }
         
@@ -911,6 +1014,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Operation cannot be started because the environment is not configured..
+        /// </summary>
+        public static string MisconfiguredEnvironment {
+            get {
+                return ResourceManager.GetString("MisconfiguredEnvironment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The environment &quot;{0}&quot; appears to be incorrectly configured or missing. You may need to install Python {1} or re-create a virtual environment..
         /// </summary>
         public static string MissingEnvironment {
@@ -952,6 +1064,15 @@ namespace Microsoft.PythonTools {
         public static string NoInterpretersAvailable {
             get {
                 return ResourceManager.GetString("NoInterpretersAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No interpreters.
+        /// </summary>
+        public static string NoInterpretersDescription {
+            get {
+                return ResourceManager.GetString("NoInterpretersDescription", resourceCulture);
             }
         }
         
@@ -1042,6 +1163,25 @@ namespace Microsoft.PythonTools {
         public static string PackageInstallSucceeded {
             get {
                 return ResourceManager.GetString("PackageInstallSucceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The selected environment does not support package management..
+        /// </summary>
+        public static string PackageManagementNotSupported {
+            get {
+                return ResourceManager.GetString("PackageManagementNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to install {0} because the selected environment does not support package management.
+        ///.
+        /// </summary>
+        public static string PackageManagementNotSupported_Package {
+            get {
+                return ResourceManager.GetString("PackageManagementNotSupported_Package", resourceCulture);
             }
         }
         
@@ -1848,6 +1988,36 @@ namespace Microsoft.PythonTools {
         public static string UnhandledException {
             get {
                 return ResourceManager.GetString("UnhandledException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Error while uninstalling &apos;{0}&apos; -----
+        ///&apos;{0}&apos; may not have been uninstalled completely.
+        ///.
+        /// </summary>
+        public static string UninstallingPackageFailed {
+            get {
+                return ResourceManager.GetString("UninstallingPackageFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Uninstalling &apos;{0}&apos; -----.
+        /// </summary>
+        public static string UninstallingPackageStarted {
+            get {
+                return ResourceManager.GetString("UninstallingPackageStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully uninstalled &apos;{0}&apos; -----
+        ///.
+        /// </summary>
+        public static string UninstallingPackageSuccess {
+            get {
+                return ResourceManager.GetString("UninstallingPackageSuccess", resourceCulture);
             }
         }
         

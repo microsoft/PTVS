@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Diagnostics;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -41,7 +42,7 @@ namespace Microsoft.PythonTools.Intellisense {
             // the last event the out of proc analyzer will send us.  Once we've received
             // that event all future information should come from at least that version.  This
             // prevents us from holding onto every version in the world.
-            Debug.Assert(fromVersion >= lastAnalysisVersion.VersionNumber);
+            Debug.Assert(fromVersion >= lastAnalysisVersion.VersionNumber, "fromVersion {0} was less than lastAnalysisVersion {1}".FormatInvariant(fromVersion, lastAnalysisVersion.VersionNumber));
 
             while (lastAnalysisVersion.Next != null && lastAnalysisVersion.VersionNumber != fromVersion) {
                 lastAnalysisVersion = lastAnalysisVersion.Next;

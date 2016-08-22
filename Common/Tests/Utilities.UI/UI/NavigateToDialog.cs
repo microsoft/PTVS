@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Windows.Automation;
 
@@ -42,7 +43,12 @@ namespace TestUtilities.UI {
 
         public void Close() {
 #if DEV12_OR_LATER
-            GetSearchBox().SetFocus();
+            try {
+                GetSearchBox().SetFocus();
+            } catch (InvalidOperationException ex) {
+                Trace.TraceError("Failed to set focus on search box");
+                Trace.TraceError(ex.ToString());
+            }
             Keyboard.PressAndRelease(System.Windows.Input.Key.Escape);
 #else
             ClickButtonByAutomationId("cancelButton");

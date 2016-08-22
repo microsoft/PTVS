@@ -138,8 +138,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     view.PrefixPath = Path.GetDirectoryName(view.InterpreterPath);
                 } else if (File.Exists(view.WindowsInterpreterPath)) {
                     view.PrefixPath = Path.GetDirectoryName(view.WindowsInterpreterPath);
-                } else if (Directory.Exists(view.LibraryPath)) {
-                    view.PrefixPath = Path.GetDirectoryName(view.LibraryPath);
                 } else {
                     // Don't have enough information, so abort without changing
                     // any settings.
@@ -169,16 +167,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     CPythonInterpreterFactoryConstants.WindowsExecutable,
                     firstCheck: new[] { "scripts" }
                 );
-            }
-            if (!Directory.Exists(view.LibraryPath)) {
-                var sitePy = PathUtils.FindFile(
-                    view.PrefixPath,
-                    "os.py",
-                    firstCheck: new[] { "lib" }
-                );
-                if (File.Exists(sitePy)) {
-                    view.LibraryPath = Path.GetDirectoryName(sitePy);
-                }
             }
 
             if (File.Exists(view.InterpreterPath)) {
@@ -226,9 +214,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     view.PrefixPath,
                     view.InterpreterPath,
                     view.WindowsInterpreterPath,
-                    view.LibraryPath,
                     view.PathEnvironmentVariable,
-                    view.ArchitectureName == "64-bit" ? ProcessorArchitecture.Amd64 : ProcessorArchitecture.X86,
+                    InterpreterArchitecture.TryParse(view.ArchitectureName),
                     Version.Parse(view.VersionName)
                 )
             );
@@ -236,14 +223,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public bool IsConfigurationChanged(ConfigurationEnvironmentView view) {
             var factory = view.EnvironmentView.Factory;
-            var arch = factory.Configuration.Architecture == ProcessorArchitecture.Amd64 ? "64-bit" : "32-bit";
             return view.Description != factory.Configuration.Description ||
                 view.PrefixPath != factory.Configuration.PrefixPath ||
                 view.InterpreterPath != factory.Configuration.InterpreterPath ||
                 view.WindowsInterpreterPath != factory.Configuration.WindowsInterpreterPath ||
-                view.LibraryPath != factory.Configuration.LibraryPath ||
                 view.PathEnvironmentVariable != factory.Configuration.PathEnvironmentVariable ||
-                view.ArchitectureName != arch ||
+                InterpreterArchitecture.TryParse(view.ArchitectureName) != factory.Configuration.Architecture ||
                 view.VersionName != factory.Configuration.Version.ToString();
         }
 
@@ -253,9 +238,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             view.PrefixPath = factory.Configuration.PrefixPath;
             view.InterpreterPath = factory.Configuration.InterpreterPath;
             view.WindowsInterpreterPath = factory.Configuration.WindowsInterpreterPath;
-            view.LibraryPath = factory.Configuration.LibraryPath;
             view.PathEnvironmentVariable = factory.Configuration.PathEnvironmentVariable;
-            view.ArchitectureName = factory.Configuration.Architecture == ProcessorArchitecture.Amd64 ? "64-bit" : "32-bit";
+            view.ArchitectureName = factory.Configuration.Architecture.ToString();
             view.VersionName = factory.Configuration.Version.ToString();
         }
 
@@ -291,7 +275,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public string PrefixPath;
         public string InterpreterPath;
         public string WindowsInterpreterPath;
-        public string LibraryPath;
         public string PathEnvironmentVariable;
         public string VersionName;
         public string ArchitectureName;
@@ -356,7 +339,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 PrefixPath = value.PrefixPath;
                 InterpreterPath = value.InterpreterPath;
                 WindowsInterpreterPath = value.WindowsInterpreterPath;
-                LibraryPath = value.LibraryPath;
                 PathEnvironmentVariable = value.PathEnvironmentVariable;
                 VersionName = value.VersionName;
                 ArchitectureName = value.ArchitectureName;
@@ -399,16 +381,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             set {
                 if (_values.WindowsInterpreterPath != value) {
                     _values.WindowsInterpreterPath = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public string LibraryPath {
-            get { return _values.LibraryPath; }
-            set {
-                if (_values.LibraryPath != value) {
-                    _values.LibraryPath = value;
                     OnPropertyChanged();
                 }
             }

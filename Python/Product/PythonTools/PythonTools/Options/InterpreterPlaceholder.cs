@@ -29,8 +29,7 @@ namespace Microsoft.PythonTools.Options {
                 null,
                 null,
                 null,
-                null,
-                ProcessorArchitecture.None,
+                InterpreterArchitecture.Unknown,
                 new Version(),
                 InterpreterUIMode.Normal
             );
@@ -38,11 +37,8 @@ namespace Microsoft.PythonTools.Options {
         
         public InterpreterConfiguration Configuration { get; private set; }
 
-        public Guid Id {
-            get {
-                return Guid.Empty;
-            }
-        }
+        public Guid Id => Guid.Empty;
+        public IPackageManager PackageManager => null;
 
         public IPythonInterpreter CreateInterpreter() {
             throw new NotSupportedException();

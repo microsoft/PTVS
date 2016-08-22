@@ -13,7 +13,7 @@
     <Name>DebugAttach</Name>
     <RootNamespace>DebugAttach</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>Global|PythonCore|2.7|x86</InterpreterId>
+    <InterpreterId>Global|PythonCore|2.7-32</InterpreterId>
     <OutputPath>.</OutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
@@ -33,7 +33,7 @@
     <Compile Include="VerySimple.py" />
   </ItemGroup>
   <ItemGroup>
-    <InterpreterReference Include="Global|PythonCore|2.7|x86" />
+    <InterpreterReference Include="Global|PythonCore|2.7-32" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

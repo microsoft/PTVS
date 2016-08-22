@@ -64,8 +64,7 @@ namespace Microsoft.PythonTools.Interpreter {
             // TODO: Differs from original by not checking for base interpreter
             // configuration
             return File.Exists(configuration.InterpreterPath) &&
-                File.Exists(configuration.WindowsInterpreterPath) &&
-                Directory.Exists(configuration.LibraryPath);
+                File.Exists(configuration.WindowsInterpreterPath);
         }
 
         public static IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories(this IPythonInterpreterFactoryProvider self) {

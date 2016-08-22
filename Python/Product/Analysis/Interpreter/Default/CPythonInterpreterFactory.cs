@@ -15,43 +15,10 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Reflection;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
     class CPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase {
         public CPythonInterpreterFactory(InterpreterConfiguration configuration, InterpreterFactoryCreationOptions options) :
-            base(configuration, options.WatchLibraryForNewModules) {            
-        }
-
-        public CPythonInterpreterFactory(
-            Version version,
-            string newId,
-            string description,
-            string prefixPath,
-            string pythonPath,
-            string pythonwPath,
-            string libPath,
-            string pathEnvVar,
-            ProcessorArchitecture arch,
-            bool watchForNewModules)
-            : base(
-                new InterpreterConfiguration(
-                    newId,
-                    description,
-                    prefixPath,
-                    pythonPath,
-                    pythonwPath,
-                    libPath,
-                    pathEnvVar,
-                    arch,
-                    version,
-                    InterpreterUIMode.SupportsDatabase),
-                watchForNewModules) { }
-
-        public override bool AssumeSimpleLibraryLayout {
-            get {
-                return false;
-            }
-        }
+            base(configuration, options) { }
     }
 }

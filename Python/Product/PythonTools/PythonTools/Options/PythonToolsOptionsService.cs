@@ -16,8 +16,8 @@
 
 using System;
 using System.ComponentModel.Design;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Settings;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Options {
     class PythonToolsOptionsService : IPythonToolsOptionsService {

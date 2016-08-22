@@ -410,12 +410,17 @@ namespace TestUtilities.UI {
                 AutomationEventHandler handler = (s, e) => {
                     closed.Set();
                 };
-                Automation.AddAutomationEventHandler(
-                    WindowPattern.WindowClosedEvent,
-                    Element,
-                    TreeScope.Element,
-                    handler
-                );
+                try {
+                    Automation.AddAutomationEventHandler(
+                        WindowPattern.WindowClosedEvent,
+                        Element,
+                        TreeScope.Element,
+                        handler
+                    );
+                } catch (ElementNotAvailableException) {
+                    // Already closed
+                    return;
+                }
 
                 if (closeCommand != null) {
                     closeCommand();

@@ -14,8 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
@@ -52,6 +54,19 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         /// <returns>The names of the modules that were found.</returns>
         public static async Task<HashSet<string>> FindModulesAsync(this IPythonInterpreterFactory factory, params string[] moduleNames) {
+            var withPackages = factory as IPackageManager;
+            if (withPackages != null) {
+                var res = new HashSet<string>();
+                foreach (var m in moduleNames) {
+                    if ((await withPackages.GetInstalledPackageAsync(new PackageSpec(m), CancellationToken.None)).IsValid) {
+                        res.Add(m);
+                    }
+                }
+                if (res.SetEquals(moduleNames)) {
+                    return res;
+                }
+            }
+
             var withDb = factory as PythonInterpreterFactoryWithDatabase;
             if (withDb != null && withDb.IsCurrent) {
                 var db = withDb.GetCurrentDatabase();
@@ -62,18 +77,21 @@ namespace Microsoft.PythonTools.Interpreter {
             var expected = new HashSet<string>(moduleNames);
 
             if (withDb != null) {
-                var paths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(withDb.DatabasePath) ??
-                    await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(withDb.Configuration.InterpreterPath).ConfigureAwait(false);
-                var db = PythonTypeDatabase.GetDatabaseExpectedModules(withDb.Configuration.Version, paths)
-                    .SelectMany()
-                    .Select(g => g.ModuleName);
-                expected.IntersectWith(db);
-                return expected;
+                try {
+                    var paths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(withDb.DatabasePath) ??
+                        await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(withDb.Configuration.InterpreterPath).ConfigureAwait(false);
+                    var db = PythonTypeDatabase.GetDatabaseExpectedModules(withDb.Configuration.Version, paths)
+                        .SelectMany()
+                        .Select(g => g.ModuleName);
+                    expected.IntersectWith(db);
+                    return expected;
+                } catch (InvalidOperationException) {
+                }
             }
 
             return await Task.Run(() => {
                 var result = new HashSet<string>();
-                foreach (var mp in ModulePath.GetModulesInLib(factory)) {
+                foreach (var mp in ModulePath.GetModulesInLib(factory.Configuration)) {
                     if (expected.Count == 0) {
                         break;
                     }

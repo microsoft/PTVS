@@ -240,7 +240,6 @@ permissions and limitations under the License.
   <Target Name="ResolvePythonInterpreterPath">
     <ResolveEnvironment>
       <Output TaskParameter="PrefixPath" PropertyName="PythonPrefixPath" />
-      <Output TaskParameter="LibraryPath" PropertyName="PythonLibraryPath" />
       <Output TaskParameter="ProjectRelativePrefixPath" PropertyName="PythonPrefixSubPath" />
       <Output TaskParameter="InterpreterPath" PropertyName="PythonInterpreterPath" Condition="$(IsWindowsApplication) != 'true'" />
       <Output TaskParameter="WindowsInterpreterPath" PropertyName="PythonInterpreterPath" Condition="$(IsWindowsApplication) == 'true'" />
@@ -264,7 +263,7 @@ permissions and limitations under the License.
     <PropertyGroup Condition="'$(PythonPrefixSubPath)' != ''">
       <VirtualEnvEnabled>true</VirtualEnvEnabled>
       <PythonPrefixSubPath Condition="!HasTrailingSlash('$(PythonPrefixSubPath)')">$(PythonPrefixSubPath)\</PythonPrefixSubPath>
-      <PythonLibrarySubPath>$(PythonPrefixSubPath)$([msbuild]::MakeRelative($(PythonPrefixPath), $(PythonLibraryPath)))</PythonLibrarySubPath>
+      <PythonLibrarySubPath Condition="$(PythonLibrarySubPath) == '' and Exists('$(PythonPrefixPath\Lib')" >$(PythonPrefixSubPath)Lib\</PythonLibrarySubPath>
       <PythonLibrarySubPath Condition="!HasTrailingSlash('$(PythonLibrarySubPath)')">$(PythonLibrarySubPath)\</PythonLibrarySubPath>
       <VirtualEnvIsVEnv Condition="Exists('$(PythonPrefixSubPath)Lib\orig-prefix.txt')">false</VirtualEnvIsVEnv>
       <VirtualEnvIsVEnv Condition="Exists('$(PythonPrefixSubPath)pyvenv.cfg')">true</VirtualEnvIsVEnv>

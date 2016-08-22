@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -328,6 +329,10 @@ namespace Microsoft.PythonTools.Interpreter {
             return new PythonTypeDatabase(factory, BaselineDatabasePath, isDefaultDatabase: true);
         }
 
+        internal static PythonTypeDatabase CreateDefaultTypeDatabase() {
+            return CreateDefaultTypeDatabase(new Version(2, 7));
+        }
+
         internal static PythonTypeDatabase CreateDefaultTypeDatabase(Version languageVersion) {
             return new PythonTypeDatabase(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(languageVersion),
                 BaselineDatabasePath, isDefaultDatabase: true);
@@ -380,10 +385,8 @@ namespace Microsoft.PythonTools.Interpreter {
         public static async Task<int> GenerateAsync(PythonTypeDatabaseCreationRequest request) {
             var fact = request.Factory;
             var evt = request.OnExit;
-            if (fact == null || !Directory.Exists(fact.Configuration.LibraryPath)) {
-                if (evt != null) {
-                    evt(NotSupportedExitCode);
-                }
+            if (fact == null) {
+                evt?.Invoke(NotSupportedExitCode);
                 return NotSupportedExitCode;
             }
             var outPath = request.OutputPath;
@@ -405,8 +408,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 "/id", fact.Configuration.Id,
                 "/version", fact.Configuration.Version.ToString(),
                 "/python", fact.Configuration.InterpreterPath,
-                request.DetectLibraryPath ? null : "/library",
-                request.DetectLibraryPath ? null : fact.Configuration.LibraryPath,
                 "/outdir", outPath,
                 "/basedb", baseDb,
                 (request.SkipUnchanged ? null : "/all"),  // null will be filtered out; empty strings are quoted
@@ -649,6 +650,38 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
+        /// Gets the set of search paths for the specified factory as
+        /// efficiently as possible. This may involve executing the
+        /// interpreter, and may cache the paths for retrieval later.
+        /// </summary>
+        public static async Task<IList<PythonLibraryPath>> GetDatabaseSearchPathsAsync(IPythonInterpreterFactory factory) {
+            var dbPath = (factory as PythonInterpreterFactoryWithDatabase)?.DatabasePath;
+            if (!string.IsNullOrEmpty(dbPath)) {
+                var paths = GetCachedDatabaseSearchPaths(dbPath);
+                if (paths != null) {
+                    return paths;
+                }
+            }
+
+            try {
+                var paths = await GetUncachedDatabaseSearchPathsAsync(factory.Configuration.InterpreterPath);
+                if (!string.IsNullOrEmpty(dbPath)) {
+                    WriteDatabaseSearchPaths(dbPath, paths);
+                }
+                return paths;
+            } catch (InvalidOperationException) {
+                // Failed to get paths
+            }
+
+            var ospy = PathUtils.FindFile(factory.Configuration.PrefixPath, "os.py", firstCheck: new[] { "Lib" });
+            if (!string.IsNullOrEmpty(ospy)) {
+                return GetDefaultDatabaseSearchPaths(PathUtils.GetParent(ospy));
+            }
+
+            return Array.Empty<PythonLibraryPath>();
+        }
+
+        /// <summary>
         /// Gets the set of search paths by running the interpreter.
         /// </summary>
         /// <param name="interpreter">Path to the interpreter.</param>
@@ -675,7 +708,12 @@ namespace Microsoft.PythonTools.Interpreter {
                     false,
                     null
                 )) {
-                    if (await proc != 0) {
+                    int exitCode = -1;
+                    try {
+                        exitCode = await proc;
+                    } catch (OperationCanceledException) {
+                    }
+                    if (exitCode != 0) {
                         throw new InvalidOperationException(string.Format(
                             "Cannot obtain list of paths{0}{1}",
                             Environment.NewLine,
@@ -755,10 +793,27 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <returns>The cached list of search paths.</returns>
         /// <remarks>Added in 2.2</remarks>
         public static List<PythonLibraryPath> GetCachedDatabaseSearchPaths(string databasePath) {
+            var cacheFile = Path.Combine(databasePath, "database.path");
+            if (!File.Exists(cacheFile)) {
+                return null;
+            }
+            if (!IsDatabaseVersionCurrent(databasePath)) {
+                // Cache file with no database is only valid for one hour
+                try {
+                    var time = File.GetLastWriteTimeUtc(cacheFile);
+                    if (time.AddHours(1) < DateTime.UtcNow) {
+                        File.Delete(cacheFile);
+                        return null;
+                    }
+                } catch (IOException) {
+                    return null;
+                }
+            }
+
+
             try {
                 var result = new List<PythonLibraryPath>();
-
-                using (var file = File.OpenText(Path.Combine(databasePath, "database.path"))) {
+                using (var file = File.OpenText(cacheFile)) {
                     string line;
                     while ((line = file.ReadLine()) != null) {
                         try {
@@ -782,6 +837,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <param name="paths">The list of search paths.</param>
         /// <remarks>Added in 2.2</remarks>
         public static void WriteDatabaseSearchPaths(string databasePath, IEnumerable<PythonLibraryPath> paths) {
+            Directory.CreateDirectory(databasePath);
             using (var file = new StreamWriter(Path.Combine(databasePath, "database.path"))) {
                 foreach (var path in paths) {
                     file.WriteLine(path.ToString());

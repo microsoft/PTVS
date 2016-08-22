@@ -125,6 +125,7 @@ namespace TestUtilities {
             if (Debugger.IsAttached) {
                 Debugger.Break();
             }
+            Console.WriteLine(message);
 
             if (_testContext == null) {
                 lock (_unhandled) {

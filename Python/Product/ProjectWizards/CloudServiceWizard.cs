@@ -23,7 +23,6 @@ using System.Reflection;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.TemplateWizard;
-using Microsoft.VisualStudioTools;
 using Project = EnvDTE.Project;
 using ProjectItem = EnvDTE.ProjectItem;
 

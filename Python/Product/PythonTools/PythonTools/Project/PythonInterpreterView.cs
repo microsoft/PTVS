@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools {
         /// Create a PythonInterpreterView with values from an IPythonInterpreterFactory.
         /// </summary>
         public PythonInterpreterView(InterpreterConfiguration config) {
-            _name = config.FullDescription;
+            _name = config.Description;
             _id = config.Id;
             _path = config.InterpreterPath;
         }

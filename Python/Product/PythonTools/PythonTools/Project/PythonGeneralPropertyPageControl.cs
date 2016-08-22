@@ -159,7 +159,7 @@ namespace Microsoft.PythonTools.Project {
             var factory = e.ListItem as IPythonInterpreterFactory;
 
             if (factory != null) {
-                e.Value = factory.Configuration.FullDescription;
+                e.Value = factory.Configuration.Description;
             } else {
                 e.Value = e.ListItem.ToString();
             }

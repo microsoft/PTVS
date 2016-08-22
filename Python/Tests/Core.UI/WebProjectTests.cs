@@ -415,8 +415,7 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectInstallOnNew() {
             using (var app = new PythonVisualStudioApp()) {
-                Pip.Uninstall(app.ServiceProvider, app.OptionsService.DefaultInterpreter, "bottle", false)
-                    .WaitAndUnwrapExceptions();
+                app.OptionsService.DefaultInterpreter.PipUninstall("bottle");
 
                 var t = Task.Run(() => app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
@@ -443,8 +442,7 @@ namespace PythonToolsUITests {
                 }
                 AssertUtil.ContainsExactly(project.GetPythonProject().ActiveInterpreter.FindModules("bottle"), "bottle");
 
-                Pip.Uninstall(app.ServiceProvider, app.OptionsService.DefaultInterpreter, "bottle", false)
-                    .WaitAndUnwrapExceptions();
+                app.OptionsService.DefaultInterpreter.PipUninstall("bottle");
             }
         }
 
@@ -599,6 +597,7 @@ namespace PythonToolsUITests {
                 EndToEndLog("Aborted analysis");
 
                 app.ServiceProvider.GetUIThread().Invoke(() => {
+                    pyProj.SetProjectProperty("WebBrowserUrl", "");
                     pyProj.SetProjectProperty("WebBrowserPort", "23457");
                 });
                 EndToEndLog("Set WebBrowserPort to 23457");
@@ -606,6 +605,7 @@ namespace PythonToolsUITests {
                 EndToEndLog("Verified without debugging");
 
                 app.ServiceProvider.GetUIThread().Invoke(() => {
+                    pyProj.SetProjectProperty("WebBrowserUrl", "");
                     pyProj.SetProjectProperty("WebBrowserPort", "23456");
                 });
                 EndToEndLog("Set WebBrowserPort to 23456");
@@ -678,6 +678,7 @@ namespace PythonToolsUITests {
                     app.ServiceProvider.GetUIThread().Invoke(() => {
                         EndToEndLog("Building");
                         app.Dte.Solution.SolutionBuild.Build(true);
+                        EndToEndLog("Build output: {0}", app.GetOutputWindowText("Build"));
                         EndToEndLog("Updating settings");
                         prevNormal = app.GetService<PythonToolsService>().DebuggerOptions.WaitOnNormalExit;
                         prevAbnormal = app.GetService<PythonToolsService>().DebuggerOptions.WaitOnAbnormalExit;
@@ -736,7 +737,7 @@ namespace PythonToolsUITests {
                     service,
                     true,
                     Path.Combine(pyProj.ProjectHome, "env"),
-                    service.FindInterpreter("Global|PythonCore|" + pythonVersion + "|x86"),
+                    service.FindInterpreter("Global|PythonCore|" + pythonVersion + "-32"),
                     Version.Parse(pythonVersion) >= new Version(3, 3)
                 );
             });
@@ -771,10 +772,7 @@ namespace PythonToolsUITests {
         }
 
         internal static void InstallWebFramework(VisualStudioApp app, string moduleName, string packageName, IPythonInterpreterFactory factory) {
-            var redirector = new TraceRedirector("pip install " + packageName);
-            var task = app.ServiceProvider.GetUIThread().InvokeTask(() =>
-                Pip.Install(app.ServiceProvider, factory, packageName, false, redirector)
-            );
+            var task = app.ServiceProvider.GetUIThread().InvokeTask(() => factory.PipInstallAsync(packageName));
             try {
                 Assert.IsTrue(task.Wait(TimeSpan.FromMinutes(3.0)), "Timed out waiting for install " + packageName);
             } catch (AggregateException ex) {
