@@ -86,8 +86,8 @@ namespace PythonToolsMockTests {
                     }, filename);
 
                     try {
-                        mre.Wait(cts.Token);
-                        analyzer.WaitForCompleteAnalysis(x => !cts.IsCancellationRequested);
+                        while (!mre.Wait(500, cts.Token) && !vs.HasPendingException) { }
+                        analyzer.WaitForCompleteAnalysis(x => !cts.IsCancellationRequested && !vs.HasPendingException);
                     } catch (OperationCanceledException) {
                     } finally {
                         analyzer.AnalysisStarted -= evt;
@@ -95,6 +95,7 @@ namespace PythonToolsMockTests {
                     if (cts.IsCancellationRequested) {
                         Assert.Fail("Timed out waiting for code analysis");
                     }
+                    vs.ThrowPendingException();
                 }
 
                 View = view;

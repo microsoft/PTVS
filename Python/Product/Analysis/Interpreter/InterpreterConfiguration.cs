@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Interpreter {
             InterpreterPath = path;
             WindowsInterpreterPath = string.IsNullOrEmpty(winPath) ? path : winPath;
             PathEnvironmentVariable = pathVar;
-            Architecture = arch;
+            Architecture = arch ?? InterpreterArchitecture.Unknown;
             Version = version ?? new Version();
             UIMode = uiMode;
         }

@@ -251,14 +251,14 @@ namespace Microsoft.PythonTools.Intellisense {
             var registry = _container.GetExportedValue<IInterpreterRegistryService>();
             IPythonInterpreterFactory factory = null;
             Version analysisVersion;
-            if (request.interpreterId.StartsWith("AnalysisOnly;")) {
-                int versionStart = request.interpreterId.IndexOf(';') + 1;
-                int versionEnd = request.interpreterId.IndexOf(';', versionStart);
+            if (request.interpreterId.StartsWith("AnalysisOnly|")) {
+                int versionStart = request.interpreterId.IndexOf('|') + 1;
+                int versionEnd = request.interpreterId.IndexOf('|', versionStart);
 
                 if (Version.TryParse(request.interpreterId.Substring(versionStart, versionEnd - versionStart), out analysisVersion)) {
                     string[] dbDirs;
                     if (versionEnd + 1 != request.interpreterId.Length) {
-                        dbDirs = request.interpreterId.Substring(versionEnd + 1).Split(';');
+                        dbDirs = request.interpreterId.Substring(versionEnd + 1).Split('|');
                     } else {
                         dbDirs = null;
                     }
