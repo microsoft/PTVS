@@ -126,6 +126,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             _serviceProvider.AddService(typeof(EnvDTE.IVsExtensibility), _extensibility);
             _serviceProvider.AddService(typeof(EnvDTE.DTE), _dte);
 
+            Shell.SetProperty((int)__VSSPROPID4.VSSPROPID_ShellInitialized, true);
+
             UIShell.AddToolWindow(new Guid(ToolWindowGuids80.SolutionExplorer), new MockToolWindow(_uiHierarchy));
 
             ErrorHandler.ThrowOnFailure(
@@ -256,7 +258,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
-        private void ThrowPendingException(bool checkThread = true) {
+        public bool HasPendingException => _edi != null;
+
+        public void ThrowPendingException() => ThrowPendingException(false);
+
+        private void ThrowPendingException(bool checkThread) {
             if (!checkThread || _throwExceptionsOn == Thread.CurrentThread) {
                 var edi = Interlocked.Exchange(ref _edi, null);
                 if (edi != null) {

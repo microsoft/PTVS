@@ -23,6 +23,7 @@ namespace TestUtilities.Mocks {
     public class MockVsShell : IVsShell {
         public readonly Dictionary<int, object> Properties = new Dictionary<int, object>();
         public readonly object ReadOnlyPropertyValue = new object();
+        private readonly List<IVsShellPropertyEvents> _listeners = new List<IVsShellPropertyEvents>();
         
         public int GetProperty(int propid, out object pvar) {
             if (Properties.TryGetValue(propid, out pvar)) {
@@ -45,6 +46,9 @@ namespace TestUtilities.Mocks {
                 Console.WriteLine("MockVsShell.SetProperty(propid={0}, var={1})", propid, var);
             }
             Properties[propid] = var;
+            foreach (var l in _listeners) {
+                l?.OnShellPropertyChange(propid, var);
+            }
             return VSConstants.S_OK;
         }
 
@@ -54,7 +58,9 @@ namespace TestUtilities.Mocks {
         }
 
         public int AdviseShellPropertyChanges(IVsShellPropertyEvents pSink, out uint pdwCookie) {
-            throw new NotImplementedException();
+            _listeners.Add(pSink);
+            pdwCookie = (uint)_listeners.Count - 1;
+            return VSConstants.S_OK;
         }
 
         public int GetPackageEnum(out IEnumPackages ppenum) {
@@ -86,7 +92,8 @@ namespace TestUtilities.Mocks {
         }
 
         public int UnadviseShellPropertyChanges(uint dwCookie) {
-            throw new NotImplementedException();
+            _listeners[(int)dwCookie] = null;
+            return VSConstants.S_OK;
         }
     }
 }
