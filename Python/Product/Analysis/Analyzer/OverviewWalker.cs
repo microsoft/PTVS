@@ -524,10 +524,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             // recursively walk the statements in the suite
             if (node.Statements != null) {
                 foreach (var innerNode in node.Statements) {
-                    var doc = ((innerNode as ExpressionStatement)?.Expression as ConstantExpression)?.Value as string;
-                    if (!string.IsNullOrEmpty(doc)) {
-                        
-                    }
                     innerNode.Walk(this);
                 }
             }
