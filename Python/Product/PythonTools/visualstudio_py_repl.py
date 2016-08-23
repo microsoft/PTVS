@@ -1169,6 +1169,7 @@ class DebugReplBackend(BasicReplBackend):
 class _ReplOutput(object):
     """file like object which redirects output to the repl window."""
     errors = None
+    closed = False
 
     def __init__(self, backend, is_stdout, old_out = None):
         self.name = "<stdout>" if is_stdout else "<stderr>"
