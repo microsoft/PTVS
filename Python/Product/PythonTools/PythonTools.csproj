@@ -258,6 +258,9 @@
     <Compile Include="PythonTools\CodeCoverage\CoverageMapper.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoveragePyConverter.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageScope.cs" />
+    <Compile Include="PythonTools\Commands\DiagnosticsWindow.xaml.cs">
+      <DependentUpon>DiagnosticsWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PythonTools\Commands\ImportCoverageCommand.cs" />
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
     <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
@@ -425,12 +428,6 @@
     <Compile Include="PythonTools\Commands\OpenDebugReplCommand.cs" />
     <Compile Include="PythonTools\Commands\RemoveImportsCommand.cs" />
     <Compile Include="PythonTools\Commands\DiagnosticsCommand.cs" />
-    <Compile Include="PythonTools\Commands\DiagnosticsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Commands\DiagnosticsForm.Designer.cs">
-      <DependentUpon>DiagnosticsForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="PythonTools\Commands\ExecuteInReplCommand.cs" />
     <Compile Include="PythonTools\Commands\FillParagraphCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenReplCommand.cs" />
@@ -901,9 +898,6 @@
     <EmbeddedResource Include="Legacy\ObsoleteResources.resx">
       <ManifestResourceName>Microsoft.VisualStudioTools.SharedProject</ManifestResourceName>
     </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Commands\DiagnosticsForm.resx">
-      <DependentUpon>DiagnosticsForm.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\NewInterpreter.resx">
       <DependentUpon>NewInterpreter.cs</DependentUpon>
     </EmbeddedResource>
@@ -962,6 +956,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="PythonTools\Commands\DiagnosticsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="PythonTools\Intellisense\CompletionControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
