@@ -109,6 +109,9 @@
     <ProjectTemplate Include="$(BuildRoot)Python\Templates\Core\ProjectTemplates\Python\FromExistingCode\*">
       <TemplateName>FromExistingCode</TemplateName>
     </ProjectTemplate>
+    <ProjectTemplate Include="$(BuildRoot)Python\Templates\NativeDevelopment\ProjectTemplates\VC\Python\PythonExtensionModule\*">
+      <TemplateName>PythonExtensionModule</TemplateName>
+    </ProjectTemplate>
     <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\WebProjectEmpty\*">
       <TemplateName>EmptyWebProject</TemplateName>
     </WebProjectTemplate>
