@@ -83,27 +83,14 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            var dlg = new DiagnosticsForm(_serviceProvider, "Gathering data...");
-
-            ThreadPool.QueueUserWorkItem(x => {
-                string data;
-                try {
-                    data = GetData(dlg);
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    data = ex.ToUnhandledExceptionMessage(GetType());
-                }
-                try {
-                    dlg.BeginInvoke((Action)(() => {
-                        dlg.Ready(data);
-                    }));
-                } catch (InvalidOperationException) {
-                    // Window has been closed already
-                }
-            });
-            dlg.ShowDialog();
+            var ui = _serviceProvider.GetUIThread();
+            var cts = new CancellationTokenSource();
+            var dlg = new DiagnosticsWindow(_serviceProvider, Task.Run(() => GetData(ui, cts.Token), cts.Token));
+            dlg.ShowModal();
+            cts.Cancel();
         }
 
-        private string GetData(System.Windows.Forms.Control ui) {
+        private string GetData(UIThreadBase ui, CancellationToken cancel) {
             StringBuilder res = new StringBuilder();
 
             if (PythonToolsPackage.IsIpyToolsInstalled()) {
@@ -131,6 +118,8 @@ namespace Microsoft.PythonTools.Commands {
             var projects = dte.Solution.Projects;
 
             foreach (EnvDTE.Project project in projects) {
+                cancel.ThrowIfCancellationRequested();
+
                 string name;
                 try {
                     // Some projects will throw rather than give us a unique
@@ -197,6 +186,8 @@ namespace Microsoft.PythonTools.Commands {
 
             res.AppendLine("Environments: ");
             foreach (var provider in knownProviders.MaybeEnumerate()) {
+                cancel.ThrowIfCancellationRequested();
+
                 res.AppendLine("    " + provider.GetType().FullName);
                 foreach (var config in provider.GetInterpreterConfigurations()) {
                     res.AppendLine("        Id: " + config.Id);
@@ -213,6 +204,8 @@ namespace Microsoft.PythonTools.Commands {
 
             res.AppendLine("Launchers:");
             foreach (var launcher in launchProviders.MaybeEnumerate()) {
+                cancel.ThrowIfCancellationRequested();
+
                 res.AppendLine("    Launcher: " + launcher.GetType().FullName);
                 res.AppendLine("        " + launcher.Description);
                 res.AppendLine("        " + launcher.Name);
@@ -257,6 +250,8 @@ namespace Microsoft.PythonTools.Commands {
 
             res.AppendLine("Loaded assemblies:");
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().OrderBy(assem => assem.FullName)) {
+                cancel.ThrowIfCancellationRequested();
+
                 AssemblyFileVersionAttribute assemFileVersion;
                 var error = "(null)";
                 try {
@@ -291,6 +286,8 @@ namespace Microsoft.PythonTools.Commands {
             res.AppendLine("Environment Analysis Logs: ");
             foreach (var provider in knownProviders) {
                 foreach (var factory in provider.GetInterpreterFactories().OfType<IPythonInterpreterFactoryWithDatabase>()) {
+                    cancel.ThrowIfCancellationRequested();
+
                     res.AppendLine(factory.Configuration.Description);
                     string analysisLog = factory.GetAnalysisLogContent(CultureInfo.InvariantCulture);
                     if (!string.IsNullOrEmpty(analysisLog)) {
