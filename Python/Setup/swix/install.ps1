@@ -1,4 +1,4 @@
-param($vs, $vsdrop, [switch] $uninstall)
+param($vs, [switch] $uninstall)
 
 $install_dirs = @(
     "Common7\IDE\Extensions\Microsoft\Python",
@@ -14,19 +14,39 @@ $to_delete = $install_dirs | ?{ Test-Path "$vs\$_" } | %{ gi "$vs\$_" }
 if ($to_delete) {
     "Cleaning old install..."
     $to_delete | rmdir -Recurse -Force
-    if ($uninstall) {
-        # Only uninstalling, so run devenv /setup now
-        Start-Process -Wait "$vs\Common7\IDE\devenv.exe" "/setup"
-    }
 }
 
 if (-not $uninstall) {
+    [Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem') | Out-Null
+
     $source = $MyInvocation.MyCommand.Definition | Split-Path -Parent
+
+    # Need to use top level directory to avoid exceeding MAX_PATH
+    $tmp = mkdir "${env:SystemDrive}\__p" -Force
+    pushd $tmp
+
+    copy -Recurse -Force "$source\*.vsix" .
+
+    gci "*.vsix" | %{
+        $d = mkdir "Content_$($_.Name)" -Force
+
+        "Extracting $($_.Name)..."
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($_, $d)
+
+        if (Test-Path "$d\contents") {
+            pushd "$d\contents"
+            copy -Recurse -Force * $vs
+            popd
+        }
+
+        rmdir $d -Recurse -Force
+    }
     
-    copy -Recurse -Force $vsdrop\engine ${env:Temp}\engine
-    
-    $catalog = "${env:Temp}\engine\catalog.vsman";
-    (gc "$source\Microsoft.PythonTools_Sideload.vsman") -replace '"manifestVersion": ".+?"', '"manifestVersion": "1.0"' | Out-File $catalog
-    & "${env:Temp}\engine\setup.exe" install --catalog "$source\Microsoft.PythonTools_Sideload.vsman" --installdir "$vs" --layoutdir "$source"
-    # devenv /setup is run by setup.exe
+    popd
+    rmdir $tmp -Recurse -Force
 }
+
+"Running devenv.exe /setup..."
+Start-Process -Wait "$vs\Common7\IDE\devenv.exe" "/setup"
+
+"Complete!"
