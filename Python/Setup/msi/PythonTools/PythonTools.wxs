@@ -38,7 +38,7 @@
       <?endforeach?>
     </DirectoryRef>
     <DirectoryRef Id="Dir_$(var.key)ProjectTemplates">
-      <?foreach temp in ConsoleAppProject;FromExistingCode?>
+      <?foreach temp in ConsoleAppProject;FromExistingCode;PythonExtensionModule?>
         <Directory Id="Dir_$(var.key)ProjectTemplates_$(var.temp)" Name="$(var.temp)" />
       <?endforeach?>
     </DirectoryRef>
