@@ -52,7 +52,6 @@
     <ProjectFile Include="Uwp\Uwp.csproj" Condition="'$(IncludeUwp)' == 'True'"/>
     
     <ProjectFile Include="..\Templates\Templates.csproj" />
-    <ProjectFile Include="..\Templates\Samples.csproj" />
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
