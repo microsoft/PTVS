@@ -18,13 +18,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Analysis;
-using Microsoft.PythonTools.Django.Project;
-using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks;
+using Microsoft.PythonTools.Django.TemplateParsing;
 
 namespace DjangoTests {
     [TestClass]

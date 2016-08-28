@@ -18,9 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Analysis;
-using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.Language.Intellisense;
 
