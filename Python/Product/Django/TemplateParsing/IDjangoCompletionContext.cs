@@ -15,9 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Analysis;
-using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Django.TemplateParsing {
@@ -33,6 +31,11 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         }
 
         Dictionary<string, TagInfo> Filters {
+            get;
+        }
+
+        string[] Urls
+        {
             get;
         }
 

@@ -340,6 +340,28 @@ namespace DjangoTests {
                         }
                     }
                 },
+                new {
+                    Got = ("url "),
+                    Expected = (DjangoBlock)new DjangoUrlBlock(new BlockParseInfo("url", " ", 0)),
+                    Context = TestCompletionContext.Simple,
+                    Completions = new[] {
+                        new {
+                            Position = 4,
+                            Expected = new[] { "'fob:oar-url'", "'cut:lower-url'" }
+                        }
+                    }
+                },
+                new {
+                    Got = ("url 'fob:oar-url' "),
+                    Expected = (DjangoBlock)new DjangoUrlBlock(new BlockParseInfo("url", " 'fob:oar-url' ", 0), new BlockClassification(new Span(4, 13), Classification.Identifier)),
+                    Context = TestCompletionContext.Simple,
+                    Completions = new[] {
+                        new {
+                            Position = 18,
+                            Expected = new[] { "as", "fob", "oar" }
+                        }
+                    }
+                }
             };
 
             foreach (var testCase in testCases) {
@@ -374,7 +396,8 @@ namespace DjangoTests {
                 { typeof(DjangoMultiVariableArgumentBlock), ValidateMultiArgumentBlock},
                 { typeof(DjangoSpacelessBlock), ValidateSpacelessBlock},
                 { typeof(DjangoTemplateTagBlock), ValidateTemplateTagBlock },
-                { typeof(DjangoWidthRatioBlock), ValidateWidthRatioBlock }
+                { typeof(DjangoWidthRatioBlock), ValidateWidthRatioBlock },
+                { typeof(DjangoUrlBlock), ValidateUrlBlock }
             };
         }
 
@@ -469,6 +492,19 @@ namespace DjangoTests {
             Assert.AreEqual(aeExpected.ParseInfo.Start, aeGot.ParseInfo.Start);
             Assert.AreEqual(aeExpected.ParseInfo.Command, aeGot.ParseInfo.Command);
             Assert.AreEqual(aeExpected.ParseInfo.Args, aeGot.ParseInfo.Args);
+        }
+
+        private static void ValidateUrlBlock(DjangoBlock expected, DjangoBlock got) {
+            var urlExpected = (DjangoUrlBlock)expected;
+            var urlGot = (DjangoUrlBlock)got;
+
+            Assert.AreEqual(urlExpected.ParseInfo.Start, urlGot.ParseInfo.Start);
+            Assert.AreEqual(urlExpected.ParseInfo.Command, urlGot.ParseInfo.Command);
+            Assert.AreEqual(urlExpected.ParseInfo.Args, urlGot.ParseInfo.Args);
+            Assert.AreEqual(urlExpected.Args.Length, urlGot.Args.Length);
+            for (int i = 0; i < urlExpected.Args.Length; i++) {
+                Assert.AreEqual(urlExpected.Args[i], urlGot.Args[i]);
+            }
         }
 
         private void ValidateBlock(DjangoBlock expected, DjangoBlock got) {
@@ -749,6 +785,15 @@ namespace DjangoTests {
         public string[] Variables {
             get {
                 return _variables;
+            }
+        }
+
+        public string[] Urls {
+            get {
+                return new[] {
+                    "fob:oar-url",
+                    "cut:lower-url"
+                };
             }
         }
 

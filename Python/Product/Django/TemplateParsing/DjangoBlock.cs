@@ -163,7 +163,8 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 {"regroup", DjangoUnknownBlock.Parse},
                 {"spaceless", DjangoSpacelessBlock.Parse},
                 {"widthratio", DjangoWidthRatioBlock.Parse},
-                {"templatetag", DjangoTemplateTagBlock.Parse}
+                {"templatetag", DjangoTemplateTagBlock.Parse},
+                {"url", DjangoUrlBlock.Parse}
             };
         }
     }

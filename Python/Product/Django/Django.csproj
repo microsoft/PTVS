@@ -218,6 +218,7 @@
     <Compile Include="TemplateParsing\DjangoBlocks\DjangoSpacelessBlock.cs" />
     <Compile Include="TemplateParsing\DjangoBlocks\DjangoTemplateTagBlock.cs" />
     <Compile Include="TemplateParsing\DjangoBlocks\DjangoUnknownBlock.cs" />
+    <Compile Include="TemplateParsing\DjangoBlocks\DjangoUrlBlock.cs" />
     <Compile Include="TemplateParsing\DjangoBlocks\DjangoWidthRatioBlock.cs" />
     <Compile Include="TemplateParsing\DjangoFilter.cs" />
     <Compile Include="TemplateParsing\DjangoFormatDefinitions.cs" />

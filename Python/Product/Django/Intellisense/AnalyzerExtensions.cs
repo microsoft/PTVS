@@ -29,7 +29,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             var tags = analyzer.SendExtensionCommandAsync(
                 DjangoAnalyzer.Name,
                 DjangoAnalyzer.Commands.GetTags,
-                String.Empty
+                string.Empty
             ).WaitOrDefault(1000);
 
             if (tags != null) {
@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             var filtersRes = analyzer.SendExtensionCommandAsync(
                 DjangoAnalyzer.Name,
                 DjangoAnalyzer.Commands.GetFilters,
-                String.Empty
+                string.Empty
             ).WaitOrDefault(1000);
 
 
@@ -55,6 +55,17 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 }
             }
             return res;
+        }
+
+        public static string[] GetUrls(this VsProjectAnalyzer analyzer)
+        {
+            var urls = analyzer.SendExtensionCommandAsync(
+                DjangoAnalyzer.Name,
+                DjangoAnalyzer.Commands.GetUrls,
+                string.Empty
+            ).WaitOrDefault(1000);
+
+            return urls != null ? new JavaScriptSerializer().Deserialize<string[]>(urls) : Array.Empty<string>();
         }
 
         public static string[] GetVariableNames(this VsProjectAnalyzer analyzer, string file) {
