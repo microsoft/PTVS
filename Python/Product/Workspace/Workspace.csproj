@@ -125,6 +125,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PythonLaunchDebugTargetProvider.cs" />
+    <Compile Include="VsPythonDebugLaunchProvider.cs" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
