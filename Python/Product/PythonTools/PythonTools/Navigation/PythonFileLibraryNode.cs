@@ -111,7 +111,7 @@ namespace Microsoft.PythonTools.Navigation {
             if (_children == null) {
                 IEnumerable<CompletionResult> members = GetChildren();
                 List<LibraryNode> children = new List<LibraryNode>();
-                foreach (var member in members) {
+                foreach (var member in members.MaybeEnumerate()) {
                     var memberChildren = new MemberChildren(_hierarchy, GetName(member.Name));
                     var node = new PythonLibraryNode(
                         _parent,
