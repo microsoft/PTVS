@@ -788,11 +788,11 @@ namespace DjangoTests {
             }
         }
 
-        public string[] Urls {
+        public DjangoUrl[] Urls {
             get {
                 return new[] {
-                    "fob:oar-url",
-                    "cut:lower-url"
+                    new DjangoUrl("fob:oar-url"),
+                    new DjangoUrl("cut:lower-url")
                 };
             }
         }

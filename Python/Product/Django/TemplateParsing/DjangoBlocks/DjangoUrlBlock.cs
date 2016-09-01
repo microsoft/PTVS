@@ -41,8 +41,9 @@ namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks {
 
         public override IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position) {
             // If no argument, show urls
-            if (Args.Length == 0)
+            if (Args.Length == 0) {
                 return GetUrlCompletion(context);
+            }
 
             BlockClassification? argBeforePosition = GetArgBeforePosition(position);
             BlockClassification? argPenultimateBeforePosition = GetArgBeforePosition(position);
@@ -60,24 +61,26 @@ namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks {
         }
 
         private IEnumerable<CompletionInfo> GetUrlCompletion(IDjangoCompletionContext context) {
-            return CompletionInfo.ToCompletionInfo(context.Urls.Select(url => String.Format("'{0}'", url)), StandardGlyphGroup.GlyphGroupField);
+            return CompletionInfo.ToCompletionInfo(context.Urls.Select(url => string.Format("'{0}'", url.FullUrl)), StandardGlyphGroup.GlyphGroupField);
         }
 
         private BlockClassification? GetArgBeforePosition(int position) {
             BlockClassification? argBeforePosition = null;
             foreach (BlockClassification arg in Args) {
-                if (position > arg.Span.Start)
+                if (position > arg.Span.Start) {
                     argBeforePosition = arg;
-                else
+                } else {
                     break;
+                }
             }
 
             return argBeforePosition;
         }
 
         private BlockClassification? GetPenultimateArgBeforePosition(int position) {
-            if (Args.Length < 2)
+            if (Args.Length < 2) {
                 return null;
+            }
 
             BlockClassification? argBeforePosition = null;
             BlockClassification? argPenultimateBeforePosition = null;

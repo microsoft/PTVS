@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             return res;
         }
 
-        public static string[] GetUrls(this VsProjectAnalyzer analyzer)
+        public static DjangoUrl[] GetUrls(this VsProjectAnalyzer analyzer)
         {
             var urls = analyzer.SendExtensionCommandAsync(
                 DjangoAnalyzer.Name,
@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
                 string.Empty
             ).WaitOrDefault(1000);
 
-            return urls != null ? new JavaScriptSerializer().Deserialize<string[]>(urls) : Array.Empty<string>();
+            return urls != null ? new JavaScriptSerializer().Deserialize<DjangoUrl[]>(urls) : Array.Empty<DjangoUrl>();
         }
 
         public static string[] GetVariableNames(this VsProjectAnalyzer analyzer, string file) {

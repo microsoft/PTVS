@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Django.Intellisense {
             }
         }
 
-        public string[] Urls {
+        public DjangoUrl[] Urls {
             get {
                 return _analyzer.GetUrls();
             }

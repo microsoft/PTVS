@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
         internal const string Name = "django";
         internal readonly Dictionary<string, TagInfo> _tags = new Dictionary<string, TagInfo>();
         internal readonly Dictionary<string, TagInfo> _filters = new Dictionary<string, TagInfo>();
-        internal readonly ISet<string> _urls = new SortedSet<string>();
+        internal readonly ISet<DjangoUrl> _urls = new SortedSet<DjangoUrl>();
         private readonly HashSet<IPythonProjectEntry> _hookedEntries = new HashSet<IPythonProjectEntry>();
         internal readonly Dictionary<string, TemplateVariables> _templateFiles = new Dictionary<string, TemplateVariables>(StringComparer.OrdinalIgnoreCase);
         private ConditionalWeakTable<Node, ContextMarker> _contextTable = new ConditionalWeakTable<Node, ContextMarker>();
@@ -344,10 +344,16 @@ namespace Microsoft.PythonTools.Django.Analysis {
         }
 
         private IAnalysisSet UrlProcessor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
-            IAnalysisSet urlNames = GetArg(args, keywordArgNames, "name", 0);
-            foreach (AnalysisValue n in urlNames) {
-                _urls.Add(n.GetConstantValueAsString());
+            // No completion if the url has no name (reverse matching not possible)
+            if (keywordArgNames.Length == 0) {
+                return AnalysisSet.Empty;
             }
+
+            IAnalysisSet urlNames = GetArg(args, keywordArgNames, "name", 0);
+
+            string urlName = urlNames.First().GetConstantValueAsString();
+
+            _urls.Add(new DjangoUrl(urlName));
 
             return AnalysisSet.Empty;
         }
