@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Workspace {
     class PythonDebugLaunchProvider : ILaunchDebugTargetProvider {
         private const string ProviderType = "F2B8B667-3D13-4E51-B067-00C188D0EB7E";
 
-        public const string LaunchTypeName = "Python";
+        public const string LaunchTypeName = "python";
 
         // Set by the workspace, not by our users
         private const string ScriptNameKey = "target";
@@ -93,7 +93,9 @@ namespace Microsoft.PythonTools.Workspace {
                 }
             } else {
                 var service = serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-                path = service.DefaultInterpreter.Configuration.InterpreterPath;
+                service.DefaultInterpreter.ThrowIfNotRunnable();
+                config = service.DefaultInterpreter.Configuration;
+                path = config.InterpreterPath;
             }
 
             if (!File.Exists(path)) {
@@ -103,10 +105,10 @@ namespace Microsoft.PythonTools.Workspace {
             IProjectLauncher launcher = null;
             var launchConfig = new LaunchConfiguration(config) {
                 InterpreterPath = config == null ? path : null,
-                InterpreterArguments = settings.GetValue<string>(InterpreterArgumentsKey),
-                ScriptName = settings.GetValue<string>(ScriptNameKey),
-                ScriptArguments = settings.GetValue<string>(ScriptArgumentsKey),
-                WorkingDirectory = settings.GetValue<string>(WorkingDirectoryKey),
+                InterpreterArguments = settings.GetValue(InterpreterArgumentsKey, string.Empty),
+                ScriptName = settings.GetValue(ScriptNameKey, string.Empty),
+                ScriptArguments = settings.GetValue(ScriptArgumentsKey, string.Empty),
+                WorkingDirectory = settings.GetValue(WorkingDirectoryKey, string.Empty),
                 // TODO: Support search paths
                 SearchPaths = null,
                 // TODO: Support env variables
@@ -115,7 +117,7 @@ namespace Microsoft.PythonTools.Workspace {
             launchConfig.LaunchOptions[PythonConstants.EnableNativeCodeDebugging] = settings.GetValue(NativeDebuggingKey, false).ToString();
 
 
-            var browserUrl = settings.GetValue<string>(WebBrowserUrlKey);
+            var browserUrl = settings.GetValue(WebBrowserUrlKey, string.Empty);
             if (!string.IsNullOrEmpty(browserUrl)) {
                 launchConfig.LaunchOptions[PythonConstants.WebBrowserUrlSetting] = browserUrl;
                 launcher = new PythonWebLauncher(serviceProvider, launchConfig, launchConfig, launchConfig);

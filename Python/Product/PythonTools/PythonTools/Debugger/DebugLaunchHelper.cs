@@ -59,7 +59,9 @@ namespace Microsoft.PythonTools.Debugger {
         }
 
         private static IEnumerable<string> GetLaunchConfigurationOptions(LaunchConfiguration config) {
-            yield return string.Format("{0}={1}", AD7Engine.VersionSetting, config.Interpreter.Version);
+            if (config.Interpreter != null) {
+                yield return string.Format("{0}={1}", AD7Engine.VersionSetting, config.Interpreter.Version);
+            }
             yield return string.Format("{0}={1}",
                 AD7Engine.InterpreterOptions,
                 config.InterpreterArguments ?? string.Empty
