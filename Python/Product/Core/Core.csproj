@@ -56,7 +56,7 @@
   <ItemDefinitionGroup>
     <ProjectReference>
       <IncludeInVSIX>true</IncludeInVSIX>
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <Private>true</Private>
     </ProjectReference>
     <Content>
