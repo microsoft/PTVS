@@ -618,11 +618,15 @@ namespace Microsoft.PythonTools.Interpreter {
             InstalledFilesChanged?.Invoke(this, EventArgs.Empty);
 
             var cts = new CancellationTokenSource();
+            var cancellationToken = cts.Token;
             var oldCts = Interlocked.Exchange(ref _currentRefresh, cts);
-            oldCts?.Cancel();
+            try {
+                oldCts?.Cancel();
+            } catch (ObjectDisposedException) {
+            }
             oldCts?.Dispose();
 
-            CacheInstalledPackagesAsync(false, cts.Token)
+            CacheInstalledPackagesAsync(false, cancellationToken)
                 .SilenceException<OperationCanceledException>()
                 .DoNotWait();
         }
