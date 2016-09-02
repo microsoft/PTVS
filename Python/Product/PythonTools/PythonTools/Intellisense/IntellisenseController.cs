@@ -1155,20 +1155,13 @@ namespace Microsoft.PythonTools.Intellisense {
 
 
         private bool EnterOnCompleteText() {
-            SnapshotPoint? point = _activeSession.GetTriggerPoint(_textView.TextBuffer.CurrentSnapshot);
-            if (point.HasValue) {
-                int chars = _textView.Caret.Position.BufferPosition.Position - point.Value.Position;
-                var selectionStatus = _activeSession.SelectedCompletionSet.SelectionStatus;
-                if (chars == selectionStatus.Completion.InsertionText.Length) {
-                    string text = _textView.TextSnapshot.GetText(point.Value.Position, chars);
+            var selectionStatus = _activeSession.SelectedCompletionSet.SelectionStatus;
+            var caret = _textView.Caret.Position.BufferPosition;
+            var span = _activeSession.GetApplicableSpan(_textView.TextBuffer).GetSpan(caret.Snapshot);
 
-                    if (String.Compare(text, selectionStatus.Completion.InsertionText, true) == 0) {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
+            return caret == span.End &&
+                span.Length == selectionStatus.Completion?.InsertionText.Length &&
+                span.GetText() == selectionStatus.Completion.InsertionText;
         }
 
         public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) {
