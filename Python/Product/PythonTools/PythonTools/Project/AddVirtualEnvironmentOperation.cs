@@ -107,11 +107,11 @@ namespace Microsoft.PythonTools.Project {
         }
 
         void IPackageManagerUI.OnOutputTextReceived(string text) {
-            _output.WriteLine(text.TrimEnd('\r', '\n'));
+            _output.WriteLine(text.TrimEndNewline());
         }
 
         void IPackageManagerUI.OnErrorTextReceived(string text) {
-            _output.WriteErrorLine(text.TrimEnd('\r', '\n'));
+            _output.WriteErrorLine(text.TrimEndNewline());
         }
 
         void IPackageManagerUI.OnOperationStarted(string operation) { }
