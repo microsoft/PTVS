@@ -324,7 +324,6 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void PipExtensionProvider_OperationStarted(object sender, OutputEventArgs e) {
-            _outputWindow.WriteLine(e.Data);
             if (_statusBar != null) {
                 _statusBar.SetText(e.Data);
             }
@@ -334,11 +333,11 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void PipExtensionProvider_OutputTextReceived(object sender, OutputEventArgs e) {
-            _outputWindow.WriteLine(e.Data);
+            _outputWindow.WriteLine(e.Data.TrimEndNewline());
         }
 
         private void PipExtensionProvider_ErrorTextReceived(object sender, OutputEventArgs e) {
-            _outputWindow.WriteErrorLine(e.Data);
+            _outputWindow.WriteErrorLine(e.Data.TrimEndNewline());
         }
 
         private void PipExtensionProvider_OperationFinished(object sender, OperationFinishedEventArgs e) {
