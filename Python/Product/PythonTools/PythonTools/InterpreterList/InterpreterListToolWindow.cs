@@ -23,6 +23,7 @@ using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.InteractiveWindow.Shell;
@@ -507,20 +508,48 @@ namespace Microsoft.PythonTools.InterpreterList {
                 return;
             }
 
-            var select = envs.Environments.OfType<EnvironmentView>().FirstOrDefault(e => e.Factory == interpreter);
-            var ext = extension == null ?
-                null :
-                select.Extensions.FirstOrDefault(e => e != null && extension.IsEquivalentTo(e.GetType()));
+            ErrorHandler.ThrowOnFailure((wnd.Frame as IVsWindowFrame)?.Show() ?? 0);
 
-            if (select != null) {
-                ErrorHandler.ThrowOnFailure((wnd.Frame as IVsWindowFrame)?.Show() ?? 0);
-                envs.Environments.MoveCurrentTo(select);
-                if (ext != null) {
-                    var exts = envs.Extensions;
-                    if (exts != null && exts.Contains(ext)) {
-                        exts.MoveCurrentTo(ext);
-                        ((ext as IEnvironmentViewExtension)?.WpfObject as ICanFocus)?.Focus();
-                    }
+            if (extension == null) {
+                SelectEnv(envs, interpreter, 3);
+            } else {
+                SelectEnvAndExt(envs, interpreter, extension, 3);
+            }
+        }
+
+        private static void SelectEnv(ToolWindow envs, IPythonInterpreterFactory interpreter, int retries) {
+            if (retries <= 0) {
+                Debug.Fail("Failed to select environment after multiple retries");
+                return;
+            }
+            var select = envs.IsLoaded ? envs.Environments.OfType<EnvironmentView>().FirstOrDefault(e => e.Factory == interpreter) : null;
+            if (select == null) {
+                envs.Dispatcher.InvokeAsync(() => SelectEnv(envs, interpreter, retries - 1), DispatcherPriority.Background);
+                return;
+            }
+
+            envs.Environments.MoveCurrentTo(select);
+        }
+
+        private static void SelectEnvAndExt(ToolWindow envs, IPythonInterpreterFactory interpreter, Type extension, int retries) {
+            if (retries <= 0) {
+                Debug.Fail("Failed to select environment/extension after multiple retries");
+                return;
+            }
+            var select = envs.IsLoaded ? envs.Environments.OfType<EnvironmentView>().FirstOrDefault(e => e.Factory == interpreter) : null;
+            if (select == null) {
+                envs.Dispatcher.InvokeAsync(() => SelectEnvAndExt(envs, interpreter, extension, retries - 1), DispatcherPriority.Background);
+                return;
+            }
+
+            var ext = select?.Extensions.FirstOrDefault(e => e != null && extension.IsEquivalentTo(e.GetType()));
+
+            envs.Environments.MoveCurrentTo(select);
+            if (ext != null) {
+                var exts = envs.Extensions;
+                if (exts != null && exts.Contains(ext)) {
+                    exts.MoveCurrentTo(ext);
+                    ((ext as IEnvironmentViewExtension)?.WpfObject as ICanFocus)?.Focus();
                 }
             }
         }
