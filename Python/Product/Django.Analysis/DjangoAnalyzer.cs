@@ -352,8 +352,9 @@ namespace Microsoft.PythonTools.Django.Analysis {
             IAnalysisSet urlNames = GetArg(args, keywordArgNames, "name", 0);
 
             string urlName = urlNames.First().GetConstantValueAsString();
+            string urlRegex = args.First().First().GetConstantValueAsString();
 
-            _urls.Add(new DjangoUrl(urlName));
+            _urls.Add(new DjangoUrl(urlName, urlRegex));
 
             return AnalysisSet.Empty;
         }

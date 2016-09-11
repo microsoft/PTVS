@@ -342,7 +342,7 @@ namespace DjangoTests {
                 },
                 new {
                     Got = ("url "),
-                    Expected = (DjangoBlock)new DjangoUrlBlock(new BlockParseInfo("url", " ", 0)),
+                    Expected = (DjangoBlock)new DjangoUrlBlock(new BlockParseInfo("url", " ", 0), Array.Empty<BlockClassification>()),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
                         new {
@@ -353,12 +353,23 @@ namespace DjangoTests {
                 },
                 new {
                     Got = ("url 'fob:oar-url' "),
-                    Expected = (DjangoBlock)new DjangoUrlBlock(new BlockParseInfo("url", " 'fob:oar-url' ", 0), new BlockClassification(new Span(4, 13), Classification.Identifier)),
+                    Expected = (DjangoBlock)new DjangoUrlBlock(new BlockParseInfo("url", " 'fob:oar-url' ", 0), new[] { new BlockClassification(new Span(4, 13), Classification.Identifier) }, "fob:oar-url"),
                     Context = TestCompletionContext.Simple,
                     Completions = new[] {
                         new {
                             Position = 18,
-                            Expected = new[] { "as", "fob", "oar" }
+                            Expected = new[] { "as", "fob", "oar", "param1=", "param2=" }
+                        }
+                    }
+                },
+                new {
+                    Got = ("url 'fob:oar-url' param2=fob "),
+                    Expected = (DjangoBlock)new DjangoUrlBlock(new BlockParseInfo("url", " 'fob:oar-url' param2=fob ", 0), new[] { new BlockClassification(new Span(4, 13), Classification.Identifier), new BlockClassification(new Span(18, 10), Classification.Identifier) }, "fob:oar-url", new[] { "param2" }),
+                    Context = TestCompletionContext.Simple,
+                    Completions = new[] {
+                        new {
+                            Position = 29,
+                            Expected = new[] { "as", "fob", "oar", "param1=" }
                         }
                     }
                 }
@@ -791,8 +802,8 @@ namespace DjangoTests {
         public DjangoUrl[] Urls {
             get {
                 return new[] {
-                    new DjangoUrl("fob:oar-url"),
-                    new DjangoUrl("cut:lower-url")
+                    new DjangoUrl("fob:oar-url", "^fob/(?P<param1>[0-9]+)/(?P<param2>[0-9]+)/([0-9]+)$"),
+                    new DjangoUrl("cut:lower-url", "^cut/$")
                 };
             }
         }
