@@ -320,7 +320,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 await RefreshTemplatesAsync(SearchTerm, _templateRefreshCancelTokenSource.Token);
             } catch (OperationCanceledException) {
             }
-            _templateRefreshCancelTokenSource = null;
         }
 
         private async Task RefreshTemplatesAsync(string searchTerm, CancellationToken ct) {
@@ -464,7 +463,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                         await AddFromSource(_installedSource, SearchTerm, KnownMonikers.TestSuite, Installed, CancellationToken.None);
                     } catch (OperationCanceledException) {
                     }
-                    _templateRefreshCancelTokenSource = null;
 
                     _templateLocalFolderPath = selection.ClonedPath;
 
@@ -620,7 +618,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     await AddFromSource(_githubSource, null, KnownMonikers.GitNoColor, GitHub, _templateRefreshCancelTokenSource.Token, continuationToken);
                 } catch (OperationCanceledException) {
                 }
-                _templateRefreshCancelTokenSource = null;
             }
         }
 
@@ -653,9 +650,9 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     ErrorDetails = ex.InnerException?.Message,
                 };
                 parent.Templates.Add(template);
+            } finally {
+                parent.Templates.Remove(loading);
             }
-
-            parent.Templates.Remove(loading);
         }
 
         private async Task RefreshContextAsync(TemplateViewModel selection) {
