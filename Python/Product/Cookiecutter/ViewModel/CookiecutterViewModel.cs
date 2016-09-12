@@ -60,6 +60,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private bool _isCreatingSuccess;
         private bool _isCreatingError;
         private TemplateViewModel _selectedTemplate;
+        private CancellationTokenSource _templateRefreshCancelTokenSource;
 
         private ITemplateSource _recommendedSource;
         private ITemplateSource _installedSource;
@@ -313,10 +314,16 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         }
 
         public async Task SearchAsync() {
-            await RefreshTemplatesAsync(SearchTerm);
+            _templateRefreshCancelTokenSource?.Cancel();
+            _templateRefreshCancelTokenSource = new CancellationTokenSource();
+            try {
+                await RefreshTemplatesAsync(SearchTerm, _templateRefreshCancelTokenSource.Token);
+            } catch (OperationCanceledException) {
+            }
+            _templateRefreshCancelTokenSource = null;
         }
 
-        private async Task RefreshTemplatesAsync(string searchTerm = null) {
+        private async Task RefreshTemplatesAsync(string searchTerm, CancellationToken ct) {
             Custom.Templates.Clear();
             Recommended.Templates.Clear();
             GitHub.Templates.Clear();
@@ -349,9 +356,9 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             SearchResults.Add(Recommended);
             SearchResults.Add(GitHub);
 
-            var recommendedTask = AddFromSource(_recommendedSource, searchTerm, KnownMonikers.RecommendedTest, Recommended);
-            var installedTask = AddFromSource(_installedSource, searchTerm, KnownMonikers.TestSuite, Installed);
-            var githubTask = AddFromSource(_githubSource, searchTerm, KnownMonikers.GitNoColor, GitHub);
+            var recommendedTask = AddFromSource(_recommendedSource, searchTerm, KnownMonikers.RecommendedTest, Recommended, ct);
+            var installedTask = AddFromSource(_installedSource, searchTerm, KnownMonikers.TestSuite, Installed, ct);
+            var githubTask = AddFromSource(_githubSource, searchTerm, KnownMonikers.GitNoColor, GitHub, ct);
 
             await Task.WhenAll(recommendedTask, installedTask, githubTask);
         }
@@ -449,8 +456,15 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
                     // We now have a new template installed, so reload that section of the results
                     _installedSource.InvalidateCache();
-                    Installed.Templates.Clear();
-                    await AddFromSource(_installedSource, SearchTerm, KnownMonikers.TestSuite, Installed);
+
+                    _templateRefreshCancelTokenSource?.Cancel();
+                    _templateRefreshCancelTokenSource = new CancellationTokenSource();
+                    try {
+                        Installed.Templates.Clear();
+                        await AddFromSource(_installedSource, SearchTerm, KnownMonikers.TestSuite, Installed, CancellationToken.None);
+                    } catch (OperationCanceledException) {
+                    }
+                    _templateRefreshCancelTokenSource = null;
 
                     _templateLocalFolderPath = selection.ClonedPath;
 
@@ -599,19 +613,26 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public async Task LoadMoreTemplates(string continuationToken) {
             var last = GitHub.Templates.LastOrDefault();
             if (last is ContinuationViewModel) {
-                GitHub.Templates.Remove(last);
-
-                await AddFromSource(_githubSource, null, KnownMonikers.GitNoColor, GitHub, continuationToken);
+                _templateRefreshCancelTokenSource?.Cancel();
+                _templateRefreshCancelTokenSource = new CancellationTokenSource();
+                try {
+                    GitHub.Templates.Remove(last);
+                    await AddFromSource(_githubSource, null, KnownMonikers.GitNoColor, GitHub, _templateRefreshCancelTokenSource.Token, continuationToken);
+                } catch (OperationCanceledException) {
+                }
+                _templateRefreshCancelTokenSource = null;
             }
         }
 
-        private async Task AddFromSource(ITemplateSource source, string searchTerm, VisualStudio.Imaging.Interop.ImageMoniker image, CategorizedViewModel parent, string continuationToken = null) {
+        private async Task AddFromSource(ITemplateSource source, string searchTerm, VisualStudio.Imaging.Interop.ImageMoniker image, CategorizedViewModel parent, CancellationToken ct, string continuationToken = null) {
             var loading = new LoadingViewModel();
             parent.Templates.Add(loading);
 
             try {
-                var result = await source.GetTemplatesAsync(searchTerm, continuationToken, CancellationToken.None);
+                var result = await source.GetTemplatesAsync(searchTerm, continuationToken, ct);
                 foreach (var t in result.Templates) {
+                    ct.ThrowIfCancellationRequested();
+
                     var vm = new TemplateViewModel();
                     vm.DisplayName = t.Name;
                     vm.Description = t.Description;
@@ -620,6 +641,8 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     vm.Image = image;
                     parent.Templates.Add(vm);
                 }
+
+                ct.ThrowIfCancellationRequested();
 
                 if (result.ContinuationToken != null) {
                     parent.Templates.Add(new ContinuationViewModel(result.ContinuationToken));
