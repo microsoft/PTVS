@@ -1,0 +1,6 @@
+default_context:
+    full_name: "Configured User"
+    author_name: "Configured Author"
+    email: "configured@email"
+    github_username: "configuredgithubuser"
+    open_source_license: "BSD license"
