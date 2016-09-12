@@ -22,28 +22,25 @@ import sys
 from cookiecutter.main import cookiecutter
 
 def main():
-    try:
-        context_json_path = sys.argv[1]
-        template_path = sys.argv[2]
-        output_path = sys.argv[3]
-        user_config_path = sys.argv[4]
-        user_config_path = user_config_path if os.path.isfile(user_config_path) else None
-        context = json.load(open(context_json_path, 'r'))
+    context_json_path = sys.argv[1]
+    template_path = sys.argv[2]
+    output_path = sys.argv[3]
+    user_config_path = sys.argv[4]
+    user_config_path = user_config_path if os.path.isfile(user_config_path) else None
+    context = json.load(open(context_json_path, 'r'))
 
-        logging.basicConfig(
-            format=u'%(levelname)s %(filename)s: %(message)s',
-            level=logging.DEBUG
-        )
+    logging.basicConfig(
+        format=u'%(levelname)s %(filename)s: %(message)s',
+        level=logging.DEBUG
+    )
 
-        cookiecutter(
-            template_path,
-            no_input=True,
-            extra_context=context,
-            output_dir=output_path,
-            config_file=user_config_path,
-        )
-    except Exception as error:
-        print(error)
+    cookiecutter(
+        template_path,
+        no_input=True,
+        extra_context=context,
+        output_dir=output_path,
+        config_file=user_config_path,
+    )
 
 if __name__ == "__main__":
     sys.exit(int(main() or 0))
