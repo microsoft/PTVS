@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.ComponentModel;
+using Microsoft.CookiecutterTools.Model;
 using Microsoft.VisualStudio.Imaging.Interop;
 
 namespace Microsoft.CookiecutterTools.ViewModel {
@@ -46,7 +47,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             get {
                 string owner;
                 string name;
-                ParseRepoOwnerAndName(RemoteUrl, out owner, out name);
+                ParseUtils.ParseGitHubRepoOwnerAndName(RemoteUrl, out owner, out name);
                 return name;
             }
         }
@@ -58,7 +59,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             get {
                 string owner;
                 string name;
-                ParseRepoOwnerAndName(RemoteUrl, out owner, out name);
+                ParseUtils.ParseGitHubRepoOwnerAndName(RemoteUrl, out owner, out name);
                 return owner;
             }
         }
@@ -70,7 +71,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             get {
                 string owner;
                 string name;
-                ParseRepoOwnerAndName(RemoteUrl, out owner, out name);
+                ParseUtils.ParseGitHubRepoOwnerAndName(RemoteUrl, out owner, out name);
                 if (!string.IsNullOrEmpty(owner) && !string.IsNullOrEmpty(name)) {
                     return owner + '/' + name;
                 }
@@ -154,26 +155,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Image)));
                 }
             }
-        }
-
-        private static bool ParseRepoOwnerAndName(string repoUrl, out string owner, out string name) {
-            owner = null;
-            name = null;
-
-            int index = repoUrl.LastIndexOf('/');
-            if (index < 0) {
-                return false;
-            }
-
-            name = repoUrl.Substring(index + 1);
-            repoUrl = repoUrl.Substring(0, index);
-            index = repoUrl.LastIndexOf('/');
-            if (index < 0) {
-                return false;
-            }
-
-            owner = repoUrl.Substring(index + 1);
-            return true;
         }
     }
 }

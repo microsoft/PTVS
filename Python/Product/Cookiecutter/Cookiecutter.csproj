@@ -148,6 +148,7 @@
     <Compile Include="Model\GitClient.cs" />
     <Compile Include="Model\ProcessOutputResult.cs" />
     <Compile Include="Model\ProcessException.cs" />
+    <Compile Include="Model\ParseUtils.cs" />
     <Compile Include="Model\TemplateEnumerationException.cs" />
     <Compile Include="Model\IGitClient.cs" />
     <Compile Include="Model\LocalTemplateSource.cs" />

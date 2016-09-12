@@ -67,7 +67,7 @@ namespace Microsoft.CookiecutterTools.Model {
 
                     string owner;
                     string name;
-                    if (ParseRepoOwnerAndName(entry, out owner, out name)) {
+                    if (ParseUtils.ParseGitHubRepoOwnerAndName(entry, out owner, out name)) {
                         template.Name = owner + "/" + name;
                     } else {
                         template.Name = entry;
@@ -78,26 +78,6 @@ namespace Microsoft.CookiecutterTools.Model {
             } catch (WebException ex) {
                 throw new TemplateEnumerationException(Strings.FeedLoadError, ex);
             }
-        }
-
-        private static bool ParseRepoOwnerAndName(string repoUrl, out string owner, out string name) {
-            owner = null;
-            name = null;
-
-            int index = repoUrl.LastIndexOf('/');
-            if (index < 0) {
-                return false;
-            }
-
-            name = repoUrl.Substring(index + 1);
-            repoUrl = repoUrl.Substring(0, index);
-            index = repoUrl.LastIndexOf('/');
-            if (index < 0) {
-                return false;
-            }
-
-            owner = repoUrl.Substring(index + 1);
-            return true;
         }
     }
 }
