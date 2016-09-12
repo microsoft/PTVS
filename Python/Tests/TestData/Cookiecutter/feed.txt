@@ -1,0 +1,6 @@
+﻿https://github.com/brettcannon/python-azure-web-app-cookiecutter
+https://github.com/pydanny/cookiecutter-django
+https://github.com/sloria/cookiecutter-flask
+https://github.com/pydanny/cookiecutter-djangopackage
+https://github.com/marcofucci/cookiecutter-simple-django
+https://github.com/agconti/cookiecutter-django-rest

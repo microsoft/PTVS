@@ -1,0 +1,24 @@
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Id="7B469DDE-BFCC-4975-9C6E-154583ED3672" Version="3.0" Language="en-US" Publisher="Microsoft Corporation" />
+    <DisplayName>Cookiecutter Tools</DisplayName>
+    <Description xml:space="preserve">Provides cookiecutter integration.</Description>
+    <MoreInfo>http://aka.ms/ptvs</MoreInfo>
+    <License>Python Tools for VS License.rtf</License>
+    <GettingStartedGuide>http://aka.ms/ptvstutorial</GettingStartedGuide>
+    <Icon>PythonProject.ico</Icon>
+    <PreviewImage>PythonProjectBig.ico</PreviewImage>
+  </Metadata>
+  <Installation InstalledByMsi="true">
+    <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[14.0,16.0)" />
+    <InstallationTarget Id="Microsoft.VisualStudio.VWDExpress" Version="14.0" />
+  </Installation>
+  <Dependencies>
+    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.6" />
+  </Dependencies>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+    <Asset Type="Microsoft.VisualStudio.Assembly" Path="|%CurrentProject%;_GetTargetPath|" AssemblyName="|%CurrentProject%;_GetAssemblyName|" />
+    <Asset Type="Microsoft.VisualStudio.MefComponent" Path="|%CurrentProject%;_GetTargetPath|" />
+  </Assets>
+</PackageManifest>
