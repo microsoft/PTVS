@@ -51,6 +51,7 @@
     
     <ProjectFile Include="Uwp\Uwp.csproj" Condition="'$(IncludeUwp)' == 'True'"/>
     
+    <ProjectFile Include="Core\Core.csproj" />
     <ProjectFile Include="..\Templates\Templates.csproj" />
   </ItemGroup>
 
