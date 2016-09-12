@@ -90,15 +90,19 @@ namespace Microsoft.PythonTools.Interpreter {
                 // switch to invalid after we've checked.
                 _isValid = PythonTypeDatabase.IsDatabaseVersionCurrent(DatabasePath);
                 _isCheckingDatabase = true;
-#if DEBUG
-                var creationStack = new StackTrace(true).ToString();
-                Task.Delay(1000).ContinueWith(t => {
-                    Debug.Assert(_hasEverCheckedDatabase, "Database check was not triggered", creationStack);
-                });
-#endif
 
                 _verWatcher = CreateDatabaseVerWatcher();
                 _verDirWatcher = CreateDatabaseDirectoryWatcher();
+#if DEBUG
+                var creationStack = new StackTrace(true).ToString();
+                Task.Delay(1000).ContinueWith(t => {
+                    Debug.Assert(
+                        _hasEverCheckedDatabase,
+                        "Database check was not triggered for {0}".FormatUI(Configuration.Id),
+                        creationStack
+                    );
+                });
+#endif
             } else {
                 // Assume the database is valid
                 _isValid = true;

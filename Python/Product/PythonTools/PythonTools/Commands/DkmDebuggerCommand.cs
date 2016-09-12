@@ -60,7 +60,12 @@ namespace Microsoft.PythonTools.Commands {
                         }
                     }
 
-                    var engineSettings = DkmEngineSettings.FindSettings(DkmEngineId.NativeEng);
+                    DkmEngineSettings engineSettings = null;
+                    try {
+                        engineSettings = DkmEngineSettings.FindSettings(DkmEngineId.NativeEng);
+                    } catch (ObjectDisposedException) {
+                    }
+
                     if (engineSettings == null) {
                         // Native debugger is not loaded at all, so this is either pure Python debugging or something else entirely.
                         return;

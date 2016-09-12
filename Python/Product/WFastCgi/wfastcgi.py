@@ -866,23 +866,25 @@ Ensure your user has sufficient privileges and try again.''' % args, file=sys.st
         return ex.returncode
 
 def enable():
+    quoted_file = '"' + __file__ + '"' if ' ' in __file__ else __file__    
     res = _run_appcmd([
         "set", "config", "/section:system.webServer/fastCGI",
-        "/+[fullPath='" + sys.executable + "', arguments='" + __file__ + "', signalBeforeTerminateSeconds='30']"
+        "/+[fullPath='" + sys.executable + "', arguments='" + quoted_file + "', signalBeforeTerminateSeconds='30']"
     ])
     
     if res == 0:
-        print('"%s|%s" can now be used as a FastCGI script processor' % (sys.executable, __file__))
+        print('"%s|%s" can now be used as a FastCGI script processor' % (sys.executable, quoted_file))
     return res
 
 def disable():
+    quoted_file = '"' + __file__ + '"' if ' ' in __file__ else __file__    
     res = _run_appcmd([
         "set", "config", "/section:system.webServer/fastCGI",
-        "/-[fullPath='" + sys.executable + "', arguments='" + __file__ + "', signalBeforeTerminateSeconds='30']"
+        "/-[fullPath='" + sys.executable + "', arguments='" + quoted_file + "', signalBeforeTerminateSeconds='30']"
     ])
 
     if res == 0:
-        print('"%s|%s" is no longer registered for use with FastCGI' % (sys.executable, __file__))
+        print('"%s|%s" is no longer registered for use with FastCGI' % (sys.executable, quoted_file))
     return res
 
 if __name__ == '__main__':

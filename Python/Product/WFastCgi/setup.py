@@ -6,7 +6,7 @@ with open(join(split(__file__)[0], 'README.rst')) as f:
 
 setup(
     name='wfastcgi',
-    version='2.2',
+    version='2.2.1',
 
     description='An IIS-Python bridge based on WSGI and FastCGI.',
     long_description=long_description,
@@ -27,6 +27,7 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Internet',
         'Topic :: Internet :: WWW/HTTP',
         'Topic :: Internet :: WWW/HTTP :: WSGI',

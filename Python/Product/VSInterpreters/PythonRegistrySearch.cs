@@ -184,7 +184,7 @@ namespace Microsoft.PythonTools.Interpreter {
             var description = tagKey.GetValue("DisplayName") as string;
             if (string.IsNullOrEmpty(description)) {
                 if (pythonCoreCompatibility) {
-                    description = "Python {0} {1}".FormatUI(arch, version);
+                    description = "Python {0}{1: ()}".FormatUI(version, arch);
                 } else {
                     description = "{0} {1}".FormatUI(company, tag);
                 }

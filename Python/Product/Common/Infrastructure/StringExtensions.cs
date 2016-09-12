@@ -79,5 +79,19 @@ namespace Microsoft.PythonTools.Infrastructure {
                 (bool.TryParse(str, out asBool) && asBool)
             );
         }
+
+        public static string TrimEndNewline(this string str) {
+            if (string.IsNullOrEmpty(str)) {
+                return string.Empty;
+            }
+
+            if (str[str.Length - 1] == '\n') {
+                if (str.Length >= 2 && str[str.Length - 2] == '\r') {
+                    return str.Remove(str.Length - 2);
+                }
+                return str.Remove(str.Length - 1);
+            }
+            return str;
+        }
     }
 }
