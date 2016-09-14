@@ -98,8 +98,8 @@
         </Strings>
       </Button>
 
-      <!--<Button guid="guidCookiecutterCmdSet" id="cmdidAddFromCookiecutter" priority="0x0100" type="Button">
-        <Parent guid="guidSHLMainMenu" id="IDG_VS_PROJ_ADD"/>
+      <Button guid="guidCookiecutterCmdSet" id="cmdidAddFromCookiecutter" priority="0x0600" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
         <Icon guid="ImageCatalogGuid" id="DockPanel"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
@@ -107,7 +107,7 @@
           <ToolTipText>Adds files using a Cookiecutter template.</ToolTipText>
           <LocCanonicalName>.AddFromCookiecutter</LocCanonicalName>
         </Strings>
-      </Button>-->
+      </Button>
 
       <Button guid="guidCookiecutterCmdSet" id="cmdidHome" priority="0x0100" type="Button">
         <Icon guid="ImageCatalogGuid" id="Home"/>
@@ -164,9 +164,6 @@
   </Commands>
 
   <CommandPlacements>
-    <!--<CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidAddFromCookiecutter" priority="0x100">
-      <Parent guid="guidSHLMainMenu" id="IDG_VS_MNUCTRL_NEWITM"/>
-    </CommandPlacement>-->
     <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidCookiecutterExplorer" priority="0x100">
       <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
     </CommandPlacement>
