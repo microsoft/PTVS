@@ -200,7 +200,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Please enter a valid output folder path..
+        ///   Looks up a localized string similar to Please enter a valid output folder in the &apos;Create To&apos; field..
         /// </summary>
         internal static string InvalidOutputFolder {
             get {
