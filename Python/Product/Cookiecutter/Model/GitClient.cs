@@ -169,6 +169,7 @@ namespace Microsoft.CookiecutterTools.Model {
             try {
                 ProcessStartInfo info = new ProcessStartInfo("where", executable);
                 info.UseShellExecute = false;
+                info.CreateNoWindow = true;
                 var process = Process.Start(info);
                 process.WaitForExit();
                 return process.ExitCode == 0;
