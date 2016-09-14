@@ -77,6 +77,7 @@ namespace Microsoft.PythonTools.Workspace {
             var registry = serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
 
             var settings = debugLaunchActionContext.LaunchConfiguration;
+            var debug = !settings.GetValue("noDebug", false);
             var path = settings.GetValue(InterpreterKey, string.Empty);
             InterpreterConfiguration config = null;
 
@@ -123,7 +124,7 @@ namespace Microsoft.PythonTools.Workspace {
                 launcher = new PythonWebLauncher(serviceProvider, launchConfig, launchConfig, launchConfig);
             }
 
-            (launcher ?? new DefaultPythonLauncher(serviceProvider, launchConfig)).LaunchProject(true);
+            (launcher ?? new DefaultPythonLauncher(serviceProvider, launchConfig)).LaunchProject(debug);
         }
 
         public bool SupportsContext(string filePath) {
