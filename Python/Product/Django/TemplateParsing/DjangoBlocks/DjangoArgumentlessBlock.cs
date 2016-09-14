@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -15,30 +15,22 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
-using Microsoft.PythonTools.Django.Analysis;
-using Microsoft.PythonTools.Interpreter;
 
-namespace Microsoft.PythonTools.Django.TemplateParsing {
+namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks {
     /// <summary>
-    /// Provides context for returning the available variables/filters in a template file.
-    /// 
-    /// This is implemented as an interface so we can mock it out for the purposes of our tests
-    /// and not need to do a fully analysis of the Django library.
+    /// Handles blocks which don't take any arguments.  Includes debug, csrf, comment
     /// </summary>
-    interface IDjangoCompletionContext {
-        string[] Variables {
-            get;
+    class DjangoArgumentlessBlock : DjangoBlock {
+        public DjangoArgumentlessBlock(BlockParseInfo parseInfo)
+            : base(parseInfo) {
         }
 
-        Dictionary<string, TagInfo> Filters {
-            get;
+        public static DjangoBlock Parse(BlockParseInfo parseInfo) {
+            return new DjangoArgumentlessBlock(parseInfo);
         }
 
-        DjangoUrl[] Urls
-        {
-            get;
+        public override IEnumerable<CompletionInfo> GetCompletions(IDjangoCompletionContext context, int position) {
+            return new CompletionInfo[0];
         }
-
-        Dictionary<string, PythonMemberType> GetMembers(string name);
     }
 }

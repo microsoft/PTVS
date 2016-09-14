@@ -21,7 +21,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
@@ -151,7 +150,7 @@ namespace Microsoft.PythonTools.Django.Project {
             }
         }
 
-        private static void RegisterExtension(PythonTools.Intellisense.VsProjectAnalyzer newAnalyzer) {
+        private static void RegisterExtension(VsProjectAnalyzer newAnalyzer) {
             newAnalyzer.RegisterExtension(typeof(DjangoAnalyzer).Assembly.CodeBase);
         }
 

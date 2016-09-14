@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
         internal const string Name = "django";
         internal readonly Dictionary<string, TagInfo> _tags = new Dictionary<string, TagInfo>();
         internal readonly Dictionary<string, TagInfo> _filters = new Dictionary<string, TagInfo>();
+        internal readonly ISet<DjangoUrl> _urls = new SortedSet<DjangoUrl>();
         private readonly HashSet<IPythonProjectEntry> _hookedEntries = new HashSet<IPythonProjectEntry>();
         internal readonly Dictionary<string, TemplateVariables> _templateFiles = new Dictionary<string, TemplateVariables>(StringComparer.OrdinalIgnoreCase);
         private ConditionalWeakTable<Node, ContextMarker> _contextTable = new ConditionalWeakTable<Node, ContextMarker>();
@@ -70,6 +71,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
             public const string GetTags = "getTags";
             public const string GetVariables = "getVariables";
             public const string GetFilters = "getFilters";
+            public const string GetUrls = "getUrls";
             public const string GetMembers = "getMembers";
 
         }
@@ -94,6 +96,8 @@ namespace Microsoft.PythonTools.Django.Analysis {
                     }
 
                     return serializer.Serialize(res);
+                case Commands.GetUrls:
+                    return serializer.Serialize(_urls.ToArray());
                 case Commands.GetMembers:
                     string[] args = serializer.Deserialize<string[]>(body);
                     var file = args[0];
@@ -150,6 +154,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
 
             _tags.Clear();
             _filters.Clear();
+            _urls.Clear();
             foreach (var entry in _hookedEntries) {
                 entry.OnNewParseTree -= OnNewParseTree;
             }
@@ -214,6 +219,9 @@ namespace Microsoft.PythonTools.Django.Analysis {
             analyzer.SpecializeFunction("django.views.generic.DetailView", "as_view", DetailViewProcessor, true);
             analyzer.SpecializeFunction("django.views.generic.list.ListView", "as_view", ListViewProcessor, true);
             analyzer.SpecializeFunction("django.views.generic.ListView", "as_view", ListViewProcessor, true);
+
+            // Urls specializers
+            analyzer.SpecializeFunction("django.conf.urls", "url", UrlProcessor, true);
         }
 
         private IAnalysisSet ParseProcessor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
@@ -333,6 +341,22 @@ namespace Microsoft.PythonTools.Django.Analysis {
                     }
                 }
             }
+        }
+
+        private IAnalysisSet UrlProcessor(Node node, AnalysisUnit unit, IAnalysisSet[] args, NameExpression[] keywordArgNames) {
+            // No completion if the url has no name (reverse matching not possible)
+            if (keywordArgNames.Length == 0) {
+                return AnalysisSet.Empty;
+            }
+
+            IAnalysisSet urlNames = GetArg(args, keywordArgNames, "name", 0);
+
+            string urlName = urlNames.First().GetConstantValueAsString();
+            string urlRegex = args.First().First().GetConstantValueAsString();
+
+            _urls.Add(new DjangoUrl(urlName, urlRegex));
+
+            return AnalysisSet.Empty;
         }
 
         private static void GetStringArguments(HashSet<string> arguments, IAnalysisSet arg) {
