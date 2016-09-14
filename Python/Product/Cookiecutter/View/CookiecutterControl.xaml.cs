@@ -62,7 +62,7 @@ namespace Microsoft.CookiecutterTools.View {
             );
 
             ViewModel.UserConfigFilePath = CookiecutterViewModel.GetUserConfigPath();
-            ViewModel.OutputFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            ViewModel.OutputFolderPath = string.Empty; // leaving this empty for now, force user to enter one
             ViewModel.SearchAsync().DoNotWait();
             ViewModel.ContextLoaded += ViewModel_ContextLoaded;
             ViewModel.HomeClicked += ViewModel_HomeClicked;

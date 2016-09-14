@@ -56,7 +56,7 @@ namespace Microsoft.CookiecutterTools.View {
 
         private void CreateFiles_Executed(object sender, ExecutedRoutedEventArgs e) {
             if (!PathUtils.IsValidPath(ViewModel.OutputFolderPath)) {
-                MessageBox.Show(Strings.InvalidOutputFolder, Strings.ProductTitle, MessageBoxButton.OKCancel, MessageBoxImage.Error);
+                MessageBox.Show(Strings.InvalidOutputFolder, Strings.ProductTitle, MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
 
