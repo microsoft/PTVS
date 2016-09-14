@@ -18,6 +18,9 @@
     <ReleaseFile Include="$(SetupOutputPath)swix\*.vsix;$(SetupOutputPath)swix\*.vsman;$(SetupOutputPath)swix\*.ps1">
       <Name>%(Filename)%(Extension)</Name>
     </ReleaseFile>
+    <ReleaseFile Include="swix\install.ps1">
+      <Name>InstallIntoDev15.ps1</Name>
+    </ReleaseFile>
   </ItemGroup>
 
   <Target Name="ListFiles">
