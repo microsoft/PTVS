@@ -34,10 +34,9 @@
     <AssemblyName>Microsoft.PythonTools</AssemblyName>
     <ProjectGuid>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</ProjectGuid>
     <UseVSSDK>true</UseVSSDK>
-    <CreateVsixContainer>true</CreateVsixContainer>
-    <StartAction>Program</StartAction>
-    <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
-    <StartArguments>/rootSuffix Exp /Log</StartArguments>
+    <CreateVsixContainer>false</CreateVsixContainer>
+    <CopyVsixManifestToOutput>false</CopyVsixManifestToOutput>
+    <DeployExtension>false</DeployExtension>
     <DefineConstants>$(DefineConstants);$(SignedSym);SHAREDPROJECT_OLESERVICEPROVIDER</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -106,12 +105,6 @@
       <Name>Microsoft.PythonTools.VSCommon</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
-    <ProjectReference2 Include="..\ImportWizard\ImportWizard.csproj" />
-    <ProjectReference2 Include="..\ProjectWizards\ProjectWizards.csproj" />
-    <ProjectReference2 Include="..\TestAdapter\TestAdapter.csproj" />
-    <ProjectReference2 Include="..\TestAdapter.Analysis\TestAdapter.Analysis.csproj" />
-    <ProjectReference2 Include="..\TestAdapter.Executor\TestAdapter.Executor.csproj" />
-    <ProjectReference2 Include="..\XamlDesignerSupport\XamlDesignerSupport.csproj" />
     <Reference Include="Microsoft.PythonTools.InteractiveWindow" />
     <Reference Include="Microsoft.PythonTools.VsInteractiveWindow" />
     <Reference Include="Microsoft.VisualStudio.Threading, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -699,25 +692,6 @@
     <None Include="Theme\Microsoft.PythonTools.theme.v15.0.pkgdef" />
     <None Include="Theme\dark.vstheme" />
     <None Include="Theme\make_theme_pkgdef.py" />
-    <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="$(BuildRoot)\Python\References\Dev$(VSTarget)\Microsoft.PythonTools.InteractiveWindow.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="$(BuildRoot)\Python\References\Dev$(VSTarget)\Microsoft.PythonTools.VsInteractiveWindow.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="Microsoft.PythonTools.VsInteractiveWindow.pkgdef">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="NoInterpreters.mht">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -1054,4 +1028,5 @@
   <Target Name="_DeleteAfterCreatePkgDef" AfterTargets="GeneratePkgDef">
     <Delete Files="@(_CopiedForCreatePkgdef)" />
   </Target>-->
+  <!--<Target Name="DetokenizeVsixManifestFile" />-->
 </Project>

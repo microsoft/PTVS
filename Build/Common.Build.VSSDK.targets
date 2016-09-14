@@ -128,7 +128,6 @@
     <Copy SourceFiles="@(_ThemePkgDef)"
           DestinationFiles="@(_ThemePkgDef->'%(IntermediateFile)')">
         <Output TaskParameter="CopiedFiles" ItemName="_CopiedThemePkgDef" />
-        <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
     </Copy>
     <ItemGroup>
       <Content Include="@(_ThemePkgDef->'%(IntermediateFile)')">

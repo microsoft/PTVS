@@ -16,27 +16,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Composition;
 using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Web;
-using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger;
-using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -50,8 +37,6 @@ namespace Microsoft.PythonTools.Project.Web {
     /// appropriate page into the users web browser.
     /// </summary>
     class PythonWebLauncher : IProjectLauncher {
-        private int? _testServerPort;
-
         public const string RunWebServerCommand = "PythonRunWebServerCommand";
         public const string DebugWebServerCommand = "PythonDebugWebServerCommand";
 
@@ -96,7 +81,7 @@ namespace Microsoft.PythonTools.Project.Web {
 
             Uri url;
             int port;
-            GetFullUrl(config, out url, out port);
+            GetFullUrl(_serviceProvider, config, out url, out port);
 
             var env = new Dictionary<string, string> { { "SERVER_PORT", port.ToString() } };
             if (url != null) {
@@ -108,15 +93,9 @@ namespace Microsoft.PythonTools.Project.Web {
             if (debug) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 1);
 
+                config.LaunchOptions[PythonConstants.WebBrowserUrlSetting] = url.AbsoluteUri;
                 using (var dsi = DebugLaunchHelper.CreateDebugTargetInfo(_serviceProvider, config)) {
                     dsi.Launch();
-                }
-
-                var debugger = (IVsDebugger)_serviceProvider.GetService(typeof(SVsShellDebugger));
-                if (url != null && debugger != null) {
-                    StartBrowser(url.AbsoluteUri, () => !IsDebugging(_serviceProvider, debugger))
-                        .HandleAllExceptions(_serviceProvider, GetType())
-                        .DoNotWait();
                 }
             } else {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
@@ -142,7 +121,7 @@ namespace Microsoft.PythonTools.Project.Web {
 
         private Task StartBrowser(string url, Func<bool> shortCircuitPredicate) {
             Uri uri;
-            if (!String.IsNullOrWhiteSpace(url) && Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri)) {
+            if (!string.IsNullOrWhiteSpace(url) && Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri)) {
                 var tcs = new TaskCompletionSource<object>();
 
                 OnPortOpenedHandler.CreateHandler(
@@ -180,68 +159,50 @@ namespace Microsoft.PythonTools.Project.Web {
 
         #endregion
 
-        private void GetFullUrl(LaunchConfiguration config, out Uri uri, out int port) {
-            int p;
-            if (!int.TryParse(config.GetLaunchOption(PythonConstants.WebBrowserPortSetting) ?? "", out p)) {
-                p = TestServerPort;
-            }
-            port = p;
-
+        internal static void GetFullUrl(IServiceProvider provider, LaunchConfiguration config, out Uri uri, out int port) {
             var host = config.GetLaunchOption(PythonConstants.WebBrowserUrlSetting);
             if (string.IsNullOrEmpty(host)) {
                 uri = null;
+                port = 0;
                 return;
             }
+
             try {
-                uri = GetFullUrl(host, p);
+                UriBuilder builder;
+                if (Uri.TryCreate(host, UriKind.Absolute, out uri)) {
+                    builder = new UriBuilder(uri);
+                } else {
+                    builder = new UriBuilder();
+                    builder.Scheme = Uri.UriSchemeHttp;
+                    builder.Host = "localhost";
+                    builder.Path = host;
+                }
+
+                int p;
+                if (int.TryParse(config.GetLaunchOption(PythonConstants.WebBrowserPortSetting) ?? "", out p)) {
+                    builder.Port = p;
+                } else if (builder.Port < 0 || (builder.Uri.IsDefaultPort && !host.Contains(":{0}".FormatInvariant(builder.Port)))) {
+                    builder.Port = GetTestServerPort();
+                }
+
+                uri = builder.Uri;
+                port = uri.Port;
             } catch (UriFormatException) {
-                var output = OutputWindowRedirector.GetGeneral(_serviceProvider);
+                if (provider == null) {
+                    throw;
+                }
+                var output = OutputWindowRedirector.GetGeneral(provider);
                 output.WriteErrorLine(Strings.ErrorInvalidLaunchUrl.FormatUI(host));
                 output.ShowAndActivate();
                 uri = null;
+                port = 0;
             }
         }
 
-        internal static Uri GetFullUrl(string host, int port) {
-            UriBuilder builder;
-            Uri uri;
-            if (Uri.TryCreate(host, UriKind.Absolute, out uri)) {
-                builder = new UriBuilder(uri);
-            } else {
-                builder = new UriBuilder();
-                builder.Scheme = Uri.UriSchemeHttp;
-                builder.Host = "localhost";
-                builder.Path = host;
-            }
-
-            builder.Port = port;
-
-            return builder.Uri;
-        }
-
-        private string TestServerPortString {
-            get {
-                if (!_testServerPort.HasValue) {
-                    _testServerPort = GetFreePort();
-                }
-                return _testServerPort.Value.ToString(CultureInfo.InvariantCulture);
-            }
-        }
-
-        private int TestServerPort {
-            get {
-                if (!_testServerPort.HasValue) {
-                    _testServerPort = GetFreePort();
-                }
-                return _testServerPort.Value;
-            }
-        }
-
-        private static int GetFreePort() {
-            return Enumerable.Range(new Random().Next(49152, 65536), 60000).Except(
-                from connection in IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections()
-                select connection.LocalEndPoint.Port
-            ).First();
+        private static int GetTestServerPort() {
+            return Enumerable.Range(new Random().Next(49152, 65536), 60000)
+                .Except(IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections().Select(c => c.LocalEndPoint.Port))
+                .First();
         }
     }
 }

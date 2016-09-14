@@ -656,21 +656,27 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </summary>
         public static async Task<IList<PythonLibraryPath>> GetDatabaseSearchPathsAsync(IPythonInterpreterFactory factory) {
             var dbPath = (factory as PythonInterpreterFactoryWithDatabase)?.DatabasePath;
-            if (!string.IsNullOrEmpty(dbPath)) {
-                var paths = GetCachedDatabaseSearchPaths(dbPath);
-                if (paths != null) {
-                    return paths;
-                }
-            }
-
-            try {
-                var paths = await GetUncachedDatabaseSearchPathsAsync(factory.Configuration.InterpreterPath);
+            for (int retries = 5; retries > 0; --retries) {
                 if (!string.IsNullOrEmpty(dbPath)) {
-                    WriteDatabaseSearchPaths(dbPath, paths);
+                    var paths = GetCachedDatabaseSearchPaths(dbPath);
+                    if (paths != null) {
+                        return paths;
+                    }
                 }
-                return paths;
-            } catch (InvalidOperationException) {
-                // Failed to get paths
+
+                try {
+                    var paths = await GetUncachedDatabaseSearchPathsAsync(factory.Configuration.InterpreterPath);
+                    if (!string.IsNullOrEmpty(dbPath)) {
+                        WriteDatabaseSearchPaths(dbPath, paths);
+                    }
+                    return paths;
+                } catch (InvalidOperationException) {
+                    // Failed to get paths
+                    break;
+                } catch (IOException) {
+                    // Failed to write paths - sleep and then loop
+                    Thread.Sleep(50);
+                }
             }
 
             var ospy = PathUtils.FindFile(factory.Configuration.PrefixPath, "os.py", firstCheck: new[] { "Lib" });
