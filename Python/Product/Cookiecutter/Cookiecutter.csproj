@@ -131,6 +131,8 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\AddFromCookiecutterCommand.cs" />
+    <Compile Include="Commands\CreateFromCookiecutterCommand.cs" />
     <Compile Include="Commands\DeleteInstalledTemplateCommand.cs" />
     <Compile Include="Commands\GitHubHomeCommand.cs" />
     <Compile Include="Commands\RunCommand.cs" />
@@ -201,7 +203,7 @@
     <Compile Include="Model\GitHubClient.cs" />
     <Compile Include="Model\ICookiecutterClient.cs" />
     <Compile Include="Model\IGitHubClient.cs" />
-    <Compile Include="Commands\OpenCookiecutterCommand.cs" />
+    <Compile Include="Commands\CookiecutterExplorerCommand.cs" />
     <Compile Include="Strings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

@@ -21,8 +21,8 @@ namespace Microsoft.CookiecutterTools.Commands {
     /// <summary>
     /// Provides the command for opening the cookiecutter window.
     /// </summary>
-    class OpenCookiecutterCommand : Command {
-        public OpenCookiecutterCommand() {
+    class AddFromCookiecutterCommand : Command {
+        public AddFromCookiecutterCommand() {
         }
 
         public override void DoCommand(object sender, EventArgs args) {
@@ -31,12 +31,13 @@ namespace Microsoft.CookiecutterTools.Commands {
 
         public string Description {
             get {
-                return "Cookiecutter";
+                // Not used
+                return string.Empty;
             }
         }
 
         public override int CommandId {
-            get { return (int)PackageIds.cmdidCookiecutter; }
+            get { return (int)PackageIds.cmdidAddFromCookiecutter; }
         }
     }
 }
