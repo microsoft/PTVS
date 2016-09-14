@@ -111,13 +111,6 @@ namespace Microsoft.PythonTools.Project.Web {
                 using (var dsi = DebugLaunchHelper.CreateDebugTargetInfo(_serviceProvider, config)) {
                     dsi.Launch();
                 }
-
-                var debugger = (IVsDebugger)_serviceProvider.GetService(typeof(SVsShellDebugger));
-                if (url != null && debugger != null) {
-                    StartBrowser(url.AbsoluteUri, () => !IsDebugging(_serviceProvider, debugger))
-                        .HandleAllExceptions(_serviceProvider, GetType())
-                        .DoNotWait();
-                }
             } else {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
 
