@@ -83,17 +83,10 @@ namespace Microsoft.CookiecutterTools {
 
             UIThread.EnsureService(this);
 
-            // Add our command handlers for menu (commands must exist in the .vsct file)
-            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (null != mcs) {
-                // Create the command for the menu item.
-                //CommandID menuCommandID = new CommandID(GuidList.guidDjangoCmdSet, (int)PkgCmdIDList.cmdidGotoTemplateSource);
-                //MenuCommand menuItem = new MenuCommand(GotoTemplateSourceCode, menuCommandID);
-                //mcs.AddCommand(menuItem);
-            }
-
             RegisterCommands(new Command[] {
-                new OpenCookiecutterCommand(),
+                new CookiecutterExplorerCommand(),
+                new CreateFromCookiecutterCommand(),
+                new AddFromCookiecutterCommand(),
             }, PackageGuids.guidCookiecutterCmdSet);
         }
 

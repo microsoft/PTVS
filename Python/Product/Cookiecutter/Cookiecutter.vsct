@@ -76,16 +76,38 @@
     </Groups>
 
     <Buttons>
-      <Button guid="guidCookiecutterCmdSet" id="cmdidCookiecutter" priority="0x0100" type="Button">
-        <Parent guid="guidSHLMainMenu" id="IDG_VS_WNDO_OTRWNDWS1"/>
+      <Button guid="guidCookiecutterCmdSet" id="cmdidCookiecutterExplorer" priority="0x0900" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_VIEW_ORG_WINDOWS"/>
         <Icon guid="ImageCatalogGuid" id="DockPanel"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
-          <ButtonText>&amp;Cookiecutter</ButtonText>
-          <ToolTipText>Cookiecutter</ToolTipText>
-          <LocCanonicalName>.Cookiecutter</LocCanonicalName>
+          <ButtonText>&amp;Cookiecutter Explorer</ButtonText>
+          <ToolTipText>Opens the Cookiecutter Explorer window.</ToolTipText>
+          <LocCanonicalName>.CookiecutterExplorer</LocCanonicalName>
         </Strings>
       </Button>
+
+      <Button guid="guidCookiecutterCmdSet" id="cmdidCreateFromCookiecutter" priority="0x0200" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_FILE_NEW_CASCADE"/>
+        <Icon guid="ImageCatalogGuid" id="DockPanel"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Create From &amp;Cookiecutter</ButtonText>
+          <ToolTipText>Creates files using a Cookiecutter template.</ToolTipText>
+          <LocCanonicalName>.CreateFromCookiecutter</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <!--<Button guid="guidCookiecutterCmdSet" id="cmdidAddFromCookiecutter" priority="0x0100" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_PROJ_ADD"/>
+        <Icon guid="ImageCatalogGuid" id="DockPanel"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Add From &amp;Cookiecutter</ButtonText>
+          <ToolTipText>Adds files using a Cookiecutter template.</ToolTipText>
+          <LocCanonicalName>.AddFromCookiecutter</LocCanonicalName>
+        </Strings>
+      </Button>-->
 
       <Button guid="guidCookiecutterCmdSet" id="cmdidHome" priority="0x0100" type="Button">
         <Icon guid="ImageCatalogGuid" id="Home"/>
@@ -142,6 +164,12 @@
   </Commands>
 
   <CommandPlacements>
+    <!--<CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidAddFromCookiecutter" priority="0x100">
+      <Parent guid="guidSHLMainMenu" id="IDG_VS_MNUCTRL_NEWITM"/>
+    </CommandPlacement>-->
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidCookiecutterExplorer" priority="0x100">
+      <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
+    </CommandPlacement>
     <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidHome" priority="0x100">
       <Parent guid="guidCookiecutterCmdSet" id="ToolbarNavGroup"/>
     </CommandPlacement>
@@ -206,12 +234,14 @@
     <!-- This is the guid used to group the menu commands together -->
     <GuidSymbol name="guidCookiecutterCmdSet" value="{6C1555D3-B9B7-4D39-B657-1A35A0F3C461}">
       <!-- Commands -->
-      <IDSymbol name="cmdidCookiecutter" value ="0x1001"/>
+      <IDSymbol name="cmdidCookiecutterExplorer" value ="0x1001"/>
       <IDSymbol name="cmdidHome" value="0x1002" />
       <IDSymbol name="cmdidRun" value="0x1003" />
       <IDSymbol name="cmdidLinkGitHubHome" value="0x1004" />
       <IDSymbol name="cmdidLinkGitHubIssues" value="0x1005" />
       <IDSymbol name="cmdidLinkGitHubWiki" value="0x1006" />
+      <IDSymbol name="cmdidCreateFromCookiecutter" value ="0x1007"/>
+      <IDSymbol name="cmdidAddFromCookiecutter" value ="0x1008"/>
 
       <!-- Context Menus -->
       <IDSymbol name="ContextMenu" value="101"/>
@@ -224,6 +254,9 @@
       <IDSymbol name="ToolbarLinksGroup" value="0x3001" />
       <IDSymbol name="ContextNavGroup" value="0x3002" />
       <IDSymbol name="ContextLinksGroup" value="0x3003" />
+    </GuidSymbol>
+    <GuidSymbol name="guidPythonToolsCmdSet" value="{bdfa79d2-2cd2-474a-a82a-ce8694116825}">
+      <IDSymbol name="WindowCommandsGroup" value="0x1014" />
     </GuidSymbol>
   </Symbols>
 
