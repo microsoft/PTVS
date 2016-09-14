@@ -92,7 +92,7 @@
         <Icon guid="ImageCatalogGuid" id="DockPanel"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
-          <ButtonText>Create From &amp;Cookiecutter</ButtonText>
+          <ButtonText>From &amp;Cookiecutter...</ButtonText>
           <ToolTipText>Creates files using a Cookiecutter template.</ToolTipText>
           <LocCanonicalName>.CreateFromCookiecutter</LocCanonicalName>
         </Strings>
@@ -103,7 +103,7 @@
         <Icon guid="ImageCatalogGuid" id="DockPanel"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
-          <ButtonText>Add From &amp;Cookiecutter</ButtonText>
+          <ButtonText>From &amp;Cookiecutter...</ButtonText>
           <ToolTipText>Adds files using a Cookiecutter template.</ToolTipText>
           <LocCanonicalName>.AddFromCookiecutter</LocCanonicalName>
         </Strings>
