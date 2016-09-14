@@ -666,7 +666,12 @@ namespace Microsoft.PythonTools.Interpreter {
             try {
                 var paths = await GetUncachedDatabaseSearchPathsAsync(factory.Configuration.InterpreterPath);
                 if (!string.IsNullOrEmpty(dbPath)) {
-                    WriteDatabaseSearchPaths(dbPath, paths);
+                    try {
+                        WriteDatabaseSearchPaths(dbPath, paths);
+                    } catch (IOException) {
+                        Thread.Sleep(100);
+                        return await GetDatabaseSearchPathsAsync(factory);
+                    }
                 }
                 return paths;
             } catch (InvalidOperationException) {
