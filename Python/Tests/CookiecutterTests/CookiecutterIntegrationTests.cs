@@ -274,6 +274,11 @@ namespace CookiecutterTests {
             Assert.IsFalse(_vm.IsCreatingError);
 
             Assert.IsTrue(Directory.Exists(Path.Combine(_vm.OutputFolderPath, "static_files")));
+            Assert.IsTrue(Directory.Exists(Path.Combine(_vm.OutputFolderPath, "post-deployment")));
+            Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "web.config")));
+            Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "static_files", "web.config")));
+            Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "post-deployment", "install-requirements.ps1")));
+            Assert.IsFalse(File.Exists(Path.Combine(_vm.OutputFolderPath, "install-requirements.ps1")));
         }
 
         private static void PrintResults(ObservableCollection<object> items) {
