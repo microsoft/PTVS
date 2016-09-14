@@ -174,67 +174,51 @@ namespace Microsoft.PythonTools.Project.Web {
         #endregion
 
         private void GetFullUrl(LaunchConfiguration config, out Uri uri, out int port) {
-            int p;
-            if (!int.TryParse(config.GetLaunchOption(PythonConstants.WebBrowserPortSetting) ?? "", out p)) {
-                p = TestServerPort;
-            }
-            port = p;
-
             var host = config.GetLaunchOption(PythonConstants.WebBrowserUrlSetting);
             if (string.IsNullOrEmpty(host)) {
                 uri = null;
+                port = 0;
                 return;
             }
+
             try {
-                uri = GetFullUrl(host, p);
+                UriBuilder builder;
+                if (Uri.TryCreate(host, UriKind.Absolute, out uri)) {
+                    builder = new UriBuilder(uri);
+                } else {
+                    builder = new UriBuilder();
+                    builder.Scheme = Uri.UriSchemeHttp;
+                    builder.Host = "localhost";
+                    builder.Path = host;
+                }
+
+                int p;
+                if (int.TryParse(config.GetLaunchOption(PythonConstants.WebBrowserPortSetting) ?? "", out p)) {
+                    builder.Port = p;
+                } else if (builder.Port < 0 || (builder.Uri.IsDefaultPort && !host.Contains(":{0}".FormatInvariant(builder.Port)))) {
+                    builder.Port = TestServerPort;
+                }
+
+                uri = builder.Uri;
+                port = uri.Port;
             } catch (UriFormatException) {
                 var output = OutputWindowRedirector.GetGeneral(_serviceProvider);
                 output.WriteErrorLine(Strings.ErrorInvalidLaunchUrl.FormatUI(host));
                 output.ShowAndActivate();
                 uri = null;
-            }
-        }
-
-        internal static Uri GetFullUrl(string host, int port) {
-            UriBuilder builder;
-            Uri uri;
-            if (Uri.TryCreate(host, UriKind.Absolute, out uri)) {
-                builder = new UriBuilder(uri);
-            } else {
-                builder = new UriBuilder();
-                builder.Scheme = Uri.UriSchemeHttp;
-                builder.Host = "localhost";
-                builder.Path = host;
-            }
-
-            builder.Port = port;
-
-            return builder.Uri;
-        }
-
-        private string TestServerPortString {
-            get {
-                if (!_testServerPort.HasValue) {
-                    _testServerPort = GetFreePort();
-                }
-                return _testServerPort.Value.ToString(CultureInfo.InvariantCulture);
+                port = 0;
             }
         }
 
         private int TestServerPort {
             get {
                 if (!_testServerPort.HasValue) {
-                    _testServerPort = GetFreePort();
+                    _testServerPort = Enumerable.Range(new Random().Next(49152, 65536), 60000)
+                        .Except(IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections().Select(c => c.LocalEndPoint.Port))
+                        .First();
                 }
                 return _testServerPort.Value;
             }
-        }
-
-        private static int GetFreePort() {
-            return Enumerable.Range(new Random().Next(49152, 65536), 60000).Except(
-                from connection in IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections()
-                select connection.LocalEndPoint.Port
-            ).First();
         }
     }
 }
