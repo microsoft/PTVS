@@ -157,7 +157,7 @@ namespace Microsoft.CookiecutterTools.Model {
         private void CopyFiles(string sourceFolderPath, string targetFolderPath) {
             Directory.CreateDirectory(targetFolderPath);
 
-            foreach (var sourceFilePath in PathUtils.EnumerateFiles(sourceFolderPath)) {
+            foreach (var sourceFilePath in PathUtils.EnumerateFiles(sourceFolderPath, recurse: false, fullPaths: true)) {
                 var fileName = PathUtils.GetFileOrDirectoryName(sourceFilePath);
                 var targetFilePath = Path.Combine(targetFolderPath, fileName);
                 File.Copy(sourceFilePath, targetFilePath, true);
