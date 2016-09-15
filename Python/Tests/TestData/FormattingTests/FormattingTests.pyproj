@@ -30,6 +30,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="async.py" />
     <Compile Include="document.py" />
     <Compile Include="selection.py" />
     <Compile Include="selection2.py" />
