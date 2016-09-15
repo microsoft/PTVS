@@ -36,6 +36,7 @@
         Microsoft.PythonTools.VSCommon.dll;
         Microsoft.PythonTools.VSInterpreters.dll;
         Microsoft.PythonTools.WebRole.dll;
+        Microsoft.PythonTools.Workspace.dll;
         Microsoft.PythonTools.XamlDesignerSupport.dll;
         Microsoft.CookiecutterTools.dll;
         "/>
