@@ -1,3 +1,4 @@
+extern alias analysis;
 // Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
@@ -16,9 +17,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Automation;
+using analysis::Microsoft.PythonTools.Parsing;
 using EnvDTE;
 using Microsoft.PythonTools;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -85,6 +88,18 @@ def g():
     pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) }, null, null);
         }
 
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void FormatAsyncDocument() {
+            FormattingTest("async.py", null, @"async  def f(x):
+    async  for  i in await  x:
+        pass
+    # comment before
+    async   with x:
+        pass
+", new Span[] { }, null, null, new Version(3, 5));
+        }
+
 
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
@@ -133,8 +148,17 @@ z=3", new Span[0], null, null);
         /// <param name="selection">The selection to format, or null if formatting the entire document</param>
         /// <param name="expectedText">The expected source code after the formatting</param>
         /// <param name="changedSpans">The spans which should be marked as changed in the buffer after formatting</param>
-        private static void FormattingTest(string filename, Span? selection, string expectedText, Span[] changedSpans, Func<PythonToolsService, object> updateSettings, Action<PythonToolsService, object> revertSettings) {
-            using (var app = new PythonVisualStudioApp()) {
+        private static void FormattingTest(
+            string filename,
+            Span? selection,
+            string expectedText,
+            Span[] changedSpans,
+            Func<PythonToolsService, object> updateSettings,
+            Action<PythonToolsService, object> revertSettings,
+            Version version = null
+        ) {
+            using (var app = new PythonVisualStudioApp())
+            using (version == null ? null : app.SelectDefaultInterpreter(PythonPaths.Versions.FirstOrDefault(v => v.Version.ToVersion() >= version))) {
                 var o = updateSettings?.Invoke(app.PythonToolsService);
                 if (revertSettings != null) {
                     app.OnDispose(() => revertSettings(app.PythonToolsService, o));
@@ -159,11 +183,16 @@ z=3", new Span[0], null, null);
 
                 // verify the contents are correct
                 string actual = null;
+                int steady = 50;
                 for (int i = 0; i < 100; i++) {
                     actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
 
                     if (expectedText == actual) {
-                        break;
+                        if (--steady <= 0) {
+                            break;
+                        }
+                    } else {
+                        steady = 50;
                     }
                     System.Threading.Thread.Sleep(100);
                 }
