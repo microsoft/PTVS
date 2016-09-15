@@ -113,9 +113,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private async void UpgradePackage_Executed(object sender, ExecutedRoutedEventArgs e) {
             try {
                 var view = (PipPackageView)e.Parameter;
-                // Provide Name, not PackageSpec, or we'll upgrade to our
-                // current version.
-                await _provider.InstallPackage(new PackageSpec(view.Name));
+                // Construct a PackageSpec with the upgraded version.
+                await _provider.InstallPackage(new PackageSpec(view.Package.Name, view.UpgradeVersion));
             } catch (OperationCanceledException) {
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 ToolWindow.SendUnhandledException(this, ExceptionDispatchInfo.Capture(ex));
