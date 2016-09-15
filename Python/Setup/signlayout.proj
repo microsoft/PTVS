@@ -37,6 +37,7 @@
         Microsoft.PythonTools.VSInterpreters.dll;
         Microsoft.PythonTools.WebRole.dll;
         Microsoft.PythonTools.XamlDesignerSupport.dll;
+        Microsoft.CookiecutterTools.dll;
         "/>
     
     <ManagedFiles Include="
