@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Automation;
@@ -80,13 +81,21 @@ namespace TestUtilities.UI {
                 try {
                     if (_onDispose != null) {
                         foreach (var action in _onDispose) {
-                            action();
+                            try {
+                                action();
+                            } catch (Exception ex) {
+                                Debug.WriteLine("Exception calling action while disposing VisualStudioApp: {0}", ex);
+                            }
                         }
                     }
 
                     if (_dte != null && _dte.Debugger.CurrentMode != dbgDebugMode.dbgDesignMode) {
-                        _dte.Debugger.TerminateAll();
-                        _dte.Debugger.Stop();
+                        try {
+                            _dte.Debugger.TerminateAll();
+                            _dte.Debugger.Stop();
+                        } catch (COMException ex) {
+                            Debug.WriteLine("Exception disposing VisualStudioApp: {0}", ex);
+                        }
                     }
                     DismissAllDialogs();
                     for (int i = 0; i < 100 && !_skipCloseAll; i++) {
