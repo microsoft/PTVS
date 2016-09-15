@@ -223,4 +223,7 @@ Please delete the installed template and try again.</value>
   <data name="OpenInSolutionExplorerQuestion" xml:space="preserve">
     <value>Would you like to open the generated folder in Solution Explorer?</value>
   </data>
+  <data name="ProcessExitCodeMessage" xml:space="preserve">
+    <value>{0} returned an exit code of {1}.</value>
+  </data>
 </root>

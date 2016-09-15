@@ -63,8 +63,10 @@ namespace Microsoft.CookiecutterTools.Model {
                     using (var key = Registry.LocalMachine.OpenSubKey(@"Software\\Microsoft\VisualStudio\SxS\VS7")) {
                         var installRoot = (string)key.GetValue(AssemblyVersionInfo.VSVersion);
                         if (installRoot != null) {
+                            // git.exe is in a folder path with a symlink to the actual extension dir with random name
                             var gitFolder = Path.Combine(installRoot, @"Common7\IDE\CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\cmd");
-                            var gitExe = Path.Combine(gitFolder, GitExecutableName);
+                            var finalGitFolder = PathUtils.GetFinalPathName(gitFolder);
+                            var gitExe = Path.Combine(finalGitFolder, GitExecutableName);
                             return gitExe;
                         }
                     }
@@ -90,6 +92,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 await output;
 
                 var r = new ProcessOutputResult() {
+                    ExeFileName = _gitExeFilePath,
                     ExitCode = output.ExitCode,
                     StandardOutputLines = output.StandardOutputLines.ToArray(),
                     StandardErrorLines = output.StandardErrorLines.ToArray(),

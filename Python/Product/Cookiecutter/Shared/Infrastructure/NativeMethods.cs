@@ -14,8 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
+using Microsoft.Win32.SafeHandles;
 
 namespace Microsoft.CookiecutterTools.Infrastructure {
     public static partial class NativeMethods {
@@ -53,5 +56,52 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
 
             return ProcessorArchitecture.None;
         }
+
+        public const int MAX_PATH = 260; // windef.h	
+        public const int MAX_FOLDER_PATH = MAX_PATH - 12;   // folders need to allow 8.3 filenames, so MAX_PATH - 12
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern uint GetFinalPathNameByHandle(
+            SafeHandle hFile,
+            [Out]StringBuilder lpszFilePath,
+            uint cchFilePath,
+            uint dwFlags
+        );
+
+        [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        public static extern SafeFileHandle CreateFile(
+            string lpFileName,
+            FileDesiredAccess dwDesiredAccess,
+            FileShareFlags dwShareMode,
+            IntPtr lpSecurityAttributes,
+            FileCreationDisposition dwCreationDisposition,
+            FileFlagsAndAttributes dwFlagsAndAttributes,
+            IntPtr hTemplateFile
+        );
+
+        [Flags]
+        public enum FileDesiredAccess : uint {
+            FILE_LIST_DIRECTORY = 1
+        }
+
+        [Flags]
+        public enum FileShareFlags : uint {
+            FILE_SHARE_READ = 0x00000001,
+            FILE_SHARE_WRITE = 0x00000002,
+            FILE_SHARE_DELETE = 0x00000004
+        }
+
+        [Flags]
+        public enum FileCreationDisposition : uint {
+            OPEN_EXISTING = 3
+        }
+
+        [Flags]
+        public enum FileFlagsAndAttributes : uint {
+            FILE_FLAG_BACKUP_SEMANTICS = 0x02000000
+        }
+
+        public static IntPtr INVALID_FILE_HANDLE = new IntPtr(-1);
+        public static IntPtr INVALID_HANDLE_VALUE = new IntPtr(-1);
     }
 }

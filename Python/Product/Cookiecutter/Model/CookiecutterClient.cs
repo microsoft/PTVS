@@ -119,12 +119,14 @@ namespace Microsoft.CookiecutterTools.Model {
                 await output;
 
                 var r = new ProcessOutputResult() {
+                    ExeFileName = interpreterPath,
                     ExitCode = output.ExitCode,
                     StandardOutputLines = output.StandardOutputLines.ToArray(),
                     StandardErrorLines = output.StandardErrorLines.ToArray(),
                 };
 
-                if (r.ExitCode < 0) {
+                // All our python scripts will return 0 if successful
+                if (r.ExitCode != 0) {
                     throw new ProcessException(r);
                 }
 

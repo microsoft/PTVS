@@ -472,6 +472,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     IsCloningSuccess = false;
                     IsCloningError = true;
 
+                    _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.ProcessExitCodeMessage, ex.Result.ExeFileName, ex.Result.ExitCode));
                     _outputWindow.WriteLine(string.Join(Environment.NewLine, ex.Result.StandardOutputLines));
                     _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, ex.Result.StandardErrorLines));
 
@@ -559,6 +560,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 IsCreatingSuccess = false;
                 IsCreatingError = true;
 
+                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.ProcessExitCodeMessage, ex.Result.ExeFileName, ex.Result.ExitCode));
                 _outputWindow.WriteLine(string.Join(Environment.NewLine, ex.Result.StandardOutputLines));
                 _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, ex.Result.StandardErrorLines));
 
@@ -693,6 +695,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 IsLoadingSuccess = false;
                 IsLoadingError = true;
 
+                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.ProcessExitCodeMessage, ex.Result.ExeFileName, ex.Result.ExitCode));
                 _outputWindow.WriteLine(string.Join(Environment.NewLine, ex.Result.StandardOutputLines));
                 _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, ex.Result.StandardErrorLines));
 
