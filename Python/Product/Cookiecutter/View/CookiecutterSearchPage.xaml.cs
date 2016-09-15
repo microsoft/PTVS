@@ -86,9 +86,7 @@ namespace Microsoft.CookiecutterTools.View {
 
         private void TreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e) {
             var val = e.NewValue as TemplateViewModel;
-            if (val != null) {
-                ViewModel.SelectTemplate(val).DoNotWait();
-            }
+            ViewModel.SelectTemplate(val).DoNotWait();
 
             SelectedTemplateChanged?.Invoke(this, EventArgs.Empty);
         }

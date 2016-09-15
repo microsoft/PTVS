@@ -147,6 +147,10 @@ namespace Microsoft.CookiecutterTools.View {
             return PageSequence.CurrentPosition == 0 && Directory.Exists(ViewModel.SelectedTemplate?.ClonedPath);
         }
 
+        internal bool CanNavigateToGitHub() {
+            return PageSequence.CurrentPosition == 0 && !string.IsNullOrEmpty(ViewModel.SelectedTemplate?.GitHubHomeUrl);
+        }
+
         internal void DeleteSelection() {
             if (!CanDeleteSelection()) {
                 return;
