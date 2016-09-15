@@ -711,7 +711,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 return;
             }
 
-            if (selection.Description == null) {
+            if (string.IsNullOrEmpty(selection.Description)) {
                 await InitializeDescription(selection);
             }
 
