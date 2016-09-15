@@ -22,9 +22,11 @@ using EnvDTE90;
 using Microsoft.PythonTools;
 using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
+using TestUtilities.UI.Python;
 using Path = System.IO.Path;
 using SD = System.Diagnostics;
 
@@ -209,7 +211,7 @@ namespace DebuggerUITests {
 
         private static SD.Process OpenSolutionAndLaunchFile(VisualStudioApp app, string debugSolution, string startFile, string interpreterArgs, string programArgs) {
             var project = app.OpenProject(debugSolution, startFile);
-            return LaunchFileFromProject(project, startFile, interpreterArgs, programArgs);
+            return LaunchFileFromProject(app, project, startFile, interpreterArgs, programArgs);
         }
 
         private static Process2 AttachAndWaitForMode(VisualStudioApp app, SD.Process processToAttach, object debugEngines, dbgDebugMode expectedMode) {
@@ -231,8 +233,7 @@ namespace DebuggerUITests {
             return result;
         }
 
-        public static SD.Process LaunchFileFromProject(EnvDTE.Project project, string filename, string interpreterArgs, string programArgs) {
-
+        public static SD.Process LaunchFileFromProject(VisualStudioApp app, EnvDTE.Project project, string filename, string interpreterArgs, string programArgs) {
             var item = project.ProjectItems.Item(filename);
             var window = item.Open();
             window.Activate();
@@ -242,7 +243,8 @@ namespace DebuggerUITests {
 
             string cmdlineArgs = String.Format("{0} \"{1}\" {2}", interpreterArgs, fullFilename, programArgs);
 
-            var projectInterpreter = project.GetPythonProject().GetInterpreterFactory().Configuration.InterpreterPath;
+            var uiThread = app.GetService<UIThreadBase>();
+            var projectInterpreter = uiThread.Invoke(() => project.GetPythonProject().GetLaunchConfigurationOrThrow().GetInterpreterPath());
 
             var psi = new SD.ProcessStartInfo(projectInterpreter, cmdlineArgs);
             psi.RedirectStandardError = true;
