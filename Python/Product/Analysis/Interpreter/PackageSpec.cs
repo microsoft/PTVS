@@ -72,17 +72,13 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public PackageSpec() { }
 
-        public PackageSpec(string name, string exactVersion = null, string constraint = null, string fullSpec = null) {
+        public PackageSpec(string name, string exactVersion, string constraint = null, string fullSpec = null)
+            : this(name, PackageVersion.TryParse(exactVersion), constraint, fullSpec) { }
+
+        public PackageSpec(string name, PackageVersion? exactVersion = null, string constraint = null, string fullSpec = null) {
             _fullSpec = fullSpec ?? "";
             Name = name ?? "";
-
-            PackageVersion ver;
-            if (!PackageVersion.TryParse(exactVersion, out ver)) {
-                ExactVersion = PackageVersion.Empty;
-            } else {
-                ExactVersion = ver;
-            }
-
+            ExactVersion = exactVersion ?? PackageVersion.Empty;
             Constraint = constraint;
         }
 

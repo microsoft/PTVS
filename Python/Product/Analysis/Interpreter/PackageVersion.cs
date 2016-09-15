@@ -312,6 +312,12 @@ namespace Microsoft.PythonTools.Interpreter {
             return ParseInternal(s, out value, out error);
         }
 
+        public static PackageVersion? TryParse(string s) {
+            Exception error;
+            PackageVersion value;
+            return ParseInternal(s, out value, out error) ? value : (PackageVersion?)null;
+        }
+
         public static PackageVersion Parse(string s) {
             PackageVersion value;
             Exception error;
