@@ -876,12 +876,8 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                     Eat(TokenKind.Colon);
                     var ws2 = _tokenWhiteSpace;
-                    var ann = ParseExpression();
                     if (name != null) {
-                        //if (PeekToken(TokenKind.Comma)) {
-                        //    ReportSyntaxError("invalid syntax");
-                        //    Eat(TokenKind.Comma);
-                        //}
+                        var ann = ParseExpression();
                         ret = new NameExpressionWithAnnotation(name.Name, ann);
                         ret.SetLoc(name.StartIndex, ann.EndIndex);
                         if (_verbatim) {
@@ -891,6 +887,9 @@ namespace Microsoft.PythonTools.Parsing {
                         int start = ret.StartIndex;
                         ret = new ErrorExpression((ws2 ?? "") + ":", ret);
                         ret.SetLoc(start, GetEnd());
+
+                        var ann = ParseExpression();
+                        
                     }
 
                     if (PeekToken(TokenKind.Comma)) {
