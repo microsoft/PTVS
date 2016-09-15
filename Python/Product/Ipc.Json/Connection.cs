@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         private readonly Func<RequestArgs, Func<Response, Task>, Task> _requestHandler;
         private readonly Stream _writer, _reader;
         private int _seq;
-        private static char[] _headerSeperator = new[] { ':' };
+        private static char[] _headerSeparator = new[] { ':' };
 
         /// <summary>
         /// Creates a new connection object for doing client/server communication.  
@@ -286,9 +286,13 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     // end of headers for this request...
                     break;
                 }
-                var split = line.Split(_headerSeperator, 2);
+                var split = line.Split(_headerSeparator, 2);
                 if (split.Length != 2) {
-                    await WriteError("Malformed header, expected 'name: value'").ConfigureAwait(false);
+                    // Probably getting an error message, so read all available
+                    // text and write an error.
+                    var error = line + reader.ReadToEnd();
+                    await WriteError("Malformed header, expected 'name: value'" + Environment.NewLine + error).ConfigureAwait(false);
+                    return null;
                 }
                 headers[split[0]] = split[1];
             }
@@ -302,10 +306,12 @@ namespace Microsoft.PythonTools.Ipc.Json {
 
             if (!headers.TryGetValue(Headers.ContentLength, out contentLengthStr)) {
                 await WriteError("Content-Length not specified on request").ConfigureAwait(false);
+                return null;
             }
 
             if (!Int32.TryParse(contentLengthStr, out contentLength) || contentLength < 0) {
                 await WriteError("Invalid Content-Length: " + contentLengthStr).ConfigureAwait(false);
+                return null;
             }
 
             char[] buffer = new char[contentLength];

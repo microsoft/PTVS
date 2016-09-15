@@ -162,7 +162,7 @@ namespace Microsoft.PythonTools.Analysis {
                     Console.Error.WriteLine("This interpreter is already being analyzed.");
                     return PythonTypeDatabase.AlreadyGeneratingExitCode;
                 } catch (Exception e) {
-                    Console.WriteLine("Error during analysis: {0}{1}", Environment.NewLine, e.ToString());
+                    Console.Error.WriteLine("Error during analysis: {0}{1}", Environment.NewLine, e.ToString());
                     LogToGlobal("FAIL_STDLIB" + Environment.NewLine + e.ToString());
                     TraceError("Analysis failed{0}{1}", Environment.NewLine, e.ToString());
                     return -10;
