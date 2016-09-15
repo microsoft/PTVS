@@ -263,6 +263,15 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} returned an exit code of {1}..
+        /// </summary>
+        internal static string ProcessExitCodeMessage {
+            get {
+                return ResourceManager.GetString("ProcessExitCodeMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cookiecutter.
         /// </summary>
         internal static string ProductTitle {

@@ -742,5 +742,44 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             }
             return sb.ToString();
         }
+
+        public static string GetFinalPathName(string dir) {
+            using (var dirHandle = NativeMethods.CreateFile(
+                dir,
+                NativeMethods.FileDesiredAccess.FILE_LIST_DIRECTORY,
+                NativeMethods.FileShareFlags.FILE_SHARE_DELETE |
+                    NativeMethods.FileShareFlags.FILE_SHARE_READ |
+                    NativeMethods.FileShareFlags.FILE_SHARE_WRITE,
+                IntPtr.Zero,
+                NativeMethods.FileCreationDisposition.OPEN_EXISTING,
+                NativeMethods.FileFlagsAndAttributes.FILE_FLAG_BACKUP_SEMANTICS,
+                IntPtr.Zero
+            )) {
+                if (!dirHandle.IsInvalid) {
+                    uint pathLen = NativeMethods.MAX_PATH + 1;
+                    uint res;
+                    StringBuilder filePathBuilder;
+                    for (;;) {
+                        filePathBuilder = new StringBuilder(checked((int)pathLen));
+                        res = NativeMethods.GetFinalPathNameByHandle(
+                            dirHandle,
+                            filePathBuilder,
+                            pathLen,
+                            0
+                        );
+                        if (res != 0 && res < pathLen) {
+                            // we had enough space, and got the filename.
+                            break;
+                        }
+                    }
+
+                    if (res != 0) {
+                        Debug.Assert(filePathBuilder.ToString().StartsWith("\\\\?\\"));
+                        return filePathBuilder.ToString().Substring(4);
+                    }
+                }
+            }
+            return dir;
+        }
     }
 }
