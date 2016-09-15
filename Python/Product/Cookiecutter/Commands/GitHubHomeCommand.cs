@@ -40,6 +40,15 @@ namespace Microsoft.CookiecutterTools.Commands {
             }
         }
 
+        public override EventHandler BeforeQueryStatus {
+            get {
+                return (sender, args) => {
+                    var oleMenuCmd = (Microsoft.VisualStudio.Shell.OleMenuCommand)sender;
+                    oleMenuCmd.Enabled = (_window.CanNavigateToGitHub());
+                };
+            }
+        }
+
         public override int CommandId {
             get { return _commandId; }
         }

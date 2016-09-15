@@ -243,6 +243,10 @@ namespace Microsoft.CookiecutterTools {
             }
         }
 
+        internal bool CanNavigateToGitHub() {
+            return _cookiecutterControl != null ? _cookiecutterControl.CanNavigateToGitHub() : false;
+        }
+
         internal void Home() {
             _cookiecutterControl?.Home();
         }
