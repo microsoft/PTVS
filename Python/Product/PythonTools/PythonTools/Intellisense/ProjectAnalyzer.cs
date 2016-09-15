@@ -338,20 +338,25 @@ namespace Microsoft.PythonTools.Intellisense {
             );
 
             process.Exited += OnAnalysisProcessExited;
-            Task.Run(async () => {
-                try {
-                    while (!process.HasExited) {
-                        var line = await process.StandardError.ReadLineAsync();
-                        if (line == null) {
-                            break;
+            if (process.HasExited) {
+                _stdErr.Append(process.StandardError.ReadToEnd());
+                OnAnalysisProcessExited(process, EventArgs.Empty);
+            } else {
+                Task.Run(async () => {
+                    try {
+                        while (!process.HasExited) {
+                            var line = await process.StandardError.ReadLineAsync();
+                            if (line == null) {
+                                break;
+                            }
+                            _stdErr.AppendLine(line);
+                            Debug.WriteLine("Analysis Std Err: " + line);
                         }
-                        _stdErr.AppendLine(line);
-                        Debug.WriteLine("Analysis Std Err: " + line);
+                    } catch (InvalidOperationException) {
+                        // can race with dispose of the process...
                     }
-                } catch (InvalidOperationException) {
-                    // can race with dispose of the process...
-                }
-            });
+                });
+            }
             conn.EventReceived += ConnectionEventReceived;
             proc = process;
             return conn;
@@ -360,7 +365,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private void OnAnalysisProcessExited(object sender, EventArgs e) {
             _processExitedCancelSource.Cancel();
             if (!_disposing) {
-                AbnormalAnalysisExit?.Invoke(
+                _abnormalAnalysisExit?.Invoke(
                     this,
                     new AbnormalAnalysisExitEventArgs(
                         _stdErr.ToString(),
@@ -370,7 +375,18 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        internal event EventHandler<AbnormalAnalysisExitEventArgs> AbnormalAnalysisExit;
+        private event EventHandler<AbnormalAnalysisExitEventArgs> _abnormalAnalysisExit;
+        internal event EventHandler<AbnormalAnalysisExitEventArgs> AbnormalAnalysisExit {
+            add {
+                if (_analysisProcess.HasExited && !_disposing) {
+                    value?.Invoke(this, new AbnormalAnalysisExitEventArgs(_stdErr.ToString(), _analysisProcess.ExitCode));
+                }
+                _abnormalAnalysisExit += value;
+            }
+            remove {
+                _abnormalAnalysisExit -= value;
+            }
+        }
         internal event EventHandler AnalysisStarted;
 
         private void ConnectionEventReceived(object sender, EventReceivedEventArgs e) {
