@@ -66,6 +66,7 @@
     <Compile Include="Interpreter\NoPackageManager.cs" />
     <Compile Include="Interpreter\PackageSpec.cs" />
     <Compile Include="Interpreter\PackageVersion.cs" />
+    <Compile Include="Parsing\Ast\NameExpressionWithAnnotation.cs" />
     <Compile Include="Projects\AnalysisExtensionNameAttribute.cs" />
     <Compile Include="AnalysisExtensions.cs" />
     <Compile Include="AnalysisHashSet.cs" />

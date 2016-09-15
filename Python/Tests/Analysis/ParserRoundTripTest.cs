@@ -1084,6 +1084,17 @@ def f(): pass");
             // try/except
             TestOneString(PythonLanguageVersion.V27, "try: pass\r\nexcept: pass\r\nelse: pass\r\nexcept Exception: pass");
             TestOneString(PythonLanguageVersion.V27, "try  :   pass\r\finally    :     pass");
+
+            // Variable annotations
+            TestOneString(PythonLanguageVersion.V36, "a:b, c");
+            TestOneString(PythonLanguageVersion.V36, "a:b, c = 1");
+            TestOneString(PythonLanguageVersion.V36, "a : b, c");
+            TestOneString(PythonLanguageVersion.V36, "a : b, c = 1");
+
+            TestOneString(PythonLanguageVersion.V36, "a,b:c");
+            TestOneString(PythonLanguageVersion.V36, "a,b:c = 1");
+            TestOneString(PythonLanguageVersion.V36, "a , b : c");
+            TestOneString(PythonLanguageVersion.V36, "a , b : c = 1");
         }
 
         [TestMethod, Priority(1)]
@@ -1489,6 +1500,12 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V27, "def  f(   a    ,     )      :       pass");
 
             TestOneString(PythonLanguageVersion.V27, "class C:\r\n    @property\r\n    def fob(self): return 42");
+
+            // Variable annotations
+            TestOneString(PythonLanguageVersion.V36, "a:b");
+            TestOneString(PythonLanguageVersion.V36, "a:b = 1");
+            TestOneString(PythonLanguageVersion.V36, "a : b");
+            TestOneString(PythonLanguageVersion.V36, "a : b = 1");
 
         }
 

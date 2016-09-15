@@ -40,7 +40,7 @@ namespace AnalysisTests {
             PythonTestData.Deploy();
         }
 
-        internal static readonly PythonLanguageVersion[] AllVersions = new[] { PythonLanguageVersion.V24, PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33, PythonLanguageVersion.V34, PythonLanguageVersion.V35 };
+        internal static readonly PythonLanguageVersion[] AllVersions = new[] { PythonLanguageVersion.V24, PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33, PythonLanguageVersion.V34, PythonLanguageVersion.V35, PythonLanguageVersion.V36 };
         internal static readonly PythonLanguageVersion[] V25AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V25).ToArray();
         internal static readonly PythonLanguageVersion[] V26AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V26).ToArray();
         internal static readonly PythonLanguageVersion[] V27AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V27).ToArray();
@@ -54,6 +54,7 @@ namespace AnalysisTests {
         internal static readonly PythonLanguageVersion[] V33AndV34 = AllVersions.Where(v => v >= PythonLanguageVersion.V33 && v <= PythonLanguageVersion.V34).ToArray();
         internal static readonly PythonLanguageVersion[] V33AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V33).ToArray();
         internal static readonly PythonLanguageVersion[] V35AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V35).ToArray();
+        internal static readonly PythonLanguageVersion[] V36AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V36).ToArray();
 
         #region Test Cases
 
@@ -2653,6 +2654,45 @@ namespace AnalysisTests {
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void VariableAnnotation() {
+            Action<Expression> FobWithOar = e => {
+                Assert.IsInstanceOfType(e, typeof(NameExpressionWithAnnotation));
+                Fob(e);
+                Oar(((NameExpressionWithAnnotation)e).Annotation);
+            };
+
+            foreach (var version in V36AndUp) {
+                CheckAst(
+                    ParseFile("VarAnnotation.py", ErrorSink.Null, version),
+                    CheckSuite(
+                        CheckExprStmt(FobWithOar), 
+                        CheckAssignment(FobWithOar, One),
+                        CheckClassDef("C", CheckSuite(
+                            CheckExprStmt(FobWithOar),
+                            CheckAssignment(FobWithOar, One)
+                        )),
+                        CheckFuncDef("f", null, CheckSuite(
+                            CheckExprStmt(FobWithOar),
+                            CheckAssignment(FobWithOar, One)
+                        ))
+                    )
+                );
+
+                ParseErrors("VarAnnotationIllegal.py", version,
+                    new ErrorInfo("only single target (not tuple) can be annotated", 0, 1, 1, 8, 1, 9),
+                    new ErrorInfo("invalid syntax", 22, 2, 9, 23, 2, 10),
+                    new ErrorInfo("unexpected token 'baz'", 24, 2, 11, 27, 2, 14),
+                    new ErrorInfo("only single target (not tuple) can be annotated", 28, 3, 1, 36, 3, 9),
+                    new ErrorInfo("can't assign to ErrorExpression", 28, 3, 1, 41, 3, 14),
+                    new ErrorInfo("invalid syntax", 54, 4, 9, 55, 4, 10),
+                    new ErrorInfo("unexpected token 'baz'", 56, 4, 11, 59, 4, 14),
+                    new ErrorInfo("unexpected token '='", 60, 4, 15, 61, 4, 16),
+                    new ErrorInfo("unexpected token '1'", 62, 4, 17, 63, 4, 18)
+                );
+            }
+        }
+
         [TestMethod, Priority(2), Timeout(10 * 60 * 1000)]
         [TestCategory("10s"), TestCategory("60s")]
         public async Task StdLib() {
@@ -3154,8 +3194,8 @@ namespace AnalysisTests {
                     Assert.AreEqual(name, funcDef.Name);
                 }
 
-                Assert.AreEqual(args.Length, funcDef.Parameters.Count);
-                for (int i = 0; i < args.Length; i++) {
+                Assert.AreEqual(args?.Length ?? 0, funcDef.Parameters.Count);
+                for (int i = 0; i < (args?.Length ?? 0); i++) {
                     args[i](funcDef.Parameters[i]);
                 }
 
@@ -3391,7 +3431,7 @@ namespace AnalysisTests {
 
         private static Action<Expression> CheckNameExpr(string name) {
             return expr => {
-                Assert.AreEqual(typeof(NameExpression), expr.GetType());
+                Assert.IsInstanceOfType(expr, typeof(NameExpression));
                 var nameExpr = (NameExpression)expr;
                 Assert.AreEqual(nameExpr.Name, name);
             };

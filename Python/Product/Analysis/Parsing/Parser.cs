@@ -864,6 +864,43 @@ namespace Microsoft.PythonTools.Parsing {
         private Statement ParseExprStmt() {
             Expression ret = ParseTestListAsExpr();
 
+            if (PeekToken(TokenKind.Colon)) {
+                if (_langVersion >= PythonLanguageVersion.V36) {
+                    var name = ret as NameExpression;
+                    if (name == null) {
+                        if (ret is TupleExpression) {
+                            ReportSyntaxError(ret.StartIndex, ret.EndIndex, "only single target (not tuple) can be annotated");
+                        } else {
+                            ReportSyntaxError(ret.StartIndex, ret.EndIndex, "illegal target for annotation");
+                        }
+                    }
+                    Eat(TokenKind.Colon);
+                    var ws2 = _tokenWhiteSpace;
+                    var ann = ParseExpression();
+                    if (name != null) {
+                        //if (PeekToken(TokenKind.Comma)) {
+                        //    ReportSyntaxError("invalid syntax");
+                        //    Eat(TokenKind.Comma);
+                        //}
+                        ret = new NameExpressionWithAnnotation(name.Name, ann);
+                        ret.SetLoc(name.StartIndex, ann.EndIndex);
+                        if (_verbatim) {
+                            AddSecondPreceedingWhiteSpace(ret, ws2);
+                        }
+                    } else {
+                        int start = ret.StartIndex;
+                        ret = new ErrorExpression((ws2 ?? "") + ":", ret);
+                        ret.SetLoc(start, GetEnd());
+                    }
+
+                    if (PeekToken(TokenKind.Comma)) {
+                        Statement stmt = new ExpressionStatement(ret);
+                        stmt.SetLoc(ret.IndexSpan);
+                        return stmt;
+                    }
+                }
+            }
+
             if (PeekToken(TokenKind.Assign)) {
                 if (_langVersion >= PythonLanguageVersion.V30) {
                     SequenceExpression seq = ret as SequenceExpression;
