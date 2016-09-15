@@ -1221,7 +1221,6 @@ namespace Microsoft.PythonTools.Project {
                 msg.ToString()
             );
             EventLog.WriteEntry(Strings.ProductTitle, msg.ToString(), EventLogEntryType.Error, 9998);
-            Site.GetUIThread().InvokeAsync(ReanalyzeProject).DoNotWait();
         }
 
         private void HookErrorsAndWarnings(VsProjectAnalyzer res) {
