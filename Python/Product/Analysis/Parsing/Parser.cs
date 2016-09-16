@@ -2437,6 +2437,7 @@ namespace Microsoft.PythonTools.Parsing {
         //with_item: test ['as' expr]
         private WithStatement ParseWithStmt(bool isAsync) {
             var start = isAsync ? GetStart() : 0;
+            var asyncWhiteSpace = isAsync ? _tokenWhiteSpace : null;
             Eat(TokenKind.KeywordWith);
             if (!isAsync) {
                 start = GetStart();
@@ -2460,7 +2461,8 @@ namespace Microsoft.PythonTools.Parsing {
 
             WithStatement ret = new WithStatement(items.ToArray(), body, isAsync);
             if (_verbatim) {
-                AddPreceedingWhiteSpace(ret, withWhiteSpace);
+                AddPreceedingWhiteSpace(ret, isAsync ? asyncWhiteSpace : withWhiteSpace);
+                AddSecondPreceedingWhiteSpace(ret, isAsync ? withWhiteSpace : null);
                 AddListWhiteSpace(ret, itemWhiteSpace.ToArray());
             }
             ret.SetLoc(start, body.EndIndex);
@@ -2486,6 +2488,7 @@ namespace Microsoft.PythonTools.Parsing {
         //for_stmt: 'for' target_list 'in' expression_list ':' suite ['else' ':' suite]
         private Statement ParseForStmt(bool isAsync) {
             var start = isAsync ? GetStart() : 0;
+            var asyncWhiteSpace = isAsync ? _tokenWhiteSpace : null;
             Eat(TokenKind.KeywordFor);
             if (!isAsync) {
                 start = GetStart();
@@ -2538,7 +2541,8 @@ namespace Microsoft.PythonTools.Parsing {
 
             ForStatement ret = new ForStatement(lhs, list, body, else_, isAsync);
             if (_verbatim) {
-                AddPreceedingWhiteSpace(ret, forWhiteSpace);
+                AddPreceedingWhiteSpace(ret, isAsync ? asyncWhiteSpace : forWhiteSpace);
+                AddFourthPreceedingWhiteSpace(ret, isAsync ? forWhiteSpace : null);
                 if (inWhiteSpace != null) {
                     AddSecondPreceedingWhiteSpace(ret, inWhiteSpace);
                 }
