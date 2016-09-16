@@ -2217,20 +2217,35 @@ namespace AnalysisTests {
                         )))
                     )
                 );
+            }
 
+            ParseErrors("CoroutineDefIllegal.py", PythonLanguageVersion.V35,
+                new ErrorInfo("'yield' inside async function", 20, 2, 5, 25, 2, 10),
+                new ErrorInfo("'yield' inside async function", 40, 3, 9, 45, 3, 14),
+                new ErrorInfo("unexpected token 'for'", 74, 6, 11, 77, 6, 14),
+                new ErrorInfo("unexpected token ':'", 88, 6, 25, 89, 6, 26),
+                new ErrorInfo("unexpected token '<newline>'", 89, 6, 26, 99, 7, 9),
+                new ErrorInfo("unexpected token '<indent>'", 89, 6, 26, 99, 7, 9),
+                new ErrorInfo("unexpected token '<dedent>'", 105, 8, 1, 107, 9, 1),
+                new ErrorInfo("unexpected token 'async'", 107, 9, 1, 112, 9, 6),
+                new ErrorInfo("unexpected token 'with'", 162, 13, 11, 166, 13, 15),
+                new ErrorInfo("unexpected token ':'", 170, 13, 19, 171, 13, 20),
+                new ErrorInfo("unexpected token '<newline>'", 171, 13, 20, 181, 14, 9),
+                new ErrorInfo("unexpected token '<indent>'", 171, 13, 20, 181, 14, 9),
+                new ErrorInfo("unexpected token '<dedent>'", 187, 15, 1, 189, 16, 1),
+                new ErrorInfo("unexpected token 'async'", 189, 16, 1, 194, 16, 6)
+            );
+
+            foreach (var version in V36AndUp) {
                 ParseErrors("CoroutineDefIllegal.py", version,
-                    new ErrorInfo("'yield' inside async function", 20, 2, 5, 25, 2, 10),
-                    new ErrorInfo("'yield' inside async function", 40, 3, 9, 45, 3, 14),
                     new ErrorInfo("unexpected token 'for'", 74, 6, 11, 77, 6, 14),
-                    new ErrorInfo("unexpected token ':'", 88, 6, 25, 89, 6, 26),
-                    new ErrorInfo("unexpected token '<newline>'", 89, 6, 26, 99, 7, 9),
-                    new ErrorInfo("unexpected token '<indent>'", 89, 6, 26, 99, 7, 9),
+                    new ErrorInfo("illegal target for annotation", 78, 6, 15, 89, 6, 26),
+                    new ErrorInfo("unexpected indent", 99, 7, 9, 103, 7, 13),
                     new ErrorInfo("unexpected token '<dedent>'", 105, 8, 1, 107, 9, 1),
                     new ErrorInfo("unexpected token 'async'", 107, 9, 1, 112, 9, 6),
                     new ErrorInfo("unexpected token 'with'", 162, 13, 11, 166, 13, 15),
-                    new ErrorInfo("unexpected token ':'", 170, 13, 19, 171, 13, 20),
                     new ErrorInfo("unexpected token '<newline>'", 171, 13, 20, 181, 14, 9),
-                    new ErrorInfo("unexpected token '<indent>'", 171, 13, 20, 181, 14, 9),
+                    new ErrorInfo("unexpected indent", 181, 14, 9, 185, 14, 13),
                     new ErrorInfo("unexpected token '<dedent>'", 187, 15, 1, 189, 16, 1),
                     new ErrorInfo("unexpected token 'async'", 189, 16, 1, 194, 16, 6)
                 );
@@ -2657,9 +2672,9 @@ namespace AnalysisTests {
         [TestMethod, Priority(0)]
         public void VariableAnnotation() {
             Action<Expression> FobWithOar = e => {
-                Assert.IsInstanceOfType(e, typeof(NameExpressionWithAnnotation));
-                Fob(e);
-                Oar(((NameExpressionWithAnnotation)e).Annotation);
+                Assert.IsInstanceOfType(e, typeof(ExpressionWithAnnotation));
+                Fob(((ExpressionWithAnnotation)e).Expression);
+                Oar(((ExpressionWithAnnotation)e).Annotation);
             };
 
             foreach (var version in V36AndUp) {
@@ -2680,15 +2695,10 @@ namespace AnalysisTests {
                 );
 
                 ParseErrors("VarAnnotationIllegal.py", version,
-                    new ErrorInfo("only single target (not tuple) can be annotated", 0, 1, 1, 8, 1, 9),
-                    new ErrorInfo("invalid syntax", 22, 2, 9, 23, 2, 10),
-                    new ErrorInfo("unexpected token 'baz'", 24, 2, 11, 27, 2, 14),
-                    new ErrorInfo("only single target (not tuple) can be annotated", 28, 3, 1, 36, 3, 9),
-                    new ErrorInfo("can't assign to ErrorExpression", 28, 3, 1, 41, 3, 14),
-                    new ErrorInfo("invalid syntax", 54, 4, 9, 55, 4, 10),
-                    new ErrorInfo("unexpected token 'baz'", 56, 4, 11, 59, 4, 14),
-                    new ErrorInfo("unexpected token '='", 60, 4, 15, 61, 4, 16),
-                    new ErrorInfo("unexpected token '1'", 62, 4, 17, 63, 4, 18)
+                    new ErrorInfo("only single target (not tuple) can be annotated", 0, 1, 1, 13, 1, 14),
+                    new ErrorInfo("unexpected token ','", 22, 2, 9, 23, 2, 10),
+                    new ErrorInfo("only single target (not tuple) can be annotated", 28, 3, 1, 45, 3, 18),
+                    new ErrorInfo("unexpected token ','", 54, 4, 9, 55, 4, 10)
                 );
             }
         }

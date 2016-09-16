@@ -446,6 +446,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         internal void AssignTo(Node assignStmt, Expression left, IAnalysisSet values) {
+            if (left is ExpressionWithAnnotation) {
+                left = ((ExpressionWithAnnotation)left).Expression;
+            }
+
             if (left is NameExpression) {
                 var l = (NameExpression)left;
                 if (!string.IsNullOrEmpty(l.Name)) {

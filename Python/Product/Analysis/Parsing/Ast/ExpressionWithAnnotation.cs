@@ -17,30 +17,38 @@
 using System.Text;
 
 namespace Microsoft.PythonTools.Parsing.Ast {
-    public class NameExpressionWithAnnotation : NameExpression {
+    public class ExpressionWithAnnotation : Expression {
+        private readonly Expression _expression;
         private readonly Expression _annotation;
 
-        public NameExpressionWithAnnotation(string name, Expression annotation) : base(name) {
+        public ExpressionWithAnnotation(Expression expression, Expression annotation) {
+            _expression = expression;
             _annotation = annotation;
         }
 
         public override string ToString() {
             if (_annotation != null) {
-                return base.ToString() + ":" + _annotation.ToString();
+                return _expression.ToString() + ":" + _annotation.ToString();
             }
-            return base.ToString();
+            return _expression.ToString();
         }
 
+        public Expression Expression => _expression;
         public Expression Annotation => _annotation;
 
-        public override string NodeName => "annotated name";
+        public override string NodeName => "annotated expression";
 
+        internal override string CheckAssign() => null;
         internal override string CheckAugmentedAssign() => "cannot assign to " + NodeName;
         internal override string CheckDelete() => "cannot delete " + NodeName;
 
+        public override void Walk(PythonWalker walker) {
+            _expression.Walk(walker);
+            _annotation?.Walk(walker);
+        }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {
-            base.AppendCodeString(res, ast, format);
+            _expression.AppendCodeString(res, ast, format);
             if (_annotation != null) {
                 // For now, use same formatting as around an assignment
                 if (format.SpacesAroundAssignmentOperator == null) {

@@ -456,7 +456,7 @@ namespace Microsoft.PythonTools.Parsing {
             if (_state.IncompleteString != null && Peek() != EOF) {
                 IncompleteString prev = _state.IncompleteString;
                 _state.IncompleteString = null;
-                return ContinueString(prev.IsSingleTickQuote ? '\'' : '"', prev.IsRaw, prev.IsUnicode, false, prev.IsTripleQuoted, 0);
+                return ContinueString(prev.IsSingleTickQuote ? '\'' : '"', prev.IsRaw, prev.IsUnicode, false, prev.IsTripleQuoted, prev.IsFormatted, 0);
             }
 
             DiscardToken();
@@ -534,7 +534,7 @@ namespace Microsoft.PythonTools.Parsing {
                     case '\"':
                     case '\'':
                         _state.LastNewLine = false;
-                        return ReadString((char)ch, false, false, false);
+                        return ReadString((char)ch, false, false, false, false);
 
                     case 'u':
                     case 'U':
@@ -553,6 +553,13 @@ namespace Microsoft.PythonTools.Parsing {
                         _state.LastNewLine = false;
                         if (_langVersion >= PythonLanguageVersion.V26) {
                             return ReadNameOrBytes();
+                        }
+                        return ReadName();
+                    case 'f':
+                    case 'F':
+                        _state.LastNewLine = false;
+                        if (_langVersion >= PythonLanguageVersion.V36) {
+                            return ReadNameOrFormattedString();
                         }
                         return ReadName();
                     case '_':
@@ -696,34 +703,48 @@ namespace Microsoft.PythonTools.Parsing {
         }
 
         private Token ReadNameOrUnicodeString() {
-            if (NextChar('\"')) return ReadString('\"', false, true, false);
-            if (NextChar('\'')) return ReadString('\'', false, true, false);
-            if (NextChar('r') || NextChar('R')) {
-                if (NextChar('\"')) return ReadString('\"', true, true, false);
-                if (NextChar('\'')) return ReadString('\'', true, true, false);
+            bool isRaw = NextChar('r') || NextChar('R');
+            if (NextChar('\"')) return ReadString('\"', isRaw, true, false, false);
+            if (NextChar('\'')) return ReadString('\'', isRaw, true, false, false);
+            if (isRaw) {
                 BufferBack();
             }
             return ReadName();
         }
 
         private Token ReadNameOrBytes() {
-            if (NextChar('\"')) return ReadString('\"', false, false, true);
-            if (NextChar('\'')) return ReadString('\'', false, false, true);
-            if (NextChar('r') || NextChar('R')) {
-                if (NextChar('\"')) return ReadString('\"', true, false, true);
-                if (NextChar('\'')) return ReadString('\'', true, false, true);
+            bool isRaw = NextChar('r') || NextChar('R');
+            if (NextChar('\"')) return ReadString('\"', isRaw, false, true, false);
+            if (NextChar('\'')) return ReadString('\'', isRaw, false, true, false);
+            if (isRaw) {
                 BufferBack();
             }
             return ReadName();
         }
 
         private Token ReadNameOrRawString() {
-            bool isBytes = false;
+            bool isBytes = false, isFormatted = false;
             if (this._langVersion >= PythonLanguageVersion.V33) {
                 isBytes = NextChar('b') || NextChar('B');
             }
-            if (NextChar('\"')) return ReadString('\"', true, false, isBytes);
-            if (NextChar('\'')) return ReadString('\'', true, false, isBytes);
+            if (this._langVersion >= PythonLanguageVersion.V36 && !isBytes) {
+                isFormatted = NextChar('f') || NextChar('F');
+            }
+            if (NextChar('\"')) return ReadString('\"', true, false, isBytes, isFormatted);
+            if (NextChar('\'')) return ReadString('\'', true, false, isBytes, isFormatted);
+            if (isBytes || isFormatted) {
+                BufferBack();
+            }
+            return ReadName();
+        }
+
+        private Token ReadNameOrFormattedString() {
+            bool isRaw = NextChar('r') || NextChar('R');
+            if (NextChar('\"')) return ReadString('\"', isRaw, false, false, true);
+            if (NextChar('\'')) return ReadString('\'', isRaw, false, false, true);
+            if (isRaw) {
+                BufferBack();
+            }
             return ReadName();
         }
 
@@ -850,7 +871,7 @@ namespace Microsoft.PythonTools.Parsing {
             return false;
         }
 
-        private Token ReadString(char quote, bool isRaw, bool isUni, bool isBytes) {
+        private Token ReadString(char quote, bool isRaw, bool isUni, bool isBytes, bool isFormatted) {
             int sadd = 0;
             bool isTriple = false;
 
@@ -868,11 +889,12 @@ namespace Microsoft.PythonTools.Parsing {
             if (isRaw) sadd++;
             if (isUni) sadd++;
             if (isBytes) sadd++;
+            if (isFormatted) sadd++;
 
-            return ContinueString(quote, isRaw, isUni, isBytes, isTriple, sadd);
+            return ContinueString(quote, isRaw, isUni, isBytes, isTriple, isFormatted, sadd);
         }
 
-        private Token ContinueString(char quote, bool isRaw, bool isUnicode, bool isBytes, bool isTriple, int startAdd) {
+        private Token ContinueString(char quote, bool isRaw, bool isUnicode, bool isBytes, bool isTriple, bool isFormatted, int startAdd) {
             // PERF: Might be nice to have this not need to get the whole token (which requires a buffer >= in size to the
             // length of the string) and instead build up the string via pieces.  Currently on files w/ large doc strings we
             // are forced to grow our buffer.
@@ -900,7 +922,7 @@ namespace Microsoft.PythonTools.Parsing {
                     UnexpectedEndOfString(isTriple, isTriple);
                     string incompleteContents = GetTokenString();
 
-                    _state.IncompleteString = new IncompleteString(quote == '\'', isRaw, isUnicode, isTriple);
+                    _state.IncompleteString = new IncompleteString(quote == '\'', isRaw, isUnicode, isTriple, isFormatted);
                     return new IncompleteStringErrorToken("<eof> while reading string", incompleteContents);
                 } else if (ch == quote) {
 
@@ -925,7 +947,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                         string incompleteContents = GetTokenString();
 
-                        _state.IncompleteString = new IncompleteString(quote == '\'', isRaw, isUnicode, isTriple);
+                        _state.IncompleteString = new IncompleteString(quote == '\'', isRaw, isUnicode, isTriple, isFormatted);
 
                         return new IncompleteStringErrorToken("<eof> while reading string", incompleteContents);
                     } else if ((nlKind = ReadEolnOpt(ch)) > 0) {
@@ -939,7 +961,7 @@ namespace Microsoft.PythonTools.Parsing {
 
                             string incompleteContents = GetTokenString();
 
-                            _state.IncompleteString = new IncompleteString(quote == '\'', isRaw, isUnicode, isTriple);
+                            _state.IncompleteString = new IncompleteString(quote == '\'', isRaw, isUnicode, isTriple, isFormatted);
                             UnexpectedEndOfString(isTriple, true);
                             return new IncompleteStringErrorToken("<eof> while reading string", incompleteContents);
                         }
@@ -2120,13 +2142,14 @@ namespace Microsoft.PythonTools.Parsing {
 
         [Serializable]
         class IncompleteString : IEquatable<IncompleteString> {
-            public readonly bool IsRaw, IsUnicode, IsTripleQuoted, IsSingleTickQuote;
+            public readonly bool IsRaw, IsUnicode, IsTripleQuoted, IsSingleTickQuote, IsFormatted;
 
-            public IncompleteString(bool isSingleTickQuote, bool isRaw, bool isUnicode, bool isTriple) {
+            public IncompleteString(bool isSingleTickQuote, bool isRaw, bool isUnicode, bool isTriple, bool isFormatted) {
                 IsRaw = isRaw;
                 IsUnicode = isUnicode;
                 IsTripleQuoted = isTriple;
                 IsSingleTickQuote = isSingleTickQuote;
+                IsFormatted = isFormatted;
             }
 
             public override bool Equals(object obj) {
@@ -2141,7 +2164,8 @@ namespace Microsoft.PythonTools.Parsing {
                 return (IsRaw ? 0x01 : 0) |
                     (IsUnicode ? 0x02 : 0) |
                     (IsTripleQuoted ? 0x04 : 0) |
-                    (IsSingleTickQuote ? 0x08 : 0);
+                    (IsSingleTickQuote ? 0x08 : 0) |
+                    (IsFormatted ? 0x10 : 0);
             }
 
             public static bool operator ==(IncompleteString left, IncompleteString right) {
@@ -2164,7 +2188,8 @@ namespace Microsoft.PythonTools.Parsing {
                 return IsRaw == other.IsRaw &&
                     IsUnicode == other.IsUnicode &&
                     IsTripleQuoted == other.IsTripleQuoted &&
-                    IsSingleTickQuote == other.IsSingleTickQuote;
+                    IsSingleTickQuote == other.IsSingleTickQuote &&
+                    IsFormatted == other.IsFormatted;
             }
 
             #endregion
