@@ -29,6 +29,8 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Profiling;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -52,6 +54,17 @@ namespace ProfilingUITests {
 
         [TestInitialize]
         public void TestInitialize() {
+            IVsShell shell = (IVsShell)VSTestContext.ServiceProvider.GetService(typeof(IVsShell));
+            Guid perfGuid = new Guid("{F4A63B2A-49AB-4b2d-AA59-A10F01026C89}");
+            int installed;
+            ErrorHandler.ThrowOnFailure(
+                shell.IsPackageInstalled(ref perfGuid, out installed)
+            );
+            if (installed == 0) {
+                Assert.Fail("Profiling is not installed");
+                return;
+            }
+
             PythonToolsService pyService;
             try {
                 pyService = VSTestContext.ServiceProvider.GetPythonToolsService_NotThreadSafe();
