@@ -1084,6 +1084,19 @@ def f(): pass");
             // try/except
             TestOneString(PythonLanguageVersion.V27, "try: pass\r\nexcept: pass\r\nelse: pass\r\nexcept Exception: pass");
             TestOneString(PythonLanguageVersion.V27, "try  :   pass\r\finally    :     pass");
+
+            // Variable annotations
+            TestOneString(PythonLanguageVersion.V36, "a:b, c");
+            TestOneString(PythonLanguageVersion.V36, "a:b, c = 1");
+            TestOneString(PythonLanguageVersion.V36, "a : b, c");
+            TestOneString(PythonLanguageVersion.V36, "a : b, c = 1");
+
+            TestOneString(PythonLanguageVersion.V36, "a,b:c");
+            TestOneString(PythonLanguageVersion.V36, "a,b:c = 1");
+            TestOneString(PythonLanguageVersion.V36, "a , b : c");
+            TestOneString(PythonLanguageVersion.V36, "a , b : c = 1");
+
+            TestOneString(PythonLanguageVersion.V36, "p: 1=optimized | 2=newlocals | 4=*arg | 8=**arg");
         }
 
         [TestMethod, Priority(1)]
@@ -1504,7 +1517,12 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V35, "@fob\r\n\r\nasync def f(): pass");
             TestOneString(PythonLanguageVersion.V35, "@fob(2)\r\nasync \\\r\ndef f(): pass");
 
-            TestOneString(PythonLanguageVersion.V35, "");
+            // Variable annotations
+            TestOneString(PythonLanguageVersion.V36, "a:b");
+            TestOneString(PythonLanguageVersion.V36, "a:b = 1");
+            TestOneString(PythonLanguageVersion.V36, "a : b");
+            TestOneString(PythonLanguageVersion.V36, "a : b = 1");
+
         }
 
         [TestMethod, Priority(1)]

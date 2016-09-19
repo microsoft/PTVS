@@ -419,8 +419,19 @@ namespace Microsoft.PythonTools.Parsing {
         private bool AllowYieldSyntax {
             get {
                 FunctionDefinition cf;
-                return _alwaysAllowContextDependentSyntax ||
-                    ((cf = CurrentFunction) != null && !cf.IsCoroutine);
+                if (_alwaysAllowContextDependentSyntax) {
+                    return true;
+                }
+                if ((cf = CurrentFunction) == null) {
+                    return false;
+                }
+                if (_langVersion >= PythonLanguageVersion.V36) {
+                    return true;
+                }
+                if (!cf.IsCoroutine) {
+                    return true;
+                }
+                return false;
             }
         }
 
@@ -803,7 +814,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         }
 
-        private Statement FinishAssignments(Expression right) {
+        private Statement FinishAssignments(Expression right, bool thereCanBeOnlyOne = false) {
             List<Expression> left = null;
             List<string> assignWhiteSpace = MakeWhiteSpaceList();
             Expression singleLeft = null;
@@ -820,6 +831,9 @@ namespace Microsoft.PythonTools.Parsing {
                 if (singleLeft == null) {
                     singleLeft = right;
                 } else {
+                    if (thereCanBeOnlyOne) {
+                        ReportSyntaxError(GetStart(), GetEnd(), "invalid syntax");
+                    }
                     if (left == null) {
                         left = new List<Expression>();
                         left.Add(singleLeft);
@@ -856,6 +870,85 @@ namespace Microsoft.PythonTools.Parsing {
             return assign;
         }
 
+        private static bool IsEndOfLineToken(Token t) {
+            switch (t.Kind) {
+                case TokenKind.Comment:
+                case TokenKind.NewLine:
+                case TokenKind.NLToken:
+                case TokenKind.EndOfFile:
+                    return true;
+            }
+            return false;
+        }
+
+        private ErrorExpression ReadLineAsError(Expression preceeding, string message) {
+            var t = NextToken();
+            Debug.Assert(t.Kind == TokenKind.Colon);
+            var image = new StringBuilder();
+            if (_verbatim) {
+                image.Append(_tokenWhiteSpace);
+            }
+            image.Append(':');
+
+            while (!IsEndOfLineToken(PeekToken())) {
+                t = NextToken();
+                if (_verbatim) {
+                    image.Append(_tokenWhiteSpace);
+                    image.Append(t.VerbatimImage);
+                } else {
+                    image.Append(t.Image);
+                }
+            }
+            var err = new ErrorExpression(image.ToString(), preceeding);
+            err.SetLoc(preceeding.StartIndex, GetEnd());
+            ReportSyntaxError(err.StartIndex, err.EndIndex, message);
+            return err;
+        }
+
+        private Expression ParseNameAnnotation(Expression expr) {
+            var inex = (expr as ParenthesisExpression)?.Expression;
+            if (expr is NameExpression || expr is MemberExpression || expr is IndexExpression ||
+                inex is NameExpression || inex is MemberExpression || inex is IndexExpression) {
+                // pass
+            } else if (expr is TupleExpression) {
+                return ReadLineAsError(expr, "only single target (not tuple) can be annotated");
+            } else {
+                return ReadLineAsError(expr, "illegal target for annotation");
+            }
+
+            Eat(TokenKind.Colon);
+            var ws2 = _tokenWhiteSpace;
+            var startColon = GetStart();
+
+            var ann = ParseExpression();
+
+            var err = ann as ErrorExpression;
+            if (err != null) {
+                var image = ws2 + ":";
+                Dictionary<object, object> attr = null;
+                if (_verbatim && _attributes.TryGetValue(err, out attr)) {
+                    object o;
+                    if (attr.TryGetValue(NodeAttributes.PreceedingWhiteSpace, out o)) {
+                        image += o.ToString();
+                    }
+                }
+
+                var err2 = err.AddPrefix(image, expr);
+                err2.SetLoc(startColon, err.EndIndex);
+                if (attr != null) {
+                    _attributes[err2] = attr;
+                    _attributes.Remove(err);
+                }
+                return err2;
+            }
+            var ret = new ExpressionWithAnnotation(expr, ann);
+            ret.SetLoc(expr.StartIndex, ann.EndIndex);
+            if (_verbatim) {
+                AddSecondPreceedingWhiteSpace(ret, ws2);
+            }
+            return ret;
+        }
+
         // expr_stmt: expression_list
         // expression_list: expression ( "," expression )* [","] 
         // assignment_stmt: (target_list "=")+ (expression_list | yield_expression) 
@@ -863,6 +956,17 @@ namespace Microsoft.PythonTools.Parsing {
         // augop: '+=' | '-=' | '*=' | '/=' | '%=' | '**=' | '>>=' | '<<=' | '&=' | '^=' | '|=' | '//='
         private Statement ParseExprStmt() {
             Expression ret = ParseTestListAsExpr();
+            bool hasAnnotation = false;
+
+            if (PeekToken(TokenKind.Colon) && _langVersion >= PythonLanguageVersion.V36) {
+                ret = ParseNameAnnotation(ret);
+                hasAnnotation = true;
+                if (!PeekToken(TokenKind.Assign)) {
+                    Statement stmt = new ExpressionStatement(ret);
+                    stmt.SetLoc(ret.IndexSpan);
+                    return stmt;
+                }
+            }
 
             if (PeekToken(TokenKind.Assign)) {
                 if (_langVersion >= PythonLanguageVersion.V30) {
@@ -880,7 +984,7 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                 }
 
-                return FinishAssignments(ret);
+                return FinishAssignments(ret, hasAnnotation);
             } else {
                 PythonOperator op = GetAssignOperator(PeekToken());
                 if (op != PythonOperator.None) {

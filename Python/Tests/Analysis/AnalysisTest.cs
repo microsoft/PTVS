@@ -2128,6 +2128,29 @@ oar2 = fob2 % (42, )";
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("oar2", text.IndexOf("oar2 =")), BuiltinTypeId.Unicode);
         }
 
+        [TestMethod, Priority(0)]
+        public void StringFormattingV36() {
+            var text = @"
+y = f'abc {42}'
+ry = rf'abc {42}'
+yr = fr'abc {42}'
+fadd = f'abc{42}' + f'{42}'
+
+def f(val):
+    print(val)
+f'abc {f(42)}'
+";
+
+            var entry = ProcessText(text, PythonLanguageVersion.V36);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", 0), BuiltinTypeId.Unicode);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("ry", 0), BuiltinTypeId.Unicode);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("yr", 0), BuiltinTypeId.Unicode);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fadd", 0), BuiltinTypeId.Unicode);
+
+            // TODO: Enable analysis of f-strings
+            //AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("val", text.IndexOf("print(val)")), BuiltinTypeId.Int);
+        }
+
         public virtual BuiltinTypeId BuiltinTypeId_Str {
             get {
                 return BuiltinTypeId.Bytes;
@@ -4299,6 +4322,49 @@ fob = D().func2()
             var entry = ProcessText(text);
             // TODO: AssertUtil.ContainsExactly(entry.GetTypesFromName("fob", 0), ListType);
         }
+
+        [TestMethod, Priority(0)]
+        public void AnnotatedAssign() {
+            var text = @"
+x : int = 42
+
+class C:
+    y : int = 42
+
+    def func(self):
+        self.abc : int = 42
+
+a = C()
+a.func()
+fob1 = a.abc
+fob2 = a.y
+fob3 = x
+";
+            var entry = ProcessText(text, PythonLanguageVersion.V36);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob1", 1), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("fob1", 1), _intMembers);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob2", 1), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("fob3", 1), _intMembers);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob3", 1), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("fob3", 1), _intMembers);
+            AssertUtil.ContainsAtLeast(entry.GetMemberNamesByIndex("a", 1), "abc", "func", "y", "__doc__", "__class__");
+
+            text = @"
+def f(val):
+    print(val)
+
+class C:
+    def __init__(self, y):
+        self.y = y
+
+x:f(42) = 1
+x:C(42) = 1
+";
+            entry = ProcessText(text, PythonLanguageVersion.V36);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("val", text.IndexOf("print(val)")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", text.IndexOf("self.y =")), BuiltinTypeId.Int);
+        }
+
 
         [TestMethod, Priority(0)]
         public void UnfinishedDot() {

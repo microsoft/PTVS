@@ -40,7 +40,7 @@ namespace AnalysisTests {
             PythonTestData.Deploy();
         }
 
-        internal static readonly PythonLanguageVersion[] AllVersions = new[] { PythonLanguageVersion.V24, PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33, PythonLanguageVersion.V34, PythonLanguageVersion.V35 };
+        internal static readonly PythonLanguageVersion[] AllVersions = new[] { PythonLanguageVersion.V24, PythonLanguageVersion.V25, PythonLanguageVersion.V26, PythonLanguageVersion.V27, PythonLanguageVersion.V30, PythonLanguageVersion.V31, PythonLanguageVersion.V32, PythonLanguageVersion.V33, PythonLanguageVersion.V34, PythonLanguageVersion.V35, PythonLanguageVersion.V36 };
         internal static readonly PythonLanguageVersion[] V25AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V25).ToArray();
         internal static readonly PythonLanguageVersion[] V26AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V26).ToArray();
         internal static readonly PythonLanguageVersion[] V27AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V27).ToArray();
@@ -54,6 +54,7 @@ namespace AnalysisTests {
         internal static readonly PythonLanguageVersion[] V33AndV34 = AllVersions.Where(v => v >= PythonLanguageVersion.V33 && v <= PythonLanguageVersion.V34).ToArray();
         internal static readonly PythonLanguageVersion[] V33AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V33).ToArray();
         internal static readonly PythonLanguageVersion[] V35AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V35).ToArray();
+        internal static readonly PythonLanguageVersion[] V36AndUp = AllVersions.Where(v => v >= PythonLanguageVersion.V36).ToArray();
 
         #region Test Cases
 
@@ -2216,20 +2217,35 @@ namespace AnalysisTests {
                         )))
                     )
                 );
+            }
 
+            ParseErrors("CoroutineDefIllegal.py", PythonLanguageVersion.V35,
+                new ErrorInfo("'yield' inside async function", 20, 2, 5, 25, 2, 10),
+                new ErrorInfo("'yield' inside async function", 40, 3, 9, 45, 3, 14),
+                new ErrorInfo("unexpected token 'for'", 74, 6, 11, 77, 6, 14),
+                new ErrorInfo("unexpected token ':'", 88, 6, 25, 89, 6, 26),
+                new ErrorInfo("unexpected token '<newline>'", 89, 6, 26, 99, 7, 9),
+                new ErrorInfo("unexpected token '<indent>'", 89, 6, 26, 99, 7, 9),
+                new ErrorInfo("unexpected token '<dedent>'", 105, 8, 1, 107, 9, 1),
+                new ErrorInfo("unexpected token 'async'", 107, 9, 1, 112, 9, 6),
+                new ErrorInfo("unexpected token 'with'", 162, 13, 11, 166, 13, 15),
+                new ErrorInfo("unexpected token ':'", 170, 13, 19, 171, 13, 20),
+                new ErrorInfo("unexpected token '<newline>'", 171, 13, 20, 181, 14, 9),
+                new ErrorInfo("unexpected token '<indent>'", 171, 13, 20, 181, 14, 9),
+                new ErrorInfo("unexpected token '<dedent>'", 187, 15, 1, 189, 16, 1),
+                new ErrorInfo("unexpected token 'async'", 189, 16, 1, 194, 16, 6)
+            );
+
+            foreach (var version in V36AndUp) {
                 ParseErrors("CoroutineDefIllegal.py", version,
-                    new ErrorInfo("'yield' inside async function", 20, 2, 5, 25, 2, 10),
-                    new ErrorInfo("'yield' inside async function", 40, 3, 9, 45, 3, 14),
                     new ErrorInfo("unexpected token 'for'", 74, 6, 11, 77, 6, 14),
-                    new ErrorInfo("unexpected token ':'", 88, 6, 25, 89, 6, 26),
-                    new ErrorInfo("unexpected token '<newline>'", 89, 6, 26, 99, 7, 9),
-                    new ErrorInfo("unexpected token '<indent>'", 89, 6, 26, 99, 7, 9),
+                    new ErrorInfo("illegal target for annotation", 78, 6, 15, 89, 6, 26),
+                    new ErrorInfo("unexpected indent", 99, 7, 9, 103, 7, 13),
                     new ErrorInfo("unexpected token '<dedent>'", 105, 8, 1, 107, 9, 1),
                     new ErrorInfo("unexpected token 'async'", 107, 9, 1, 112, 9, 6),
                     new ErrorInfo("unexpected token 'with'", 162, 13, 11, 166, 13, 15),
-                    new ErrorInfo("unexpected token ':'", 170, 13, 19, 171, 13, 20),
                     new ErrorInfo("unexpected token '<newline>'", 171, 13, 20, 181, 14, 9),
-                    new ErrorInfo("unexpected token '<indent>'", 171, 13, 20, 181, 14, 9),
+                    new ErrorInfo("unexpected indent", 181, 14, 9, 185, 14, 13),
                     new ErrorInfo("unexpected token '<dedent>'", 187, 15, 1, 189, 16, 1),
                     new ErrorInfo("unexpected token 'async'", 189, 16, 1, 194, 16, 6)
                 );
@@ -2653,6 +2669,57 @@ namespace AnalysisTests {
             }
         }
 
+        [TestMethod, Priority(0)]
+        public void VariableAnnotation() {
+            Action<Expression> FobWithOar = e => {
+                Assert.IsInstanceOfType(e, typeof(ExpressionWithAnnotation));
+                Fob(((ExpressionWithAnnotation)e).Expression);
+                Oar(((ExpressionWithAnnotation)e).Annotation);
+            };
+            Action<Expression> Fob1WithOar = e => {
+                Assert.IsInstanceOfType(e, typeof(ExpressionWithAnnotation));
+                CheckIndexExpression(Fob, One)(((ExpressionWithAnnotation)e).Expression);
+                Oar(((ExpressionWithAnnotation)e).Annotation);
+            };
+            Action<Expression> FobOarWithBaz = e => {
+                Assert.IsInstanceOfType(e, typeof(ExpressionWithAnnotation));
+                CheckMemberExpr(Fob, "oar")(((ExpressionWithAnnotation)e).Expression);
+                Baz(((ExpressionWithAnnotation)e).Annotation);
+            };
+
+            foreach (var version in V36AndUp) {
+                CheckAst(
+                    ParseFile("VarAnnotation.py", ErrorSink.Null, version),
+                    CheckSuite(
+                        CheckExprStmt(FobWithOar), 
+                        CheckAssignment(FobWithOar, One),
+                        CheckExprStmt(Fob1WithOar),
+                        CheckExprStmt(FobOarWithBaz),
+                        CheckClassDef("C", CheckSuite(
+                            CheckExprStmt(FobWithOar),
+                            CheckAssignment(FobWithOar, One),
+                            CheckExprStmt(Fob1WithOar),
+                            CheckExprStmt(FobOarWithBaz)
+                        )),
+                        CheckFuncDef("f", null, CheckSuite(
+                            CheckExprStmt(FobWithOar),
+                            CheckAssignment(FobWithOar, One),
+                            CheckExprStmt(Fob1WithOar),
+                            CheckExprStmt(FobOarWithBaz)
+                        ))
+                    )
+                );
+
+                ParseErrors("VarAnnotationIllegal.py", version,
+                    new ErrorInfo("only single target (not tuple) can be annotated", 0, 1, 1, 13, 1, 14),
+                    new ErrorInfo("unexpected token ','", 23, 2, 9, 24, 2, 10),
+                    new ErrorInfo("only single target (not tuple) can be annotated", 30, 3, 1, 47, 3, 18),
+                    new ErrorInfo("unexpected token ','", 57, 4, 9, 58, 4, 10),
+                    new ErrorInfo("invalid syntax", 83, 5, 16, 84, 5, 17)
+               );
+            }
+        }
+
         [TestMethod, Priority(2), Timeout(10 * 60 * 1000)]
         [TestCategory("10s"), TestCategory("60s")]
         public async Task StdLib() {
@@ -2707,6 +2774,21 @@ namespace AnalysisTests {
                 if (skippedFiles.Contains(filename) || filename.StartsWith("badsyntax_") || filename.StartsWith("bad_coding") || file.IndexOf("\\lib2to3\\tests\\") != -1) {
                     continue;
                 }
+
+                switch (curVersion.Version) {
+                    case PythonLanguageVersion.V36:
+                        if (// https://github.com/Microsoft/PTVS/issues/1638
+                            filename.Equals("test_coroutines.py", StringComparison.OrdinalIgnoreCase) ||
+                            // https://github.com/Microsoft/PTVS/issues/1637
+                            filename.Equals("test_unicode_identifiers.py", StringComparison.OrdinalIgnoreCase) ||
+                            // https://github.com/Microsoft/PTVS/issues/1645
+                            filename.Equals("test_grammar.py", StringComparison.OrdinalIgnoreCase)
+                            ) {
+                            continue;
+                        }
+                        break;
+                }
+
                 using (var parser = Parser.CreateParser(new StreamReader(file), curVersion.Version, new ParserOptions() { ErrorSink = errorSink })) {
                     var ast = parser.ParseFile();
                 }
@@ -3154,8 +3236,8 @@ namespace AnalysisTests {
                     Assert.AreEqual(name, funcDef.Name);
                 }
 
-                Assert.AreEqual(args.Length, funcDef.Parameters.Count);
-                for (int i = 0; i < args.Length; i++) {
+                Assert.AreEqual(args?.Length ?? 0, funcDef.Parameters.Count);
+                for (int i = 0; i < (args?.Length ?? 0); i++) {
                     args[i](funcDef.Parameters[i]);
                 }
 
@@ -3391,7 +3473,7 @@ namespace AnalysisTests {
 
         private static Action<Expression> CheckNameExpr(string name) {
             return expr => {
-                Assert.AreEqual(typeof(NameExpression), expr.GetType());
+                Assert.IsInstanceOfType(expr, typeof(NameExpression));
                 var nameExpr = (NameExpression)expr;
                 Assert.AreEqual(nameExpr.Name, name);
             };
