@@ -349,11 +349,13 @@ namespace Microsoft.PythonTools.Django.Analysis {
                 return AnalysisSet.Empty;
             }
 
-            IAnalysisSet urlNames = GetArg(args, keywordArgNames, "name", 0);
+            IAnalysisSet urlNames = GetArg(args, keywordArgNames, "name", -1);
+            if (urlNames == null) { // The kwargs do not contain a name arg
+                return AnalysisSet.Empty;
+            }
 
             string urlName = urlNames.First().GetConstantValueAsString();
             string urlRegex = args.First().First().GetConstantValueAsString();
-
             _urls.Add(new DjangoUrl(urlName, urlRegex));
 
             return AnalysisSet.Empty;
