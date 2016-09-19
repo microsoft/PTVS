@@ -116,7 +116,7 @@ namespace PythonToolsTests {
             Assert.AreEqual(@"Traceback (most recent call last):
   File ""<debug input>"", line 1, in <module>
 NameError: name 'does_not_exist' is not defined
-", _window.Error);
+".Replace("\r\n", "\n"), _window.Error.Replace("\r\n", "\n"));
         }
 
         [TestMethod, Priority(3)]
@@ -430,6 +430,21 @@ NameError: name 'does_not_exist' is not defined
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python35 ?? PythonPaths.Python35_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class DebugReplEvaluatorTests36 : DebugReplEvaluatorTests {
+        [ClassInitialize]
+        public static new void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python36 ?? PythonPaths.Python36_x64;
             }
         }
     }

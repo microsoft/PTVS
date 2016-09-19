@@ -722,8 +722,8 @@ long GetPythonThreadId(PythonVersion version, PyThreadState* curThread) {
         threadId = ((PyThreadState_25_27*)curThread)->thread_id;
     } else if (PyThreadState_30_33::IsFor(version)) {
         threadId = ((PyThreadState_30_33*)curThread)->thread_id;
-    } else if (PyThreadState_34_35::IsFor(version)) {
-        threadId = ((PyThreadState_34_35*)curThread)->thread_id;
+    } else if (PyThreadState_34_36::IsFor(version)) {
+        threadId = ((PyThreadState_34_36*)curThread)->thread_id;
     }
     return threadId;
 }
@@ -855,8 +855,6 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
         auto getThreadTls = (PyThread_get_key_value*)GetProcAddress(module, "PyThread_get_key_value");
         auto setThreadTls = (PyThread_set_key_value*)GetProcAddress(module, "PyThread_set_key_value");
         auto delThreadTls = (PyThread_delete_key_value*)GetProcAddress(module, "PyThread_delete_key_value");
-        auto pyGilStateEnsure = (PyGILState_EnsureFunc*)GetProcAddress(module, "PyGILState_Ensure");
-        auto pyGilStateRelease = (PyGILState_ReleaseFunc*)GetProcAddress(module, "PyGILState_Release");
         auto PyCFrame_Type = (PyTypeObject*)GetProcAddress(module, "PyCFrame_Type");
 
         if (addPendingCall == nullptr || curPythonThread == nullptr || interpHead == nullptr || gilEnsure == nullptr || gilRelease == nullptr || threadHead == nullptr ||
@@ -864,8 +862,7 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
             pyDictNew == nullptr || pyCompileString == nullptr || pyEvalCode == nullptr || getDictItem == nullptr || call == nullptr ||
             getBuiltins == nullptr || dictSetItem == nullptr || intFromLong == nullptr || pyErrRestore == nullptr || pyErrFetch == nullptr ||
             errOccurred == nullptr || pyImportMod == nullptr || pyGetAttr == nullptr || pyNone == nullptr || pySetAttr == nullptr || boolFromLong == nullptr ||
-            getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr ||
-            pyGilStateEnsure == nullptr || pyGilStateRelease == nullptr) {
+            getThreadTls == nullptr || setThreadTls == nullptr || delThreadTls == nullptr) {
                 // we're missing some APIs, we cannot attach.
                 connInfo.ReportError(ConnError_PythonNotFound);
                 return false;
@@ -975,13 +972,13 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                             // Py_InitThreads to bring up multi-threading.
                             // Some context here: http://bugs.python.org/issue11329
                             // http://pytools.codeplex.com/workitem/834
-                            gilState = pyGilStateEnsure();
+                            gilState = gilEnsure();
                         }
                         initThreads();
 
                         if (version >= PythonVersion_32) {
                             // we will release the GIL here
-                            pyGilStateRelease(gilState);
+                            gilRelease(gilState);
                         } else {
                             releaseLock();
                         }
@@ -1149,8 +1146,8 @@ bool DoAttach(HMODULE module, ConnectionInfo& connInfo, bool isDebug) {
                             frame = ((PyThreadState_25_27*)curThread)->frame;
                         } else if (PyThreadState_30_33::IsFor(version)) {
                             frame = ((PyThreadState_30_33*)curThread)->frame;
-                        } else if (PyThreadState_34_35::IsFor(version)) {
-                            frame = ((PyThreadState_34_35*)curThread)->frame;
+                        } else if (PyThreadState_34_36::IsFor(version)) {
+                            frame = ((PyThreadState_34_36*)curThread)->frame;
                         }
 
                         auto threadObj = PyObjectHolder(isDebug, call(new_thread.ToPython(), pyThreadId.ToPython(), pyTrue, frame, NULL));
@@ -1342,8 +1339,8 @@ int TraceGeneral(int interpreterId, PyObject *obj, PyFrameObject *frame, int wha
             ((PyThreadState_25_27*)curThread)->c_tracefunc(((PyThreadState_25_27*)curThread)->c_traceobj, frame, what, arg);
         } else if (PyThreadState_30_33::IsFor(version)) {
             ((PyThreadState_30_33*)curThread)->c_tracefunc(((PyThreadState_30_33*)curThread)->c_traceobj, frame, what, arg);
-        } else if (PyThreadState_34_35::IsFor(version)) {
-            ((PyThreadState_34_35*)curThread)->c_tracefunc(((PyThreadState_34_35*)curThread)->c_traceobj, frame, what, arg);
+        } else if (PyThreadState_34_36::IsFor(version)) {
+            ((PyThreadState_34_36*)curThread)->c_tracefunc(((PyThreadState_34_36*)curThread)->c_traceobj, frame, what, arg);
         }
     }
     return 0;
@@ -1387,8 +1384,8 @@ void SetInitialTraceFunc(DWORD interpreterId, PyThreadState *thread) {
         gilstate_counter = ((PyThreadState_25_27*)thread)->gilstate_counter;
     } else if (PyThreadState_30_33::IsFor(version)) {
         gilstate_counter = ((PyThreadState_30_33*)thread)->gilstate_counter;
-    } else if (PyThreadState_34_35::IsFor(version)) {
-        gilstate_counter = ((PyThreadState_34_35*)thread)->gilstate_counter;
+    } else if (PyThreadState_34_36::IsFor(version)) {
+        gilstate_counter = ((PyThreadState_34_36*)thread)->gilstate_counter;
     }
 
     if (gilstate_counter == 1) {
