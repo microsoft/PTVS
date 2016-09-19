@@ -1095,6 +1095,8 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V36, "a,b:c = 1");
             TestOneString(PythonLanguageVersion.V36, "a , b : c");
             TestOneString(PythonLanguageVersion.V36, "a , b : c = 1");
+
+            TestOneString(PythonLanguageVersion.V36, "p: 1=optimized | 2=newlocals | 4=*arg | 8=**arg");
         }
 
         [TestMethod, Priority(1)]

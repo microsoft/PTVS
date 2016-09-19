@@ -814,7 +814,7 @@ namespace Microsoft.PythonTools.Parsing {
 
         }
 
-        private Statement FinishAssignments(Expression right) {
+        private Statement FinishAssignments(Expression right, bool thereCanBeOnlyOne = false) {
             List<Expression> left = null;
             List<string> assignWhiteSpace = MakeWhiteSpaceList();
             Expression singleLeft = null;
@@ -831,6 +831,9 @@ namespace Microsoft.PythonTools.Parsing {
                 if (singleLeft == null) {
                     singleLeft = right;
                 } else {
+                    if (thereCanBeOnlyOne) {
+                        ReportSyntaxError(GetStart(), GetEnd(), "invalid syntax");
+                    }
                     if (left == null) {
                         left = new List<Expression>();
                         left.Add(singleLeft);
@@ -953,9 +956,11 @@ namespace Microsoft.PythonTools.Parsing {
         // augop: '+=' | '-=' | '*=' | '/=' | '%=' | '**=' | '>>=' | '<<=' | '&=' | '^=' | '|=' | '//='
         private Statement ParseExprStmt() {
             Expression ret = ParseTestListAsExpr();
+            bool hasAnnotation = false;
 
             if (PeekToken(TokenKind.Colon) && _langVersion >= PythonLanguageVersion.V36) {
                 ret = ParseNameAnnotation(ret);
+                hasAnnotation = true;
                 if (!PeekToken(TokenKind.Assign)) {
                     Statement stmt = new ExpressionStatement(ret);
                     stmt.SetLoc(ret.IndexSpan);
@@ -979,7 +984,7 @@ namespace Microsoft.PythonTools.Parsing {
                     }
                 }
 
-                return FinishAssignments(ret);
+                return FinishAssignments(ret, hasAnnotation);
             } else {
                 PythonOperator op = GetAssignOperator(PeekToken());
                 if (op != PythonOperator.None) {

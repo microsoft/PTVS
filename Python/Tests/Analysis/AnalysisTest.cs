@@ -2135,6 +2135,10 @@ y = f'abc {42}'
 ry = rf'abc {42}'
 yr = fr'abc {42}'
 fadd = f'abc{42}' + f'{42}'
+
+def f(val):
+    print(val)
+f'abc {f(42)}'
 ";
 
             var entry = ProcessText(text, PythonLanguageVersion.V36);
@@ -2142,6 +2146,9 @@ fadd = f'abc{42}' + f'{42}'
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("ry", 0), BuiltinTypeId.Unicode);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("yr", 0), BuiltinTypeId.Unicode);
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fadd", 0), BuiltinTypeId.Unicode);
+
+            // TODO: Enable analysis of f-strings
+            //AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("val", text.IndexOf("print(val)")), BuiltinTypeId.Int);
         }
 
         public virtual BuiltinTypeId BuiltinTypeId_Str {
@@ -4341,6 +4348,21 @@ fob3 = x
             AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("fob3", 1), BuiltinTypeId.Int);
             AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("fob3", 1), _intMembers);
             AssertUtil.ContainsAtLeast(entry.GetMemberNamesByIndex("a", 1), "abc", "func", "y", "__doc__", "__class__");
+
+            text = @"
+def f(val):
+    print(val)
+
+class C:
+    def __init__(self, y):
+        self.y = y
+
+x:f(42) = 1
+x:C(42) = 1
+";
+            entry = ProcessText(text, PythonLanguageVersion.V36);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("val", text.IndexOf("print(val)")), BuiltinTypeId.Int);
+            AssertUtil.ContainsExactly(entry.GetTypeIdsByIndex("y", text.IndexOf("self.y =")), BuiltinTypeId.Int);
         }
 
 

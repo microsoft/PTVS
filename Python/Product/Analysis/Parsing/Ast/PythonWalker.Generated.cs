@@ -60,6 +60,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public virtual bool Walk(ErrorExpression node) { return true; }
         public virtual void PostWalk(ErrorExpression node) { }
 
+        // ExpressionWithAnnotation
+        public virtual bool Walk(ExpressionWithAnnotation node) { return true; }
+        public virtual void PostWalk(ExpressionWithAnnotation node) { }
+
         // GeneratorExpression
         public virtual bool Walk(GeneratorExpression node) { return true; }
         public virtual void PostWalk(GeneratorExpression node) { }
@@ -322,6 +326,10 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         public override bool Walk(ErrorExpression node) { return false; }
         public override void PostWalk(ErrorExpression node) { }
 
+        // ExpressionWithAnnotation
+        public override bool Walk(ExpressionWithAnnotation node) { return false; }
+        public override void PostWalk(ExpressionWithAnnotation node) { }
+
         // GeneratorExpression
         public override bool Walk(GeneratorExpression node) { return false; }
         public override void PostWalk(GeneratorExpression node) { }
@@ -579,6 +587,9 @@ namespace Microsoft.PythonTools.Parsing.Ast {
 
         // ErrorExpression
         public override bool Walk(ErrorExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
+
+        // ExpressionWithAnnotation
+        public override bool Walk(ExpressionWithAnnotation node) { return Location >= node.StartIndex && Location <= node.EndIndex; }
 
         // GeneratorExpression
         public override bool Walk(GeneratorExpression node) { return Location >= node.StartIndex && Location <= node.EndIndex; }

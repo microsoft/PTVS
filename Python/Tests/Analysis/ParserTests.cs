@@ -2676,6 +2676,16 @@ namespace AnalysisTests {
                 Fob(((ExpressionWithAnnotation)e).Expression);
                 Oar(((ExpressionWithAnnotation)e).Annotation);
             };
+            Action<Expression> Fob1WithOar = e => {
+                Assert.IsInstanceOfType(e, typeof(ExpressionWithAnnotation));
+                CheckIndexExpression(Fob, One)(((ExpressionWithAnnotation)e).Expression);
+                Oar(((ExpressionWithAnnotation)e).Annotation);
+            };
+            Action<Expression> FobOarWithBaz = e => {
+                Assert.IsInstanceOfType(e, typeof(ExpressionWithAnnotation));
+                CheckMemberExpr(Fob, "oar")(((ExpressionWithAnnotation)e).Expression);
+                Baz(((ExpressionWithAnnotation)e).Annotation);
+            };
 
             foreach (var version in V36AndUp) {
                 CheckAst(
@@ -2683,23 +2693,30 @@ namespace AnalysisTests {
                     CheckSuite(
                         CheckExprStmt(FobWithOar), 
                         CheckAssignment(FobWithOar, One),
+                        CheckExprStmt(Fob1WithOar),
+                        CheckExprStmt(FobOarWithBaz),
                         CheckClassDef("C", CheckSuite(
                             CheckExprStmt(FobWithOar),
-                            CheckAssignment(FobWithOar, One)
+                            CheckAssignment(FobWithOar, One),
+                            CheckExprStmt(Fob1WithOar),
+                            CheckExprStmt(FobOarWithBaz)
                         )),
                         CheckFuncDef("f", null, CheckSuite(
                             CheckExprStmt(FobWithOar),
-                            CheckAssignment(FobWithOar, One)
+                            CheckAssignment(FobWithOar, One),
+                            CheckExprStmt(Fob1WithOar),
+                            CheckExprStmt(FobOarWithBaz)
                         ))
                     )
                 );
 
                 ParseErrors("VarAnnotationIllegal.py", version,
                     new ErrorInfo("only single target (not tuple) can be annotated", 0, 1, 1, 13, 1, 14),
-                    new ErrorInfo("unexpected token ','", 22, 2, 9, 23, 2, 10),
-                    new ErrorInfo("only single target (not tuple) can be annotated", 28, 3, 1, 45, 3, 18),
-                    new ErrorInfo("unexpected token ','", 54, 4, 9, 55, 4, 10)
-                );
+                    new ErrorInfo("unexpected token ','", 23, 2, 9, 24, 2, 10),
+                    new ErrorInfo("only single target (not tuple) can be annotated", 30, 3, 1, 47, 3, 18),
+                    new ErrorInfo("unexpected token ','", 57, 4, 9, 58, 4, 10),
+                    new ErrorInfo("invalid syntax", 83, 5, 16, 84, 5, 17)
+               );
             }
         }
 
@@ -2757,6 +2774,21 @@ namespace AnalysisTests {
                 if (skippedFiles.Contains(filename) || filename.StartsWith("badsyntax_") || filename.StartsWith("bad_coding") || file.IndexOf("\\lib2to3\\tests\\") != -1) {
                     continue;
                 }
+
+                switch (curVersion.Version) {
+                    case PythonLanguageVersion.V36:
+                        if (// https://github.com/Microsoft/PTVS/issues/1638
+                            filename.Equals("test_coroutines.py", StringComparison.OrdinalIgnoreCase) ||
+                            // https://github.com/Microsoft/PTVS/issues/1637
+                            filename.Equals("test_unicode_identifiers.py", StringComparison.OrdinalIgnoreCase) ||
+                            // https://github.com/Microsoft/PTVS/issues/1645
+                            filename.Equals("test_grammar.py", StringComparison.OrdinalIgnoreCase)
+                            ) {
+                            continue;
+                        }
+                        break;
+                }
+
                 using (var parser = Parser.CreateParser(new StreamReader(file), curVersion.Version, new ParserOptions() { ErrorSink = errorSink })) {
                     var ast = parser.ParseFile();
                 }

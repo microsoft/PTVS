@@ -43,8 +43,11 @@ namespace Microsoft.PythonTools.Parsing.Ast {
         internal override string CheckDelete() => "cannot delete " + NodeName;
 
         public override void Walk(PythonWalker walker) {
-            _expression.Walk(walker);
-            _annotation?.Walk(walker);
+            if (walker.Walk(this)) {
+                _expression.Walk(walker);
+                _annotation?.Walk(walker);
+            }
+            walker.PostWalk(this);
         }
 
         internal override void AppendCodeString(StringBuilder res, PythonAst ast, CodeFormattingOptions format) {

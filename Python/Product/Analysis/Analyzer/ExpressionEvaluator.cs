@@ -201,6 +201,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             { typeof(TupleExpression), ExpressionEvaluator.EvaluateSequence },
             { typeof(ListExpression), ExpressionEvaluator.EvaluateSequence },
             { typeof(SliceExpression), ExpressionEvaluator.EvaluateSlice },
+            { typeof(ExpressionWithAnnotation), ExpressionEvaluator.EvaluateAnnotatedExpression },
         };
 
         private static IAnalysisSet EvaluateSequence(ExpressionEvaluator ee, Node node) {
@@ -208,6 +209,14 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             // TODO: We need to update the sequence on each re-evaluation, not just
             // evaluate it once.
             return ee.MakeSequence(ee, node);
+        }
+
+        private static IAnalysisSet EvaluateAnnotatedExpression(ExpressionEvaluator ee, Node node) {
+            var n = (ExpressionWithAnnotation)node;
+            if (n.Annotation != null) {
+                ee.Evaluate(n.Annotation);
+            }
+            return ee.Evaluate(n.Expression);
         }
 
         private static IAnalysisSet EvaluateParenthesis(ExpressionEvaluator ee, Node node) {

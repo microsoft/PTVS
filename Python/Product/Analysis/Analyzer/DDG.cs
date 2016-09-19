@@ -152,12 +152,19 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             InterpreterScope oldScope;
             if (ne != null &&
                 (oldScope = _eval.Scope).OuterScope != null &&
-                node.Left.OfType<NameExpression>().Any(n => n.Name == ne.Name)) {
+                (node.Left.OfType<NameExpression>().Any(n => n.Name == ne.Name) ||
+                node.Left.OfType<ExpressionWithAnnotation>().Select(e => e.Expression).OfType<NameExpression>().Any(n => n.Name == ne.Name))) {
                 try {
                     _eval.Scope = _eval.Scope.OuterScope;
                     valueType = valueType.Union(_eval.Evaluate(node.Right));
                 } finally {
                     _eval.Scope = oldScope;
+                }
+            }
+
+            foreach (var left in node.Left.OfType<ExpressionWithAnnotation>()) {
+                if (left.Annotation != null) {
+                    _eval.Evaluate(left.Annotation);
                 }
             }
 
