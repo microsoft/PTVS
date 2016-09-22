@@ -15,14 +15,13 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
-using Microsoft.CookiecutterTools.Interpreters;
-using Microsoft.CookiecutterTools.Infrastructure;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.CookiecutterTools.Interpreters;
 
 namespace Microsoft.CookiecutterTools.Model {
-    class CookiecutterClientProvider {
-        public ICookiecutterClient Create() {
+    static class CookiecutterClientProvider {
+        public static ICookiecutterClient Create() {
             var interpreter = FindCompatibleInterpreter();
             if (interpreter != null) {
                 return new CookiecutterClient(interpreter);
@@ -31,29 +30,14 @@ namespace Microsoft.CookiecutterTools.Model {
             return null;
         }
 
-        public bool CompatiblePythonAvailable() {
+        public static bool IsCompatiblePythonAvailable() {
             return FindCompatibleInterpreter() != null;
         }
 
-        private CookiecutterPythonInterpreter FindCompatibleInterpreter() {
-            foreach (var r in GetAvailableInterpreters()) {
-                if (r.Item2) {
-                    return new CookiecutterPythonInterpreter(r.Item1);
-                }
-            }
-
-            return null;
-        }
-
-        private IEnumerable<Tuple<string, bool>> GetAvailableInterpreters() {
-            var res = PythonRegistrySearch.PerformDefaultSearch();
-            foreach (var r in res) {
-                if (r.Configuration.Version < new Version(3, 3)) {
-                    continue;
-                }
-
-                yield return Tuple.Create(r.Configuration.InterpreterPath, true);
-            }
+        private static CookiecutterPythonInterpreter FindCompatibleInterpreter() {
+            var interpreters = PythonRegistrySearch.PerformDefaultSearch();
+            var compatible = interpreters.Where(interp => interp.Configuration.Version >= new Version(3, 3)).FirstOrDefault();
+            return compatible != null ? new CookiecutterPythonInterpreter(compatible.Configuration.InterpreterPath) : null;
         }
     }
 }

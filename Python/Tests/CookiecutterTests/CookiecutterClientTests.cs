@@ -74,13 +74,21 @@ namespace CookiecutterTests {
 
         [TestInitialize]
         public void SetupTest() {
-            var provider = new CookiecutterClientProvider();
-            _client = provider.Create();
+            _client = CookiecutterClientProvider.Create();
             Assert.IsNotNull(_client, "The system doesn't have any compatible Python interpreters.");
+        }
+
+        private async Task EnsureCookiecutterInstalledAsync() {
+            if (!_client.CookiecutterInstalled) {
+                await _client.CreateCookiecutterEnv();
+                await _client.InstallPackage();
+            }
         }
 
         [TestMethod]
         public async Task LoadContextNoUserConfig() {
+            await EnsureCookiecutterInstalledAsync();
+
             var actual = await _client.LoadContextAsync(LocalTemplatePath, NoUserConfigFilePath);
 
             CollectionAssert.AreEqual(LocalTemplateNoUserConfigContextItems, actual.Item1, new ContextItemComparer());
@@ -88,6 +96,8 @@ namespace CookiecutterTests {
 
         [TestMethod]
         public async Task LoadContextWithUserConfig() {
+            await EnsureCookiecutterInstalledAsync();
+
             var actual = await _client.LoadContextAsync(LocalTemplatePath, UserConfigFilePath);
 
             CollectionAssert.AreEqual(LocalTemplateWithUserConfigContextItems, actual.Item1, new ContextItemComparer());
@@ -95,6 +105,8 @@ namespace CookiecutterTests {
 
         [TestMethod]
         public async Task GenerateWithoutUserConfig() {
+            await EnsureCookiecutterInstalledAsync();
+
             Dictionary<string, string> actual = await GenerateFromLocalTemplate(NoUserConfigFilePath);
 
             var expected = new Dictionary<string, string>() {
@@ -114,6 +126,8 @@ namespace CookiecutterTests {
 
         [TestMethod]
         public async Task GenerateWithUserConfig() {
+            await EnsureCookiecutterInstalledAsync();
+
             Dictionary<string, string> actual = await GenerateFromLocalTemplate(UserConfigFilePath);
 
             var expected = new Dictionary<string, string>() {
