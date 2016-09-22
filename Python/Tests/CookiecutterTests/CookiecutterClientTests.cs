@@ -75,10 +75,8 @@ namespace CookiecutterTests {
         [TestInitialize]
         public void SetupTest() {
             var provider = new CookiecutterClientProvider();
-            _client = provider.Create(false);
-            if (_client == null) {
-                Assert.Inconclusive("The Cookiecutter package is not installed in any of the registered interpreters.");
-            }
+            _client = provider.Create();
+            Assert.IsNotNull(_client, "The system doesn't have any compatible Python interpreters.");
         }
 
         [TestMethod]

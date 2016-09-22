@@ -207,6 +207,21 @@
 
             <StackPanel Margin="4 4 4 8"
                         Orientation="Vertical"
+                        Visibility="{Binding Path=IsInstalling, Converter={StaticResource BoolToVisibleOrCollapsed}}">
+                <Separator/>
+                <TextBlock Text="Installing cookiecutter..."/>
+                <ProgressBar Margin="4" IsIndeterminate="True"/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal"
+                        Visibility="{Binding Path=IsInstallingError, Converter={StaticResource BoolToVisibleOrCollapsed}}">
+                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
+                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Error installing cookiecutter. See output window for details."/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Vertical"
                         Visibility="{Binding Path=IsCloning, Converter={StaticResource BoolToVisibleOrCollapsed}}">
                 <Separator/>
                 <TextBlock Text="Cloning repository..."/>

@@ -20,6 +20,5 @@ namespace Microsoft.CookiecutterTools {
         public const string HelpUrl = "http://go.microsoft.com/fwlink/?LinkID=827351";
         public const string InstallGitUrl = "http://go.microsoft.com/fwlink/?LinkID=827352";
         public const string InstallPythonUrl = "http://go.microsoft.com/fwlink/?LinkID=827353";
-        public const string InstallCookiecutterUrl = "http://go.microsoft.com/fwlink/?LinkID=827354";
     }
 }

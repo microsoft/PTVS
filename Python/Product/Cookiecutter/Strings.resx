@@ -150,14 +150,11 @@ You can get more information by running Visual Studio with the /log parameter on
   <data name="GitHubSearchError" xml:space="preserve">
     <value>Could not retrieve results from GitHub</value>
   </data>
-  <data name="InstallCookiecutterInfoBarLink" xml:space="preserve">
-    <value>Install cookiecutter package</value>
-  </data>
   <data name="InstallGitInfoBarLink" xml:space="preserve">
     <value>Install Git</value>
   </data>
   <data name="InstallPythonInfoBarLink" xml:space="preserve">
-    <value>Install Python</value>
+    <value>Install Python 3</value>
   </data>
   <data name="MissingDependenciesInfoBarMessage" xml:space="preserve">
     <value>Some external dependencies are missing. Click the links to install them.</value>
@@ -171,6 +168,15 @@ You can get more information by running Visual Studio with the /log parameter on
     <value>A different template with the name '{0}' already exists in '{1}'.
 
 Please delete the installed template and try again.</value>
+  </data>
+  <data name="InstallingCookiecutterStarted" xml:space="preserve">
+    <value>----- Installing cookiecutter -----</value>
+  </data>
+  <data name="InstallingCookiecutterSuccess" xml:space="preserve">
+    <value>----- Successfully installed cookiecutter -----</value>
+  </data>
+  <data name="InstallingCookiecutterFailed" xml:space="preserve">
+    <value>----- Failed to install cookiecutter -----</value>
   </data>
   <data name="CloningTemplateStarted" xml:space="preserve">
     <value>----- Cloning template '{0}' -----</value>
