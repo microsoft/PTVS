@@ -15,15 +15,15 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
-using Microsoft.CookiecutterTools.Interpreters;
-using Microsoft.CookiecutterTools.Infrastructure;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using Microsoft.CookiecutterTools.Interpreters;
 
 namespace Microsoft.CookiecutterTools.Model {
-    class CookiecutterClientProvider {
-        public ICookiecutterClient Create(bool useEmbedded) {
-            var interpreter = useEmbedded ? FindEmbeddedInterpreter() : FindCompatibleInterpreter();
+    static class CookiecutterClientProvider {
+        public static ICookiecutterClient Create() {
+            var interpreter = FindCompatibleInterpreter();
             if (interpreter != null) {
                 return new CookiecutterClient(interpreter);
             }
@@ -31,64 +31,17 @@ namespace Microsoft.CookiecutterTools.Model {
             return null;
         }
 
-        public bool CheckDependencies(out bool missingPython, out bool missingCookiecutter) {
-            missingPython = true;
-            missingCookiecutter = true;
-
-            foreach (var r in GetAvailableInterpreters()) {
-                missingPython = false;
-                if (r.Item2) {
-                    missingCookiecutter = false;
-                    break;
-                }
-            }
-
-            return missingPython || missingCookiecutter;
+        public static bool IsCompatiblePythonAvailable() {
+            return FindCompatibleInterpreter() != null;
         }
 
-        private CookiecutterPythonInterpreter FindCompatibleInterpreter() {
-            foreach (var r in GetAvailableInterpreters()) {
-                if (r.Item2) {
-                    return new CookiecutterPythonInterpreter(r.Item1);
-                }
-            }
-
-            return null;
-        }
-
-        private CookiecutterPythonInterpreter FindEmbeddedInterpreter() {
-            var path = PythonToolsInstallPath.TryGetFile(@"python-3.5.1-embed-win32\python.exe");
-            if (!string.IsNullOrEmpty(path)) {
-                return new CookiecutterPythonInterpreter(path);
-            }
-
-            return null;
-        }
-
-        private IEnumerable<Tuple<string, bool>> GetAvailableInterpreters() {
-            var res = PythonRegistrySearch.PerformDefaultSearch();
-            foreach (var r in res) {
-                var testResult = Check(r.Configuration.InterpreterPath);
-                yield return Tuple.Create(r.Configuration.InterpreterPath, testResult == "ok");
-            }
-        }
-
-        private string Check(string interpreterPath) {
-            var checkScript = PythonToolsInstallPath.GetFile("cookiecutter_check.py");
-            return RunPythonScript(interpreterPath, checkScript, "");
-        }
-
-        private string RunPythonScript(string interpreterPath, string script, string parameters) {
-            var psi = new ProcessStartInfo(interpreterPath, string.Format("\"{0}\" {1}", script, parameters));
-            psi.RedirectStandardOutput = true;
-            psi.UseShellExecute = false;
-            psi.CreateNoWindow = true;
-
-            var proc = Process.Start(psi);
-            var output = proc.StandardOutput.ReadToEnd().Trim();
-            proc.WaitForExit();
-
-            return output;
+        private static CookiecutterPythonInterpreter FindCompatibleInterpreter() {
+            var interpreters = PythonRegistrySearch.PerformDefaultSearch();
+            var compatible = interpreters
+                .Where(x => File.Exists(x.Configuration.InterpreterPath))
+                .OrderByDescending(x => x.Configuration.Version)
+                .FirstOrDefault(x => x.Configuration.Version >= new Version(3, 3));
+            return compatible != null ? new CookiecutterPythonInterpreter(compatible.Configuration.InterpreterPath) : null;
         }
     }
 }

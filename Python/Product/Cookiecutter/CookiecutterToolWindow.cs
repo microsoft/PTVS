@@ -44,11 +44,6 @@ namespace Microsoft.CookiecutterTools {
         private IVsInfoBar _infoBarModel;
         private uint _infoBarAdviseCookie;
 
-        private bool _missingDependencies;
-        private bool _missingGit;
-        private bool _missingPython;
-        private bool _missingCookiecutter;
-
         private readonly object _commandsLock = new object();
         private readonly Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
 
@@ -77,8 +72,8 @@ namespace Microsoft.CookiecutterTools {
             _infoBarFactory = _site.GetService(typeof(SVsInfoBarUIFactory)) as IVsInfoBarUIFactory;
 
             object control = null;
-            _missingDependencies = CheckDependencies(out _missingGit, out _missingPython, out _missingCookiecutter);
-            if (_missingDependencies) {
+
+            if (!CookiecutterClientProvider.IsCompatiblePythonAvailable()) {
                 control = new MissingDependencies();
             } else {
                 string feedUrl = CookiecutterPackage.Instance.RecommendedFeed;
@@ -109,7 +104,7 @@ namespace Microsoft.CookiecutterTools {
 
             OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
 
-            if (CookiecutterPackage.Instance.ShowHelp || _missingDependencies) {
+            if (CookiecutterPackage.Instance.ShowHelp) {
                 AddInfoBar();
             }
         }
@@ -121,10 +116,8 @@ namespace Microsoft.CookiecutterTools {
                     _infoBarAdviseCookie = 0;
                 }
 
-                if (!_missingDependencies) {
-                    // Save this for later time
-                    CookiecutterPackage.Instance.ShowHelp = false;
-                }
+                // Remember this for next time
+                CookiecutterPackage.Instance.ShowHelp = false;
 
                 RemoveInfoBar(_infoBar);
                 _infoBar.Close();
@@ -138,37 +131,14 @@ namespace Microsoft.CookiecutterTools {
 
         private void AddInfoBar() {
             Action showHelp = () => Process.Start(UrlConstants.HelpUrl);
-            Action installGit = () => Process.Start(UrlConstants.InstallGitUrl);
-            Action installPython = () => Process.Start(UrlConstants.InstallPythonUrl);
-            Action installCookiecutter = () => Process.Start(UrlConstants.InstallCookiecutterUrl);
 
             var messages = new List<IVsInfoBarTextSpan>();
             var actions = new List<InfoBarActionItem>();
 
-            if (_missingDependencies) {
-                messages.Add(new InfoBarTextSpan(Strings.MissingDependenciesInfoBarMessage));
-            } else {
-                messages.Add(new InfoBarTextSpan(Strings.InfoBarMessage));
-            }
+            messages.Add(new InfoBarTextSpan(Strings.InfoBarMessage));
+            actions.Add(new InfoBarHyperlink(Strings.InfoBarMessageLink, showHelp));
 
-            if (!_missingDependencies) {
-                actions.Add(new InfoBarHyperlink(Strings.InfoBarMessageLink, showHelp));
-            }
-
-            if (_missingGit) {
-                actions.Add(new InfoBarHyperlink(Strings.InstallGitInfoBarLink, installGit));
-            }
-
-            if (_missingPython) {
-                actions.Add(new InfoBarHyperlink(Strings.InstallPythonInfoBarLink, installPython));
-            }
-
-            if (_missingCookiecutter) {
-                actions.Add(new InfoBarHyperlink(Strings.InstallCookiecutterInfoBarLink, installCookiecutter));
-            }
-
-            var image =  _missingDependencies ? KnownMonikers.StatusError : KnownMonikers.StatusInformation;
-            _infoBarModel = new InfoBarModel(messages, actions, image, isCloseButtonVisible: true);
+            _infoBarModel = new InfoBarModel(messages, actions, KnownMonikers.StatusInformation, isCloseButtonVisible: true);
             _infoBar = _infoBarFactory.CreateInfoBar(_infoBarModel);
             AddInfoBar(_infoBar);
             _infoBar.Advise(this, out _infoBarAdviseCookie);
@@ -278,20 +248,6 @@ namespace Microsoft.CookiecutterTools {
                 (int)point.Y,
                 this
             );
-        }
-
-        private static bool CheckDependencies(out bool missingGit, out bool missingPython, out bool missingCookiecutter) {
-            missingGit = true;
-            missingPython = true;
-            missingCookiecutter = true;
-
-            new CookiecutterClientProvider().CheckDependencies(out missingPython, out missingCookiecutter);
-
-            if (!string.IsNullOrEmpty(GitClient.RecommendedGitFilePath)) {
-                missingGit = false;
-            }
-
-            return missingGit || missingPython || missingCookiecutter;
         }
     }
 }

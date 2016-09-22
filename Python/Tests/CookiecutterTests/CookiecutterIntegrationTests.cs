@@ -88,7 +88,7 @@ namespace CookiecutterTests {
 
             _gitClient = new GitClient(GitClient.RecommendedGitFilePath);
             _gitHubClient = new GitHubClient();
-            _cutterClient = new CookiecutterClientProvider().Create(false);
+            _cutterClient = CookiecutterClientProvider.Create();
             _installedTemplateSource = new LocalTemplateSource(installedPath, _gitClient);
             _gitHubTemplateSource = new GitHubTemplateSource(_gitHubClient);
             _feedTemplateSource = new FeedTemplateSource(feedUrl);
@@ -202,6 +202,8 @@ namespace CookiecutterTests {
 
         [TestMethod]
         public async Task CreateFromLocalTemplate() {
+            await EnsureCookiecutterInstalledAsync();
+
             _vm.SearchTerm = TestLocalTemplatePath;
             await _vm.SearchAsync();
 
@@ -249,6 +251,8 @@ namespace CookiecutterTests {
 
         [TestMethod]
         public async Task CreateFromOnlineTemplate() {
+            await EnsureCookiecutterInstalledAsync();
+
             _vm.SearchTerm = OnlineTemplateUrl;
             await _vm.SearchAsync();
 
@@ -279,6 +283,13 @@ namespace CookiecutterTests {
             Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "static_files", "web.config")));
             Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "post-deployment", "install-requirements.ps1")));
             Assert.IsFalse(File.Exists(Path.Combine(_vm.OutputFolderPath, "install-requirements.ps1")));
+        }
+
+        private async Task EnsureCookiecutterInstalledAsync() {
+            if (!_cutterClient.CookiecutterInstalled) {
+                await _cutterClient.CreateCookiecutterEnv();
+                await _cutterClient.InstallPackage();
+            }
         }
 
         private static void PrintResults(ObservableCollection<object> items) {

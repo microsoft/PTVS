@@ -24,7 +24,25 @@ using Microsoft.CookiecutterTools.Model;
 
 namespace CookiecutterTests {
     class MockCookiecutterClient : ICookiecutterClient {
+        public bool CookiecutterInstalled {
+            get {
+                throw new NotImplementedException();
+            }
+        }
+
+        public Task<ProcessOutputResult> CreateCookiecutterEnv() {
+            throw new NotImplementedException();
+        }
+
         public Task<ProcessOutputResult> GenerateProjectAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
+            throw new NotImplementedException();
+        }
+
+        public Task<ProcessOutputResult> InstallPackage() {
+            throw new NotImplementedException();
+        }
+
+        public Task<bool> IsCookiecutterInstalled() {
             throw new NotImplementedException();
         }
 

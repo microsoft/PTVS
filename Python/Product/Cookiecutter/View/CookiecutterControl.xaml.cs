@@ -51,7 +51,7 @@ namespace Microsoft.CookiecutterTools.View {
             var gitClient = new GitClient(gitExeFilePath);
             var gitHubClient = new GitHubClient();
             ViewModel = new CookiecutterViewModel(
-                new CookiecutterClientProvider().Create(false),
+                CookiecutterClientProvider.Create(),
                 gitHubClient,
                 gitClient,
                 outputWindow,

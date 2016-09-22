@@ -7,7 +7,27 @@
              xmlns:local="clr-namespace:Microsoft.CookiecutterTools.View"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
-    <Grid>
-        <TextBlock Margin="4" TextWrapping="Wrap" Text="This feature requires external dependencies that are not installed." VerticalAlignment="Center" HorizontalAlignment="Center"/>
-    </Grid>
+    <UserControl.CommandBindings>
+        <CommandBinding Command="{x:Static local:MissingDependencies.InstallPython}"
+                    CanExecute="InstallPython_CanExecute"
+                    Executed="InstallPython_Executed" />
+    </UserControl.CommandBindings>
+    <UserControl.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="CookiecutterDictionary.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </UserControl.Resources>
+    <StackPanel Orientation="Vertical" VerticalAlignment="Center">
+        <TextBlock Margin="8"
+                    TextWrapping="Wrap"
+                    Text="Please install Python 3.3 or later to use this feature (requires VS restart)."
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"/>
+        <Button Margin="8"
+                Command="{x:Static local:MissingDependencies.InstallPython}"
+                HorizontalAlignment="Center"
+                Style="{StaticResource NavigationButton}">Help me install Python</Button>
+    </StackPanel>
 </UserControl>

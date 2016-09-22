@@ -173,15 +173,6 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Install cookiecutter package.
-        /// </summary>
-        internal static string InstallCookiecutterInfoBarLink {
-            get {
-                return ResourceManager.GetString("InstallCookiecutterInfoBarLink", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Install Git.
         /// </summary>
         internal static string InstallGitInfoBarLink {
@@ -191,7 +182,34 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Install Python.
+        ///   Looks up a localized string similar to ----- Failed to install cookiecutter -----.
+        /// </summary>
+        internal static string InstallingCookiecutterFailed {
+            get {
+                return ResourceManager.GetString("InstallingCookiecutterFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Installing cookiecutter -----.
+        /// </summary>
+        internal static string InstallingCookiecutterStarted {
+            get {
+                return ResourceManager.GetString("InstallingCookiecutterStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully installed cookiecutter -----.
+        /// </summary>
+        internal static string InstallingCookiecutterSuccess {
+            get {
+                return ResourceManager.GetString("InstallingCookiecutterSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Install Python 3.
         /// </summary>
         internal static string InstallPythonInfoBarLink {
             get {
