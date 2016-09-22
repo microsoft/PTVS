@@ -155,6 +155,8 @@
     <None Include="source.extension.vsixmanifest" />
     <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll">
       <VSIXSubPath>.</VSIXSubPath>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
     <Content Include="$(BuildRoot)\Python\References\Dev$(VSTarget)\Microsoft.PythonTools.InteractiveWindow.dll">
       <VSIXSubPath>.</VSIXSubPath>

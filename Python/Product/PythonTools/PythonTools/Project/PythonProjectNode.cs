@@ -1214,13 +1214,12 @@ namespace Microsoft.PythonTools.Project {
             msg.AppendFormat("Exit Code: {0}", e.ExitCode);
             msg.AppendLine();
             msg.AppendLine(" ------ STD ERR ------ ");
-            msg.AppendLine(e.StdErr);
+            msg.Append(e.StdErr);
             msg.AppendLine(" ------ END STD ERR ------ ");
             Site.GetPythonToolsService().Logger.LogEvent(
                 PythonLogEvent.AnalysisExitedAbnormally,
                 msg.ToString()
             );
-            EventLog.WriteEntry(Strings.ProductTitle, msg.ToString(), EventLogEntryType.Error, 9998);
         }
 
         private void HookErrorsAndWarnings(VsProjectAnalyzer res) {
