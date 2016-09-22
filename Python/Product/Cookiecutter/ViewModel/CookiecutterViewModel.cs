@@ -168,15 +168,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
-        public bool IsInstalling
-        {
-            get
-            {
+        public bool IsInstalling {
+            get {
                 return _isInstalling;
             }
 
-            set
-            {
+            set {
                 if (value != _isInstalling) {
                     _isInstalling = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsInstalling)));
@@ -184,15 +181,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
-        public bool IsInstallingSuccess
-        {
-            get
-            {
+        public bool IsInstallingSuccess {
+            get {
                 return _isInstallingSuccess;
             }
 
-            set
-            {
+            set {
                 if (value != _isInstallingSuccess) {
                     _isInstallingSuccess = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsInstallingSuccess)));
@@ -200,15 +194,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
-        public bool IsInstallingError
-        {
-            get
-            {
+        public bool IsInstallingError {
+            get {
                 return _isInstallingError;
             }
 
-            set
-            {
+            set {
                 if (value != _isInstallingError) {
                     _isInstallingError = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsInstallingError)));
