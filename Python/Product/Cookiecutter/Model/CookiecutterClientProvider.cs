@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.CookiecutterTools.Interpreters;
 
@@ -36,7 +37,10 @@ namespace Microsoft.CookiecutterTools.Model {
 
         private static CookiecutterPythonInterpreter FindCompatibleInterpreter() {
             var interpreters = PythonRegistrySearch.PerformDefaultSearch();
-            var compatible = interpreters.Where(interp => interp.Configuration.Version >= new Version(3, 3)).FirstOrDefault();
+            var compatible = interpreters
+                .Where(x => File.Exists(x.Configuration.InterpreterPath))
+                .OrderByDescending(x => x.Configuration.Version)
+                .FirstOrDefault(x => x.Configuration.Version >= new Version(3, 3));
             return compatible != null ? new CookiecutterPythonInterpreter(compatible.Configuration.InterpreterPath) : null;
         }
     }
