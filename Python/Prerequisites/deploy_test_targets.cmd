@@ -13,7 +13,11 @@ echo This script should be run as an administrator.
 
 set D=%~dp0
 
-call :docopy "%ProgramFiles(x86)%\MSBuild\Microsoft\VisualStudio\v15.0"
+rem Guess some directories for Visual Studio 15
+call :docopy "%ProgramFiles(x86)%\Microsoft Visual Studio\VSPreview15\MSBuild\Microsoft\VisualStudio\v15.0"
+if errorlevel 1 call :docopy "%SystemDrive%\VS\MSBuild\Microsoft\VisualStudio\v15.0"
+if errorlevel 1 call :docopy "%ProgramFiles(x86)%\MSBuild\Microsoft\VisualStudio\v15.0"
+
 call :docopy "%ProgramFiles(x86)%\MSBuild\Microsoft\VisualStudio\v14.0"
 
 pause
@@ -21,9 +25,9 @@ exit /B 0
 
 :docopy
 
-set TARGET=%~1\Python Tools\
+if not exist "%~1" exit /B 1
 
-if not exist "%~1" exit /B 0
+set TARGET=%~1\Python Tools\
 
 pushd "%D%..\Product\BuildTasks\TestTargets"
 echo.

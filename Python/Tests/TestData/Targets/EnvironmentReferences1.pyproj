@@ -54,24 +54,16 @@
       <Output TaskParameter="PrefixPath" PropertyName="PrefixPath" />
       <Output TaskParameter="InterpreterPath" PropertyName="InterpreterPath" />
       <Output TaskParameter="WindowsInterpreterPath" PropertyName="WindowsInterpreterPath" />
-      <Output TaskParameter="LibraryPath" PropertyName="LibraryPath" />
       <Output TaskParameter="Architecture" PropertyName="Architecture" />
       <Output TaskParameter="PathEnvironmentVariable" PropertyName="PathEnvironmentVariable" />
       <Output TaskParameter="Description" PropertyName="Description" />
     </ResolveEnvironment>
 
-    <PropertyGroup>
-      <ActualPrefix>$(SystemDrive)\Python27_x86\</ActualPrefix>
-      <ActualPrefix Condition="!Exists($(ActualPrefix))">$(SystemDrive)\Python27_32\</ActualPrefix>
-      <ActualPrefix Condition="!Exists($(ActualPrefix))">$(SystemDrive)\Python27\</ActualPrefix>
-    </PropertyGroup>
-
-    <Error Condition="'$(ActualPrefix)' != '$(PrefixPath)'" Text="Incorrect PrefixPath: $(PrefixPath)" />
-    <Error Condition="'$(ActualPrefix)python.exe' != '$(InterpreterPath)'" Text="Incorrect InterpreterPath: $(InterpreterPath)" />
-    <Error Condition="'$(ActualPrefix)pythonw.exe' != '$(WindowsInterpreterPath)'" Text="Incorrect WindowsInterpreterPath: $(WindowsInterpreterPath)" />
-    <Error Condition="'$(ActualPrefix)Lib\' != '$(LibraryPath)'" Text="Incorrect LibraryPath: $(LibraryPath)" />
+    <Error Condition="!Exists('$(PrefixPath)python.exe')" Text="Incorrect PrefixPath: $(PrefixPath)" />
+    <Error Condition="'$(PrefixPath)python.exe' != '$(InterpreterPath)'" Text="Incorrect InterpreterPath: $(InterpreterPath)" />
+    <Error Condition="'$(PrefixPath)pythonw.exe' != '$(WindowsInterpreterPath)'" Text="Incorrect WindowsInterpreterPath: $(WindowsInterpreterPath)" />
     <Error Condition="'X86' != '$(Architecture)'" Text="Incorrect Architecture: $(Architecture)" />
     <Error Condition="'PYTHONPATH' != '$(PathEnvironmentVariable)'" Text="Incorrect PathEnvironmentVariable: $(PathEnvironmentVariable)" />
-    <Error Condition="'Python 2.7' != '$(Description)'" Text="Incorrect Description: $(Description)" />
+    <Error Condition="'Python 2.7 (32-bit)' != '$(Description)'" Text="Incorrect Description: $(Description)" />
   </Target>
 </Project>
