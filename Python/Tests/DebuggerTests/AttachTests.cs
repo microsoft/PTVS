@@ -807,7 +807,10 @@ int main(int argc, char* argv[]) {
             string script = TestData.GetPath(@"TestData\DebuggerProject\AttachPtvsd.py");
             var psi = new ProcessStartInfo(Version.InterpreterPath, PtvsdInterpreterArguments + " \"" + script + "\"") {
                 WorkingDirectory = TestData.GetPath(),
-                UseShellExecute = false
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
             };
 
             var p = Process.Start(psi);
@@ -822,7 +825,7 @@ int main(int argc, char* argv[]) {
                         break;
                     } catch (SocketException) {
                         // Failed to connect - the process might have not started yet, so keep trying a few more times.
-                        if (i >= 5) {
+                        if (i >= 5 || p.HasExited) {
                             throw;
                         }
                     }
@@ -862,6 +865,8 @@ int main(int argc, char* argv[]) {
                     DetachProcess(proc);
                 }
             } finally {
+                Console.WriteLine(p.StandardOutput.ReadToEnd());
+                Console.WriteLine(p.StandardError.ReadToEnd());
                 DisposeProcess(p);
             }
         }
@@ -1042,6 +1047,28 @@ int main(int argc, char* argv[]) {
         internal override PythonVersion Version {
             get {
                 return PythonPaths.Python35_x64;
+            }
+        }
+    }
+
+    [TestClass]
+    public class AttachTests36 : AttachTests {
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python36;
+            }
+        }
+
+        public override void AttachNewThread_PyThreadState_New() {
+            // PyEval_AcquireLock deprecated in 3.2
+        }
+    }
+
+    [TestClass]
+    public class AttachTests36_x64 : AttachTests35 {
+        internal override PythonVersion Version {
+            get {
+                return PythonPaths.Python36_x64;
             }
         }
     }
