@@ -916,4 +916,7 @@ modified from these scripts.</value>
   <data name="PackageManagementNotSupported" xml:space="preserve">
     <value>The selected environment does not support package management.</value>
   </data>
+  <data name="UnableToElevate" xml:space="preserve">
+    <value>Visual Studio was unable to launch the elevated process.</value>
+  </data>
 </root>
