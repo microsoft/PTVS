@@ -24,10 +24,8 @@ using Microsoft.CookiecutterTools.Model;
 
 namespace CookiecutterTests {
     class MockCookiecutterClient : ICookiecutterClient {
-        public bool CookiecutterInstalled
-        {
-            get
-            {
+        public bool CookiecutterInstalled {
+            get {
                 throw new NotImplementedException();
             }
         }
