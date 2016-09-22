@@ -88,7 +88,7 @@ namespace CookiecutterTests {
 
             _gitClient = new GitClient(GitClient.RecommendedGitFilePath);
             _gitHubClient = new GitHubClient();
-            _cutterClient = new CookiecutterClientProvider().Create(false);
+            _cutterClient = new CookiecutterClientProvider().Create();
             _installedTemplateSource = new LocalTemplateSource(installedPath, _gitClient);
             _gitHubTemplateSource = new GitHubTemplateSource(_gitHubClient);
             _feedTemplateSource = new FeedTemplateSource(feedUrl);

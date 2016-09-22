@@ -22,8 +22,8 @@ using System.Collections.Generic;
 
 namespace Microsoft.CookiecutterTools.Model {
     class CookiecutterClientProvider {
-        public ICookiecutterClient Create(bool useEmbedded) {
-            var interpreter = useEmbedded ? FindEmbeddedInterpreter() : FindCompatibleInterpreter();
+        public ICookiecutterClient Create() {
+            var interpreter = FindCompatibleInterpreter();
             if (interpreter != null) {
                 return new CookiecutterClient(interpreter);
             }
@@ -31,19 +31,8 @@ namespace Microsoft.CookiecutterTools.Model {
             return null;
         }
 
-        public bool CheckDependencies(out bool missingPython, out bool missingCookiecutter) {
-            missingPython = true;
-            missingCookiecutter = true;
-
-            foreach (var r in GetAvailableInterpreters()) {
-                missingPython = false;
-                if (r.Item2) {
-                    missingCookiecutter = false;
-                    break;
-                }
-            }
-
-            return missingPython || missingCookiecutter;
+        public bool CompatiblePythonAvailable() {
+            return FindCompatibleInterpreter() != null;
         }
 
         private CookiecutterPythonInterpreter FindCompatibleInterpreter() {
@@ -56,39 +45,15 @@ namespace Microsoft.CookiecutterTools.Model {
             return null;
         }
 
-        private CookiecutterPythonInterpreter FindEmbeddedInterpreter() {
-            var path = PythonToolsInstallPath.TryGetFile(@"python-3.5.1-embed-win32\python.exe");
-            if (!string.IsNullOrEmpty(path)) {
-                return new CookiecutterPythonInterpreter(path);
-            }
-
-            return null;
-        }
-
         private IEnumerable<Tuple<string, bool>> GetAvailableInterpreters() {
             var res = PythonRegistrySearch.PerformDefaultSearch();
             foreach (var r in res) {
-                var testResult = Check(r.Configuration.InterpreterPath);
-                yield return Tuple.Create(r.Configuration.InterpreterPath, testResult == "ok");
+                if (r.Configuration.Version < new Version(3, 3)) {
+                    continue;
+                }
+
+                yield return Tuple.Create(r.Configuration.InterpreterPath, true);
             }
-        }
-
-        private string Check(string interpreterPath) {
-            var checkScript = PythonToolsInstallPath.GetFile("cookiecutter_check.py");
-            return RunPythonScript(interpreterPath, checkScript, "");
-        }
-
-        private string RunPythonScript(string interpreterPath, string script, string parameters) {
-            var psi = new ProcessStartInfo(interpreterPath, string.Format("\"{0}\" {1}", script, parameters));
-            psi.RedirectStandardOutput = true;
-            psi.UseShellExecute = false;
-            psi.CreateNoWindow = true;
-
-            var proc = Process.Start(psi);
-            var output = proc.StandardOutput.ReadToEnd().Trim();
-            proc.WaitForExit();
-
-            return output;
         }
     }
 }

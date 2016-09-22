@@ -47,7 +47,6 @@ namespace Microsoft.CookiecutterTools {
         private bool _missingDependencies;
         private bool _missingGit;
         private bool _missingPython;
-        private bool _missingCookiecutter;
 
         private readonly object _commandsLock = new object();
         private readonly Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
@@ -77,7 +76,7 @@ namespace Microsoft.CookiecutterTools {
             _infoBarFactory = _site.GetService(typeof(SVsInfoBarUIFactory)) as IVsInfoBarUIFactory;
 
             object control = null;
-            _missingDependencies = CheckDependencies(out _missingGit, out _missingPython, out _missingCookiecutter);
+            _missingDependencies = CheckDependencies(out _missingGit, out _missingPython);
             if (_missingDependencies) {
                 control = new MissingDependencies();
             } else {
@@ -140,7 +139,6 @@ namespace Microsoft.CookiecutterTools {
             Action showHelp = () => Process.Start(UrlConstants.HelpUrl);
             Action installGit = () => Process.Start(UrlConstants.InstallGitUrl);
             Action installPython = () => Process.Start(UrlConstants.InstallPythonUrl);
-            Action installCookiecutter = () => Process.Start(UrlConstants.InstallCookiecutterUrl);
 
             var messages = new List<IVsInfoBarTextSpan>();
             var actions = new List<InfoBarActionItem>();
@@ -161,10 +159,6 @@ namespace Microsoft.CookiecutterTools {
 
             if (_missingPython) {
                 actions.Add(new InfoBarHyperlink(Strings.InstallPythonInfoBarLink, installPython));
-            }
-
-            if (_missingCookiecutter) {
-                actions.Add(new InfoBarHyperlink(Strings.InstallCookiecutterInfoBarLink, installCookiecutter));
             }
 
             var image =  _missingDependencies ? KnownMonikers.StatusError : KnownMonikers.StatusInformation;
@@ -280,18 +274,15 @@ namespace Microsoft.CookiecutterTools {
             );
         }
 
-        private static bool CheckDependencies(out bool missingGit, out bool missingPython, out bool missingCookiecutter) {
+        private static bool CheckDependencies(out bool missingGit, out bool missingPython) {
             missingGit = true;
-            missingPython = true;
-            missingCookiecutter = true;
-
-            new CookiecutterClientProvider().CheckDependencies(out missingPython, out missingCookiecutter);
+            missingPython = !new CookiecutterClientProvider().CompatiblePythonAvailable();
 
             if (!string.IsNullOrEmpty(GitClient.RecommendedGitFilePath)) {
                 missingGit = false;
             }
 
-            return missingGit || missingPython || missingCookiecutter;
+            return missingGit || missingPython;
         }
     }
 }

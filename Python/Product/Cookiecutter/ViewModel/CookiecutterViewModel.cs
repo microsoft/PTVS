@@ -50,6 +50,9 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private string _outputFolderPath;
         private string _selectedDescription;
         private string _selectedLocation;
+        private bool _isInstalling;
+        private bool _isInstallingSuccess;
+        private bool _isInstallingError;
         private bool _isCloning;
         private bool _isCloningSuccess;
         private bool _isCloningError;
@@ -161,6 +164,54 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _selectedLocation) {
                     _selectedLocation = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedLocation)));
+                }
+            }
+        }
+
+        public bool IsInstalling
+        {
+            get
+            {
+                return _isInstalling;
+            }
+
+            set
+            {
+                if (value != _isInstalling) {
+                    _isInstalling = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsInstalling)));
+                }
+            }
+        }
+
+        public bool IsInstallingSuccess
+        {
+            get
+            {
+                return _isInstallingSuccess;
+            }
+
+            set
+            {
+                if (value != _isInstallingSuccess) {
+                    _isInstallingSuccess = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsInstallingSuccess)));
+                }
+            }
+        }
+
+        public bool IsInstallingError
+        {
+            get
+            {
+                return _isInstallingError;
+            }
+
+            set
+            {
+                if (value != _isInstallingError) {
+                    _isInstallingError = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsInstallingError)));
                 }
             }
         }
@@ -623,6 +674,64 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
+        private async Task<bool> EnsureCookiecutterIsInstalled() {
+            if (await _cutterClient.IsCookiecutterInstalled()) {
+                return true;
+            }
+
+            IsInstalling = true;
+            IsInstallingSuccess = false;
+            IsInstallingError = false;
+
+            try {
+                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.InstallingCookiecutterStarted));
+
+                var result = await _cutterClient.CreateCookiecutterEnv();
+                _outputWindow.WriteLine(string.Join(Environment.NewLine, result.StandardOutputLines));
+                _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, result.StandardErrorLines));
+
+                result = await _cutterClient.InstallPackage();
+                _outputWindow.WriteLine(string.Join(Environment.NewLine, result.StandardOutputLines));
+                _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, result.StandardErrorLines));
+
+                _outputWindow.WriteLine(string.Empty);
+                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.InstallingCookiecutterSuccess));
+                _outputWindow.ShowAndActivate();
+
+                IsInstalling = false;
+                IsInstallingSuccess = true;
+                IsInstallingError = false;
+
+                return true;
+            } catch (ProcessException ex) {
+                IsInstalling = false;
+                IsInstallingSuccess = false;
+                IsInstallingError = true;
+
+                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.ProcessExitCodeMessage, ex.Result.ExeFileName, ex.Result.ExitCode));
+                _outputWindow.WriteLine(string.Join(Environment.NewLine, ex.Result.StandardOutputLines));
+                _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, ex.Result.StandardErrorLines));
+
+                _outputWindow.WriteLine(string.Empty);
+                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.InstallingCookiecutterFailed));
+                _outputWindow.ShowAndActivate();
+
+                return false;
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                IsInstalling = false;
+                IsInstallingSuccess = false;
+                IsInstallingError = true;
+
+                _outputWindow.WriteErrorLine(ex.Message);
+
+                _outputWindow.WriteLine(string.Empty);
+                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.InstallingCookiecutterFailed));
+                _outputWindow.ShowAndActivate();
+
+                return false;
+            }
+        }
+
         private async Task AddFromSource(ITemplateSource source, string searchTerm, VisualStudio.Imaging.Interop.ImageMoniker image, CategorizedViewModel parent, CancellationToken ct, string continuationToken = null) {
             var loading = new LoadingViewModel();
             parent.Templates.Add(loading);
@@ -658,10 +767,15 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         }
 
         private async Task RefreshContextAsync(TemplateViewModel selection) {
+            if (!await EnsureCookiecutterIsInstalled()) {
+                return;
+            }
+
             try {
                 IsLoading = true;
                 IsLoadingSuccess = false;
                 IsLoadingError = false;
+
 
                 var result = await _cutterClient.LoadContextAsync(selection.ClonedPath, UserConfigFilePath);
 
