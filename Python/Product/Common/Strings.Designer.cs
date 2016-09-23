@@ -1973,6 +1973,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Visual Studio was unable to launch the elevated process..
+        /// </summary>
+        public static string UnableToElevate {
+            get {
+                return ResourceManager.GetString("UnableToElevate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error occurred while upgrading projects: {0}.
         /// </summary>
         public static string UnexpectedUpgradeError {
