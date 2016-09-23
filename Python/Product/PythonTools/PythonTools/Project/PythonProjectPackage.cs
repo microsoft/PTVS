@@ -23,6 +23,8 @@ using Microsoft.VisualStudio;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.PythonTools.Infrastructure;
+using MSBuild = Microsoft.Build.Evaluation;
 
 namespace Microsoft.PythonTools.Project {
     //Set the projectsTemplatesDirectory to a non-existant path to prevent VS from including the working directory as a valid template path
@@ -58,6 +60,16 @@ namespace Microsoft.PythonTools.Project {
         internal const string PythonFileFilter = "Python Project Files (*.pyproj);*.pyproj";
 
         protected override void Initialize() {
+            // The variable is inherited by MSBuild processes and is used to resolve test target
+            // files.
+            var installPath = PathUtils.GetParent(PythonToolsInstallPath.GetFile("Microsoft.PythonTools.dll", GetType().Assembly));
+            string rootDir;
+            if (!((IServiceProvider)this).TryGetShellProperty((__VSSPROPID)__VSSPROPID2.VSSPROPID_InstallRootDir, out rootDir) ||
+                !PathUtils.IsSubpathOf(rootDir, installPath)) {
+                MSBuild.ProjectCollection.GlobalProjectCollection.SetGlobalProperty("_PythonToolsPath", installPath);
+                Environment.SetEnvironmentVariable("_PythonToolsPath", installPath);
+            }
+
             base.Initialize();
             RegisterProjectFactory(new PythonWebProjectFactory(this));
         }

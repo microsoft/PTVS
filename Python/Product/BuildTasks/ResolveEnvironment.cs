@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
 using System.Linq;
 using Microsoft.Build.Evaluation;
@@ -23,8 +22,6 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.ComponentModelHost;
-using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.PythonTools.BuildTasks {
     /// <summary>
@@ -92,7 +89,7 @@ namespace Microsoft.PythonTools.BuildTasks {
             ProjectCollection collection = null;
             Project project = null;
 
-            var exports = FromInProc() ?? FromOutOfProc();
+            var exports = GetExportProvider();
             if (exports == null) {
                 _log.LogError("Unable to obtain interpreter service.");
                 return false;
@@ -142,28 +139,28 @@ namespace Microsoft.PythonTools.BuildTasks {
                     projectContext.AddContext(project);
                 }
                 try {
-                    var factory = exports.GetExportedValue<IInterpreterRegistryService>().FindInterpreter(id);
+                    var config = exports.GetExportedValue<IInterpreterRegistryService>().FindConfiguration(id);
 
-                    if (factory == null) {
+                    if (config == null) {
                         _log.LogError(
                             "The environment '{0}' is not available. Check your project configuration and try again.",
-                            factory.Configuration.Description
+                            id
                         );
                         return false;
                     } else {
-                        PrefixPath = PathUtils.EnsureEndSeparator(factory.Configuration.PrefixPath);
+                        PrefixPath = PathUtils.EnsureEndSeparator(config.PrefixPath);
                         if (PathUtils.IsSubpathOf(projectHome, PrefixPath)) {
                             ProjectRelativePrefixPath = PathUtils.GetRelativeDirectoryPath(projectHome, PrefixPath);
                         } else {
                             ProjectRelativePrefixPath = string.Empty;
                         }
-                        InterpreterPath = factory.Configuration.InterpreterPath;
-                        WindowsInterpreterPath = factory.Configuration.WindowsInterpreterPath;
-                        Architecture = factory.Configuration.Architecture.ToString();
-                        PathEnvironmentVariable = factory.Configuration.PathEnvironmentVariable;
-                        Description = factory.Configuration.Description;
-                        MajorVersion = factory.Configuration.Version.Major.ToString();
-                        MinorVersion = factory.Configuration.Version.Minor.ToString();
+                        InterpreterPath = config.InterpreterPath;
+                        WindowsInterpreterPath = config.WindowsInterpreterPath;
+                        Architecture = config.Architecture.ToString("X");
+                        PathEnvironmentVariable = config.PathEnvironmentVariable;
+                        Description = config.Description;
+                        MajorVersion = config.Version.Major.ToString();
+                        MinorVersion = config.Version.Minor.ToString();
 
                         return true;
                     }
@@ -190,17 +187,7 @@ namespace Microsoft.PythonTools.BuildTasks {
         public ITaskHost HostObject { get; set; }
 
 
-        private static ExportProvider FromInProc() {
-            if (ServiceProvider.GlobalProvider != null) {
-                var model = ServiceProvider.GlobalProvider.GetService(typeof(SComponentModel)) as IComponentModel;
-                if (model != null) {
-                    return model.DefaultExportProvider;
-                }
-            }
-            return null;
-        }
-
-        private ExportProvider FromOutOfProc() {
+        private ExportProvider GetExportProvider() {
             return InterpreterCatalog.CreateContainer(
                 new CatalogLog(_log), 
                 typeof(MsBuildProjectContextProvider), 

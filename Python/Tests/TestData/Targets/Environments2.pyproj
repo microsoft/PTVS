@@ -31,8 +31,8 @@
       <Description>env (Python 2.7)</Description>
       <InterpreterPath>Scripts\python.exe</InterpreterPath>
       <WindowsInterpreterPath>Scripts\pythonw.exe</WindowsInterpreterPath>
-      <LibraryPath>Lib\</LibraryPath>
       <PathEnvironmentVariable>PYTHONPATH</PathEnvironmentVariable>
+      <Architecture>X86</Architecture>
     </Interpreter>
     <Interpreter Include="env2\">
       <Id>env2</Id>
@@ -41,8 +41,8 @@
       <Description>env2 (Python 3.3)</Description>
       <InterpreterPath>Scripts2\python.exe</InterpreterPath>
       <WindowsInterpreterPath>Scripts2\pythonw.exe</WindowsInterpreterPath>
-      <LibraryPath>Lib2\</LibraryPath>
       <PathEnvironmentVariable>PYTHONPATH2</PathEnvironmentVariable>
+      <Architecture>X86</Architecture>
     </Interpreter>
     <InterpreterReference Include="Global|PythonCore|2.7-32" />
   </ItemGroup>
@@ -54,7 +54,6 @@
       <Output TaskParameter="PrefixPath" PropertyName="PrefixPath" />
       <Output TaskParameter="InterpreterPath" PropertyName="InterpreterPath" />
       <Output TaskParameter="WindowsInterpreterPath" PropertyName="WindowsInterpreterPath" />
-      <Output TaskParameter="LibraryPath" PropertyName="LibraryPath" />
       <Output TaskParameter="Architecture" PropertyName="Architecture" />
       <Output TaskParameter="PathEnvironmentVariable" PropertyName="PathEnvironmentVariable" />
       <Output TaskParameter="Description" PropertyName="Description" />
@@ -63,7 +62,6 @@
     <Error Condition="'$(MSBuildThisFileDirectory)env2\' != '$(PrefixPath)'" Text="Incorrect PrefixPath: $(PrefixPath)" />
     <Error Condition="'$(MSBuildThisFileDirectory)env2\Scripts2\python.exe' != '$(InterpreterPath)'" Text="Incorrect InterpreterPath: $(InterpreterPath)" />
     <Error Condition="'$(MSBuildThisFileDirectory)env2\Scripts2\pythonw.exe' != '$(WindowsInterpreterPath)'" Text="Incorrect WindowsInterpreterPath: $(WindowsInterpreterPath)" />
-    <Error Condition="'$(MSBuildThisFileDirectory)env2\Lib2\' != '$(LibraryPath)'" Text="Incorrect LibraryPath: $(LibraryPath)" />
     <Error Condition="'X86' != '$(Architecture)'" Text="Incorrect Architecture: $(Architecture)" />
     <Error Condition="'PYTHONPATH2' != '$(PathEnvironmentVariable)'" Text="Incorrect PathEnvironmentVariable: $(PathEnvironmentVariable)" />
     <Error Condition="'env2 (Python 3.3)' != '$(Description)'" Text="Incorrect Description: $(Description)" />

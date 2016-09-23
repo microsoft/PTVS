@@ -458,7 +458,7 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                     { MSBuildConstants.InterpreterPathKey, interpreterPath },
                     { MSBuildConstants.WindowsPathKey, windowInterpreterPath },
                     { MSBuildConstants.VersionKey, config.Version.ToString() },
-                    { MSBuildConstants.ArchitectureKey, config.Architecture.ToString() },
+                    { MSBuildConstants.ArchitectureKey, config.Architecture.ToString("X") },
                     { MSBuildConstants.PathEnvVarKey, config.PathEnvironmentVariable }
                 }
             );

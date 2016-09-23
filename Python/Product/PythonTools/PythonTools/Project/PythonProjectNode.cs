@@ -323,7 +323,7 @@ namespace Microsoft.PythonTools.Project {
                     { MSBuildConstants.InterpreterPathKey, PathUtils.GetRelativeFilePath(rootPath, config.InterpreterPath) },
                     { MSBuildConstants.WindowsPathKey, PathUtils.GetRelativeFilePath(rootPath, config.WindowsInterpreterPath) },
                     { MSBuildConstants.PathEnvVarKey, config.PathEnvironmentVariable },
-                    { MSBuildConstants.ArchitectureKey, config.Architecture.ToString() }
+                    { MSBuildConstants.ArchitectureKey, config.Architecture.ToString("X") }
                 });
 
             lock (_validFactories) {
