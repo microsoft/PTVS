@@ -56,7 +56,11 @@ namespace Microsoft.PythonTools.Project {
             try {
                 return base.DebugLaunch(flags);
             } catch (MissingInterpreterException ex) {
-                MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                if (_project.ActiveInterpreter == _project.InterpreterRegistry.NoInterpretersValue) {
+                    PythonToolsPackage.OpenNoInterpretersHelpPage(ProjectMgr.Site, ex.HelpPage);
+                } else {
+                    MessageBox.Show(ex.Message, Strings.ProductTitle, MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                }
                 return VSConstants.S_OK;
             } catch (NoInterpretersException ex) {
                 PythonToolsPackage.OpenNoInterpretersHelpPage(ProjectMgr.Site, ex.HelpPage);

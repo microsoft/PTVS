@@ -1,5 +1,10 @@
 param($vs, [switch] $uninstall)
 
+if (-not $vs) {
+    throw "Missing -vs [path] parameter"
+    exit 1
+}
+
 $install_dirs = @(
     "Common7\IDE\Extensions\Microsoft\Python",
     "Common7\IDE\ProjectTemplates\Python",
