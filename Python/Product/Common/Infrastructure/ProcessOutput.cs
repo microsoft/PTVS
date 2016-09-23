@@ -356,9 +356,31 @@ namespace Microsoft.PythonTools.Infrastructure {
                 throw new InvalidOperationException(Strings.UnableToElevate);
             }
 
+            var process = new Process();
+
             clientTask.ContinueWith(t => {
                 listener.Stop();
-                var client = t.Result;
+                TcpClient client;
+                try {
+                    client = t.Result;
+                } catch (AggregateException ae) {
+                    try {
+                        process.Kill();
+                    } catch (InvalidOperationException) {
+                    } catch (Win32Exception) {
+                    }
+
+                    if (redirector != null) {
+                        foreach (var ex in ae.InnerExceptions.DefaultIfEmpty(ae)) {
+                            using (var reader = new StringReader(ex.ToString())) {
+                                for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
+                                    redirector.WriteErrorLine(line);
+                                }
+                            }
+                        }
+                    }
+                    return;
+                }
                 using (var writer = new StreamWriter(client.GetStream(), utf8, 4096, true)) {
                     writer.WriteLine(filename);
                     writer.WriteLine(args);
@@ -388,7 +410,6 @@ namespace Microsoft.PythonTools.Infrastructure {
                 }
             });
 
-            var process = new Process();
             process.StartInfo = psi;
 
             return new ProcessOutput(process, redirector);
