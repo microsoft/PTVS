@@ -522,15 +522,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             // test discoverer and test executor to connect back to VS.
             Environment.SetEnvironmentVariable("_PTVS_PID", Process.GetCurrentProcess().Id.ToString());
 
-            // The variable is inherited by MSBuild processes and is used to resolve test target
-            // files.
-            var installPath = PathUtils.GetParent(PythonToolsInstallPath.GetFile("Microsoft.PythonTools.dll", GetType().Assembly));
-            string rootDir;
-            if (!services.TryGetShellProperty((__VSSPROPID)__VSSPROPID2.VSSPROPID_InstallRootDir, out rootDir) ||
-                !PathUtils.IsSubpathOf(rootDir, installPath)) {
-                Environment.SetEnvironmentVariable("_PythonToolsPath", installPath);
-            }
-
             Trace.WriteLine("Leaving Initialize() of: {0}".FormatUI(this));
         }
 
