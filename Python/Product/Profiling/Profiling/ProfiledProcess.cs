@@ -22,6 +22,7 @@ using System.Reflection;
 using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Shell.Interop;
+using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Profiling {
     sealed class ProfiledProcess : IDisposable {
@@ -150,6 +151,38 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         private string GetPerfToolsPath() {
+            using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)) {
+                if (baseKey == null) {
+                    throw new InvalidOperationException("Cannot open system registry");
+                }
+
+                using (var key = baseKey.OpenSubKey(@"Software\Microsoft\VisualStudio\VSPerf")) {
+                    var path = key?.GetValue("CollectionToolsDir") as string;
+                    if (!string.IsNullOrEmpty(path)) {
+                        if (_arch == ProcessorArchitecture.Amd64) {
+                            path = PathUtils.GetAbsoluteDirectoryPath(path, "x64");
+                        }
+                        if (Directory.Exists(path)) {
+                            return path;
+                        }
+                    }
+                }
+
+                using (var key = baseKey.OpenSubKey(@"SOFTWARE\Microsoft\VisualStudio\RemoteTools\{0}\DiagnosticsHub".FormatUI(AssemblyVersionInfo.VSVersion))) {
+                    var path = PathUtils.GetParent(key?.GetValue("VSPerfPath") as string);
+                    if (!string.IsNullOrEmpty(path)) {
+                        if (_arch == ProcessorArchitecture.Amd64) {
+                            path = PathUtils.GetAbsoluteDirectoryPath(path, "x64");
+                        }
+                        if (Directory.Exists(path)) {
+                            return path;
+                        }
+                    }
+                }
+            }
+
+            Debug.Fail("Registry search for Perfomance Tools failed - falling back on old path");
+
             string shFolder;
             if (!_pyService.Site.TryGetShellProperty(__VSSPROPID.VSSPROPID_InstallDirectory, out shFolder)) {
                 throw new InvalidOperationException("Cannot find shell folder for Visual Studio");
