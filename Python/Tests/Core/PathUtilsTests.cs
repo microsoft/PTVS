@@ -374,11 +374,12 @@ namespace PythonToolsTests {
         public void TestNormalizeDirectoryPath() {
             foreach (var testCase in Pairs(
                 @"a\b\c", @"a\b\c\",
-                @"a\b\.\c", @"a\b\.\c\",
-                @"a\b\d\..\c", @"a\b\d\..\c\"
+                @"a\b\.\c", @"a\b\c\",
+                @"a\b\d\..\c", @"a\b\c\",
+                @"a\b\\c", @"a\b\c\"
                 )) {
                 foreach (var root in new[] { "", @".\", @"..\", @"\" }) {
-                    var expected = root + testCase.Item2;
+                    var expected = (root == @".\" ? "" : root) + testCase.Item2;
                     var actual = PathUtils.NormalizeDirectoryPath(root + testCase.Item1);
 
                     Assert.AreEqual(expected, actual);
@@ -410,11 +411,13 @@ namespace PythonToolsTests {
         public void TestNormalizePath() {
             foreach (var testCase in Pairs(
                 @"a\b\c", @"a\b\c",
-                @"a\b\.\c", @"a\b\.\c",
-                @"a\b\d\..\c", @"a\b\d\..\c"
+                @"a\b\.\c", @"a\b\c",
+                @"a\b\d\..\c", @"a\b\c",
+                @"a\b\\c", @"a\b\c",
+                @".\..\a", @"..\a"
                 )) {
                 foreach (var root in new[] { "", @".\", @"..\", @"\" }) {
-                    var expected = root + testCase.Item2;
+                    var expected = (root == @".\" ? "" : root) + testCase.Item2;
                     var actual = PathUtils.NormalizePath(root + testCase.Item1);
 
                     Assert.AreEqual(expected, actual);

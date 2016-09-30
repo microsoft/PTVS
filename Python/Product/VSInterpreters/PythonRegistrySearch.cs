@@ -122,9 +122,9 @@ namespace Microsoft.PythonTools.Interpreter {
                 return null;
             }
 
-            var prefixPath = installKey.GetValue(null) as string;
-            var exePath = installKey.GetValue("ExecutablePath") as string;
-            var exewPath = installKey.GetValue("WindowedExecutablePath") as string;
+            var prefixPath = PathUtils.NormalizePath(installKey.GetValue(null) as string);
+            var exePath = PathUtils.NormalizePath(installKey.GetValue("ExecutablePath") as string);
+            var exewPath = PathUtils.NormalizePath(installKey.GetValue("WindowedExecutablePath") as string);
             if (pythonCoreCompatibility && !string.IsNullOrEmpty(prefixPath)) {
                 if (string.IsNullOrEmpty(exePath)) {
                     exePath = PathUtils.GetAbsoluteFilePath(prefixPath, CPythonInterpreterFactoryConstants.ConsoleExecutable);
