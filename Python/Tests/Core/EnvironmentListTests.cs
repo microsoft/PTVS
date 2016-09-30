@@ -696,7 +696,7 @@ namespace PythonToolsUITests {
             pm.AddInstallable(new PackageSpec("ptvsd", "1.0") { Description = "ptvsd description" });
             var desc2 = pv.Description;
 
-            await Task.Delay(10);
+            await Task.Delay(100);
 
             AssertUtil.ContainsExactly(changes, "Description", "UpgradeVersion");
             Assert.AreNotEqual(desc, pv.Description);

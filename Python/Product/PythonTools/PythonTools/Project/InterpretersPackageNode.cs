@@ -152,6 +152,7 @@ namespace Microsoft.PythonTools.Project {
                 statusBar.SetText((success ? Strings.PackageUninstallSucceeded : Strings.PackageUninstallFailed).FormatUI(
                     _packageName
                 ));
+            } catch (OperationCanceledException) {
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 statusBar.SetText(Strings.PackageUninstallFailed.FormatUI(_packageName));
             }

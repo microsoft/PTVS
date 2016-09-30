@@ -21,13 +21,13 @@ using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
-using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
@@ -277,49 +277,10 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void PipExtensionProvider_QueryShouldElevate(object sender, QueryShouldElevateEventArgs e) {
-            if (_pyService.GeneralOptions.ElevatePip) {
-                e.Elevate = true;
-                return;
-            }
-
             try {
-                // Create a test file and delete it immediately to ensure we can do it.
-                // If this fails, prompt the user to see whether they want to elevate.
-                var testFile = PathUtils.GetAvailableFilename(e.Configuration.PrefixPath, "access-test", ".txt");
-                using (new FileStream(testFile, FileMode.CreateNew, FileAccess.Write, FileShare.Delete, 4096, FileOptions.DeleteOnClose)) { }
-                e.Elevate = false;
-                return;
-            } catch (IOException) {
-            } catch (UnauthorizedAccessException) {
-            }
-
-            var td = new TaskDialog(_site) {
-                Title = Strings.ProductTitle,
-                MainInstruction = Strings.ElevateForInstallPackage_MainInstruction,
-                AllowCancellation = true,
-            };
-            var elevate = new TaskDialogButton(Strings.ElevateForInstallPackage_Elevate, Strings.ElevateForInstallPackage_Elevate_Note) {
-                ElevationRequired = true
-            };
-            var noElevate = new TaskDialogButton(Strings.ElevateForInstallPackage_DoNotElevate, Strings.ElevateForInstallPackage_DoNotElevate_Note);
-            var elevateAlways = new TaskDialogButton(Strings.ElevateForInstallPackage_ElevateAlways, Strings.ElevateForInstallPackage_ElevateAlways_Note) {
-                ElevationRequired = true
-            };
-            td.Buttons.Add(elevate);
-            td.Buttons.Add(noElevate);
-            td.Buttons.Add(elevateAlways);
-            td.Buttons.Add(TaskDialogButton.Cancel);
-            var sel = td.ShowModal();
-            if (sel == TaskDialogButton.Cancel) {
+                e.Elevate = VsPackageManagerUI.ShouldElevate(_site, e.Factory.Configuration, "pip");
+            } catch (OperationCanceledException) {
                 e.Cancel = true;
-            } else if (sel == noElevate) {
-                e.Elevate = false;
-            } else if (sel == elevateAlways) {
-                _pyService.GeneralOptions.ElevatePip = true;
-                _pyService.GeneralOptions.Save();
-                e.Elevate = true;
-            } else {
-                e.Elevate = true;
             }
         }
 

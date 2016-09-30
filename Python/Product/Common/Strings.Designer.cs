@@ -380,7 +380,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Package installation may fail if you do not have sufficient permissions.
+        ///   Looks up a localized string similar to This operation may fail if you do not have sufficient permissions.
         /// </summary>
         public static string ElevateForInstallPackage_DoNotElevate_Note {
             get {
@@ -407,7 +407,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &amp;Always elevate when installing packages.
+        ///   Looks up a localized string similar to &amp;Always elevate when installing or removing packages.
         /// </summary>
         public static string ElevateForInstallPackage_ElevateAlways {
             get {
@@ -425,7 +425,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Administrator privileges may be required to install or update this package..
+        ///   Looks up a localized string similar to Administrator privileges may be required to install, update or remove packages for this environment..
         /// </summary>
         public static string ElevateForInstallPackage_MainInstruction {
             get {

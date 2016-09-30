@@ -79,6 +79,8 @@ namespace Microsoft.PythonTools.Interpreter {
             _refreshIsCurrentTrigger?.Change(1000, Timeout.Infinite);
         }
 
+        public IPythonInterpreterFactory Factory => _factory;
+
         public void Dispose() {
             Dispose(true);
             GC.SuppressFinalize(this);
@@ -124,7 +126,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private Task<bool> ShouldElevate(IPackageManagerUI ui, string operation) {
-            return ui == null ? Task.FromResult(false) : ui.ShouldElevateAsync(operation);
+            return ui == null ? Task.FromResult(false) : ui.ShouldElevateAsync(this, operation);
         }
 
         public bool IsReady {
@@ -175,8 +177,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var operation = "pip_downloader.py";
             using (await _working.LockAsync(cancellationToken)) {
-                ui?.OnOperationStarted(operation);
-                ui?.OnOutputTextReceived(Strings.InstallingPipStarted);
+                ui?.OnOperationStarted(this, operation);
+                ui?.OnOutputTextReceived(this, Strings.InstallingPipStarted);
 
                 using (var proc = ProcessOutput.Run(
                     _factory.Configuration.InterpreterPath,
@@ -184,7 +186,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     _factory.Configuration.PrefixPath,
                     UnbufferedEnv,
                     false,
-                    PackageManagerUIRedirector.Get(ui),
+                    PackageManagerUIRedirector.Get(this, ui),
                     elevate: await ShouldElevate(ui, operation)
                 )) {
                     try {
@@ -194,8 +196,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
 
-                ui?.OnOutputTextReceived(IsReady ? Strings.InstallingPipSuccess : Strings.InstallingPackageFailed);
-                ui?.OnOperationFinished(operation, IsReady);
+                ui?.OnOutputTextReceived(this, IsReady ? Strings.InstallingPipSuccess : Strings.InstallingPackageFailed);
+                ui?.OnOperationFinished(this, operation, IsReady);
             }
         }
 
@@ -216,8 +218,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 args += arguments;
 
                 var operation = args;
-                ui?.OnOutputTextReceived(operation);
-                ui?.OnOperationStarted(Strings.ExecutingCommandStarted.FormatUI(arguments));
+                ui?.OnOutputTextReceived(this, operation);
+                ui?.OnOperationStarted(this, Strings.ExecutingCommandStarted.FormatUI(arguments));
 
                 try {
                     using (var output = ProcessOutput.Run(
@@ -226,7 +228,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         _factory.Configuration.PrefixPath,
                         UnbufferedEnv,
                         false,
-                        PackageManagerUIRedirector.Get(ui),
+                        PackageManagerUIRedirector.Get(this, ui),
                         quoteArgs: false,
                         elevate: await ShouldElevate(ui, operation)
                     )) {
@@ -246,8 +248,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
 
                     var msg = success ? Strings.ExecutingCommandSucceeded : Strings.ExecutingCommandFailed;
-                    ui?.OnOutputTextReceived(msg.FormatUI(arguments));
-                    ui?.OnOperationFinished(operation, success);
+                    ui?.OnOutputTextReceived(this, msg.FormatUI(arguments));
+                    ui?.OnOperationFinished(this, operation, success);
                     await CacheInstalledPackagesAsync(true, cancellationToken);
                 }
             }
@@ -271,8 +273,8 @@ namespace Microsoft.PythonTools.Interpreter {
             var operation = string.Join(" ", args);
 
             using (await _working.LockAsync(cancellationToken)) {
-                ui?.OnOperationStarted(operation);
-                ui?.OnOutputTextReceived(Strings.InstallingPackageStarted.FormatUI(name));
+                ui?.OnOperationStarted(this, operation);
+                ui?.OnOutputTextReceived(this, Strings.InstallingPackageStarted.FormatUI(name));
 
                 try {
                     using (var output = ProcessOutput.Run(
@@ -281,7 +283,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         _factory.Configuration.PrefixPath,
                         UnbufferedEnv,
                         false,
-                        PackageManagerUIRedirector.Get(ui),
+                        PackageManagerUIRedirector.Get(this, ui),
                         quoteArgs: false,
                         elevate: await ShouldElevate(ui, operation)
                     )) {
@@ -301,8 +303,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
 
                     var msg = success ? Strings.InstallingPackageSuccess : Strings.InstallingPackageFailed;
-                    ui?.OnOutputTextReceived(msg.FormatUI(name));
-                    ui?.OnOperationFinished(operation, success);
+                    ui?.OnOutputTextReceived(this, msg.FormatUI(name));
+                    ui?.OnOperationFinished(this, operation, success);
                     await CacheInstalledPackagesAsync(true, cancellationToken);
                 }
             }
@@ -327,8 +329,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
             try {
                 using (await _working.LockAsync(cancellationToken)) {
-                    ui?.OnOperationStarted(operation);
-                    ui?.OnOutputTextReceived(Strings.InstallingPackageStarted.FormatUI(name));
+                    ui?.OnOperationStarted(this, operation);
+                    ui?.OnOutputTextReceived(this, Strings.InstallingPackageStarted.FormatUI(name));
 
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
@@ -336,7 +338,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         _factory.Configuration.PrefixPath,
                         UnbufferedEnv,
                         false,
-                        PackageManagerUIRedirector.Get(ui),
+                        PackageManagerUIRedirector.Get(this, ui),
                         elevate: await ShouldElevate(ui, operation)
                     )) {
                         if (!output.IsStarted) {
@@ -370,8 +372,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 var msg = success ? Strings.UninstallingPackageSuccess : Strings.UninstallingPackageFailed;
-                ui?.OnOutputTextReceived(msg.FormatUI(name));
-                ui?.OnOperationFinished(operation, success);
+                ui?.OnOutputTextReceived(this, msg.FormatUI(name));
+                ui?.OnOperationFinished(this, operation, success);
             }
         }
 
