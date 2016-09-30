@@ -172,7 +172,7 @@ namespace Microsoft.PythonTools.Profiling {
                     }
                 }
 
-                using (var key = baseKey.OpenSubKey(@"SOFTWARE\Microsoft\VisualStudio\RemoteTools\{0}\DiagnosticsHub".FormatUI(AssemblyVersionInfo.VSVersion))) {
+                using (var key = baseKey.OpenSubKey(@"SOFTWARE\Microsoft\VisualStudio\RemoteTools\{0}\DiagnosticsHub".FormatInvariant(AssemblyVersionInfo.VSVersion))) {
                     var path = PathUtils.GetParent(key?.GetValue("VSPerfPath") as string);
                     if (!string.IsNullOrEmpty(path)) {
                         if (_arch == ProcessorArchitecture.Amd64) {
