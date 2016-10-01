@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public static async Task<HashSet<string>> FindModulesAsync(this IPythonInterpreterFactory factory, params string[] moduleNames) {
             var finding = new HashSet<string>(moduleNames);
             var found = new HashSet<string>();
-            var withPackages = factory as IPackageManager;
+            var withPackages = factory.PackageManager;
             if (withPackages != null) {
                 foreach (var m in finding) {
                     if ((await withPackages.GetInstalledPackageAsync(new PackageSpec(m), CancellationToken.None)).IsValid) {
@@ -75,11 +75,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 var db = withDb.GetCurrentDatabase();
                 found.UnionWith(finding.Where(m => db.GetModule(m) != null));
 
-                finding.ExceptWith(found);
-                if (!finding.Any()) {
-                    // Found all of them, so stop searching
-                    return found;
-                }
+                // Always stop searching after this step
+                return found;
             }
 
             if (withDb != null) {
@@ -100,7 +97,6 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             return await Task.Run(() => {
-                var result = new HashSet<string>();
                 foreach (var mp in ModulePath.GetModulesInLib(factory.Configuration)) {
                     if (finding.Remove(mp.ModuleName)) {
                         found.Add(mp.ModuleName);
@@ -110,7 +106,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         break;
                     }
                 }
-                return result;
+                return found;
             });
         }
 
