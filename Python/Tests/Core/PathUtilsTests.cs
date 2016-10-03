@@ -377,7 +377,7 @@ namespace PythonToolsTests {
                 @"a\b\.\c", @"a\b\c\",
                 @"a\b\d\..\c", @"a\b\c\",
                 @"a\b\\c", @"a\b\c\"
-                )) {
+            )) {
                 foreach (var root in new[] { "", @".\", @"..\", @"\" }) {
                     var expected = (root == @".\" ? "" : root) + testCase.Item2;
                     var actual = PathUtils.NormalizeDirectoryPath(root + testCase.Item1);
@@ -389,8 +389,9 @@ namespace PythonToolsTests {
             foreach (var testCase in Pairs(
                 @"a\b\c", @"a\b\c\",
                 @"a\b\.\c", @"a\b\c\",
-                @"a\b\d\..\c", @"a\b\c\"
-                )) {
+                @"a\b\d\..\c", @"a\b\c\",
+                @"a\..\..\b", @"b\"
+            )) {
                 foreach (var root in new[] { @"C:\", @"\\pc\share\", @"ftp://me@example.com/" }) {
                     var expected = root + testCase.Item2;
                     var actual = PathUtils.NormalizeDirectoryPath(root + testCase.Item1);
@@ -413,9 +414,8 @@ namespace PythonToolsTests {
                 @"a\b\c", @"a\b\c",
                 @"a\b\.\c", @"a\b\c",
                 @"a\b\d\..\c", @"a\b\c",
-                @"a\b\\c", @"a\b\c",
-                @".\..\a", @"..\a"
-                )) {
+                @"a\b\\c", @"a\b\c"
+            )) {
                 foreach (var root in new[] { "", @".\", @"..\", @"\" }) {
                     var expected = (root == @".\" ? "" : root) + testCase.Item2;
                     var actual = PathUtils.NormalizePath(root + testCase.Item1);
@@ -432,8 +432,9 @@ namespace PythonToolsTests {
             foreach (var testCase in Pairs(
                 @"a\b\c", @"a\b\c",
                 @"a\b\.\c", @"a\b\c",
-                @"a\b\d\..\c", @"a\b\c"
-                )) {
+                @"a\b\d\..\c", @"a\b\c",
+                @"a\..\..\b", @"b"
+            )) {
                 foreach (var root in new[] { @"C:\", @"\\pc\share\", @"ftp://me@example.com/" }) {
                     var expected = root + testCase.Item2;
                     var actual = PathUtils.NormalizePath(root + testCase.Item1);

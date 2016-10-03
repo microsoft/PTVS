@@ -73,7 +73,6 @@ namespace Microsoft.PythonTools.Infrastructure {
 
             var root = EnsureEndSeparator(Path.GetPathRoot(path));
             var parts = path.Substring(root.Length).Split(DirectorySeparators);
-            bool isAbs = parts[0].EndsWith(":");
             bool isDir = string.IsNullOrWhiteSpace(parts[parts.Length - 1]);
 
             for (int i = 0; i < parts.Length; ++i) {
@@ -90,12 +89,17 @@ namespace Microsoft.PythonTools.Infrastructure {
                 }
 
                 if (parts[i] == "..") {
-                    for (int j = i - 1; j > 0; --j) {
+                    bool found = false;
+                    for (int j = i - 1; j >= 0; --j) {
                         if (!string.IsNullOrEmpty(parts[j])) {
                             parts[i] = null;
                             parts[j] = null;
+                            found = true;
                             break;
                         }
+                    }
+                    if (!found && !string.IsNullOrEmpty(root)) {
+                        parts[i] = null;
                     }
                     continue;
                 }
