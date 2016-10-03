@@ -26,6 +26,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private NoPackageManager() { }
 
         public bool IsReady => true;
+        public IPythonInterpreterFactory Factory => null;
 
         public event EventHandler InstalledFilesChanged { add { } remove { } }
         public event EventHandler InstalledPackagesChanged { add { } remove { } }

@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// The text to display. Trailing newlines will be included.
         /// </param>
         /// <remarks>This function may be called from any thread.</remarks>
-        void OnOutputTextReceived(string text);
+        void OnOutputTextReceived(IPackageManager sender, string text);
 
         /// <summary>
         /// Called when error text should be displayed to the user.
@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// The text to display. Trailing newlines will be included.
         /// </param>
         /// <remarks>This function may be called from any thread.</remarks>
-        void OnErrorTextReceived(string text);
+        void OnErrorTextReceived(IPackageManager sender, string text);
 
         /// <summary>
         /// Called when an operation starts.
@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// user information.
         /// </param>
         /// <remarks>This function may be called from any thread.</remarks>
-        void OnOperationStarted(string operation);
+        void OnOperationStarted(IPackageManager sender, string operation);
 
         /// <summary>
         /// Called when an operation completes.
@@ -55,7 +55,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </param>
         /// <param name="success">True if the operation was successful.</param>
         /// <remarks>This function may be called from any thread.</remarks>
-        void OnOperationFinished(string operation, bool success);
+        void OnOperationFinished(IPackageManager sender, string operation, bool success);
 
         /// <summary>
         /// Called when the package manager needs to decide whether to elevate.
@@ -65,6 +65,6 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <param name="operation">The current operation identifier.</param>
         /// <returns>True if the operation should elevate.</returns>
         /// <remarks>This function may be called from any thread.</remarks>
-        Task<bool> ShouldElevateAsync(string operation);
+        Task<bool> ShouldElevateAsync(IPackageManager sender, string operation);
     }
 }
