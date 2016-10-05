@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectFile Include="..\Product\dirs.proj"/>
+    <ProjectFile Include="..\Product\dirs.proj" Condition="'$(SkipProduct)' != 'true'"/>
     <ProjectFile Include="signlayout.proj" />
     <ProjectFile Include="msi.proj" Condition="'$(IncludeMSI)' != 'false'" />
     <ProjectFile Include="swix\dirs.proj" />
