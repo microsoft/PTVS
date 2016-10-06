@@ -429,7 +429,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         // Pip failed, so return a directory listing
                         var paths = await PythonTypeDatabase.GetDatabaseSearchPathsAsync(_factory);
 
-                        packages = await Task.Run(() => paths.Where(p => !p.IsStandardLibrary)
+                        packages = await Task.Run(() => paths.Where(p => !p.IsStandardLibrary && Directory.Exists(p.Path))
                             .SelectMany(p => PathUtils.EnumerateDirectories(p.Path, recurse: false))
                             .Select(path => Path.GetFileName(path))
                             .Select(name => PackageNameRegex.Match(name))
@@ -561,7 +561,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 return;
             }
 
-            paths = paths.OrderBy(p => p.Path.Length).ToList();
+            paths = paths
+                .Where(p => Directory.Exists(p.Path))
+                .OrderBy(p => p.Path.Length)
+                .ToList();
 
             var watching = new List<string>();
             var watchers = new List<FileSystemWatcher>();
