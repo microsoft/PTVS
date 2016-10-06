@@ -40,6 +40,7 @@ if (-not $uninstall) {
 
         if (Test-Path "$d\contents") {
             pushd "$d\contents"
+            gci * -Recurse | ?{ $_.Name -Match '%' } | %{ move $_ "$([System.Web.HttpUtility]::UrlDecode($_))" }
             copy -Recurse -Force * $vs
             popd
         }
