@@ -34,11 +34,10 @@ namespace Microsoft.PythonTools.Interpreter {
             options = options?.Clone() ?? new InterpreterFactoryCreationOptions();
 
             if (string.IsNullOrEmpty(options.DatabasePath)) {
-                var subpath = configuration.Id.Replace('|', '\\');
-                if (!PathUtils.IsValidPath(subpath)) {
-                    subpath = Convert.ToBase64String(new UTF8Encoding(false).GetBytes(configuration.Id));
-                }
-                options.DatabasePath = Path.Combine(PythonTypeDatabase.CompletionDatabasePath, subpath);
+                options.DatabasePath = Path.Combine(
+                    PythonTypeDatabase.CompletionDatabasePath,
+                    GetRelativePathForConfigurationId(configuration.Id)
+                );
             }
 
             var fact = new CPythonInterpreterFactory(configuration, options);
@@ -46,6 +45,19 @@ namespace Microsoft.PythonTools.Interpreter {
                 fact.BeginRefreshIsCurrent();
             }
             return fact;
+        }
+
+        /// <summary>
+        /// Returns a relative path string based on the provided ID. There is no
+        /// guarantee that the path is human readable or that it is used by all
+        /// components.
+        /// </summary>
+        public static string GetRelativePathForConfigurationId(string id) {
+            var subpath = id.Replace('|', '\\');
+            if (!PathUtils.IsValidPath(subpath)) {
+                subpath = Convert.ToBase64String(new UTF8Encoding(false).GetBytes(id));
+            }
+            return subpath;
         }
 
         /// <summary>

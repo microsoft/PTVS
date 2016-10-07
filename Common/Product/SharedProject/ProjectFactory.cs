@@ -78,19 +78,19 @@ namespace Microsoft.VisualStudioTools.Project {
             }
         }
 
-		/// <summary>
-		/// The msbuild project for the project file.
-		/// </summary>
-		protected MSBuild.Project BuildProject {
-			get	{
-				return this.buildProject;
-			}
-		}
+        /// <summary>
+        /// The msbuild project for the project file.
+        /// </summary>
+        protected MSBuild.Project BuildProject {
+            get	{
+                return this.buildProject;
+            }
+        }
 
-		#endregion
+        #endregion
 
-		#region ctor
-		[Obsolete("Provide an IServiceProvider instead of a package")]
+        #region ctor
+        [Obsolete("Provide an IServiceProvider instead of a package")]
         protected ProjectFactory(Microsoft.VisualStudio.Shell.Package package)
             : this((IServiceProvider)package) {
         }

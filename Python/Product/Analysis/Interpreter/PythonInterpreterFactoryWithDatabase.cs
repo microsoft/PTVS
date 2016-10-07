@@ -40,6 +40,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private PythonTypeDatabase _typeDb, _typeDbWithoutPackages;
         private IDisposable _generating;
         private bool _isValid, _isCheckingDatabase, _disposed;
+        private readonly string _databasePath;
 #if DEBUG
         private bool _hasEverCheckedDatabase;
 #endif
@@ -75,7 +76,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
             Configuration = config;
 
-            DatabasePath = options.DatabasePath;
+            _databasePath = options.DatabasePath;
 
             // Avoid creating a interpreter with an unsupported version.
             // https://github.com/Microsoft/PTVS/issues/706
@@ -303,7 +304,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        public virtual string DatabasePath { get; }
+        public virtual string DatabasePath { get { return _databasePath; } }
 
         public string GetAnalysisLogContent(IFormatProvider culture) {
             if (string.IsNullOrEmpty(DatabasePath)) {
