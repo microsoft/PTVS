@@ -166,15 +166,15 @@ def main():
 
     if MAJOR_VERSION == (2, 5):
         install_from_source(
-            'http://go.microsoft.com/fwlink/?LinkId=317602',
-            'http://go.microsoft.com/fwlink/?LinkId=313647',
+            'https://go.microsoft.com/fwlink/?LinkId=317602',
+            'https://go.microsoft.com/fwlink/?LinkId=313647',
         )
         return
 
     if MAJOR_VERSION == (3, 1):
         install_from_source(
-            'http://go.microsoft.com/fwlink/?LinkId=616616',
-            'http://go.microsoft.com/fwlink/?LinkID=616614',
+            'https://go.microsoft.com/fwlink/?LinkId=616616',
+            'https://go.microsoft.com/fwlink/?LinkID=616614',
         )
         return
 
@@ -187,8 +187,8 @@ def main():
 
     print('\nFailed to install. Attempting direct download.')
     install_from_source(
-        'http://go.microsoft.com/fwlink/?LinkId=317603',
-        'http://go.microsoft.com/fwlink/?LinkId=317604',
+        'https://go.microsoft.com/fwlink/?LinkId=317603',
+        'https://go.microsoft.com/fwlink/?LinkId=317604',
     )
 
 def _restart_with_x_frames():
