@@ -24,6 +24,7 @@ using Microsoft.CookiecutterTools.Commands;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
+using Microsoft.CookiecutterTools.Telemetry;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
@@ -83,11 +84,19 @@ namespace Microsoft.CookiecutterTools {
 
             UIThread.EnsureService(this);
 
+            CookiecutterTelemetry.Initialize();
+
             RegisterCommands(new Command[] {
                 new CookiecutterExplorerCommand(),
                 new CreateFromCookiecutterCommand(),
                 new AddFromCookiecutterCommand(),
             }, PackageGuids.guidCookiecutterCmdSet);
+        }
+
+        protected override void Dispose(bool disposing) {
+            CookiecutterTelemetry.Current.Dispose();
+
+            base.Dispose(disposing);
         }
 
         #endregion

@@ -66,6 +66,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GitHubDiscoveryTests.cs" />
+    <Compile Include="ITelemetryTestSupport.cs" />
+    <Compile Include="StringTelemetryRecorderTests.cs" />
+    <Compile Include="TelemetryTestService.cs" />
+    <Compile Include="TelemetryTestServiceTests.cs" />
+    <Compile Include="TestTelemetryRecorder.cs" />
     <Compile Include="CookiecutterIntegrationTests.cs" />
     <Compile Include="FeedTemplateSourceTests.cs" />
     <Compile Include="CookiecutterViewModelTests.cs" />
