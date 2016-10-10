@@ -57,6 +57,7 @@ namespace CookiecutterTests {
         private ITemplateSource _installedTemplateSource;
         private ITemplateSource _gitHubTemplateSource;
         private ITemplateSource _feedTemplateSource;
+        private string _openedFolder;
 
         internal static ContextItemViewModel[] LocalTemplateWithUserConfigContextItems { get; } = new ContextItemViewModel[] {
                 new ContextItemViewModel("full_name", "Configured User"),
@@ -96,9 +97,13 @@ namespace CookiecutterTests {
             _gitHubTemplateSource = new GitHubTemplateSource(_gitHubClient);
             _feedTemplateSource = new FeedTemplateSource(feedUrl);
 
-            _vm = new CookiecutterViewModel(_cutterClient, _gitHubClient, _gitClient, _telemetry, _redirector, _installedTemplateSource, _feedTemplateSource, _gitHubTemplateSource, null);
+            _vm = new CookiecutterViewModel(_cutterClient, _gitHubClient, _gitClient, _telemetry, _redirector, _installedTemplateSource, _feedTemplateSource, _gitHubTemplateSource, OpenFolder);
             _vm.UserConfigFilePath = userConfigFilePath;
             _vm.OutputFolderPath = outputProjectFolder;
+        }
+
+        private void OpenFolder(string folderPath) {
+            _openedFolder = folderPath;
         }
 
         [TestMethod]
@@ -283,6 +288,7 @@ namespace CookiecutterTests {
             Assert.IsFalse(_vm.IsCreating);
             Assert.IsTrue(_vm.IsCreatingSuccess);
             Assert.IsFalse(_vm.IsCreatingError);
+            Assert.AreEqual(_vm.OutputFolderPath, _vm.OpenInExplorerFolderPath);
 
             Assert.IsTrue(Directory.Exists(Path.Combine(_vm.OutputFolderPath, "static_files")));
             Assert.IsTrue(Directory.Exists(Path.Combine(_vm.OutputFolderPath, "post-deployment")));
@@ -310,6 +316,10 @@ namespace CookiecutterTests {
             Assert.IsFalse(log.Contains(template.RepositoryFullName));
             Assert.IsFalse(log.Contains(template.RepositoryName));
             Assert.IsFalse(log.Contains(template.RepositoryOwner));
+
+            Assert.AreEqual(null, _openedFolder);
+            _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
+            Assert.AreEqual(_vm.OpenInExplorerFolderPath, _openedFolder);
         }
 
         private async Task EnsureCookiecutterInstalledAsync() {

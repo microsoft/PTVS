@@ -124,13 +124,6 @@
 
             <StackPanel Margin="4 4 4 8"
                         Orientation="Horizontal"
-                        Visibility="{Binding Path=IsCreatingSuccess, Converter={StaticResource BoolToVisibleOrCollapsed}}">
-                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"/>
-                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Files created successfully."/>
-            </StackPanel>
-
-            <StackPanel Margin="4 4 4 8"
-                        Orientation="Horizontal"
                         Visibility="{Binding Path=IsCreatingError, Converter={StaticResource BoolToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
                 <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Error creating files. See output window for details."/>

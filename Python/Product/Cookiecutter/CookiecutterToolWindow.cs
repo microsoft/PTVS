@@ -181,11 +181,6 @@ namespace Microsoft.CookiecutterTools {
         internal const string vsWindowKindSolutionExplorer = "{3AE79031-E1BC-11D0-8F78-00A0C9110057}";
 
         private void OpenInSolutionExplorer(string folderPath) {
-            var res = MessageBox.Show(Strings.OpenInSolutionExplorerQuestion, Strings.ProductTitle, MessageBoxButton.YesNo, MessageBoxImage.Question);
-            if (res != MessageBoxResult.Yes) {
-                return;
-            }
-
             _uiShell.PostExecCommand(ref openFolderCommandGroupGuid, OpenFolderCommandId, 0, folderPath);
             _dte.Windows.Item(vsWindowKindSolutionExplorer)?.Activate();
         }

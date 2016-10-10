@@ -17,6 +17,7 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -63,6 +64,18 @@ namespace Microsoft.CookiecutterTools.View {
         private void OpenInBrowser_Executed(object sender, ExecutedRoutedEventArgs e) {
             var url = (string)e.Parameter;
             Process.Start(url)?.Dispose();
+        }
+
+        private void OpenInExplorer_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var folderPath = (string)e.Parameter;
+            e.CanExecute = Directory.Exists(folderPath);
+            e.Handled = true;
+        }
+
+        private void OpenInExplorer_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var folderPath = (string)e.Parameter;
+            ViewModel.OpenFolderInExplorer(folderPath);
+            Process.Start(folderPath)?.Dispose();
         }
 
         private void LoadMore_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
