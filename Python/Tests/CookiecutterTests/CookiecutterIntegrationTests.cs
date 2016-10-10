@@ -17,16 +17,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.CookiecutterTools.Infrastructure;
+using Microsoft.CookiecutterTools.Model;
+using Microsoft.CookiecutterTools.Telemetry;
+using Microsoft.CookiecutterTools.ViewModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
-using Microsoft.CookiecutterTools;
-using System.Collections.ObjectModel;
-using Microsoft.CookiecutterTools.Model;
-using Microsoft.CookiecutterTools.ViewModel;
 
 namespace CookiecutterTests {
     [TestClass]
@@ -51,6 +52,7 @@ namespace CookiecutterTests {
         private IGitClient _gitClient;
         private IGitHubClient _gitHubClient;
         private ICookiecutterClient _cutterClient;
+        private ICookiecutterTelemetry _telemetry;
         private CookiecutterViewModel _vm;
         private ITemplateSource _installedTemplateSource;
         private ITemplateSource _gitHubTemplateSource;
@@ -89,11 +91,12 @@ namespace CookiecutterTests {
             _gitClient = new GitClient(GitClient.RecommendedGitFilePath);
             _gitHubClient = new GitHubClient();
             _cutterClient = CookiecutterClientProvider.Create();
+            _telemetry = new CookiecutterTelemetry(new TelemetryTestService());
             _installedTemplateSource = new LocalTemplateSource(installedPath, _gitClient);
             _gitHubTemplateSource = new GitHubTemplateSource(_gitHubClient);
             _feedTemplateSource = new FeedTemplateSource(feedUrl);
 
-            _vm = new CookiecutterViewModel(_cutterClient, _gitHubClient, _gitClient, _redirector, _installedTemplateSource, _feedTemplateSource, _gitHubTemplateSource, null);
+            _vm = new CookiecutterViewModel(_cutterClient, _gitHubClient, _gitClient, _telemetry, _redirector, _installedTemplateSource, _feedTemplateSource, _gitHubTemplateSource, null);
             _vm.UserConfigFilePath = userConfigFilePath;
             _vm.OutputFolderPath = outputProjectFolder;
         }
@@ -122,6 +125,10 @@ namespace CookiecutterTests {
             CollectionAssert.DoesNotContain(_vm.GitHub.Templates, continuationVM);
             continuationVM = _vm.GitHub.Templates.Last() as ContinuationViewModel;
             Assert.IsNotNull(continuationVM);
+
+            var log = ((ITelemetryTestSupport)_telemetry.TelemetryService).SessionLog;
+            Assert.IsTrue(log.Contains("Test/Cookiecutter/Search/Load"));
+            Assert.IsTrue(log.Contains("Test/Cookiecutter/Search/More"));
         }
 
         [TestMethod]
@@ -283,6 +290,26 @@ namespace CookiecutterTests {
             Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "static_files", "web.config")));
             Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "post-deployment", "install-requirements.ps1")));
             Assert.IsFalse(File.Exists(Path.Combine(_vm.OutputFolderPath, "install-requirements.ps1")));
+
+            var log = ((ITelemetryTestSupport)_telemetry.TelemetryService).SessionLog;
+
+            Assert.IsTrue(log.Contains("Test/Cookiecutter/Search/Load"));
+            Assert.IsTrue(log.Contains("Test/Cookiecutter/Template/Clone"));
+            Assert.IsTrue(log.Contains("Test/Cookiecutter/Template/Load"));
+            Assert.IsTrue(log.Contains("Test/Cookiecutter/Template/Run"));
+
+            Assert.IsTrue(log.Contains(template.RemoteUrl.GetSha512()));
+            Assert.IsTrue(log.Contains(template.RepositoryFullName.GetSha512()));
+            Assert.IsTrue(log.Contains(template.RepositoryName.GetSha512()));
+            Assert.IsTrue(log.Contains(template.RepositoryOwner.GetSha512()));
+
+            Assert.IsFalse(log.Contains(template.DisplayName));
+            Assert.IsFalse(log.Contains(template.Description));
+            Assert.IsFalse(log.Contains(template.ClonedPath));
+            Assert.IsFalse(log.Contains(template.RemoteUrl));
+            Assert.IsFalse(log.Contains(template.RepositoryFullName));
+            Assert.IsFalse(log.Contains(template.RepositoryName));
+            Assert.IsFalse(log.Contains(template.RepositoryOwner));
         }
 
         private async Task EnsureCookiecutterInstalledAsync() {

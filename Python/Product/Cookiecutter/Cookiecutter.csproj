@@ -74,6 +74,7 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0" />
+    <Reference Include="Microsoft.VisualStudio.Telemetry" />
     <Reference Include="Microsoft.VisualStudio.Text.Data, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.Logic, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.UI, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -145,6 +146,10 @@
     <Compile Include="Commands\DeleteInstalledTemplateCommand.cs" />
     <Compile Include="Commands\GitHubHomeCommand.cs" />
     <Compile Include="Commands\RunCommand.cs" />
+    <Compile Include="Telemetry\DictionaryExtension.cs" />
+    <Compile Include="Telemetry\ITelemetryRecorder.cs" />
+    <Compile Include="Telemetry\ITelemetryService.cs" />
+    <Compile Include="Telemetry\TelemetryServiceBase.cs" />
     <Compile Include="Cookiecutter.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -166,6 +171,12 @@
     <Compile Include="Model\SearchUtils.cs" />
     <Compile Include="Model\TemplateEnumerationResult.cs" />
     <Compile Include="Shared\Infrastructure\ShellUtils.cs" />
+    <Compile Include="Telemetry\ICookiecutterTelemetry.cs" />
+    <Compile Include="Telemetry\ITelemetryLog.cs" />
+    <Compile Include="Telemetry\CookiecutterTelemetry.cs" />
+    <Compile Include="Telemetry\StringTelemetryRecorder.cs" />
+    <Compile Include="Telemetry\VsTelemetryRecorder.cs" />
+    <Compile Include="Telemetry\VsTelemetryService.cs" />
     <Compile Include="UrlConstants.cs" />
     <Compile Include="ViewModel\ContinuationViewModel.cs" />
     <Compile Include="ViewModel\LoadingViewModel.cs" />

@@ -26,8 +26,9 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using Microsoft.CookiecutterTools.Infrastructure;
-using Microsoft.CookiecutterTools.ViewModel;
 using Microsoft.CookiecutterTools.Model;
+using Microsoft.CookiecutterTools.Telemetry;
+using Microsoft.CookiecutterTools.ViewModel;
 
 namespace Microsoft.CookiecutterTools.View {
     /// <summary>
@@ -44,7 +45,7 @@ namespace Microsoft.CookiecutterTools.View {
             InitializeComponent();
         }
 
-        public CookiecutterControl(Redirector outputWindow, Uri feedUrl, Action<string> openFolder, Action updateCommandUI) {
+        public CookiecutterControl(Redirector outputWindow, ICookiecutterTelemetry telemetry, Uri feedUrl, Action<string> openFolder, Action updateCommandUI) {
             _updateCommandUI = updateCommandUI;
 
             string gitExeFilePath = GitClient.RecommendedGitFilePath;
@@ -54,6 +55,7 @@ namespace Microsoft.CookiecutterTools.View {
                 CookiecutterClientProvider.Create(),
                 gitHubClient,
                 gitClient,
+                telemetry,
                 outputWindow,
                 new LocalTemplateSource(CookiecutterViewModel.DefaultInstalledFolderPath, gitClient),
                 new FeedTemplateSource(feedUrl),

@@ -17,6 +17,8 @@
 using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Microsoft.CookiecutterTools.Infrastructure {
@@ -78,6 +80,13 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                 str.Equals("yes", StringComparison.InvariantCultureIgnoreCase) ||
                 (bool.TryParse(str, out asBool) && asBool)
             );
+        }
+
+        public static string GetSha512(this string input) {
+            SHA512 sha = SHA512.Create();
+            byte[] inputBytes = Encoding.Unicode.GetBytes(input);
+            byte[] hash = sha.ComputeHash(inputBytes);
+            return BitConverter.ToString(hash);
         }
     }
 }

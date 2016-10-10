@@ -26,6 +26,7 @@ using TestUtilities.Python;
 using Microsoft.CookiecutterTools;
 using Microsoft.CookiecutterTools.ViewModel;
 using Microsoft.CookiecutterTools.Model;
+using Microsoft.CookiecutterTools.Telemetry;
 
 namespace CookiecutterTests {
     [TestClass]
@@ -65,7 +66,8 @@ namespace CookiecutterTests {
             var output = TestData.GetTempPath("Cookiecutter", true);
             var outputProjectFolder = Path.Combine(output, "project");
 
-            _vm = new CookiecutterViewModel(_cutterClient, _gitHubClient, _gitClient, _redirector, _installedTemplateSource, _feedTemplateSource, _gitHubTemplateSource, null);
+            var telemetry = new CookiecutterTelemetry();
+            _vm = new CookiecutterViewModel(_cutterClient, _gitHubClient, _gitClient, telemetry, _redirector, _installedTemplateSource, _feedTemplateSource, _gitHubTemplateSource, null);
             _vm.UserConfigFilePath = UserConfigFilePath;
             _vm.OutputFolderPath = outputProjectFolder;
         }
