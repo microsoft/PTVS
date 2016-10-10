@@ -479,6 +479,9 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public async Task LoadTemplateAsync() {
             var selection = SelectedTemplate;
             Debug.Assert(selection != null);
+            if (selection == null) {
+                throw new InvalidOperationException("LoadTemplateAsync called with null SelectedTemplate");
+            }
 
             if (IsCloneNeeded(selection)) {
                 IsCloning = true;
@@ -576,6 +579,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         }
 
         public async Task CreateFilesAsync() {
+            var selection = SelectedTemplate;
+            Debug.Assert(selection != null);
+            if (selection == null) {
+                throw new InvalidOperationException("CreateFilesAsync called with null SelectedTemplate");
+            }
+
             IsCloning = false;
             IsCloningError = false;
             IsCloningSuccess = false;
@@ -583,9 +592,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             IsCreating = true;
             IsCreatingError = false;
             IsCreatingSuccess = false;
-
-            var selection = SelectedTemplate;
-            Debug.Assert(selection != null);
 
             try {
                 var contextFilePath = Path.GetTempFileName();
