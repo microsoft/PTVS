@@ -23,6 +23,7 @@ if ($to_delete) {
 
 if (-not $uninstall) {
     [Reflection.Assembly]::LoadWithPartialName('System.IO.Compression.FileSystem') | Out-Null
+    [Reflection.Assembly]::LoadWithPartialName('System.Web') | Out-Null
 
     $source = $MyInvocation.MyCommand.Definition | Split-Path -Parent
 
