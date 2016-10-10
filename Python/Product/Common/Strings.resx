@@ -789,13 +789,13 @@ modified from these scripts.</value>
     <value>&amp;Continue without Administrator privileges</value>
   </data>
   <data name="ElevateForInstallPackage_DoNotElevate_Note" xml:space="preserve">
-    <value>Package installation may fail if you do not have sufficient permissions</value>
+    <value>This operation may fail if you do not have sufficient permissions</value>
   </data>
   <data name="ElevateForInstallPackage_Elevate" xml:space="preserve">
     <value>&amp;Elevate now</value>
   </data>
   <data name="ElevateForInstallPackage_ElevateAlways" xml:space="preserve">
-    <value>&amp;Always elevate when installing packages</value>
+    <value>&amp;Always elevate when installing or removing packages</value>
   </data>
   <data name="ElevateForInstallPackage_ElevateAlways_Note" xml:space="preserve">
     <value>This dialog will not be shown again</value>
@@ -804,7 +804,7 @@ modified from these scripts.</value>
     <value>You may be prompted for credentials</value>
   </data>
   <data name="ElevateForInstallPackage_MainInstruction" xml:space="preserve">
-    <value>Administrator privileges may be required to install or update this package.</value>
+    <value>Administrator privileges may be required to install, update or remove packages for this environment.</value>
   </data>
   <data name="UpgradedWebBrowserUrlProperty" xml:space="preserve">
     <value>The web browser URL property has been set to a default value. It may be modified through Project Properties.</value>
@@ -915,5 +915,8 @@ modified from these scripts.</value>
   </data>
   <data name="PackageManagementNotSupported" xml:space="preserve">
     <value>The selected environment does not support package management.</value>
+  </data>
+  <data name="UnableToElevate" xml:space="preserve">
+    <value>Visual Studio was unable to launch the elevated process.</value>
   </data>
 </root>

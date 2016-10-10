@@ -20,10 +20,10 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Input;
 using Microsoft.CookiecutterTools.Commands;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
+using Microsoft.CookiecutterTools.Telemetry;
 using Microsoft.CookiecutterTools.View;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
@@ -74,14 +74,16 @@ namespace Microsoft.CookiecutterTools {
             object control = null;
 
             if (!CookiecutterClientProvider.IsCompatiblePythonAvailable()) {
+                ReportPrereqsEvent(false);
                 control = new MissingDependencies();
             } else {
+                ReportPrereqsEvent(true);
                 string feedUrl = CookiecutterPackage.Instance.RecommendedFeed;
                 if (string.IsNullOrEmpty(feedUrl)) {
                     feedUrl = UrlConstants.DefaultRecommendedFeed;
                 }
 
-                _cookiecutterControl = new CookiecutterControl(_outputWindow, new Uri(feedUrl), OpenGeneratedFolder, UpdateCommandUI);
+                _cookiecutterControl = new CookiecutterControl(_outputWindow, CookiecutterTelemetry.Current, new Uri(feedUrl), OpenGeneratedFolder, UpdateCommandUI);
                 _cookiecutterControl.ContextMenuRequested += OnContextMenuRequested;
                 control = _cookiecutterControl;
             }
@@ -248,6 +250,14 @@ namespace Microsoft.CookiecutterTools {
                 (int)point.Y,
                 this
             );
+        }
+
+        private static void ReportPrereqsEvent(bool found) {
+            try {
+                CookiecutterTelemetry.Current.TelemetryService.ReportEvent(CookiecutterTelemetry.TelemetryArea.Prereqs, CookiecutterTelemetry.PrereqsEvents.Python, found.ToString());
+            } catch (Exception ex) {
+                Debug.Fail($"Error reporting event.\n{ex.Message}");
+            }
         }
     }
 }

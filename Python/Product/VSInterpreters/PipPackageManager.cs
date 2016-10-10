@@ -34,6 +34,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly List<PackageSpec> _packages;
         private CancellationTokenSource _currentRefresh;
         private bool _isReady, _everCached;
+        private readonly string[] _extraInterpreterArgs;
 
         internal readonly SemaphoreSlim _working = new SemaphoreSlim(1);
 
@@ -52,8 +53,12 @@ namespace Microsoft.PythonTools.Interpreter {
             RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
 
-        public PipPackageManager(bool allowFileSystemWatchers = true) {
+        public PipPackageManager(
+            bool allowFileSystemWatchers = true,
+            IEnumerable<string> extraInterpreterArgs = null
+        ) {
             _packages = new List<PackageSpec>();
+            _extraInterpreterArgs = extraInterpreterArgs?.ToArray() ?? Array.Empty<string>();
 
             if (allowFileSystemWatchers) {
                 _libWatchers = new List<FileSystemWatcher>();
@@ -78,6 +83,8 @@ namespace Microsoft.PythonTools.Interpreter {
             }
             _refreshIsCurrentTrigger?.Change(1000, Timeout.Infinite);
         }
+
+        public IPythonInterpreterFactory Factory => _factory;
 
         public void Dispose() {
             Dispose(true);
@@ -124,7 +131,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private Task<bool> ShouldElevate(IPackageManagerUI ui, string operation) {
-            return ui == null ? Task.FromResult(false) : ui.ShouldElevateAsync(operation);
+            return ui == null ? Task.FromResult(false) : ui.ShouldElevateAsync(this, operation);
         }
 
         public bool IsReady {
@@ -139,11 +146,14 @@ namespace Microsoft.PythonTools.Interpreter {
         public event EventHandler IsReadyChanged;
 
         private async Task UpdateIsReadyAsync(bool alreadyHasLock, CancellationToken cancellationToken) {
+            var args = _extraInterpreterArgs
+                .Concat(new[] { "-c", "import pip" });
+
             var workingLock = alreadyHasLock ? null : await _working.LockAsync(cancellationToken);
             try {
                 using (var proc = ProcessOutput.Run(
                     _factory.Configuration.InterpreterPath,
-                    new[] { "-E", "-c", "import pip" },
+                    args,
                     _factory.Configuration.PrefixPath,
                     UnbufferedEnv,
                     false,
@@ -174,17 +184,19 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             var operation = "pip_downloader.py";
+            var args = _extraInterpreterArgs
+                .Concat(new[] { PythonToolsInstallPath.GetFile("pip_downloader.py", GetType().Assembly) });
             using (await _working.LockAsync(cancellationToken)) {
-                ui?.OnOperationStarted(operation);
-                ui?.OnOutputTextReceived(Strings.InstallingPipStarted);
+                ui?.OnOperationStarted(this, operation);
+                ui?.OnOutputTextReceived(this, Strings.InstallingPipStarted);
 
                 using (var proc = ProcessOutput.Run(
                     _factory.Configuration.InterpreterPath,
-                    new[] { "-E", PythonToolsInstallPath.GetFile("pip_downloader.py", GetType().Assembly) },
+                    args,
                     _factory.Configuration.PrefixPath,
                     UnbufferedEnv,
                     false,
-                    PackageManagerUIRedirector.Get(ui),
+                    PackageManagerUIRedirector.Get(this, ui),
                     elevate: await ShouldElevate(ui, operation)
                 )) {
                     try {
@@ -194,8 +206,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
 
-                ui?.OnOutputTextReceived(IsReady ? Strings.InstallingPipSuccess : Strings.InstallingPackageFailed);
-                ui?.OnOperationFinished(operation, IsReady);
+                ui?.OnOutputTextReceived(this, IsReady ? Strings.InstallingPipSuccess : Strings.InstallingPackageFailed);
+                ui?.OnOperationFinished(this, operation, IsReady);
             }
         }
 
@@ -205,28 +217,30 @@ namespace Microsoft.PythonTools.Interpreter {
 
             using (await _working.LockAsync(cancellationToken)) {
                 bool success = false;
-                string args;
+
+                var args = _extraInterpreterArgs.ToList();
 
                 if (!SupportsDashMPip) {
-                    args = "-c \"import pip; pip.main()\" ";
+                    args.Add("-c");
+                    args.Add("\"import pip; pip.main()\"");
                 } else {
-                    args = "-m pip ";
+                    args.Add("-m");
+                    args.Add("pip");
                 }
+                string argStr = (string.Join(" ", args.Select(ProcessOutput.QuoteSingleArgument)) + " " + arguments).Trim();
 
-                args += arguments;
-
-                var operation = args;
-                ui?.OnOutputTextReceived(operation);
-                ui?.OnOperationStarted(Strings.ExecutingCommandStarted.FormatUI(arguments));
+                var operation = argStr;
+                ui?.OnOutputTextReceived(this, operation);
+                ui?.OnOperationStarted(this, Strings.ExecutingCommandStarted.FormatUI(arguments));
 
                 try {
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
-                        new[] { args },
+                        new[] { argStr },
                         _factory.Configuration.PrefixPath,
                         UnbufferedEnv,
                         false,
-                        PackageManagerUIRedirector.Get(ui),
+                        PackageManagerUIRedirector.Get(this, ui),
                         quoteArgs: false,
                         elevate: await ShouldElevate(ui, operation)
                     )) {
@@ -246,8 +260,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
 
                     var msg = success ? Strings.ExecutingCommandSucceeded : Strings.ExecutingCommandFailed;
-                    ui?.OnOutputTextReceived(msg.FormatUI(arguments));
-                    ui?.OnOperationFinished(operation, success);
+                    ui?.OnOutputTextReceived(this, msg.FormatUI(arguments));
+                    ui?.OnOperationFinished(this, operation, success);
                     await CacheInstalledPackagesAsync(true, cancellationToken);
                 }
             }
@@ -258,21 +272,24 @@ namespace Microsoft.PythonTools.Interpreter {
             await AbortIfNotReady(cancellationToken);
 
             bool success = false;
-            List<string> args;
+            var args = _extraInterpreterArgs.ToList();
 
             if (!SupportsDashMPip) {
-                args = new List<string> { "-c", "\"import pip; pip.main()\"", "install" };
+                args.Add("-c");
+                args.Add("\"import pip; pip.main()\"");
             } else {
-                args = new List<string> { "-m", "pip", "install" };
+                args.Add("-m");
+                args.Add("pip");
             }
+            args.Add("install");
 
             args.Add(package.FullSpec);
             var name = string.IsNullOrEmpty(package.Name) ? package.FullSpec : package.Name;
             var operation = string.Join(" ", args);
 
             using (await _working.LockAsync(cancellationToken)) {
-                ui?.OnOperationStarted(operation);
-                ui?.OnOutputTextReceived(Strings.InstallingPackageStarted.FormatUI(name));
+                ui?.OnOperationStarted(this, operation);
+                ui?.OnOutputTextReceived(this, Strings.InstallingPackageStarted.FormatUI(name));
 
                 try {
                     using (var output = ProcessOutput.Run(
@@ -281,7 +298,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         _factory.Configuration.PrefixPath,
                         UnbufferedEnv,
                         false,
-                        PackageManagerUIRedirector.Get(ui),
+                        PackageManagerUIRedirector.Get(this, ui),
                         quoteArgs: false,
                         elevate: await ShouldElevate(ui, operation)
                     )) {
@@ -301,8 +318,8 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
 
                     var msg = success ? Strings.InstallingPackageSuccess : Strings.InstallingPackageFailed;
-                    ui?.OnOutputTextReceived(msg.FormatUI(name));
-                    ui?.OnOperationFinished(operation, success);
+                    ui?.OnOutputTextReceived(this, msg.FormatUI(name));
+                    ui?.OnOperationFinished(this, operation, success);
                     await CacheInstalledPackagesAsync(true, cancellationToken);
                 }
             }
@@ -313,13 +330,17 @@ namespace Microsoft.PythonTools.Interpreter {
             await AbortIfNotReady(cancellationToken);
 
             bool success = false;
-            List<string> args;
+            var args = _extraInterpreterArgs.ToList();
 
             if (!SupportsDashMPip) {
-                args = new List<string> { "-c", "import pip; pip.main()", "uninstall", "-y" };
+                args.Add("-c");
+                args.Add("\"import pip; pip.main()\"");
             } else {
-                args = new List<string> { "-m", "pip", "uninstall", "-y" };
+                args.Add("-m");
+                args.Add("pip");
             }
+            args.Add("uninstall");
+            args.Add("-y");
 
             args.Add(package.FullSpec);
             var name = string.IsNullOrEmpty(package.Name) ? package.FullSpec : package.Name;
@@ -327,8 +348,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
             try {
                 using (await _working.LockAsync(cancellationToken)) {
-                    ui?.OnOperationStarted(operation);
-                    ui?.OnOutputTextReceived(Strings.InstallingPackageStarted.FormatUI(name));
+                    ui?.OnOperationStarted(this, operation);
+                    ui?.OnOutputTextReceived(this, Strings.InstallingPackageStarted.FormatUI(name));
 
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
@@ -336,7 +357,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         _factory.Configuration.PrefixPath,
                         UnbufferedEnv,
                         false,
-                        PackageManagerUIRedirector.Get(ui),
+                        PackageManagerUIRedirector.Get(this, ui),
                         elevate: await ShouldElevate(ui, operation)
                     )) {
                         if (!output.IsStarted) {
@@ -370,8 +391,8 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 var msg = success ? Strings.UninstallingPackageSuccess : Strings.UninstallingPackageFailed;
-                ui?.OnOutputTextReceived(msg.FormatUI(name));
-                ui?.OnOperationFinished(operation, success);
+                ui?.OnOutputTextReceived(this, msg.FormatUI(name));
+                ui?.OnOperationFinished(this, operation, success);
             }
         }
 
@@ -392,12 +413,16 @@ namespace Microsoft.PythonTools.Interpreter {
 
             var workingLock = alreadyHasLock ? null : await _working.LockAsync(cancellationToken);
             try {
-                string[] args;
+                var args = _extraInterpreterArgs.ToList();
+
                 if (!SupportsDashMPip) {
-                    args = new[] { "-E", "-c", "import pip; pip.main()", "list" };
+                    args.Add("-c");
+                    args.Add("\"import pip; pip.main()\"");
                 } else {
-                    args = new[] { "-E", "-m", "pip", "list" };
+                    args.Add("-m");
+                    args.Add("pip");
                 }
+                args.Add("list");
 
                 using (await _concurrencyLock.LockAsync(cancellationToken)) {
                     using (var proc = ProcessOutput.Run(
@@ -427,7 +452,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         // Pip failed, so return a directory listing
                         var paths = await PythonTypeDatabase.GetDatabaseSearchPathsAsync(_factory);
 
-                        packages = await Task.Run(() => paths.Where(p => !p.IsStandardLibrary)
+                        packages = await Task.Run(() => paths.Where(p => !p.IsStandardLibrary && Directory.Exists(p.Path))
                             .SelectMany(p => PathUtils.EnumerateDirectories(p.Path, recurse: false))
                             .Select(path => Path.GetFileName(path))
                             .Select(name => PackageNameRegex.Match(name))
@@ -559,7 +584,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 return;
             }
 
-            paths = paths.OrderBy(p => p.Path.Length).ToList();
+            paths = paths
+                .Where(p => Directory.Exists(p.Path))
+                .OrderBy(p => p.Path.Length)
+                .ToList();
 
             var watching = new List<string>();
             var watchers = new List<FileSystemWatcher>();

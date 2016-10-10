@@ -700,6 +700,9 @@ namespace Microsoft.PythonTools.Interpreter {
             // path that we can filter out later
             var tempWorkingDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             Directory.CreateDirectory(tempWorkingDir);
+            var srcGetSearchPaths = PythonToolsInstallPath.GetFile("get_search_paths.py", typeof(PythonTypeDatabase).Assembly);
+            var getSearchPaths = PathUtils.GetAbsoluteFilePath(tempWorkingDir, PathUtils.GetFileOrDirectoryName(srcGetSearchPaths));
+            File.Copy(srcGetSearchPaths, getSearchPaths);
 
             try {
                 using (var proc = ProcessOutput.Run(
@@ -707,7 +710,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     new[] {
                         "-S",   // don't import site - we do that in code
                         "-E",   // ignore environment
-                        "-c", "import sys;print('\\n'.join(sys.path));print('-');import site;site.main();print('\\n'.join(sys.path))"
+                        getSearchPaths
                     },
                     tempWorkingDir,
                     null,
@@ -739,57 +742,17 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
-            var result = new List<PythonLibraryPath>();
-            var treatPathsAsStandardLibrary = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            bool builtinLibraries = true;
-            foreach (var p in lines) {
-                if (p == "-") {
-                    if (builtinLibraries) {
-                        // Seen all the builtins
-                        builtinLibraries = false;
-                        continue;
-                    } else {
-                        // Extra hyphen, so stop processing
-                        break;
-                    }
+            return lines.Select(s => {
+                if (s.StartsWith(tempWorkingDir, StringComparison.OrdinalIgnoreCase)) {
+                    return null;
                 }
-
-                if (string.IsNullOrEmpty(p) || p == ".") {
-                    continue;
-                }
-
-                string path;
                 try {
-                    if (!Path.IsPathRooted(p)) {
-                        path = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(interpreter), p));
-                    } else {
-                        path = Path.GetFullPath(p);
-                    }
-                } catch (ArgumentException) {
-                    continue;
-                } catch (PathTooLongException) {
-                    continue;
+                    return PythonLibraryPath.Parse(s);
+                } catch (FormatException) {
+                    Debug.Fail("Invalid format for search path: " + s);
+                    return null;
                 }
-
-                if (string.Equals(p, tempWorkingDir, StringComparison.OrdinalIgnoreCase)) {
-                    continue;
-                }
-
-                if (Directory.Exists(path)) {
-                    if (builtinLibraries) {
-                        // Looking at first section of output, which are
-                        // considered to be the "standard library"
-                        treatPathsAsStandardLibrary.Add(path);
-                    } else {
-                        // Looking at second section of output, which
-                        // includes site-packages and .pth files
-                        result.Add(new PythonLibraryPath(path, treatPathsAsStandardLibrary.Contains(path), null));
-                    }
-                }
-            }
-
-            return result;
+            }).Where(p => p != null).ToList();
         }
 
         /// <summary>

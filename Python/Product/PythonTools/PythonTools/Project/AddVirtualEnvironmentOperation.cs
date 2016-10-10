@@ -22,7 +22,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Project {
-    sealed class AddVirtualEnvironmentOperation : IPackageManagerUI {
+    sealed class AddVirtualEnvironmentOperation {
         private readonly PythonProjectNode _project;
         private readonly string _virtualEnvPath;
         private readonly IPythonInterpreterFactory _baseInterpreter;
@@ -97,29 +97,13 @@ namespace Microsoft.PythonTools.Project {
             WriteOutput(Strings.RequirementsTxtInstalling.FormatUI(txt));
             if (await factory.PackageManager.InstallAsync(
                 PackageSpec.FromArguments("-r " + ProcessOutput.QuoteSingleArgument(txt)),
-                this,
+                new VsPackageManagerUI(_project.Site),
                 CancellationToken.None
             )) {
                 WriteOutput(Strings.PackageInstallSucceeded.FormatUI(Path.GetFileName(txt)));
             } else {
                 WriteOutput(Strings.PackageInstallFailed.FormatUI(Path.GetFileName(txt)));
             }
-        }
-
-        void IPackageManagerUI.OnOutputTextReceived(string text) {
-            _output.WriteLine(text.TrimEndNewline());
-        }
-
-        void IPackageManagerUI.OnErrorTextReceived(string text) {
-            _output.WriteErrorLine(text.TrimEndNewline());
-        }
-
-        void IPackageManagerUI.OnOperationStarted(string operation) { }
-
-        void IPackageManagerUI.OnOperationFinished(string operation, bool success) { }
-
-        Task<bool> IPackageManagerUI.ShouldElevateAsync(string operation) {
-            return Task.FromResult(_project.Site.GetPythonToolsService().GeneralOptions.ElevatePip);
         }
     }
 }

@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -22,38 +23,93 @@ using Microsoft.PythonTools.Options;
 
 namespace Microsoft.PythonTools.Project {
     class VsPackageManagerUI : IPackageManagerUI {
+        private readonly IServiceProvider _site;
         private readonly Redirector _outputWindow;
         private readonly GeneralOptions _options;
         private readonly bool _alwaysElevate;
 
         public VsPackageManagerUI(IServiceProvider provider, bool alwaysElevate = false) {
+            _site = provider;
             _outputWindow = OutputWindowRedirector.GetGeneral(provider);
             _options = provider.GetPythonToolsService().GeneralOptions;
             _alwaysElevate = alwaysElevate;
         }
 
-        public void OnErrorTextReceived(string text) {
+        public void OnErrorTextReceived(IPackageManager sender, string text) {
             _outputWindow.WriteErrorLine(text.TrimEndNewline());
         }
 
-        public void OnOperationFinished(string operation, bool success) {
+        public void OnOperationFinished(IPackageManager sender, string operation, bool success) {
             if (_options.ShowOutputWindowForPackageInstallation) {
                 _outputWindow.ShowAndActivate();
             }
         }
 
-        public void OnOperationStarted(string operation) {
+        public void OnOperationStarted(IPackageManager sender, string operation) {
             if (_options.ShowOutputWindowForPackageInstallation) {
                 _outputWindow.ShowAndActivate();
             }
         }
 
-        public void OnOutputTextReceived(string text) {
+        public void OnOutputTextReceived(IPackageManager sender, string text) {
             _outputWindow.WriteLine(text.TrimEndNewline());
         }
 
-        public Task<bool> ShouldElevateAsync(string operation) {
-            return Task.FromResult(_options.ElevatePip || _alwaysElevate);
+        public async Task<bool> ShouldElevateAsync(IPackageManager sender, string operation) {
+            if (_alwaysElevate) {
+                return true;
+            }
+
+            return ShouldElevate(_site, sender.Factory.Configuration, operation);
+        }
+
+        public static bool ShouldElevate(IServiceProvider site, InterpreterConfiguration config, string operation) {
+            var opts = site.GetPythonToolsService().GeneralOptions;
+            if (opts.ElevatePip) {
+                return true;
+            }
+
+            try {
+                // Create a test file and delete it immediately to ensure we can do it.
+                // If this fails, prompt the user to see whether they want to elevate.
+                var testFile = PathUtils.GetAvailableFilename(config.PrefixPath, "access-test", ".txt");
+                using (new FileStream(testFile, FileMode.CreateNew, FileAccess.Write, FileShare.Delete, 4096, FileOptions.DeleteOnClose)) { }
+                return false;
+            } catch (IOException) {
+            } catch (UnauthorizedAccessException) {
+            }
+
+            var td = new TaskDialog(site) {
+                Title = Strings.ProductTitle,
+                MainInstruction = Strings.ElevateForInstallPackage_MainInstruction,
+                AllowCancellation = true,
+            };
+            var elevate = new TaskDialogButton(Strings.ElevateForInstallPackage_Elevate, Strings.ElevateForInstallPackage_Elevate_Note) {
+                ElevationRequired = true
+            };
+            var noElevate = new TaskDialogButton(Strings.ElevateForInstallPackage_DoNotElevate, Strings.ElevateForInstallPackage_DoNotElevate_Note);
+            var elevateAlways = new TaskDialogButton(Strings.ElevateForInstallPackage_ElevateAlways, Strings.ElevateForInstallPackage_ElevateAlways_Note) {
+                ElevationRequired = true
+            };
+            td.Buttons.Add(elevate);
+            td.Buttons.Add(noElevate);
+            td.Buttons.Add(elevateAlways);
+            td.Buttons.Add(TaskDialogButton.Cancel);
+            var sel = td.ShowModal();
+            if (sel == TaskDialogButton.Cancel) {
+                throw new OperationCanceledException();
+            }
+
+            if (sel == noElevate) {
+                return false;
+            }
+
+            if (sel == elevateAlways) {
+                opts.ElevatePip = true;
+                opts.Save();
+            }
+
+            return true;
         }
     }
 }

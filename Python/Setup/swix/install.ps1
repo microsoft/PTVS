@@ -1,5 +1,10 @@
 param($vs, [switch] $uninstall)
 
+if (-not $vs) {
+    throw "Missing -vs [path] parameter"
+    exit 1
+}
+
 $install_dirs = @(
     "Common7\IDE\Extensions\Microsoft\Python",
     "Common7\IDE\ProjectTemplates\Python",
@@ -35,6 +40,7 @@ if (-not $uninstall) {
 
         if (Test-Path "$d\contents") {
             pushd "$d\contents"
+            gci * -Recurse | ?{ $_.Name -Match '%' } | %{ move $_ "$([System.Web.HttpUtility]::UrlDecode($_))" }
             copy -Recurse -Force * $vs
             popd
         }

@@ -12,16 +12,16 @@ namespace TestUtilities.Python {
         private readonly List<PackageSpec> _installable = new List<PackageSpec>();
 
         private bool _seenChange;
-        private IPythonInterpreterFactory _factory;
 
         public bool IsReady { get; set; }
+        public IPythonInterpreterFactory Factory { get; set; }
 
         public event EventHandler InstalledFilesChanged { add { throw new NotImplementedException(); } remove { } }
         public event EventHandler InstalledPackagesChanged;
         public event EventHandler IsReadyChanged { add { throw new NotImplementedException(); } remove { } }
 
         public void SetInterpreterFactory(IPythonInterpreterFactory factory) {
-            _factory = factory;
+            Factory = factory;
         }
 
         public Task<bool> ExecuteAsync(string arguments, IPackageManagerUI ui, CancellationToken cancellationToken) {
@@ -53,11 +53,11 @@ namespace TestUtilities.Python {
         }
 
         public async Task<bool> InstallAsync(PackageSpec package, IPackageManagerUI ui, CancellationToken cancellationToken) {
-            ui?.OnOperationStarted("install " + package.FullSpec);
+            ui?.OnOperationStarted(this, "install " + package.FullSpec);
             _installed.Add(package);
             await Task.Delay(100, cancellationToken);
             _seenChange = true;
-            ui?.OnOperationFinished("install " + package.FullSpec, true);
+            ui?.OnOperationFinished(this, "install " + package.FullSpec, true);
             return true;
         }
 

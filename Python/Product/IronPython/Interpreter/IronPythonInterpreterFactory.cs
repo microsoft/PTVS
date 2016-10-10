@@ -21,7 +21,7 @@ using Microsoft.PythonTools.Interpreter;
 namespace Microsoft.IronPythonTools.Interpreter {
     class IronPythonInterpreterFactory : PythonInterpreterFactoryWithDatabase {
         public IronPythonInterpreterFactory(InterpreterArchitecture arch)
-            : base(GetConfiguration(arch), new InterpreterFactoryCreationOptions()) { }
+            : base(GetConfiguration(arch), GetCreationOptions(arch)) { }
 
         private static string GetInterpreterId(InterpreterArchitecture arch) {
             if (arch == InterpreterArchitecture.x64) {
@@ -44,6 +44,16 @@ namespace Microsoft.IronPythonTools.Interpreter {
                 new Version(2, 7),
                 InterpreterUIMode.SupportsDatabase
             );
+        }
+
+        private static InterpreterFactoryCreationOptions GetCreationOptions(InterpreterArchitecture arch) {
+            return new InterpreterFactoryCreationOptions {
+                PackageManager = BuiltInPackageManagers.PipXFrames,
+                DatabasePath = Path.Combine(
+                    PythonTypeDatabase.CompletionDatabasePath,
+                    InterpreterFactoryCreator.GetRelativePathForConfigurationId(GetInterpreterId(arch))
+                )
+            };
         }
 
         public override IPythonInterpreter MakeInterpreter(PythonInterpreterFactoryWithDatabase factory) {

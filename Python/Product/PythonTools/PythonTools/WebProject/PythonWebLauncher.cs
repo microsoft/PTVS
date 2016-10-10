@@ -93,7 +93,9 @@ namespace Microsoft.PythonTools.Project.Web {
             if (debug) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 1);
 
-                config.LaunchOptions[PythonConstants.WebBrowserUrlSetting] = url.AbsoluteUri;
+                if (url != null) {
+                    config.LaunchOptions[PythonConstants.WebBrowserUrlSetting] = url.AbsoluteUri;
+                }
                 using (var dsi = DebugLaunchHelper.CreateDebugTargetInfo(_serviceProvider, config)) {
                     dsi.Launch();
                 }
@@ -160,10 +162,17 @@ namespace Microsoft.PythonTools.Project.Web {
         #endregion
 
         internal static void GetFullUrl(IServiceProvider provider, LaunchConfiguration config, out Uri uri, out int port) {
+            int p;
+            if (int.TryParse(config.GetLaunchOption(PythonConstants.WebBrowserPortSetting) ?? "", out p)) {
+                port = p;
+            } else {
+                port = GetTestServerPort();
+                p = -1;
+            }
+
             var host = config.GetLaunchOption(PythonConstants.WebBrowserUrlSetting);
             if (string.IsNullOrEmpty(host)) {
                 uri = null;
-                port = 0;
                 return;
             }
 
@@ -178,8 +187,7 @@ namespace Microsoft.PythonTools.Project.Web {
                     builder.Path = host;
                 }
 
-                int p;
-                if (int.TryParse(config.GetLaunchOption(PythonConstants.WebBrowserPortSetting) ?? "", out p)) {
+                if (p >= 0) {
                     builder.Port = p;
                 } else if (builder.Port < 0 || (builder.Uri.IsDefaultPort && !host.Contains(":{0}".FormatInvariant(builder.Port)))) {
                     builder.Port = GetTestServerPort();
@@ -195,7 +203,6 @@ namespace Microsoft.PythonTools.Project.Web {
                 output.WriteErrorLine(Strings.ErrorInvalidLaunchUrl.FormatUI(host));
                 output.ShowAndActivate();
                 uri = null;
-                port = 0;
             }
         }
 

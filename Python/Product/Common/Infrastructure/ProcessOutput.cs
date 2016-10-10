@@ -307,10 +307,6 @@ namespace Microsoft.PythonTools.Infrastructure {
             psi.UseShellExecute = true;
             psi.Verb = elevate ? "runas" : null;
 
-            int port = GetFreePort();
-            var listener = new TcpListener(IPAddress.Loopback, port);
-            psi.Arguments = port.ToString();
-
             var utf8 = new UTF8Encoding(false);
             // Send args and env as base64 to avoid newline issues
             string args;
@@ -330,10 +326,61 @@ namespace Microsoft.PythonTools.Infrastructure {
                 string.Join("|", env.Select(kv => kv.Key + "=" + Convert.ToBase64String(utf8.GetBytes(kv.Value)))) :
                 "";
 
-            listener.Start();
-            listener.AcceptTcpClientAsync().ContinueWith(t => {
+            TcpListener listener = null;
+            Task<TcpClient> clientTask = null;
+
+            for (int retries = 10; retries >= 0; --retries) {
+                int port = GetFreePort();
+                listener = new TcpListener(IPAddress.Loopback, port);
+                psi.Arguments = port.ToString();
+                try {
+                    listener.Start();
+                } catch (SocketException) {
+                    if (retries == 0) {
+                        throw;
+                    }
+                    continue;
+                }
+                try {
+                    clientTask = listener.AcceptTcpClientAsync();
+                } catch (SocketException) {
+                    listener.Stop();
+                    if (retries == 0) {
+                        throw;
+                    }
+                    clientTask = null;
+                }
+            }
+
+            if (clientTask == null) {
+                throw new InvalidOperationException(Strings.UnableToElevate);
+            }
+
+            var process = new Process();
+
+            clientTask.ContinueWith(t => {
                 listener.Stop();
-                var client = t.Result;
+                TcpClient client;
+                try {
+                    client = t.Result;
+                } catch (AggregateException ae) {
+                    try {
+                        process.Kill();
+                    } catch (InvalidOperationException) {
+                    } catch (Win32Exception) {
+                    }
+
+                    if (redirector != null) {
+                        foreach (var ex in ae.InnerExceptions.DefaultIfEmpty(ae)) {
+                            using (var reader = new StringReader(ex.ToString())) {
+                                for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
+                                    redirector.WriteErrorLine(line);
+                                }
+                            }
+                        }
+                    }
+                    return;
+                }
                 using (var writer = new StreamWriter(client.GetStream(), utf8, 4096, true)) {
                     writer.WriteLine(filename);
                     writer.WriteLine(args);
@@ -363,7 +410,6 @@ namespace Microsoft.PythonTools.Infrastructure {
                 }
             });
 
-            var process = new Process();
             process.StartInfo = psi;
 
             return new ProcessOutput(process, redirector);

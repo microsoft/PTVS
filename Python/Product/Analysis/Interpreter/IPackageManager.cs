@@ -37,6 +37,13 @@ namespace Microsoft.PythonTools.Interpreter {
         void SetInterpreterFactory(IPythonInterpreterFactory factory);
 
         /// <summary>
+        /// Returns the interpreter factory associated with this manager, or
+        /// <c>null</c> if <see cref="SetInterpreterFactory"/> has not been
+        /// called.
+        /// </summary>
+        IPythonInterpreterFactory Factory { get; }
+
+        /// <summary>
         /// True if the package manager is ready for use. This may return false
         /// if a tool needs to be installed, for example.
         /// </summary>

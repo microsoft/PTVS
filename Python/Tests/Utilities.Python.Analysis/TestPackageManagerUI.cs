@@ -34,23 +34,23 @@ namespace TestUtilities.Python {
             return text;
         }
 
-        public void OnOutputTextReceived(string text) {
+        public void OnOutputTextReceived(IPackageManager sender, string text) {
             Trace.TraceInformation(RemoveNewline(text));
         }
 
-        public void OnErrorTextReceived(string text) {
+        public void OnErrorTextReceived(IPackageManager sender, string text) {
             Trace.TraceError(RemoveNewline(text));
         }
 
-        public void OnOperationFinished(string operation, bool success) {
+        public void OnOperationFinished(IPackageManager sender, string operation, bool success) {
             Trace.TraceInformation("{0} finished. Success: {1}", operation, success);
         }
 
-        public void OnOperationStarted(string operation) {
+        public void OnOperationStarted(IPackageManager sender, string operation) {
             Trace.TraceInformation("{0} started.", operation);
         }
 
-        public Task<bool> ShouldElevateAsync(string operation) {
+        public Task<bool> ShouldElevateAsync(IPackageManager sender, string operation) {
             return Task.FromResult(false);
         }
     }

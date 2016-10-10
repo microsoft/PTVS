@@ -38,10 +38,10 @@ namespace Microsoft.PythonTools.Project {
         public static Task<bool> Install(IServiceProvider provider, IPythonInterpreterFactory factory) {
             var ui = new VsPackageManagerUI(provider);
             if (factory.Configuration.Version < new Version(2, 5)) {
-                ui.OnErrorTextReceived("Python versions earlier than 2.5 are not supported by PTVS.\n");
+                ui.OnErrorTextReceived(null, "Python versions earlier than 2.5 are not supported by PTVS.\n");
                 throw new OperationCanceledException();
             } else if (factory.PackageManager == null) {
-                ui.OnErrorTextReceived(Strings.PackageManagementNotSupported_Package.FormatUI("virtualenv"));
+                ui.OnErrorTextReceived(null, Strings.PackageManagementNotSupported_Package.FormatUI("virtualenv"));
                 throw new OperationCanceledException();
             } else if (factory.Configuration.Version == new Version(2, 5)) {
                 return factory.PackageManager.InstallAsync(PackageSpec.FromArguments("https://go.microsoft.com/fwlink/?LinkID=317970"), ui, CancellationToken.None);
@@ -148,7 +148,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            await ContinueCreate(provider, factory, path, false, PackageManagerUIRedirector.Get(ui));
+            await ContinueCreate(provider, factory, path, false, PackageManagerUIRedirector.Get(pm, ui));
         }
 
         public static InterpreterConfiguration FindInterpreterConfiguration(

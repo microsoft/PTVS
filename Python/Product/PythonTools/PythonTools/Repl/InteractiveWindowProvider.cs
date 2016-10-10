@@ -82,7 +82,19 @@ namespace Microsoft.PythonTools.Repl {
                 "session! Now you need to restart Visual Studio to open any more.");
         }
 
+        private bool EnsureInterpretersAvailable() {
+            var registry = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+            if (registry.Configurations.Any()) {
+                return true;
+            }
+
+            PythonToolsPackage.OpenNoInterpretersHelpPage(_serviceProvider);
+            return false;
+        }
+
         public IVsInteractiveWindow OpenOrCreate(string replId) {
+            EnsureInterpretersAvailable();
+
             IVsInteractiveWindow wnd;
             lock (_windows) {
                 foreach(var window in _windows.Values) {
@@ -100,6 +112,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IVsInteractiveWindow Create(string replId, int curId = -1) {
+            EnsureInterpretersAvailable();
+
             if (curId < 0) {
                 curId = GetNextId();
             }
@@ -134,6 +148,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IVsInteractiveWindow OpenOrCreateTemporary(string replId, string title, out bool wasCreated) {
+            EnsureInterpretersAvailable();
+
             IVsInteractiveWindow wnd;
             lock (_windows) {
                 int curId;
@@ -154,6 +170,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IVsInteractiveWindow CreateTemporary(string replId, string title) {
+            EnsureInterpretersAvailable();
+
             int curId = GetNextId();
 
             var window = CreateInteractiveWindowInternal(

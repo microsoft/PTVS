@@ -74,6 +74,7 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.10.0" />
+    <Reference Include="Microsoft.VisualStudio.Telemetry" />
     <Reference Include="Microsoft.VisualStudio.Text.Data, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.Logic, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.UI, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -82,9 +83,6 @@
     <Reference Include="Microsoft.VisualStudio.Shell.$(VsTarget)">
       <Private>false</Private>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Framework, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' == '15.0'" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
@@ -98,7 +96,6 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.14.0.DesignTime, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Utilities, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Threading, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.Build, Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
@@ -130,12 +127,29 @@
     </Reference>
     <Reference Include="WindowsBase" />
   </ItemGroup>
+  <Choose>
+    <When Condition="$(VSTarget) == '15.0'">
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Shell.Framework, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+        <Reference Include="Microsoft.VisualStudio.Shell.Immutable.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'" />
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
   <ItemGroup>
     <Compile Include="Commands\AddFromCookiecutterCommand.cs" />
     <Compile Include="Commands\CreateFromCookiecutterCommand.cs" />
     <Compile Include="Commands\DeleteInstalledTemplateCommand.cs" />
     <Compile Include="Commands\GitHubHomeCommand.cs" />
     <Compile Include="Commands\RunCommand.cs" />
+    <Compile Include="Telemetry\DictionaryExtension.cs" />
+    <Compile Include="Telemetry\ITelemetryRecorder.cs" />
+    <Compile Include="Telemetry\ITelemetryService.cs" />
+    <Compile Include="Telemetry\TelemetryServiceBase.cs" />
     <Compile Include="Cookiecutter.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -157,6 +171,12 @@
     <Compile Include="Model\SearchUtils.cs" />
     <Compile Include="Model\TemplateEnumerationResult.cs" />
     <Compile Include="Shared\Infrastructure\ShellUtils.cs" />
+    <Compile Include="Telemetry\ICookiecutterTelemetry.cs" />
+    <Compile Include="Telemetry\ITelemetryLog.cs" />
+    <Compile Include="Telemetry\CookiecutterTelemetry.cs" />
+    <Compile Include="Telemetry\StringTelemetryRecorder.cs" />
+    <Compile Include="Telemetry\VsTelemetryRecorder.cs" />
+    <Compile Include="Telemetry\VsTelemetryService.cs" />
     <Compile Include="UrlConstants.cs" />
     <Compile Include="ViewModel\ContinuationViewModel.cs" />
     <Compile Include="ViewModel\LoadingViewModel.cs" />

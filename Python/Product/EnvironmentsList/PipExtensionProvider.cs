@@ -137,8 +137,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public event EventHandler<QueryShouldElevateEventArgs> QueryShouldElevate;
 
-        public Task<bool> ShouldElevateAsync(string operation) {
-            var e = new QueryShouldElevateEventArgs(_factory.Configuration);
+        public Task<bool> ShouldElevateAsync(IPackageManager sender, string operation) {
+            var e = new QueryShouldElevateEventArgs(_factory);
             QueryShouldElevate?.Invoke(this, e);
             if (e.ElevateAsync != null) {
                 return e.ElevateAsync;
@@ -175,25 +175,25 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         public event EventHandler<OutputEventArgs> OutputTextReceived;
 
-        public void OnOutputTextReceived(string text) {
+        public void OnOutputTextReceived(IPackageManager sender, string text) {
             OutputTextReceived?.Invoke(this, new OutputEventArgs(text));
         }
 
         public event EventHandler<OutputEventArgs> ErrorTextReceived;
 
-        public void OnErrorTextReceived(string text) {
+        public void OnErrorTextReceived(IPackageManager sender, string text) {
             ErrorTextReceived?.Invoke(this, new OutputEventArgs(text));
         }
 
         public event EventHandler<OutputEventArgs> OperationStarted;
 
-        public void OnOperationStarted(string operation) {
+        public void OnOperationStarted(IPackageManager sender, string operation) {
             OperationStarted?.Invoke(this, new OutputEventArgs(operation));
         }
 
         public event EventHandler<OperationFinishedEventArgs> OperationFinished;
 
-        public void OnOperationFinished(string operation, bool success) {
+        public void OnOperationFinished(IPackageManager sender, string operation, bool success) {
             OperationFinished?.Invoke(this, new OperationFinishedEventArgs(operation, success));
         }
 
@@ -232,10 +232,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// <summary>
         /// The configuration of the interpreter that may require elevation.
         /// </summary>
-        public InterpreterConfiguration Configuration { get; }
+        public IPythonInterpreterFactory Factory { get; }
 
-        public QueryShouldElevateEventArgs(InterpreterConfiguration configuration) {
-            Configuration = configuration;
+        public QueryShouldElevateEventArgs(IPythonInterpreterFactory factory) {
+            Factory = factory;
         }
     }
 

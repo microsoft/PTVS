@@ -16,12 +16,12 @@ MERCHANTABLITY OR NON-INFRINGEMENT.
 See the Apache Version 2.0 License for specific language governing
 permissions and limitations under the License.
 -->
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_PythonToolsPath>$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft Corporation\Python Tools for Visual Studio - Django\3.0</_PythonToolsPath>
     <!-- Enable logging for publish/preview -->
     <EnablePackageProcessLoggingAndAssert>true</EnablePackageProcessLoggingAndAssert>
   </PropertyGroup>
-  
+
+  <!-- _PythonToolsPath must be provided or defined in the environment -->
   <Import Project="$(_PythonToolsPath)\Microsoft.PythonTools.Django.targets" />
 </Project>
