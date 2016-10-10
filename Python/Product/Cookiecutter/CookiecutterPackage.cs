@@ -22,12 +22,11 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using Microsoft.CookiecutterTools.Commands;
 using Microsoft.CookiecutterTools.Infrastructure;
+using Microsoft.CookiecutterTools.Telemetry;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
-using Microsoft.CookiecutterTools.Telemetry;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.CookiecutterTools {
     /// <summary>

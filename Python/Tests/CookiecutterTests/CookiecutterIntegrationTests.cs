@@ -17,17 +17,17 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.CookiecutterTools.Infrastructure;
+using Microsoft.CookiecutterTools.Model;
+using Microsoft.CookiecutterTools.Telemetry;
+using Microsoft.CookiecutterTools.ViewModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
 using TestUtilities.Python;
-using System.Collections.ObjectModel;
-using Microsoft.CookiecutterTools.Model;
-using Microsoft.CookiecutterTools.ViewModel;
-using Microsoft.CookiecutterTools.Telemetry;
-using Microsoft.CookiecutterTools.Infrastructure;
 
 namespace CookiecutterTests {
     [TestClass]

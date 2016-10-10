@@ -26,9 +26,9 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
 using Microsoft.CookiecutterTools.Infrastructure;
-using Microsoft.CookiecutterTools.ViewModel;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.Telemetry;
+using Microsoft.CookiecutterTools.ViewModel;
 
 namespace Microsoft.CookiecutterTools.View {
     /// <summary>

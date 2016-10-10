@@ -20,14 +20,13 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Input;
 using Microsoft.CookiecutterTools.Commands;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
+using Microsoft.CookiecutterTools.Telemetry;
 using Microsoft.CookiecutterTools.View;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
-using Microsoft.CookiecutterTools.Telemetry;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
