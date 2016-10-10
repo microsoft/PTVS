@@ -32,8 +32,7 @@ namespace Microsoft.CookiecutterTools.Telemetry {
                         }
                     }
                 }
-            }
-            else {
+            } else {
                 dict = new Dictionary<string, object>();
             }
             return dict;
