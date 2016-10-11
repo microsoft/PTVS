@@ -43,6 +43,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             bool allowUI = true
         ) {
             var message = ex.ToUnhandledExceptionMessage(callerType, callerFile, callerLineNumber, callerName);
+
             // Send the message to the trace listener in case there is
             // somebody out there listening.
             Trace.TraceError(message);
@@ -71,20 +72,28 @@ namespace Microsoft.PythonTools.Infrastructure {
                 // Unknown error prevented writing to the log
             }
 
-            if (allowUI) {
-                lock (_displayedMessages) {
-                    if (!string.IsNullOrEmpty(logFile) &&
-                        _displayedMessages.Add(string.Format("{0}:{1}", callerFile, callerLineNumber))) {
-                        // First time we've seen this error, so let the user know
-                        MessageBox.Show(Strings.SeeActivityLog.FormatUI(logFile), Strings.ProductTitle);
-                    }
-                }
-            }
-
             try {
                 ActivityLog.LogError(Strings.ProductTitle, message);
             } catch (InvalidOperationException) {
                 // Activity Log is unavailable.
+                logFile = null;
+            }
+
+            if (allowUI) {
+                lock (_displayedMessages) {
+                    var key = "{0}:{1}:{2}".FormatInvariant(callerFile, callerLineNumber, ex.GetType().Name);
+                    if (_displayedMessages.Add(key)) {
+                        // First time we've seen this error, so let the user know
+                        // Prefer the dialog with our issue tracker and exception
+                        // details, but if we don't have a site available then
+                        // refer the user to ActivityLog.xml.
+                        if (site != null) {
+                            TaskDialog.ForException(site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
+                        } else if (!string.IsNullOrEmpty(logFile)) {
+                            MessageBox.Show(Strings.SeeActivityLog.FormatUI(logFile), Strings.ProductTitle);
+                        }
+                    }
+                }
             }
         }
 

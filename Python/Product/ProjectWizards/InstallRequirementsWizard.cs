@@ -131,7 +131,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                         provider,
                         ex,
                         Strings.InstallRequirementsFailed,
-                        PythonConstants.IssueTrackerUrl
+                        Strings.IssueTrackerUrl
                     ).ShowModal();
                 }
             }
