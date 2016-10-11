@@ -1014,6 +1014,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to https://go.microsoft.com/fwlink/?LinkId=402428.
+        /// </summary>
+        public static string IssueTrackerUrl {
+            get {
+                return ResourceManager.GetString("IssueTrackerUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Operation cannot be started because the environment is not configured..
         /// </summary>
         public static string MisconfiguredEnvironment {

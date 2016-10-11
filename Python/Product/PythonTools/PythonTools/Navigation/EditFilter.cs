@@ -629,6 +629,15 @@ namespace Microsoft.PythonTools.Language {
         /// Called from VS when we should handle a command or pass it on.
         /// </summary>
         public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            try {
+                return ExecWorker(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+            } catch (Exception ex) {
+                ex.ReportUnhandledException(_serviceProvider, GetType());
+                return VSConstants.E_FAIL;
+            }
+        }
+
+        private int ExecWorker(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             // preprocessing
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
                 switch ((VSConstants.VSStd97CmdID)nCmdID) {

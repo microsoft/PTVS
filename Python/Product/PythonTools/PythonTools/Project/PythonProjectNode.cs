@@ -470,7 +470,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override string IssueTrackerUrl {
-            get { return PythonConstants.IssueTrackerUrl; }
+            get { return Strings.IssueTrackerUrl; }
         }
 
         private static string GetSearchPathEntry(AnalysisEntry entry) {

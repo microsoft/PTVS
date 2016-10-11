@@ -151,7 +151,7 @@ namespace Microsoft.PythonTools.InterpreterList {
                     Directory.CreateDirectory(path);
                     File.WriteAllText(PathUtils.GetAbsoluteFilePath(path, "readme.txt"), Strings.ReplScriptPathReadmeContents);
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    TaskDialog.ForException(_site, ex, issueTrackerUrl: PythonConstants.IssueTrackerUrl).ShowModal();
+                    TaskDialog.ForException(_site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
                     return false;
                 }
             }
@@ -189,7 +189,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             try {
                 File.WriteAllText(path, Strings.ReplScriptPathIPythonModeTxtContents);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                TaskDialog.ForException(_site, ex, issueTrackerUrl: PythonConstants.IssueTrackerUrl).ShowModal();
+                TaskDialog.ForException(_site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
                 return;
             }
 
@@ -213,7 +213,7 @@ namespace Microsoft.PythonTools.InterpreterList {
                 try {
                     File.Delete(path);
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    TaskDialog.ForException(_site, ex, issueTrackerUrl: PythonConstants.IssueTrackerUrl).ShowModal();
+                    TaskDialog.ForException(_site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
                     return;
                 }
             }
@@ -315,7 +315,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             var ex = (ExceptionDispatchInfo)e.Parameter;
             Debug.Assert(ex != null, "Unhandled exception with no exception object");
 
-            var td = TaskDialog.ForException(_site, ex.SourceException, string.Empty, PythonConstants.IssueTrackerUrl);
+            var td = TaskDialog.ForException(_site, ex.SourceException, string.Empty, Strings.IssueTrackerUrl);
             td.Title = Strings.ProductTitle;
             td.ShowModal();
         }
@@ -347,7 +347,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             try {
                 window = service.OpenOrCreate(replId);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                TaskDialog.ForException(_site, ex, Strings.ErrorOpeningInteractiveWindow, PythonConstants.IssueTrackerUrl).ShowModal();
+                TaskDialog.ForException(_site, ex, Strings.ErrorOpeningInteractiveWindow, Strings.IssueTrackerUrl).ShowModal();
                 return;
             }
 
