@@ -27,6 +27,9 @@
         <CommandBinding Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
                     CanExecute="OpenInBrowser_CanExecute"
                     Executed="OpenInBrowser_Executed" />
+        <CommandBinding Command="{x:Static vm:CookiecutterViewModel.OpenInExplorer}"
+                    CanExecute="OpenInExplorer_CanExecute"
+                    Executed="OpenInExplorer_Executed" />
     </Page.CommandBindings>
     <Page.Resources>
         <ResourceDictionary>
@@ -71,6 +74,8 @@
     </Page.Resources>
     <Grid>
         <Grid.RowDefinitions>
+            <!-- Created successfully -->
+            <RowDefinition Height="Auto"/>
             <!-- Search -->
             <RowDefinition Height="Auto"/>
             <!-- Results -->
@@ -80,8 +85,29 @@
             <!-- Description -->
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
+
+        <!-- Created successfully -->
+        <StackPanel Grid.Row="0" Orientation="Vertical" Visibility="{Binding Path=IsCreatingSuccess, Converter={StaticResource BoolToVisibleOrCollapsed}}">
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal">
+                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"/>
+                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Files created successfully."/>
+            </StackPanel>
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal">
+                <imaging:CrispImage Margin="20 0 0 0" Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.OpenFolder}"/>
+                <Button Style="{StaticResource NavigationButton}"
+                    Margin="4 0 0 0"
+                    Command="{x:Static vm:CookiecutterViewModel.OpenInExplorer}"
+                    CommandParameter="{Binding Path=OpenInExplorerFolderPath,Mode=OneWay}"
+                    HorizontalAlignment="Left">
+                    Open in Solution Explorer
+                </Button>
+            </StackPanel>
+        </StackPanel>
+
         <!-- Search -->
-        <StackPanel Grid.Row="0" Orientation="Vertical">
+        <StackPanel Grid.Row="1" Orientation="Vertical">
             <Grid>
                 <Grid.Resources>
                     <Style TargetType="{x:Type TextBox}">
@@ -108,7 +134,7 @@
         </StackPanel>
 
         <!-- Results -->
-        <TreeView Grid.Row="1"
+        <TreeView Grid.Row="2"
                   Margin="4 4 0 8"
                   ItemsSource="{Binding Path=SearchResults}"
                   SelectedItemChanged="TreeView_SelectedItemChanged"
@@ -199,7 +225,7 @@
         </TreeView>
 
         <!-- Next + Status -->
-        <StackPanel Grid.Row="2" Orientation="Vertical">
+        <StackPanel Grid.Row="3" Orientation="Vertical">
             <Button Margin="4"
                 Command="{x:Static vm:CookiecutterViewModel.RunSelection}"
                 MinWidth="100"
@@ -254,7 +280,7 @@
         </StackPanel>
 
         <!-- Description -->
-        <Grid Grid.Row="3" Height="100">
+        <Grid Grid.Row="4" Height="100">
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
