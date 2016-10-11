@@ -43,6 +43,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
         public static readonly ICommand LoadMore = new RoutedCommand();
         public static readonly ICommand OpenInBrowser = new RoutedCommand();
+        public static readonly ICommand OpenInExplorer = new RoutedCommand();
         public static readonly ICommand RunSelection = new RoutedCommand();
         public static readonly ICommand Search = new RoutedCommand();
         public static readonly ICommand CreateFilesCommand = new RoutedCommand();
@@ -50,6 +51,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
         private string _searchTerm;
         private string _outputFolderPath;
+        private string _openInExplorerFolderPath;
         private string _selectedDescription;
         private string _selectedLocation;
         private bool _isInstalling;
@@ -141,6 +143,19 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _outputFolderPath) {
                     _outputFolderPath = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OutputFolderPath)));
+                }
+            }
+        }
+
+        public string OpenInExplorerFolderPath {
+            get {
+                return _openInExplorerFolderPath;
+            }
+
+            set {
+                if (value != _openInExplorerFolderPath) {
+                    _openInExplorerFolderPath = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OpenInExplorerFolderPath)));
                 }
             }
         }
@@ -592,6 +607,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             IsCreating = true;
             IsCreatingError = false;
             IsCreatingSuccess = false;
+            OpenInExplorerFolderPath = null;
 
             try {
                 var contextFilePath = Path.GetTempFileName();
@@ -607,6 +623,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 } catch (IOException) {
                 }
 
+                OpenInExplorerFolderPath = OutputFolderPath;
+
+                Reset();
+
                 IsCreating = false;
                 IsCreatingSuccess = true;
                 IsCreatingError = false;
@@ -619,10 +639,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 _outputWindow.ShowAndActivate();
 
                 ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Run, selection);
-
-                if (_openFolder != null) {
-                    _openFolder(OutputFolderPath);
-                }
             } catch (ProcessException ex) {
                 IsCreating = false;
                 IsCreatingSuccess = false;
@@ -675,6 +691,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
         public void NavigateToHelp() {
             Process.Start(UrlConstants.HelpUrl)?.Dispose();
+        }
+
+        public void OpenFolderInExplorer(string path) {
+            _openFolder(path);
         }
 
         public async Task SelectTemplate(TemplateViewModel template) {
