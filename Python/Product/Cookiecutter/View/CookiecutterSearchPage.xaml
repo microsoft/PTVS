@@ -100,7 +100,7 @@
                     Margin="4 0 0 0"
                     Command="{x:Static vm:CookiecutterViewModel.OpenInExplorer}"
                     CommandParameter="{Binding Path=OpenInExplorerFolderPath,Mode=OneWay}"
-                    HorizontalAlignment="Left">Open in solution explorer</Button>
+                    HorizontalAlignment="Left">Open in Solution Explorer</Button>
             </StackPanel>
         </StackPanel>
 
