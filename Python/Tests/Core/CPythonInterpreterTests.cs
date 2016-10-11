@@ -15,9 +15,14 @@
 // permissions and limitations under the License.
 
 using System;
+using System.IO;
 using System.Linq;
+using System.Threading;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
+using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.Win32;
 using TestUtilities;
@@ -33,7 +38,7 @@ namespace PythonToolsTests {
             AssertListener.Initialize();
             PythonTestData.Deploy();
         }
-        
+
         [TestMethod, Priority(0)]
         public void FactoryProvider() {
             var provider = InterpFactory;
@@ -76,6 +81,97 @@ namespace PythonToolsTests {
                     key.DeleteSubKey("NotARealInterpreter", false);
                 }
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public void ImportFromSearchPath() {
+            PythonAnalyzer state;
+            IPythonProjectEntry entry;
+            PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = true;
+            try {
+                AnalyzeCode(out state, out entry, @"from test_package import *");
+
+                state.AnalyzeQueuedEntries(CancellationTokens.After60s);
+                AssertUtil.CheckCollection(
+                    entry.Analysis.GetAllAvailableMembers(SourceLocation.None).Select(m => m.Name),
+                    new string[0],
+                    new[] { "package_method", "package_method_two", "test_package" }
+                );
+
+                state.SetSearchPaths(new[] { TestData.GetPath("TestData\\AddImport") });
+
+                entry.Analyze(CancellationToken.None, true);
+                state.AnalyzeQueuedEntries(CancellationTokens.After60s);
+
+                AssertUtil.CheckCollection(
+                    entry.Analysis.GetAllAvailableMembers(SourceLocation.None).Select(m => m.Name),
+                    new[] { "package_method", "package_method_two" },
+                    new[] { "test_package" }
+                );
+            } finally {
+                PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = false;
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void ImportPydFromSearchPath() {
+            PythonAnalyzer state;
+            IPythonProjectEntry entry;
+            PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = true;
+            try {
+                AnalyzeCode(out state, out entry, @"from spam import *",
+                preferredVersion: new Version(2, 7), preferredArch: InterpreterArchitecture.x86);
+
+                state.AnalyzeQueuedEntries(CancellationTokens.After60s);
+                AssertUtil.CheckCollection(
+                    entry.Analysis.GetAllAvailableMembers(SourceLocation.None).Select(m => m.Name),
+                    new string[0],
+                    new[] { "system", "spam" }
+                );
+
+                state.SetSearchPaths(new[] { TestData.GetPath("TestData") });
+
+                entry.Analyze(CancellationToken.None, true);
+                state.AnalyzeQueuedEntries(CancellationTokens.After60s);
+
+                AssertUtil.CheckCollection(
+                    entry.Analysis.GetAllAvailableMembers(SourceLocation.None).Select(m => m.Name),
+                    new[] { "system" },
+                    new[] { "spam" }
+                );
+            } finally {
+                PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = false;
+            }
+        }
+
+        private static void AnalyzeCode(
+            out PythonAnalyzer analyzer,
+            out IPythonProjectEntry entry,
+            string code,
+            Version preferredVersion = null,
+            InterpreterArchitecture preferredArch = null,
+            string module = "test-module"
+        ) {
+            var provider = InterpFactory;
+            var factory = provider.GetInterpreterFactories().OrderByDescending(f => f.Configuration.Version)
+                .Where(f => preferredVersion == null || f.Configuration.Version == preferredVersion)
+                .Where(f => preferredArch == null || f.Configuration.Architecture == preferredArch)
+                .FirstOrDefault();
+            Assert.IsNotNull(factory, "no factory found");
+
+            analyzer = PythonAnalyzer.CreateSynchronously(factory);
+            var path = Path.Combine(TestData.GetTempPath(randomSubPath: true), module.Replace('.', '\\'));
+            Directory.CreateDirectory(PathUtils.GetParent(path));
+            File.WriteAllText(path, code);
+
+            entry = analyzer.AddModule(module, path);
+            PythonAst ast;
+            using (var p = Parser.CreateParser(new StringReader(code), factory.GetLanguageVersion())) {
+                ast = p.ParseFile();
+                entry.UpdateTree(ast, null);
+            }
+
+            entry.Analyze(CancellationToken.None, true);
         }
     }
 }

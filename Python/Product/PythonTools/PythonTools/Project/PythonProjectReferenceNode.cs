@@ -27,21 +27,21 @@ using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     class PythonProjectReferenceNode : ProjectReferenceNode {
-        private readonly FileChangeManager _fileChangeListener;
-        private string _observing;
-        private AssemblyName _asmName;
-        private bool _failedToAnalyze;
-        private ProjectReference _curReference;
+        //private readonly FileChangeManager _fileChangeListener;
+        //private string _observing;
+        //private AssemblyName _asmName;
+        //private bool _failedToAnalyze;
+        //private ProjectReference _curReference;
 
         public PythonProjectReferenceNode(ProjectNode root, ProjectElement element)
             : base(root, element) {
-            _fileChangeListener = new FileChangeManager(ProjectMgr.Site);
+            //_fileChangeListener = new FileChangeManager(ProjectMgr.Site);
             Initialize();
         }
 
         public PythonProjectReferenceNode(ProjectNode project, string referencedProjectName, string projectPath, string projectReference)
             : base(project, referencedProjectName, projectPath, projectReference) {
-            _fileChangeListener = new FileChangeManager(ProjectMgr.Site);
+            //_fileChangeListener = new FileChangeManager(ProjectMgr.Site);
             Initialize();
         }
 
@@ -49,18 +49,18 @@ namespace Microsoft.PythonTools.Project {
             var solutionEvents = ProjectMgr.Site.GetSolutionEvents();
             solutionEvents.ActiveSolutionConfigurationChanged += EventListener_AfterActiveSolutionConfigurationChange;
             solutionEvents.BuildCompleted += EventListener_BuildCompleted;
-            _fileChangeListener.FileChangedOnDisk += FileChangedOnDisk;
+            //_fileChangeListener.FileChangedOnDisk += FileChangedOnDisk;
             solutionEvents.ProjectLoaded += PythonProjectReferenceNode_ProjectLoaded;
-            InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
+            //InitializeFileChangeListener();
+            //AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
         }
 
         private void EventListener_BuildCompleted(object sender, EventArgs e) {
             if (ProjectMgr.IsClosing) {
                 return;
             }
-            InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
+            //InitializeFileChangeListener();
+            //AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
             ProjectMgr.OnInvalidateItems(Parent);
         }
 
@@ -68,8 +68,8 @@ namespace Microsoft.PythonTools.Project {
             if (ProjectMgr.IsClosing) {
                 return;
             }
-            InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
+            //InitializeFileChangeListener();
+            //AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
             ProjectMgr.OnInvalidateItems(Parent);
         }
 
@@ -77,92 +77,93 @@ namespace Microsoft.PythonTools.Project {
             if (ProjectMgr.IsClosing) {
                 return;
             }
-            InitializeFileChangeListener();
-            AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
+            //InitializeFileChangeListener();
+            //AddAnalyzedAssembly(((PythonProjectNode)ProjectMgr).GetAnalyzer()).DoNotWait();
             ProjectMgr.OnInvalidateItems(Parent);
         }
 
-        private async void InitializeFileChangeListener() {
-            if (_observing != null) {
-                _fileChangeListener.StopObservingItem(_observing);
-            }
+        //private async void InitializeFileChangeListener() {
+        //    if (_observing != null) {
+        //        _fileChangeListener.StopObservingItem(_observing);
+        //    }
+        //
+        //    await Task.Delay(500).ConfigureAwait(true);
+        //
+        //    _observing = ReferencedProjectOutputPath;
+        //    if (_observing != null) {
+        //        _fileChangeListener.ObserveItem(_observing);
+        //    }
+        //}
 
-            await Task.Delay(500).ConfigureAwait(true);
+        //private void FileChangedOnDisk(object sender, FileChangedOnDiskEventArgs e) {
+        //    if (ProjectMgr.IsClosing) {
+        //        return;
+        //    }
+        //    var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
+        //    // remove the reference to whatever we are currently observing
+        //    RemoveAnalyzedAssembly(interp);
+        //
+        //    if ((e.FileChangeFlag & (VisualStudio.Shell.Interop._VSFILECHANGEFLAGS.VSFILECHG_Add | VisualStudio.Shell.Interop._VSFILECHANGEFLAGS.VSFILECHG_Time | VisualStudio.Shell.Interop._VSFILECHANGEFLAGS.VSFILECHG_Size)) != 0) {
+        //        // kick off the analysis of the new assembly...
+        //        AddAnalyzedAssembly(interp).DoNotWait();
+        //    }
+        //}
 
-            _observing = ReferencedProjectOutputPath;
-            if (_observing != null) {
-                _fileChangeListener.ObserveItem(_observing);
-            }
-        }
+        //private void RemoveAnalyzedAssembly(VsProjectAnalyzer interp) {
+        //    if (interp != null) {
+        //        if (_curReference != null) {
+        //            interp.RemoveReferenceAsync(_curReference).Wait();
+        //            _curReference = null;
+        //        }
+        //    }
+        //}
 
-        private void FileChangedOnDisk(object sender, FileChangedOnDiskEventArgs e) {
-            if (ProjectMgr.IsClosing) {
-                return;
-            }
-            var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
-            // remove the reference to whatever we are currently observing
-            RemoveAnalyzedAssembly(interp);
+        //internal async Task AddAnalyzedAssembly(VsProjectAnalyzer interp) {
+        //    if (interp != null) {
+        //        string asmName;
+        //        string outFile;
+        //        try {
+        //            asmName = AssemblyName;
+        //            outFile = ReferencedProjectOutputPath;
+        //        } catch (COMException) {
+        //            _failedToAnalyze = true;
+        //            return;
+        //        }
+        //        _failedToAnalyze = false;
+        //        _curReference = null;
+        //    
+        //        if (!string.IsNullOrEmpty(asmName)) {
+        //            _asmName = new AssemblyName(asmName);
+        //            _curReference = new ProjectAssemblyReference(_asmName, ReferencedProjectOutputPath);
+        //        } else if (File.Exists(outFile)) {
+        //            _asmName = null;
+        //            _curReference = new ProjectReference(outFile, ProjectReferenceKind.ExtensionModule);
+        //        } else {
+        //            if (ReferencedProjectObject == null ||
+        //                !Utilities.GuidEquals(PythonConstants.ProjectFactoryGuid, ReferencedProjectObject.Kind)) {
+        //                // Only failed if the reference isn't to another Python
+        //                // project.
+        //                _failedToAnalyze = true;
+        //            }
+        //        }
+        //    
+        //        if (_curReference != null) {
+        //            try {
+        //                await interp.AddReferenceAsync(_curReference);
+        //            } catch (Exception) {
+        //                _failedToAnalyze = true;
+        //            }
+        //        }
+        //    }
+        //}
 
-            if ((e.FileChangeFlag & (VisualStudio.Shell.Interop._VSFILECHANGEFLAGS.VSFILECHG_Add | VisualStudio.Shell.Interop._VSFILECHANGEFLAGS.VSFILECHG_Time | VisualStudio.Shell.Interop._VSFILECHANGEFLAGS.VSFILECHG_Size)) != 0) {
-                // kick off the analysis of the new assembly...
-                AddAnalyzedAssembly(interp).DoNotWait();
-            }
-        }
-
-        private void RemoveAnalyzedAssembly(VsProjectAnalyzer interp) {
-            if (interp != null) {
-                if (_curReference != null) {
-                    interp.RemoveReferenceAsync(_curReference).Wait();
-                    _curReference = null;
-                }
-            }
-        }
-
-        internal async Task AddAnalyzedAssembly(VsProjectAnalyzer interp) {
-            if (interp != null) {
-                var asmName = AssemblyName;
-                string outFile;
-                try {
-                    outFile = ReferencedProjectOutputPath;
-                } catch (COMException) {
-                    _failedToAnalyze = true;
-                    return;
-                }
-                _failedToAnalyze = false;
-                _curReference = null;
-
-                if (!string.IsNullOrEmpty(asmName)) {
-                    _asmName = new AssemblyName(asmName);
-                    _curReference = new ProjectAssemblyReference(_asmName, ReferencedProjectOutputPath);
-                } else if (File.Exists(outFile)) {
-                    _asmName = null;
-                    _curReference = new ProjectReference(outFile, ProjectReferenceKind.ExtensionModule);
-                } else {
-                    if (ReferencedProjectObject == null ||
-                        !Utilities.GuidEquals(PythonConstants.ProjectFactoryGuid, ReferencedProjectObject.Kind)) {
-                        // Only failed if the reference isn't to another Python
-                        // project.
-                        _failedToAnalyze = true;
-                    }
-                }
-
-                if (_curReference != null) {
-                    try {
-                        await interp.AddReferenceAsync(_curReference);
-                    } catch (Exception) {
-                        _failedToAnalyze = true;
-                    }
-                }
-            }
-        }
-
-        protected override bool CanShowDefaultIcon() {
-            if (_failedToAnalyze) {
-                return false;
-            }
-
-            return base.CanShowDefaultIcon();
-        }
+        //protected override bool CanShowDefaultIcon() {
+        //    if (_failedToAnalyze) {
+        //        return false;
+        //    }
+        //
+        //    return base.CanShowDefaultIcon();
+        //}
 
         protected override void Dispose(bool disposing) {
             base.Dispose(disposing);
@@ -173,8 +174,8 @@ namespace Microsoft.PythonTools.Project {
                 solutionEvents.BuildCompleted -= EventListener_BuildCompleted;
                 solutionEvents.ProjectLoaded -= PythonProjectReferenceNode_ProjectLoaded;
 
-                _fileChangeListener.FileChangedOnDisk -= FileChangedOnDisk;
-                _fileChangeListener.Dispose();
+                //_fileChangeListener.FileChangedOnDisk -= FileChangedOnDisk;
+                //_fileChangeListener.Dispose();
             }
         }
     }

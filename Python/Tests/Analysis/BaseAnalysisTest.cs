@@ -118,9 +118,7 @@ namespace AnalysisTests {
 
             state.Limits = GetLimits();
             if (analysisDirs != null) {
-                foreach (var dir in analysisDirs) {
-                    state.AddAnalysisDirectory(dir);
-                }
+                state.SetSearchPaths(analysisDirs);
             }
 
             return state;

@@ -65,7 +65,7 @@ namespace Microsoft.PythonTools.Project {
             string path = this.Url;
             if (base.Remove(removeFromStorage)) {
                 //Remove entry from project's Search Path
-                _project.RemoveSearchPathEntry(path);
+                _project.RemoveSearchPath(path);
                 return true;
             }
             return false;

@@ -1,4 +1,4 @@
-// Python Tools for Visual Studio
+﻿// Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
 //
@@ -14,18 +14,20 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using Microsoft.PythonTools.Interpreter;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.PythonTools.Analysis;
 
-namespace Microsoft.PythonTools.Analysis.Values {
-    internal class EnumInstanceInfo : ConstantInfo {
-        public EnumInstanceInfo(object value, PythonAnalyzer projectState)
-            : base(projectState.ClassInfos[BuiltinTypeId.Int], value, PythonMemberType.EnumInstance) {
+namespace Microsoft.PythonTools.Interpreter.Ast {
+    class AstPythonConstant : IPythonConstant, ILocatedMember {
+        public AstPythonConstant(IPythonType type, params LocationInfo[] locations) {
+            Type = type;
+            Locations = locations.ToArray();
         }
 
-        public override string Description {
-            get {
-                return Value.ToString();
-            }
-        }
+        public IEnumerable<LocationInfo> Locations { get; }
+
+        public PythonMemberType MemberType => PythonMemberType.Constant;
+        public IPythonType Type { get; }
     }
 }

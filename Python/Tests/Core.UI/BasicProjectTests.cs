@@ -1088,7 +1088,7 @@ namespace PythonToolsUITests {
                 Assert.IsTrue(File.Exists(TestData.GetPath(@"TestData\ProjectReference\Debug\native_module.pyd")), ".pyd was not created");
 
                 var searchPaths = app.ServiceProvider.GetUIThread().Invoke(() => project.GetPythonProject().GetSearchPaths().ToArray());
-                AssertUtil.ContainsExactly(searchPaths, TestData.GetPath(@"TestData\ProjectReference\Debug\"));
+                AssertUtil.ContainsExactly(searchPaths, TestData.GetPath(@"TestData\ProjectReference\Debug"));
 
                 var pyproj = project.GetPythonProject();
                 var analyzer = pyproj.GetAnalyzer();

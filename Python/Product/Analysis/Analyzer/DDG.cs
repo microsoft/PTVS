@@ -304,11 +304,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 foreach (var part in ModulePath.GetParents(name, includeFullName: false)) {
                     ModuleReference parentRef;
                     if (ProjectState.Modules.TryImport(part, out parentRef)) {
-                        var bi = parentRef.Module as BuiltinModule;
-                        if (bi == null) {
-                            break;
-                        }
-                        bi.Imported(_unit);
+                        parentRef.Module?.Imported(_unit);
                     }
                 }
                 

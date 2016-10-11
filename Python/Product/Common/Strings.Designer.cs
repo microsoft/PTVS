@@ -1023,6 +1023,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Search path &apos;{0}&apos; is not a valid directory or file..
+        /// </summary>
+        public static string InvalidSearchPath {
+            get {
+                return ResourceManager.GetString("InvalidSearchPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Operation cannot be started because the environment is not configured..
         /// </summary>
         public static string MisconfiguredEnvironment {

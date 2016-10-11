@@ -71,6 +71,7 @@ namespace Microsoft.PythonTools.Project {
         private VsProjectAnalyzer _analyzer;
         private readonly HashSet<AnalysisEntry> _warnOnLaunchFiles = new HashSet<AnalysisEntry>();
         private PythonDebugPropertyPage _debugPropPage;
+        private readonly SearchPathManager _searchPaths = new SearchPathManager();
         private CommonSearchPathContainerNode _searchPathContainer;
         private InterpretersContainerNode _interpretersContainer;
         private readonly HashSet<string> _validFactories = new HashSet<string>();
@@ -82,6 +83,8 @@ namespace Microsoft.PythonTools.Project {
         private readonly PythonProject _pythonProject;
 
         public PythonProjectNode(IServiceProvider serviceProvider) : base(serviceProvider, null) {
+            _searchPaths.Changed += SearchPaths_Changed;
+
             Type projectNodePropsType = typeof(PythonProjectNodeProperties);
             AddCATIDMapping(projectNodePropsType, projectNodePropsType.GUID);
             ActiveInterpreterChanged += OnActiveInterpreterChanged;
@@ -508,7 +511,7 @@ namespace Microsoft.PythonTools.Project {
                     dirToAdd = null;
                 }
                 if (!string.IsNullOrEmpty(dirToAdd)) {
-                    AddSearchPathEntry(PathUtils.EnsureEndSeparator(dirToAdd));
+                    _searchPaths.Add(dirToAdd, true);
                 }
             }
 
@@ -638,7 +641,6 @@ namespace Microsoft.PythonTools.Project {
                 _searchPathContainer = new CommonSearchPathContainerNode(this);
                 this.AddChild(_searchPathContainer);
                 RefreshCurrentWorkingDirectory();
-                RefreshSearchPaths();
             }
 
             _interpretersContainer = new InterpretersContainerNode(this);
@@ -662,7 +664,15 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            Site.GetPythonToolsService().SurveyNews.CheckSurveyNews(false);
+            if (!this.IsAppxPackageableProject()) {
+                _searchPaths.LoadPathsFromString(ProjectHome, GetProjectProperty(PythonConstants.SearchPathSetting, false));
+            }
+
+            try {
+                Site.GetPythonToolsService().SurveyNews.CheckSurveyNews(false);
+            } catch (Exception ex) {
+                Debug.Fail($"Error checking news: {ex}");
+            }
         }
 
         private void RefreshCurrentWorkingDirectory() {
@@ -694,15 +704,12 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private void RefreshSearchPaths() {
+        private void RefreshSearchPaths(IList<string> searchPath) {
             try {
                 IsRefreshing = true;
 
-                string projHome = ProjectHome;
-                string workDir = GetWorkingDirectory();
-                IList<string> searchPath = GetSearchPaths();
-
                 //Refresh regular search path nodes
+                SetProjectProperty(PythonConstants.SearchPathSetting, _searchPaths.SavePathsToString(ProjectHome));
 
                 //We need to update search path nodes according to the search path property.
                 //It's quite expensive to remove all and build all nodes from scratch, 
@@ -843,126 +850,46 @@ namespace Microsoft.PythonTools.Project {
             }
             return null;
         }
-        /// <summary>
-        /// Parses SearchPath property into a list of distinct absolute paths, preserving the order.
-        /// </summary>
-        public IList<string> GetSearchPaths() {
-            var searchPath = GetProjectProperty(PythonConstants.SearchPathSetting, true);
-            return GetSearchPaths(searchPath, true);
+
+
+        private void SearchPaths_Changed(object sender, EventArgs e) {
+            // Update solution explorer
+            Site.GetUIThread().InvokeAsync(() =>
+                RefreshSearchPaths(_searchPaths.GetAbsolutePersistedSearchPaths())
+            );
+
+            // Update analyzer
+            AnalyzeSearchPaths(_searchPaths.GetAbsolutePersistedSearchPaths());
         }
 
         /// <summary>
-        /// Parses SearchPath string into a list of distinct absolute paths, preserving the order.
+        /// Returns a list of absolute search paths, optionally including those
+        /// that are implied by other properties.
         /// </summary>
-        protected IList<string> GetSearchPaths(string searchPath, bool includeReferences) {
-            var result = new List<string>();
-            var seen = new HashSet<string>();
-
-            if (!string.IsNullOrEmpty(searchPath)) {
-                foreach (var path in searchPath.Split(';')) {
-                    if (string.IsNullOrEmpty(path)) {
-                        continue;
-                    }
-
-                    var absPath = PathUtils.GetAbsoluteFilePath(ProjectHome, path);
-                    if (seen.Add(absPath)) {
-                        result.Add(absPath);
-                    }
-                }
-            }
-
-            if (includeReferences) {
-                foreach (var r in (GetReferenceContainer()?.EnumReferences()).MaybeEnumerate()) {
-                    string url;
-                    try {
-                        url = (r as ProjectReferenceNode)?.ReferencedProjectOutputPath ?? r.Url;
-                    } catch (InvalidOperationException) {
-                        continue;
-                    }
-                    var absPath = PathUtils.GetAbsoluteFilePath(ProjectHome, url);
-
-                    if (!string.IsNullOrEmpty(absPath)) {
-                        var parentPath = PathUtils.GetParent(absPath);
-                        if (!string.IsNullOrEmpty(parentPath) && seen.Add(parentPath)) {
-                            result.Add(parentPath);
-                        }
-                    }
-                }
-            }
-
-            return result;
+        public IList<string> GetSearchPaths(bool withImplied = true) {
+            return withImplied ?
+                _searchPaths.GetAbsoluteSearchPaths() :
+                _searchPaths.GetAbsolutePersistedSearchPaths();
         }
 
-
-        /// <summary>
-        /// Saves list of paths back as SearchPath project property.
-        /// </summary>
-        private void SaveSearchPath(IList<string> value) {
-            var valueStr = string.Join(";", value.Select(path => {
-                var relPath = PathUtils.GetRelativeFilePath(ProjectHome, path);
-                if (string.IsNullOrEmpty(relPath)) {
-                    relPath = ".";
-                }
-                return relPath;
-            }));
-            SetProjectProperty(PythonConstants.SearchPathSetting, valueStr);
-        }
-
-        /// <summary>
-        /// Adds new search path to the SearchPath project property.
-        /// </summary>
-        internal void AddSearchPathEntry(string newpath) {
-            Utilities.ArgumentNotNull("newpath", newpath);
-
-            var searchPath = GetSearchPaths();
-            var absPath = PathUtils.GetAbsoluteFilePath(ProjectHome, newpath);
-            // Ignore the end separator when determining whether the path has
-            // already been added. Having both "C:\Fob" and "C:\Fob\" is not
-            // legal.
-            if (searchPath.Contains(PathUtils.EnsureEndSeparator(absPath), StringComparer.OrdinalIgnoreCase) ||
-                searchPath.Contains(PathUtils.TrimEndSeparator(absPath), StringComparer.OrdinalIgnoreCase)) {
-                return;
-            }
-            searchPath.Add(absPath);
-            SaveSearchPath(searchPath);
-        }
-
-        /// <summary>
-        /// Removes a given path from the SearchPath property.
-        /// </summary>
-        internal void RemoveSearchPathEntry(string path) {
-            var absPath = PathUtils.TrimEndSeparator(PathUtils.GetAbsoluteFilePath(ProjectHome, path));
-            var absPathWithEndSeparator = PathUtils.EnsureEndSeparator(absPath);
-            var searchPath = GetSearchPaths();
-
-            var newSearchPath = searchPath
-                // Ignore the end separator when determining paths to remove.
-                .Where(p => !absPath.Equals(p, StringComparison.OrdinalIgnoreCase) &&
-                            !absPathWithEndSeparator.Equals(p, StringComparison.OrdinalIgnoreCase))
-                .ToList();
-
-            if (searchPath.Count != newSearchPath.Count) {
-                SaveSearchPath(newSearchPath);
-            }
-        }
 
         /// <summary>
         /// Executes Add Search Path menu command.
         /// </summary>        
         internal int AddSearchPath() {
-            string dirName = Dialogs.BrowseForDirectory(
-                IntPtr.Zero,
-                ProjectHome,
-                Strings.SelectFolderForSearchPath
-            );
+            string dirName = Dialogs.BrowseForDirectory(IntPtr.Zero, ProjectHome, Strings.SelectFolderForSearchPath);
 
             if (dirName != null) {
-                AddSearchPathEntry(PathUtils.EnsureEndSeparator(dirName));
+                _searchPaths.Add(dirName, true);
             }
 
             return VSConstants.S_OK;
         }
 
+
+        internal void RemoveSearchPath(string path) {
+            _searchPaths.Remove(path);
+        }
 
         private async void PythonProjectNode_OnProjectPropertyChanged(object sender, ProjectPropertyChangedArgs e) {
             switch (e.PropertyName) {
@@ -979,37 +906,6 @@ namespace Microsoft.PythonTools.Project {
                         genProp.WorkingDirectory = e.NewValue;
                     }
                     break;
-                case PythonConstants.SearchPathSetting:
-                    RefreshSearchPaths();
-
-                    var analyzer = _analyzer;
-                    if (analyzer != null) {
-                        // we need to remove old files from the analyzer and add the new files
-                        HashSet<string> oldDirs = new HashSet<string>(GetSearchPaths(e.OldValue, true), StringComparer.OrdinalIgnoreCase);
-                        HashSet<string> newDirs = new HashSet<string>(GetSearchPaths(e.NewValue, true), StringComparer.OrdinalIgnoreCase);
-
-                        // figure out all the possible directory names we could be removing...
-                        foreach (var fileProject in analyzer.LoadedFiles) {
-                            string file = fileProject.Key;
-                            var projectEntry = fileProject.Value;
-                            string searchPathEntry = fileProject.Value.SearchPathEntry;
-                            if (projectEntry != null &&
-                                searchPathEntry != null &&
-                                !newDirs.Contains(searchPathEntry)) {
-                                analyzer.UnloadFileAsync(projectEntry).DoNotWait();
-                            }
-                        }
-
-                        // find the values only in the old list, and let the analyzer know it shouldn't be watching those dirs
-                        oldDirs.ExceptWith(newDirs);
-                        foreach (var dir in oldDirs) {
-                            await analyzer.StopAnalyzingDirectoryAsync(dir);
-                        }
-
-                        AnalyzeSearchPaths(newDirs);
-                    }
-
-                    break;
             }
 
             var debugProp = DebugPropertyPage;
@@ -1018,19 +914,13 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private async void AnalyzeSearchPaths(IEnumerable<string> newDirs) {
+        private void AnalyzeSearchPaths(IEnumerable<string> absolutePaths) {
             var analyzer = _analyzer;
             if (analyzer != null) {
                 // now add all of the missing files, any dups will automatically not be re-analyzed
-                foreach (var dir in newDirs) {
-                    if (File.Exists(dir)) {
-                        // If it's a file and not a directory, parse it as a .zip
-                        // file in accordance with PEP 273.
-                        await analyzer.AnalyzeZipArchiveAsync(dir);
-                    } else if (Directory.Exists(dir)) {
-                        await analyzer.AnalyzeDirectoryAsync(dir);
-                    }
-                }
+                analyzer.SetSearchPathsAsync(absolutePaths)
+                    .HandleAllExceptions(Site, GetType())
+                    .DoNotWait();
             }
         }
 
@@ -1159,7 +1049,7 @@ namespace Microsoft.PythonTools.Project {
                 return service.DefaultAnalyzer;
             } else if (_analyzer == null) {
                 _analyzer = CreateAnalyzer();
-                AnalyzeSearchPaths(GetSearchPaths());
+                AnalyzeSearchPaths(_searchPaths.GetAbsoluteSearchPaths());
             }
             return _analyzer;
         }
@@ -1329,7 +1219,7 @@ namespace Microsoft.PythonTools.Project {
                 ScriptName = GetStartupFile(),
                 ScriptArguments = GetProjectProperty(PythonConstants.CommandLineArgumentsSetting, resetCache: false),
                 WorkingDirectory = GetWorkingDirectory(),
-                SearchPaths = GetSearchPaths().ToList()
+                SearchPaths = _searchPaths.GetAbsoluteSearchPaths().ToList()
             };
 
             var str = GetProjectProperty(PythonConstants.IsWindowsApplicationSetting);
@@ -1415,13 +1305,7 @@ namespace Microsoft.PythonTools.Project {
                 var analyzer = CreateAnalyzer();
                 Debug.Assert(analyzer != null);
 
-                var analyzerChanging = ProjectAnalyzerChanging;
-                if (analyzerChanging != null) {
-                    analyzerChanging(this, new AnalyzerChangingEventArgs(
-                        _analyzer,
-                        analyzer
-                    ));
-                }
+                ProjectAnalyzerChanging?.Invoke(this, new AnalyzerChangingEventArgs(_analyzer, analyzer));
 
                 Reanalyze(analyzer);
                 var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
@@ -1435,15 +1319,11 @@ namespace Microsoft.PythonTools.Project {
                     }
                 }
 
-                var searchPath = GetSearchPaths();
-                if (searchPath != null && analyzer != null) {
-                    AnalyzeSearchPaths(searchPath);
+                if (analyzer != null) {
+                    AnalyzeSearchPaths(_searchPaths.GetAbsoluteSearchPaths());
                 }
 
-                var analyzerChanged = ProjectAnalyzerChanged;
-                if (analyzerChanged != null) {
-                    analyzerChanged(this, EventArgs.Empty);
-                }
+                ProjectAnalyzerChanged?.Invoke(this, EventArgs.Empty);
             } catch (ObjectDisposedException) {
                 // Raced with project disposal
             } finally {
@@ -1461,20 +1341,20 @@ namespace Microsoft.PythonTools.Project {
                 await newAnalyzer.AnalyzeFileAsync(child.Url);
             }
 
-            var references = GetReferenceContainer();
-            var interp = newAnalyzer;
-            if (references != null && interp != null) {
-                foreach (var child in GetReferenceContainer().EnumReferences()) {
-                    var pyd = child as PythonExtensionReferenceNode;
-                    if (pyd != null) {
-                        pyd.AnalyzeReference(interp);
-                    }
-                    var pyproj = child as PythonProjectReferenceNode;
-                    if (pyproj != null) {
-                        pyproj.AddAnalyzedAssembly(interp).DoNotWait();
-                    }
-                }
-            }
+            //var references = GetReferenceContainer();
+            //var interp = newAnalyzer;
+            //if (references != null && interp != null) {
+            //    foreach (var child in GetReferenceContainer().EnumReferences()) {
+            //        var pyd = child as PythonExtensionReferenceNode;
+            //        if (pyd != null) {
+            //            pyd.AnalyzeReference(interp);
+            //        }
+            //        var pyproj = child as PythonProjectReferenceNode;
+            //        if (pyproj != null) {
+            //            pyproj.AddAnalyzedAssembly(interp).DoNotWait();
+            //        }
+            //    }
+            //}
         }
 
         public override ReferenceNode CreateReferenceNodeForFile(string filename) {
@@ -2005,7 +1885,7 @@ namespace Microsoft.PythonTools.Project {
                 ProjectHome
             );
             if (!string.IsNullOrEmpty(fileName)) {
-                AddSearchPathEntry(fileName);
+                _searchPaths.Add(fileName, true);
             }
             return VSConstants.S_OK;
         }
@@ -2024,7 +1904,7 @@ namespace Microsoft.PythonTools.Project {
 
             foreach (var bit in value.Split(';')) {
                 if (!string.IsNullOrEmpty(bit)) {
-                    AddSearchPathEntry(bit);
+                    _searchPaths.Add(bit, true);
                 }
             }
             return VSConstants.S_OK;

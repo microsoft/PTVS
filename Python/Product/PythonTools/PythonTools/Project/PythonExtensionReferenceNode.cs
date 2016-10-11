@@ -33,8 +33,8 @@ namespace Microsoft.PythonTools.Project {
     internal class PythonExtensionReferenceNode : ReferenceNode {
         private readonly string _filename;              // The name of the assembly this refernce represents
         private Automation.OAPythonExtensionReference _automationObject;
-        private FileChangeManager _fileChangeListener;  // Defines the listener that would listen on file changes on the nested project node.
-        private bool _isDisposed, _failedToAnalyze;
+        //private FileChangeManager _fileChangeListener;  // Defines the listener that would listen on file changes on the nested project node.
+        private bool /*_isDisposed,*/ _failedToAnalyze;
 
         internal PythonExtensionReferenceNode(PythonProjectNode root, string filename)
             : this(root, null, filename) {
@@ -45,22 +45,22 @@ namespace Microsoft.PythonTools.Project {
             Utilities.ArgumentNotNullOrEmpty("filename", filename);
             _filename = PathUtils.GetAbsoluteFilePath(root.ProjectHome, filename);
 
-            AnalyzeReference(root.GetAnalyzer());
-            InitializeFileChangeEvents();
+            //AnalyzeReference(root.GetAnalyzer());
+            //InitializeFileChangeEvents();
         }
 
-        internal void AnalyzeReference(VsProjectAnalyzer interp) {
-            if (interp == null) {
-                _failedToAnalyze = true;
-                return;
-            }
-
-            _failedToAnalyze = false;
-            var task = interp.AddReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
-
-            // check if we get an exception, and if so mark ourselves as a dangling reference.
-            task.ContinueWith(new TaskFailureHandler(TaskScheduler.FromCurrentSynchronizationContext(), this).HandleAddRefFailure);
-        }
+        //internal void AnalyzeReference(VsProjectAnalyzer interp) {
+        //    if (interp == null) {
+        //        _failedToAnalyze = true;
+        //        return;
+        //    }
+        //
+        //    _failedToAnalyze = false;
+        //    var task = interp.AddReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule));
+        //
+        //    // check if we get an exception, and if so mark ourselves as a dangling reference.
+        //    task.ContinueWith(new TaskFailureHandler(TaskScheduler.FromCurrentSynchronizationContext(), this).HandleAddRefFailure);
+        //}
 
         class TaskFailureHandler {
             private readonly TaskScheduler _uiScheduler;
@@ -126,18 +126,18 @@ namespace Microsoft.PythonTools.Project {
         /// Disposes the node
         /// </summary>
         /// <param name="disposing"></param>
-        protected override void Dispose(bool disposing) {
-            if (_isDisposed) {
-                return;
-            }
+        //protected override void Dispose(bool disposing) {
+        //    if (_isDisposed) {
+        //        return;
+        //    }
 
-            try {
-                UnregisterFromFileChangeService();
-            } finally {
-                base.Dispose(disposing);
-                _isDisposed = true;
-            }
-        }
+        //    try {
+        //        UnregisterFromFileChangeService();
+        //    } finally {
+        //        base.Dispose(disposing);
+        //        _isDisposed = true;
+        //    }
+        //}
 
         /// <summary>
         /// Checks if an assembly is already added. The method parses all references and compares the full assemblynames, or the location of the assemblies to decide whether two assemblies are the same.
@@ -181,44 +181,44 @@ namespace Microsoft.PythonTools.Project {
         /// <summary>
         /// Registers with File change events
         /// </summary>
-        private void InitializeFileChangeEvents() {
-            _fileChangeListener = new FileChangeManager(ProjectMgr.Site);
-            _fileChangeListener.FileChangedOnDisk += OnExtensionChangedOnDisk;
-        }
+        //private void InitializeFileChangeEvents() {
+        //    _fileChangeListener = new FileChangeManager(ProjectMgr.Site);
+        //    _fileChangeListener.FileChangedOnDisk += OnExtensionChangedOnDisk;
+        //}
 
         /// <summary>
         /// Unregisters this node from file change notifications.
         /// </summary>
-        private void UnregisterFromFileChangeService() {
-            _fileChangeListener.FileChangedOnDisk -= OnExtensionChangedOnDisk;
-            _fileChangeListener.Dispose();
-        }
+        //private void UnregisterFromFileChangeService() {
+        //    _fileChangeListener.FileChangedOnDisk -= OnExtensionChangedOnDisk;
+        //    _fileChangeListener.Dispose();
+        //}
 
         /// <summary>
         /// Event callback. Called when one of the extension files are changed.
         /// </summary>
         /// <param name="sender">The FileChangeManager object.</param>
         /// <param name="e">Event args containing the file name that was updated.</param>
-        private void OnExtensionChangedOnDisk(object sender, FileChangedOnDiskEventArgs e) {
-            Debug.Assert(e != null, "No event args specified for the FileChangedOnDisk event");
-            if (e == null) {
-                return;
-            }
-
-            var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
-            if (interp != null && PathUtils.IsSamePath(e.FileName, _filename)) {
-                if ((e.FileChangeFlag & (_VSFILECHANGEFLAGS.VSFILECHG_Attr | _VSFILECHANGEFLAGS.VSFILECHG_Size | _VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Add)) != 0) {
-                    // file was modified, unload and reload the extension module from our database.
-                    interp.RemoveReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
-
-                    AnalyzeReference(interp);
-                } else if ((e.FileChangeFlag & _VSFILECHANGEFLAGS.VSFILECHG_Del) != 0) {
-                    // file was deleted, unload from our extension database
-                    interp.RemoveReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
-                    ProjectMgr.OnInvalidateItems(Parent);
-                }
-            }
-        }
+        //private void OnExtensionChangedOnDisk(object sender, FileChangedOnDiskEventArgs e) {
+        //    Debug.Assert(e != null, "No event args specified for the FileChangedOnDisk event");
+        //    if (e == null) {
+        //        return;
+        //    }
+        //
+        //    var interp = ((PythonProjectNode)ProjectMgr).GetAnalyzer();
+        //    if (interp != null && PathUtils.IsSamePath(e.FileName, _filename)) {
+        //        if ((e.FileChangeFlag & (_VSFILECHANGEFLAGS.VSFILECHG_Attr | _VSFILECHANGEFLAGS.VSFILECHG_Size | _VSFILECHANGEFLAGS.VSFILECHG_Time | _VSFILECHANGEFLAGS.VSFILECHG_Add)) != 0) {
+        //            // file was modified, unload and reload the extension module from our database.
+        //            interp.RemoveReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
+        //
+        //            AnalyzeReference(interp);
+        //        } else if ((e.FileChangeFlag & _VSFILECHANGEFLAGS.VSFILECHG_Del) != 0) {
+        //            // file was deleted, unload from our extension database
+        //            interp.RemoveReferenceAsync(new ProjectReference(_filename, ProjectReferenceKind.ExtensionModule)).Wait();
+        //            ProjectMgr.OnInvalidateItems(Parent);
+        //        }
+        //    }
+        //}
 
         /// <summary>
         /// Overridden method. The method updates the build dependency list before removing the node from the hierarchy.
