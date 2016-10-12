@@ -14,9 +14,6 @@
     <OutputType>Library</OutputType>
     <RootNamespace>Microsoft.VisualStudioTools.BuildTasks</RootNamespace>
     <AssemblyName>Microsoft.VisualStudioTools.BuildTasks</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
-    <TargetFrameworkProfile>
-    </TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
     <SignAssembly>false</SignAssembly>
     <RunCodeAnalysis>false</RunCodeAnalysis>
