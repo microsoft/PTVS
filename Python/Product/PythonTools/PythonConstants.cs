@@ -29,8 +29,6 @@ namespace Microsoft.PythonTools {
         internal const string WindowsFileExtension = ".pyw";
         internal const string ProjectImageList = "Microsoft.PythonImageList.png";
 
-        internal const string IssueTrackerUrl = "http://go.microsoft.com/fwlink/?LinkId=402428";
-
         internal const string LibraryManagerGuid = "888888e5-b976-4366-9e98-e7bc01f1842c";
         internal const string LibraryManagerServiceGuid = "88888859-2f95-416e-9e2b-cac4678e5af7";
         public const string ProjectFactoryGuid = "888888a0-9f3d-457c-b088-3a5042f75d52";

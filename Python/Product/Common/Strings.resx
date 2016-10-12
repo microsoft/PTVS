@@ -919,4 +919,8 @@ modified from these scripts.</value>
   <data name="UnableToElevate" xml:space="preserve">
     <value>Visual Studio was unable to launch the elevated process.</value>
   </data>
+  <data name="IssueTrackerUrl" xml:space="preserve">
+    <value>https://go.microsoft.com/fwlink/?LinkId=402428</value>
+    <comment>Should not be localized</comment>
+  </data>
 </root>

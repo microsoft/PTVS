@@ -156,7 +156,16 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         int IOleCommandTarget.Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
-            var eval = _interactive.Evaluator;
+            try {
+                return ExecWorker(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+            } catch (Exception ex) {
+                ex.ReportUnhandledException(_serviceProvider, GetType());
+                return VSConstants.E_FAIL;
+            }
+        }
+
+        private int ExecWorker(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+                var eval = _interactive.Evaluator;
             
             // preprocessing
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
