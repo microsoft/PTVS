@@ -105,7 +105,7 @@ y = GenericType()
 zzz = y.ReturnsGenericParam()
 ";
             var entry = ProcessText(text, analysisDirs: new[] { Environment.CurrentDirectory });
-            AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("zzz", 1), "GetEnumerator", "__doc__", "__iter__", "__repr__");
+            AssertUtil.ContainsExactly(entry.GetMemberNames("zzz", 1), "GetEnumerator", "__doc__", "__iter__", "__repr__");
         }
 
         [TestMethod, Priority(1)]
@@ -116,7 +116,7 @@ n = AccessViolationException.__new__
 ";
             var entry = ProcessText(text, analysisDirs: new[] { Environment.CurrentDirectory });
             AssertUtil.ContainsExactly(
-                entry.GetSignaturesByIndex("n", 1)
+                entry.GetSignatures("n", 1)
                 .Select(x => FormatSignature(x)), 
                 "__new__(cls: AccessViolationException)",
                 "__new__(cls: AccessViolationException, message: str)",
@@ -139,7 +139,7 @@ import clr
 x = 'abc'
 ";
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetMemberNamesByIndex("x", 1), _strMembersClr);
+            AssertUtil.ContainsExactly(entry.GetMemberNames("x", 1), _strMembersClr);
         }
 
         [TestMethod, Priority(1)]
@@ -150,7 +150,7 @@ clr.AddReference('System.Drawing')
 from System.Drawing import Point
 ";
             var entry = ProcessText(text);
-            var members = entry.GetMemberNamesByIndex("Point", text.IndexOf("from System.")).ToList();
+            var members = entry.GetMemberNames("Point", text.IndexOf("from System.")).ToList();
 
             Assert.AreEqual(35, members.Count);
         }
@@ -163,7 +163,7 @@ clr.AddReferenceByName('Microsoft.Scripting')
 from Microsoft.Scripting import SourceUnit
 ";
             var entry = ProcessText(text);
-            Assert.AreEqual(40, entry.GetMemberNamesByIndex("SourceUnit", text.IndexOf("from Microsoft.")).ToList().Count);
+            Assert.AreEqual(40, entry.GetMemberNames("SourceUnit", text.IndexOf("from Microsoft.")).ToList().Count);
         }
 
         [TestMethod, Priority(1)]
@@ -200,7 +200,7 @@ a = C()
 b = a.some_color
 ");
 
-            AssertUtil.ContainsExactly(entry.GetTypesByIndex("b", 1).Select(x => x.Name), "Color");
+            AssertUtil.ContainsExactly(entry.GetTypes("b", 1).Select(x => x.Name), "Color");
         }
 
         [TestMethod, Priority(1)]
@@ -214,15 +214,15 @@ y = str
 y = int
 ");
 
-            var result = entry.GetSignaturesByIndex("System.Collections.Generic.Dictionary[int, int]", 1).ToArray();
+            var result = entry.GetSignatures("System.Collections.Generic.Dictionary[int, int]", 1).ToArray();
             Assert.AreEqual(6, result.Length);
 
             // 2 possible types
-            result = entry.GetSignaturesByIndex("System.Collections.Generic.Dictionary[x, int]", 1).ToArray();
+            result = entry.GetSignatures("System.Collections.Generic.Dictionary[x, int]", 1).ToArray();
             Assert.AreEqual(12, result.Length);
 
             // 4 possible types
-            result = entry.GetSignaturesByIndex("System.Collections.Generic.Dictionary[x, y]", 1).ToArray();
+            result = entry.GetSignatures("System.Collections.Generic.Dictionary[x, y]", 1).ToArray();
             Assert.AreEqual(24, result.Length);
         }
 
@@ -264,7 +264,7 @@ from System import Environment
 Environment.GetCommandLineArgs()
 ";
             var entry = ProcessText(text);
-            Assert.IsTrue(entry.GetMemberNamesByIndex("Environment", 1).Any(s => s == "CommandLine"));
+            Assert.IsTrue(entry.GetMemberNames("Environment", 1).Any(s => s == "CommandLine"));
         }
 
         [TestMethod, Priority(1)]
@@ -273,7 +273,7 @@ Environment.GetCommandLineArgs()
 import System.Collections as coll
 ";
             var entry = ProcessText(text);
-            Assert.IsTrue(entry.GetMemberNamesByIndex("coll", 1).Any(s => s == "ArrayList"));
+            Assert.IsTrue(entry.GetMemberNames("coll", 1).Any(s => s == "ArrayList"));
         }
 
         [TestMethod, Priority(1)]
@@ -284,13 +284,13 @@ System.Environment.GetCommandLineArgs()
 x = System.Environment
 ";
             var entry = ProcessText(text);
-            var system = entry.GetMemberNamesByIndex("System", 1).ToSet();
+            var system = entry.GetMemberNames("System", 1).ToSet();
             // defined in mscorlib
             AssertUtil.Contains(system, "AccessViolationException");
             // defined in System
             AssertUtil.Contains(system, "CodeDom");
 
-            AssertUtil.Contains(entry.GetMemberNamesByIndex("x", 1), "GetEnvironmentVariables");
+            AssertUtil.Contains(entry.GetMemberNames("x", 1), "GetEnvironmentVariables");
         }
 
         [TestMethod, Priority(1)]
@@ -303,10 +303,10 @@ args = x.GetCommandLineArgs()
 ";
             var entry = ProcessText(text);
 
-            var args = entry.GetTypesByIndex("args", text.IndexOf("args =")).Select(x => x.Name).ToSet();
+            var args = entry.GetTypes("args", text.IndexOf("args =")).Select(x => x.Name).ToSet();
             AssertUtil.ContainsExactly(args, "Array[str]");
 
-            Assert.IsTrue(entry.GetMemberNamesByIndex("args", text.IndexOf("args =")).Any(s => s == "AsReadOnly"));
+            Assert.IsTrue(entry.GetMemberNames("args", text.IndexOf("args =")).Any(s => s == "AsReadOnly"));
         }
 
         [TestMethod, Priority(1)]
@@ -316,7 +316,7 @@ import System
 x = System.Collections
 ";
             var entry = ProcessText(text);
-            var x = entry.GetMemberNamesByIndex("x", text.IndexOf("x =")).ToSet();
+            var x = entry.GetMemberNames("x", text.IndexOf("x =")).ToSet();
             Assert.IsTrue(x.Contains("Generic"));
             Assert.IsTrue(x.Contains("ArrayList"));
         }
@@ -333,7 +333,7 @@ x = List[int]()
 
             // AreEqual(entry.GetMembersFromName('x', len(text) - 1), 
             //     get_intersect_members_clr(List[int]))
-            var self = new List<string>(entry.GetMemberNamesByIndex("x", text.IndexOf("x =")));
+            var self = new List<string>(entry.GetMemberNames("x", text.IndexOf("x =")));
             Assert.IsTrue(self.Contains("AddRange"));
         }
 
@@ -394,7 +394,7 @@ def f(sender, args):
 System.AppDomain.CurrentDomain.AssemblyLoad += f
 ";
             var entry = ProcessText(text);
-            Assert.IsTrue(entry.GetMemberNamesByIndex("args", text.IndexOf("pass")).Any(s => s == "LoadedAssembly"));
+            Assert.IsTrue(entry.GetMemberNames("args", text.IndexOf("pass")).Any(s => s == "LoadedAssembly"));
         }
 
         [TestMethod, Priority(1)]
@@ -429,18 +429,18 @@ def g():
 ";
             var entry = ProcessText(text);
 
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("System", 1), "built-in module System");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("System.String.Length", 1), "property of type int");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("System.Environment.CurrentDirectory", 1), "str");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("e", 1), "ArrayList");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("ArrayList", 1), "type ArrayList");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("e.Count", 1), "int");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("System.DBNull.Value", 1), "DBNull");
-            AssertUtil.ContainsExactly(entry.GetShortDescriptionsByIndex("System.StringSplitOptions", 1), "type StringSplitOptions");
+            AssertUtil.ContainsExactly(entry.GetDescriptions("System", 1), "built-in module System");
+            AssertUtil.ContainsExactly(entry.GetDescriptions("System.String.Length", 1), "property of type int");
+            AssertUtil.ContainsExactly(entry.GetDescriptions("System.Environment.CurrentDirectory", 1), "str");
+            AssertUtil.ContainsExactly(entry.GetDescriptions("e", 1), "ArrayList");
+            AssertUtil.ContainsExactly(entry.GetShortDescriptions("ArrayList", 1), "type ArrayList");
+            AssertUtil.ContainsExactly(entry.GetDescriptions("e.Count", 1), "int");
+            AssertUtil.ContainsExactly(entry.GetShortDescriptions("System.DBNull.Value", 1), "DBNull");
+            AssertUtil.ContainsExactly(entry.GetShortDescriptions("System.StringSplitOptions", 1), "type StringSplitOptions");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("\"abc\".Length", 1), "int");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("c.Length", 1), "int");
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.StringSplitOptions.RemoveEmptyEntries", 0), "field of type StringSplitOptions");
-            AssertUtil.ContainsExactly(entry.GetDescriptionsByIndex("g", 1), "def g() -> built-in module System");    // return info could be better
+            AssertUtil.ContainsExactly(entry.GetDescriptions("g", 1), "def g() -> built-in module System");    // return info could be better
             //AssertUtil.ContainsExactly(entry.GetVariableDescriptionsByIndex("System.AppDomain.DomainUnload", 1), "event of type System.EventHandler");
         }
 
@@ -454,7 +454,7 @@ constructed = str().Contains
 
             string[] testContains = new[] { "const", "constructed" };
             foreach (var test in testContains) {
-                var result = entry.GetSignaturesByIndex(test, 1).ToArray();
+                var result = entry.GetSignatures(test, 1).ToArray();
                 Assert.AreEqual(1, result.Length);
                 Assert.AreEqual(1, result[0].Parameters.Length);
                 Assert.AreEqual("value", result[0].Parameters[0].Name);
@@ -504,8 +504,8 @@ import wpf
 from System.Windows.Media import Colors
 ");
 
-            AssertUtil.Contains(entry.GetMemberNamesByIndex("Colors", 1), "Blue");
-            AssertUtil.Contains(entry.GetMemberNamesByIndex("wpf", 1), "LoadComponent");
+            AssertUtil.Contains(entry.GetMemberNames("Colors", 1), "Blue");
+            AssertUtil.Contains(entry.GetMemberNames("wpf", 1), "LoadComponent");
         }
 
         [TestMethod, Priority(1)]

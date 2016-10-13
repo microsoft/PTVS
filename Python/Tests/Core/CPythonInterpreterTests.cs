@@ -18,6 +18,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -84,61 +85,36 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(0)]
-        public void ImportFromSearchPath() {
-            PythonAnalyzer state;
-            IPythonProjectEntry entry;
+        public async Task ImportFromSearchPath() {
             PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = true;
             try {
-                AnalyzeCode(out state, out entry, @"from test_package import *");
+                var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
+                await analyzer.AddModuleAsync("test-module", "from test_package import *");
 
-                state.AnalyzeQueuedEntries(CancellationTokens.After60s);
-                AssertUtil.CheckCollection(
-                    entry.Analysis.GetAllAvailableMembers(SourceLocation.None).Select(m => m.Name),
-                    new string[0],
-                    new[] { "package_method", "package_method_two", "test_package" }
-                );
+                AssertUtil.CheckCollection(analyzer.GetAllNames(), null, new[] { "package_method", "package_method_two", "test_package" });
 
-                state.SetSearchPaths(new[] { TestData.GetPath("TestData\\AddImport") });
+                analyzer.SetSearchPaths(TestData.GetPath("TestData\\AddImport"));
+                analyzer.ReanalyzeAll();
 
-                entry.Analyze(CancellationToken.None, true);
-                state.AnalyzeQueuedEntries(CancellationTokens.After60s);
-
-                AssertUtil.CheckCollection(
-                    entry.Analysis.GetAllAvailableMembers(SourceLocation.None).Select(m => m.Name),
-                    new[] { "package_method", "package_method_two" },
-                    new[] { "test_package" }
-                );
+                AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "package_method", "package_method_two" }, new[] { "test_package" });
             } finally {
                 PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = false;
             }
         }
 
         [TestMethod, Priority(0)]
-        public void ImportPydFromSearchPath() {
-            PythonAnalyzer state;
-            IPythonProjectEntry entry;
+        public async Task ImportPydFromSearchPath() {
             PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = true;
             try {
-                AnalyzeCode(out state, out entry, @"from spam import *",
-                preferredVersion: new Version(2, 7), preferredArch: InterpreterArchitecture.x86);
+                var analyzer = new PythonAnalysis("Global|PythonCore|2.7-32");
 
-                state.AnalyzeQueuedEntries(CancellationTokens.After60s);
-                AssertUtil.CheckCollection(
-                    entry.Analysis.GetAllAvailableMembers(SourceLocation.None).Select(m => m.Name),
-                    new string[0],
-                    new[] { "system", "spam" }
-                );
+                await analyzer.AddModuleAsync("test-module", "from spam import *");
+                AssertUtil.CheckCollection(analyzer.GetAllNames(), null, new[] { "system", "spam" });
 
-                state.SetSearchPaths(new[] { TestData.GetPath("TestData") });
+                analyzer.SetSearchPaths(TestData.GetPath("TestData"));
+                analyzer.ReanalyzeAll(CancellationTokens.After60s);
 
-                entry.Analyze(CancellationToken.None, true);
-                state.AnalyzeQueuedEntries(CancellationTokens.After60s);
-
-                AssertUtil.CheckCollection(
-                    entry.Analysis.GetAllAvailableMembers(SourceLocation.None).Select(m => m.Name),
-                    new[] { "system" },
-                    new[] { "spam" }
-                );
+                AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "system" }, new[] { "spam" });
             } finally {
                 PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = false;
             }

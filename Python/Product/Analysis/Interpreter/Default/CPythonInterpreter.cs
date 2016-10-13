@@ -28,7 +28,7 @@ using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Default {
-    class CPythonInterpreter : IPythonInterpreter, IDisposable {
+    class CPythonInterpreter : IPythonInterpreter {
         readonly Version _langVersion;
         private PythonInterpreterFactoryWithDatabase _factory;
         private PythonTypeDatabase _typeDb, _searchPathDb;

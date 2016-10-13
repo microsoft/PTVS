@@ -253,14 +253,14 @@ namespace TestUtilities
             IEqualityComparer<T> comparer = null
         ) {
             var set = new HashSet<T>(source, comparer);
-            var expected = new HashSet<T>(expectedSubset, comparer);
+            var expected = new HashSet<T>(expectedSubset ?? Enumerable.Empty<T>(), comparer);
 
             var missing = new HashSet<T>(expected, comparer);
             missing.ExceptWith(set);        // should be empty
 
             expected.IntersectWith(set);    // should be unchanged
 
-            var unexpectedPresent = new HashSet<T>(unexpectedSubset, comparer);
+            var unexpectedPresent = new HashSet<T>(unexpectedSubset ?? Enumerable.Empty<T>(), comparer);
             var unexpectedAbsent = new HashSet<T>(unexpectedPresent, comparer);
             unexpectedPresent.IntersectWith(set);  // should be empty
             unexpectedAbsent.ExceptWith(unexpectedPresent); // should be unchanged
