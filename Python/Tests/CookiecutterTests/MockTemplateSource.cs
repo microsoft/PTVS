@@ -24,7 +24,7 @@ using Microsoft.CookiecutterTools;
 using Microsoft.CookiecutterTools.Model;
 
 namespace CookiecutterTests {
-    class MockTemplateSource : ITemplateSource {
+    class MockTemplateSource : ILocalTemplateSource {
         public Dictionary<Tuple<string, string>, Tuple<Template[], string>> Templates { get; } = new Dictionary<Tuple<string, string>, Tuple<Template[], string>>();
         public bool Invalidated { get; set; }
 
@@ -38,6 +38,18 @@ namespace CookiecutterTests {
 
         public void InvalidateCache() {
             Invalidated = true;
+        }
+
+        public Task DeleteTemplateAsync(string repoPath) {
+            return Task.CompletedTask;
+        }
+
+        public Task<ProcessOutputResult> UpdateTemplateAsync(string repoPath) {
+            return Task.FromResult(new ProcessOutputResult());
+        }
+
+        Task<Tuple<bool?, ProcessOutputResult>> ILocalTemplateSource.CheckForUpdateAsync(string repoPath) {
+            throw new NotImplementedException();
         }
     }
 }

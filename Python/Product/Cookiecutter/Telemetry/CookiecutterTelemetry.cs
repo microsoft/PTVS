@@ -40,6 +40,7 @@ namespace Microsoft.CookiecutterTools.Telemetry {
         internal class SearchEvents {
             public const string Load = "Load";
             public const string More = "More";
+            public const string CheckUpdate = "CheckUpdate";
         }
 
         internal class TemplateEvents {
@@ -47,6 +48,7 @@ namespace Microsoft.CookiecutterTools.Telemetry {
             public const string Load = "Load";
             public const string Run = "Run";
             public const string Delete = "Delete";
+            public const string Update = "Update";
         }
 
         public static void Initialize(ITelemetryService service = null) {

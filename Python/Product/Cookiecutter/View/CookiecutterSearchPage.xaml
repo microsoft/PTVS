@@ -9,7 +9,7 @@
       xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
       xmlns:img="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
       xmlns:imagecatalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
-      wpf:LambdaProperties.ImportedNamespaces="System.Windows Microsoft.CookiecutterTools"
+      wpf:LambdaProperties.ImportedNamespaces="System.Windows Microsoft.CookiecutterTools Microsoft.CookiecutterTools.ViewModel"
       mc:Ignorable="d" 
       d:DataContext="{Binding Source={d:DesignData Source=CookiecutterControlDesignData.xaml}}"
       d:DesignHeight="550" d:DesignWidth="300"
@@ -54,6 +54,9 @@
                             <TextBlock Grid.Column="0" Text="{Binding Path=DisplayName}"/>
                         </Grid>
                     </DataTemplate>
+                    <wpf:Lambda x:Key="OperationStatusInProgressToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.InProgress ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+                    <wpf:Lambda x:Key="OperationStatusFailedToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.Failed ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+                    <wpf:Lambda x:Key="OperationStatusSucceededToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.Succeeded ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
                     <wpf:Lambda x:Key="BoolToVisibleOrCollapsed">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
                     <wpf:Lambda x:Key="BoolToVisible">(bool b) => b ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
                     <wpf:Lambda x:Key="BoolToNotVisible">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
@@ -87,7 +90,7 @@
         </Grid.RowDefinitions>
 
         <!-- Created successfully -->
-        <StackPanel Grid.Row="0" Orientation="Vertical" Visibility="{Binding Path=IsCreatingSuccess, Converter={StaticResource BoolToVisibleOrCollapsed}}">
+        <StackPanel Grid.Row="0" Orientation="Vertical" Visibility="{Binding Path=CreatingStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
             <StackPanel Margin="4 4 4 8"
                         Orientation="Horizontal">
                 <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"/>
@@ -154,6 +157,14 @@
                         <imaging:CrispImage Width="16" Height="16"
                                             Margin="0 0 0 2"
                                             Moniker="{Binding Path=Image}">
+                        </imaging:CrispImage>
+                        <imaging:CrispImage Width="16" Height="16"
+                                            Margin="0 0 0 2"
+                                            Visibility="{Binding Path=IsUpdateAvailable, Converter={StaticResource BoolToVisibleOrCollapsed}}"
+                                            Moniker="{x:Static imagecatalog:KnownMonikers.Download}">
+                            <imaging:CrispImage.ToolTip>
+                                <TextBlock TextWrapping="Wrap" Text="An update is available"/>
+                            </imaging:CrispImage.ToolTip>
                         </imaging:CrispImage>
                         <TextBlock Margin="4 0 0 0"
                                    Style="{StaticResource TreeViewItemTextBlock}"
@@ -233,7 +244,7 @@
 
             <StackPanel Margin="4 4 4 8"
                         Orientation="Vertical"
-                        Visibility="{Binding Path=IsInstalling, Converter={StaticResource BoolToVisibleOrCollapsed}}">
+                        Visibility="{Binding Path=InstallingStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
                 <Separator/>
                 <TextBlock Text="Installing cookiecutter..."/>
                 <ProgressBar Margin="4" IsIndeterminate="True"/>
@@ -241,14 +252,14 @@
 
             <StackPanel Margin="4 4 4 8"
                         Orientation="Horizontal"
-                        Visibility="{Binding Path=IsInstallingError, Converter={StaticResource BoolToVisibleOrCollapsed}}">
+                        Visibility="{Binding Path=InstallingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
                 <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Error installing cookiecutter. See output window for details."/>
             </StackPanel>
 
             <StackPanel Margin="4 4 4 8"
                         Orientation="Vertical"
-                        Visibility="{Binding Path=IsCloning, Converter={StaticResource BoolToVisibleOrCollapsed}}">
+                        Visibility="{Binding Path=CloningStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
                 <Separator/>
                 <TextBlock Text="Cloning repository..."/>
                 <ProgressBar Margin="4" IsIndeterminate="True"/>
@@ -256,14 +267,14 @@
 
             <StackPanel Margin="4 4 4 8"
                         Orientation="Horizontal"
-                        Visibility="{Binding Path=IsCloningError, Converter={StaticResource BoolToVisibleOrCollapsed}}">
+                        Visibility="{Binding Path=CloningStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
                 <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Error cloning repository. See output window for details."/>
             </StackPanel>
 
             <StackPanel Margin="4 4 4 8"
                         Orientation="Vertical"
-                        Visibility="{Binding Path=IsLoading, Converter={StaticResource BoolToVisibleOrCollapsed}}">
+                        Visibility="{Binding Path=LoadingStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
                 <Separator/>
                 <TextBlock Text="Loading template..."/>
                 <ProgressBar Margin="4" IsIndeterminate="True"/>
@@ -271,9 +282,53 @@
 
             <StackPanel Margin="4 4 4 8"
                         Orientation="Horizontal"
-                        Visibility="{Binding Path=IsLoadingError, Converter={StaticResource BoolToVisibleOrCollapsed}}">
+                        Visibility="{Binding Path=LoadingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
                 <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Error loading template. See output window for details."/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Vertical"
+                        Visibility="{Binding Path=CheckingUpdateStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
+                <Separator/>
+                <TextBlock Text="Checking for updates..."/>
+                <ProgressBar Margin="4" IsIndeterminate="True"/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal"
+                        Visibility="{Binding Path=CheckingUpdateStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
+                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"/>
+                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Check for updates completed."/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal"
+                        Visibility="{Binding Path=CheckingUpdateStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
+                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
+                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Error checking for updates. See output window for details."/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Vertical"
+                        Visibility="{Binding Path=UpdatingStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
+                <Separator/>
+                <TextBlock Text="Updating template..."/>
+                <ProgressBar Margin="4" IsIndeterminate="True"/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal"
+                        Visibility="{Binding Path=UpdatingStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
+                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"/>
+                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Template updated."/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal"
+                        Visibility="{Binding Path=UpdatingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
+                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
+                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Error updating template. See output window for details."/>
             </StackPanel>
 
             <Separator Margin="4"/>

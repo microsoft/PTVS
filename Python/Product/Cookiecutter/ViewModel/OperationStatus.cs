@@ -14,15 +14,11 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Threading.Tasks;
-
-namespace Microsoft.CookiecutterTools.Model {
-    interface IGitClient {
-        Task<Tuple<string, ProcessOutputResult>> CloneAsync(string repoUrl, string targetParentFolderPath);
-        Task<string> GetRemoteOriginAsync(string repoFolderPath);
-        Task<DateTime?> GetLastCommitDateAsync(string repoFolderPath, string branch = null);
-        Task<ProcessOutputResult> FetchAsync(string repoFolderPath);
-        Task<ProcessOutputResult> MergeAsync(string repoFolderPath);
+namespace Microsoft.CookiecutterTools.ViewModel {
+    enum OperationStatus {
+        NotStarted,
+        InProgress,
+        Succeeded,
+        Failed,
     }
 }

@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
+
 namespace Microsoft.CookiecutterTools.Model {
     class Template {
         public Template() {
@@ -27,6 +29,18 @@ namespace Microsoft.CookiecutterTools.Model {
         public string RemoteUrl { get; set; }
         public string LocalFolderPath { get; set; }
         public string Description { get; set; }
+        public DateTime? ClonedLastUpdate { get; set; }
+        public DateTime? RemoteLastUpdate { get; set; }
+        public bool? UpdateAvailable {
+            get {
+                if (RemoteLastUpdate.HasValue && ClonedLastUpdate.HasValue) {
+                    var span = RemoteLastUpdate - ClonedLastUpdate;
+                    return span.Value.TotalMinutes > 2;
+                }
+
+                return null;
+            }
+        }
 
         public Template Clone() {
             return (Template)MemberwiseClone();

@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -55,10 +56,8 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
-        private static string TeamExplorerGitFilePath
-        {
-            get
-            {
+        private static string TeamExplorerGitFilePath {
+            get {
                 try {
                     using (var key = Registry.LocalMachine.OpenSubKey(@"Software\\Microsoft\VisualStudio\SxS\VS7")) {
                         var installRoot = (string)key.GetValue(AssemblyVersionInfo.VSVersion);
@@ -125,6 +124,67 @@ namespace Microsoft.CookiecutterTools.Model {
             return null;
         }
 
+        public async Task<DateTime?> GetLastCommitDateAsync(string repoFolderPath, string branch) {
+            var arguments = new List<string>() { "log", "-1", "--date=iso" };
+            if (!string.IsNullOrEmpty(branch)) {
+                arguments.Add(branch);
+            }
+
+            var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null);
+            using (output) {
+                await output;
+                foreach (var line in output.StandardOutputLines) {
+                    DateTime? date;
+                    if (ParseDate(line, out date)) {
+                        return date;
+                    }
+                }
+            }
+            return null;
+        }
+
+        public async Task<ProcessOutputResult> FetchAsync(string repoFolderPath) {
+            var arguments = new string[] { "fetch" };
+            var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null);
+            using (output) {
+                await output;
+
+                var r = new ProcessOutputResult() {
+                    ExeFileName = _gitExeFilePath,
+                    ExitCode = output.ExitCode,
+                    StandardOutputLines = output.StandardOutputLines.ToArray(),
+                    StandardErrorLines = output.StandardErrorLines.ToArray(),
+                };
+
+                if (r.ExitCode < 0) {
+                    throw new ProcessException(r);
+                }
+
+                return r;
+            }
+        }
+
+        public async Task<ProcessOutputResult> MergeAsync(string repoFolderPath) {
+            var arguments = new string[] { "merge" };
+            var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null);
+            using (output) {
+                await output;
+
+                var r = new ProcessOutputResult() {
+                    ExeFileName = _gitExeFilePath,
+                    ExitCode = output.ExitCode,
+                    StandardOutputLines = output.StandardOutputLines.ToArray(),
+                    StandardErrorLines = output.StandardErrorLines.ToArray(),
+                };
+
+                if (r.ExitCode < 0) {
+                    throw new ProcessException(r);
+                }
+
+                return r;
+            }
+        }
+
         private static string GetClonedFolder(string repoUrl, string targetParentFolderPath) {
             string name;
             if (!ParseRepoName(repoUrl, out name)) {
@@ -137,6 +197,19 @@ namespace Microsoft.CookiecutterTools.Model {
 
             var localTemplateFolder = Path.Combine(targetParentFolderPath, name);
             return localTemplateFolder;
+        }
+
+        private bool ParseDate(string line, out DateTime? date) {
+            date = null;
+
+            // Date:   2016-07-28 10:03:07 +0200
+            if (line.StartsWith("Date:")) {
+                var text = line.Substring("Date:".Length);
+                date = Convert.ToDateTime(text).ToUniversalTime();
+                return true;
+            }
+
+            return false;
         }
 
         private bool ParseOrigin(string remote, out string url) {

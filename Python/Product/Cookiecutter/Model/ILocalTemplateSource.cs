@@ -15,14 +15,13 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.CookiecutterTools.Model {
-    interface IGitClient {
-        Task<Tuple<string, ProcessOutputResult>> CloneAsync(string repoUrl, string targetParentFolderPath);
-        Task<string> GetRemoteOriginAsync(string repoFolderPath);
-        Task<DateTime?> GetLastCommitDateAsync(string repoFolderPath, string branch = null);
-        Task<ProcessOutputResult> FetchAsync(string repoFolderPath);
-        Task<ProcessOutputResult> MergeAsync(string repoFolderPath);
+    interface ILocalTemplateSource : ITemplateSource {
+        Task DeleteTemplateAsync(string repoPath);
+        Task<Tuple<bool?, ProcessOutputResult>> CheckForUpdateAsync(string repoPath);
+        Task<ProcessOutputResult> UpdateTemplateAsync(string repoPath);
     }
 }

@@ -146,6 +146,9 @@
     <Compile Include="Commands\DeleteInstalledTemplateCommand.cs" />
     <Compile Include="Commands\GitHubHomeCommand.cs" />
     <Compile Include="Commands\RunCommand.cs" />
+    <Compile Include="Commands\CheckForUpdatesCommand.cs" />
+    <Compile Include="Commands\UpdateCommand.cs" />
+    <Compile Include="Model\ILocalTemplateSource.cs" />
     <Compile Include="Telemetry\DictionaryExtension.cs" />
     <Compile Include="Telemetry\ITelemetryRecorder.cs" />
     <Compile Include="Telemetry\ITelemetryService.cs" />
@@ -179,6 +182,7 @@
     <Compile Include="Telemetry\VsTelemetryService.cs" />
     <Compile Include="UrlConstants.cs" />
     <Compile Include="ViewModel\ContinuationViewModel.cs" />
+    <Compile Include="ViewModel\OperationStatus.cs" />
     <Compile Include="ViewModel\LoadingViewModel.cs" />
     <Compile Include="ViewModel\ErrorViewModel.cs" />
     <Compile Include="Model\GitHubTemplateSource.cs" />

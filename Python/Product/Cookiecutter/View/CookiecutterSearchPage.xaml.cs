@@ -89,7 +89,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         private void RunSelection_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            e.CanExecute = ViewModel?.SelectedTemplate != null && !ViewModel.IsCloning && !ViewModel.IsLoading;
+            e.CanExecute = ViewModel?.SelectedTemplate != null && ViewModel.CloningStatus != OperationStatus.InProgress && ViewModel.LoadingStatus != OperationStatus.InProgress;
             e.Handled = true;
         }
 
@@ -139,6 +139,14 @@ namespace Microsoft.CookiecutterTools.View {
             }
 
             ViewModel.LoadTemplateAsync().DoNotWait();
+        }
+
+        public void UpdateTemplate() {
+            ViewModel.UpdateTemplateAsync().DoNotWait();
+        }
+
+        internal void CheckForUpdates() {
+            ViewModel.CheckForUpdatesAsync().DoNotWait();
         }
     }
 }

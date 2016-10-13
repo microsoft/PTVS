@@ -28,7 +28,19 @@ namespace CookiecutterTests {
             throw new NotImplementedException();
         }
 
+        public Task<DateTime?> GetLastCommitDateAsync(string repoFolderPath, string branch = null) {
+            throw new NotImplementedException();
+        }
+
         public Task<string> GetRemoteOriginAsync(string repoFolderPath) {
+            throw new NotImplementedException();
+        }
+
+        public Task<ProcessOutputResult> MergeAsync(string repoFolderPath) {
+            throw new NotImplementedException();
+        }
+
+        Task<ProcessOutputResult> IGitClient.FetchAsync(string repoFolderPath) {
             throw new NotImplementedException();
         }
     }
