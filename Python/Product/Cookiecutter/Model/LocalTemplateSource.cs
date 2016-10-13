@@ -14,14 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools.Infrastructure;
 
 namespace Microsoft.CookiecutterTools.Model {
-    class LocalTemplateSource : ITemplateSource {
+    class LocalTemplateSource : ILocalTemplateSource {
         private string _installedFolderPath;
         private IGitClient _gitClient;
         private List<Template> _cache;
@@ -52,6 +54,47 @@ namespace Microsoft.CookiecutterTools.Model {
 
         public void InvalidateCache() {
             _cache = null;
+        }
+
+        public Task DeleteTemplateAsync(string repoPath) {
+            ShellUtils.DeleteDirectory(repoPath);
+
+            _cache.RemoveAll(t => t.LocalFolderPath == repoPath);
+
+            return Task.CompletedTask;
+        }
+
+        public async Task<ProcessOutputResult> UpdateTemplateAsync(string repoPath) {
+            var res = await _gitClient.MergeAsync(repoPath);
+
+            var template = _cache.SingleOrDefault(t => t.LocalFolderPath == repoPath);
+            if (template != null) {
+                template.ClonedLastUpdate = await _gitClient.GetLastCommitDateAsync(template.LocalFolderPath);
+            }
+
+            return res;
+        }
+
+        public async Task<Tuple<bool?, ProcessOutputResult>> CheckForUpdateAsync(string repoPath) {
+            if (_cache == null) {
+                await BuildCacheAsync();
+            }
+
+            var template = _cache.SingleOrDefault(t => t.RemoteUrl == repoPath);
+            if (template == null) {
+                return null;
+            }
+
+            var res = await _gitClient.FetchAsync(template.LocalFolderPath);
+
+            template.ClonedLastUpdate = await _gitClient.GetLastCommitDateAsync(template.LocalFolderPath);
+            template.RemoteLastUpdate = await _gitClient.GetLastCommitDateAsync(template.LocalFolderPath, "origin/master");
+
+            if (template.RemoteLastUpdate.HasValue && template.ClonedLastUpdate.HasValue) {
+                var span = template.RemoteLastUpdate - template.ClonedLastUpdate;
+            }
+
+            return Tuple.Create(template.UpdateAvailable, res);
         }
 
         private async Task BuildCacheAsync() {

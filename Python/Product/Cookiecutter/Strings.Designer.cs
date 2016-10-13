@@ -61,6 +61,78 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to ----- Failed to check for updates -----.
+        /// </summary>
+        internal static string CheckingForAllUpdatesFailed {
+            get {
+                return ResourceManager.GetString("CheckingForAllUpdatesFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Checking for updates -----.
+        /// </summary>
+        internal static string CheckingForAllUpdatesStarted {
+            get {
+                return ResourceManager.GetString("CheckingForAllUpdatesStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully checked for updates -----.
+        /// </summary>
+        internal static string CheckingForAllUpdatesSuccess {
+            get {
+                return ResourceManager.GetString("CheckingForAllUpdatesSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error checking for update..
+        /// </summary>
+        internal static string CheckingTemplateUpdateError {
+            get {
+                return ResourceManager.GetString("CheckingTemplateUpdateError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An update is available..
+        /// </summary>
+        internal static string CheckingTemplateUpdateFound {
+            get {
+                return ResourceManager.GetString("CheckingTemplateUpdateFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not determine if an update is available..
+        /// </summary>
+        internal static string CheckingTemplateUpdateInconclusive {
+            get {
+                return ResourceManager.GetString("CheckingTemplateUpdateInconclusive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Template is already up-to-date..
+        /// </summary>
+        internal static string CheckingTemplateUpdateNotFound {
+            get {
+                return ResourceManager.GetString("CheckingTemplateUpdateNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Checking for update to template &apos;{0}&apos; from &apos;{1}&apos; -----.
+        /// </summary>
+        internal static string CheckingTemplateUpdateStarted {
+            get {
+                return ResourceManager.GetString("CheckingTemplateUpdateStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A different template with the name &apos;{0}&apos; already exists in &apos;{1}&apos;.
         ///
         ///Please delete the installed template and try again..
@@ -388,6 +460,33 @@ namespace Microsoft.CookiecutterTools {
         internal static string UnhandledException {
             get {
                 return ResourceManager.GetString("UnhandledException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Failed to update template &apos;{0}&apos; -----.
+        /// </summary>
+        internal static string UpdatingTemplateFailed {
+            get {
+                return ResourceManager.GetString("UpdatingTemplateFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Updating template &apos;{0}&apos; -----.
+        /// </summary>
+        internal static string UpdatingTemplateStarted {
+            get {
+                return ResourceManager.GetString("UpdatingTemplateStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully updated template &apos;{0}&apos; -----.
+        /// </summary>
+        internal static string UpdatingTemplateSuccess {
+            get {
+                return ResourceManager.GetString("UpdatingTemplateSuccess", resourceCulture);
             }
         }
     }

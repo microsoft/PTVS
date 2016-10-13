@@ -214,6 +214,39 @@ Please delete the installed template and try again.</value>
   <data name="DeletingTemplateFailed" xml:space="preserve">
     <value>----- Failed to delete template '{0}' -----</value>
   </data>
+  <data name="CheckingForAllUpdatesStarted" xml:space="preserve">
+    <value>----- Checking for updates -----</value>
+  </data>
+  <data name="CheckingForAllUpdatesSuccess" xml:space="preserve">
+    <value>----- Successfully checked for updates -----</value>
+  </data>
+  <data name="CheckingForAllUpdatesFailed" xml:space="preserve">
+    <value>----- Failed to check for updates -----</value>
+  </data>
+  <data name="CheckingTemplateUpdateStarted" xml:space="preserve">
+    <value>----- Checking for update to template '{0}' from '{1}' -----</value>
+  </data>
+  <data name="CheckingTemplateUpdateFound" xml:space="preserve">
+    <value>An update is available.</value>
+  </data>
+  <data name="CheckingTemplateUpdateNotFound" xml:space="preserve">
+    <value>Template is already up-to-date.</value>
+  </data>
+  <data name="CheckingTemplateUpdateError" xml:space="preserve">
+    <value>Error checking for update.</value>
+  </data>
+  <data name="CheckingTemplateUpdateInconclusive" xml:space="preserve">
+    <value>Could not determine if an update is available.</value>
+  </data>
+  <data name="UpdatingTemplateStarted" xml:space="preserve">
+    <value>----- Updating template '{0}' -----</value>
+  </data>
+  <data name="UpdatingTemplateSuccess" xml:space="preserve">
+    <value>----- Successfully updated template '{0}' -----</value>
+  </data>
+  <data name="UpdatingTemplateFailed" xml:space="preserve">
+    <value>----- Failed to update template '{0}' -----</value>
+  </data>
   <data name="TemplateCategoryInstalled" xml:space="preserve">
     <value>Installed</value>
   </data>

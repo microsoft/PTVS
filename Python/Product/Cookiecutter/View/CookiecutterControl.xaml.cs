@@ -176,6 +176,30 @@ namespace Microsoft.CookiecutterTools.View {
             _searchPage.LoadTemplate();
         }
 
+        internal bool CanUpdateSelection() {
+            return PageSequence.CurrentPosition == 0 && ViewModel.SelectedTemplate != null && ViewModel.SelectedTemplate.IsUpdateAvailable == true;
+        }
+
+        internal void UpdateSelection() {
+            if (!CanUpdateSelection()) {
+                return;
+            }
+
+            _searchPage.UpdateTemplate();
+        }
+
+        internal bool CanCheckForUpdates() {
+            return PageSequence.CurrentPosition == 0;
+        }
+
+        internal void CheckForUpdates() {
+            if (!CanCheckForUpdates()) {
+                return;
+            }
+
+            _searchPage.CheckForUpdates();
+        }
+
         private void UserControl_MouseRightButtonUp(object sender, MouseButtonEventArgs e) {
             var element = (FrameworkElement)sender;
             var point = element.PointToScreen(GetPosition(e, element));

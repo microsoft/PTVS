@@ -33,11 +33,11 @@ using Microsoft.VisualStudio.Shell.Interop;
 namespace Microsoft.CookiecutterTools {
     [Guid("AC207EBF-16F8-4AA4-A0A8-70AF37308FCD")]
     sealed class CookiecutterToolWindow : ToolWindowPane, IVsInfoBarUIEvents {
-        private IServiceProvider _site;
         private Redirector _outputWindow;
         private IVsStatusbar _statusBar;
         private IVsUIShell _uiShell;
         private EnvDTE.DTE _dte;
+
         private CookiecutterControl _cookiecutterControl;
         private IVsInfoBarUIFactory _infoBarFactory;
         private IVsInfoBarUIElement _infoBar;
@@ -62,14 +62,12 @@ namespace Microsoft.CookiecutterTools {
         }
 
         protected override void OnCreate() {
-            _site = (IServiceProvider)this;
-
-            _outputWindow = OutputWindowRedirector.GetGeneral(CookiecutterPackage.Instance);
+            _outputWindow = OutputWindowRedirector.GetGeneral(this);
             Debug.Assert(_outputWindow != null);
-            _statusBar = _site.GetService(typeof(SVsStatusbar)) as IVsStatusbar;
-            _uiShell = _site.GetService(typeof(SVsUIShell)) as IVsUIShell;
-            _dte = _site.GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
-            _infoBarFactory = _site.GetService(typeof(SVsInfoBarUIFactory)) as IVsInfoBarUIFactory;
+            _statusBar = GetService(typeof(SVsStatusbar)) as IVsStatusbar;
+            _uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
+            _dte = GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+            _infoBarFactory = GetService(typeof(SVsInfoBarUIFactory)) as IVsInfoBarUIFactory;
 
             object control = null;
 
@@ -93,6 +91,8 @@ namespace Microsoft.CookiecutterTools {
             RegisterCommands(new Command[] {
                 new HomeCommand(this),
                 new RunCommand(this),
+                new UpdateCommand(this),
+                new CheckForUpdatesCommand(this),
                 new GitHubCommand(this, PackageIds.cmdidLinkGitHubHome),
                 new GitHubCommand(this, PackageIds.cmdidLinkGitHubIssues),
                 new GitHubCommand(this, PackageIds.cmdidLinkGitHubWiki),
@@ -232,6 +232,22 @@ namespace Microsoft.CookiecutterTools {
 
         internal bool CanRunSelection() {
             return _cookiecutterControl != null ? _cookiecutterControl.CanRunSelection() : false;
+        }
+
+        internal void CheckForUpdates() {
+            _cookiecutterControl?.CheckForUpdates();
+        }
+
+        internal bool CanCheckForUpdates() {
+            return _cookiecutterControl != null ? _cookiecutterControl.CanCheckForUpdates() : false;
+        }
+
+        internal void UpdateSelection() {
+            _cookiecutterControl?.UpdateSelection();
+        }
+
+        internal bool CanUpdateSelection() {
+            return _cookiecutterControl != null ? _cookiecutterControl.CanUpdateSelection() : false;
         }
 
         private void OnContextMenuRequested(object sender, PointEventArgs e) {
