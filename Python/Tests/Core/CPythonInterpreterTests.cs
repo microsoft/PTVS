@@ -85,12 +85,12 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(0)]
-        public async Task ImportFromSearchPath() {
+        public void ImportFromSearchPath() {
             PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = true;
             try {
                 var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
-                await analyzer.AddModuleAsync("test-module", "from test_package import *");
-
+                analyzer.AddModule("test-module", "from test_package import *");
+                analyzer.WaitForAnalysis();
                 AssertUtil.CheckCollection(analyzer.GetAllNames(), null, new[] { "package_method", "package_method_two", "test_package" });
 
                 analyzer.SetSearchPaths(TestData.GetPath("TestData\\AddImport"));
@@ -103,12 +103,13 @@ namespace PythonToolsTests {
         }
 
         [TestMethod, Priority(0)]
-        public async Task ImportPydFromSearchPath() {
+        public void ImportPydFromSearchPath() {
             PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = true;
             try {
                 var analyzer = new PythonAnalysis("Global|PythonCore|2.7-32");
 
-                await analyzer.AddModuleAsync("test-module", "from spam import *");
+                analyzer.AddModule("test-module", "from spam import *");
+                analyzer.WaitForAnalysis();
                 AssertUtil.CheckCollection(analyzer.GetAllNames(), null, new[] { "system", "spam" });
 
                 analyzer.SetSearchPaths(TestData.GetPath("TestData"));
