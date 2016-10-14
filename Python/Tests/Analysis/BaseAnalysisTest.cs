@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -37,6 +38,8 @@ namespace AnalysisTests {
         private readonly IPythonInterpreterFactory _defaultFactoryV2 = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
         private readonly IPythonInterpreterFactory _defaultFactoryV3 = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 5));
 
+        private List<IDisposable> _toDispose;
+
         static BaseAnalysisTest() {
             AnalysisLog.Reset();
             AnalysisLog.ResetTime();
@@ -54,6 +57,10 @@ namespace AnalysisTests {
         public void EndAnalysisLog() {
             AnalysisLog.Flush();
             AnalysisLog.Output = null;
+            foreach (var d in _toDispose.MaybeEnumerate()) {
+                d.Dispose();
+            }
+            _toDispose = null;
         }
 
         protected virtual IPythonInterpreterFactory DefaultFactoryV2 => _defaultFactoryV2;
@@ -62,38 +69,51 @@ namespace AnalysisTests {
         protected virtual IModuleContext DefaultContext => null;
         protected virtual AnalysisLimits GetLimits() => AnalysisLimits.GetDefaultLimits();
 
-        protected virtual BuiltinTypeId StrType(PythonAnalysis analyzer) => analyzer.BuiltinTypeId_Str;
-        protected virtual BuiltinTypeId StrIteratorType(PythonAnalysis analyzer) => analyzer.BuiltinTypeId_StrIterator;
+        protected virtual PythonAnalysis CreateAnalyzerInternal(IPythonInterpreterFactory factory) {
+            return new PythonAnalysis(factory);
+        }
 
-        public PythonAnalysis CreateAnalyzer(IPythonInterpreterFactory factory) {
-            var analysis = new PythonAnalysis(factory) {
-                AssertOnParseErrors = true,
-                ModuleContext = DefaultContext
-            };
+        public PythonAnalysis CreateAnalyzer(IPythonInterpreterFactory factory = null, bool allowParseErrors = false) {
+            var analysis = CreateAnalyzerInternal(factory ?? DefaultFactoryV2);
+            analysis.AssertOnParseErrors = !allowParseErrors;
+            analysis.ModuleContext = DefaultContext;
             analysis.SetLimits(GetLimits());
+
+            if (_toDispose == null) {
+                _toDispose = new List<IDisposable>();
+            }
+            _toDispose.Add(analysis);
+
             return analysis;
         }
 
-        public PythonAnalysis ProcessTextV2(string text) {
-            var analysis = CreateAnalyzer(DefaultFactoryV2);
-            analysis.AddModuleAsync("test-module", text, CancellationTokens.After5s).WaitAndUnwrapExceptions();
+        public PythonAnalysis ProcessTextV2(string text, bool allowParseErrors = false) {
+            var analysis = CreateAnalyzer(DefaultFactoryV2, allowParseErrors);
+            analysis.AddModule("test-module", text);
+            analysis.WaitForAnalysis();
             return analysis;
         }
 
-        public PythonAnalysis ProcessTextV3(string text) {
-            var analysis = CreateAnalyzer(DefaultFactoryV3);
-            analysis.AddModuleAsync("test-module", text, CancellationTokens.After5s).WaitAndUnwrapExceptions();
+        public PythonAnalysis ProcessTextV3(string text, bool allowParseErrors = false) {
+            var analysis = CreateAnalyzer(DefaultFactoryV3, allowParseErrors);
+            analysis.AddModule("test-module", text);
+            analysis.WaitForAnalysis();
             return analysis;
         }
 
-        public PythonAnalysis ProcessText(string text, PythonLanguageVersion version = PythonLanguageVersion.None) {
+        public PythonAnalysis ProcessText(
+            string text,
+            PythonLanguageVersion version = PythonLanguageVersion.None,
+            bool allowParseErrors = false
+        ) {
             // TODO: Analyze against multiple versions when the version is None
             if (version == PythonLanguageVersion.None) {
-                return ProcessTextV2(text);
+                return ProcessTextV2(text, allowParseErrors);
             }
 
-            var analysis = CreateAnalyzer(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion()));
-            analysis.AddModuleAsync("test-module", text, CancellationTokens.After5s).WaitAndUnwrapExceptions();
+            var analysis = CreateAnalyzer(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion()), allowParseErrors);
+            analysis.AddModule("test-module", text);
+            analysis.WaitForAnalysis();
             return analysis;
         }
     }

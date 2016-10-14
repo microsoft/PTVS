@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.Remoting;
@@ -38,17 +39,13 @@ namespace IronPythonTests {
     /// </summary>
     [TestClass]
     public class IronPythonAnalysisTest : AnalysisTest {
-        private string[] _objectMembersClr, _strMembersClr;
-
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
             AssertListener.Initialize();
             PythonTestData.Deploy();
         }
 
-        protected override bool SupportsPython3 {
-            get { return false; }
-        }
+        protected override bool SupportsPython3 => false;
 
         protected override string ListInitParameterName {
             get { return "enumerable"; }
@@ -58,40 +55,13 @@ namespace IronPythonTests {
             get { return IronPythonModuleContext.DontShowClrInstance;}
         }
 
-        protected override bool ShouldUseUnicodeLiterals(PythonLanguageVersion version) {
-            return true;
-        }
+        protected override IPythonInterpreterFactory DefaultFactoryV2 => new IronPythonInterpreterFactory(InterpreterArchitecture.x86);
+        protected override IPythonInterpreterFactory DefaultFactoryV3 => null;
 
-        public IronPythonAnalysisTest()
-            : base(new IronPythonInterpreterFactory(InterpreterArchitecture.x86), CreateInterpreter()) {
-            var objectType = Interpreter.GetBuiltinType(BuiltinTypeId.Object);
-            _objectMembersClr = objectType.GetMemberNames(IronPythonModuleContext.ShowClrInstance).ToArray();
-            var stringType = Interpreter.GetBuiltinType(BuiltinTypeId.Str);
-            _strMembersClr = stringType.GetMemberNames(IronPythonModuleContext.ShowClrInstance).ToArray();
-
-            Assert.IsTrue(_objectMembers.Length < _objectMembersClr.Length);
-            Assert.IsTrue(_strMembers.Length < _strMembersClr.Length);
-        }
-
-        private static IPythonInterpreter CreateInterpreter() {
-            var res = new IronPythonInterpreter(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(PythonLanguageVersion.V27.ToVersion()));
-            res.Remote.AddAssembly(new ObjectHandle(typeof(IronPythonAnalysisTest).Assembly));
-            return res;
-        }
-
-        public override BuiltinTypeId BuiltinTypeId_Str {
-            get {
-                return BuiltinTypeId.Unicode;
-            }
-        }
-
-        public override BuiltinTypeId BuiltinTypeId_StrIterator {
-            get {
-                // IronPython does not distinguish between string iterators, and
-                // since BytesIterator < UnicodeIterator, it is the one returned
-                // for iter("").
-                return BuiltinTypeId.BytesIterator;
-            }
+        protected override PythonAnalysis CreateAnalyzerInternal(IPythonInterpreterFactory factory) {
+            var analysis = new IronPythonAnalysis(factory);
+            analysis.SetSearchPaths(Environment.CurrentDirectory);
+            return analysis;
         }
 
         [TestMethod, Priority(1)]
@@ -104,7 +74,8 @@ from AnalysisTests.DotNetAnalysis import *
 y = GenericType()
 zzz = y.ReturnsGenericParam()
 ";
-            var entry = ProcessText(text, analysisDirs: new[] { Environment.CurrentDirectory });
+            var entry = ProcessText(text);
+
             AssertUtil.ContainsExactly(entry.GetMemberNames("zzz", 1), "GetEnumerator", "__doc__", "__iter__", "__repr__");
         }
 
@@ -114,7 +85,7 @@ zzz = y.ReturnsGenericParam()
 from System import AccessViolationException
 n = AccessViolationException.__new__
 ";
-            var entry = ProcessText(text, analysisDirs: new[] { Environment.CurrentDirectory });
+            var entry = ProcessText(text);
             AssertUtil.ContainsExactly(
                 entry.GetSignatures("n", 1)
                 .Select(x => FormatSignature(x)), 
@@ -139,7 +110,7 @@ import clr
 x = 'abc'
 ";
             var entry = ProcessText(text);
-            AssertUtil.ContainsExactly(entry.GetMemberNames("x", 1), _strMembersClr);
+            entry.AssertHasAttr("x", "Length");
         }
 
         [TestMethod, Priority(1)]
@@ -173,7 +144,7 @@ import System
 x = System.StringComparison.OrdinalIgnoreCase
             ");
 
-            var x = entry.GetValuesByIndex("x", 1).First();
+            var x = entry.GetValue<AnalysisValue>("x", 1);
             Debug.Assert(x.MemberType == PythonMemberType.EnumInstance);
             Assert.AreEqual(x.MemberType, PythonMemberType.EnumInstance);
         }
@@ -236,7 +207,7 @@ def g():
 def f(sender, args): pass
 ";
             var entry = ProcessText(text);
-            VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("f", text.IndexOf("x ="))), new VariableLocation(4, 22, VariableType.Reference), new VariableLocation(6, 5, VariableType.Definition));
+            entry.AssertReferences("f", text.IndexOf("x ="), new VariableLocation(4, 22, VariableType.Reference), new VariableLocation(6, 5, VariableType.Definition));
 
             text = @"
 from System import EventHandler
@@ -244,7 +215,7 @@ def f(sender, args): pass
 
 x = EventHandler(f)";
             entry = ProcessText(text);
-            VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("f", text.IndexOf("x ="))), new VariableLocation(5, 18, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
+            entry.AssertReferences("f", text.IndexOf("x ="), new VariableLocation(5, 18, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
 
             // left hand side is unknown, right hand side should still have refs added
             text = @"
@@ -254,7 +225,7 @@ def f(sender, args): pass
 a.fob += EventHandler(f)
 ";
             entry = ProcessText(text);
-            VerifyReferences(UniqifyVariables(entry.GetVariablesByIndex("f", text.IndexOf("a.fob +="))), new VariableLocation(5, 23, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
+            entry.AssertReferences("f", text.IndexOf("a.fob +="), new VariableLocation(5, 23, VariableType.Reference), new VariableLocation(3, 5, VariableType.Definition));
         }
 
         [TestMethod, Priority(1)]
@@ -348,8 +319,7 @@ mod = asm.DefineDynamicModule()
 mod.
 ";
             var entry = ProcessText(text);
-            var tooltips = entry.GetMembersByIndex("mod", text.IndexOf("mod ="))
-                .Where(m => m.Name == "CreateGlobalFunctions")
+            var tooltips = entry.GetMember("mod", "CreateGlobalFunctions", text.IndexOf("mod ="))
                 .Select(m => m.Documentation)
                 .ToArray();
             Assert.AreEqual(1, tooltips.Length);
@@ -365,8 +335,7 @@ mod.
 from System import DivideByZeroException
 ";
             var entry = ProcessText(text);
-            var dbzEx = entry.GetValuesByIndex("DivideByZeroException", 0).First() as BuiltinClassInfo;
-            Assert.IsNotNull(dbzEx);
+            var dbzEx = entry.GetValue<BuiltinClassInfo>("DivideByZeroException");
             // Check values from IPythonType MRO
             AssertUtil.ContainsExactly(dbzEx.PythonType.Mro.Select(t => t.Name),
                 "DivideByZeroException",
@@ -401,7 +370,7 @@ System.AppDomain.CurrentDomain.AssemblyLoad += f
         public void EventMemberType() {
             var text = @"from System import AppDomain";
             var entry = ProcessText(text);
-            var mem = entry.GetMembersByIndex("AppDomain", 1).Where(x => x.Name == "AssemblyLoad").First();
+            var mem = entry.GetMember("AppDomain", "AssemblyLoad").Single();
             Assert.AreEqual(mem.MemberType, PythonMemberType.Event);
         }
 
@@ -472,10 +441,9 @@ w = Window()
 w.Activate
 ");
 
-            var result = entry.GetValuesByIndex("w.Activate", 1).ToArray();
-            Assert.AreEqual(1, result.Length);
-            Console.WriteLine("Docstring was: <{0}>", result[0].Documentation);
-            Assert.IsFalse(string.IsNullOrWhiteSpace(result[0].Documentation));
+            var result = entry.GetValue<AnalysisValue>("w.Activate", 1);
+            Console.WriteLine("Docstring was: <{0}>", result.Documentation);
+            Assert.IsFalse(string.IsNullOrWhiteSpace(result.Documentation));
         }
 
         /*
@@ -512,11 +480,11 @@ from System.Windows.Media import Colors
         public void XamlEmptyXName() {
             // [Python Tools] Adding attribute through XAML in IronPython application crashes VS.
             // http://pytools.codeplex.com/workitem/743
-            using (var analyzer = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter)) {
+            using (var analyzer = CreateAnalyzer()) {
                 string xamlPath = TestData.GetPath(@"TestData\Xaml\EmptyXName.xaml");
                 string pyPath = TestData.GetPath(@"TestData\Xaml\EmptyXName.py");
-                var xamlEntry = analyzer.AddXamlFile(xamlPath);
-                var pyEntry = analyzer.AddModule("EmptyXName", pyPath);
+                var xamlEntry = analyzer.Analyzer.AddXamlFile(xamlPath);
+                var pyEntry = analyzer.AddModule("EmptyXName", File.ReadAllText(pyPath), pyPath);
 
                 xamlEntry.ParseContent(new FileStreamReader(xamlPath), null);
 

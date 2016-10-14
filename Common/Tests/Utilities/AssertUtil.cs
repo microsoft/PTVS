@@ -199,6 +199,18 @@ namespace TestUtilities
         }
 
         [System.Diagnostics.DebuggerStepThrough]
+        public static void DoesntContain<T>(IEnumerable<T> source, IEnumerable<T> value) {
+            foreach (var v in source) {
+                foreach (var v2 in value) {
+                    if (v.Equals(v2)) {
+                        Assert.Fail(String.Format("{0} contains {1}", MakeText(source), value));
+                    }
+                }
+            }
+
+        }
+
+        [System.Diagnostics.DebuggerStepThrough]
         public static void ContainsExactly<T>(IEnumerable<T> source, IEnumerable<T> expected) {
             ContainsExactly(new HashSet<T>(source), expected.ToArray());
         }

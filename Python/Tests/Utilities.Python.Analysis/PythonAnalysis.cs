@@ -32,7 +32,7 @@ using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities.Python {
-    public class PythonAnalysis {
+    public class PythonAnalysis : IDisposable {
         private readonly PythonAnalyzer _analyzer;
         private readonly Dictionary<string, IPythonProjectEntry> _entries;
 
@@ -40,6 +40,7 @@ namespace TestUtilities.Python {
         private readonly Dictionary<BuiltinTypeId, string[]> _cachedMembers;
 
         private readonly string _root;
+        private bool _disposed;
 
         public PythonAnalysis(PythonLanguageVersion version)
             : this(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion())) { }
@@ -79,22 +80,29 @@ namespace TestUtilities.Python {
             _root = TestData.GetTempPath(randomSubPath: true);
         }
 
-        public PythonAnalyzer Analyzer => _analyzer;
-        public ModuleAnalysis Result {
-            get {
-                if (DefaultModule == null) {
-                    Assert.Fail("No modules available");
-                    return null;
-                }
+        public void Dispose() {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
-                try {
-                    return _entries[DefaultModule].Analysis;
-                } catch (KeyNotFoundException) {
-                    Assert.Fail("Module " + DefaultModule + " was not found");
-                    return null;
-                }
+        ~PythonAnalysis() {
+            Dispose(false);
+        }
+
+        protected void Dispose(bool disposing) {
+            if (_disposed) {
+                return;
+            }
+            _disposed = true;
+
+            if (disposing) {
+                _analyzer.Dispose();
             }
         }
+
+        public PythonAnalyzer Analyzer => _analyzer;
+        public IReadOnlyDictionary<string, IPythonProjectEntry> Modules => _entries;
+        public string CodeFolder => _root;
 
         public bool CreateProjectOnDisk { get; set; }
         public string DefaultModule { get; set; }
@@ -105,11 +113,11 @@ namespace TestUtilities.Python {
         public virtual BuiltinTypeId BuiltinTypeId_StrIterator => _analyzer.LanguageVersion.Is3x() ? BuiltinTypeId.UnicodeIterator : BuiltinTypeId.BytesIterator;
 
 
-        private IPythonProjectEntry AddModule(string name, string code) {
-            var path = Path.Combine(_root, name.Replace('.', '\\'));
+        public IPythonProjectEntry AddModule(string name, string code, string filename = null) {
+            var path = Path.Combine(_root, (filename ?? (name.Replace('.', '\\') + ".py")));
             if (CreateProjectOnDisk) {
                 Directory.CreateDirectory(PathUtils.GetParent(path));
-                File.WriteAllText(path + ".py", code);
+                File.WriteAllText(path, code);
             }
 
             var entry = _analyzer.AddModule(name, path);
@@ -118,25 +126,8 @@ namespace TestUtilities.Python {
                 DefaultModule = name;
             }
 
-            return entry;
-        }
-
-        public IPythonProjectEntry EnqueueModule(string name, string code) {
-            var entry = AddModule(name, code);
             UpdateModule(entry, code);
             return entry;
-        }
-
-        public async Task<IPythonProjectEntry> AddModuleAsync(string name, string code, CancellationToken? cancel = null) {
-            var entry = AddModule(name, code);
-
-            try {
-                await UpdateModuleAsync(entry, code, cancel);
-                return entry;
-            } catch (OperationCanceledException) {
-                _entries.Remove(name);
-                throw;
-            }
         }
 
         public void UpdateModule(IPythonProjectEntry entry, string code) {
@@ -154,44 +145,14 @@ namespace TestUtilities.Python {
                 }
                 if (errors.Errors.Any() || errors.Warnings.Any()) {
                     if (AssertOnParseErrors) {
-                        Assert.Fail("Errors parsing " + entry.FilePath, MakeMessage(errors));
+                        var errorMsg = MakeMessage(errors);
+                        Trace.TraceError(errorMsg);
+                        Assert.Fail("Errors parsing " + entry.FilePath, errorMsg);
                     }
                 }
             }
 
-            entry.Analyze(CancellationToken.None, false);
-        }
-        public Task<CollectingErrorSink> UpdateModuleAsync(IPythonProjectEntry entry, string code, CancellationToken? cancel = null) {
-            CollectingErrorSink errors = null;
-            if (code != null) {
-                PythonAst ast;
-                errors = new CollectingErrorSink();
-                using (var p = Parser.CreateParser(
-                    new StringReader(code),
-                    _analyzer.LanguageVersion,
-                    new ParserOptions { BindReferences = true, ErrorSink = errors }
-                )) {
-                    ast = p.ParseFile();
-                    entry.UpdateTree(ast, null);
-                }
-                if (errors.Errors.Any() || errors.Warnings.Any()) {
-                    if (AssertOnParseErrors) {
-                        Assert.Fail("Errors parsing " + entry.FilePath, MakeMessage(errors));
-                    }
-                }
-            }
-
-            var tcs = new TaskCompletionSource<CollectingErrorSink>(errors);
-            _tasks[entry] = tcs;
-            var realCancel = cancel ?? CancellationTokens.After5s;
-            realCancel.Register(() => tcs.TrySetCanceled());
-            entry.Analyze(realCancel, true);
-
-            if (!realCancel.IsCancellationRequested) {
-                entry.OnNewAnalysis += Entry_OnNewAnalysis;
-            }
-
-            return tcs.Task;
+            entry.Analyze(CancellationToken.None, true);
         }
 
         private static string MakeMessage(CollectingErrorSink errors) {
@@ -228,6 +189,9 @@ namespace TestUtilities.Python {
         }
 
         public void WaitForAnalysis(CancellationToken? cancel = null) {
+            if (_analyzer.Queue.Count == 0) {
+                return;
+            }
             _analyzer.AnalyzeQueuedEntries(cancel ?? CancellationTokens.After5s);
         }
 
@@ -268,6 +232,9 @@ namespace TestUtilities.Python {
 
         public IEnumerable<BuiltinTypeId> GetTypeIds(IPythonProjectEntry module, string exprText, int index = 0) {
             return module.Analysis.GetValuesByIndex(exprText, index).Select(m => {
+                if (m.TypeId != BuiltinTypeId.Unknown) {
+                    return m.TypeId;
+                }
                 if (m.PythonType.TypeId != BuiltinTypeId.Unknown) {
                     return m.PythonType.TypeId;
                 }
@@ -338,15 +305,40 @@ namespace TestUtilities.Python {
             return module.Analysis.GetAllAvailableMembers(SourceLocation.None).Select(m => m.Name);
         }
 
+        public IEnumerable<string> GetNamesNoBuiltins(int index = 0) {
+            return GetNamesNoBuiltins(_entries[DefaultModule], index);
+        }
+
+        public IEnumerable<string> GetNamesNoBuiltins(IPythonProjectEntry module, int index = 0) {
+            return module.Analysis.GetVariablesNoBuiltinsByIndex(index);
+        }
+
+        public AnalysisValue[] GetValues(string variable, int index = 0) {
+            return GetValues(_entries[DefaultModule], variable, index);
+        }
+
+        public AnalysisValue[] GetValues(IPythonProjectEntry module, string variable, int index = 0) {
+            return module.Analysis.GetValuesByIndex(variable, index).ToArray();
+        }
+
         public T GetValue<T>(string variable, int index = 0) where T : AnalysisValue {
             return GetValue<T>(_entries[DefaultModule], variable, index);
         }
 
         public T GetValue<T>(IPythonProjectEntry module, string variable, int index = 0) where T : AnalysisValue {
-            var r = module.Analysis.GetVariablesByIndex(variable, index).SingleOrDefault();
-            Assert.IsNotNull(r, "'{0}.{1}' had no variables".FormatInvariant(module.ModuleName, variable));
-            Assert.IsInstanceOfType(r, typeof(T), "'{0}.{1}' was not expected type".FormatInvariant(module.ModuleName, variable));
-            return (T)r;
+            var rs = module.Analysis.GetValuesByIndex(variable, index).ToArray();
+            if (rs.Length == 0) {
+                Assert.Fail("'{0}.{1}' had no variables".FormatInvariant(module.ModuleName, variable));
+            } else if (rs.Length > 1) {
+                foreach (var r in rs) {
+                    Trace.TraceInformation(r.ToString());
+                }
+                Assert.Fail("'{0}.{1}' had multiple values".FormatInvariant(module.ModuleName, variable));
+            } else {
+                Assert.IsInstanceOfType(rs[0], typeof(T), "'{0}.{1}' was not expected type".FormatInvariant(module.ModuleName, variable));
+                return (T)rs[0];
+            }
+            return default(T);
         }
 
         public IOverloadResult[] GetSignatures(string exprText, int index = 0) {
@@ -355,6 +347,14 @@ namespace TestUtilities.Python {
 
         public IOverloadResult[] GetSignatures(IPythonProjectEntry module, string exprText, int index = 0) {
             return module.Analysis.GetSignaturesByIndex(exprText, index).ToArray();
+        }
+
+        public IOverloadResult[] GetOverrideable(int index = 0) {
+            return GetOverrideable(_entries[DefaultModule], index);
+        }
+
+        public IOverloadResult[] GetOverrideable(IPythonProjectEntry module, int index = 0) {
+            return module.Analysis.GetOverrideableByIndex(index).ToArray();
         }
 
         #endregion
@@ -371,6 +371,18 @@ namespace TestUtilities.Python {
 
         public void AssertHasAttr(IPythonProjectEntry module, string expr, int index, params string[] attrs) {
             AssertUtil.ContainsAtLeast(GetMemberNames(module, expr, index), attrs);
+        }
+
+        public void AssertNotHasAttr(string expr, params string[] attrs) {
+            AssertNotHasAttr(_entries[DefaultModule], expr, 0, attrs);
+        }
+
+        public void AssertNotHasAttr(string expr, int index, params string[] attrs) {
+            AssertNotHasAttr(_entries[DefaultModule], expr, index, attrs);
+        }
+
+        public void AssertNotHasAttr(IPythonProjectEntry module, string expr, int index, params string[] attrs) {
+            AssertUtil.DoesntContain(GetMemberNames(module, expr, index), attrs);
         }
 
         public void AssertHasAttrExact(string expr, params string[] attrs) {
@@ -401,21 +413,108 @@ namespace TestUtilities.Python {
             AssertIsInstance(_entries[DefaultModule], expr, 0, types);
         }
 
+        public void AssertIsInstance(string expr, int index, params BuiltinTypeId[] types) {
+            AssertIsInstance(_entries[DefaultModule], expr, index, types);
+        }
+
         public void AssertIsInstance(IPythonProjectEntry module, string expr, params BuiltinTypeId[] types) {
             AssertIsInstance(module, expr, 0, types);
         }
 
         public void AssertIsInstance(IPythonProjectEntry module, string expr, int index, params BuiltinTypeId[] types) {
-            AssertUtil.ContainsExactly(GetTypeIds(module, expr, index), types);
+            var fixedTypes = types.Select(t => {
+                if (t == BuiltinTypeId.Str) {
+                    return BuiltinTypeId_Str;
+                } else if (t == BuiltinTypeId.StrIterator) {
+                    return BuiltinTypeId_StrIterator;
+                }
+                return t;
+            }).ToArray();
+            AssertUtil.ContainsExactly(GetTypeIds(module, expr, index), fixedTypes);
+        }
+
+        public void AssertAttrIsType(string variable, string memberName, params PythonMemberType[] types) {
+            AssertAttrIsType(_entries[DefaultModule], variable, memberName, 0, types);
+        }
+
+        public void AssertAttrIsType(string variable, string memberName, int index, params PythonMemberType[] types) {
+            AssertAttrIsType(_entries[DefaultModule], variable, memberName, index, types);
+        }
+
+        public void AssertAttrIsType(IPythonProjectEntry module, string variable, string memberName, params PythonMemberType[] types) {
+            AssertAttrIsType(module, variable, memberName, 0, types);
+        }
+
+        public void AssertAttrIsType(IPythonProjectEntry module, string variable, string memberName, int index, params PythonMemberType[] types) {
+            AssertUtil.ContainsExactly(GetMember(module, variable, memberName, index).Select(m => m.MemberType), types);
+        }
+
+        public void AssertDescription(string expr, string description) {
+            AssertDescription(_entries[DefaultModule], expr, 0, description);
+        }
+
+        public void AssertDescription(IPythonProjectEntry module, string expr, string description) {
+            AssertDescription(module, expr, 0, description);
+        }
+
+        public void AssertDescription(string expr, int index, string description) {
+            AssertDescription(_entries[DefaultModule], expr, index, description);
+        }
+
+        public void AssertDescription(IPythonProjectEntry module, string expr, int index, string description) {
+            var val = GetValue<AnalysisValue>(module, expr, index);
+            if (description != val?.Description && description != val?.ShortDescription) {
+                Assert.Fail("Expected description of '{0}.{1}' was '{2}'. Actual was '{3}' or '{4}'".FormatInvariant(module.ModuleName, expr, description, val?.ShortDescription ?? "", val?.Description ?? ""));
+            }
+        }
+
+        public void AssertDescriptionContains(string expr, params string[] description) {
+            AssertDescriptionContains(_entries[DefaultModule], expr, 0, description);
+        }
+
+        public void AssertDescriptionContains(IPythonProjectEntry module, string expr, params string[] description) {
+            AssertDescriptionContains(module, expr, 0, description);
+        }
+
+        public void AssertDescriptionContains(string expr, int index, params string[] description) {
+            AssertDescriptionContains(_entries[DefaultModule], expr, index, description);
+        }
+
+        public void AssertDescriptionContains(IPythonProjectEntry module, string expr, int index, params string[] description) {
+            var val = GetValue<AnalysisValue>(module, expr, index);
+            AssertUtil.Contains(val?.Description, description);
+        }
+
+        public void AssertConstantEquals(string expr, string value) {
+            AssertConstantEquals(_entries[DefaultModule], expr, 0, value);
+        }
+
+        public void AssertConstantEquals(string expr, int index, string value) {
+            AssertConstantEquals(_entries[DefaultModule], expr, index, value);
+        }
+
+        public void AssertConstantEquals(IPythonProjectEntry module, string expr, string value) {
+            AssertConstantEquals(module, expr, 0, value);
+        }
+
+        public void AssertConstantEquals(IPythonProjectEntry module, string expr, int index, string value) {
+            var val = GetValue<AnalysisValue>(module, expr, index);
+            Assert.AreEqual(val?.GetConstantValueAsString(), value, "{0}.{1}".FormatInvariant(module.ModuleName, expr));
         }
 
         private static IEnumerable<IAnalysisVariable> UniquifyReferences(IGrouping<LocationInfo, IAnalysisVariable> source) {
-            var res = source.OrderBy(v => v.Type).Where(v => v.Type != VariableType.Value);
+            var defn = source.FirstOrDefault(v => v.Type == VariableType.Definition);
+            var refr = source.FirstOrDefault(v => v.Type == VariableType.Reference);
             var value = source.FirstOrDefault(v => v.Type == VariableType.Value);
-            if (value != null) {
-                res = res.DefaultIfEmpty(value);
+            if (defn != null) {
+                yield return defn;
             }
-            return res;
+            if (refr != null) {
+                yield return refr;
+            }
+            if (value != null && defn == null && refr == null) {
+                yield return value;
+            }
         }
 
         public void AssertReferences(string expr, params VariableLocation[] expectedVars) {
@@ -427,6 +526,22 @@ namespace TestUtilities.Python {
         }
 
         public void AssertReferences(IPythonProjectEntry module, string expr, int index, params VariableLocation[] expectedVars) {
+            AssertReferencesWorker(module, expr, index, true, expectedVars);
+        }
+
+        public void AssertReferencesInclude(string expr, params VariableLocation[] expectedVars) {
+            AssertReferencesInclude(_entries[DefaultModule], expr, 0, expectedVars);
+        }
+
+        public void AssertReferencesInclude(string expr, int index, params VariableLocation[] expectedVars) {
+            AssertReferencesInclude(_entries[DefaultModule], expr, index, expectedVars);
+        }
+
+        public void AssertReferencesInclude(IPythonProjectEntry module, string expr, int index, params VariableLocation[] expectedVars) {
+            AssertReferencesWorker(module, expr, index, false, expectedVars);
+        }
+
+        private void AssertReferencesWorker(IPythonProjectEntry module, string expr, int index, bool exact, VariableLocation[] expectedVars) {
             var vars = module.Analysis.GetVariablesByIndex(expr, index)
                 .GroupBy(v => v.Location)
                 .OrderBy(g => g.Key.StartLine)
@@ -449,12 +564,13 @@ namespace TestUtilities.Python {
             }
             var foundNotExpected = notFoundYet.OrderBy(v => v.StartLine).ThenBy(v => v.StartCol).ThenBy(v => v.Type).ToList();
 
-            if (!expectedNotFound.Any() && !foundNotExpected.Any()) {
+            if (!expectedNotFound.Any() && (!exact || !foundNotExpected.Any())) {
                 return;
             }
 
             Assert.Fail(
                 "References did not match.{0}{0}Actual:{0}{1}{0}{0}Expected but missing:{0}{2}{0}{0}Unexpected:{0}{3}{0}",
+                Environment.NewLine,
                 string.Join(", " + Environment.NewLine, vars.Select(v => v.ToString())),
                 string.Join(", " + Environment.NewLine, expectedNotFound.Select(v => v.ToString())),
                 string.Join(", " + Environment.NewLine, foundNotExpected.Select(v => v.ToString()))
@@ -476,6 +592,7 @@ namespace TestUtilities.Python {
         public string[] ObjectMembers => GetMembersOf(BuiltinTypeId.Object);
         public string[] IntMembers => GetMembersOf(BuiltinTypeId.Int);
         public string[] BytesMembers => GetMembersOf(BuiltinTypeId.Bytes);
+        public string[] StrMembers => GetMembersOf(BuiltinTypeId_Str);
         public string[] ListMembers => GetMembersOf(BuiltinTypeId.List);
         public string[] FunctionMembers => GetMembersOf(BuiltinTypeId.Function);
 
