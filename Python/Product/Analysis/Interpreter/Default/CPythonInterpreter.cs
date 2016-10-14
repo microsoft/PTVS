@@ -92,10 +92,14 @@ namespace Microsoft.PythonTools.Interpreter.Default {
                 mod = _searchPathDb?.GetModule(name);
                 if (mod == null) {
                     foreach (var searchPath in _searchPaths.MaybeEnumerate()) {
-                        if (File.Exists(searchPath)) {
-                            mod = LoadModuleFromZipFile(searchPath, name);
-                        } else if (Directory.Exists(searchPath)) {
-                            mod = LoadModuleFromDirectory(searchPath, name);
+                        try {
+                            if (File.Exists(searchPath)) {
+                                mod = LoadModuleFromZipFile(searchPath, name);
+                            } else if (Directory.Exists(searchPath)) {
+                                mod = LoadModuleFromDirectory(searchPath, name);
+                            }
+                        } catch (ArgumentException) {
+                            return null;
                         }
 
                         if (mod != null) {
@@ -109,7 +113,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
         private void EnsureSearchPathDB() {
             if (_searchPathDb == null) {
-                _searchPathDb = new PythonTypeDatabase(_factory);
+                _searchPathDb = new PythonTypeDatabase(_factory, innerDatabase: _typeDb);
             }
         }
 
@@ -272,6 +276,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
 
         public void Dispose() {
+            _searchPathDb = null;
             _typeDb = null;
 
             var factory = _factory;

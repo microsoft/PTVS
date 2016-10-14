@@ -23,12 +23,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonFunction : IPythonFunction {
         private readonly List<AstPythonFunctionOverload> _overloads;
 
-        public AstPythonFunction(PythonAst ast, IPythonModule declModule, IPythonType declType, FunctionDefinition def) {
+        public AstPythonFunction(PythonAst ast, IPythonModule declModule, IPythonType declType, FunctionDefinition def, string doc) {
             DeclaringModule = declModule;
             DeclaringType = declType;
 
             Name = def.Name;
-            Documentation = def.Documentation;
+            Documentation = doc;
 
             foreach (var dec in (def.Decorators?.Decorators).MaybeEnumerate().OfType<NameExpression>()) {
                 if (dec.Name == "classmethod") {

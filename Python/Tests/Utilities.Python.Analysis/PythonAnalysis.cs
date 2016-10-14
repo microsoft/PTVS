@@ -183,7 +183,7 @@ namespace TestUtilities.Python {
 
         public void ReanalyzeAll(CancellationToken? cancel = null) {
             foreach (var entry in _entries.Values) {
-                entry.Analyze(CancellationToken.None, false);
+                entry.Analyze(CancellationToken.None, true);
             }
             WaitForAnalysis(cancel);
         }

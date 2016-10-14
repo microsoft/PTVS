@@ -216,7 +216,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (existing == null) {
                 var m = _scope.Peek();
                 if (m != null) {
-                    m[node.Name] = new AstPythonFunction(_ast, _module, CurrentClass, node);
+                    m[node.Name] = new AstPythonFunction(_ast, _module, CurrentClass, node, GetDoc(node.Body as SuiteStatement));
                 }
             } else {
                 existing.AddOverload(_ast, node);
@@ -225,12 +225,20 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return false;
         }
 
+        private static string GetDoc(SuiteStatement node) {
+            var docExpr = node?.Statements?.FirstOrDefault() as ExpressionStatement;
+            var ce = docExpr?.Expression as ConstantExpression;
+            return ce?.Value as string;
+        }
+
         public override bool Walk(ClassDefinition node) {
             var m = _scope.Peek();
             if (m != null) {
                 var n = new Dictionary<string, IMember>();
-                m[node.Name] = n["__class__"] = new AstPythonType(_ast, _module, node, GetLoc(node));
+                AstPythonType t = new AstPythonType(_ast, _module, node, GetDoc(node.Body as SuiteStatement), GetLoc(node));
+                m[node.Name] = n["__class__"] = t;
                 _scope.Push(n);
+
                 return true;
             }
             return false;
