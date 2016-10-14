@@ -44,11 +44,11 @@ namespace CookiecutterTests {
             return Task.CompletedTask;
         }
 
-        public Task<ProcessOutputResult> UpdateTemplateAsync(string repoPath) {
+        public Task UpdateTemplateAsync(string repoPath) {
             return Task.FromResult(new ProcessOutputResult());
         }
 
-        Task<Tuple<bool?, ProcessOutputResult>> ILocalTemplateSource.CheckForUpdateAsync(string repoPath) {
+        Task<bool?> ILocalTemplateSource.CheckForUpdateAsync(string repoPath) {
             throw new NotImplementedException();
         }
     }

@@ -49,10 +49,10 @@ namespace Microsoft.CookiecutterTools.View {
             _updateCommandUI = updateCommandUI;
 
             string gitExeFilePath = GitClient.RecommendedGitFilePath;
-            var gitClient = new GitClient(gitExeFilePath);
+            var gitClient = new GitClient(gitExeFilePath, outputWindow);
             var gitHubClient = new GitHubClient();
             ViewModel = new CookiecutterViewModel(
-                CookiecutterClientProvider.Create(),
+                CookiecutterClientProvider.Create(outputWindow),
                 gitHubClient,
                 gitClient,
                 telemetry,

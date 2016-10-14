@@ -19,17 +19,18 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.Win32;
 
 namespace Microsoft.CookiecutterTools.Model {
     class GitClient : IGitClient {
-        private string _gitExeFilePath;
+        private readonly string _gitExeFilePath;
+        private readonly Redirector _redirector;
 
-        public GitClient(string gitExeFilePath) {
+        public GitClient(string gitExeFilePath, Redirector redirector) {
             _gitExeFilePath = gitExeFilePath;
+            _redirector = redirector;
         }
 
         public static string RecommendedGitFilePath {
@@ -76,7 +77,7 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
-        public async Task<Tuple<string, ProcessOutputResult>> CloneAsync(string repoUrl, string targetParentFolderPath) {
+        public async Task<string> CloneAsync(string repoUrl, string targetParentFolderPath) {
             Directory.CreateDirectory(targetParentFolderPath);
 
             string localTemplateFolder = GetClonedFolder(repoUrl, targetParentFolderPath);
@@ -86,15 +87,13 @@ namespace Microsoft.CookiecutterTools.Model {
             }
 
             var arguments = new string[] { "clone", repoUrl };
-            var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, null, false, null);
+            var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, null, false, _redirector);
             using (output) {
                 await output;
 
                 var r = new ProcessOutputResult() {
                     ExeFileName = _gitExeFilePath,
                     ExitCode = output.ExitCode,
-                    StandardOutputLines = output.StandardOutputLines.ToArray(),
-                    StandardErrorLines = output.StandardErrorLines.ToArray(),
                 };
 
                 if (r.ExitCode < 0) {
@@ -105,7 +104,7 @@ namespace Microsoft.CookiecutterTools.Model {
                     throw new ProcessException(r);
                 }
 
-                return Tuple.Create(localTemplateFolder, r);
+                return localTemplateFolder;
             }
         }
 
@@ -134,54 +133,46 @@ namespace Microsoft.CookiecutterTools.Model {
             using (output) {
                 await output;
                 foreach (var line in output.StandardOutputLines) {
-                    DateTime? date;
-                    if (ParseDate(line, out date)) {
-                        return date;
+                    // Line with date starts with 'Date'. Example:
+                    // Date:   2016-07-28 10:03:07 +0200
+                    if (line.StartsWith("Date:")) {
+                        try {
+                            var text = line.Substring("Date:".Length);
+                            return Convert.ToDateTime(text).ToUniversalTime();
+                        } catch (FormatException) {
+                            return null;
+                        }
                     }
                 }
             }
             return null;
         }
 
-        public async Task<ProcessOutputResult> FetchAsync(string repoFolderPath) {
+        public async Task FetchAsync(string repoFolderPath) {
             var arguments = new string[] { "fetch" };
-            var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null);
+            var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, _redirector);
             using (output) {
                 await output;
-
-                var r = new ProcessOutputResult() {
-                    ExeFileName = _gitExeFilePath,
-                    ExitCode = output.ExitCode,
-                    StandardOutputLines = output.StandardOutputLines.ToArray(),
-                    StandardErrorLines = output.StandardErrorLines.ToArray(),
-                };
-
-                if (r.ExitCode < 0) {
-                    throw new ProcessException(r);
+                if (output.ExitCode < 0) {
+                    throw new ProcessException(new ProcessOutputResult() {
+                        ExeFileName = _gitExeFilePath,
+                        ExitCode = output.ExitCode,
+                    });
                 }
-
-                return r;
             }
         }
 
-        public async Task<ProcessOutputResult> MergeAsync(string repoFolderPath) {
+        public async Task MergeAsync(string repoFolderPath) {
             var arguments = new string[] { "merge" };
-            var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null);
+            var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, _redirector);
             using (output) {
                 await output;
-
-                var r = new ProcessOutputResult() {
-                    ExeFileName = _gitExeFilePath,
-                    ExitCode = output.ExitCode,
-                    StandardOutputLines = output.StandardOutputLines.ToArray(),
-                    StandardErrorLines = output.StandardErrorLines.ToArray(),
-                };
-
-                if (r.ExitCode < 0) {
-                    throw new ProcessException(r);
+                if (output.ExitCode < 0) {
+                    throw new ProcessException(new ProcessOutputResult() {
+                        ExeFileName = _gitExeFilePath,
+                        ExitCode = output.ExitCode,
+                    });
                 }
-
-                return r;
             }
         }
 
@@ -197,19 +188,6 @@ namespace Microsoft.CookiecutterTools.Model {
 
             var localTemplateFolder = Path.Combine(targetParentFolderPath, name);
             return localTemplateFolder;
-        }
-
-        private bool ParseDate(string line, out DateTime? date) {
-            date = null;
-
-            // Date:   2016-07-28 10:03:07 +0200
-            if (line.StartsWith("Date:")) {
-                var text = line.Substring("Date:".Length);
-                date = Convert.ToDateTime(text).ToUniversalTime();
-                return true;
-            }
-
-            return false;
         }
 
         private bool ParseOrigin(string remote, out string url) {

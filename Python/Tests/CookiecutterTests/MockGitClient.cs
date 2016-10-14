@@ -20,11 +20,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools;
+using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 
 namespace CookiecutterTests {
     class MockGitClient : IGitClient {
-        public Task<Tuple<string, ProcessOutputResult>> CloneAsync(string repoUrl, string targetParentFolderPath) {
+        public Task<string> CloneAsync(Redirector redirector, string repoUrl, string targetParentFolderPath) {
             throw new NotImplementedException();
         }
 
@@ -36,11 +37,15 @@ namespace CookiecutterTests {
             throw new NotImplementedException();
         }
 
-        public Task<ProcessOutputResult> MergeAsync(string repoFolderPath) {
+        public Task MergeAsync(string repoFolderPath) {
             throw new NotImplementedException();
         }
 
-        Task<ProcessOutputResult> IGitClient.FetchAsync(string repoFolderPath) {
+        public Task FetchAsync(string repoFolderPath) {
+            throw new NotImplementedException();
+        }
+
+        public Task<string> CloneAsync(string repoUrl, string targetParentFolderPath) {
             throw new NotImplementedException();
         }
     }

@@ -64,18 +64,16 @@ namespace Microsoft.CookiecutterTools.Model {
             return Task.CompletedTask;
         }
 
-        public async Task<ProcessOutputResult> UpdateTemplateAsync(string repoPath) {
-            var res = await _gitClient.MergeAsync(repoPath);
+        public async Task UpdateTemplateAsync(string repoPath) {
+            await _gitClient.MergeAsync(repoPath);
 
             var template = _cache.SingleOrDefault(t => t.LocalFolderPath == repoPath);
             if (template != null) {
                 template.ClonedLastUpdate = await _gitClient.GetLastCommitDateAsync(template.LocalFolderPath);
             }
-
-            return res;
         }
 
-        public async Task<Tuple<bool?, ProcessOutputResult>> CheckForUpdateAsync(string repoPath) {
+        public async Task<bool?> CheckForUpdateAsync(string repoPath) {
             if (_cache == null) {
                 await BuildCacheAsync();
             }
@@ -85,7 +83,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 return null;
             }
 
-            var res = await _gitClient.FetchAsync(template.LocalFolderPath);
+            await _gitClient.FetchAsync(template.LocalFolderPath);
 
             template.ClonedLastUpdate = await _gitClient.GetLastCommitDateAsync(template.LocalFolderPath);
             template.RemoteLastUpdate = await _gitClient.GetLastCommitDateAsync(template.LocalFolderPath, "origin/master");
@@ -94,7 +92,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 var span = template.RemoteLastUpdate - template.ClonedLastUpdate;
             }
 
-            return Tuple.Create(template.UpdateAvailable, res);
+            return template.UpdateAvailable;
         }
 
         private async Task BuildCacheAsync() {
