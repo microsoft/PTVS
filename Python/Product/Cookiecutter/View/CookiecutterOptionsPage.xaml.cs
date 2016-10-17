@@ -50,7 +50,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         private void CreateFiles_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            e.CanExecute = ViewModel != null && ViewModel.CreatingStatus != OperationStatus.InProgress && ViewModel.SelectedTemplate != null;
+            e.CanExecute = ViewModel?.CanRunSelectedTemplate == true;
             e.Handled = true;
         }
 

@@ -273,6 +273,42 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
+        public bool CanLoadSelectedTemplate {
+            get {
+                return SelectedTemplate != null && CloningStatus != OperationStatus.InProgress && LoadingStatus != OperationStatus.InProgress;
+            }
+        }
+
+        public bool CanRunSelectedTemplate {
+            get {
+                return SelectedTemplate != null && CreatingStatus != OperationStatus.InProgress;
+            }
+        }
+
+        public bool CanDeleteSelectedTemplate {
+            get {
+                return Directory.Exists(SelectedTemplate?.ClonedPath);
+            }
+        }
+
+        public bool CanUpdateSelectedTemplate {
+            get {
+                return SelectedTemplate != null && SelectedTemplate.IsUpdateAvailable;
+            }
+        }
+
+        public bool CanNavigateToGitHub {
+            get {
+                return !string.IsNullOrEmpty(SelectedTemplate?.GitHubHomeUrl);
+            }
+        }
+
+        public bool CanCheckForUpdates {
+            get {
+                return CheckingUpdateStatus != OperationStatus.InProgress;
+            }
+        }
+
         public bool IsOutputFolderEmpty() {
             if (Directory.Exists(OutputFolderPath)) {
                 var files = Directory.EnumerateFileSystemEntries(OutputFolderPath);

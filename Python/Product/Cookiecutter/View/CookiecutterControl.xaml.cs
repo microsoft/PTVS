@@ -146,11 +146,11 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         internal bool CanDeleteSelection() {
-            return PageSequence.CurrentPosition == 0 && Directory.Exists(ViewModel.SelectedTemplate?.ClonedPath);
+            return PageSequence.CurrentPosition == 0 && ViewModel.CanDeleteSelectedTemplate;
         }
 
         internal bool CanNavigateToGitHub() {
-            return PageSequence.CurrentPosition == 0 && !string.IsNullOrEmpty(ViewModel.SelectedTemplate?.GitHubHomeUrl);
+            return PageSequence.CurrentPosition == 0 && ViewModel.CanNavigateToGitHub;
         }
 
         internal void DeleteSelection() {
@@ -165,7 +165,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         internal bool CanRunSelection() {
-            return PageSequence.CurrentPosition == 0 && ViewModel.SelectedTemplate != null;
+            return PageSequence.CurrentPosition == 0 && ViewModel.CanRunSelectedTemplate;
         }
 
         internal void RunSelection() {
@@ -177,7 +177,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         internal bool CanUpdateSelection() {
-            return PageSequence.CurrentPosition == 0 && ViewModel.SelectedTemplate != null && ViewModel.SelectedTemplate.IsUpdateAvailable == true;
+            return PageSequence.CurrentPosition == 0 && ViewModel.CanUpdateSelectedTemplate;
         }
 
         internal void UpdateSelection() {
@@ -189,7 +189,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         internal bool CanCheckForUpdates() {
-            return PageSequence.CurrentPosition == 0;
+            return PageSequence.CurrentPosition == 0 && ViewModel.CanCheckForUpdates;
         }
 
         internal void CheckForUpdates() {
