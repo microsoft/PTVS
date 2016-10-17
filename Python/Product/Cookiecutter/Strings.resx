@@ -259,6 +259,11 @@ Please delete the installed template and try again.</value>
 ----- Failed to check for updates -----
 </value>
   </data>
+  <data name="CheckingForAllUpdatesCanceled" xml:space="preserve">
+    <value>
+----- Check for updates canceled -----
+</value>
+  </data>
   <data name="CheckingTemplateUpdateStarted" xml:space="preserve">
     <value>
 ----- Checking for update to template '{0}' from '{1}' -----

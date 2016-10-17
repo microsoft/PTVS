@@ -27,6 +27,8 @@ namespace CookiecutterTests {
     class MockTemplateSource : ILocalTemplateSource {
         public Dictionary<Tuple<string, string>, Tuple<Template[], string>> Templates { get; } = new Dictionary<Tuple<string, string>, Tuple<Template[], string>>();
         public bool Invalidated { get; set; }
+        public Dictionary<string, bool?> UpdatesAvailable { get; } = new Dictionary<string, bool?>();
+        public List<string> Updated { get; } = new List<string>();
 
         public Task<TemplateEnumerationResult> GetTemplatesAsync(string filter, string continuationToken, CancellationToken cancellationToken) {
             Tuple<Template[], string> result;
@@ -45,11 +47,12 @@ namespace CookiecutterTests {
         }
 
         public Task UpdateTemplateAsync(string repoPath) {
-            return Task.FromResult(new ProcessOutputResult());
+            Updated.Add(repoPath);
+            return Task.CompletedTask;
         }
 
         Task<bool?> ILocalTemplateSource.CheckForUpdateAsync(string repoPath) {
-            throw new NotImplementedException();
+            return Task.FromResult(UpdatesAvailable[repoPath]);
         }
     }
 }

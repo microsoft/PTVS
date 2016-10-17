@@ -63,6 +63,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
         private TemplateViewModel _selectedTemplate;
         private CancellationTokenSource _templateRefreshCancelTokenSource;
+        private CancellationTokenSource _checkUpdatesCancelTokenSource;
 
         private ITemplateSource _recommendedSource;
         private ILocalTemplateSource _installedSource;
@@ -271,7 +272,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     CloningStatus == OperationStatus.InProgress ||
                     LoadingStatus == OperationStatus.InProgress ||
                     CreatingStatus == OperationStatus.InProgress ||
-                    CheckingUpdateStatus == OperationStatus.InProgress ||
                     UpdatingStatus == OperationStatus.InProgress;
             }
         }
@@ -321,7 +321,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
         public bool CanCheckForUpdates {
             get {
-                return !IsBusy;
+                return !IsBusy && CheckingUpdateStatus != OperationStatus.InProgress;
             }
         }
 
@@ -463,6 +463,8 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
             ResetStatus();
 
+            _checkUpdatesCancelTokenSource?.Cancel();
+
             if (IsCloneNeeded(selection)) {
                 CloningStatus = OperationStatus.InProgress;
 
@@ -513,42 +515,52 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public async Task CheckForUpdatesAsync() {
             ResetStatus();
 
-            CheckingUpdateStatus = OperationStatus.InProgress;
+            try {
+                _checkUpdatesCancelTokenSource?.Cancel();
+                _checkUpdatesCancelTokenSource = new CancellationTokenSource();
 
-            _outputWindow.ShowAndActivate();
-            _outputWindow.WriteLine(Strings.CheckingForAllUpdatesStarted);
+                CheckingUpdateStatus = OperationStatus.InProgress;
 
-            bool anyError = false;
-            var templatesResult = await _installedSource.GetTemplatesAsync(null, null, CancellationToken.None);
-            foreach (var template in templatesResult.Templates) {
-                try {
-                    _outputWindow.WriteLine(Strings.CheckingTemplateUpdateStarted.FormatUI(template.Name, template.RemoteUrl));
+                _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(Strings.CheckingForAllUpdatesStarted);
 
-                    var available = await _installedSource.CheckForUpdateAsync(template.RemoteUrl);
+                bool anyError = false;
+                var templatesResult = await _installedSource.GetTemplatesAsync(null, null, CancellationToken.None);
+                foreach (var template in templatesResult.Templates) {
+                    _checkUpdatesCancelTokenSource.Token.ThrowIfCancellationRequested();
 
-                    if (available.HasValue) {
-                        _outputWindow.WriteLine(available.Value ? Strings.CheckingTemplateUpdateFound : Strings.CheckingTemplateUpdateNotFound);
-                    } else {
-                        _outputWindow.WriteLine(Strings.CheckingTemplateUpdateInconclusive);
+                    try {
+                        _outputWindow.WriteLine(Strings.CheckingTemplateUpdateStarted.FormatUI(template.Name, template.RemoteUrl));
+
+                        var available = await _installedSource.CheckForUpdateAsync(template.RemoteUrl);
+
+                        if (available.HasValue) {
+                            _outputWindow.WriteLine(available.Value ? Strings.CheckingTemplateUpdateFound : Strings.CheckingTemplateUpdateNotFound);
+                        } else {
+                            _outputWindow.WriteLine(Strings.CheckingTemplateUpdateInconclusive);
+                        }
+
+                        var installed = Installed.Templates.OfType<TemplateViewModel>().SingleOrDefault(vm => vm.RemoteUrl == template.RemoteUrl);
+                        if (installed != null) {
+                            installed.IsUpdateAvailable = available == true;
+                        }
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        anyError = true;
+
+                        _outputWindow.WriteErrorLine(ex.Message);
+                        _outputWindow.WriteLine(Strings.CheckingTemplateUpdateError);
                     }
-
-                    var installed = Installed.Templates.OfType<TemplateViewModel>().SingleOrDefault(vm => vm.RemoteUrl == template.RemoteUrl);
-                    if (installed != null) {
-                        installed.IsUpdateAvailable = available == true;
-                    }
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    anyError = true;
-
-                    _outputWindow.WriteErrorLine(ex.Message);
-                    _outputWindow.WriteLine(Strings.CheckingTemplateUpdateError);
                 }
+
+                CheckingUpdateStatus = anyError ? OperationStatus.Failed : OperationStatus.Succeeded;
+
+                _outputWindow.WriteLine(anyError ? Strings.CheckingForAllUpdatesFailed : Strings.CheckingForAllUpdatesSuccess);
+
+                ReportEvent(CookiecutterTelemetry.TelemetryArea.Search, CookiecutterTelemetry.SearchEvents.CheckUpdate, (!anyError).ToString());
+            } catch (OperationCanceledException) {
+                CheckingUpdateStatus = OperationStatus.Failed;
+                _outputWindow.WriteLine(Strings.CheckingForAllUpdatesCanceled);
             }
-
-            CheckingUpdateStatus = anyError ? OperationStatus.Failed : OperationStatus.Succeeded;
-
-            _outputWindow.WriteLine(anyError ? Strings.CheckingForAllUpdatesFailed : Strings.CheckingForAllUpdatesSuccess);
-
-            ReportEvent(CookiecutterTelemetry.TelemetryArea.Search, CookiecutterTelemetry.SearchEvents.CheckUpdate, (!anyError).ToString());
         }
 
         public async Task UpdateTemplateAsync() {

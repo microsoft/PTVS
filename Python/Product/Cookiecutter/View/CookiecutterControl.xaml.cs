@@ -97,10 +97,12 @@ namespace Microsoft.CookiecutterTools.View {
 
         private void ViewModel_HomeClicked(object sender, EventArgs e) {
             PageSequence.MoveCurrentToFirst();
+            _updateCommandUI();
         }
 
         private void ViewModel_ContextLoaded(object sender, EventArgs e) {
             PageSequence.MoveCurrentToLast();
+            _updateCommandUI();
         }
 
         public CookiecutterViewModel ViewModel {
@@ -143,6 +145,7 @@ namespace Microsoft.CookiecutterTools.View {
 
         internal void Home() {
             ViewModel.Reset();
+            _updateCommandUI();
         }
 
         internal bool CanDeleteSelection() {

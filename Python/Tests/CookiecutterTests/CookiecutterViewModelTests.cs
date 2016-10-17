@@ -46,6 +46,7 @@ namespace CookiecutterTests {
         private MockTemplateSource _installedTemplateSource;
         private MockTemplateSource _gitHubTemplateSource;
         private MockTemplateSource _feedTemplateSource;
+        private CookiecutterTelemetry _telemetry;
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {
@@ -66,17 +67,16 @@ namespace CookiecutterTests {
             var output = TestData.GetTempPath("Cookiecutter", true);
             var outputProjectFolder = Path.Combine(output, "project");
 
-            var telemetry = new CookiecutterTelemetry();
-            _vm = new CookiecutterViewModel(_cutterClient, _gitHubClient, _gitClient, telemetry, _redirector, _installedTemplateSource, _feedTemplateSource, _gitHubTemplateSource, null);
+            _telemetry = new CookiecutterTelemetry(new TelemetryTestService());
+            _vm = new CookiecutterViewModel(_cutterClient, _gitHubClient, _gitClient, _telemetry, _redirector, _installedTemplateSource, _feedTemplateSource, _gitHubTemplateSource, null);
             _vm.UserConfigFilePath = UserConfigFilePath;
             _vm.OutputFolderPath = outputProjectFolder;
         }
 
-        // TODO: does not work yet
-        //[TestMethod]
+       [TestMethod]
         public async Task Search() {
             _installedTemplateSource.Templates.Add(
-                Tuple.Create(string.Empty, (string)null),
+                Tuple.Create((string)null, (string)null),
                 Tuple.Create(new Template[] {
                     new Template() {
                         Name = "owner1/template1",
@@ -84,8 +84,64 @@ namespace CookiecutterTests {
                         RemoteUrl = "https://github.com/owner1/template1",
                         Description = string.Empty }
                 }, (string)null));
+
+            _installedTemplateSource.UpdatesAvailable.Add("https://github.com/owner1/template1", true);
+
             await _vm.SearchAsync();
             Assert.IsTrue(_vm.Installed.Templates.Count == 1);
+
+            var log = ((ITelemetryTestSupport)_telemetry.TelemetryService).SessionLog;
+            Assert.IsTrue(log.Contains("Test/Cookiecutter/Search/Load"));
+        }
+
+        [TestMethod]
+        public async Task CheckForUpdates() {
+            _installedTemplateSource.Templates.Add(
+                Tuple.Create((string)null, (string)null),
+                Tuple.Create(new Template[] {
+                    new Template() {
+                        Name = "owner1/template1",
+                        LocalFolderPath = Path.Combine(_vm.InstalledFolderPath, "template1"),
+                        RemoteUrl = "https://github.com/owner1/template1",
+                        Description = string.Empty }
+                }, (string)null));
+
+            _installedTemplateSource.UpdatesAvailable.Add("https://github.com/owner1/template1", true);
+
+            await _vm.SearchAsync();
+            Assert.IsTrue(_vm.Installed.Templates.Count == 1);
+
+            await _vm.CheckForUpdatesAsync();
+            var t1 = _vm.Installed.Templates.OfType<TemplateViewModel>().FirstOrDefault();
+            Assert.IsTrue(t1.IsUpdateAvailable);
+        }
+
+        [TestMethod]
+        public async Task UpdateTemplate() {
+            _installedTemplateSource.Templates.Add(
+                Tuple.Create((string)null, (string)null),
+                Tuple.Create(new Template[] {
+                    new Template() {
+                        Name = "owner1/template1",
+                        LocalFolderPath = Path.Combine(_vm.InstalledFolderPath, "template1"),
+                        RemoteUrl = "https://github.com/owner1/template1",
+                        Description = string.Empty }
+                }, (string)null));
+
+            _installedTemplateSource.UpdatesAvailable.Add("https://github.com/owner1/template1", true);
+
+            await _vm.SearchAsync();
+            Assert.IsTrue(_vm.Installed.Templates.Count == 1);
+
+            var t1 = _vm.Installed.Templates.OfType<TemplateViewModel>().FirstOrDefault();
+            _vm.SelectedTemplate = t1;
+
+            await _vm.UpdateTemplateAsync();
+            Assert.IsFalse(t1.IsUpdateAvailable);
+
+            //CollectionAssert.AreEquivalent(
+            //    new string[] { "https://github.com/owner1/template1" },
+            //    _installedTemplateSource.Updated);
         }
     }
 }

@@ -62,6 +62,17 @@ namespace Microsoft.CookiecutterTools {
         
         /// <summary>
         ///   Looks up a localized string similar to 
+        ///----- Check for updates canceled -----
+        ///.
+        /// </summary>
+        internal static string CheckingForAllUpdatesCanceled {
+            get {
+                return ResourceManager.GetString("CheckingForAllUpdatesCanceled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 
         ///----- Failed to check for updates -----
         ///.
         /// </summary>
