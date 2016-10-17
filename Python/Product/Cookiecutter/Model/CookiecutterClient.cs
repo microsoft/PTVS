@@ -176,6 +176,8 @@ namespace Microsoft.CookiecutterTools.Model {
                 var r = new ProcessOutputResult() {
                     ExeFileName = interpreterPath,
                     ExitCode = output.ExitCode,
+                    StandardOutputLines = output.StandardOutputLines?.ToArray(),
+                    StandardErrorLines = output.StandardErrorLines?.ToArray(),
                 };
 
                 // All our python scripts will return 0 if successful

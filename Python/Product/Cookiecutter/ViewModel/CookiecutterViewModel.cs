@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -191,6 +190,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _installingStatus) {
                     _installingStatus = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InstallingStatus)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
                 }
             }
         }
@@ -204,6 +204,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _cloningStatus) {
                     _cloningStatus = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CloningStatus)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
                 }
             }
         }
@@ -217,6 +218,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _loadingStatus) {
                     _loadingStatus = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoadingStatus)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
                 }
             }
         }
@@ -230,6 +232,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _creatingStatus) {
                     _creatingStatus = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CreatingStatus)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
                 }
             }
         }
@@ -243,6 +246,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _checkingUpdateStatus) {
                     _checkingUpdateStatus = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CheckingUpdateStatus)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
                 }
             }
         }
@@ -256,7 +260,19 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _updatingStatus) {
                     _updatingStatus = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UpdatingStatus)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
                 }
+            }
+        }
+
+        public bool IsBusy {
+            get {
+                return InstallingStatus == OperationStatus.InProgress ||
+                    CloningStatus == OperationStatus.InProgress ||
+                    LoadingStatus == OperationStatus.InProgress ||
+                    CreatingStatus == OperationStatus.InProgress ||
+                    CheckingUpdateStatus == OperationStatus.InProgress ||
+                    UpdatingStatus == OperationStatus.InProgress;
             }
         }
 
@@ -275,25 +291,25 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
         public bool CanLoadSelectedTemplate {
             get {
-                return SelectedTemplate != null && CloningStatus != OperationStatus.InProgress && LoadingStatus != OperationStatus.InProgress;
+                return SelectedTemplate != null && !IsBusy;
             }
         }
 
         public bool CanRunSelectedTemplate {
             get {
-                return SelectedTemplate != null && CreatingStatus != OperationStatus.InProgress;
+                return SelectedTemplate != null && !IsBusy;
             }
         }
 
         public bool CanDeleteSelectedTemplate {
             get {
-                return Directory.Exists(SelectedTemplate?.ClonedPath);
+                return Directory.Exists(SelectedTemplate?.ClonedPath) && !IsBusy;
             }
         }
 
         public bool CanUpdateSelectedTemplate {
             get {
-                return SelectedTemplate != null && SelectedTemplate.IsUpdateAvailable;
+                return SelectedTemplate != null && SelectedTemplate.IsUpdateAvailable && !IsBusy;
             }
         }
 
@@ -305,7 +321,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
         public bool CanCheckForUpdates {
             get {
-                return CheckingUpdateStatus != OperationStatus.InProgress;
+                return !IsBusy;
             }
         }
 

@@ -113,7 +113,9 @@ namespace Microsoft.CookiecutterTools.View {
                             ViewModel.SelectedTemplate = template;
                         }
 
-                        LoadTemplate();
+                        if (ViewModel.CanLoadSelectedTemplate) {
+                            LoadTemplate();
+                        }
                     }
                 }
             }
