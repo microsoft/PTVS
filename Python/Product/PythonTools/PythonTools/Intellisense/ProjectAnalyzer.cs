@@ -660,6 +660,45 @@ namespace Microsoft.PythonTools.Intellisense {
             return res;
         }
 
+        internal async Task<IReadOnlyList<AnalysisEntry>> AnalyzeFileAsync(string[] paths, string addingFromDirectory = null) {
+            if (_conn == null) {
+                // We aren't able to analyze code, so don't create an entry.
+                return null;
+            }
+
+            var req = new AP.AddBulkFileRequest { path = new string[paths.Length], addingFromDir = addingFromDirectory };
+            bool anyAdded = false;
+            AnalysisEntry[] res = new AnalysisEntry[paths.Length];
+            for (int i = 0; i < paths.Length; ++i) {
+                AnalysisEntry existing;
+                if (_projectFiles.TryGetValue(paths[i], out existing)) {
+                    res[i] = existing;
+                } else {
+                    anyAdded = true;
+                    req.path[i] = paths[i];
+                }
+            }
+
+            if (anyAdded) {
+                Interlocked.Increment(ref _parsePending);
+                var response = await SendRequestAsync(req).ConfigureAwait(false);
+                if (response != null) {
+                    for (int i = 0; i < paths.Length; ++i) {
+                        AnalysisEntry entry = null;
+                        var path = paths[i];
+                        var id = response.fileId[i];
+                        if (id != -1 && !_projectFilesById.TryGetValue(id, out entry)) {
+                            entry = _projectFilesById[id] = _projectFiles[path] = new AnalysisEntry(this, path, id);
+                            entry.AnalysisCookie = new FileCookie(path);
+                        }
+                        res[i] = entry;
+                    }
+                }
+            }
+
+            return res;
+        }
+
 
         internal AnalysisEntry GetAnalysisEntryFromPath(string path) {
             AnalysisEntry res;

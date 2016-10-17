@@ -156,6 +156,7 @@ namespace Microsoft.PythonTools.Intellisense {
             switch (command) {
                 case AP.UnloadFileRequest.Command: response = UnloadFile((AP.UnloadFileRequest)request); break;
                 case AP.AddFileRequest.Command: response = AnalyzeFile((AP.AddFileRequest)request); break;
+                case AP.AddBulkFileRequest.Command: response = AnalyzeFile((AP.AddBulkFileRequest)request); break;
                 case AP.TopLevelCompletionsRequest.Command: response = GetTopLevelCompletions(request); break;
                 case AP.CompletionsRequest.Command: response = GetCompletions(request); break;
                 case AP.GetModulesRequest.Command: response = GetModules(request); break;
@@ -1517,6 +1518,22 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AP.AddFileResponse() {
                 fileId = -1
             };
+        }
+
+        private Response AnalyzeFile(AP.AddBulkFileRequest request) {
+            var response = new AP.AddBulkFileResponse {
+                fileId = Enumerable.Repeat(-1, request.path.Length).ToArray()
+            };
+
+            for(int i = 0; i < request.path.Length; ++i) {
+                var entry = AnalyzeFile(request.path[i], request.addingFromDir);
+
+                if (entry != null) {
+                    response.fileId[i] = ProjectEntryMap.GetId(entry);
+                }
+            }
+
+            return response;
         }
 
         private Response UnloadFile(AP.UnloadFileRequest command) {

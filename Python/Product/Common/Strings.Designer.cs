@@ -1014,20 +1014,20 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to https://go.microsoft.com/fwlink/?LinkId=402428.
-        /// </summary>
-        public static string IssueTrackerUrl {
-            get {
-                return ResourceManager.GetString("IssueTrackerUrl", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Search path &apos;{0}&apos; is not a valid directory or file..
         /// </summary>
         public static string InvalidSearchPath {
             get {
                 return ResourceManager.GetString("InvalidSearchPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://go.microsoft.com/fwlink/?LinkId=402428.
+        /// </summary>
+        public static string IssueTrackerUrl {
+            get {
+                return ResourceManager.GetString("IssueTrackerUrl", resourceCulture);
             }
         }
         
@@ -1294,6 +1294,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Direct references to .pyd files have been deprecated. We recommend replacing the reference with a Search Path..
+        /// </summary>
+        public static string PydReferenceDeprecated {
+            get {
+                return ResourceManager.GetString("PydReferenceDeprecated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Python.
         /// </summary>
         public static string PythonMenuLabel {
@@ -1344,6 +1353,24 @@ namespace Microsoft.PythonTools {
         public static string QuickInfo_UnknownType {
             get {
                 return ResourceManager.GetString("QuickInfo_UnknownType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [Deprecated].
+        /// </summary>
+        public static string RefDeprecatedMessage {
+            get {
+                return ResourceManager.GetString("RefDeprecatedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explanation of this reference type&apos;s deprecation..
+        /// </summary>
+        public static string RefDeprecatedMessageDescription {
+            get {
+                return ResourceManager.GetString("RefDeprecatedMessageDescription", resourceCulture);
             }
         }
         
@@ -2239,6 +2266,15 @@ namespace Microsoft.PythonTools {
         public static string WarningUnknownType {
             get {
                 return ResourceManager.GetString("WarningUnknownType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to WebPI references have been deprecated. We recommend replacing the reference with a custom installation script..
+        /// </summary>
+        public static string WebPIReferenceDeprecated {
+            get {
+                return ResourceManager.GetString("WebPIReferenceDeprecated", resourceCulture);
             }
         }
         

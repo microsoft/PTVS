@@ -926,4 +926,16 @@ modified from these scripts.</value>
     <value>https://go.microsoft.com/fwlink/?LinkId=402428</value>
     <comment>Should not be localized</comment>
   </data>
+  <data name="PydReferenceDeprecated" xml:space="preserve">
+    <value>Direct references to .pyd files have been deprecated. We recommend replacing the reference with a Search Path.</value>
+  </data>
+  <data name="RefDeprecatedMessage" xml:space="preserve">
+    <value>[Deprecated]</value>
+  </data>
+  <data name="RefDeprecatedMessageDescription" xml:space="preserve">
+    <value>Explanation of this reference type's deprecation.</value>
+  </data>
+  <data name="WebPIReferenceDeprecated" xml:space="preserve">
+    <value>WebPI references have been deprecated. We recommend replacing the reference with a custom installation script.</value>
+  </data>
 </root>

@@ -51,26 +51,26 @@ namespace Microsoft.PythonTools {
             }
         }
 
-        public void Add(string absolutePath, bool persisted) {
+        public void Add(string absolutePath, bool persisted, object moniker = null) {
             absolutePath = PathUtils.TrimEndSeparator(absolutePath);
             if (string.IsNullOrEmpty(absolutePath)) {
                 throw new ArgumentException("cannot be null or empty", nameof(absolutePath));
             }
 
             lock (_paths) {
-                _paths.Add(new SearchPath(absolutePath, persisted));
+                _paths.Add(new SearchPath(absolutePath, persisted, moniker));
             }
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
-        public void Insert(int index, string absolutePath, bool persisted) {
+        public void Insert(int index, string absolutePath, bool persisted, object moniker = null) {
             absolutePath = PathUtils.TrimEndSeparator(absolutePath);
             if (string.IsNullOrEmpty(absolutePath)) {
                 throw new ArgumentException("cannot be null or empty", nameof(absolutePath));
             }
 
             lock (_paths) {
-                _paths.Insert(index, new SearchPath(absolutePath, persisted));
+                _paths.Insert(index, new SearchPath(absolutePath, persisted, moniker));
             }
             Changed?.Invoke(this, EventArgs.Empty);
         }
@@ -83,6 +83,12 @@ namespace Microsoft.PythonTools {
 
             lock (_paths) {
                 return _paths.Any(p => p.Path.Equals(absolutePath, StringComparison.OrdinalIgnoreCase));
+            }
+        }
+
+        public bool ContainsMoniker(object moniker) {
+            lock (_paths) {
+                return _paths.Any(p => p.Moniker == moniker);
             }
         }
 
@@ -127,6 +133,53 @@ namespace Microsoft.PythonTools {
             }
         }
 
+        public bool AddOrReplace(object moniker, string absolutePath, bool isPersisted) {
+            absolutePath = PathUtils.TrimEndSeparator(absolutePath);
+            if (string.IsNullOrEmpty(absolutePath)) {
+                throw new ArgumentException("cannot be null or empty", nameof(absolutePath));
+            }
+            if (moniker == null) {
+                throw new ArgumentNullException("cannot be null", nameof(moniker));
+            }
+
+            bool any = false, changed = false;
+            lock (_paths) {
+                for (int i = 0; i < _paths.Count; ++i) {
+                    var p = _paths[i];
+                    if (p.Moniker == moniker) {
+                        if (any) {
+                            throw new InvalidOperationException("multiple entries for the one moniker");
+                        }
+                        any = true;
+                        if (!p.Path.Equals(absolutePath, StringComparison.OrdinalIgnoreCase) ||
+                            p.Persisted != isPersisted) {
+                            _paths[i] = new SearchPath(absolutePath, isPersisted, moniker);
+                            changed = true;
+                        }
+                    }
+                }
+                if (!any) {
+                    _paths.Add(new SearchPath(absolutePath, isPersisted, moniker));
+                    changed = true;
+                }
+            }
+            if (changed) {
+                Changed?.Invoke(this, EventArgs.Empty);
+            }
+            return changed;
+        }
+
+        public void RemoveByMoniker(object moniker) {
+            bool any;
+            lock (_paths) {
+                any = _paths.RemoveAll(p => p.Moniker == moniker) > 0;
+            }
+
+            if (any) {
+                Changed?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
         public void LoadPathsFromString(string projectHome, string setting) {
             var newPaths = new List<SearchPath>();
             if (!string.IsNullOrEmpty(setting)) {
@@ -136,9 +189,9 @@ namespace Microsoft.PythonTools {
                     }
 
                     if (string.IsNullOrEmpty(projectHome)) {
-                        newPaths.Add(new SearchPath(path, true));
+                        newPaths.Add(new SearchPath(path, true, null));
                     } else {
-                        newPaths.Add(new SearchPath(PathUtils.GetAbsoluteFilePath(projectHome, path), true));
+                        newPaths.Add(new SearchPath(PathUtils.GetAbsoluteFilePath(projectHome, path), true, null));
                     }
                 }
             }
@@ -173,10 +226,12 @@ namespace Microsoft.PythonTools {
         internal struct SearchPath {
             public string Path;
             public bool Persisted;
+            public object Moniker;
 
-            public SearchPath(string path, bool persisted) {
+            public SearchPath(string path, bool persisted, object moniker) {
                 Path = path;
                 Persisted = persisted;
+                Moniker = moniker;
             }
         }
     }

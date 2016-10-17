@@ -71,7 +71,7 @@ namespace Microsoft.PythonTools.Project {
         private VsProjectAnalyzer _analyzer;
         private readonly HashSet<AnalysisEntry> _warnOnLaunchFiles = new HashSet<AnalysisEntry>();
         private PythonDebugPropertyPage _debugPropPage;
-        private readonly SearchPathManager _searchPaths = new SearchPathManager();
+        internal readonly SearchPathManager _searchPaths = new SearchPathManager();
         private CommonSearchPathContainerNode _searchPathContainer;
         private InterpretersContainerNode _interpretersContainer;
         private readonly HashSet<string> _validFactories = new HashSet<string>();
@@ -704,9 +704,11 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private void RefreshSearchPaths(IList<string> searchPath) {
+        private void RefreshSearchPaths() {
             try {
                 IsRefreshing = true;
+
+                var searchPath = _searchPaths.GetAbsoluteSearchPaths();
 
                 //Refresh regular search path nodes
                 SetProjectProperty(PythonConstants.SearchPathSetting, _searchPaths.SavePathsToString(ProjectHome));
@@ -855,11 +857,20 @@ namespace Microsoft.PythonTools.Project {
         private void SearchPaths_Changed(object sender, EventArgs e) {
             // Update solution explorer
             Site.GetUIThread().InvokeAsync(() =>
-                RefreshSearchPaths(_searchPaths.GetAbsolutePersistedSearchPaths())
+                RefreshSearchPaths()
             );
 
             // Update analyzer
-            AnalyzeSearchPaths(_searchPaths.GetAbsolutePersistedSearchPaths());
+            UpdateAnalyzerSearchPaths();
+        }
+
+        private void UpdateAnalyzerSearchPaths(VsProjectAnalyzer analyzer = null) {
+            analyzer = analyzer ?? _analyzer;
+            if (analyzer != null) {
+                analyzer.SetSearchPathsAsync(_searchPaths.GetAbsoluteSearchPaths())
+                    .HandleAllExceptions(Site, GetType())
+                    .DoNotWait();
+            }
         }
 
         /// <summary>
@@ -870,6 +881,14 @@ namespace Microsoft.PythonTools.Project {
             return withImplied ?
                 _searchPaths.GetAbsoluteSearchPaths() :
                 _searchPaths.GetAbsolutePersistedSearchPaths();
+        }
+
+        internal void OnInvalidateSearchPath(string absolutePath, object moniker) {
+            if (!_searchPaths.AddOrReplace(moniker, absolutePath, false)) {
+                // Didn't change a search path, so we need to trigger reanalysis
+                // manually.
+                UpdateAnalyzerSearchPaths();
+            }
         }
 
 
@@ -911,16 +930,6 @@ namespace Microsoft.PythonTools.Project {
             var debugProp = DebugPropertyPage;
             if (debugProp != null) {
                 ((PythonDebugPropertyPageControl)debugProp.Control).ReloadSetting(e.PropertyName);
-            }
-        }
-
-        private void AnalyzeSearchPaths(IEnumerable<string> absolutePaths) {
-            var analyzer = _analyzer;
-            if (analyzer != null) {
-                // now add all of the missing files, any dups will automatically not be re-analyzed
-                analyzer.SetSearchPathsAsync(absolutePaths)
-                    .HandleAllExceptions(Site, GetType())
-                    .DoNotWait();
             }
         }
 
@@ -1049,7 +1058,6 @@ namespace Microsoft.PythonTools.Project {
                 return service.DefaultAnalyzer;
             } else if (_analyzer == null) {
                 _analyzer = CreateAnalyzer();
-                AnalyzeSearchPaths(_searchPaths.GetAbsoluteSearchPaths());
             }
             return _analyzer;
         }
@@ -1096,6 +1104,7 @@ namespace Microsoft.PythonTools.Project {
             res.AbnormalAnalysisExit += AnalysisProcessExited;
 
             HookErrorsAndWarnings(res);
+            UpdateAnalyzerSearchPaths(res);
             return res;
         }
 
@@ -1279,10 +1288,12 @@ namespace Microsoft.PythonTools.Project {
             }
 
             InterpreterDbChanged?.Invoke(this, EventArgs.Empty);
-            Site.GetUIThread().InvokeAsync(ReanalyzeProject).DoNotWait();
+            Site.GetUIThread().InvokeTask(async () => {
+                await ReanalyzeProject().HandleAllExceptions(Site, GetType());
+            }).DoNotWait();
         }
 
-        private void ReanalyzeProject() {
+        private async Task ReanalyzeProject() {
             if (IsClosing || IsClosed) {
                 // This deferred event is no longer important.
                 return;
@@ -1307,7 +1318,6 @@ namespace Microsoft.PythonTools.Project {
 
                 ProjectAnalyzerChanging?.Invoke(this, new AnalyzerChangingEventArgs(_analyzer, analyzer));
 
-                Reanalyze(analyzer);
                 var oldAnalyzer = Interlocked.Exchange(ref _analyzer, analyzer);
 
                 if (oldAnalyzer != null) {
@@ -1320,7 +1330,9 @@ namespace Microsoft.PythonTools.Project {
                 }
 
                 if (analyzer != null) {
-                    AnalyzeSearchPaths(_searchPaths.GetAbsoluteSearchPaths());
+                    var files = AllVisibleDescendants.OfType<PythonFileNode>().Select(f => f.Url).ToArray();
+                    await analyzer.AnalyzeFileAsync(files);
+                    await analyzer.SetSearchPathsAsync(_searchPaths.GetAbsoluteSearchPaths());
                 }
 
                 ProjectAnalyzerChanged?.Invoke(this, EventArgs.Empty);
@@ -1336,76 +1348,9 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private async void Reanalyze(VsProjectAnalyzer newAnalyzer) {
-            foreach (var child in AllVisibleDescendants.OfType<PythonFileNode>()) {
-                await newAnalyzer.AnalyzeFileAsync(child.Url);
-            }
-
-            //var references = GetReferenceContainer();
-            //var interp = newAnalyzer;
-            //if (references != null && interp != null) {
-            //    foreach (var child in GetReferenceContainer().EnumReferences()) {
-            //        var pyd = child as PythonExtensionReferenceNode;
-            //        if (pyd != null) {
-            //            pyd.AnalyzeReference(interp);
-            //        }
-            //        var pyproj = child as PythonProjectReferenceNode;
-            //        if (pyproj != null) {
-            //            pyproj.AddAnalyzedAssembly(interp).DoNotWait();
-            //        }
-            //    }
-            //}
-        }
-
-        public override ReferenceNode CreateReferenceNodeForFile(string filename) {
-            var interp = GetAnalyzer();
-            if (interp == null) {
-                return null;
-            }
-
-            var cancelSource = new CancellationTokenSource();
-            var task = interp.AddReferenceAsync(new ProjectReference(filename, ProjectReferenceKind.ExtensionModule), cancelSource.Token);
-
-            // try to complete synchronously w/o flashing the dialog...
-            if (!task.Wait(100)) {
-                var progress = new TaskProgressBar(task, cancelSource, "Waiting for analysis of extension module to complete...");
-                if (progress.ShowDialog() != true) {
-                    // user cancelled.
-                    return null;
-                }
-            }
-
-            var exception = task.Exception;
-            if (exception != null) {
-                string msg = GetErrorMessage(exception);
-
-                string fullMsg = String.Format("Cannot add reference to {0}:", filename);
-                if (msg != null) {
-                    fullMsg = fullMsg + "\r\n\r\n" + msg;
-                }
-                MessageBox.Show(fullMsg);
-            } else {
-                return new PythonExtensionReferenceNode(this, filename);
-            }
-
-            return null;
-        }
-
-        private static string GetErrorMessage(AggregateException exception) {
-            string msg = null;
-            foreach (var inner in exception.InnerExceptions) {
-                if (inner is AggregateException) {
-                    msg = GetErrorMessage((AggregateException)inner);
-                } else if (msg == null || inner is CannotAnalyzeExtensionException) {
-                    msg = inner.Message;
-                }
-            }
-            return msg;
-        }
-
-        protected override string AddReferenceExtensions {
+        protected override string AssemblyReferenceTargetMoniker {
             get {
-                return Strings.AddReferenceExtensions;
+                return GetProjectProperty("TargetFrameworkMoniker", false); // ?? ".NETFramework, version=4.5";
             }
         }
 

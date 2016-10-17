@@ -297,6 +297,19 @@ namespace Microsoft.PythonTools.Intellisense {
             public int fileId;
         }
 
+        public class AddBulkFileRequest : Request<AddBulkFileResponse> {
+            public const string Command = "addBulkFile";
+
+            public string[] path;
+            public string addingFromDir;
+
+            public override string command => Command;
+        }
+
+        public class AddBulkFileResponse : Response {
+            public int[] fileId;
+        }
+
         public sealed class SetSearchPathRequest : Request<Response> {
             public const string Command = "setSearchPath";
 
