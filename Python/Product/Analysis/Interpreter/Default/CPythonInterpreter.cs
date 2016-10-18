@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private PythonTypeDatabase _typeDb, _searchPathDb;
         private PythonAnalyzer _state;
         private IReadOnlyList<string> _searchPaths;
-        //private readonly object _referencesLock = new object();
+        private Dictionary<string, HashSet<string>> _zipPackageCache;
 
         public CPythonInterpreter(PythonInterpreterFactoryWithDatabase factory) {
             _langVersion = factory.Configuration.Version;
@@ -52,6 +52,7 @@ namespace Microsoft.PythonTools.Interpreter.Default {
 
             _typeDb = factory.GetCurrentDatabase();
             _searchPathDb = null;
+            _zipPackageCache = null;
 
             ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
         }
@@ -157,10 +158,71 @@ namespace Microsoft.PythonTools.Interpreter.Default {
             return mod;
         }
 
-        private IPythonModule LoadModuleFromZipFile(string zipFile, string moduleName) {
-            using (var stream = new FileStream(zipFile, FileMode.Open, FileAccess.Read))
-            using (var zip = new ZipArchive(stream, ZipArchiveMode.Read, true)) {
+        class GetModuleCallable {
+            private readonly HashSet<string> _packages;
+
+            public GetModuleCallable(HashSet<string> packages) {
+                _packages = packages;
+            }
+
+            public string GetModule(string basePath, string lastBit) {
+                var candidate = Path.Combine(basePath, lastBit, "__init__.py");
+                if (_packages.Contains(candidate)) {
+                    return candidate;
+                }
+                candidate = Path.Combine(basePath, Path.ChangeExtension(lastBit, ".py"));
+                if (_packages.Contains(candidate)) {
+                    return candidate;
+                }
+                candidate = Path.Combine(basePath, Path.ChangeExtension(lastBit, ".pyw"));
+                if (_packages.Contains(candidate)) {
+                    return candidate;
+                }
                 return null;
+            }
+        }
+
+        private IPythonModule LoadModuleFromZipFile(string zipFile, string moduleName) {
+            ModulePath name;
+            HashSet<string> packages = null;
+
+            var cache = _zipPackageCache;
+            if (cache == null) {
+                cache = _zipPackageCache = new Dictionary<string, HashSet<string>>();
+            }
+
+            if (!cache.TryGetValue(zipFile, out packages) || packages == null) {
+                using (var stream = new FileStream(zipFile, FileMode.Open, FileAccess.Read))
+                using (var zip = new ZipArchive(stream, ZipArchiveMode.Read, true)) {
+                    cache[zipFile] = packages = new HashSet<string>(
+                        zip.Entries.Select(e => e.FullName.Replace('/', '\\'))
+                    );
+                }
+            }
+
+            try {
+                name = ModulePath.FromBasePathAndName(
+                    "",
+                    moduleName,
+                    packages.Contains,
+                    new GetModuleCallable(packages).GetModule
+                );
+            } catch (ArgumentException) {
+                return null;
+            }
+
+            using (var stream = new FileStream(zipFile, FileMode.Open, FileAccess.Read))
+            using (var zip = new ZipArchive(stream, ZipArchiveMode.Read, true))
+            using (var sourceStream = zip.GetEntry(name.SourceFile.Replace('\\', '/'))?.Open()) {
+                if (sourceStream == null) {
+                    return null;
+                }
+                return AstPythonModule.FromStream(
+                    this,
+                    sourceStream,
+                    PathUtils.GetAbsoluteFilePath(zipFile, name.SourceFile),
+                    _factory.GetLanguageVersion()
+                );
             }
         }
 
@@ -184,99 +246,18 @@ namespace Microsoft.PythonTools.Interpreter.Default {
         private void PythonAnalyzer_SearchPathsChanged(object sender, EventArgs e) {
             _searchPaths = _state.GetSearchPaths();
             _searchPathDb = null;
+            _zipPackageCache = null;
             ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public event EventHandler ModuleNamesChanged;
-
-        //public Task AddReferenceAsync(ProjectReference reference, CancellationToken cancellationToken = default(CancellationToken)) {
-        //    if (reference == null) {
-        //        return MakeExceptionTask(new ArgumentNullException("reference"));
-        //    }
-
-        //    bool cloneDb = false;
-        //    lock (_referencesLock) {
-        //        if (_references == null) {
-        //            _references = new HashSet<ProjectReference>();
-        //            cloneDb = true;
-        //        }
-        //    }
-
-        //    if (cloneDb && _typeDb != null) {
-        //        // If we needed to set _references, then we also need to clone
-        //        // _typeDb to avoid adding modules to the shared database.
-        //        _typeDb = _typeDb.Clone();
-        //    }
-
-        //    switch (reference.Kind) {
-        //        case ProjectReferenceKind.ExtensionModule:
-        //            lock (_referencesLock) {
-        //                _references.Add(reference);
-        //            }
-        //            string filename;
-        //            try {
-        //                filename = Path.GetFileNameWithoutExtension(reference.Name);
-        //            } catch (Exception e) {
-        //                return MakeExceptionTask(e);
-        //            }
-
-        //            if (_typeDb != null) {
-        //                return _typeDb.LoadExtensionModuleAsync(filename,
-        //                    reference.Name,
-        //                    cancellationToken).ContinueWith(RaiseModulesChanged);
-        //            }
-        //            break;
-        //    }
-
-        //    return Task.Factory.StartNew(EmptyTask);
-        //}
-
-        //public void RemoveReference(ProjectReference reference) {
-        //    switch (reference.Kind) {
-        //        case ProjectReferenceKind.ExtensionModule:
-        //            bool removed = false;
-        //            lock (_referencesLock) {
-        //                removed = _references != null && _references.Remove(reference);
-        //            }
-        //            if (removed && _typeDb != null) {
-        //                _typeDb.UnloadExtensionModule(Path.GetFileNameWithoutExtension(reference.Name));
-        //                RaiseModulesChanged(null);
-        //            }
-        //            break;
-        //    }
-        //}
-
-        //public IEnumerable<ProjectReference> GetReferences() {
-        //    var references = _references;
-        //    return references != null ?
-        //        references.AsLockedEnumerable(_referencesLock) :
-        //        Enumerable.Empty<ProjectReference>();
-        //}
-
-        //private static Task MakeExceptionTask(Exception e) {
-        //    var res = new TaskCompletionSource<Task>();
-        //    res.SetException(e);
-        //    return res.Task;
-        //}
-
-        //private static void EmptyTask() {
-        //}
-
-        //private void RaiseModulesChanged(Task task) {
-        //    if (task != null && task.Exception != null) {
-        //        throw task.Exception;
-        //    }
-        //    var modNamesChanged = ModuleNamesChanged;
-        //    if (modNamesChanged != null) {
-        //        modNamesChanged(this, EventArgs.Empty);
-        //    }
-        //}
 
         #endregion
 
 
         public void Dispose() {
             _searchPathDb = null;
+            _zipPackageCache = null;
             _typeDb = null;
 
             var factory = _factory;

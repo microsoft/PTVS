@@ -86,20 +86,15 @@ namespace PythonToolsTests {
 
         [TestMethod, Priority(0)]
         public void ImportFromSearchPath() {
-            PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = true;
-            try {
-                var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
-                analyzer.AddModule("test-module", "from test_package import *");
-                analyzer.WaitForAnalysis();
-                AssertUtil.CheckCollection(analyzer.GetAllNames(), null, new[] { "package_method", "package_method_two", "test_package" });
+            var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
+            analyzer.AddModule("test-module", "from test_package import *");
+            analyzer.WaitForAnalysis();
+            AssertUtil.CheckCollection(analyzer.GetAllNames(), null, new[] { "package_method", "package_method_two", "test_package" });
 
-                analyzer.SetSearchPaths(TestData.GetPath("TestData\\AddImport"));
-                analyzer.ReanalyzeAll();
+            analyzer.SetSearchPaths(TestData.GetPath("TestData\\AddImport"));
+            analyzer.ReanalyzeAll();
 
-                AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "package_method", "package_method_two" }, new[] { "test_package" });
-            } finally {
-                PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = false;
-            }
+            AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "package_method", "package_method_two" }, new[] { "test_package" });
         }
 
         [TestMethod, Priority(0)]
@@ -119,6 +114,19 @@ namespace PythonToolsTests {
             } finally {
                 PythonTypeDatabase.ExtensionModuleLoader.AlwaysGenerateDb = false;
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public void ImportFromZipFile() {
+            var analyzer = new PythonAnalysis(PythonLanguageVersion.V35);
+            analyzer.AddModule("test-module", "from test_package import *");
+            analyzer.WaitForAnalysis();
+            AssertUtil.CheckCollection(analyzer.GetAllNames(), null, new[] { "package_method", "package_method_two", "test_package" });
+
+            analyzer.SetSearchPaths(TestData.GetPath("TestData\\AddImport.zip"));
+            analyzer.ReanalyzeAll();
+
+            AssertUtil.CheckCollection(analyzer.GetAllNames(), new[] { "package_method", "package_method_two" }, new[] { "test_package" });
         }
 
         private static void AnalyzeCode(

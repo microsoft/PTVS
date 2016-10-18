@@ -606,7 +606,11 @@ namespace Microsoft.PythonTools.Analysis {
                 if (!PythonPackageRegex.IsMatch(bit)) {
                     throw new ArgumentException("Not a valid Python package: " + bit);
                 }
-                path = PathUtils.GetAbsoluteFilePath(path, bit);
+                if (string.IsNullOrEmpty(path)) {
+                    path = bit;
+                } else {
+                    path = PathUtils.GetAbsoluteFilePath(path, bit);
+                }
                 if (!isPackage(path)) {
                     throw new ArgumentException("Python package not found: " + path);
                 }

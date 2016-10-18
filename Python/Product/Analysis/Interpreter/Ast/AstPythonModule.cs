@@ -33,13 +33,23 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         private readonly Dictionary<string, IMember> _members;
 
         public static IPythonModule FromFile(IPythonInterpreter interpreter, string sourceFile, PythonLanguageVersion langVersion) {
+            using (var stream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite)) {
+                return FromStream(interpreter, stream, sourceFile, langVersion);
+            }
+        }
+
+        public static IPythonModule FromStream(
+            IPythonInterpreter interpreter,
+            Stream sourceFile,
+            string fileName,
+            PythonLanguageVersion langVersion
+        ) {
             PythonAst ast;
-            using (var stream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var parser = Parser.CreateParser(stream, langVersion)) {
+            using (var parser = Parser.CreateParser(sourceFile, langVersion)) {
                 ast = parser.ParseFile();
             }
 
-            return new AstPythonModule(interpreter, ast, sourceFile);
+            return new AstPythonModule(interpreter, ast, fileName);
         }
 
         internal AstPythonModule(IPythonInterpreter interpreter, PythonAst ast, string filePath) {
