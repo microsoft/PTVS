@@ -204,7 +204,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                         var n = node.AsNames?[i] ?? node.Names[i];
                         if (n != null) {
                             m[n.Name] = new AstPythonConstant(
-                                _interpreter.GetBuiltinType(BuiltinTypeId.Module),
+                                _interpreter.GetBuiltinType(BuiltinTypeId.Unknown),
                                 GetLoc(n)
                             );
                         }
