@@ -46,7 +46,7 @@ namespace AnalysisTests {
         public void AstClasses() {
             var mod = Parse("Classes.py", PythonLanguageVersion.V35);
             AssertUtil.ContainsExactly(mod.GetMemberNames(null),
-                "C1", "C2", "C3", "C4",
+                "C1", "C2", "C3", "C4", "C5",
                 "D", "E",
                 "F1",
                 "f"
@@ -56,10 +56,17 @@ namespace AnalysisTests {
             Assert.IsInstanceOfType(mod.GetMember(null, "C2"), typeof(AstPythonType));
             Assert.IsInstanceOfType(mod.GetMember(null, "C3"), typeof(AstPythonType));
             Assert.IsInstanceOfType(mod.GetMember(null, "C4"), typeof(AstPythonType));
+            Assert.IsInstanceOfType(mod.GetMember(null, "C5"), typeof(AstPythonType));
             Assert.IsInstanceOfType(mod.GetMember(null, "D"), typeof(AstPythonType));
             Assert.IsInstanceOfType(mod.GetMember(null, "E"), typeof(AstPythonType));
             Assert.IsInstanceOfType(mod.GetMember(null, "F1"), typeof(AstPythonType));
             Assert.IsInstanceOfType(mod.GetMember(null, "f"), typeof(AstPythonFunction));
+
+            var C1 = (IPythonType)mod.GetMember(null, "C1");
+            Assert.AreEqual("C1", C1.Documentation);
+
+            var C5 = (IPythonType)mod.GetMember(null, "C5");
+            Assert.AreEqual("C1", C5.Documentation);
 
             var F1 = (IMemberContainer)mod.GetMember(null, "F1");
             AssertUtil.ContainsExactly(F1.GetMemberNames(null),
@@ -75,17 +82,21 @@ namespace AnalysisTests {
         public void AstFunctions() {
             var mod = Parse("Functions.py", PythonLanguageVersion.V35);
             AssertUtil.ContainsExactly(mod.GetMemberNames(null),
-                "f", "g", "h",
+                "f", "f2", "g", "h",
                 "C"
             );
 
             Assert.IsInstanceOfType(mod.GetMember(null, "f"), typeof(AstPythonFunction));
+            Assert.IsInstanceOfType(mod.GetMember(null, "f2"), typeof(AstPythonFunction));
             Assert.IsInstanceOfType(mod.GetMember(null, "g"), typeof(AstPythonFunction));
             Assert.IsInstanceOfType(mod.GetMember(null, "h"), typeof(AstPythonFunction));
             Assert.IsInstanceOfType(mod.GetMember(null, "C"), typeof(AstPythonType));
 
             var f = (IPythonFunction)mod.GetMember(null, "f");
             Assert.AreEqual("f", f.Documentation);
+
+            var f2 = (IPythonFunction)mod.GetMember(null, "f2");
+            Assert.AreEqual("f", f2.Documentation);
 
             var C = (IMemberContainer)mod.GetMember(null, "C");
             AssertUtil.ContainsExactly(C.GetMemberNames(null),
@@ -104,6 +115,45 @@ namespace AnalysisTests {
 
             Assert.IsInstanceOfType(C2.GetMember(null, "k"), typeof(AstPythonFunction));
             Assert.IsInstanceOfType(C2.GetMember(null, "__class__"), typeof(AstPythonType));
+        }
+
+        [TestMethod, Priority(0)]
+        public void AstValues() {
+            using (var entry = new PythonAnalysis(PythonLanguageVersion.V35)) {
+                entry.SetSearchPaths(TestData.GetPath(@"TestData\AstAnalysis"));
+                entry.AddModule("test-module", "from Values import *");
+                entry.WaitForAnalysis();
+
+                entry.AssertHasAttr("",
+                    "x", "y", "z", "pi", "l", "t", "d", "s",
+                    "X", "Y", "Z", "PI", "L", "T", "D", "S"
+                );
+
+                entry.AssertIsInstance("x", BuiltinTypeId.Int);
+                entry.AssertIsInstance("y", BuiltinTypeId.Str);
+                entry.AssertIsInstance("z", BuiltinTypeId.Bytes);
+                entry.AssertIsInstance("pi", BuiltinTypeId.Float);
+                entry.AssertIsInstance("l", BuiltinTypeId.List);
+                entry.AssertIsInstance("t", BuiltinTypeId.Tuple);
+                entry.AssertIsInstance("d", BuiltinTypeId.Dict);
+                entry.AssertIsInstance("s", BuiltinTypeId.Set);
+                entry.AssertIsInstance("X", BuiltinTypeId.Int);
+                entry.AssertIsInstance("Y", BuiltinTypeId.Str);
+                entry.AssertIsInstance("Z", BuiltinTypeId.Bytes);
+                entry.AssertIsInstance("PI", BuiltinTypeId.Float);
+                entry.AssertIsInstance("L", BuiltinTypeId.List);
+                entry.AssertIsInstance("T", BuiltinTypeId.Tuple);
+                entry.AssertIsInstance("D", BuiltinTypeId.Dict);
+                entry.AssertIsInstance("S", BuiltinTypeId.Set);
+            }
+        }
+
+        [TestMethod, Priority(0)]
+        public void AstImports() {
+            var mod = Parse("Imports.py", PythonLanguageVersion.V35);
+            AssertUtil.ContainsExactly(mod.GetMemberNames(null),
+                "version_info", "a_made_up_module"
+            );
         }
 
 

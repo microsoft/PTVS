@@ -194,6 +194,10 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public override bool Walk(FromImportStatement node) {
             var m = _scope.Peek();
+            if (node.Root.MakeString() == "__future__") {
+                return false;
+            }
+
             if (m != null && node.Names != null) {
                 try {
                     for (int i = 0; i < node.Names.Count; ++i) {

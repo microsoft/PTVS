@@ -3,6 +3,8 @@ def f():
     pass
     def f1(): pass
 
+f2 = f
+
 if True:
     def g(): pass
 else:

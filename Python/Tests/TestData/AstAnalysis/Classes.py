@@ -1,7 +1,12 @@
-class C1: pass
+class C1:
+    """C1"""
+    pass
+
 class C2(object): pass
 class C3(C2): pass
 class C4(C1, C2, C3): pass
+
+C5 = C1
 
 if True:
     class D: pass
