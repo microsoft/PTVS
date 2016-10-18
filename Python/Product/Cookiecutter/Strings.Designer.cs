@@ -62,7 +62,7 @@ namespace Microsoft.CookiecutterTools {
         
         /// <summary>
         ///   Looks up a localized string similar to 
-        ///----- Check for updates canceled -----
+        ///----- Check for template updates canceled -----
         ///.
         /// </summary>
         internal static string CheckingForAllUpdatesCanceled {
@@ -73,7 +73,7 @@ namespace Microsoft.CookiecutterTools {
         
         /// <summary>
         ///   Looks up a localized string similar to 
-        ///----- Failed to check for updates -----
+        ///----- Failed to check for template updates -----
         ///.
         /// </summary>
         internal static string CheckingForAllUpdatesFailed {
@@ -84,7 +84,7 @@ namespace Microsoft.CookiecutterTools {
         
         /// <summary>
         ///   Looks up a localized string similar to 
-        ///----- Checking for updates -----
+        ///----- Checking for template updates -----
         ///.
         /// </summary>
         internal static string CheckingForAllUpdatesStarted {
@@ -95,7 +95,7 @@ namespace Microsoft.CookiecutterTools {
         
         /// <summary>
         ///   Looks up a localized string similar to 
-        ///----- Successfully checked for updates -----
+        ///----- Successfully checked for template updates -----
         ///.
         /// </summary>
         internal static string CheckingForAllUpdatesSuccess {
@@ -105,7 +105,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error checking for update..
+        ///   Looks up a localized string similar to Error checking for an update..
         /// </summary>
         internal static string CheckingTemplateUpdateError {
             get {

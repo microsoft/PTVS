@@ -482,8 +482,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
                     ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Clone, selection);
 
-                    // We now have a new template installed, so reload that section of the results
-                    _installedSource.InvalidateCache();
+                    await _installedSource.AddTemplateAsync(selection.ClonedPath);
 
                     _templateRefreshCancelTokenSource?.Cancel();
                     _templateRefreshCancelTokenSource = new CancellationTokenSource();
@@ -521,7 +520,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
                 CheckingUpdateStatus = OperationStatus.InProgress;
 
-                _outputWindow.ShowAndActivate();
                 _outputWindow.WriteLine(Strings.CheckingForAllUpdatesStarted);
 
                 bool anyError = false;
@@ -545,6 +543,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                             installed.IsUpdateAvailable = available == true;
                         }
                     } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        if (!anyError) {
+                            _outputWindow.ShowAndActivate();
+                        }
+
                         anyError = true;
 
                         _outputWindow.WriteErrorLine(ex.Message);
@@ -558,7 +560,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
                 ReportEvent(CookiecutterTelemetry.TelemetryArea.Search, CookiecutterTelemetry.SearchEvents.CheckUpdate, (!anyError).ToString());
             } catch (OperationCanceledException) {
-                CheckingUpdateStatus = OperationStatus.Failed;
+                CheckingUpdateStatus = OperationStatus.Canceled;
                 _outputWindow.WriteLine(Strings.CheckingForAllUpdatesCanceled);
             }
         }

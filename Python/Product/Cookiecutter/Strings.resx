@@ -246,22 +246,22 @@ Please delete the installed template and try again.</value>
   </data>
   <data name="CheckingForAllUpdatesStarted" xml:space="preserve">
     <value>
------ Checking for updates -----
+----- Checking for template updates -----
 </value>
   </data>
   <data name="CheckingForAllUpdatesSuccess" xml:space="preserve">
     <value>
------ Successfully checked for updates -----
+----- Successfully checked for template updates -----
 </value>
   </data>
   <data name="CheckingForAllUpdatesFailed" xml:space="preserve">
     <value>
------ Failed to check for updates -----
+----- Failed to check for template updates -----
 </value>
   </data>
   <data name="CheckingForAllUpdatesCanceled" xml:space="preserve">
     <value>
------ Check for updates canceled -----
+----- Check for template updates canceled -----
 </value>
   </data>
   <data name="CheckingTemplateUpdateStarted" xml:space="preserve">
@@ -276,7 +276,7 @@ Please delete the installed template and try again.</value>
     <value>Template is already up-to-date.</value>
   </data>
   <data name="CheckingTemplateUpdateError" xml:space="preserve">
-    <value>Error checking for update.</value>
+    <value>Error checking for an update.</value>
   </data>
   <data name="CheckingTemplateUpdateInconclusive" xml:space="preserve">
     <value>Could not determine if an update is available.</value>

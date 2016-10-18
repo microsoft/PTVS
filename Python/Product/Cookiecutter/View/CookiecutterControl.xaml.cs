@@ -19,12 +19,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
-using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.Telemetry;
@@ -38,8 +39,12 @@ namespace Microsoft.CookiecutterTools.View {
         private CookiecutterSearchPage _searchPage;
         private CookiecutterOptionsPage _optionsPage;
         private Action _updateCommandUI;
+        private DispatcherTimer _checkForUpdatesTimer;
 
         public event EventHandler<PointEventArgs> ContextMenuRequested;
+
+        private static TimeSpan CheckForUpdateInitialDelay = TimeSpan.FromSeconds(15);
+        private static TimeSpan CheckForUpdateRetryDelay = TimeSpan.FromMinutes(2);
 
         public CookiecutterControl() {
             InitializeComponent();
@@ -47,6 +52,9 @@ namespace Microsoft.CookiecutterTools.View {
 
         public CookiecutterControl(Redirector outputWindow, ICookiecutterTelemetry telemetry, Uri feedUrl, Action<string> openFolder, Action updateCommandUI) {
             _updateCommandUI = updateCommandUI;
+
+            _checkForUpdatesTimer = new DispatcherTimer();
+            _checkForUpdatesTimer.Tick += new EventHandler(CheckForUpdateTimer_Tick);
 
             string gitExeFilePath = GitClient.RecommendedGitFilePath;
             var gitClient = new GitClient(gitExeFilePath, outputWindow);
@@ -65,7 +73,6 @@ namespace Microsoft.CookiecutterTools.View {
 
             ViewModel.UserConfigFilePath = CookiecutterViewModel.GetUserConfigPath();
             ViewModel.OutputFolderPath = string.Empty; // leaving this empty for now, force user to enter one
-            ViewModel.SearchAsync().DoNotWait();
             ViewModel.ContextLoaded += ViewModel_ContextLoaded;
             ViewModel.HomeClicked += ViewModel_HomeClicked;
 
@@ -89,6 +96,39 @@ namespace Microsoft.CookiecutterTools.View {
             InitializeComponent();
 
             _searchPage.SelectedTemplateChanged += SearchPage_SelectedTemplateChanged;
+        }
+
+        public async Task InitializeAsync(bool checkForUpdates) {
+            await ViewModel.SearchAsync();
+
+            if (checkForUpdates) {
+                _checkForUpdatesTimer.Interval = CheckForUpdateInitialDelay;
+                _checkForUpdatesTimer.Start();
+            }
+        }
+
+        private void CheckForUpdateTimer_Tick(object sender, EventArgs e) {
+            AutomaticCheckForUpdates().DoNotWait();
+        }
+
+        private async Task AutomaticCheckForUpdates() {
+            _checkForUpdatesTimer.Stop();
+
+            bool reschedule = false;
+            if (CanCheckForUpdates()) {
+                await ViewModel.CheckForUpdatesAsync();
+
+                if (ViewModel.CheckingUpdateStatus == OperationStatus.Canceled) {
+                    reschedule = true;
+                }
+            } else {
+                reschedule = true;
+            }
+
+            if (reschedule) {
+                _checkForUpdatesTimer.Interval = CheckForUpdateRetryDelay;
+                _checkForUpdatesTimer.Start();
+            }
         }
 
         private void SearchPage_SelectedTemplateChanged(object sender, EventArgs e) {
@@ -199,6 +239,9 @@ namespace Microsoft.CookiecutterTools.View {
             if (!CanCheckForUpdates()) {
                 return;
             }
+
+            // The user initiated check, so cancel any automatic check
+            _checkForUpdatesTimer.Stop();
 
             _searchPage.CheckForUpdates();
         }

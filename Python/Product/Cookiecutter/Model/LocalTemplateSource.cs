@@ -49,11 +49,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 }
             }
 
-            return new TemplateEnumerationResult(templates);
-        }
-
-        public void InvalidateCache() {
-            _cache = null;
+            return new TemplateEnumerationResult(templates.OrderBy(t => t.Name).ToList());
         }
 
         public Task DeleteTemplateAsync(string repoPath) {
@@ -62,6 +58,10 @@ namespace Microsoft.CookiecutterTools.Model {
             _cache.RemoveAll(t => t.LocalFolderPath == repoPath);
 
             return Task.CompletedTask;
+        }
+
+        public async Task AddTemplateAsync(string repoPath) {
+            await AddFolderToCache(repoPath);
         }
 
         public async Task UpdateTemplateAsync(string repoPath) {
@@ -100,17 +100,20 @@ namespace Microsoft.CookiecutterTools.Model {
 
             if (Directory.Exists(_installedFolderPath)) {
                 foreach (var folder in PathUtils.EnumerateDirectories(_installedFolderPath, recurse: false, fullPaths: true)) {
-
-                    var template = new Template() {
-                        LocalFolderPath = folder,
-                        Name = PathUtils.GetFileOrDirectoryName(folder),
-                    };
-
-                    await InitializeRemoteAsync(template);
-
-                    _cache.Add(template);
+                    await AddFolderToCache(folder);
                 }
             }
+        }
+
+        private async Task AddFolderToCache(string repoPath) {
+            var template = new Template() {
+                LocalFolderPath = repoPath,
+                Name = PathUtils.GetFileOrDirectoryName(repoPath),
+            };
+
+            await InitializeRemoteAsync(template);
+
+            _cache.Add(template);
         }
 
         private async Task InitializeRemoteAsync(Template template) {

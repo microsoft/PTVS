@@ -27,9 +27,10 @@ using Microsoft.CookiecutterTools.Model;
 namespace CookiecutterTests {
     class MockTemplateSource : ILocalTemplateSource {
         public Dictionary<Tuple<string, string>, Tuple<Template[], string>> Templates { get; } = new Dictionary<Tuple<string, string>, Tuple<Template[], string>>();
-        public bool Invalidated { get; set; }
         public Dictionary<string, bool?> UpdatesAvailable { get; } = new Dictionary<string, bool?>();
         public List<string> Updated { get; } = new List<string>();
+        public List<string> Added { get; } = new List<string>();
+        public List<string> Deleted { get; } = new List<string>();
 
         public Task<TemplateEnumerationResult> GetTemplatesAsync(string filter, string continuationToken, CancellationToken cancellationToken) {
             Tuple<Template[], string> result;
@@ -39,11 +40,8 @@ namespace CookiecutterTests {
             return Task.FromResult(new TemplateEnumerationResult(new Template[0]));
         }
 
-        public void InvalidateCache() {
-            Invalidated = true;
-        }
-
         public Task DeleteTemplateAsync(string repoPath) {
+            Deleted.Add(repoPath);
             return Task.CompletedTask;
         }
 
@@ -54,6 +52,11 @@ namespace CookiecutterTests {
 
         Task<bool?> ILocalTemplateSource.CheckForUpdateAsync(string repoPath) {
             return Task.FromResult(UpdatesAvailable[repoPath]);
+        }
+
+        public Task AddTemplateAsync(string repoPath) {
+            Added.Add(repoPath);
+            return Task.CompletedTask;
         }
     }
 }

@@ -24,5 +24,6 @@ namespace Microsoft.CookiecutterTools.Model {
         Task DeleteTemplateAsync(string repoPath);
         Task<bool?> CheckForUpdateAsync(string repoPath);
         Task UpdateTemplateAsync(string repoPath);
+        Task AddTemplateAsync(string repoPath);
     }
 }
