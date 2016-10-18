@@ -112,6 +112,8 @@ namespace CookiecutterTests {
             Assert.IsTrue(_vm.Installed.Templates.Count == 1);
 
             await _vm.CheckForUpdatesAsync();
+            Assert.AreEqual(OperationStatus.Succeeded, _vm.CheckingUpdateStatus);
+
             var t1 = _vm.Installed.Templates.OfType<TemplateViewModel>().FirstOrDefault();
             Assert.IsTrue(t1.IsUpdateAvailable);
         }
@@ -133,15 +135,16 @@ namespace CookiecutterTests {
             await _vm.SearchAsync();
             Assert.IsTrue(_vm.Installed.Templates.Count == 1);
 
-            var t1 = _vm.Installed.Templates.OfType<TemplateViewModel>().FirstOrDefault();
-            _vm.SelectedTemplate = t1;
+            var templateViewModel = _vm.Installed.Templates.OfType<TemplateViewModel>().FirstOrDefault();
+            _vm.SelectedTemplate = templateViewModel;
 
             await _vm.UpdateTemplateAsync();
-            Assert.IsFalse(t1.IsUpdateAvailable);
+            Assert.AreEqual(OperationStatus.Succeeded, _vm.UpdatingStatus);
+            Assert.IsFalse(templateViewModel.IsUpdateAvailable);
 
-            //CollectionAssert.AreEquivalent(
-            //    new string[] { "https://github.com/owner1/template1" },
-            //    _installedTemplateSource.Updated);
+            CollectionAssert.AreEquivalent(
+                new string[] { Path.Combine(_vm.InstalledFolderPath, "template1") },
+                _installedTemplateSource.Updated);
         }
     }
 }
