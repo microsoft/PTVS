@@ -19,12 +19,13 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
-using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.Telemetry;
@@ -38,8 +39,12 @@ namespace Microsoft.CookiecutterTools.View {
         private CookiecutterSearchPage _searchPage;
         private CookiecutterOptionsPage _optionsPage;
         private Action _updateCommandUI;
+        private DispatcherTimer _checkForUpdatesTimer;
 
         public event EventHandler<PointEventArgs> ContextMenuRequested;
+
+        private static TimeSpan CheckForUpdateInitialDelay = TimeSpan.FromSeconds(15);
+        private static TimeSpan CheckForUpdateRetryDelay = TimeSpan.FromMinutes(2);
 
         public CookiecutterControl() {
             InitializeComponent();
@@ -48,11 +53,14 @@ namespace Microsoft.CookiecutterTools.View {
         public CookiecutterControl(Redirector outputWindow, ICookiecutterTelemetry telemetry, Uri feedUrl, Action<string> openFolder, Action updateCommandUI) {
             _updateCommandUI = updateCommandUI;
 
+            _checkForUpdatesTimer = new DispatcherTimer();
+            _checkForUpdatesTimer.Tick += new EventHandler(CheckForUpdateTimer_Tick);
+
             string gitExeFilePath = GitClient.RecommendedGitFilePath;
-            var gitClient = new GitClient(gitExeFilePath);
+            var gitClient = new GitClient(gitExeFilePath, outputWindow);
             var gitHubClient = new GitHubClient();
             ViewModel = new CookiecutterViewModel(
-                CookiecutterClientProvider.Create(),
+                CookiecutterClientProvider.Create(outputWindow),
                 gitHubClient,
                 gitClient,
                 telemetry,
@@ -65,7 +73,6 @@ namespace Microsoft.CookiecutterTools.View {
 
             ViewModel.UserConfigFilePath = CookiecutterViewModel.GetUserConfigPath();
             ViewModel.OutputFolderPath = string.Empty; // leaving this empty for now, force user to enter one
-            ViewModel.SearchAsync().DoNotWait();
             ViewModel.ContextLoaded += ViewModel_ContextLoaded;
             ViewModel.HomeClicked += ViewModel_HomeClicked;
 
@@ -91,16 +98,51 @@ namespace Microsoft.CookiecutterTools.View {
             _searchPage.SelectedTemplateChanged += SearchPage_SelectedTemplateChanged;
         }
 
+        public async Task InitializeAsync(bool checkForUpdates) {
+            await ViewModel.SearchAsync();
+
+            if (checkForUpdates) {
+                _checkForUpdatesTimer.Interval = CheckForUpdateInitialDelay;
+                _checkForUpdatesTimer.Start();
+            }
+        }
+
+        private void CheckForUpdateTimer_Tick(object sender, EventArgs e) {
+            AutomaticCheckForUpdates().DoNotWait();
+        }
+
+        private async Task AutomaticCheckForUpdates() {
+            _checkForUpdatesTimer.Stop();
+
+            bool reschedule = false;
+            if (CanCheckForUpdates()) {
+                await ViewModel.CheckForUpdatesAsync();
+
+                if (ViewModel.CheckingUpdateStatus == OperationStatus.Canceled) {
+                    reschedule = true;
+                }
+            } else {
+                reschedule = true;
+            }
+
+            if (reschedule) {
+                _checkForUpdatesTimer.Interval = CheckForUpdateRetryDelay;
+                _checkForUpdatesTimer.Start();
+            }
+        }
+
         private void SearchPage_SelectedTemplateChanged(object sender, EventArgs e) {
             _updateCommandUI();
         }
 
         private void ViewModel_HomeClicked(object sender, EventArgs e) {
             PageSequence.MoveCurrentToFirst();
+            _updateCommandUI();
         }
 
         private void ViewModel_ContextLoaded(object sender, EventArgs e) {
             PageSequence.MoveCurrentToLast();
+            _updateCommandUI();
         }
 
         public CookiecutterViewModel ViewModel {
@@ -143,14 +185,15 @@ namespace Microsoft.CookiecutterTools.View {
 
         internal void Home() {
             ViewModel.Reset();
+            _updateCommandUI();
         }
 
         internal bool CanDeleteSelection() {
-            return PageSequence.CurrentPosition == 0 && Directory.Exists(ViewModel.SelectedTemplate?.ClonedPath);
+            return PageSequence.CurrentPosition == 0 && ViewModel.CanDeleteSelectedTemplate;
         }
 
         internal bool CanNavigateToGitHub() {
-            return PageSequence.CurrentPosition == 0 && !string.IsNullOrEmpty(ViewModel.SelectedTemplate?.GitHubHomeUrl);
+            return PageSequence.CurrentPosition == 0 && ViewModel.CanNavigateToGitHub;
         }
 
         internal void DeleteSelection() {
@@ -165,7 +208,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         internal bool CanRunSelection() {
-            return PageSequence.CurrentPosition == 0 && ViewModel.SelectedTemplate != null;
+            return PageSequence.CurrentPosition == 0 && ViewModel.CanRunSelectedTemplate;
         }
 
         internal void RunSelection() {
@@ -174,6 +217,33 @@ namespace Microsoft.CookiecutterTools.View {
             }
 
             _searchPage.LoadTemplate();
+        }
+
+        internal bool CanUpdateSelection() {
+            return PageSequence.CurrentPosition == 0 && ViewModel.CanUpdateSelectedTemplate;
+        }
+
+        internal void UpdateSelection() {
+            if (!CanUpdateSelection()) {
+                return;
+            }
+
+            _searchPage.UpdateTemplate();
+        }
+
+        internal bool CanCheckForUpdates() {
+            return PageSequence.CurrentPosition == 0 && ViewModel.CanCheckForUpdates;
+        }
+
+        internal void CheckForUpdates() {
+            if (!CanCheckForUpdates()) {
+                return;
+            }
+
+            // The user initiated check, so cancel any automatic check
+            _checkForUpdatesTimer.Stop();
+
+            _searchPage.CheckForUpdates();
         }
 
         private void UserControl_MouseRightButtonUp(object sender, MouseButtonEventArgs e) {

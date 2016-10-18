@@ -15,20 +15,22 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.Win32;
 
 namespace Microsoft.CookiecutterTools.Model {
     class GitClient : IGitClient {
-        private string _gitExeFilePath;
+        private readonly string _gitExeFilePath;
+        private readonly Redirector _redirector;
 
-        public GitClient(string gitExeFilePath) {
+        public GitClient(string gitExeFilePath, Redirector redirector) {
             _gitExeFilePath = gitExeFilePath;
+            _redirector = redirector;
         }
 
         public static string RecommendedGitFilePath {
@@ -55,10 +57,8 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
-        private static string TeamExplorerGitFilePath
-        {
-            get
-            {
+        private static string TeamExplorerGitFilePath {
+            get {
                 try {
                     using (var key = Registry.LocalMachine.OpenSubKey(@"Software\\Microsoft\VisualStudio\SxS\VS7")) {
                         var installRoot = (string)key.GetValue(AssemblyVersionInfo.VSVersion);
@@ -77,7 +77,7 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
-        public async Task<Tuple<string, ProcessOutputResult>> CloneAsync(string repoUrl, string targetParentFolderPath) {
+        public async Task<string> CloneAsync(string repoUrl, string targetParentFolderPath) {
             Directory.CreateDirectory(targetParentFolderPath);
 
             string localTemplateFolder = GetClonedFolder(repoUrl, targetParentFolderPath);
@@ -87,15 +87,12 @@ namespace Microsoft.CookiecutterTools.Model {
             }
 
             var arguments = new string[] { "clone", repoUrl };
-            var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, null, false, null);
-            using (output) {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, null, false, _redirector)) {
                 await output;
 
                 var r = new ProcessOutputResult() {
                     ExeFileName = _gitExeFilePath,
                     ExitCode = output.ExitCode,
-                    StandardOutputLines = output.StandardOutputLines.ToArray(),
-                    StandardErrorLines = output.StandardErrorLines.ToArray(),
                 };
 
                 if (r.ExitCode < 0) {
@@ -106,14 +103,13 @@ namespace Microsoft.CookiecutterTools.Model {
                     throw new ProcessException(r);
                 }
 
-                return Tuple.Create(localTemplateFolder, r);
+                return localTemplateFolder;
             }
         }
 
         public async Task<string> GetRemoteOriginAsync(string repoFolderPath) {
             var arguments = new string[] { "remote", "-v" };
-            var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null);
-            using (output) {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null)) {
                 await output;
                 foreach (var remote in output.StandardOutputLines) {
                     string origin;
@@ -123,6 +119,54 @@ namespace Microsoft.CookiecutterTools.Model {
                 }
             }
             return null;
+        }
+
+        public async Task<DateTime?> GetLastCommitDateAsync(string repoFolderPath, string branch) {
+            var arguments = new List<string>() { "log", "-1", "--date=iso" };
+            if (!string.IsNullOrEmpty(branch)) {
+                arguments.Add(branch);
+            }
+
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null)) {
+                await output;
+                foreach (var line in output.StandardOutputLines) {
+                    // Line with date starts with 'Date'. Example:
+                    // Date:   2016-07-28 10:03:07 +0200
+                    if (line.StartsWith("Date:")) {
+                        try {
+                            var text = line.Substring("Date:".Length);
+                            return Convert.ToDateTime(text).ToUniversalTime();
+                        } catch (FormatException) {
+                            return null;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
+        public async Task FetchAsync(string repoFolderPath) {
+            var arguments = new string[] { "fetch" };
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, _redirector)) {
+                if (await output < 0) {
+                    throw new ProcessException(new ProcessOutputResult() {
+                        ExeFileName = _gitExeFilePath,
+                        ExitCode = output.ExitCode,
+                    });
+                }
+            }
+        }
+
+        public async Task MergeAsync(string repoFolderPath) {
+            var arguments = new string[] { "merge" };
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, _redirector)) {
+                if (await output < 0) {
+                    throw new ProcessException(new ProcessOutputResult() {
+                        ExeFileName = _gitExeFilePath,
+                        ExitCode = output.ExitCode,
+                    });
+                }
+            }
         }
 
         private static string GetClonedFolder(string repoUrl, string targetParentFolderPath) {

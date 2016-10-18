@@ -14,17 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
-using System.Threading.Tasks;
-using Microsoft.CookiecutterTools.Infrastructure;
-
-namespace Microsoft.CookiecutterTools.Model {
-    interface ICookiecutterClient {
-        bool CookiecutterInstalled { get; }
-        Task<bool> IsCookiecutterInstalled();
-        Task CreateCookiecutterEnv();
-        Task InstallPackage();
-        Task<ContextItem[]> LoadContextAsync(string localTemplateFolder, string userConfigFilePath);
-        Task GenerateProjectAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath);
+namespace Microsoft.CookiecutterTools.ViewModel {
+    enum OperationStatus {
+        NotStarted,
+        InProgress,
+        Succeeded,
+        Failed,
+        Canceled,
     }
 }

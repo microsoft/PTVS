@@ -54,7 +54,7 @@ namespace CookiecutterTests {
         private ICookiecutterClient _cutterClient;
         private ICookiecutterTelemetry _telemetry;
         private CookiecutterViewModel _vm;
-        private ITemplateSource _installedTemplateSource;
+        private ILocalTemplateSource _installedTemplateSource;
         private ITemplateSource _gitHubTemplateSource;
         private ITemplateSource _feedTemplateSource;
         private string _openedFolder;
@@ -89,9 +89,9 @@ namespace CookiecutterTests {
             var installedPath = TestInstalledTemplateFolderPath;
             var userConfigFilePath = TestUserConfigFilePath;
 
-            _gitClient = new GitClient(GitClient.RecommendedGitFilePath);
+            _gitClient = new GitClient(GitClient.RecommendedGitFilePath, _redirector);
             _gitHubClient = new GitHubClient();
-            _cutterClient = CookiecutterClientProvider.Create();
+            _cutterClient = CookiecutterClientProvider.Create(_redirector);
             _telemetry = new CookiecutterTelemetry(new TelemetryTestService());
             _installedTemplateSource = new LocalTemplateSource(installedPath, _gitClient);
             _gitHubTemplateSource = new GitHubTemplateSource(_gitHubClient);
@@ -225,9 +225,7 @@ namespace CookiecutterTests {
             await _vm.LoadTemplateAsync();
 
             // Local template doesn't need to be cloned
-            Assert.IsFalse(_vm.IsCloning);
-            Assert.IsFalse(_vm.IsCloningError);
-            Assert.IsFalse(_vm.IsCloningSuccess);
+            Assert.AreEqual(OperationStatus.NotStarted, _vm.CloningStatus);
 
             PrintContextItems(_vm.ContextItems);
             CollectionAssert.AreEqual(LocalTemplateWithUserConfigContextItems, _vm.ContextItems, new ContextItemViewModelComparer());
@@ -238,9 +236,7 @@ namespace CookiecutterTests {
 
             await _vm.CreateFilesAsync();
 
-            Assert.IsFalse(_vm.IsCreating);
-            Assert.IsTrue(_vm.IsCreatingSuccess);
-            Assert.IsFalse(_vm.IsCreatingError);
+            Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
 
             var reportFilePath = Path.Combine(_vm.OutputFolderPath, "report.txt");
             Assert.IsTrue(File.Exists(reportFilePath), "Failed to generate some project files.");
@@ -274,9 +270,7 @@ namespace CookiecutterTests {
             await _vm.LoadTemplateAsync();
 
             // Local template needs to be cloned
-            Assert.IsFalse(_vm.IsCloning);
-            Assert.IsFalse(_vm.IsCloningError);
-            Assert.IsTrue(_vm.IsCloningSuccess);
+            Assert.AreEqual(OperationStatus.Succeeded, _vm.CloningStatus);
 
             PrintContextItems(_vm.ContextItems);
 
@@ -285,9 +279,7 @@ namespace CookiecutterTests {
 
             await _vm.CreateFilesAsync();
 
-            Assert.IsFalse(_vm.IsCreating);
-            Assert.IsTrue(_vm.IsCreatingSuccess);
-            Assert.IsFalse(_vm.IsCreatingError);
+            Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
             Assert.AreEqual(_vm.OutputFolderPath, _vm.OpenInExplorerFolderPath);
 
             Assert.IsTrue(Directory.Exists(Path.Combine(_vm.OutputFolderPath, "static_files")));

@@ -20,6 +20,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools;
+using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 
 namespace CookiecutterTests {
@@ -30,15 +31,15 @@ namespace CookiecutterTests {
             }
         }
 
-        public Task<ProcessOutputResult> CreateCookiecutterEnv() {
+        public Task CreateCookiecutterEnv() {
             throw new NotImplementedException();
         }
 
-        public Task<ProcessOutputResult> GenerateProjectAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
+        public Task GenerateProjectAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
             throw new NotImplementedException();
         }
 
-        public Task<ProcessOutputResult> InstallPackage() {
+        public Task InstallPackage() {
             throw new NotImplementedException();
         }
 
@@ -46,7 +47,7 @@ namespace CookiecutterTests {
             throw new NotImplementedException();
         }
 
-        public Task<Tuple<ContextItem[], ProcessOutputResult>> LoadContextAsync(string localTemplateFolder, string userConfigFilePath) {
+        public Task<ContextItem[]> LoadContextAsync(string localTemplateFolder, string userConfigFilePath) {
             throw new NotImplementedException();
         }
     }

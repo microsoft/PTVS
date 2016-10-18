@@ -21,7 +21,6 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools.Infrastructure;
-using Microsoft.VisualStudio.Shell;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.CookiecutterTools.Model {
@@ -29,6 +28,7 @@ namespace Microsoft.CookiecutterTools.Model {
         private readonly CookiecutterPythonInterpreter _interpreter;
         private readonly string _envFolderPath;
         private readonly string _envInterpreterPath;
+        private readonly Redirector _redirector;
 
         public bool CookiecutterInstalled {
             get {
@@ -40,11 +40,12 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
-        public CookiecutterClient(CookiecutterPythonInterpreter interpreter) {
+        public CookiecutterClient(CookiecutterPythonInterpreter interpreter, Redirector redirector) {
             _interpreter = interpreter;
             var localAppDataFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             _envFolderPath = Path.Combine(localAppDataFolderPath, "Microsoft", "CookiecutterTools", "env");
             _envInterpreterPath = Path.Combine(_envFolderPath, "scripts", "python.exe");
+            _redirector = redirector;
         }
 
         public async Task<bool> IsCookiecutterInstalled() {
@@ -61,29 +62,29 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
-        public async Task<ProcessOutputResult> CreateCookiecutterEnv() {
+        public async Task CreateCookiecutterEnv() {
             // Create a virtual environment using the global interpreter
             var interpreterPath = _interpreter.InterpreterExecutablePath;
             var output = ProcessOutput.RunHiddenAndCapture(interpreterPath, "-m", "venv", _envFolderPath);
 
-            return await WaitForOutput(interpreterPath, output);
+            await WaitForOutput(interpreterPath, output);
         }
 
-        public async Task<ProcessOutputResult> InstallPackage() {
+        public async Task InstallPackage() {
             // Install the package into the virtual environment
             var output = ProcessOutput.RunHiddenAndCapture(_envInterpreterPath, "-m", "pip", "install", "cookiecutter<1.5");
 
-            return await WaitForOutput(_envInterpreterPath, output);
+            await WaitForOutput(_envInterpreterPath, output);
         }
 
-        public async Task<Tuple<ContextItem[], ProcessOutputResult>> LoadContextAsync(string localTemplateFolder, string userConfigFilePath) {
+        public async Task<ContextItem[]> LoadContextAsync(string localTemplateFolder, string userConfigFilePath) {
             if (localTemplateFolder == null) {
                 throw new ArgumentNullException(nameof(localTemplateFolder));
             }
 
             var items = new List<ContextItem>();
 
-            var result = await RunGenerateContextScript(_envInterpreterPath, localTemplateFolder, userConfigFilePath);
+            var result = await RunGenerateContextScript(_redirector, _envInterpreterPath, localTemplateFolder, userConfigFilePath);
             var contextJson = string.Join(Environment.NewLine, result.StandardOutputLines);
             var context = (JToken)JObject.Parse(contextJson).SelectToken("cookiecutter");
             if (context != null) {
@@ -107,10 +108,10 @@ namespace Microsoft.CookiecutterTools.Model {
                 }
             }
 
-            return Tuple.Create(items.ToArray(), result);
+            return items.ToArray();
         }
 
-        public async Task<ProcessOutputResult> GenerateProjectAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
+        public async Task GenerateProjectAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
             if (localTemplateFolder == null) {
                 throw new ArgumentNullException(nameof(localTemplateFolder));
             }
@@ -126,15 +127,13 @@ namespace Microsoft.CookiecutterTools.Model {
             string tempFolder = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
             Directory.CreateDirectory(tempFolder);
 
-            var result = await RunRunScript(_envInterpreterPath, localTemplateFolder, userConfigFilePath, tempFolder, contextFilePath);
+            var result = await RunRunScript(_redirector, _envInterpreterPath, localTemplateFolder, userConfigFilePath, tempFolder, contextFilePath);
             MoveToDesiredFolder(outputFolderPath, tempFolder);
-
-            return result;
         }
 
-        private static async Task<ProcessOutputResult> RunGenerateContextScript(string interpreterPath, string templateFolderPath, string userConfigFilePath) {
+        private static async Task<ProcessOutputResult> RunGenerateContextScript(Redirector redirector, string interpreterPath, string templateFolderPath, string userConfigFilePath) {
             var scriptPath = PythonToolsInstallPath.GetFile("cookiecutter_load.py");
-            return await RunPythonScript(interpreterPath, scriptPath, string.Format("\"{0}\" \"{1}\"", templateFolderPath, userConfigFilePath));
+            return await RunPythonScript(redirector, interpreterPath, scriptPath, string.Format("\"{0}\" \"{1}\"", templateFolderPath, userConfigFilePath));
         }
 
         private static async Task<ProcessOutputResult> RunCheckScript(string interpreterPath) {
@@ -143,25 +142,31 @@ namespace Microsoft.CookiecutterTools.Model {
             return await WaitForOutput(interpreterPath, output);
         }
 
-        private static async Task<ProcessOutputResult> RunRunScript(string interpreterPath, string templateFolderPath, string userConfigFilePath, string outputFolderPath, string contextPath) {
+        private static async Task<ProcessOutputResult> RunRunScript(Redirector redirector, string interpreterPath, string templateFolderPath, string userConfigFilePath, string outputFolderPath, string contextPath) {
             var scriptPath = PythonToolsInstallPath.GetFile("cookiecutter_run.py");
-            return await RunPythonScript(interpreterPath, scriptPath, GetRunArguments(templateFolderPath, userConfigFilePath, outputFolderPath, contextPath));
+            return await RunPythonScript(redirector, interpreterPath, scriptPath, GetRunArguments(templateFolderPath, userConfigFilePath, outputFolderPath, contextPath));
         }
 
         private static string GetRunArguments(string templateFolderPath, string userConfigFilePath, string outputFolderPath, string contextFilePath) {
             return string.Format("\"{0}\" \"{1}\" \"{2}\" \"{3}\"", contextFilePath, templateFolderPath, outputFolderPath, userConfigFilePath);
         }
 
-        private static async Task<ProcessOutputResult> RunPythonScript(string interpreterPath, string script, string parameters, bool showWindow = false) {
+        private static async Task<ProcessOutputResult> RunPythonScript(Redirector redirector, string interpreterPath, string script, string parameters) {
+            var outputLines = new List<string>();
+            var errorLines = new List<string>();
+
             ProcessOutput output = null;
             var arguments = string.Format("\"{0}\" {1}", script, parameters);
-            if (showWindow) {
-                output = ProcessOutput.RunVisible(interpreterPath, arguments);
-            } else {
-                output = ProcessOutput.RunHiddenAndCapture(interpreterPath, arguments);
-            }
+            var listRedirector = new ListRedirector(outputLines, errorLines);
+            var outerRedirector = new TeeRedirector(redirector, listRedirector);
 
-            return await WaitForOutput(interpreterPath, output);
+            output = ProcessOutput.Run(interpreterPath, new string[] { arguments }, null, null, false, outerRedirector);
+
+            var result = await WaitForOutput(interpreterPath, output);
+            result.StandardOutputLines = outputLines.ToArray();
+            result.StandardErrorLines = errorLines.ToArray();
+
+            return result;
         }
 
         private static async Task<ProcessOutputResult> WaitForOutput(string interpreterPath, ProcessOutput output) {
@@ -171,8 +176,8 @@ namespace Microsoft.CookiecutterTools.Model {
                 var r = new ProcessOutputResult() {
                     ExeFileName = interpreterPath,
                     ExitCode = output.ExitCode,
-                    StandardOutputLines = output.StandardOutputLines.ToArray(),
-                    StandardErrorLines = output.StandardErrorLines.ToArray(),
+                    StandardOutputLines = output.StandardOutputLines?.ToArray(),
+                    StandardErrorLines = output.StandardErrorLines?.ToArray(),
                 };
 
                 // All our python scripts will return 0 if successful

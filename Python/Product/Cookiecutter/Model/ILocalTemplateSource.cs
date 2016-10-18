@@ -15,16 +15,15 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools.Infrastructure;
 
 namespace Microsoft.CookiecutterTools.Model {
-    interface ICookiecutterClient {
-        bool CookiecutterInstalled { get; }
-        Task<bool> IsCookiecutterInstalled();
-        Task CreateCookiecutterEnv();
-        Task InstallPackage();
-        Task<ContextItem[]> LoadContextAsync(string localTemplateFolder, string userConfigFilePath);
-        Task GenerateProjectAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath);
+    interface ILocalTemplateSource : ITemplateSource {
+        Task DeleteTemplateAsync(string repoPath);
+        Task<bool?> CheckForUpdateAsync(string repoPath);
+        Task UpdateTemplateAsync(string repoPath);
+        Task AddTemplateAsync(string repoPath);
     }
 }

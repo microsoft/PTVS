@@ -10,6 +10,7 @@
       xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
       xmlns:img="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
       xmlns:imagecatalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
+      wpf:LambdaProperties.ImportedNamespaces="System.Windows Microsoft.CookiecutterTools Microsoft.CookiecutterTools.ViewModel"
       mc:Ignorable="d" 
       d:DataContext="{Binding Source={d:DesignData Source=CookiecutterControlDesignData.xaml}}"
       d:DesignHeight="600" d:DesignWidth="300"
@@ -51,6 +52,9 @@
                                                                Watermark="{Binding Default}" />
                         </StackPanel>
                     </DataTemplate>
+                    <wpf:Lambda x:Key="OperationStatusInProgressToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.InProgress ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+                    <wpf:Lambda x:Key="OperationStatusFailedToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.Failed ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+                    <wpf:Lambda x:Key="OperationStatusSucceededToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.Succeeded ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
                     <wpf:Lambda x:Key="BoolToVisibleOrCollapsed">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
                     <wpf:Lambda x:Key="BoolToVisible">(bool b) => b ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
                     <wpf:Lambda x:Key="BoolToNotVisible">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
@@ -66,7 +70,7 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <StackPanel Grid.Row="0" Margin="4" Orientation="Vertical">
-            <StackPanel Margin="4 4 4 8" Orientation="Horizontal" Visibility="{Binding IsCloningSuccess, Converter={StaticResource BoolToVisibleOrCollapsed}}">
+            <StackPanel Margin="4 4 4 8" Orientation="Horizontal" Visibility="{Binding CloningStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"/>
                 <TextBlock Margin="4 0 0 0" Text="Template cloned successfully."/>
             </StackPanel>
@@ -117,14 +121,14 @@
 
             <StackPanel Margin="4 4 4 8"
                         Orientation="Vertical"
-                        Visibility="{Binding Path=IsCreating, Converter={StaticResource BoolToVisibleOrCollapsed}}">
+                        Visibility="{Binding Path=CreatingStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
                 <TextBlock Text="Creating files..."/>
                 <ProgressBar Margin="4" IsIndeterminate="True"/>
             </StackPanel>
 
             <StackPanel Margin="4 4 4 8"
                         Orientation="Horizontal"
-                        Visibility="{Binding Path=IsCreatingError, Converter={StaticResource BoolToVisibleOrCollapsed}}">
+                        Visibility="{Binding Path=CreatingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
                 <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Error creating files. See output window for details."/>
             </StackPanel>

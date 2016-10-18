@@ -14,14 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools.Infrastructure;
 
 namespace Microsoft.CookiecutterTools.Model {
-    class LocalTemplateSource : ITemplateSource {
+    class LocalTemplateSource : ILocalTemplateSource {
         private string _installedFolderPath;
         private IGitClient _gitClient;
         private List<Template> _cache;
@@ -47,11 +49,60 @@ namespace Microsoft.CookiecutterTools.Model {
                 }
             }
 
-            return new TemplateEnumerationResult(templates);
+            return new TemplateEnumerationResult(templates.OrderBy(t => t.Name).ToList());
         }
 
-        public void InvalidateCache() {
-            _cache = null;
+        public async Task DeleteTemplateAsync(string repoPath) {
+            if (_cache == null) {
+                await BuildCacheAsync();
+            }
+
+            ShellUtils.DeleteDirectory(repoPath);
+
+            _cache.RemoveAll(t => t.LocalFolderPath == repoPath);
+        }
+
+        public async Task AddTemplateAsync(string repoPath) {
+            if (_cache == null) {
+                await BuildCacheAsync();
+            } else {
+                await AddFolderToCache(repoPath);
+            }
+        }
+
+        public async Task UpdateTemplateAsync(string repoPath) {
+            if (_cache == null) {
+                await BuildCacheAsync();
+            }
+
+            await _gitClient.MergeAsync(repoPath);
+
+            var template = _cache.SingleOrDefault(t => t.LocalFolderPath == repoPath);
+            if (template != null) {
+                template.ClonedLastUpdate = await _gitClient.GetLastCommitDateAsync(template.LocalFolderPath);
+            }
+        }
+
+        public async Task<bool?> CheckForUpdateAsync(string repoPath) {
+            if (_cache == null) {
+                await BuildCacheAsync();
+            }
+
+            var template = _cache.SingleOrDefault(t => t.RemoteUrl == repoPath);
+            if (template == null) {
+                return null;
+            }
+
+            await _gitClient.FetchAsync(template.LocalFolderPath);
+
+            template.ClonedLastUpdate = await _gitClient.GetLastCommitDateAsync(template.LocalFolderPath);
+            template.RemoteLastUpdate = await _gitClient.GetLastCommitDateAsync(template.LocalFolderPath, "origin/master");
+
+            if (template.RemoteLastUpdate.HasValue && template.ClonedLastUpdate.HasValue) {
+                var span = template.RemoteLastUpdate - template.ClonedLastUpdate;
+            }
+
+            return template.UpdateAvailable;
         }
 
         private async Task BuildCacheAsync() {
@@ -59,17 +110,20 @@ namespace Microsoft.CookiecutterTools.Model {
 
             if (Directory.Exists(_installedFolderPath)) {
                 foreach (var folder in PathUtils.EnumerateDirectories(_installedFolderPath, recurse: false, fullPaths: true)) {
-
-                    var template = new Template() {
-                        LocalFolderPath = folder,
-                        Name = PathUtils.GetFileOrDirectoryName(folder),
-                    };
-
-                    await InitializeRemoteAsync(template);
-
-                    _cache.Add(template);
+                    await AddFolderToCache(folder);
                 }
             }
+        }
+
+        private async Task AddFolderToCache(string repoPath) {
+            var template = new Template() {
+                LocalFolderPath = repoPath,
+                Name = PathUtils.GetFileOrDirectoryName(repoPath),
+            };
+
+            await InitializeRemoteAsync(template);
+
+            _cache.Add(template);
         }
 
         private async Task InitializeRemoteAsync(Template template) {
