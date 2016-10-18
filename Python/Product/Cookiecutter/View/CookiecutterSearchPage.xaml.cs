@@ -75,7 +75,6 @@ namespace Microsoft.CookiecutterTools.View {
         private void OpenInExplorer_Executed(object sender, ExecutedRoutedEventArgs e) {
             var folderPath = (string)e.Parameter;
             ViewModel.OpenFolderInExplorer(folderPath);
-            Process.Start(folderPath)?.Dispose();
         }
 
         private void LoadMore_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -89,7 +88,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         private void RunSelection_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            e.CanExecute = ViewModel?.SelectedTemplate != null && ViewModel.CloningStatus != OperationStatus.InProgress && ViewModel.LoadingStatus != OperationStatus.InProgress;
+            e.CanExecute = ViewModel?.CanLoadSelectedTemplate == true;
             e.Handled = true;
         }
 
@@ -114,7 +113,9 @@ namespace Microsoft.CookiecutterTools.View {
                             ViewModel.SelectedTemplate = template;
                         }
 
-                        LoadTemplate();
+                        if (ViewModel.CanLoadSelectedTemplate) {
+                            LoadTemplate();
+                        }
                     }
                 }
             }

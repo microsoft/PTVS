@@ -20,5 +20,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         InProgress,
         Succeeded,
         Failed,
+        Canceled,
     }
 }

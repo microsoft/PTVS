@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
 
                                 if (Version.TryParse(dirInfo.Name, out pythonUwpVersion)) {
                                     var prefixPath = dirInfo.GetDirectories(PythonUwpConstants.InterpreterRelativePath).FirstOrDefault();
-                                    if (prefixPath.Exists) {
+                                    if (prefixPath != null && prefixPath.Exists) {
                                         var targetsFile = prefixPath?.GetFiles(PythonUwpConstants.InterpreterFile).FirstOrDefault();
                                         var libPath = prefixPath?.GetDirectories(PythonUwpConstants.InterpreterLibPath).FirstOrDefault();
 

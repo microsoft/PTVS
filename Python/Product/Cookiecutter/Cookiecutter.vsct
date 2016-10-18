@@ -272,7 +272,7 @@
       <IDSymbol name="cmdidCreateFromCookiecutter" value ="0x1007"/>
       <IDSymbol name="cmdidAddFromCookiecutter" value ="0x1008"/>
       <IDSymbol name="cmdidUpdateTemplate" value ="0x1009"/>
-      <IDSymbol name="cmdidCheckForUpdates" value ="0x1010"/>
+      <IDSymbol name="cmdidCheckForUpdates" value ="0x100a"/>
 
       <!-- Context Menus -->
       <IDSymbol name="ContextMenu" value="101"/>

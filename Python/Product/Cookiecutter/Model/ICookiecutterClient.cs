@@ -16,14 +16,15 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.CookiecutterTools.Infrastructure;
 
 namespace Microsoft.CookiecutterTools.Model {
     interface ICookiecutterClient {
         bool CookiecutterInstalled { get; }
         Task<bool> IsCookiecutterInstalled();
-        Task<ProcessOutputResult> CreateCookiecutterEnv();
-        Task<ProcessOutputResult> InstallPackage();
-        Task<Tuple<ContextItem[], ProcessOutputResult>> LoadContextAsync(string localTemplateFolder, string userConfigFilePath);
-        Task<ProcessOutputResult> GenerateProjectAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath);
+        Task CreateCookiecutterEnv();
+        Task InstallPackage();
+        Task<ContextItem[]> LoadContextAsync(string localTemplateFolder, string userConfigFilePath);
+        Task GenerateProjectAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath);
     }
 }

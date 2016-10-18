@@ -89,9 +89,9 @@ namespace CookiecutterTests {
             var installedPath = TestInstalledTemplateFolderPath;
             var userConfigFilePath = TestUserConfigFilePath;
 
-            _gitClient = new GitClient(GitClient.RecommendedGitFilePath);
+            _gitClient = new GitClient(GitClient.RecommendedGitFilePath, _redirector);
             _gitHubClient = new GitHubClient();
-            _cutterClient = CookiecutterClientProvider.Create();
+            _cutterClient = CookiecutterClientProvider.Create(_redirector);
             _telemetry = new CookiecutterTelemetry(new TelemetryTestService());
             _installedTemplateSource = new LocalTemplateSource(installedPath, _gitClient);
             _gitHubTemplateSource = new GitHubTemplateSource(_gitHubClient);

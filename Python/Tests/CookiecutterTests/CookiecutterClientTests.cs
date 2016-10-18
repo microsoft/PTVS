@@ -37,6 +37,7 @@ namespace CookiecutterTests {
         private static string UserConfigFilePath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "userconfig.yaml");
 
         private ICookiecutterClient _client;
+        private MockRedirector _redirector = new MockRedirector();
 
         private static ContextItem[] LocalTemplateNoUserConfigContextItems { get; } = new ContextItem[] {
             new ContextItem("full_name", "Default Full Name"),
@@ -74,7 +75,7 @@ namespace CookiecutterTests {
 
         [TestInitialize]
         public void SetupTest() {
-            _client = CookiecutterClientProvider.Create();
+            _client = CookiecutterClientProvider.Create(_redirector);
             Assert.IsNotNull(_client, "The system doesn't have any compatible Python interpreters.");
         }
 
@@ -91,7 +92,7 @@ namespace CookiecutterTests {
 
             var actual = await _client.LoadContextAsync(LocalTemplatePath, NoUserConfigFilePath);
 
-            CollectionAssert.AreEqual(LocalTemplateNoUserConfigContextItems, actual.Item1, new ContextItemComparer());
+            CollectionAssert.AreEqual(LocalTemplateNoUserConfigContextItems, actual, new ContextItemComparer());
         }
 
         [TestMethod]
@@ -100,7 +101,7 @@ namespace CookiecutterTests {
 
             var actual = await _client.LoadContextAsync(LocalTemplatePath, UserConfigFilePath);
 
-            CollectionAssert.AreEqual(LocalTemplateWithUserConfigContextItems, actual.Item1, new ContextItemComparer());
+            CollectionAssert.AreEqual(LocalTemplateWithUserConfigContextItems, actual, new ContextItemComparer());
         }
 
         [TestMethod]
@@ -153,7 +154,7 @@ namespace CookiecutterTests {
             var contextFilePath = Path.Combine(output, "context.json");
 
             var vm = new CookiecutterViewModel();
-            foreach (var item in context.Item1) {
+            foreach (var item in context) {
                 vm.ContextItems.Add(new ContextItemViewModel(item.Name, item.DefaultValue, item.Values));
             }
 
@@ -161,8 +162,7 @@ namespace CookiecutterTests {
 
             Directory.CreateDirectory(outputProjectFolder);
 
-            var result = await _client.GenerateProjectAsync(LocalTemplatePath, userConfigFilePath, contextFilePath, outputProjectFolder);
-            Assert.AreEqual(result.ExitCode, 0);
+            await _client.GenerateProjectAsync(LocalTemplatePath, userConfigFilePath, contextFilePath, outputProjectFolder);
 
             var reportFilePath = Path.Combine(outputProjectFolder, "report.txt");
             Assert.IsTrue(File.Exists(reportFilePath), "Failed to generate some project files.");

@@ -121,6 +121,6 @@
     <value>Python Tools for Visual Studio</value>
   </data>
   <data name="PythonUwpSdkNotFound" xml:space="preserve">
-    <value>Could not find CPython UWP SDK.  \nPlease download from &lt;http://go.microsoft.com/fwlink/?LinkID=613495&amp;amp;clcid=0x409&gt; and restart Visual Studio.</value>
+    <value>Could not find CPython UWP SDK.  Please download from &lt;http://go.microsoft.com/fwlink/?LinkID=613495&amp;amp;clcid=0x409&gt; and restart Visual Studio.</value>
   </data>
 </root>

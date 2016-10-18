@@ -33,7 +33,7 @@ namespace Microsoft.CookiecutterTools
         public const int cmdidCreateFromCookiecutter = 0x1007;
         public const int cmdidAddFromCookiecutter = 0x1008;
         public const int cmdidUpdateTemplate = 0x1009;
-        public const int cmdidCheckForUpdates = 0x1010;
+        public const int cmdidCheckForUpdates = 0x100A;
         public const int ContextMenu = 0x0065;
         public const int WindowToolBarId = 0x2000;
         public const int ToolbarNavGroup = 0x3000;

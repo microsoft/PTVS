@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -64,6 +63,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
         private TemplateViewModel _selectedTemplate;
         private CancellationTokenSource _templateRefreshCancelTokenSource;
+        private CancellationTokenSource _checkUpdatesCancelTokenSource;
 
         private ITemplateSource _recommendedSource;
         private ILocalTemplateSource _installedSource;
@@ -191,6 +191,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _installingStatus) {
                     _installingStatus = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(InstallingStatus)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
                 }
             }
         }
@@ -204,6 +205,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _cloningStatus) {
                     _cloningStatus = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CloningStatus)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
                 }
             }
         }
@@ -217,6 +219,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _loadingStatus) {
                     _loadingStatus = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(LoadingStatus)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
                 }
             }
         }
@@ -230,6 +233,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _creatingStatus) {
                     _creatingStatus = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CreatingStatus)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
                 }
             }
         }
@@ -243,6 +247,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _checkingUpdateStatus) {
                     _checkingUpdateStatus = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CheckingUpdateStatus)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
                 }
             }
         }
@@ -256,7 +261,18 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _updatingStatus) {
                     _updatingStatus = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(UpdatingStatus)));
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsBusy)));
                 }
+            }
+        }
+
+        public bool IsBusy {
+            get {
+                return InstallingStatus == OperationStatus.InProgress ||
+                    CloningStatus == OperationStatus.InProgress ||
+                    LoadingStatus == OperationStatus.InProgress ||
+                    CreatingStatus == OperationStatus.InProgress ||
+                    UpdatingStatus == OperationStatus.InProgress;
             }
         }
 
@@ -270,6 +286,42 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     _selectedTemplate = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedTemplate)));
                 }
+            }
+        }
+
+        public bool CanLoadSelectedTemplate {
+            get {
+                return SelectedTemplate != null && !IsBusy;
+            }
+        }
+
+        public bool CanRunSelectedTemplate {
+            get {
+                return SelectedTemplate != null && !IsBusy;
+            }
+        }
+
+        public bool CanDeleteSelectedTemplate {
+            get {
+                return Directory.Exists(SelectedTemplate?.ClonedPath) && !IsBusy;
+            }
+        }
+
+        public bool CanUpdateSelectedTemplate {
+            get {
+                return SelectedTemplate != null && SelectedTemplate.IsUpdateAvailable && !IsBusy;
+            }
+        }
+
+        public bool CanNavigateToGitHub {
+            get {
+                return !string.IsNullOrEmpty(SelectedTemplate?.GitHubHomeUrl);
+            }
+        }
+
+        public bool CanCheckForUpdates {
+            get {
+                return !IsBusy && CheckingUpdateStatus != OperationStatus.InProgress;
             }
         }
 
@@ -346,13 +398,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             try {
                 string remote = template.RemoteUrl;
 
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.DeletingTemplateStarted, template.ClonedPath));
+                _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(Strings.DeletingTemplateStarted.FormatUI(template.ClonedPath));
 
                 await _installedSource.DeleteTemplateAsync(template.ClonedPath);
 
-                _outputWindow.WriteLine(string.Empty);
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.DeletingTemplateSuccess, template.ClonedPath));
-                _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(Strings.DeletingTemplateSuccess.FormatUI(template.ClonedPath));
 
                 ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Delete, template);
 
@@ -378,11 +429,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 }
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 _outputWindow.WriteErrorLine(ex.Message);
-
-                _outputWindow.WriteLine(string.Empty);
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.DeletingTemplateFailed, template.ClonedPath));
-                _outputWindow.ShowAndActivate();
-
+                _outputWindow.WriteLine(Strings.DeletingTemplateFailed.FormatUI(template.ClonedPath));
                 ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Delete, template, ex);
             }
         }
@@ -416,30 +463,26 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
             ResetStatus();
 
+            _checkUpdatesCancelTokenSource?.Cancel();
+
             if (IsCloneNeeded(selection)) {
                 CloningStatus = OperationStatus.InProgress;
 
                 try {
-                    _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.CloningTemplateStarted, selection.DisplayName));
+                    _outputWindow.ShowAndActivate();
+                    _outputWindow.WriteLine(Strings.CloningTemplateStarted.FormatUI(selection.DisplayName));
 
                     Directory.CreateDirectory(InstalledFolderPath);
 
-                    var result = await _gitClient.CloneAsync(selection.RemoteUrl, InstalledFolderPath);
-                    selection.ClonedPath = result.Item1;
+                    selection.ClonedPath = await _gitClient.CloneAsync(selection.RemoteUrl, InstalledFolderPath);
 
                     CloningStatus = OperationStatus.Succeeded;
 
-                    _outputWindow.WriteLine(string.Join(Environment.NewLine, result.Item2.StandardOutputLines));
-                    _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, result.Item2.StandardErrorLines));
-
-                    _outputWindow.WriteLine(string.Empty);
-                    _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.CloningTemplateSuccess, selection.DisplayName, selection.ClonedPath));
-                    _outputWindow.ShowAndActivate();
+                    _outputWindow.WriteLine(Strings.CloningTemplateSuccess.FormatUI(selection.DisplayName, selection.ClonedPath));
 
                     ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Clone, selection);
 
-                    // We now have a new template installed, so reload that section of the results
-                    _installedSource.InvalidateCache();
+                    await _installedSource.AddTemplateAsync(selection.ClonedPath);
 
                     _templateRefreshCancelTokenSource?.Cancel();
                     _templateRefreshCancelTokenSource = new CancellationTokenSource();
@@ -452,26 +495,11 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     _templateLocalFolderPath = selection.ClonedPath;
 
                     await RefreshContextAsync(selection);
-                } catch (ProcessException ex) {
-                    CloningStatus = OperationStatus.Failed;
-
-                    _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.ProcessExitCodeMessage, ex.Result.ExeFileName, ex.Result.ExitCode));
-                    _outputWindow.WriteLine(string.Join(Environment.NewLine, ex.Result.StandardOutputLines));
-                    _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, ex.Result.StandardErrorLines));
-
-                    _outputWindow.WriteLine(string.Empty);
-                    _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.CloningTemplateFailed, selection.DisplayName));
-                    _outputWindow.ShowAndActivate();
-
-                    ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Clone, selection, ex);
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     CloningStatus = OperationStatus.Failed;
 
                     _outputWindow.WriteErrorLine(ex.Message);
-
-                    _outputWindow.WriteLine(string.Empty);
-                    _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.CloningTemplateFailed, selection.DisplayName));
-                    _outputWindow.ShowAndActivate();
+                    _outputWindow.WriteLine(Strings.CloningTemplateFailed.FormatUI(selection.DisplayName));
 
                     ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Clone, selection, ex);
                 }
@@ -486,51 +514,55 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public async Task CheckForUpdatesAsync() {
             ResetStatus();
 
-            CheckingUpdateStatus = OperationStatus.InProgress;
+            try {
+                _checkUpdatesCancelTokenSource?.Cancel();
+                _checkUpdatesCancelTokenSource = new CancellationTokenSource();
 
-            _outputWindow.WriteLine(Strings.CheckingForAllUpdatesStarted);
+                CheckingUpdateStatus = OperationStatus.InProgress;
 
-            bool anyError = false;
-            var templatesResult = await _installedSource.GetTemplatesAsync(null, null, CancellationToken.None);
-            foreach (var template in templatesResult.Templates) {
-                try {
-                    var availableResult = await _installedSource.CheckForUpdateAsync(template.RemoteUrl);
-                    _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.CheckingTemplateUpdateStarted, template.Name, template.RemoteUrl));
-                    _outputWindow.WriteLine(string.Join(Environment.NewLine, availableResult.Item2.StandardOutputLines));
-                    _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, availableResult.Item2.StandardErrorLines));
+                _outputWindow.WriteLine(Strings.CheckingForAllUpdatesStarted);
 
-                    if (availableResult.Item1.HasValue) {
-                        _outputWindow.WriteLine(availableResult.Item1.Value ? Strings.CheckingTemplateUpdateFound : Strings.CheckingTemplateUpdateNotFound);
-                    } else {
-                        _outputWindow.WriteLine(Strings.CheckingTemplateUpdateInconclusive);
+                bool anyError = false;
+                var templatesResult = await _installedSource.GetTemplatesAsync(null, null, CancellationToken.None);
+                foreach (var template in templatesResult.Templates) {
+                    _checkUpdatesCancelTokenSource.Token.ThrowIfCancellationRequested();
+
+                    try {
+                        _outputWindow.WriteLine(Strings.CheckingTemplateUpdateStarted.FormatUI(template.Name, template.RemoteUrl));
+
+                        var available = await _installedSource.CheckForUpdateAsync(template.RemoteUrl);
+
+                        if (available.HasValue) {
+                            _outputWindow.WriteLine(available.Value ? Strings.CheckingTemplateUpdateFound : Strings.CheckingTemplateUpdateNotFound);
+                        } else {
+                            _outputWindow.WriteLine(Strings.CheckingTemplateUpdateInconclusive);
+                        }
+
+                        var installed = Installed.Templates.OfType<TemplateViewModel>().SingleOrDefault(vm => vm.RemoteUrl == template.RemoteUrl);
+                        if (installed != null) {
+                            installed.IsUpdateAvailable = available == true;
+                        }
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        if (!anyError) {
+                            _outputWindow.ShowAndActivate();
+                        }
+
+                        anyError = true;
+
+                        _outputWindow.WriteErrorLine(ex.Message);
+                        _outputWindow.WriteLine(Strings.CheckingTemplateUpdateError);
                     }
-
-                    var installed = Installed.Templates.OfType<TemplateViewModel>().SingleOrDefault(vm => vm.RemoteUrl == template.RemoteUrl);
-                    if (installed != null) {
-                        installed.IsUpdateAvailable = availableResult.Item1 == true;
-                    }
-                } catch (ProcessException ex) {
-                    anyError = true;
-
-                    _outputWindow.WriteLine(Strings.CheckingTemplateUpdateError);
-                    _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.ProcessExitCodeMessage, ex.Result.ExeFileName, ex.Result.ExitCode));
-                    _outputWindow.WriteLine(string.Join(Environment.NewLine, ex.Result.StandardOutputLines));
-                    _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, ex.Result.StandardErrorLines));
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    anyError = true;
-
-                    _outputWindow.WriteLine(Strings.CheckingTemplateUpdateError);
-                    _outputWindow.WriteErrorLine(ex.Message);
                 }
+
+                CheckingUpdateStatus = anyError ? OperationStatus.Failed : OperationStatus.Succeeded;
+
+                _outputWindow.WriteLine(anyError ? Strings.CheckingForAllUpdatesFailed : Strings.CheckingForAllUpdatesSuccess);
+
+                ReportEvent(CookiecutterTelemetry.TelemetryArea.Search, CookiecutterTelemetry.SearchEvents.CheckUpdate, (!anyError).ToString());
+            } catch (OperationCanceledException) {
+                CheckingUpdateStatus = OperationStatus.Canceled;
+                _outputWindow.WriteLine(Strings.CheckingForAllUpdatesCanceled);
             }
-
-            CheckingUpdateStatus = anyError ? OperationStatus.Failed : OperationStatus.Succeeded;
-
-            _outputWindow.WriteLine(string.Empty);
-            _outputWindow.WriteLine(anyError ? Strings.CheckingForAllUpdatesFailed : Strings.CheckingForAllUpdatesSuccess);
-            _outputWindow.ShowAndActivate();
-
-            ReportEvent(CookiecutterTelemetry.TelemetryArea.Search, CookiecutterTelemetry.SearchEvents.CheckUpdate, (!anyError).ToString());
         }
 
         public async Task UpdateTemplateAsync() {
@@ -545,41 +577,22 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             try {
                 UpdatingStatus = OperationStatus.InProgress;
 
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.UpdatingTemplateStarted, selection.DisplayName));
+                _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(Strings.UpdatingTemplateStarted.FormatUI(selection.DisplayName));
 
-                var result = await _installedSource.UpdateTemplateAsync(selection.ClonedPath);
+                await _installedSource.UpdateTemplateAsync(selection.ClonedPath);
                 selection.IsUpdateAvailable = false;
 
                 UpdatingStatus = OperationStatus.Succeeded;
 
-                _outputWindow.WriteLine(string.Join(Environment.NewLine, result.StandardOutputLines));
-                _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, result.StandardErrorLines));
-
-                _outputWindow.WriteLine(string.Empty);
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.UpdatingTemplateSuccess, selection.DisplayName, selection.ClonedPath));
-                _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(Strings.UpdatingTemplateSuccess.FormatUI(selection.DisplayName, selection.ClonedPath));
 
                 ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Update, selection);
-            } catch (ProcessException ex) {
-                UpdatingStatus = OperationStatus.Failed;
-
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.ProcessExitCodeMessage, ex.Result.ExeFileName, ex.Result.ExitCode));
-                _outputWindow.WriteLine(string.Join(Environment.NewLine, ex.Result.StandardOutputLines));
-                _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, ex.Result.StandardErrorLines));
-
-                _outputWindow.WriteLine(string.Empty);
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.UpdatingTemplateFailed, selection.DisplayName));
-                _outputWindow.ShowAndActivate();
-
-                ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Update, selection, ex);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 UpdatingStatus = OperationStatus.Failed;
 
                 _outputWindow.WriteErrorLine(ex.Message);
-
-                _outputWindow.WriteLine(string.Empty);
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.UpdatingTemplateFailed, selection.DisplayName));
-                _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(Strings.UpdatingTemplateFailed.FormatUI(selection.DisplayName));
 
                 ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Update, selection, ex);
             }
@@ -619,9 +632,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 var contextFilePath = Path.GetTempFileName();
                 SaveUserInput(contextFilePath);
 
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.RunningTemplateStarted, selection.DisplayName));
+                _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(Strings.RunningTemplateStarted.FormatUI(selection.DisplayName));
 
-                var result = await _cutterClient.GenerateProjectAsync(_templateLocalFolderPath, UserConfigFilePath, contextFilePath, OutputFolderPath);
+                await _cutterClient.GenerateProjectAsync(_templateLocalFolderPath, UserConfigFilePath, contextFilePath, OutputFolderPath);
 
                 try {
                     File.Delete(contextFilePath);
@@ -635,34 +649,14 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
                 CreatingStatus = OperationStatus.Succeeded;
 
-                _outputWindow.WriteLine(string.Join(Environment.NewLine, result.StandardOutputLines));
-                _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, result.StandardErrorLines));
-
-                _outputWindow.WriteLine(string.Empty);
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.RunningTemplateSuccess, selection.DisplayName, OutputFolderPath));
-                _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(Strings.RunningTemplateSuccess.FormatUI(selection.DisplayName, OutputFolderPath));
 
                 ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Run, selection);
-            } catch (ProcessException ex) {
-                CreatingStatus = OperationStatus.Failed;
-
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.ProcessExitCodeMessage, ex.Result.ExeFileName, ex.Result.ExitCode));
-                _outputWindow.WriteLine(string.Join(Environment.NewLine, ex.Result.StandardOutputLines));
-                _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, ex.Result.StandardErrorLines));
-
-                _outputWindow.WriteLine(string.Empty);
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.RunningTemplateFailed, selection.DisplayName));
-                _outputWindow.ShowAndActivate();
-
-                ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Run, selection, ex);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 CreatingStatus = OperationStatus.Failed;
 
                 _outputWindow.WriteErrorLine(ex.Message);
-
-                _outputWindow.WriteLine(string.Empty);
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.RunningTemplateFailed, selection.DisplayName));
-                _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(Strings.RunningTemplateFailed.FormatUI(selection.DisplayName));
 
                 ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Run, selection, ex);
             }
@@ -726,45 +720,23 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             InstallingStatus = OperationStatus.InProgress;
 
             try {
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.InstallingCookiecutterStarted));
-
-                var result = await _cutterClient.CreateCookiecutterEnv();
-                _outputWindow.WriteLine(string.Join(Environment.NewLine, result.StandardOutputLines));
-                _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, result.StandardErrorLines));
-
-                result = await _cutterClient.InstallPackage();
-                _outputWindow.WriteLine(string.Join(Environment.NewLine, result.StandardOutputLines));
-                _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, result.StandardErrorLines));
-
-                _outputWindow.WriteLine(string.Empty);
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.InstallingCookiecutterSuccess));
                 _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(Strings.InstallingCookiecutterStarted);
+
+                await _cutterClient.CreateCookiecutterEnv();
+                await _cutterClient.InstallPackage();
+
+                _outputWindow.WriteLine(Strings.InstallingCookiecutterSuccess);
 
                 InstallingStatus = OperationStatus.Succeeded;
 
                 ReportEvent(CookiecutterTelemetry.TelemetryArea.Prereqs, CookiecutterTelemetry.PrereqsEvents.Install, true.ToString());
                 return true;
-            } catch (ProcessException ex) {
-                InstallingStatus = OperationStatus.Failed;
-
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.ProcessExitCodeMessage, ex.Result.ExeFileName, ex.Result.ExitCode));
-                _outputWindow.WriteLine(string.Join(Environment.NewLine, ex.Result.StandardOutputLines));
-                _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, ex.Result.StandardErrorLines));
-
-                _outputWindow.WriteLine(string.Empty);
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.InstallingCookiecutterFailed));
-                _outputWindow.ShowAndActivate();
-
-                ReportEvent(CookiecutterTelemetry.TelemetryArea.Prereqs, CookiecutterTelemetry.PrereqsEvents.Install, false.ToString());
-                return false;
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 InstallingStatus = OperationStatus.Failed;
 
                 _outputWindow.WriteErrorLine(ex.Message);
-
-                _outputWindow.WriteLine(string.Empty);
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.InstallingCookiecutterFailed));
-                _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(Strings.InstallingCookiecutterFailed);
 
                 ReportEvent(CookiecutterTelemetry.TelemetryArea.Prereqs, CookiecutterTelemetry.PrereqsEvents.Install, false.ToString());
                 return false;
@@ -814,43 +786,29 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             try {
                 LoadingStatus = OperationStatus.InProgress;
 
+                _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(Strings.LoadingTemplateStarted.FormatUI(selection.DisplayName));
+
                 var result = await _cutterClient.LoadContextAsync(selection.ClonedPath, UserConfigFilePath);
 
                 ContextItems.Clear();
-                foreach (var item in result.Item1) {
+                foreach (var item in result) {
                     ContextItems.Add(new ContextItemViewModel(item.Name, item.DefaultValue, item.Values));
                 }
 
                 LoadingStatus = OperationStatus.Succeeded;
 
-                _outputWindow.WriteLine(string.Empty);
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.LoadingTemplateSuccess, selection.DisplayName));
-                _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(Strings.LoadingTemplateSuccess.FormatUI(selection.DisplayName));
 
                 ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Load, selection);
 
                 // Go to the context page
                 ContextLoaded?.Invoke(this, EventArgs.Empty);
-            } catch (InvalidOperationException ex) {
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
                 LoadingStatus = OperationStatus.Failed;
 
                 _outputWindow.WriteErrorLine(ex.Message);
-
-                _outputWindow.WriteLine(string.Empty);
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.LoadingTemplateFailed, selection.DisplayName));
-                _outputWindow.ShowAndActivate();
-
-                ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Load, selection, ex);
-            } catch (ProcessException ex) {
-                LoadingStatus = OperationStatus.Failed;
-
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.ProcessExitCodeMessage, ex.Result.ExeFileName, ex.Result.ExitCode));
-                _outputWindow.WriteLine(string.Join(Environment.NewLine, ex.Result.StandardOutputLines));
-                _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, ex.Result.StandardErrorLines));
-
-                _outputWindow.WriteLine(string.Empty);
-                _outputWindow.WriteLine(string.Format(CultureInfo.CurrentUICulture, Strings.LoadingTemplateFailed, selection.DisplayName));
-                _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(Strings.LoadingTemplateFailed.FormatUI(selection.DisplayName));
 
                 ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Load, selection, ex);
             }

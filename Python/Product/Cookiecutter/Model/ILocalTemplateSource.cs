@@ -17,11 +17,13 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.CookiecutterTools.Infrastructure;
 
 namespace Microsoft.CookiecutterTools.Model {
     interface ILocalTemplateSource : ITemplateSource {
         Task DeleteTemplateAsync(string repoPath);
-        Task<Tuple<bool?, ProcessOutputResult>> CheckForUpdateAsync(string repoPath);
-        Task<ProcessOutputResult> UpdateTemplateAsync(string repoPath);
+        Task<bool?> CheckForUpdateAsync(string repoPath);
+        Task UpdateTemplateAsync(string repoPath);
+        Task AddTemplateAsync(string repoPath);
     }
 }

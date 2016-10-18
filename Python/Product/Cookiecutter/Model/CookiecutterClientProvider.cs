@@ -18,14 +18,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Interpreters;
 
 namespace Microsoft.CookiecutterTools.Model {
     static class CookiecutterClientProvider {
-        public static ICookiecutterClient Create() {
+        public static ICookiecutterClient Create(Redirector redirector) {
             var interpreter = FindCompatibleInterpreter();
             if (interpreter != null) {
-                return new CookiecutterClient(interpreter);
+                return new CookiecutterClient(interpreter, redirector);
             }
 
             return null;
