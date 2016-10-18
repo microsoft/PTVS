@@ -15,18 +15,15 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.CookiecutterTools {
     [Guid("BDB4E0B1-4869-4A6F-AD55-5230B768261D")]
     public class CookiecutterOptionPage : DialogPage {
         private bool _showHelp = true;
+        private bool _checkForTemplateUpdate = true;
         private string _feedUrl = UrlConstants.DefaultRecommendedFeed;
 
         public CookiecutterOptionPage() {
@@ -46,6 +43,14 @@ namespace Microsoft.CookiecutterTools {
         public string FeedUrl {
             get { return _feedUrl; }
             set { _feedUrl = value; }
+        }
+
+        [Category("General")]
+        [DisplayName("Check for Template Update")]
+        [Description("Automatically check online for updates to installed templates.")]
+        public bool CheckForTemplateUpdate {
+            get { return _checkForTemplateUpdate; }
+            set { _checkForTemplateUpdate = value; }
         }
     }
 }

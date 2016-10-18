@@ -17,7 +17,8 @@
             RemoteUrl="https://github.com/brettcannon/python-azure-web-app-cookiecutter"/>
                 <vm:TemplateViewModel
             DisplayName="azure-batch-cookiecutter"
-            RemoteUrl="https://github.com/Azure/azure-batch-cookiecutter"/>
+            RemoteUrl="https://github.com/Azure/azure-batch-cookiecutter"
+            IsUpdateAvailable="True"/>
                 <vm:TemplateViewModel
             DisplayName="azure-hdinsight-eventhubs-cookiecutter"
             RemoteUrl="https://github.com/Azure/azure-hdinsight-eventhubs-cookiecutter"/>

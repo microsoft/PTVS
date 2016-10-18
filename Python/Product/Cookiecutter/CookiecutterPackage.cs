@@ -172,5 +172,18 @@ namespace Microsoft.CookiecutterTools {
                 page.SaveSettingsToStorage();
             }
         }
+
+        internal bool CheckForTemplateUpdate {
+            get {
+                var page = (CookiecutterOptionPage)GetDialogPage(typeof(CookiecutterOptionPage));
+                return page.CheckForTemplateUpdate;
+            }
+
+            set {
+                var page = (CookiecutterOptionPage)GetDialogPage(typeof(CookiecutterOptionPage));
+                page.CheckForTemplateUpdate = value;
+                page.SaveSettingsToStorage();
+            }
+        }
     }
 }

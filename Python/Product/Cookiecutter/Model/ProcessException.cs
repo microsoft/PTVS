@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Globalization;
 using System.Threading.Tasks;
 
 namespace Microsoft.CookiecutterTools.Model {
@@ -22,7 +23,8 @@ namespace Microsoft.CookiecutterTools.Model {
     class ProcessException : Exception {
         public ProcessOutputResult Result { get; }
 
-        public ProcessException(ProcessOutputResult result) {
+        public ProcessException(ProcessOutputResult result) :
+            base(string.Format(CultureInfo.CurrentUICulture, Strings.ProcessExitCodeMessage, result.ExeFileName, result.ExitCode)) {
             Result = result;
         }
     }

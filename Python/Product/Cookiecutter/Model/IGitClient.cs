@@ -16,10 +16,14 @@
 
 using System;
 using System.Threading.Tasks;
+using Microsoft.CookiecutterTools.Infrastructure;
 
 namespace Microsoft.CookiecutterTools.Model {
     interface IGitClient {
-        Task<Tuple<string, ProcessOutputResult>> CloneAsync(string repoUrl, string targetParentFolderPath);
+        Task<string> CloneAsync(string repoUrl, string targetParentFolderPath);
         Task<string> GetRemoteOriginAsync(string repoFolderPath);
+        Task<DateTime?> GetLastCommitDateAsync(string repoFolderPath, string branch = null);
+        Task FetchAsync(string repoFolderPath);
+        Task MergeAsync(string repoFolderPath);
     }
 }

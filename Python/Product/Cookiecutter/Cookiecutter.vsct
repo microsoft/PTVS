@@ -129,6 +129,26 @@
         </Strings>
       </Button>
 
+      <Button guid="guidCookiecutterCmdSet" id="cmdidCheckForUpdates" priority="0x0300" type="Button">
+        <Icon guid="ImageCatalogGuid" id="RunUpdate"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Check for Updates</ButtonText>
+          <MenuText>&amp;Check for Updates</MenuText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidCookiecutterCmdSet" id="cmdidUpdateTemplate" priority="0x0400" type="Button">
+        <Icon guid="ImageCatalogGuid" id="Download"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Update</ButtonText>
+          <MenuText>&amp;Update</MenuText>
+        </Strings>
+      </Button>
+
       <Button guid="guidCookiecutterCmdSet" id="cmdidLinkGitHubHome" priority="0x0100" type="Button">
         <Icon guid="ImageCatalogGuid" id="BrowserLink"/>
         <CommandFlag>DefaultDisabled</CommandFlag>
@@ -176,6 +196,12 @@
     <CommandPlacement guid="guidVSStd97" id="cmdidDelete" priority="0x300">
       <Parent guid="guidCookiecutterCmdSet" id="ToolbarNavGroup"/>
     </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidCheckForUpdates" priority="0x400">
+      <Parent guid="guidCookiecutterCmdSet" id="ToolbarNavGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidUpdateTemplate" priority="0x500">
+      <Parent guid="guidCookiecutterCmdSet" id="ToolbarNavGroup"/>
+    </CommandPlacement>
     <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidLinkGitHubHome" priority="0x100">
         <Parent guid="guidCookiecutterCmdSet" id="ToolbarLinksGroup"/>
     </CommandPlacement>
@@ -193,6 +219,12 @@
       <Parent guid="guidCookiecutterCmdSet" id="ContextNavGroup"/>
     </CommandPlacement>
     <CommandPlacement guid="guidVSStd97" id="cmdidDelete" priority="0x300">
+      <Parent guid="guidCookiecutterCmdSet" id="ContextNavGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidCheckForUpdates" priority="0x400">
+      <Parent guid="guidCookiecutterCmdSet" id="ContextNavGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidUpdateTemplate" priority="0x500">
       <Parent guid="guidCookiecutterCmdSet" id="ContextNavGroup"/>
     </CommandPlacement>
     <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidLinkGitHubHome" priority="0x100">
@@ -239,6 +271,8 @@
       <IDSymbol name="cmdidLinkGitHubWiki" value="0x1006" />
       <IDSymbol name="cmdidCreateFromCookiecutter" value ="0x1007"/>
       <IDSymbol name="cmdidAddFromCookiecutter" value ="0x1008"/>
+      <IDSymbol name="cmdidUpdateTemplate" value ="0x1009"/>
+      <IDSymbol name="cmdidCheckForUpdates" value ="0x100a"/>
 
       <!-- Context Menus -->
       <IDSymbol name="ContextMenu" value="101"/>
