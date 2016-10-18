@@ -75,20 +75,10 @@ namespace CookiecutterTests {
 
        [TestMethod]
         public async Task Search() {
-            _installedTemplateSource.Templates.Add(
-                Tuple.Create((string)null, (string)null),
-                Tuple.Create(new Template[] {
-                    new Template() {
-                        Name = "owner1/template1",
-                        LocalFolderPath = Path.Combine(_vm.InstalledFolderPath, "template1"),
-                        RemoteUrl = "https://github.com/owner1/template1",
-                        Description = string.Empty }
-                }, (string)null));
-
-            _installedTemplateSource.UpdatesAvailable.Add("https://github.com/owner1/template1", true);
+            PopulateInstalledSource();
 
             await _vm.SearchAsync();
-            Assert.IsTrue(_vm.Installed.Templates.Count == 1);
+            Assert.IsTrue(_vm.Installed.Templates.Count == 3);
 
             var log = ((ITelemetryTestSupport)_telemetry.TelemetryService).SessionLog;
             Assert.IsTrue(log.Contains("Test/Cookiecutter/Search/Load"));
@@ -96,30 +86,47 @@ namespace CookiecutterTests {
 
         [TestMethod]
         public async Task CheckForUpdates() {
-            _installedTemplateSource.Templates.Add(
-                Tuple.Create((string)null, (string)null),
-                Tuple.Create(new Template[] {
-                    new Template() {
-                        Name = "owner1/template1",
-                        LocalFolderPath = Path.Combine(_vm.InstalledFolderPath, "template1"),
-                        RemoteUrl = "https://github.com/owner1/template1",
-                        Description = string.Empty }
-                }, (string)null));
+            PopulateInstalledSource();
 
             _installedTemplateSource.UpdatesAvailable.Add("https://github.com/owner1/template1", true);
+            _installedTemplateSource.UpdatesAvailable.Add("https://github.com/owner2/template3", true);
 
             await _vm.SearchAsync();
-            Assert.IsTrue(_vm.Installed.Templates.Count == 1);
 
             await _vm.CheckForUpdatesAsync();
             Assert.AreEqual(OperationStatus.Succeeded, _vm.CheckingUpdateStatus);
 
-            var t1 = _vm.Installed.Templates.OfType<TemplateViewModel>().FirstOrDefault();
+            var t1 = _vm.Installed.Templates.OfType<TemplateViewModel>().SingleOrDefault(t => t.RepositoryName == "template1");
             Assert.IsTrue(t1.IsUpdateAvailable);
+
+            var t2 = _vm.Installed.Templates.OfType<TemplateViewModel>().SingleOrDefault(t => t.RepositoryName == "template2");
+            Assert.IsFalse(t2.IsUpdateAvailable);
+
+            var t3 = _vm.Installed.Templates.OfType<TemplateViewModel>().SingleOrDefault(t => t.RepositoryName == "template3");
+            Assert.IsTrue(t3.IsUpdateAvailable);
         }
 
         [TestMethod]
         public async Task UpdateTemplate() {
+            PopulateInstalledSource();
+
+            _installedTemplateSource.UpdatesAvailable.Add("https://github.com/owner1/template1", true);
+
+            await _vm.SearchAsync();
+
+            var t1 = _vm.Installed.Templates.OfType<TemplateViewModel>().SingleOrDefault(t => t.RepositoryName == "template1");
+            _vm.SelectedTemplate = t1;
+
+            await _vm.UpdateTemplateAsync();
+            Assert.AreEqual(OperationStatus.Succeeded, _vm.UpdatingStatus);
+            Assert.IsFalse(t1.IsUpdateAvailable);
+
+            CollectionAssert.AreEquivalent(
+                new string[] { Path.Combine(_vm.InstalledFolderPath, "template1") },
+                _installedTemplateSource.Updated);
+        }
+
+        private void PopulateInstalledSource() {
             _installedTemplateSource.Templates.Add(
                 Tuple.Create((string)null, (string)null),
                 Tuple.Create(new Template[] {
@@ -127,24 +134,18 @@ namespace CookiecutterTests {
                         Name = "owner1/template1",
                         LocalFolderPath = Path.Combine(_vm.InstalledFolderPath, "template1"),
                         RemoteUrl = "https://github.com/owner1/template1",
-                        Description = string.Empty }
+                        Description = string.Empty },
+                    new Template() {
+                        Name = "owner1/template2",
+                        LocalFolderPath = Path.Combine(_vm.InstalledFolderPath, "template2"),
+                        RemoteUrl = "https://github.com/owner1/template2",
+                        Description = string.Empty },
+                    new Template() {
+                        Name = "owner2/template3",
+                        LocalFolderPath = Path.Combine(_vm.InstalledFolderPath, "template3"),
+                        RemoteUrl = "https://github.com/owner2/template3",
+                        Description = string.Empty },
                 }, (string)null));
-
-            _installedTemplateSource.UpdatesAvailable.Add("https://github.com/owner1/template1", true);
-
-            await _vm.SearchAsync();
-            Assert.IsTrue(_vm.Installed.Templates.Count == 1);
-
-            var templateViewModel = _vm.Installed.Templates.OfType<TemplateViewModel>().FirstOrDefault();
-            _vm.SelectedTemplate = templateViewModel;
-
-            await _vm.UpdateTemplateAsync();
-            Assert.AreEqual(OperationStatus.Succeeded, _vm.UpdatingStatus);
-            Assert.IsFalse(templateViewModel.IsUpdateAvailable);
-
-            CollectionAssert.AreEquivalent(
-                new string[] { Path.Combine(_vm.InstalledFolderPath, "template1") },
-                _installedTemplateSource.Updated);
         }
     }
 }

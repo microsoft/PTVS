@@ -51,7 +51,11 @@ namespace CookiecutterTests {
         }
 
         Task<bool?> ILocalTemplateSource.CheckForUpdateAsync(string repoPath) {
-            return Task.FromResult(UpdatesAvailable[repoPath]);
+            bool? available;
+            if (!UpdatesAvailable.TryGetValue(repoPath, out available)) {
+                available = false;
+            }
+            return Task.FromResult(available);
         }
 
         public Task AddTemplateAsync(string repoPath) {
