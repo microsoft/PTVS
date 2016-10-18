@@ -84,7 +84,7 @@ namespace Microsoft.CookiecutterTools {
                 _cookiecutterControl = new CookiecutterControl(_outputWindow, CookiecutterTelemetry.Current, new Uri(feedUrl), OpenGeneratedFolder, UpdateCommandUI);
                 _cookiecutterControl.ContextMenuRequested += OnContextMenuRequested;
                 control = _cookiecutterControl;
-                _cookiecutterControl.InitializeAsync(CookiecutterPackage.Instance.CheckForTemplateUpdate).DoNotWait();
+                _cookiecutterControl.InitializeAsync(CookiecutterPackage.Instance.CheckForTemplateUpdate).HandleAllExceptions(this, GetType()).DoNotWait();
             }
 
             Content = control;

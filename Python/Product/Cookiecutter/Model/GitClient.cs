@@ -87,8 +87,7 @@ namespace Microsoft.CookiecutterTools.Model {
             }
 
             var arguments = new string[] { "clone", repoUrl };
-            var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, null, false, _redirector);
-            using (output) {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, null, false, _redirector)) {
                 await output;
 
                 var r = new ProcessOutputResult() {
@@ -110,8 +109,7 @@ namespace Microsoft.CookiecutterTools.Model {
 
         public async Task<string> GetRemoteOriginAsync(string repoFolderPath) {
             var arguments = new string[] { "remote", "-v" };
-            var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null);
-            using (output) {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null)) {
                 await output;
                 foreach (var remote in output.StandardOutputLines) {
                     string origin;
@@ -129,8 +127,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 arguments.Add(branch);
             }
 
-            var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null);
-            using (output) {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null)) {
                 await output;
                 foreach (var line in output.StandardOutputLines) {
                     // Line with date starts with 'Date'. Example:
@@ -150,10 +147,8 @@ namespace Microsoft.CookiecutterTools.Model {
 
         public async Task FetchAsync(string repoFolderPath) {
             var arguments = new string[] { "fetch" };
-            var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, _redirector);
-            using (output) {
-                await output;
-                if (output.ExitCode < 0) {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, _redirector)) {
+                if (await output < 0) {
                     throw new ProcessException(new ProcessOutputResult() {
                         ExeFileName = _gitExeFilePath,
                         ExitCode = output.ExitCode,
@@ -164,10 +159,8 @@ namespace Microsoft.CookiecutterTools.Model {
 
         public async Task MergeAsync(string repoFolderPath) {
             var arguments = new string[] { "merge" };
-            var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, _redirector);
-            using (output) {
-                await output;
-                if (output.ExitCode < 0) {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, _redirector)) {
+                if (await output < 0) {
                     throw new ProcessException(new ProcessOutputResult() {
                         ExeFileName = _gitExeFilePath,
                         ExitCode = output.ExitCode,
