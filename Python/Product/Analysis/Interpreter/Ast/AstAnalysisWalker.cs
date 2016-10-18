@@ -82,9 +82,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 if (scope != null && scope.TryGetValue(ne.Name, out existing) && existing != null) {
                     return existing;
                 }
+                if (_members != null && _members.TryGetValue(ne.Name, out existing) && existing != null) {
+                    return existing;
+                }
             }
 
-            var type = GetTypeFromExpression(expr, scope);
+            var type = GetTypeFromExpression(expr);
             if (type != null) {
                 return new AstPythonConstant(type, GetLoc(expr));
             }
@@ -92,7 +95,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return null;
         }
 
-        private IPythonType GetTypeFromExpression(Expression expr, Dictionary<string, IMember> scope) {
+        private IPythonType GetTypeFromExpression(Expression expr) {
             var ce = expr as ConstantExpression;
             if (ce != null) {
                 if (ce.Value == null) {

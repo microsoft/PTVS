@@ -70,8 +70,10 @@ namespace AnalysisTests {
 
             var F1 = (IMemberContainer)mod.GetMember(null, "F1");
             AssertUtil.ContainsExactly(F1.GetMemberNames(null),
-                "F2", "F3", "__class__"
+                "F2", "F3", "F6", "__class__"
             );
+            var F6 = (IPythonType)F1.GetMember(null, "F6");
+            Assert.AreEqual("C1", F6.Documentation);
 
             Assert.IsInstanceOfType(F1.GetMember(null, "F2"), typeof(AstPythonType));
             Assert.IsInstanceOfType(F1.GetMember(null, "F3"), typeof(AstPythonType));

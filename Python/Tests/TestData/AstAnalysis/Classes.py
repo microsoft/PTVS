@@ -21,6 +21,7 @@ class F1:
             class F4: pass
         else:
             class F5: pass
+    F6 = C1
 
 def f():
     class X: pass
