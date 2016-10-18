@@ -1841,6 +1841,9 @@ namespace Microsoft.PythonTools.Intellisense {
             IPythonProjectEntry module;
             if (!_projectFiles.TryGetValue(path, out item)) {
                 item = AnalyzeNewFile(path, addingFromDirectory);
+                if (item == null) {
+                    return null;
+                }
                 _projectFiles.Add(path, item);
 
                 if ((module = item as IPythonProjectEntry) != null) {
