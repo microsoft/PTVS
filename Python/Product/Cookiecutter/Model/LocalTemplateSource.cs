@@ -52,19 +52,29 @@ namespace Microsoft.CookiecutterTools.Model {
             return new TemplateEnumerationResult(templates.OrderBy(t => t.Name).ToList());
         }
 
-        public Task DeleteTemplateAsync(string repoPath) {
+        public async Task DeleteTemplateAsync(string repoPath) {
+            if (_cache == null) {
+                await BuildCacheAsync();
+            }
+
             ShellUtils.DeleteDirectory(repoPath);
 
             _cache.RemoveAll(t => t.LocalFolderPath == repoPath);
-
-            return Task.CompletedTask;
         }
 
         public async Task AddTemplateAsync(string repoPath) {
-            await AddFolderToCache(repoPath);
+            if (_cache == null) {
+                await BuildCacheAsync();
+            } else {
+                await AddFolderToCache(repoPath);
+            }
         }
 
         public async Task UpdateTemplateAsync(string repoPath) {
+            if (_cache == null) {
+                await BuildCacheAsync();
+            }
+
             await _gitClient.MergeAsync(repoPath);
 
             var template = _cache.SingleOrDefault(t => t.LocalFolderPath == repoPath);
