@@ -884,7 +884,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal void OnInvalidateSearchPath(string absolutePath, object moniker) {
-            if (!_searchPaths.AddOrReplace(moniker, absolutePath, false)) {
+            if (string.IsNullOrEmpty(absolutePath)) {
+                // Clear all paths associated with this moniker
+                _searchPaths.RemoveByMoniker(moniker);
+            } else if (!_searchPaths.AddOrReplace(moniker, absolutePath, false)) {
                 // Didn't change a search path, so we need to trigger reanalysis
                 // manually.
                 UpdateAnalyzerSearchPaths();
@@ -1351,6 +1354,12 @@ namespace Microsoft.PythonTools.Project {
         protected override string AssemblyReferenceTargetMoniker {
             get {
                 return GetProjectProperty("TargetFrameworkMoniker", false); // ?? ".NETFramework, version=4.5";
+            }
+        }
+
+        protected override string AddReferenceExtensions {
+            get {
+                return null;
             }
         }
 

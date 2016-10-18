@@ -1405,15 +1405,11 @@ namespace Microsoft.VisualStudioTools.Project {
         public int AddProjectReference() {
             var referenceManager = this.GetService(typeof(SVsReferenceManager)) as IVsReferenceManager;
             if (referenceManager != null) {
-                var contextGuids = new[] {
-                    VSConstants.ProjectReferenceProvider_Guid,
-                    VSConstants.FileReferenceProvider_Guid
-                };
                 referenceManager.ShowReferenceManager(
                     this,
                     SR.GetString(SR.AddReferenceDialogTitle),
                     "VS.ReferenceManager",
-                    contextGuids.First(),
+                    VSConstants.ProjectReferenceProvider_Guid,
                     false);
                 return VSConstants.S_OK;
             } else {
@@ -1476,7 +1472,12 @@ namespace Microsoft.VisualStudioTools.Project {
                 .OfType<ProjectReferenceNode>();
             foreach (var reference in references) {
                 var newReference = (IVsProjectReference)context.CreateReference();
+                newReference.FullPath = reference.Url;
+                newReference.Name = reference.ReferencedProjectName;
                 newReference.Identity = reference.ReferencedProjectGuid.ToString("B");
+                newReference.ReferenceSpecification = reference.ReferencedProjectIdentity;
+                newReference.AlreadyReferenced = true;
+                context.AddReference(newReference);
             }
 
             return context;
@@ -1490,6 +1491,19 @@ namespace Microsoft.VisualStudioTools.Project {
 
             var context = (IVsAssemblyReferenceProviderContext)mgr.CreateProviderContext(VSConstants.AssemblyReferenceProvider_Guid);
             context.TargetFrameworkMoniker = moniker;
+
+            var referenceContainer = this.GetReferenceContainer();
+            var references = referenceContainer
+                .EnumReferences()
+                .OfType<AssemblyReferenceNode>();
+            foreach (var reference in references) {
+                var newReference = (IVsAssemblyReference)context.CreateReference();
+                newReference.FullPath = reference.Url ?? reference.AssemblyName.ToString();
+                newReference.Name = reference.AssemblyName.Name;
+                newReference.AlreadyReferenced = true;
+                context.AddReference(newReference);
+            }
+
             return context;
         }
 
@@ -1503,6 +1517,18 @@ namespace Microsoft.VisualStudioTools.Project {
 
             var context = (IVsFileReferenceProviderContext)mgr.CreateProviderContext(VSConstants.FileReferenceProvider_Guid);
             context.BrowseFilter = AddReferenceExtensions.Replace('|', '\0') + "\0";
+
+            var referenceContainer = this.GetReferenceContainer();
+            var references = referenceContainer
+                .EnumReferences()
+                .Where(n => !(n is AssemblyReferenceNode) && !(n is ProjectReferenceNode));
+            foreach (var reference in references) {
+                var newReference = (IVsFileReference)context.CreateReference();
+                newReference.FullPath = reference.Url;
+                newReference.AlreadyReferenced = true;
+                context.AddReference(newReference);
+            }
+
             return context;
         }
 
@@ -1546,6 +1572,8 @@ namespace Microsoft.VisualStudioTools.Project {
 
             if (context.ProviderGuid == VSConstants.ProjectReferenceProvider_Guid) {
                 removedReferences = GetRemovedReferences(context as IVsProjectReferenceProviderContext);
+            } else if (context.ProviderGuid == VSConstants.AssemblyReferenceProvider_Guid) {
+                removedReferences = GetRemovedReferences(context as IVsAssemblyReferenceProviderContext);
             } else if (context.ProviderGuid == VSConstants.FileReferenceProvider_Guid) {
                 removedReferences = GetRemovedReferences(context as IVsFileReferenceProviderContext);
             }

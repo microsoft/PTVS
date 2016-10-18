@@ -197,8 +197,8 @@ namespace Microsoft.PythonTools {
             }
 
             lock (_paths) {
-                _paths.Clear();
-                _paths.AddRange(newPaths);
+                _paths.RemoveAll(p => p.Moniker == null);
+                _paths.InsertRange(0, newPaths);
             }
             Changed?.Invoke(this, EventArgs.Empty);
         }

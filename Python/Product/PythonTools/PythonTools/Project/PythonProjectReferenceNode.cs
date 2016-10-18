@@ -15,6 +15,10 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -41,11 +45,13 @@ namespace Microsoft.PythonTools.Project {
 
             var solution = (IVsSolution)ProjectMgr.Site.GetService(typeof(SVsSolution));
             var guid = ReferencedProjectGuid;
-            IVsHierarchy hier;
-            int hr = solution.GetProjectOfGuid(ref guid, out hier);
-            if (ErrorHandler.Succeeded(hr)) {
+            try {
                 var searchPath = PathUtils.GetParent(ReferencedProjectOutputPath);
                 (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(searchPath, this);
+            } catch (COMException ex) {
+                // Project is not loaded yet. We will update the search path on
+                // load, build or run.
+                ex.ReportUnhandledException(ProjectMgr.Site, GetType());
             }
         }
 
@@ -55,8 +61,23 @@ namespace Microsoft.PythonTools.Project {
             }
             ProjectMgr.OnInvalidateItems(Parent);
 
-            var searchPath = PathUtils.GetParent(ReferencedProjectOutputPath);
-            (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(searchPath, this);
+            try {
+                var searchPath = PathUtils.GetParent(ReferencedProjectOutputPath);
+                (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(searchPath, this);
+            } catch (COMException ex) {
+                // Failed to get output path for some reason. Remove the
+                // existing search path for now.
+                ex.ReportUnhandledException(ProjectMgr.Site, GetType());
+                (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(null, this);
+            }
+        }
+
+        internal override string ReferencedProjectOutputPath {
+            get {
+                var outputs = ReferencedProjectBuildOutputs.ToArray();
+                return outputs.FirstOrDefault(o => ".pyd".Equals(Path.GetExtension(o), StringComparison.OrdinalIgnoreCase)) ??
+                    outputs.FirstOrDefault();
+            }
         }
 
         private void EventListener_BuildCompleted(object sender, EventArgs e) {
@@ -76,6 +97,14 @@ namespace Microsoft.PythonTools.Project {
 
         private void EventListener_AfterActiveSolutionConfigurationChange(object sender, EventArgs e) {
             Invalidate();
+        }
+
+        public override bool Remove(bool removeFromStorage) {
+            if (base.Remove(removeFromStorage)) {
+                (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(null, this);
+                return true;
+            }
+            return false;
         }
 
         protected override void Dispose(bool disposing) {
