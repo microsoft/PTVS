@@ -43,6 +43,14 @@ namespace Microsoft.CookiecutterTools.View {
             WpfCommands.Executed(null, sender, e);
         }
 
+        private void Odbc_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            SqlCommands.CanExecute(null, sender, e);
+        }
+
+        private void Odbc_Executed(object sender, ExecutedRoutedEventArgs e) {
+            SqlCommands.Executed(null, sender, e);
+        }
+
         private void Home_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = ViewModel != null && ViewModel.CreatingStatus != OperationStatus.InProgress;
             e.Handled = true;
