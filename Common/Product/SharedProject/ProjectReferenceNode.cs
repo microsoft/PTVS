@@ -191,7 +191,14 @@ namespace Microsoft.VisualStudioTools.Project {
                 keyName = null;
             }
 
-            ErrorHandler.ThrowOnFailure(group.get_Outputs(0, null, actual));
+            try {
+                ErrorHandler.ThrowOnFailure(group.get_Outputs(0, null, actual));
+            } catch (NotImplementedException) {
+                if (CommonUtils.IsValidPath(keyName)) {
+                    return Enumerable.Repeat(keyName, 1);
+                }
+                throw;
+            }
             var outputs = new IVsOutput2[actual[0]];
             ErrorHandler.ThrowOnFailure(group.get_Outputs((uint)outputs.Length, outputs, actual));
 
