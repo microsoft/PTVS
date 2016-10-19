@@ -118,7 +118,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
 #if DEBUG
             var assertListener = Debug.Listeners["Microsoft.PythonTools.AssertListener"];
             if (assertListener != null) {
-                domain.DoCallBack(new AssertListenerInitializer(assertListener).Initialize);
+                var init = (AssertListenerInitializer)domain.CreateInstanceAndUnwrap(
+                    typeof(AssertListenerInitializer).Assembly.FullName,
+                    typeof(AssertListenerInitializer).FullName
+                );
+                init.Initialize(assertListener);
             }
 #endif
 
@@ -126,17 +130,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
 #if DEBUG
-        [Serializable]
-        class AssertListenerInitializer {
-            private readonly TraceListener _listener;
+        class AssertListenerInitializer : MarshalByRefObject {
+            public AssertListenerInitializer() { }
 
-            public AssertListenerInitializer(TraceListener listener) {
-                _listener = listener;
-            }
-
-            public void Initialize() {
-                if (Debug.Listeners[_listener.Name] == null) {
-                    Debug.Listeners.Add(_listener);
+            public void Initialize(TraceListener listener) {
+                if (Debug.Listeners[listener.Name] == null) {
+                    Debug.Listeners.Add(listener);
                     Debug.Listeners.Remove("Default");
                 }
             }
