@@ -79,7 +79,7 @@ def Aliased(fob):
 ";
 
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
-                AssertUtil.Contains(newPs.Analyzer.GetModules().Select(x => x.Name), "test");
+                AssertUtil.Contains(newPs.Analyzer.Analyzer.GetModules().Select(x => x.Name), "test");
 
                 string codeText = @"
 import test
@@ -161,7 +161,7 @@ def Overloaded(a, b):
 ";
 
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
-                AssertUtil.Contains(newPs.Analyzer.GetModules().Select(x => x.Name), "test");
+                AssertUtil.Contains(newPs.Analyzer.Analyzer.GetModules().Select(x => x.Name), "test");
 
                 string codeText = @"
 import test
@@ -175,11 +175,12 @@ Overloaded = test.Overloaded
                 var allMembers = newMod.Analysis.GetAllAvailableMembersByIndex(pos, GetMemberOptions.None);
 
                 Assert.AreEqual("class test.Aliased\r\nclass doc\r\n\r\nfunction Aliased(fob)\r\nfunction doc", allMembers.First(x => x.Name == "Aliased").Documentation);
-                Assert.AreEqual(1, newMod.Analysis.GetSignaturesByIndex("FunctionNoRetType", pos).ToArray().Length);
+                newPs.Analyzer.AssertHasParameters("FunctionNoRetType", "value");
 
-                var doc = newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First();
+                //var doc = newMod.Analysis.GetMembersByIndex("test", pos).Where(x => x.Name == "Overloaded").First();
                 // help 2 should be first because it has more parameters
-                Assert.AreEqual("function Overloaded(a, b)\r\nhelp 2\r\n\r\nfunction Overloaded(a)\r\nhelp 1", doc.Documentation);
+                //Assert.AreEqual("function Overloaded(a, b)\r\nhelp 2\r\n\r\nfunction Overloaded(a)\r\nhelp 1", doc.Documentation);
+                AssertUtil.ContainsExactly(newPs.Analyzer.GetDescriptions("test.Overloaded"), "function Overloaded(a, b)\r\nhelp 2", "function Overloaded(a)\r\nhelp 1");
             }
         }
 
@@ -206,7 +207,7 @@ class MultipleInheritance(WithInstanceMembers, WithMemberFunctions):
 ";
 
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
-                AssertUtil.Contains(newPs.Analyzer.GetModules().Select(x => x.Name), "test");
+                AssertUtil.Contains(newPs.Analyzer.Analyzer.GetModules().Select(x => x.Name), "test");
 
                 string codeText = @"
 import test
@@ -224,10 +225,10 @@ MultipleInheritance = test.MultipleInheritance
                 var fobMembers = instMembers.Where(x => x.Name == "fob");
                 Assert.AreNotEqual(null, fobMembers.FirstOrDefault().Name);
 
-                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("WithMemberFunctions", pos), "oar");
-                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("SingleInheritance", pos), "oar", "baz");
-                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("DoubleInheritance", pos), "oar", "baz");
-                AssertUtil.ContainsAtLeast(newMod.Analysis.GetMemberNamesByIndex("MultipleInheritance", pos), "fob", "oar");
+                newPs.Analyzer.AssertHasAttr("WithMemberFunctions", "oar");
+                newPs.Analyzer.AssertHasAttr("SingleInheritance", "oar", "baz");
+                newPs.Analyzer.AssertHasAttr("DoubleInheritance", "oar", "baz");
+                newPs.Analyzer.AssertHasAttr("MultipleInheritance", "fob", "oar");
             }
         }
 
@@ -242,7 +243,7 @@ def ReturningMultiplyDefinedClass():
 ";
 
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
-                AssertUtil.Contains(newPs.Analyzer.GetModules().Select(x => x.Name), "test");
+                AssertUtil.Contains(newPs.Analyzer.Analyzer.GetModules().Select(x => x.Name), "test");
 
                 string codeText = @"
 import test
@@ -250,12 +251,11 @@ MultiplyDefinedClass = test.MultiplyDefinedClass
 ReturningMultiplyDefinedClass = test.ReturningMultiplyDefinedClass
 ";
                 var newMod = newPs.NewModule("baz", codeText);
-                int pos = codeText.LastIndexOf('\n');
 
-                var mdc = newMod.Analysis.GetValuesByIndex("MultiplyDefinedClass", pos).ToList();
-                Assert.AreEqual(2, mdc.Count);
+                var mdc = newPs.Analyzer.GetValues("MultiplyDefinedClass");
+                Assert.AreEqual(2, mdc.Length);
 
-                var rmdc = newMod.Analysis.GetValuesByIndex("ReturningMultiplyDefinedClass", pos).OfType<BuiltinFunctionInfo>().Single();
+                var rmdc = newPs.Analyzer.GetValue<BuiltinFunctionInfo>("ReturningMultiplyDefinedClass");
                 AssertUtil.ContainsExactly(rmdc.Function.Overloads.Single().ReturnType, mdc.Select(p => p.PythonType));
             }
         }
@@ -280,9 +280,8 @@ C.append(C)
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
                 string code2 = @"import test
 C = test.C";
-                var newMod = newPs.NewModule("test2", code2);
-
-                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("C", 0), "list of list");
+                newPs.NewModule("test2", code2);
+                newPs.Analyzer.AssertDescription("C", "list of list");
             }
         }
 
@@ -300,9 +299,8 @@ def f(): return 42";
 import fob
 abc = fob.x
 ";
-                var newMod = newPs.NewModule("baz", code);
-
-                Assert.AreEqual(newMod.Analysis.GetValuesByIndex("abc", code.LastIndexOf('\n')).First().PythonType, newPs.Analyzer.Interpreter.GetBuiltinType(BuiltinTypeId.Int));
+                newPs.NewModule("baz", code);
+                newPs.Analyzer.AssertIsInstance("abc", BuiltinTypeId.Int);
             }
         }
 
@@ -331,10 +329,10 @@ import oar, baz
 oar_Fob = oar.Fob
 baz_Fob = baz.Fob
 ";
-                var newMod = newPs.NewModule("fez", code);
+                newPs.NewModule("fez", code);
 
-                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("oar_Fob", 0), "class fob.Fob");
-                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("baz_Fob", 0), "class fob.Fob");
+                newPs.Analyzer.AssertDescription("oar_Fob", "class fob.Fob");
+                newPs.Analyzer.AssertDescription("baz_Fob", "class fob.Fob");
             }
         }
 
@@ -349,9 +347,13 @@ f(3, 'abc')
 f([1, 2], 3)
 ";
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
-                var newMod = newPs.NewModule("test2", "from test import f; x = f()");
-
-                AssertUtil.ContainsExactly(newMod.Analysis.GetShortDescriptionsByIndex("x", 0), "int", "str", "list of int");
+                newPs.NewModule("test2", "from test import f; x = f()");
+                newPs.Analyzer.AssertIsInstance("x", BuiltinTypeId.Int, BuiltinTypeId.Str, BuiltinTypeId.List);
+                var lst = newPs.Analyzer.GetValues("x")
+                    .OfType<SequenceBuiltinInstanceInfo>()
+                    .Where(s => s.TypeId == BuiltinTypeId.List)
+                    .Single();
+                Assert.AreEqual("list of int", lst.ShortDescription);
             }
         }
 
@@ -368,23 +370,8 @@ inst_f = A().f
             using (var newPs = SaveLoad(PythonLanguageVersion.V27, new AnalysisModule("test", "test.py", code))) {
                 var newMod = newPs.NewModule("test2", "from test import cls_f, inst_f");
 
-                var clsSig = newMod.Analysis.GetSignaturesByIndex("cls_f", 0).Single();
-                var instSig = newMod.Analysis.GetSignaturesByIndex("inst_f", 0).Single();
-
-                var clsProto = string.Format("cls_f({0})", string.Join(", ", clsSig.Parameters.Select(p => p.Name)));
-                var instProto = string.Format("inst_f({0})", string.Join(", ", instSig.Parameters.Select(p => p.Name)));
-                Console.WriteLine(clsProto);
-                Console.WriteLine(instProto);
-
-                Assert.AreEqual(3, clsSig.Parameters.Length, clsProto);
-                Assert.AreEqual(2, instSig.Parameters.Length, instProto);
-
-                Assert.AreEqual("self", clsSig.Parameters[0].Name);
-                Assert.AreEqual("a", clsSig.Parameters[1].Name);
-                Assert.AreEqual("b", clsSig.Parameters[2].Name);
-
-                Assert.AreEqual("a", instSig.Parameters[0].Name);
-                Assert.AreEqual("b", instSig.Parameters[1].Name);
+                newPs.Analyzer.AssertHasParameters("cls_f", "self", "a", "b");
+                newPs.Analyzer.AssertHasParameters("inst_f", "a", "b");
             }
         }
 
@@ -484,31 +471,21 @@ x = unittest.skipIf(False)
         private SaveLoadResult SaveLoad(PythonLanguageVersion version, params AnalysisModule[] modules) {
             IPythonProjectEntry[] entries = new IPythonProjectEntry[modules.Length];
 
-            var fact = InterpreterFactory;
-            var interp = Interpreter;
-            if (version != fact.GetLanguageVersion()) {
-                fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
-                interp = fact.CreateInterpreter();
-            }
+            var fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
+            var interp = fact.CreateInterpreter();
 
-            var codeFolder = TestData.GetTempPath(randomSubPath: true);
-            var dbFolder = Path.Combine(codeFolder, "DB");
-            Directory.CreateDirectory(codeFolder);
+            var dbFolder = TestData.GetTempPath(randomSubPath: true);
             Directory.CreateDirectory(dbFolder);
 
-            var state = PythonAnalyzer.CreateSynchronously(fact, interp, SharedDatabaseState.BuiltinName2x);
+            var state = new PythonAnalysis(fact, interp, SharedDatabaseState.BuiltinName2x);
+            state.CreateProjectOnDisk = true;
             for (int i = 0; i < modules.Length; i++) {
-                var fullname = Path.Combine(codeFolder, modules[i].Filename);
-                File.WriteAllText(fullname, modules[i].Code);
-                entries[i] = state.AddModule(modules[i].ModuleName, fullname);
-                Prepare(entries[i], new StringReader(modules[i].Code), version);
+                state.AddModule(modules[i].ModuleName, modules[i].Code, modules[i].Filename);
             }
 
-            for (int i = 0; i < modules.Length; i++) {
-                entries[i].Analyze(CancellationToken.None, false);
-            }
+            state.WaitForAnalysis();
 
-            new SaveAnalysis().Save(state, dbFolder);
+            new SaveAnalysis().Save(state.Analyzer, dbFolder);
 
             File.Copy(
                 Path.Combine(PythonTypeDatabase.BaselineDatabasePath, "__builtin__.idb"),
@@ -521,7 +498,7 @@ x = unittest.skipIf(False)
                 null,
                 dbFolder
             );
-            return new SaveLoadResult(PythonAnalyzer.CreateSynchronously(loadFactory), codeFolder);
+            return new SaveLoadResult(CreateAnalyzer(loadFactory), state.CodeFolder);
         }
 
         class AnalysisModule {
@@ -538,17 +515,16 @@ x = unittest.skipIf(False)
 
         class SaveLoadResult : IDisposable {
             private readonly string _dir;
-            public readonly PythonAnalyzer Analyzer;
+            public readonly PythonAnalysis Analyzer;
 
-            public SaveLoadResult(PythonAnalyzer analyzer, string dir) {
+            public SaveLoadResult(PythonAnalysis analyzer, string dir) {
                 Analyzer = analyzer;
                 _dir = dir;
             }
 
             public IPythonProjectEntry NewModule(string name, string code) {
-                var entry = Analyzer.AddModule(name, name + ".py");
-                Prepare(entry, new StringReader(code), PythonLanguageVersion.V27);
-                entry.Analyze(CancellationToken.None);
+                var entry = Analyzer.AddModule(name, code);
+                Analyzer.WaitForAnalysis();
                 return entry;
             }
 

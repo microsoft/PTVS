@@ -53,6 +53,8 @@ namespace Microsoft.PythonTools.Intellisense {
         // For entries that were loaded from a .zip file, IProjectEntry.Properties[_pathInZipFile] contains the path of the item inside the archive.
         private static readonly object _pathInZipFile = new { Name = "PathInZipFile" };
 
+        internal readonly SearchPathManager _searchPaths = new SearchPathManager();
+
         private readonly bool _implicitProject;
         private readonly StringBuilder _stdErr = new StringBuilder();
 
@@ -293,28 +295,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
         #endregion
 
-        /// <summary>
-        /// Analyzes a complete directory including all of the contained files and packages.
-        /// </summary>
-        /// <param name="dir">Directory to analyze.</param>
-        /// <param name="onFileAnalyzed">If specified, this callback is invoked for every <see cref="IProjectEntry"/>
-        /// that is analyzed while analyzing this directory.</param>
-        /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
-        public async Task AnalyzeDirectoryAsync(string dir) {
-            await SendRequestAsync(new AP.AddDirectoryRequest() { dir = dir }).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// Analyzes a .zip file including all of the contained files and packages.
-        /// </summary>
-        /// <param name="dir">.zip file to analyze.</param>
-        /// <param name="onFileAnalyzed">If specified, this callback is invoked for every <see cref="IProjectEntry"/>
-        /// that is analyzed while analyzing this directory.</param>
-        /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
-        public async Task AnalyzeZipArchiveAsync(string zipFileName) {
-            await SendRequestAsync(
-                new AP.AddZipArchiveRequest() { archive = zipFileName }
-            ).ConfigureAwait(false);
+        public async Task SetSearchPathsAsync(IEnumerable<string> absolutePaths) {
+            await SendRequestAsync(new AP.SetSearchPathRequest { dir = absolutePaths.ToArray() }).ConfigureAwait(false);
         }
 
         #endregion
@@ -421,7 +403,6 @@ namespace Microsoft.PythonTools.Intellisense {
                         );
                         _projectFilesById[childFile.fileId] = _projectFiles[childFile.filename] = entry;
                     }
-                    entry.SearchPathEntry = childFile.parent;
                     break;
                 case AP.UnhandledExceptionEvent.Name:
                     Debug.Fail("Unhandled exception from analyzer");
@@ -672,6 +653,45 @@ namespace Microsoft.PythonTools.Intellisense {
                     if (response.fileId != -1 && !_projectFilesById.TryGetValue(response.fileId, out res)) {
                         res = _projectFilesById[response.fileId] = _projectFiles[path] = new AnalysisEntry(this, path, response.fileId);
                         res.AnalysisCookie = new FileCookie(path);
+                    }
+                }
+            }
+
+            return res;
+        }
+
+        internal async Task<IReadOnlyList<AnalysisEntry>> AnalyzeFileAsync(string[] paths, string addingFromDirectory = null) {
+            if (_conn == null) {
+                // We aren't able to analyze code, so don't create an entry.
+                return null;
+            }
+
+            var req = new AP.AddBulkFileRequest { path = new string[paths.Length], addingFromDir = addingFromDirectory };
+            bool anyAdded = false;
+            AnalysisEntry[] res = new AnalysisEntry[paths.Length];
+            for (int i = 0; i < paths.Length; ++i) {
+                AnalysisEntry existing;
+                if (_projectFiles.TryGetValue(paths[i], out existing)) {
+                    res[i] = existing;
+                } else {
+                    anyAdded = true;
+                    req.path[i] = paths[i];
+                }
+            }
+
+            if (anyAdded) {
+                Interlocked.Increment(ref _parsePending);
+                var response = await SendRequestAsync(req).ConfigureAwait(false);
+                if (response != null) {
+                    for (int i = 0; i < paths.Length; ++i) {
+                        AnalysisEntry entry = null;
+                        var path = paths[i];
+                        var id = response.fileId[i];
+                        if (id != -1 && !_projectFilesById.TryGetValue(id, out entry)) {
+                            entry = _projectFilesById[id] = _projectFiles[path] = new AnalysisEntry(this, path, id);
+                            entry.AnalysisCookie = new FileCookie(path);
+                        }
+                        res[i] = entry;
                     }
                 }
             }
@@ -1377,10 +1397,6 @@ namespace Microsoft.PythonTools.Intellisense {
             var res = new Stopwatch();
             res.Start();
             return res;
-        }
-
-        internal async Task StopAnalyzingDirectoryAsync(string directory) {
-            await SendRequestAsync(new AP.RemoveDirectoryRequest() { dir = directory }).ConfigureAwait(false);
         }
 
         internal async Task UnloadFileAsync(AnalysisEntry entry) {

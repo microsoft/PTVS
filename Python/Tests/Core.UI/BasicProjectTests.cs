@@ -1060,9 +1060,6 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void CProjectReference() {
             var pythons = PythonPaths.Versions.Where(p => p.Version.Is3x() && !p.Isx64).Reverse().Take(2).ToList();
-            if (pythons.Count != 2) {
-                pythons = PythonPaths.Versions.Where(p => p.Version.Is3x() && p.Isx64).Reverse().Take(2).ToList();
-            }
             Assert.AreEqual(2, pythons.Count, "Two different Python 3 interpreters required");
             var buildPython = pythons[0];
             var testPython = pythons[1];
@@ -1076,34 +1073,65 @@ namespace PythonToolsUITests {
             );
 
             using (var app = new PythonVisualStudioApp())
+            using (var evt = new AutoResetEvent(false))
             using (var dis = app.SelectDefaultInterpreter(buildPython)) {
                 var project = app.OpenProject(@"TestData\ProjectReference\CProjectReference.sln", projectName: "PythonApplication2", expectedProjects: 2);
 
                 var sln = app.GetService<IVsSolution4>(typeof(SVsSolution));
                 sln.EnsureSolutionIsLoaded((uint)__VSBSLFLAGS.VSBSLFLAGS_None);
+                var pyproj = project.GetPythonProject();
 
                 app.Dte.Solution.SolutionBuild.Clean(true);
                 app.Dte.Solution.SolutionBuild.Build(true);
 
                 Assert.IsTrue(File.Exists(TestData.GetPath(@"TestData\ProjectReference\Debug\native_module.pyd")), ".pyd was not created");
 
-                var searchPaths = app.ServiceProvider.GetUIThread().Invoke(() => project.GetPythonProject().GetSearchPaths().ToArray());
-                AssertUtil.ContainsExactly(searchPaths, TestData.GetPath(@"TestData\ProjectReference\Debug\"));
+                var searchPaths = app.ServiceProvider.GetUIThread().Invoke(() => pyproj.GetSearchPaths().ToArray());
+                AssertUtil.ContainsExactly(searchPaths, TestData.GetPath(@"TestData\ProjectReference\Debug"));
 
-                var pyproj = project.GetPythonProject();
                 var analyzer = pyproj.GetAnalyzer();
-                Assert.IsNotNull(analyzer.GetModulesResult(true).Result.Where(x => x.Name == "native_module").FirstOrDefault(), "module was not loaded");
-
-                using (var evt = new AutoResetEvent(false)) {
-                    pyproj.ProjectAnalyzerChanged += (s, e) => { try { evt.Set(); } catch { } };
-                    dis.SetDefault(app.InterpreterService.FindInterpreter(testPython.Id));
-                    Assert.IsTrue(evt.WaitOne(10000), "Timed out waiting for analyzer change");
+                analyzer.WaitForAnalysisStarted(TimeSpan.FromSeconds(5.0));
+                analyzer.WaitForCompleteAnalysis(_ => true);
+                for (int retries = 10; retries > 0 && analyzer.GetModulesResult(true).Result.FirstOrDefault(x => x.Name == "native_module") == null; --retries) {
+                    Thread.Sleep(500);
                 }
+                Assert.IsNotNull(analyzer.GetModulesResult(true).Result.FirstOrDefault(x => x.Name == "native_module"), "module was not loaded");
+
+                pyproj.ProjectAnalyzerChanged += (s, e) => { try { evt.Set(); } catch { } };
+                dis.SetDefault(app.InterpreterService.FindInterpreter(testPython.Id));
+                Assert.IsTrue(evt.WaitOne(10000), "Timed out waiting for analyzer change");
+
                 analyzer = pyproj.GetAnalyzer();
                 for (int retries = 10; retries > 0 && analyzer.GetModulesResult(true).Result.Where(x => x.Name == "native_module").FirstOrDefault() == null; --retries) {
                     Thread.Sleep(500);
                 }
                 Assert.IsNotNull(analyzer.GetModulesResult(true).Result.Where(x => x.Name == "native_module").FirstOrDefault(), "module was not reloadod");
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void DeprecatedPydReferenceNode() {
+            using (var app = new PythonVisualStudioApp()) {
+                var proj = app.OpenProject(@"TestData\DeprecatedReferences.sln", expectedProjects: 2, projectName: "PydReference");
+                Trace.TraceInformation("References:");
+                foreach (var node in proj.GetPythonProject().GetReferenceContainer().EnumReferences()) {
+                    Trace.TraceInformation("  {0}: {1}", node.GetType().Name, node.Caption);
+                }
+                Assert.AreEqual("..\\spam.pyd", proj.GetPythonProject().GetReferenceContainer().EnumReferences().OfType<DeprecatedReferenceNode>().FirstOrDefault()?.Caption);
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void DeprecatedWebPIReferenceNode() {
+            using (var app = new PythonVisualStudioApp()) {
+                var proj = app.OpenProject(@"TestData\DeprecatedReferences.sln", expectedProjects: 2, projectName: "WebPIReference");
+                Trace.TraceInformation("References:");
+                foreach (var node in proj.GetPythonProject().GetReferenceContainer().EnumReferences()) {
+                    Trace.TraceInformation("  {0}: {1}", node.GetType().Name, node.Caption);
+                }
+                Assert.AreEqual("Django 1.4", proj.GetPythonProject().GetReferenceContainer().EnumReferences().OfType<DeprecatedReferenceNode>().FirstOrDefault()?.Caption);
             }
         }
 

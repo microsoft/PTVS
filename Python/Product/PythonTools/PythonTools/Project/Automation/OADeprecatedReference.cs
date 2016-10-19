@@ -14,33 +14,30 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudioTools.Project.Automation;
 using VSLangProj;
 
 namespace Microsoft.PythonTools.Project.Automation {
     [ComVisible(true)]
-    public class OAWebPiReference : OAReferenceBase {
-        internal OAWebPiReference(WebPiReferenceNode webPiReferenceNode) :
-            base(webPiReferenceNode) {
-        }
-        
-        
-        #region Reference override
-       
-        public override string Name {
-            get {
-                return System.IO.Path.GetFileNameWithoutExtension(BaseReferenceNode.Url);
-            }
+    public class OADeprecatedReference : OAReferenceBase {
+        internal OADeprecatedReference(DeprecatedReferenceNode deprecatedReferenceNode) :
+            base(deprecatedReferenceNode) {
         }
 
-        public override prjReferenceType Type {
+        private DeprecatedReferenceNode Node => (DeprecatedReferenceNode)BaseReferenceNode;
+
+        public override string Name => Node.Caption;
+
+        public override uint RefType => 0;
+
+        public override prjReferenceType Type => prjReferenceType.prjReferenceTypeAssembly;
+
+        public override bool CopyLocal {
             get {
-                return prjReferenceType.prjReferenceTypeAssembly;
+                return false;
             }
+            set { }
         }
-        #endregion
     }
 }

@@ -854,7 +854,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
         internal CPythonConstant GetConstant(IPythonType type) {
             CPythonConstant constant;
-            if (_constants.TryGetValue(type, out constant)) {
+            if (_constants.TryGetValue(type, out constant) ||
+                (constant = _inner?.GetConstant(type)) != null) {
                 return constant;
             }
             _constants[type] = constant = new CPythonConstant(type);
