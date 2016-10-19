@@ -59,7 +59,11 @@ namespace Microsoft.VisualStudioTools.Project.Automation
         {
             get
             {
-                return BaseReferenceNode.ReferencedProjectOutputPath;
+                try {
+                    return BaseReferenceNode.ReferencedProjectOutputPath;
+                } catch (COMException) {
+                    return string.Empty;
+                }
             }
         }
         public override EnvDTE.Project SourceProject

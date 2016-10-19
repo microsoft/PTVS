@@ -50,7 +50,6 @@ namespace Microsoft.VisualStudioTools.Project {
     }
 
     internal abstract class CommonProjectNode : ProjectNode, IVsProjectSpecificEditorMap2, IVsDeferredSaveProject {
-        private Guid _mruPageGuid = new Guid(CommonConstants.AddReferenceMRUPageGuid);
         private VSLangProj.VSProject _vsProject = null;
         private static ImageList _imageList;
         private ProjectDocumentsListenerForStartupFileUpdates _projectDocListenerForStartupFileUpdates;

@@ -18,6 +18,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
@@ -267,9 +268,16 @@ namespace PythonToolsTests {
                 var m1Path = TestData.GetPath("TestData\\SimpleImport\\module1.py");
                 var m2Path = TestData.GetPath("TestData\\SimpleImport\\module2.py");
 
-                var entry1 = analyzer.AnalyzeFileAsync(m1Path).Result;
-                var entry2 = analyzer.AnalyzeFileAsync(m2Path).Result;
-                analyzer.WaitForCompleteAnalysis(_ => true);
+                var taskEntry1 = analyzer.AnalyzeFileAsync(m1Path);
+                var taskEntry2 = analyzer.AnalyzeFileAsync(m2Path);
+                taskEntry1.Wait(CancellationTokens.After5s);
+                taskEntry2.Wait(CancellationTokens.After5s);
+                var entry1 = taskEntry1.Result;
+                var entry2 = taskEntry2.Result;
+
+                var cancel = CancellationTokens.After60s;
+                analyzer.WaitForCompleteAnalysis(_ => !cancel.IsCancellationRequested);
+                cancel.ThrowIfCancellationRequested();
 
                 var loc = new Microsoft.PythonTools.Parsing.SourceLocation(0, 1, 1);
                 AssertUtil.ContainsExactly(
@@ -316,7 +324,7 @@ namespace PythonToolsTests {
         public void AnalyzeBadEgg() {
             var factories = new[] { InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 4)) };
             using (var analyzer = new VsProjectAnalyzer(PythonToolsTestUtilities.CreateMockServiceProvider(), factories[0])) {
-                analyzer.AnalyzeZipArchiveAsync(TestData.GetPath(@"TestData\BadEgg.egg")).Wait();
+                analyzer.SetSearchPathsAsync(new[] { TestData.GetPath(@"TestData\BadEgg.egg") }).Wait();
                 analyzer.WaitForCompleteAnalysis(_ => true);
 
                 // Analysis result must contain the module for the filename inside the egg that is a valid identifier,

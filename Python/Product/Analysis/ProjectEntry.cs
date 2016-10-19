@@ -21,6 +21,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
@@ -427,9 +428,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         void Analyze(CancellationToken cancel, bool enqueueOnly);
 
-        IGroupableAnalysisProject AnalysisGroup {
-            get;
-        }
+        IGroupableAnalysisProject AnalysisGroup { get; }
     }
 
     /// <summary>

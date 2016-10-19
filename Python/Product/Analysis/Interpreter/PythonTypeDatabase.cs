@@ -26,7 +26,9 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -142,19 +144,24 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <param name="interpreter">The Python interprefer which will be used
         /// to analyze the extension module.</param>
         /// <param name="moduleName">The module name of the extension module.</param>
-        public Task LoadExtensionModuleAsync(string moduleName, string extensionModuleFilename, CancellationToken cancellationToken = default(CancellationToken)) {
-            return Task.Factory.StartNew(
-                new ExtensionModuleLoader(
-                    this,
-                    _factory,
-                    moduleName,
-                    extensionModuleFilename,
-                    cancellationToken
-                ).LoadExtensionModule
+        public void LoadExtensionModule(
+            ModulePath moduleName,
+            CancellationToken cancellationToken = default(CancellationToken)
+        ) {
+            var loader = new ExtensionModuleLoader(
+                this,
+                _factory,
+                moduleName,
+                cancellationToken
             );
+            loader.LoadExtensionModule();
         }
 
-        public bool UnloadExtensionModule(string moduleName) {
+        public void AddModule(string moduleName, IPythonModule module) {
+            _sharedState.Modules[moduleName] = module;
+        }
+
+        public bool UnloadModule(string moduleName) {
             IPythonModule dummy;
             return _sharedState.Modules.TryRemove(moduleName, out dummy);
         }
@@ -165,20 +172,18 @@ namespace Microsoft.PythonTools.Interpreter {
             return res.Task;
         }
 
-        class ExtensionModuleLoader {
+        internal class ExtensionModuleLoader {
             private readonly PythonTypeDatabase _typeDb;
             private readonly IPythonInterpreterFactory _factory;
-            private readonly string _moduleName;
-            private readonly string _extensionFilename;
+            private readonly ModulePath _moduleName;
             private readonly CancellationToken _cancel;
 
             const string _extensionModuleInfoFile = "extensions.$list";
 
-            public ExtensionModuleLoader(PythonTypeDatabase typeDb, IPythonInterpreterFactory factory, string moduleName, string extensionFilename, CancellationToken cancel) {
+            public ExtensionModuleLoader(PythonTypeDatabase typeDb, IPythonInterpreterFactory factory, ModulePath moduleName, CancellationToken cancel) {
                 _typeDb = typeDb;
                 _factory = factory;
                 _moduleName = moduleName;
-                _extensionFilename = extensionFilename;
                 _cancel = cancel;
             }
 
@@ -187,17 +192,14 @@ namespace Microsoft.PythonTools.Interpreter {
                 string dbFile = null;
                 // open the file locking it - only one person can look at the "database" of per-project analysis.
                 using (var fs = OpenProjectExtensionList()) {
-                    dbFile = FindDbFile(_factory, _extensionFilename, existingModules, dbFile, fs);
+                    dbFile = FindDbFile(_factory, _moduleName.SourceFile, existingModules, dbFile, fs);
 
                     if (dbFile == null) {
-                        dbFile = GenerateDbFile(_factory, _moduleName, _extensionFilename, existingModules, dbFile, fs);
+                        dbFile = GenerateDbFile(_factory, _moduleName, existingModules, dbFile, fs);
                     }
                 }
 
-                _typeDb._sharedState.Modules[_moduleName] = new CPythonModule(_typeDb, _moduleName, dbFile, false);
-            }
-
-            private void PublishModule(object state) {
+                _typeDb._sharedState.Modules[_moduleName.FullName] = new CPythonModule(_typeDb, _moduleName.FullName, dbFile, false);
             }
 
             private FileStream OpenProjectExtensionList() {
@@ -210,7 +212,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         if (_cancel.CanBeCanceled) {
                             _cancel.WaitHandle.WaitOne(100);
                         } else {
-                            System.Threading.Thread.Sleep(100);
+                            Thread.Sleep(100);
                         }
                     }
                 }
@@ -218,7 +220,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 throw new CannotAnalyzeExtensionException("Cannot access per-project extension registry.");
             }
 
-            private string GenerateDbFile(IPythonInterpreterFactory interpreter, string moduleName, string extensionModuleFilename, List<string> existingModules, string dbFile, FileStream fs) {
+            private string GenerateDbFile(IPythonInterpreterFactory interpreter, ModulePath moduleName, List<string> existingModules, string dbFile, FileStream fs) {
                 // we need to generate the DB file
                 dbFile = Path.Combine(ReferencesDatabasePath, moduleName + ".$project.idb");
                 int retryCount = 0;
@@ -226,13 +228,21 @@ namespace Microsoft.PythonTools.Interpreter {
                     dbFile = Path.Combine(ReferencesDatabasePath, moduleName + "." + ++retryCount + ".$project.idb");
                 }
 
-                using (var output = interpreter.Run(
+                var args = new List<string> {
                     PythonToolsInstallPath.GetFile("ExtensionScraper.py"),
                     "scrape",
-                    "-",                                    // do not use __import__
-                    extensionModuleFilename,                // extension module path
-                    Path.ChangeExtension(dbFile, null)      // output file path (minus .idb)
-                    )) {
+                };
+
+                if (moduleName.IsNativeExtension) {
+                    args.Add("-");
+                    args.Add(moduleName.SourceFile);
+                } else {
+                    args.Add(moduleName.ModuleName);
+                    args.Add(moduleName.LibraryPath);
+                }
+                args.Add(Path.ChangeExtension(dbFile, null));
+
+                using (var output = interpreter.Run(args.ToArray())) {
                     if (_cancel.CanBeCanceled) {
                         if (WaitHandle.WaitAny(new[] { _cancel.WaitHandle, output.WaitHandle }) != 1) {
                             // we were cancelled
@@ -247,9 +257,9 @@ namespace Microsoft.PythonTools.Interpreter {
                         // save the new entry in the DB file
                         existingModules.Add(
                             String.Format("{0}|{1}|{2}|{3}",
-                                extensionModuleFilename,
+                                moduleName.SourceFile,
                                 interpreter.Configuration.Id,
-                                new FileInfo(extensionModuleFilename).LastWriteTime.ToString("O"),
+                                new FileInfo(moduleName.SourceFile).LastWriteTime.ToString("O"),
                                 dbFile
                             )
                         );
@@ -273,11 +283,17 @@ namespace Microsoft.PythonTools.Interpreter {
             const int extensionTimeStamp = 2;
             const int dbFileIndex = 3;
 
+            internal static bool AlwaysGenerateDb = false;
+
             /// <summary>
             /// Finds the appropriate entry in our database file and returns the name of the .idb file to be loaded or null
             /// if we do not have a generated .idb file.
             /// </summary>
             private static string FindDbFile(IPythonInterpreterFactory interpreter, string extensionModuleFilename, List<string> existingModules, string dbFile, FileStream fs) {
+                if (AlwaysGenerateDb) {
+                    return null;
+                }
+
                 var reader = new StreamReader(fs);
 
                 string line;

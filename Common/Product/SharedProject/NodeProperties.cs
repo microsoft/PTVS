@@ -839,13 +839,5 @@ namespace Microsoft.VisualStudioTools.Project {
             : base(node) {
         }
         #endregion
-
-        #region overriden methods
-        public override string FullPath {
-            get {
-                return ((ProjectReferenceNode)Node).ReferencedProjectOutputPath;
-            }
-        }
-        #endregion
     }
 }

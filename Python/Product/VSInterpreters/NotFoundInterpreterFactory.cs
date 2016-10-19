@@ -23,6 +23,7 @@ using Microsoft.PythonTools.Infrastructure;
 namespace Microsoft.PythonTools.Interpreter
 {
     sealed class NotFoundInterpreter : IPythonInterpreter {
+        public void Dispose() { }
         public void Initialize(PythonAnalyzer state) { }
         public IPythonType GetBuiltinType(BuiltinTypeId id) { throw new KeyNotFoundException(); }
         public IList<string> GetModuleNames() { return new string[0]; }
