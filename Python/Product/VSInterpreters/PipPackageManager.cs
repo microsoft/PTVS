@@ -95,6 +95,7 @@ namespace Microsoft.PythonTools.Interpreter {
             Dispose(false);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_refreshIsCurrentTrigger")]
         protected void Dispose(bool disposing) {
             if (_isDisposed) {
                 return;

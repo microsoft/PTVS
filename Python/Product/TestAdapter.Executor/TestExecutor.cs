@@ -163,7 +163,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     break;
                 }
 
-                var runner = new TestRunner(
+                using (var runner = new TestRunner(
                     frameworkHandle,
                     runContext,
                     testGroup,
@@ -171,9 +171,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                     testGroup.Key,
                     _app,
                     _cancelRequested
-                );
-
-                runner.Run();
+                )) {
+                    runner.Run();
+                }
             }
 
             if (codeCoverage) {
@@ -287,7 +287,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             return false;
         }
 
-        class TestRunner {
+        sealed class TestRunner : IDisposable {
             private readonly IFrameworkHandle _frameworkHandle;
             private readonly IRunContext _context;
             private readonly IEnumerable<TestCase> _tests;
@@ -348,6 +348,14 @@ namespace Microsoft.PythonTools.TestAdapter {
                 _socket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
                 _socket.Listen(0);
                 _socket.BeginAccept(AcceptConnection, _socket);
+            }
+
+            [SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_connection")]
+            public void Dispose() {
+                _connected.Dispose();
+                _done.Dispose();
+                _connection?.Dispose();
+                _socket.Dispose();
             }
 
             private static Task RequestHandler(RequestArgs arg1, Func<Response, Task> arg2) {
