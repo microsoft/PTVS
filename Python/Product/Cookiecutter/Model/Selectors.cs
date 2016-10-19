@@ -15,18 +15,10 @@
 // permissions and limitations under the License.
 
 namespace Microsoft.CookiecutterTools.Model {
-    class ContextItem {
-        public ContextItem(string name, string selector, string defaultValue, string[] items = null) {
-            Name = name;
-            Selector = selector;
-            DefaultValue = defaultValue;
-            Values = items ?? new string[0];
-        }
-
-        public string Name { get; }
-        public string Description { get; set; }
-        public string Selector { get; set; }
-        public string DefaultValue { get; }
-        public string[] Values { get; }
+    internal static class Selectors {
+        public const string String = "string";
+        public const string List = "list";
+        public const string YesNo = "yesno";
+        public const string Connection = "connection";
     }
 }

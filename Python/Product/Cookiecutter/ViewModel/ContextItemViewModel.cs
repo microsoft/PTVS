@@ -16,10 +16,13 @@
 
 using System.Collections.Generic;
 using System.ComponentModel;
+using Microsoft.CookiecutterTools.Model;
 
 namespace Microsoft.CookiecutterTools.ViewModel {
     class ContextItemViewModel : INotifyPropertyChanged {
         private string _name;
+        private string _selector;
+        private string _description;
         private string _val;
         private string _default;
         private List<string> _items;
@@ -30,11 +33,13 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         /// Constructor for design view.
         /// </summary>
         public ContextItemViewModel() :
-            this(null, null, null) {
+            this(null, Selectors.String, null, null, null) {
         }
 
-        public ContextItemViewModel(string name, string defaultValue, string[] items = null) {
+        public ContextItemViewModel(string name, string selector, string description, string defaultValue, string[] items = null) {
             _name = name;
+            _selector = selector;
+            _description = !string.IsNullOrEmpty(description) ? description : defaultValue;
             _val = string.Empty;
             _default = defaultValue;
             _items = new List<string>();
@@ -50,6 +55,32 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
             set {
                 _name = value;
+            }
+        }
+
+        public string Selector {
+            get {
+                return _selector;
+            }
+
+            set {
+                if (value != _selector) {
+                    _selector = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Selector)));
+                }
+            }
+        }
+
+        public string Description {
+            get {
+                return _description;
+            }
+
+            set {
+                if (value != _description) {
+                    _description = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Description)));
+                }
             }
         }
 
