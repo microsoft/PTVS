@@ -46,6 +46,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         /// </summary>
         public string RepositoryName {
             get {
+                if (string.IsNullOrEmpty(RemoteUrl)) {
+                    return string.Empty;
+                }
+
                 string owner;
                 string name;
                 ParseUtils.ParseGitHubRepoOwnerAndName(RemoteUrl, out owner, out name);
@@ -58,6 +62,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         /// </summary>
         public string RepositoryOwner {
             get {
+                if (string.IsNullOrEmpty(RemoteUrl)) {
+                    return string.Empty;
+                }
+
                 string owner;
                 string name;
                 ParseUtils.ParseGitHubRepoOwnerAndName(RemoteUrl, out owner, out name);
@@ -70,6 +78,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         /// </summary>
         public string RepositoryFullName {
             get {
+                if (string.IsNullOrEmpty(RemoteUrl)) {
+                    return string.Empty;
+                }
+
                 string owner;
                 string name;
                 ParseUtils.ParseGitHubRepoOwnerAndName(RemoteUrl, out owner, out name);

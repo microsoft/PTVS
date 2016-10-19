@@ -82,6 +82,18 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             );
         }
 
+        public static string Truncate(this string str, int length) {
+            if (string.IsNullOrEmpty(str)) {
+                return str;
+            }
+
+            if (str.Length < length) {
+                return str;
+            }
+
+            return str.Substring(0, length);
+        }
+
         public static string GetSha512(this string input) {
             SHA512 sha = SHA512.Create();
             byte[] inputBytes = Encoding.Unicode.GetBytes(input);
