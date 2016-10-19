@@ -291,6 +291,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
                 _analysisProcess.Dispose();
             });
+
+            _processExitedCancelSource.Cancel();
+            _processExitedCancelSource.Dispose();
         }
 
         #endregion

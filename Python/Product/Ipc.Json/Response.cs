@@ -22,6 +22,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Ipc.Json {
+    [Serializable]
     public class Response {
         public Response() {
         }

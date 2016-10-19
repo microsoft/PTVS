@@ -73,7 +73,11 @@ namespace Microsoft.PythonTools.Interpreter {
         public string ScriptName { get; set; }
         public string ScriptArguments { get; set; }
         public string WorkingDirectory { get; set; }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public List<string> SearchPaths { get; set; }
+
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
         public Dictionary<string, string> Environment { get; set; }
 
         public Dictionary<string, string> LaunchOptions => _options;

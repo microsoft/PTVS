@@ -3,6 +3,7 @@
   <Import Project="TestProjectBefore.settings" />
 
   <ItemGroup>
+    <ProjectFile Include="$(BuildRoot)\Python\Product\dirs.proj"/>
     <ProjectFile Include="$(BuildRoot)\Common\Tests\dirs.proj"/>
     <ProjectFile Include="Analysis\AnalysisTests.csproj" />
     <ProjectFile Include="AzurePublishingUITests\AzurePublishingUITests.csproj" />
