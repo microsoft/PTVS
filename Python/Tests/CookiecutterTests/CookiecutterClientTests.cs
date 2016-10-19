@@ -34,36 +34,51 @@ namespace CookiecutterTests {
         private const string NoUserConfigFilePath = "";
 
         private static string LocalTemplatePath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "template");
+        private static string LocalTemplateForVSPath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "templateforvs");
         private static string UserConfigFilePath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "userconfig.yaml");
 
         private ICookiecutterClient _client;
         private MockRedirector _redirector = new MockRedirector();
 
         private static ContextItem[] LocalTemplateNoUserConfigContextItems { get; } = new ContextItem[] {
-            new ContextItem("full_name", "Default Full Name"),
-            new ContextItem("email", "default@email"),
-            new ContextItem("github_username", "defaultgitusername"),
-            new ContextItem("project_name", "Default Project Name"),
-            new ContextItem("project_slug", "{{ cookiecutter.project_name.lower().replace(' ', '_') }}"),
-            new ContextItem("pypi_username", "{{ cookiecutter.github_username }}"),
-            new ContextItem("version", "0.1.0"),
-            new ContextItem("use_azure", "y"),
-            new ContextItem("open_source_license", "MIT license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }),
-            new ContextItem("port", "5000"),
+            new ContextItem("full_name", Selectors.String, "Default Full Name"),
+            new ContextItem("email", Selectors.String, "default@email"),
+            new ContextItem("github_username", Selectors.String, "defaultgitusername"),
+            new ContextItem("project_name", Selectors.String, "Default Project Name"),
+            new ContextItem("project_slug", Selectors.String, "{{ cookiecutter.project_name.lower().replace(' ', '_') }}"),
+            new ContextItem("pypi_username", Selectors.String, "{{ cookiecutter.github_username }}"),
+            new ContextItem("version", Selectors.String, "0.1.0"),
+            new ContextItem("use_azure", Selectors.String, "y"),
+            new ContextItem("open_source_license", Selectors.List, "MIT license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }),
+            new ContextItem("port", Selectors.String, "5000"),
+            // Note that _copy_without_render item should not appear
+        };
+
+        private static ContextItem[] LocalTemplateForVSNoUserConfigContextItems { get; } = new ContextItem[] {
+            new ContextItem("full_name", Selectors.String, "Default Full Name") { Description="Full name of author." },
+            new ContextItem("email", Selectors.String, "default@email"),
+            new ContextItem("github_username", Selectors.String, "defaultgitusername"),
+            new ContextItem("project_name", Selectors.String, "Default Project Name") { Description="Description for the application."},
+            new ContextItem("project_slug", Selectors.String, "{{ cookiecutter.project_name.lower().replace(' ', '_') }}") { Description="Pythonic name for the application." },
+            new ContextItem("pypi_username", Selectors.String, "{{ cookiecutter.github_username }}"),
+            new ContextItem("version", Selectors.String, "0.1.0"),
+            new ContextItem("use_azure", Selectors.YesNo, "y") { Description="Enable Azure support." },
+            new ContextItem("open_source_license", Selectors.List, "MIT license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }) { Description="License under which you will distribute the generated files." },
+            new ContextItem("port", Selectors.String, "5000"),
             // Note that _copy_without_render item should not appear
         };
 
         private static ContextItem[] LocalTemplateWithUserConfigContextItems { get; } = new ContextItem[] {
-            new ContextItem("full_name", "Configured User"),
-            new ContextItem("email", "configured@email"),
-            new ContextItem("github_username", "configuredgithubuser"),
-            new ContextItem("project_name", "Default Project Name"),
-            new ContextItem("project_slug", "{{ cookiecutter.project_name.lower().replace(' ', '_') }}"),
-            new ContextItem("pypi_username", "{{ cookiecutter.github_username }}"),
-            new ContextItem("version", "0.1.0"),
-            new ContextItem("use_azure", "y"),
-            new ContextItem("open_source_license", "BSD license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }),
-            new ContextItem("port", "5000"),
+            new ContextItem("full_name", Selectors.String, "Configured User"),
+            new ContextItem("email", Selectors.String, "configured@email"),
+            new ContextItem("github_username", Selectors.String, "configuredgithubuser"),
+            new ContextItem("project_name", Selectors.String, "Default Project Name"),
+            new ContextItem("project_slug", Selectors.String, "{{ cookiecutter.project_name.lower().replace(' ', '_') }}"),
+            new ContextItem("pypi_username", Selectors.String, "{{ cookiecutter.github_username }}"),
+            new ContextItem("version", Selectors.String, "0.1.0"),
+            new ContextItem("use_azure", Selectors.String, "y"),
+            new ContextItem("open_source_license", Selectors.List, "BSD license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }),
+            new ContextItem("port", Selectors.String, "5000"),
             // Note that _copy_without_render item should not appear
         };
 
@@ -102,6 +117,15 @@ namespace CookiecutterTests {
             var actual = await _client.LoadContextAsync(LocalTemplatePath, UserConfigFilePath);
 
             CollectionAssert.AreEqual(LocalTemplateWithUserConfigContextItems, actual, new ContextItemComparer());
+        }
+
+        [TestMethod]
+        public async Task LoadContextForVSNoUserConfig() {
+            await EnsureCookiecutterInstalledAsync();
+
+            var actual = await _client.LoadContextAsync(LocalTemplateForVSPath, NoUserConfigFilePath);
+
+            CollectionAssert.AreEqual(LocalTemplateForVSNoUserConfigContextItems, actual, new ContextItemComparer());
         }
 
         [TestMethod]
@@ -155,7 +179,7 @@ namespace CookiecutterTests {
 
             var vm = new CookiecutterViewModel();
             foreach (var item in context) {
-                vm.ContextItems.Add(new ContextItemViewModel(item.Name, item.DefaultValue, item.Values));
+                vm.ContextItems.Add(new ContextItemViewModel(item.Name, item.Selector, item.Description, item.DefaultValue, item.Values));
             }
 
             vm.SaveUserInput(contextFilePath);
@@ -207,7 +231,25 @@ namespace CookiecutterTests {
                     return res;
                 }
 
+                res = a.Selector.CompareTo(b.Selector);
+                if (res != 0) {
+                    return res;
+                }
+
+                res = SafeCompare(a.Description, b.Description);
+                if (res != 0) {
+                    return res;
+                }
+
                 return 0;
+            }
+
+            private int SafeCompare(IComparable a, IComparable b) {
+                if (a == null) {
+                    return b == null ? 0 : -1;
+                }
+
+                return a.CompareTo(b);
             }
         }
     }

@@ -15,10 +15,12 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Interpreter.Default;
 using Microsoft.PythonTools.Parsing;
@@ -32,12 +34,11 @@ namespace AnalysisTests {
     /// <summary>
     /// Base class w/ common infrastructure for analysis unit tests.
     /// </summary>
-    public class BaseAnalysisTest : IDisposable {
-        public IPythonInterpreterFactory InterpreterFactory;
-        public IPythonInterpreter Interpreter;
-        public string[] _objectMembers, _functionMembers;
-        public string[] _strMembers;
-        public string[] _listMembers, _intMembers;
+    public class BaseAnalysisTest {
+        private readonly IPythonInterpreterFactory _defaultFactoryV2 = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7));
+        private readonly IPythonInterpreterFactory _defaultFactoryV3 = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(3, 5));
+
+        private List<IDisposable> _toDispose;
 
         static BaseAnalysisTest() {
             AnalysisLog.Reset();
@@ -46,116 +47,74 @@ namespace AnalysisTests {
             PythonTestData.Deploy(includeTestData: false);
         }
 
-        public BaseAnalysisTest()
-            : this(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(new Version(2, 7))) {
+        [TestInitialize]
+        public void StartAnalysisLog() {
+            AnalysisLog.Reset();
+            AnalysisLog.Output = Console.Out;
         }
 
-        public BaseAnalysisTest(IPythonInterpreterFactory factory)
-            : this(factory, factory.CreateInterpreter()) {
-        }
-
-        protected virtual IModuleContext DefaultContext {
-            get { return null; }
-        }
-
-        public BaseAnalysisTest(IPythonInterpreterFactory factory, IPythonInterpreter interpreter) {
-            InterpreterFactory = factory;
-            Interpreter = interpreter;
-            var objectType = Interpreter.GetBuiltinType(BuiltinTypeId.Object);
-            Assert.IsNotNull(objectType);
-            var intType = Interpreter.GetBuiltinType(BuiltinTypeId.Int);
-            var bytesType = Interpreter.GetBuiltinType(BuiltinTypeId.Bytes);
-            var listType = Interpreter.GetBuiltinType(BuiltinTypeId.List);
-            var functionType = Interpreter.GetBuiltinType(BuiltinTypeId.Function);
-
-            _objectMembers = objectType.GetMemberNames(DefaultContext).ToArray();
-            _strMembers = bytesType.GetMemberNames(DefaultContext).ToArray();
-            _listMembers = listType.GetMemberNames(DefaultContext).ToArray();
-            _intMembers = intType.GetMemberNames(DefaultContext).ToArray();
-            _functionMembers = functionType.GetMemberNames(DefaultContext).ToArray();
-        }
-
-        public static TextReader GetSourceUnit(string text, string name) {
-            return new StringReader(text);
-        }
-
-        public static TextReader GetSourceUnit(string text) {
-            return GetSourceUnit(text, "fob");
-        }
-
-        protected virtual AnalysisLimits GetLimits() {
-            return AnalysisLimits.GetDefaultLimits();
-        }
-
-        protected virtual bool SupportsPython3 {
-            get { return true; }
-        }
-
-        protected virtual bool ShouldUseUnicodeLiterals(PythonLanguageVersion version) {
-            return version.Is3x();
-        }
-
-        public PythonAnalyzer CreateAnalyzer(PythonLanguageVersion version = PythonLanguageVersion.V27, string[] analysisDirs = null) {
-            // Explicitly provide the builtins name, since we aren't recreating
-            // the interpreter for each version like we should be.
-            var fact = InterpreterFactory;
-            var interp = Interpreter;
-            var builtinsName = "__builtin__";
-            if (version != fact.GetLanguageVersion()) {
-                fact = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion());
-                interp = fact.CreateInterpreter();
-                builtinsName = null;
+        [TestCleanup]
+        public void EndAnalysisLog() {
+            AnalysisLog.Flush();
+            AnalysisLog.Output = null;
+            foreach (var d in _toDispose.MaybeEnumerate()) {
+                d.Dispose();
             }
-            var state = PythonAnalyzer.CreateSynchronously(fact, interp, builtinsName);
-
-            if (ShouldUseUnicodeLiterals(version)) {
-                var types = (KnownTypes)state.Types;
-                types._types[(int)BuiltinTypeId.Str] = state.Types[BuiltinTypeId.Unicode];
-                types._types[(int)BuiltinTypeId.StrIterator] = state.Types[BuiltinTypeId.UnicodeIterator];
-                types._classInfos[(int)BuiltinTypeId.Str] = state.ClassInfos[BuiltinTypeId.Unicode];
-                types._classInfos[(int)BuiltinTypeId.StrIterator] = state.ClassInfos[BuiltinTypeId.UnicodeIterator];
-            }
-
-            state.Limits = GetLimits();
-            if (analysisDirs != null) {
-                foreach (var dir in analysisDirs) {
-                    state.AddAnalysisDirectory(dir);
-                }
-            }
-
-            return state;
+            _toDispose = null;
         }
 
-        public ModuleAnalysis ProcessText(
+        protected virtual IPythonInterpreterFactory DefaultFactoryV2 => _defaultFactoryV2;
+        protected virtual IPythonInterpreterFactory DefaultFactoryV3 => _defaultFactoryV3;
+        protected virtual bool SupportsPython3 => _defaultFactoryV3 != null;
+        protected virtual IModuleContext DefaultContext => null;
+        protected virtual AnalysisLimits GetLimits() => AnalysisLimits.GetDefaultLimits();
+
+        protected virtual PythonAnalysis CreateAnalyzerInternal(IPythonInterpreterFactory factory) {
+            return new PythonAnalysis(factory);
+        }
+
+        public PythonAnalysis CreateAnalyzer(IPythonInterpreterFactory factory = null, bool allowParseErrors = false) {
+            var analysis = CreateAnalyzerInternal(factory ?? DefaultFactoryV2);
+            analysis.AssertOnParseErrors = !allowParseErrors;
+            analysis.ModuleContext = DefaultContext;
+            analysis.SetLimits(GetLimits());
+
+            if (_toDispose == null) {
+                _toDispose = new List<IDisposable>();
+            }
+            _toDispose.Add(analysis);
+
+            return analysis;
+        }
+
+        public PythonAnalysis ProcessTextV2(string text, bool allowParseErrors = false) {
+            var analysis = CreateAnalyzer(DefaultFactoryV2, allowParseErrors);
+            analysis.AddModule("test-module", text);
+            analysis.WaitForAnalysis();
+            return analysis;
+        }
+
+        public PythonAnalysis ProcessTextV3(string text, bool allowParseErrors = false) {
+            var analysis = CreateAnalyzer(DefaultFactoryV3, allowParseErrors);
+            analysis.AddModule("test-module", text);
+            analysis.WaitForAnalysis();
+            return analysis;
+        }
+
+        public PythonAnalysis ProcessText(
             string text,
-            PythonLanguageVersion version = PythonLanguageVersion.V27,
-            string[] analysisDirs = null,
-            CancellationToken cancel = default(CancellationToken)
+            PythonLanguageVersion version = PythonLanguageVersion.None,
+            bool allowParseErrors = false
         ) {
-            var sourceUnit = GetSourceUnit(text, "fob");
-            var state = CreateAnalyzer(version, analysisDirs);
-            var entry = state.AddModule("fob", "fob", null);
-            Prepare(entry, sourceUnit, version);
-            entry.Analyze(cancel);
-
-            return entry.Analysis;
-        }
-
-        public static void Prepare(IPythonProjectEntry entry, TextReader sourceUnit, PythonLanguageVersion version = PythonLanguageVersion.V27) {
-            using (var parser = Parser.CreateParser(sourceUnit, version, new ParserOptions() { BindReferences = true })) {
-                entry.UpdateTree(parser.ParseFile(), null);
+            // TODO: Analyze against multiple versions when the version is None
+            if (version == PythonLanguageVersion.None) {
+                return ProcessTextV2(text, allowParseErrors);
             }
+
+            var analysis = CreateAnalyzer(InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(version.ToVersion()), allowParseErrors);
+            analysis.AddModule("test-module", text);
+            analysis.WaitForAnalysis();
+            return analysis;
         }
-
-        #region IDisposable Members
-
-        public void Dispose() {
-            IDisposable dispose = Interpreter as IDisposable;
-            if (dispose != null) {
-                dispose.Dispose();
-            }
-        }
-
-        #endregion
     }
 }

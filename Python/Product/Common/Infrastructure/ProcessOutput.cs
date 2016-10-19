@@ -270,8 +270,10 @@ namespace Microsoft.PythonTools.Infrastructure {
             return new ProcessOutput(process, redirector);
         }
 
+        private static readonly Random FreePortRandom = new Random();
+
         private static int GetFreePort() {
-            return Enumerable.Range(new Random().Next(49152, 65536), 60000).Except(
+            return Enumerable.Range(FreePortRandom.Next(49152, 65536), 60000).Except(
                 from connection in IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections()
                 select connection.LocalEndPoint.Port
             ).First();

@@ -74,43 +74,24 @@ namespace Microsoft.PythonTools.Project {
 
         protected override ReferenceNode CreateReferenceNode(string referenceType, ProjectElement element) {
             if (referenceType == ProjectFileConstants.Reference) {
-                string pyExtension = element.GetMetadata(PythonConstants.PythonExtension);
-                if (!String.IsNullOrWhiteSpace(pyExtension)) {
-                    return new PythonExtensionReferenceNode((PythonProjectNode)ProjectMgr, element, pyExtension);
+                if (Path.GetExtension(element.Url).Equals(".pyd", StringComparison.OrdinalIgnoreCase)) {
+                    return new DeprecatedReferenceNode(
+                        ProjectMgr,
+                        element,
+                        element.GetMetadata(ProjectFileConstants.Include),
+                        Strings.PydReferenceDeprecated
+                    );
                 }
             } else if (referenceType == ProjectFileConstants.WebPiReference) {
-                return new WebPiReferenceNode(
+                return new DeprecatedReferenceNode(
                     ProjectMgr,
                     element,
-                    element.GetMetadata("Feed"),
-                    element.GetMetadata("ProductId"),
-                    element.GetMetadata("FriendlyName")
+                    element.GetMetadata("FriendlyName"),
+                    Strings.WebPIReferenceDeprecated
                 );
             }
 
             return base.CreateReferenceNode(referenceType, element);
-        }
-
-        protected override ReferenceNode CreateReferenceNode(VSCOMPONENTSELECTORDATA selectorData) {
-            ReferenceNode node = null;
-            switch (selectorData.type) {
-                case VSCOMPONENTTYPE.VSCOMPONENTTYPE_Custom:
-                    if (selectorData.lCustom == 0) {
-                        node = new WebPiReferenceNode(
-                            (PythonProjectNode)ProjectMgr,
-                            selectorData.bstrFile,
-                            selectorData.bstrTitle,
-                            selectorData.bstrProjRef
-                        );
-
-                    }
-                    break;
-                default:
-                    node = base.CreateReferenceNode(selectorData);
-                    break;
-            }
-
-            return node;
         }
     }
 }

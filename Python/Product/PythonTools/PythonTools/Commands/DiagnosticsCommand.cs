@@ -25,6 +25,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
@@ -85,12 +86,13 @@ namespace Microsoft.PythonTools.Commands {
         public override void DoCommand(object sender, EventArgs args) {
             var ui = _serviceProvider.GetUIThread();
             var cts = new CancellationTokenSource();
-            var dlg = new DiagnosticsWindow(_serviceProvider, Task.Run(() => GetData(ui, cts.Token), cts.Token));
+            bool skipAnalysisLog = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
+            var dlg = new DiagnosticsWindow(_serviceProvider, Task.Run(() => GetData(ui, skipAnalysisLog, cts.Token), cts.Token));
             dlg.ShowModal();
             cts.Cancel();
         }
 
-        private string GetData(UIThreadBase ui, CancellationToken cancel) {
+        private string GetData(UIThreadBase ui, bool skipAnalysisLog, CancellationToken cancel) {
             StringBuilder res = new StringBuilder();
 
             if (PythonToolsPackage.IsIpyToolsInstalled()) {
@@ -283,19 +285,22 @@ namespace Microsoft.PythonTools.Commands {
             }
             res.AppendLine();
 
-            res.AppendLine("Environment Analysis Logs: ");
-            foreach (var provider in knownProviders) {
-                foreach (var factory in provider.GetInterpreterFactories().OfType<IPythonInterpreterFactoryWithDatabase>()) {
-                    cancel.ThrowIfCancellationRequested();
+            if (!skipAnalysisLog) {
+                res.AppendLine("Environment Analysis Logs: ");
+                foreach (var provider in knownProviders) {
+                    foreach (var factory in provider.GetInterpreterFactories().OfType<IPythonInterpreterFactoryWithDatabase>()) {
+                        cancel.ThrowIfCancellationRequested();
 
-                    res.AppendLine(factory.Configuration.Description);
-                    string analysisLog = factory.GetAnalysisLogContent(CultureInfo.InvariantCulture);
-                    if (!string.IsNullOrEmpty(analysisLog)) {
-                        res.AppendLine(analysisLog);
+                        res.AppendLine(factory.Configuration.Description);
+                        string analysisLog = factory.GetAnalysisLogContent(CultureInfo.InvariantCulture);
+                        if (!string.IsNullOrEmpty(analysisLog)) {
+                            res.AppendLine(analysisLog);
+                        }
+                        res.AppendLine();
                     }
-                    res.AppendLine();
                 }
             }
+
             return res.ToString();
         }
 

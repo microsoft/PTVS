@@ -44,9 +44,10 @@ namespace AnalysisTests {
     public partial class AnalysisTest : BaseAnalysisTest {
         [PerfMethod]
         public void TestLookupPerf_Namespaces() {
-            var entry = ProcessText(@"
+            var state = ProcessText(@"
 import System
             ");
+            var entry = state.Modules[state.DefaultModule].Analysis;
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -65,17 +66,14 @@ import System
             string merlin = Environment.GetEnvironmentVariable("DLR_ROOT") ?? @"C:\Product\0\dlr";
             var text = File.ReadAllText(Path.Combine(merlin + @"\External.LCA_RESTRICTED\Languages\IronPython\27\Lib\decimal.py"));
 
-            var sourceUnit = GetSourceUnit(text);
-            var projectState = PythonAnalyzer.CreateSynchronously(InterpreterFactory, Interpreter);
+            var state = CreateAnalyzer();
+            var entry = state.AddModule("decimal", text);
             Stopwatch sw = new Stopwatch();
-            var entry = projectState.AddModule("decimal", "decimal", null);
-            Prepare(entry, sourceUnit);
-            entry.Analyze(CancellationToken.None);
 
             sw.Start();
             for (int i = 0; i < 5; i++) {
-                Prepare(entry, sourceUnit);
-                entry.Analyze(CancellationToken.None);
+                state.UpdateModule(entry, text);
+                state.WaitForAnalysis();
             }
 
             sw.Stop();
@@ -112,9 +110,10 @@ import System
 
         [PerfMethod]
         public void TestLookupPerf_Namespaces2() {
-            var entry = ProcessText(@"
+            var state = ProcessText(@"
 import System
             ");
+            var entry = state.Modules[state.DefaultModule].Analysis;
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -164,9 +163,10 @@ import System
         /// </summary>
         [PerfMethod]
         public void TestLookupPerf_Types() {
-            var entry = ProcessText(@"
+            var state = ProcessText(@"
 import System
             ");
+            var entry = state.Modules[state.DefaultModule].Analysis;
 
             Stopwatch sw = new Stopwatch();
             sw.Start();
@@ -185,7 +185,8 @@ import System
             foreach (var name in builtin_module_names) {
                 text.AppendLine("import " + name);
             }
-            var entry = ProcessText(text.ToString());
+            var state = ProcessText(text.ToString());
+            var entry = state.Modules[state.DefaultModule].Analysis;
 
             Stopwatch sw = new Stopwatch();
             sw.Start();

@@ -297,18 +297,23 @@ namespace Microsoft.PythonTools.Intellisense {
             public int fileId;
         }
 
-        public sealed class AddDirectoryRequest : Request<Response> {
-            public const string Command = "addDir";
+        public class AddBulkFileRequest : Request<AddBulkFileResponse> {
+            public const string Command = "addBulkFile";
 
-            public string dir;
+            public string[] path;
+            public string addingFromDir;
+
             public override string command => Command;
         }
 
-        public sealed class RemoveDirectoryRequest : Request<Response> {
-            public const string Command = "removeDir";
+        public class AddBulkFileResponse : Response {
+            public int[] fileId;
+        }
 
-            public string dir;
+        public sealed class SetSearchPathRequest : Request<Response> {
+            public const string Command = "setSearchPath";
 
+            public string[] dir;
             public override string command => Command;
         }
 
@@ -570,20 +575,9 @@ namespace Microsoft.PythonTools.Intellisense {
             public int fileId;
         }
 
-        public sealed class AddZipArchiveRequest : Request<Response> {
-            public const string Command = "addZipArchive";
-            public string archive;
-
-            public override string command => Command;
-        }
-
         public sealed class ChildFileAnalyzed : Event {
             public const string Name = "childFileAnalyzed";
 
-            /// <summary>
-            /// The directory or zip file which was asked to be analyzed
-            /// </summary>
-            public string parent;
             /// <summary>
             /// The filename which got added
             /// </summary>
@@ -860,6 +854,11 @@ namespace Microsoft.PythonTools.Intellisense {
             public UnhandledExceptionEvent(Exception ex) {
                 message = ex.ToString();
             }
+
+            public UnhandledExceptionEvent(string message) {
+                this.message = message;
+            }
+
             public override string name => Name;
         }
 
