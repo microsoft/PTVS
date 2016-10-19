@@ -94,17 +94,17 @@ namespace Microsoft.CookiecutterTools.Model {
                     // Properties that start with underscore are for internal use,
                     // and cookiecutter doesn't prompt for them.
                     if (!prop.Name.StartsWith("_")) {
-                        if (prop.Value.Type == JTokenType.String) {
-                            items.Add(new ContextItem(prop.Name, ContextItemValueType.String, prop.Value.ToString()));
-                        } else if (prop.Value.Type == JTokenType.Integer || prop.Value.Type == JTokenType.Float) {
-                            items.Add(new ContextItem(prop.Name, ContextItemValueType.Numeric, prop.Value.ToString()));
+                        if (prop.Value.Type == JTokenType.String ||
+                            prop.Value.Type == JTokenType.Integer ||
+                            prop.Value.Type == JTokenType.Float) {
+                            items.Add(new ContextItem(prop.Name, Selectors.String, prop.Value.ToString()));
                         } else if (prop.Value.Type == JTokenType.Array) {
                             var elements = new List<string>();
                             JArray ar = prop.Value as JArray;
                             foreach (JToken element in ar) {
                                 elements.Add(element.ToString());
                             }
-                            items.Add(new ContextItem(prop.Name, ContextItemValueType.List, elements[0], elements.ToArray()));
+                            items.Add(new ContextItem(prop.Name, Selectors.List, elements[0], elements.ToArray()));
                         } else {
                             throw new InvalidOperationException(string.Format("Unsupported json element type in context file for property '{0}'.", prop.Name));
                         }
@@ -141,7 +141,7 @@ namespace Microsoft.CookiecutterTools.Model {
             MoveToDesiredFolder(outputFolderPath, tempFolder);
         }
 
-        private static void LoadVisualStudioSpecificContext(List<ContextItem> items, JProperty vsExtrasProp) {
+        private void LoadVisualStudioSpecificContext(List<ContextItem> items, JProperty vsExtrasProp) {
             // This section reads additional metadata for Visual Studio.
             // All fields are optional, but if they are specified, they are validated.
             //
@@ -149,17 +149,16 @@ namespace Microsoft.CookiecutterTools.Model {
             // "_visual_studio" : {
             //   "var1" : {
             //     "description" : "description for var 1",
-            //     "type" : "yesno"
+            //     "selector" : "yesno"
             //   },
             //   "var2" : {
             //     "description" : "description for var 2",
-            //     "type" : "connection"
+            //     "selector" : "connection"
             //   }
             // }
             //
-            // Valid values for type:
+            // Valid values for selector:
             // - string
-            // - numeric
             // - list
             // - yesno: generates 'y' or 'n'
             // - connection
@@ -171,7 +170,7 @@ namespace Microsoft.CookiecutterTools.Model {
                         if (prop.Value.Type == JTokenType.Object) {
                             var itemObj = (JObject)prop.Value;
                             ReadDescription(item, itemObj);
-                            ReadValueType(item, itemObj);
+                            ReadSelector(item, itemObj);
                         } else {
                             WrongJsonType(prop.Name, JTokenType.Object, prop.Value.Type);
                         }
@@ -184,7 +183,7 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
-        private static JToken ReadDescription(ContextItem item, JObject itemObj) {
+        private JToken ReadDescription(ContextItem item, JObject itemObj) {
             var descriptionToken = itemObj.SelectToken("description");
             if (descriptionToken != null) {
                 if (descriptionToken.Type == JTokenType.String) {
@@ -197,44 +196,23 @@ namespace Microsoft.CookiecutterTools.Model {
             return descriptionToken;
         }
 
-        private static void ReadValueType(ContextItem item, JObject itemObj) {
-            var typeToken = itemObj.SelectToken("type");
-            if (typeToken != null) {
-                if (typeToken.Type == JTokenType.String) {
-                    string typeVal = typeToken.Value<string>();
-                    switch (typeVal) {
-                        case "numeric":
-                            item.ValueType = ContextItemValueType.Numeric;
-                            break;
-                        case "string":
-                            item.ValueType = ContextItemValueType.String;
-                            break;
-                        case "yesno":
-                            item.ValueType = ContextItemValueType.YesNo;
-                            break;
-                        case "list":
-                            item.ValueType = ContextItemValueType.List;
-                            break;
-                        case "connection":
-                            item.ValueType = ContextItemValueType.Connection;
-                            break;
-                        default:
-                            Debug.Fail($"Unknown value type: '{typeVal}'");
-                            item.ValueType = ContextItemValueType.String;
-                            break;
-                    }
+        private void ReadSelector(ContextItem item, JObject itemObj) {
+            var selectorToken = itemObj.SelectToken("selector");
+            if (selectorToken != null) {
+                if (selectorToken.Type == JTokenType.String) {
+                    item.Selector = selectorToken.Value<string>();
                 } else {
-                    WrongJsonType("type", JTokenType.String, typeToken.Type);
+                    WrongJsonType("selector", JTokenType.String, selectorToken.Type);
                 }
             }
         }
 
-        private static void WrongJsonType(string name, JTokenType expected, JTokenType actual) {
-            throw new InvalidOperationException(string.Format("'{0}' from _visual_studio section in context file should be of type '{1}', instead of '{2}'.", name, expected, actual));
+        private void WrongJsonType(string name, JTokenType expected, JTokenType actual) {
+            _redirector.WriteErrorLine(string.Format("'{0}' from _visual_studio section in context file should be of type '{1}', instead of '{2}'.", name, expected, actual));
         }
 
-        private static void ReferenceNotFound(string name) {
-            throw new InvalidOperationException(string.Format("'{0}' is referenced from _visual_studio section in context file but was not found.", name));
+        private void ReferenceNotFound(string name) {
+            _redirector.WriteErrorLine(string.Format("'{0}' is referenced from _visual_studio section in context file but was not found.", name));
         }
 
         private static async Task<ProcessOutputResult> RunGenerateContextScript(Redirector redirector, string interpreterPath, string templateFolderPath, string userConfigFilePath) {

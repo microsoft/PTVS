@@ -16,16 +16,16 @@
 
 namespace Microsoft.CookiecutterTools.Model {
     class ContextItem {
-        public ContextItem(string name, ContextItemValueType valueType, string defaultValue, string[] items = null) {
+        public ContextItem(string name, string selector, string defaultValue, string[] items = null) {
             Name = name;
-            ValueType = valueType;
+            Selector = selector;
             DefaultValue = defaultValue;
             Values = items ?? new string[0];
         }
 
         public string Name { get; }
         public string Description { get; set; }
-        public ContextItemValueType ValueType { get; set; }
+        public string Selector { get; set; }
         public string DefaultValue { get; }
         public string[] Values { get; }
     }

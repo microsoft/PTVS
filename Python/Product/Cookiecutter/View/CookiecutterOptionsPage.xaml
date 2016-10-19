@@ -34,7 +34,7 @@
                 <ResourceDictionary Source="CookiecutterDictionary.xaml" />
                 <ResourceDictionary>
                     <view:TemplateContextItemTemplateSelector x:Key="contextItemSelector"/>
-                    <DataTemplate x:Key="textTemplate">
+                    <DataTemplate x:Key="stringTemplate">
                         <StackPanel Orientation="Vertical">
                             <TextBlock Margin="8 4 4 0" Text="{Binding Name}"/>
                             <wpf:ConfigurationTextBoxWithHelp Margin="4 0 8 4"

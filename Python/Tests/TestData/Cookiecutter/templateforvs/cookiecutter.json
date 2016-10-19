@@ -24,13 +24,13 @@
     },
     "use_azure": {
       "description": "Enable Azure support.",
-      "type":  "yesno"
+      "selector":  "yesno"
     },
     "open_source_license": {
       "description": "License under which you will distribute the generated files."
     },
     "port": {
-      "type" :  "numeric"
+      "selector" :  "string"
     }
   }
 }

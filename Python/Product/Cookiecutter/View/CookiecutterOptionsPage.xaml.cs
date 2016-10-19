@@ -15,10 +15,12 @@
 // permissions and limitations under the License.
 
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.CookiecutterTools.Infrastructure;
+using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.ViewModel;
 using WpfCommands = Microsoft.VisualStudioTools.Wpf.Commands;
 
@@ -77,29 +79,19 @@ namespace Microsoft.CookiecutterTools.View {
             var element = container as FrameworkElement;
             var p = item as ContextItemViewModel;
             if (element != null && p != null) {
-                string templateName;
-                switch (p.ValueType) {
-                    case Model.ContextItemValueType.String:
-                        templateName = "textTemplate";
-                        break;
-                    case Model.ContextItemValueType.Numeric:
-                        templateName = "textTemplate";
-                        break;
-                    case Model.ContextItemValueType.List:
-                        templateName = "listTemplate";
-                        break;
-                    case Model.ContextItemValueType.YesNo:
-                        templateName = "yesnoTemplate";
-                        break;
-                    case Model.ContextItemValueType.Connection:
-                        templateName = "connectionTemplate";
-                        break;
-                    default:
-                        Debug.Fail($"Unknown value type: '{p.ValueType}'");
-                        templateName = "textTemplate";
-                        break;
+                string selector = p.Selector?.ToLowerInvariant()?.Truncate(30);
+                if (selector != null && Regex.IsMatch(selector, "^[a-z]+$")) {
+                    selector = p.Selector;
+                } else {
+                    selector = Selectors.String;
                 }
-                return element.FindResource(templateName) as DataTemplate;
+
+                var template = element.FindResource(selector + "Template") as DataTemplate;
+                if (template == null) {
+                    template = element.FindResource("stringTemplate") as DataTemplate;
+                }
+
+                return template;
             }
             return base.SelectTemplate(item, container);
         }

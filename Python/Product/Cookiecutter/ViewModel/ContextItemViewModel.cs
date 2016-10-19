@@ -21,7 +21,7 @@ using Microsoft.CookiecutterTools.Model;
 namespace Microsoft.CookiecutterTools.ViewModel {
     class ContextItemViewModel : INotifyPropertyChanged {
         private string _name;
-        private ContextItemValueType _valueType;
+        private string _selector;
         private string _description;
         private string _val;
         private string _default;
@@ -33,12 +33,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         /// Constructor for design view.
         /// </summary>
         public ContextItemViewModel() :
-            this(null, ContextItemValueType.String, null, null, null) {
+            this(null, Selectors.String, null, null, null) {
         }
 
-        public ContextItemViewModel(string name, ContextItemValueType valueType, string description, string defaultValue, string[] items = null) {
+        public ContextItemViewModel(string name, string selector, string description, string defaultValue, string[] items = null) {
             _name = name;
-            _valueType = valueType;
+            _selector = selector;
             _description = !string.IsNullOrEmpty(description) ? description : defaultValue;
             _val = string.Empty;
             _default = defaultValue;
@@ -58,15 +58,15 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
-        public ContextItemValueType ValueType {
+        public string Selector {
             get {
-                return _valueType;
+                return _selector;
             }
 
             set {
-                if (value != _valueType) {
-                    _valueType = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ValueType)));
+                if (value != _selector) {
+                    _selector = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Selector)));
                 }
             }
         }

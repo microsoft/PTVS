@@ -15,11 +15,10 @@
 // permissions and limitations under the License.
 
 namespace Microsoft.CookiecutterTools.Model {
-    enum ContextItemValueType {
-        String,
-        Numeric,
-        List,
-        YesNo,
-        Connection,
+    internal static class Selectors {
+        public const string String = "string";
+        public const string List = "list";
+        public const string YesNo = "yesno";
+        public const string Connection = "connection";
     }
 }
