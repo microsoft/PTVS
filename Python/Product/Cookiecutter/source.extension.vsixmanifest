@@ -16,7 +16,9 @@
   <Dependencies>
     <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.6" />
   </Dependencies>
-  <Prerequisites />
+  <Prerequisites>
+    <Prerequisite Id="Microsoft.VisualStudio.Component.CoreEditor" Version="[15.0,16.0)" DisplayName="Visual Studio core editor" />
+  </Prerequisites>
   <Assets>
     <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|%CurrentProject%;_GetTargetPath|" AssemblyName="|%CurrentProject%;_GetAssemblyName|" />
