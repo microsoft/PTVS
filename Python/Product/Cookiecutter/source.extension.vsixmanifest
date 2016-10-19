@@ -16,6 +16,7 @@
   <Dependencies>
     <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" Version="4.6" />
   </Dependencies>
+  <Prerequisites />
   <Assets>
     <Asset Type="Microsoft.VisualStudio.Package" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
     <Asset Type="Microsoft.VisualStudio.Assembly" Path="|%CurrentProject%;_GetTargetPath|" AssemblyName="|%CurrentProject%;_GetAssemblyName|" />
