@@ -64,6 +64,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <see cref="RefreshIsCurrent"/> must be called after creation to
         /// ensure the database state is correctly reflected.
         /// </remarks>
+        [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public PythonInterpreterFactoryWithDatabase(
             InterpreterConfiguration config,
             InterpreterFactoryCreationOptions options

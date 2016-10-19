@@ -111,6 +111,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     }
                 }
                 _refreshIsCurrentTrigger?.Dispose();
+                _working.Dispose();
             }
         }
 

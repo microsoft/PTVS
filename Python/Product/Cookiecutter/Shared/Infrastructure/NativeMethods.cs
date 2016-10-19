@@ -21,7 +21,7 @@ using System.Text;
 using Microsoft.Win32.SafeHandles;
 
 namespace Microsoft.CookiecutterTools.Infrastructure {
-    public static partial class NativeMethods {
+    static partial class NativeMethods {
         [DllImport("kernel32", EntryPoint = "GetBinaryTypeW", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Winapi)]
         private static extern bool _GetBinaryType(string lpApplicationName, out GetBinaryTypeResult lpBinaryType);
 

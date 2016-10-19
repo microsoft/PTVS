@@ -2550,6 +2550,9 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _queueActivityEvent.Dispose();
+            _connection.Dispose();
+            _container.Dispose();
+            _catalog.Dispose();
         }
 
         #endregion

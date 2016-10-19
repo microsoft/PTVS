@@ -189,6 +189,14 @@ namespace Microsoft.PythonTools.Interpreter {
             return NormalizedForm.GetHashCode();
         }
 
+        public static bool operator ==(PackageVersion x, PackageVersion y) {
+            return x.Equals(y);
+        }
+
+        public static bool operator !=(PackageVersion x, PackageVersion y) {
+            return !x.Equals(y);
+        }
+
         public int CompareTo(PackageVersion other) {
             Exception error;
             if (!Validate(out error)) {

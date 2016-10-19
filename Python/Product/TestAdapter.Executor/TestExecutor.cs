@@ -248,7 +248,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private static string UpdateBest(string best, string test) {
             if (best == null || best == test) {
                 best = test;
-            } else if (best != "") {
+            } else if (!string.IsNullOrEmpty(best)) {
                 best = "";
             }
 
@@ -258,7 +258,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         internal static string UpdateBestFile(string bestFile, string testFile) {
             if (bestFile == null || bestFile == testFile) {
                 bestFile = testFile;
-            } else if (bestFile != "") {
+            } else if (!string.IsNullOrEmpty(bestFile)) {
                 // Get common directory name, trim to the last \\ where we 
                 // have things in common
                 int lastSlash = 0;

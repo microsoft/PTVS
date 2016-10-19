@@ -24,7 +24,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
         public static void DeleteDirectory(string path) {
             NativeMethods.RecursivelyDeleteDirectory(path, silent: true);
         }
-        
+
         /// <summary>
         /// Unmanaged API wrappers.
         /// </summary>
@@ -100,7 +100,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
 
             public const int MAX_PATH = 260;
 
-            [DllImport("kernel32.dll", SetLastError = true)]
+            [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
             [return: MarshalAs(UnmanagedType.Bool)]
             public static extern bool CreateDirectory(string lpPathName, IntPtr lpSecurityAttributes);
 
@@ -116,7 +116,7 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
             /// <param name="lpTargetFileName">Path to the file/directory that the symbolic link should be pointing to.</param>
             /// <param name="dwFlags">Flag specifying either file or directory.</param>
             /// <returns></returns>
-            [DllImport("kernel32.dll")]
+            [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
             internal static extern bool CreateSymbolicLink(string lpSymlinkFileName, string lpTargetFileName, SymbolicLink dwFlags);
 
             internal enum SymbolicLink {
