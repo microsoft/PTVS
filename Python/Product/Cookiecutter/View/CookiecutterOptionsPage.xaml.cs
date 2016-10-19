@@ -86,12 +86,11 @@ namespace Microsoft.CookiecutterTools.View {
                     selector = Selectors.String;
                 }
 
-                var template = element.FindResource(selector + "Template") as DataTemplate;
-                if (template == null) {
-                    template = element.FindResource("stringTemplate") as DataTemplate;
+                try {
+                    return element.FindResource(selector + "Template") as DataTemplate;
+                } catch (ResourceReferenceKeyNotFoundException) {
+                    return element.FindResource("stringTemplate") as DataTemplate;
                 }
-
-                return template;
             }
             return base.SelectTemplate(item, container);
         }
