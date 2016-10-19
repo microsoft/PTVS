@@ -10,6 +10,7 @@
       xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
       xmlns:img="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
       xmlns:imagecatalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
+      xmlns:sys="clr-namespace:System;assembly=mscorlib"
       wpf:LambdaProperties.ImportedNamespaces="System.Windows Microsoft.CookiecutterTools Microsoft.CookiecutterTools.ViewModel"
       mc:Ignorable="d" 
       d:DataContext="{Binding Source={d:DesignData Source=CookiecutterControlDesignData.xaml}}"
@@ -33,12 +34,22 @@
                 <ResourceDictionary Source="CookiecutterDictionary.xaml" />
                 <ResourceDictionary>
                     <view:TemplateContextItemTemplateSelector x:Key="contextItemSelector"/>
-                    <DataTemplate x:Key="textTemplate">
+                    <DataTemplate x:Key="stringTemplate">
                         <StackPanel Orientation="Vertical">
                             <TextBlock Margin="8 4 4 0" Text="{Binding Name}"/>
                             <wpf:ConfigurationTextBoxWithHelp Margin="4 0 8 4"
                                                               Text="{Binding Val, Mode=TwoWay}"
-                                                              HelpText="{Binding Default}"
+                                                              HelpText="{Binding Description}"
+                                                              Watermark="{Binding Default}" />
+                        </StackPanel>
+                    </DataTemplate>
+                    <DataTemplate x:Key="connectionTemplate">
+                        <!-- TODO -->
+                        <StackPanel Orientation="Vertical">
+                            <TextBlock Margin="8 4 4 0" Text="{Binding Name}"/>
+                            <wpf:ConfigurationTextBoxWithHelp Margin="4 0 8 4"
+                                                              Text="{Binding Val, Mode=TwoWay}"
+                                                              HelpText="{Binding Description}"
                                                               Watermark="{Binding Default}" />
                         </StackPanel>
                     </DataTemplate>
@@ -48,7 +59,23 @@
                             <wpf:ConfigurationComboBoxWithHelp Margin="4 0 8 4"
                                                                Value="{Binding Val, Mode=TwoWay}"
                                                                Values="{Binding Items}"
-                                                               HelpText="{Binding Default}"
+                                                               HelpText="{Binding Description}"
+                                                               Watermark="{Binding Default}" />
+                        </StackPanel>
+                    </DataTemplate>
+                    <DataTemplate x:Key="yesnoTemplate">
+                        <StackPanel Orientation="Vertical">
+                            <StackPanel.Resources>
+                                <x:Array x:Key="yesnoValues" Type="sys:String">
+                                    <sys:String>y</sys:String>
+                                    <sys:String>n</sys:String>
+                                </x:Array>
+                            </StackPanel.Resources>
+                            <TextBlock Margin="8 4 4 0" Text="{Binding Name}"/>
+                            <wpf:ConfigurationComboBoxWithHelp Margin="4 0 8 4"
+                                                               Value="{Binding Val, Mode=TwoWay}"
+                                                               Values="{StaticResource ResourceKey=yesnoValues}"
+                                                               HelpText="{Binding Description}"
                                                                Watermark="{Binding Default}" />
                         </StackPanel>
                     </DataTemplate>

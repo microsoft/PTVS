@@ -219,6 +219,10 @@ namespace Microsoft.PythonTools.Interpreter {
                 onExit?.Invoke(PythonTypeDatabase.NotSupportedExitCode);
                 return;
             }
+            if (IsGenerating) {
+                onExit?.Invoke(PythonTypeDatabase.AlreadyGeneratingExitCode);
+                return;
+            }
 
             var req = new PythonTypeDatabaseCreationRequest {
                 Factory = this,
@@ -347,6 +351,16 @@ namespace Microsoft.PythonTools.Interpreter {
                 _isCurrentException = null;
                 OnIsCurrentChanged();
                 return;
+            }
+            if (IsGenerating) {
+                if (PythonTypeDatabase.IsDatabaseRegenerating(DatabasePath)) {
+                    _isValid = false;
+                    _missingModules = null;
+                    _isCurrentException = null;
+                    return;
+                }
+                var generating = Interlocked.Exchange(ref _generating, null);
+                generating?.Dispose();
             }
 
             try {
