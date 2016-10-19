@@ -314,4 +314,7 @@ Please delete the installed template and try again.</value>
   <data name="ProcessExitCodeMessage" xml:space="preserve">
     <value>{0} returned an exit code of {1}.</value>
   </data>
+  <data name="ConnectionStringFormatIncorrect" xml:space="preserve">
+    <value>The connection string appears to be in incorrect format. Would you like to re-create it?</value>
+  </data>
 </root>

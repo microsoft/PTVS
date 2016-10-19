@@ -196,6 +196,15 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The connection string appears to be in incorrect format. Would you like to re-create it?.
+        /// </summary>
+        internal static string ConnectionStringFormatIncorrect {
+            get {
+                return ResourceManager.GetString("ConnectionStringFormatIncorrect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete the template from this folder?
         ///
         ///{0}.
