@@ -60,16 +60,16 @@ namespace CookiecutterTests {
         private string _openedFolder;
 
         internal static ContextItemViewModel[] LocalTemplateWithUserConfigContextItems { get; } = new ContextItemViewModel[] {
-                new ContextItemViewModel("full_name", "Configured User"),
-                new ContextItemViewModel("email", "configured@email"),
-                new ContextItemViewModel("github_username", "configuredgithubuser"),
-                new ContextItemViewModel("project_name", "Default Project Name"),
-                new ContextItemViewModel("project_slug", "{{ cookiecutter.project_name.lower().replace(' ', '_') }}"),
-                new ContextItemViewModel("pypi_username", "{{ cookiecutter.github_username }}"),
-                new ContextItemViewModel("version", "0.1.0"),
-                new ContextItemViewModel("use_azure", "y"),
-                new ContextItemViewModel("open_source_license", "BSD license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }),
-                new ContextItemViewModel("port", "5000"),
+                new ContextItemViewModel("full_name", ContextItemValueType.String, null, "Configured User"),
+                new ContextItemViewModel("email", ContextItemValueType.String, null, "configured@email"),
+                new ContextItemViewModel("github_username", ContextItemValueType.String, null, "configuredgithubuser"),
+                new ContextItemViewModel("project_name", ContextItemValueType.String, null, "Default Project Name"),
+                new ContextItemViewModel("project_slug", ContextItemValueType.String, null, "{{ cookiecutter.project_name.lower().replace(' ', '_') }}"),
+                new ContextItemViewModel("pypi_username", ContextItemValueType.String, null, "{{ cookiecutter.github_username }}"),
+                new ContextItemViewModel("version", ContextItemValueType.String, null, "0.1.0"),
+                new ContextItemViewModel("use_azure", ContextItemValueType.String, null, "y"),
+                new ContextItemViewModel("open_source_license", ContextItemValueType.List, null, "BSD license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }),
+                new ContextItemViewModel("port", ContextItemValueType.Numeric, null, "5000"),
                 // Note that _copy_without_render item should not appear
         };
 
@@ -376,7 +376,25 @@ namespace CookiecutterTests {
                     return res;
                 }
 
+                res = a.ValueType.CompareTo(b.ValueType);
+                if (res != 0) {
+                    return res;
+                }
+
+                res = SafeCompare(a.Description, b.Description);
+                if (res != 0) {
+                    return res;
+                }
+
                 return 0;
+            }
+
+            private int SafeCompare(IComparable a, IComparable b) {
+                if (a == null) {
+                    return b == null ? 0 : -1;
+                }
+
+                return a.CompareTo(b);
             }
         }
     }

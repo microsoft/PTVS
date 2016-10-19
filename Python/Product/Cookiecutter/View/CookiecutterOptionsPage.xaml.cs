@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -76,7 +77,28 @@ namespace Microsoft.CookiecutterTools.View {
             var element = container as FrameworkElement;
             var p = item as ContextItemViewModel;
             if (element != null && p != null) {
-                var templateName = p.Items.Count == 0 ? "textTemplate" : "listTemplate";
+                string templateName;
+                switch (p.ValueType) {
+                    case Model.ContextItemValueType.String:
+                        templateName = "textTemplate";
+                        break;
+                    case Model.ContextItemValueType.Numeric:
+                        templateName = "textTemplate";
+                        break;
+                    case Model.ContextItemValueType.List:
+                        templateName = "listTemplate";
+                        break;
+                    case Model.ContextItemValueType.YesNo:
+                        templateName = "yesnoTemplate";
+                        break;
+                    case Model.ContextItemValueType.Connection:
+                        templateName = "connectionTemplate";
+                        break;
+                    default:
+                        Debug.Fail($"Unknown value type: '{p.ValueType}'");
+                        templateName = "textTemplate";
+                        break;
+                }
                 return element.FindResource(templateName) as DataTemplate;
             }
             return base.SelectTemplate(item, container);

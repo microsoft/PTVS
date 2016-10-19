@@ -15,18 +15,11 @@
 // permissions and limitations under the License.
 
 namespace Microsoft.CookiecutterTools.Model {
-    class ContextItem {
-        public ContextItem(string name, ContextItemValueType valueType, string defaultValue, string[] items = null) {
-            Name = name;
-            ValueType = valueType;
-            DefaultValue = defaultValue;
-            Values = items ?? new string[0];
-        }
-
-        public string Name { get; }
-        public string Description { get; set; }
-        public ContextItemValueType ValueType { get; set; }
-        public string DefaultValue { get; }
-        public string[] Values { get; }
+    enum ContextItemValueType {
+        String,
+        Numeric,
+        List,
+        YesNo,
+        Connection,
     }
 }

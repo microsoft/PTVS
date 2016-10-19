@@ -793,7 +793,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
                 ContextItems.Clear();
                 foreach (var item in result) {
-                    ContextItems.Add(new ContextItemViewModel(item.Name, item.DefaultValue, item.Values));
+                    ContextItems.Add(new ContextItemViewModel(item.Name, item.ValueType, item.Description, item.DefaultValue, item.Values));
                 }
 
                 LoadingStatus = OperationStatus.Succeeded;
