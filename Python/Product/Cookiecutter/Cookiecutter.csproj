@@ -68,6 +68,7 @@
     <Reference Include="Microsoft.VisualStudio.Editor, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Language.Intellisense, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Language.StandardClassification, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.Data.ConnectionUI.Dialog" />
     <Reference Include="Microsoft.VisualStudio.OLE.Interop" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'" />
@@ -150,6 +151,8 @@
     <Compile Include="Commands\UpdateCommand.cs" />
     <Compile Include="Model\Selectors.cs" />
     <Compile Include="Model\ILocalTemplateSource.cs" />
+    <Compile Include="View\SqlCommands.cs" />
+    <Compile Include="Model\ConnectionStringConverter.cs" />
     <Compile Include="Resources\ImageMonikers.cs" />
     <Compile Include="Telemetry\DictionaryExtension.cs" />
     <Compile Include="Telemetry\ITelemetryRecorder.cs" />

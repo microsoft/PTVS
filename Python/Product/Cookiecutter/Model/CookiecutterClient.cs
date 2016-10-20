@@ -148,12 +148,14 @@ namespace Microsoft.CookiecutterTools.Model {
             // Example:
             // "_visual_studio" : {
             //   "var1" : {
-            //     "description" : "description for var 1",
+            //     "label" : "Variable 1",
+            //     "description" : "Description for variable 1",
             //     "selector" : "yesno"
             //   },
             //   "var2" : {
-            //     "description" : "description for var 2",
-            //     "selector" : "connection"
+            //     "label" : "Variable 2",
+            //     "description" : "Description for variable 2",
+            //     "selector" : "odbcConnection"
             //   }
             // }
             //
@@ -161,7 +163,7 @@ namespace Microsoft.CookiecutterTools.Model {
             // - string
             // - list
             // - yesno: generates 'y' or 'n'
-            // - connection
+            // - odbcConnection
             if (vsExtrasProp.Value.Type == JTokenType.Object) {
                 var vsExtrasObj = (JObject)vsExtrasProp.Value;
                 foreach (JProperty prop in vsExtrasObj.Properties()) {
@@ -169,6 +171,7 @@ namespace Microsoft.CookiecutterTools.Model {
                     if (item != null) {
                         if (prop.Value.Type == JTokenType.Object) {
                             var itemObj = (JObject)prop.Value;
+                            ReadLabel(item, itemObj);
                             ReadDescription(item, itemObj);
                             ReadSelector(item, itemObj);
                         } else {
@@ -181,6 +184,19 @@ namespace Microsoft.CookiecutterTools.Model {
             } else {
                 WrongJsonType("_visual_studio", JTokenType.Object, vsExtrasProp.Value.Type);
             }
+        }
+
+        private JToken ReadLabel(ContextItem item, JObject itemObj) {
+            var labelToken = itemObj.SelectToken("label");
+            if (labelToken != null) {
+                if (labelToken.Type == JTokenType.String) {
+                    item.Label = labelToken.Value<string>();
+                } else {
+                    WrongJsonType("label", JTokenType.String, labelToken.Type);
+                }
+            }
+
+            return labelToken;
         }
 
         private JToken ReadDescription(ContextItem item, JObject itemObj) {

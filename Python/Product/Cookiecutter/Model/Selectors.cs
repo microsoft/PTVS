@@ -19,6 +19,6 @@ namespace Microsoft.CookiecutterTools.Model {
         public const string String = "string";
         public const string List = "list";
         public const string YesNo = "yesno";
-        public const string Connection = "connection";
+        public const string OdbcConnection = "odbcConnection";
     }
 }

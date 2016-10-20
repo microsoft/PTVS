@@ -60,16 +60,16 @@ namespace CookiecutterTests {
         private string _openedFolder;
 
         internal static ContextItemViewModel[] LocalTemplateWithUserConfigContextItems { get; } = new ContextItemViewModel[] {
-                new ContextItemViewModel("full_name", Selectors.String, null, "Configured User"),
-                new ContextItemViewModel("email", Selectors.String, null, "configured@email"),
-                new ContextItemViewModel("github_username", Selectors.String, null, "configuredgithubuser"),
-                new ContextItemViewModel("project_name", Selectors.String, null, "Default Project Name"),
-                new ContextItemViewModel("project_slug", Selectors.String, null, "{{ cookiecutter.project_name.lower().replace(' ', '_') }}"),
-                new ContextItemViewModel("pypi_username", Selectors.String, null, "{{ cookiecutter.github_username }}"),
-                new ContextItemViewModel("version", Selectors.String, null, "0.1.0"),
-                new ContextItemViewModel("use_azure", Selectors.String, null, "y"),
-                new ContextItemViewModel("open_source_license", Selectors.List, null, "BSD license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }),
-                new ContextItemViewModel("port", Selectors.String, null, "5000"),
+                new ContextItemViewModel("full_name", Selectors.String, null, null, "Configured User"),
+                new ContextItemViewModel("email", Selectors.String, null, null, "configured@email"),
+                new ContextItemViewModel("github_username", Selectors.String, null, null, "configuredgithubuser"),
+                new ContextItemViewModel("project_name", Selectors.String, null, null, "Default Project Name"),
+                new ContextItemViewModel("project_slug", Selectors.String, null, null, "{{ cookiecutter.project_name.lower().replace(' ', '_') }}"),
+                new ContextItemViewModel("pypi_username", Selectors.String, null, null, "{{ cookiecutter.github_username }}"),
+                new ContextItemViewModel("version", Selectors.String, null, null, "0.1.0"),
+                new ContextItemViewModel("use_azure", Selectors.String, null, null, "y"),
+                new ContextItemViewModel("open_source_license", Selectors.List, null, null, "BSD license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }),
+                new ContextItemViewModel("port", Selectors.String, null, null, "5000"),
                 // Note that _copy_without_render item should not appear
         };
 
