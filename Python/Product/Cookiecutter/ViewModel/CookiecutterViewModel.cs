@@ -28,7 +28,6 @@ using System.Windows.Input;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.Telemetry;
-using Microsoft.VisualStudio.Imaging;
 using Newtonsoft.Json;
 
 namespace Microsoft.CookiecutterTools.ViewModel {
@@ -369,14 +368,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (searchTerm.StartsWith("http")) {
                     searchTermTemplate.DisplayName = searchTerm;
                     searchTermTemplate.RemoteUrl = searchTerm;
-                    searchTermTemplate.Image = KnownMonikers.GitNoColor;
                     Custom.Templates.Add(searchTermTemplate);
                     SearchResults.Add(Custom);
                     return;
                 } else if (Directory.Exists(searchTerm)) {
                     searchTermTemplate.DisplayName = searchTerm;
                     searchTermTemplate.ClonedPath = searchTerm;
-                    searchTermTemplate.Image = KnownMonikers.TestSuite;
                     Custom.Templates.Add(searchTermTemplate);
                     SearchResults.Add(Custom);
                     return;
@@ -387,9 +384,9 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             SearchResults.Add(Recommended);
             SearchResults.Add(GitHub);
 
-            var recommendedTask = AddFromSource(_recommendedSource, searchTerm, KnownMonikers.RecommendedTest, Recommended, ct);
-            var installedTask = AddFromSource(_installedSource, searchTerm, KnownMonikers.TestSuite, Installed, ct);
-            var githubTask = AddFromSource(_githubSource, searchTerm, KnownMonikers.GitNoColor, GitHub, ct);
+            var recommendedTask = AddFromSource(_recommendedSource, searchTerm, Recommended, ct);
+            var installedTask = AddFromSource(_installedSource, searchTerm, Installed, ct);
+            var githubTask = AddFromSource(_githubSource, searchTerm, GitHub, ct);
 
             await Task.WhenAll(recommendedTask, installedTask, githubTask);
         }
@@ -488,7 +485,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     _templateRefreshCancelTokenSource = new CancellationTokenSource();
                     try {
                         Installed.Templates.Clear();
-                        await AddFromSource(_installedSource, SearchTerm, KnownMonikers.TestSuite, Installed, CancellationToken.None);
+                        await AddFromSource(_installedSource, SearchTerm, Installed, CancellationToken.None);
                     } catch (OperationCanceledException) {
                     }
 
@@ -704,7 +701,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 try {
                     GitHub.Templates.Remove(last);
                     ReportEvent(CookiecutterTelemetry.TelemetryArea.Search, CookiecutterTelemetry.SearchEvents.More);
-                    await AddFromSource(_githubSource, null, KnownMonikers.GitNoColor, GitHub, _templateRefreshCancelTokenSource.Token, continuationToken);
+                    await AddFromSource(_githubSource, null, GitHub, _templateRefreshCancelTokenSource.Token, continuationToken);
                 } catch (OperationCanceledException) {
                 }
             }
@@ -743,7 +740,14 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
-        private async Task AddFromSource(ITemplateSource source, string searchTerm, VisualStudio.Imaging.Interop.ImageMoniker image, CategorizedViewModel parent, CancellationToken ct, string continuationToken = null) {
+        private async Task AddFromSource(
+            ITemplateSource source,
+            string searchTerm,
+            CategorizedViewModel parent,
+            CancellationToken ct,
+            string continuationToken = null,
+            VisualStudio.Imaging.Interop.ImageMoniker? updateableImage = null
+        ) {
             var loading = new LoadingViewModel();
             parent.Templates.Add(loading);
 
@@ -758,7 +762,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     vm.RemoteUrl = t.RemoteUrl;
                     vm.ClonedPath = t.LocalFolderPath;
                     vm.IsUpdateAvailable = t.UpdateAvailable == true;
-                    vm.Image = image;
                     parent.Templates.Add(vm);
                 }
 

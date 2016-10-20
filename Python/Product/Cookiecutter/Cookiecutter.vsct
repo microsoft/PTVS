@@ -78,7 +78,7 @@
     <Buttons>
       <Button guid="guidCookiecutterCmdSet" id="cmdidCookiecutterExplorer" priority="0x0900" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_VIEW_ORG_WINDOWS"/>
-        <Icon guid="ImageCatalogGuid" id="DockPanel"/>
+        <Icon guid="guidCookiecutterImages" id="Cookiecutter"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>&amp;Cookiecutter Explorer</ButtonText>
@@ -89,7 +89,7 @@
 
       <Button guid="guidCookiecutterCmdSet" id="cmdidCreateFromCookiecutter" priority="0x0200" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_FILE_NEW_CASCADE"/>
-        <Icon guid="ImageCatalogGuid" id="DockPanel"/>
+        <Icon guid="guidCookiecutterImages" id="NewCookiecutter"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>From &amp;Cookiecutter...</ButtonText>
@@ -100,7 +100,7 @@
 
       <Button guid="guidCookiecutterCmdSet" id="cmdidAddFromCookiecutter" priority="0x0600" type="Button">
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
-        <Icon guid="ImageCatalogGuid" id="DockPanel"/>
+        <Icon guid="guidCookiecutterImages" id="NewCookiecutter"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>From &amp;Cookiecutter...</ButtonText>
@@ -140,7 +140,7 @@
       </Button>
 
       <Button guid="guidCookiecutterCmdSet" id="cmdidUpdateTemplate" priority="0x0400" type="Button">
-        <Icon guid="ImageCatalogGuid" id="Download"/>
+        <Icon guid="guidCookiecutterImages" id="Download"/>
         <CommandFlag>DefaultDisabled</CommandFlag>
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
@@ -288,6 +288,16 @@
     </GuidSymbol>
     <GuidSymbol name="guidPythonToolsCmdSet" value="{bdfa79d2-2cd2-474a-a82a-ce8694116825}">
       <IDSymbol name="WindowCommandsGroup" value="0x1014" />
+    </GuidSymbol>
+    <GuidSymbol name="guidCookiecutterImages" value="{50EDF200-5C99-4968-ABC0-CF1A2C490F00}">
+      <IDSymbol name="Cancel" value="1"/>
+      <IDSymbol name="Cookiecutter" value="2"/>
+      <IDSymbol name="CookiecutterTemplate" value="3"/>
+      <IDSymbol name="CookiecutterTemplateOK" value="4"/>
+      <IDSymbol name="CookiecutterTemplateUpdate" value="5"/>
+      <IDSymbol name="CookiecutterTemplateWarning" value="6"/>
+      <IDSymbol name="Download" value="7"/>
+      <IDSymbol name="NewCookiecutter" value="8"/>
     </GuidSymbol>
   </Symbols>
 

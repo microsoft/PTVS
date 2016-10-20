@@ -18,11 +18,13 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
 using Microsoft.CookiecutterTools.Commands;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
+using Microsoft.CookiecutterTools.Resources;
 using Microsoft.CookiecutterTools.Telemetry;
 using Microsoft.CookiecutterTools.View;
 using Microsoft.VisualStudio;
@@ -48,7 +50,7 @@ namespace Microsoft.CookiecutterTools {
         private readonly Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
 
         public CookiecutterToolWindow() {
-            BitmapImageMoniker = KnownMonikers.DockPanel;
+            BitmapImageMoniker = ImageMonikers.Cookiecutter;
             Caption = Strings.ToolWindowCaption;
             ToolBar = new CommandID(PackageGuids.guidCookiecutterCmdSet, PackageIds.WindowToolBarId);
         }

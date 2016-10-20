@@ -5,6 +5,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:vm="clr-namespace:Microsoft.CookiecutterTools.ViewModel"
+      xmlns:rc="clr-namespace:Microsoft.CookiecutterTools.Resources"
       xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
       xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
       xmlns:img="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
@@ -13,6 +14,7 @@
       mc:Ignorable="d" 
       d:DataContext="{Binding Source={d:DesignData Source=CookiecutterControlDesignData.xaml}}"
       d:DesignHeight="550" d:DesignWidth="300"
+      img:ImageThemingUtilities.ImageBackgroundColor="{Binding Background,RelativeSource={RelativeSource Self},Converter={StaticResource BrushToColorConverter}}"
       Title="Search">
     <Page.CommandBindings>
         <CommandBinding Command="{x:Static vm:CookiecutterViewModel.LoadMore}"
@@ -113,26 +115,20 @@
         <StackPanel Grid.Row="1" Orientation="Vertical">
             <Grid>
                 <Grid.Resources>
-                    <Style TargetType="{x:Type TextBox}">
-                        <Setter Property="Height" Value="23"/>
+                    <Style x:Key="SearchButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+                        <Setter Property="Command" Value="{x:Static vm:CookiecutterViewModel.Search}" />
+                        <Setter Property="Content" Value="Search" />
+                        <Setter Property="Padding" Value="6 4" />
+                        <Setter Property="Margin" Value="3 0 0 0" />
                     </Style>
                 </Grid.Resources>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0"
-                                                  Margin="0 0 0 0"
+                
+                <wpf:ConfigurationTextBoxWithHelp Margin="0 0 0 0"
                                                   Text="{Binding Path=SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                   HelpText="Enter search terms or template location (git repository URL or path to local folder)"
                                                   Watermark="Enter search terms or template location"
-                                                  KeyDown="TextBox_KeyDown">
-                </wpf:ConfigurationTextBoxWithHelp>
-                <Button Grid.Column="1"
-                        Command="{x:Static vm:CookiecutterViewModel.Search}"
-                        Margin="2 2 0 2"
-                        Height="23"
-                        Width="50">Search</Button>
+                                                  BrowseButtonStyle="{StaticResource SearchButtonStyle}"
+                                                  KeyDown="TextBox_KeyDown" />
             </Grid>
         </StackPanel>
 
@@ -153,32 +149,28 @@
                                Text="{Binding Path=DisplayName}"/>
                 </HierarchicalDataTemplate>
                 <DataTemplate DataType="{x:Type vm:TemplateViewModel}">
-                    <StackPanel Orientation="Horizontal">
-                        <imaging:CrispImage Width="16" Height="16"
+                    <StackPanel Orientation="Horizontal" x:Name="Item">
+                        <imaging:CrispImage x:Name="Image" Width="16" Height="16"
                                             Margin="0 0 0 2"
-                                            Moniker="{Binding Path=Image}">
-                        </imaging:CrispImage>
-                        <imaging:CrispImage Width="16" Height="16"
-                                            Margin="0 0 0 2"
-                                            Visibility="{Binding Path=IsUpdateAvailable, Converter={StaticResource BoolToVisibleOrCollapsed}}"
-                                            Moniker="{x:Static imagecatalog:KnownMonikers.Download}">
-                            <imaging:CrispImage.ToolTip>
-                                <TextBlock TextWrapping="Wrap" Text="An update is available"/>
-                            </imaging:CrispImage.ToolTip>
-                        </imaging:CrispImage>
-                        <TextBlock Margin="4 0 0 0"
+                                            Moniker="{x:Static rc:ImageMonikers.CookiecutterTemplate}" />
+                        <TextBlock Margin="3 3"
                                    Style="{StaticResource TreeViewItemTextBlock}"
-                                   Text="{Binding Path=DisplayName}">
-                    </TextBlock>
+                                   Text="{Binding Path=DisplayName}" />
                     </StackPanel>
+                    <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding Path=IsUpdateAvailable}" Value="True">
+                            <Setter TargetName="Item" Property="ToolTip" Value="An update is available." />
+                            <Setter TargetName="Image" Property="Moniker" Value="{x:Static rc:ImageMonikers.CookiecutterTemplateUpdate}" />
+                        </DataTrigger>
+                    </DataTemplate.Triggers>
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type vm:ErrorViewModel}">
                     <StackPanel Orientation="Horizontal">
                         <imaging:CrispImage Width="16" Height="16"
                                             Margin="0 0 0 2"
-                                            Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}">
+                                            Moniker="{x:Static rc:ImageMonikers.CookiecutterTemplateWarning}">
                         </imaging:CrispImage>
-                        <TextBlock Margin="4 0 0 0"
+                        <TextBlock Margin="3 3"
                                    Style="{StaticResource TreeViewItemTextBlock}"
                                    Text="{Binding Path=ErrorDescription}">
                             <TextBlock.ToolTip>
@@ -191,9 +183,9 @@
                     <StackPanel Orientation="Horizontal">
                         <imaging:CrispImage Width="16" Height="16"
                                             Margin="0 0 0 2"
-                                            Moniker="{x:Static imagecatalog:KnownMonikers.StatusRunning}">
+                                            Moniker="{x:Static imagecatalog:KnownMonikers.Refresh}">
                         </imaging:CrispImage>
-                        <TextBlock Margin="4 0 0 0"
+                        <TextBlock Margin="3 3"
                                    Style="{StaticResource TreeViewItemTextBlock}"
                                    Text="Loading...">
                             <TextBlock.ToolTip>
@@ -206,19 +198,15 @@
                     <StackPanel Orientation="Horizontal">
                         <imaging:CrispImage Width="16" Height="16"
                                             Margin="0 0 0 2"
-                                            Moniker="{x:Static imagecatalog:KnownMonikers.StatusSuppressed}">
+                                            Moniker="{x:Static imagecatalog:KnownMonikers.Download}">
                         </imaging:CrispImage>
 
                         <Button Style="{StaticResource NavigationButton}"
-                                Margin="4 0 0 0"
+                                Margin="3 3"
                                 Command="{x:Static vm:CookiecutterViewModel.LoadMore}"
                                 CommandParameter="{Binding Path=ContinuationToken,Mode=OneWay}"
                                 HorizontalAlignment="Left">
-                            <TextBlock Grid.Column="1"
-                                       Style="{StaticResource TreeViewItemTextBlock}"
-                                       TextWrapping="WrapWithOverflow"
-                                       Background="{DynamicResource {x:Static wpf:Controls.ControlBackgroundKey}}"
-                                       Foreground="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}">
+                            <TextBlock>
                                     Load more...
                             </TextBlock>
                         </Button>
