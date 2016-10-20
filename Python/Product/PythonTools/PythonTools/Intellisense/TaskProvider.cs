@@ -974,17 +974,37 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     sealed class ErrorTaskProvider : TaskProvider {
-        public ErrorTaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider)
+        internal ErrorTaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider)
             : base(serviceProvider, taskList, errorProvider) {
+        }
+
+        public static object CreateService(IServiceProvider container, Type serviceType) {
+            if (serviceType.IsEquivalentTo(typeof(ErrorTaskProvider))) {
+                var errorList = container.GetService(typeof(SVsErrorList)) as IVsTaskList;
+                var model = container.GetComponentModel();
+                var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
+                return new ErrorTaskProvider(container, errorList, errorProvider);
+            }
+            return null;
         }
     }
 
     sealed class CommentTaskProvider : TaskProvider, IVsTaskListEvents {
         private volatile Dictionary<string, VSTASKPRIORITY> _tokens;
 
-        public CommentTaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider)
+        internal CommentTaskProvider(IServiceProvider serviceProvider, IVsTaskList taskList, IErrorProviderFactory errorProvider)
             : base(serviceProvider, taskList, errorProvider) {
             RefreshTokens();
+        }
+
+        public static object CreateService(IServiceProvider container, Type serviceType) {
+            if (serviceType.IsEquivalentTo(typeof(CommentTaskProvider))) {
+                var errorList = container.GetService(typeof(SVsErrorList)) as IVsTaskList;
+                var model = container.GetComponentModel();
+                var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
+                return new CommentTaskProvider(container, errorList, errorProvider);
+            }
+            return null;
         }
 
         public Dictionary<string, VSTASKPRIORITY> Tokens {
