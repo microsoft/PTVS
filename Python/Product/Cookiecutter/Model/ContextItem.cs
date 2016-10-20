@@ -24,6 +24,7 @@ namespace Microsoft.CookiecutterTools.Model {
         }
 
         public string Name { get; }
+        public string Label { get; set; }
         public string Description { get; set; }
         public string Selector { get; set; }
         public string DefaultValue { get; }

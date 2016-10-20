@@ -43,6 +43,14 @@ namespace Microsoft.CookiecutterTools.View {
             WpfCommands.Executed(null, sender, e);
         }
 
+        private void Odbc_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            SqlCommands.CanExecute(null, sender, e);
+        }
+
+        private void Odbc_Executed(object sender, ExecutedRoutedEventArgs e) {
+            SqlCommands.Executed(null, sender, e);
+        }
+
         private void Home_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             e.CanExecute = ViewModel != null && ViewModel.CreatingStatus != OperationStatus.InProgress;
             e.Handled = true;
@@ -80,9 +88,7 @@ namespace Microsoft.CookiecutterTools.View {
             var p = item as ContextItemViewModel;
             if (element != null && p != null) {
                 string selector = p.Selector?.ToLowerInvariant()?.Truncate(30);
-                if (selector != null && Regex.IsMatch(selector, "^[a-z]+$")) {
-                    selector = p.Selector;
-                } else {
+                if (selector == null || !Regex.IsMatch(selector, "^[a-z]+$")) {
                     selector = Selectors.String;
                 }
 

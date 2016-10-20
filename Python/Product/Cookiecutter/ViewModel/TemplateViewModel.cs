@@ -26,7 +26,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private string _description;
         private bool _isSearchTerm;
         private bool _isUpdateAvailable;
-        private ImageMoniker _image;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -166,19 +165,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _isUpdateAvailable) {
                     _isUpdateAvailable = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsUpdateAvailable)));
-                }
-            }
-        }
-
-        public ImageMoniker Image {
-            get {
-                return _image;
-            }
-
-            set {
-                if (value.Guid != _image.Guid || value.Id != _image.Id) {
-                    _image = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Image)));
                 }
             }
         }
