@@ -321,6 +321,8 @@ namespace Microsoft.PythonTools.Analysis.Values {
             get { return this.ProjectEntry.ProjectState.Types[BuiltinTypeId.Module]; }
         }
 
+        internal override BuiltinTypeId TypeId => BuiltinTypeId.Module;
+
         #region IVariableDefContainer Members
 
         public IEnumerable<IReferenceable> GetDefinitions(string name) {

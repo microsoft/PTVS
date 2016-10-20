@@ -118,7 +118,11 @@ namespace Microsoft.IronPythonTools.Interpreter {
 #if DEBUG
             var assertListener = Debug.Listeners["Microsoft.PythonTools.AssertListener"];
             if (assertListener != null) {
-                domain.DoCallBack(new AssertListenerInitializer(assertListener).Initialize);
+                var init = (AssertListenerInitializer)domain.CreateInstanceAndUnwrap(
+                    typeof(AssertListenerInitializer).Assembly.FullName,
+                    typeof(AssertListenerInitializer).FullName
+                );
+                init.Initialize(assertListener);
             }
 #endif
 
@@ -126,17 +130,12 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
 #if DEBUG
-        [Serializable]
-        class AssertListenerInitializer {
-            private readonly TraceListener _listener;
+        class AssertListenerInitializer : MarshalByRefObject {
+            public AssertListenerInitializer() { }
 
-            public AssertListenerInitializer(TraceListener listener) {
-                _listener = listener;
-            }
-
-            public void Initialize() {
-                if (Debug.Listeners[_listener.Name] == null) {
-                    Debug.Listeners.Add(_listener);
+            public void Initialize(TraceListener listener) {
+                if (Debug.Listeners[listener.Name] == null) {
+                    Debug.Listeners.Add(listener);
                     Debug.Listeners.Remove("Default");
                 }
             }
@@ -177,15 +176,15 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public void Initialize(PythonAnalyzer state) {
             if (_state != null) {
-                _state.AnalysisDirectoriesChanged -= AnalysisDirectoryChanged;
+                _state.SearchPathsChanged -= PythonAnalyzer_SearchPathsChanged;
             }
 
             _state = state;
             SpecializeClrFunctions();
 
             if (_state != null) {
-                _state.AnalysisDirectoriesChanged += AnalysisDirectoryChanged;
-                AnalysisDirectoryChanged(_state, EventArgs.Empty);
+                _state.SearchPathsChanged += PythonAnalyzer_SearchPathsChanged;
+                PythonAnalyzer_SearchPathsChanged(_state, EventArgs.Empty);
             }
         }
 
@@ -197,7 +196,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
             _state.SpecializeFunction("clr", "AddReferenceToFileAndPath", (n, u, p, kw) => AddReference(n, LoadAssemblyFromFileWithPath), true);
         }
 
-        private void AnalysisDirectoryChanged(object sender, EventArgs e) {
+        private void PythonAnalyzer_SearchPathsChanged(object sender, EventArgs e) {
             switch (_remote.SetAnalysisDirectories(_state.AnalysisDirectories.ToArray())) {
                 case SetAnalysisDirectoriesResult.NoChange:
                     break;
@@ -344,10 +343,7 @@ namespace Microsoft.IronPythonTools.Interpreter {
         }
 
         internal void RaiseModuleNamesChanged() {
-            var modNamesChanged = ModuleNamesChanged;
-            if (modNamesChanged != null) {
-                modNamesChanged(this, EventArgs.Empty);
-            }
+            ModuleNamesChanged?.Invoke(this, EventArgs.Empty);
         }
 
         #region IPythonInterpreter Members

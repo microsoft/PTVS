@@ -164,7 +164,7 @@ namespace DjangoTests {
             DjangoAnalyzer djangoAnalyzer = new DjangoAnalyzer();
             djangoAnalyzer.Register(analyzer);
 
-            analyzer.AddAnalysisDirectory(path);
+            analyzer.SetSearchPaths(new[] { path });
 
             List<IPythonProjectEntry> entries = new List<IPythonProjectEntry>();
             foreach (string file in Directory.EnumerateFiles(path, "*.py", SearchOption.AllDirectories)) {

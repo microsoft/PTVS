@@ -545,6 +545,87 @@ namespace Microsoft.PythonTools.Analysis {
             return new ModulePath(fullName, path, remainder);
         }
 
+        /// <summary>
+        /// Returns a new ModulePath value determined from the provided search
+        /// path and module name, if the module exists. This function may access
+        /// the filesystem to determine the package name unless
+        /// <paramref name="isPackage"/> and <param name="getModule"/> are
+        /// provided.
+        /// </summary>
+        /// <param name="basePath">
+        /// The path referring to a directory to start searching in.
+        /// </param>
+        /// <param name="moduleName">
+        /// The full name of the module. If the name resolves to a package,
+        /// "__init__" is automatically appended to the resulting name.
+        /// </param>
+        /// <param name="isPackage">
+        /// A predicate that determines whether the specified substring of
+        /// <paramref name="path"/> represents a package. If omitted, the
+        /// default behavior is to check for a file named "__init__.py" in the
+        /// directory passed to the predicate.
+        /// </param>
+        /// <param name="getModule">
+        /// A function that returns valid module paths given a directory and a
+        /// module name. The module name does not include any extension.
+        /// For example, given "C:\Spam" and "eggs", this function may return
+        /// one of "C:\Spam\eggs.py", "C:\Spam\eggs\__init__.py",
+        /// "C:\Spam\eggs_d.cp35-win32.pyd" or some other full path. Returns
+        /// null if there is no module importable by that name.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        /// moduleName is not a valid Python module.
+        /// </exception>
+        public static ModulePath FromBasePathAndName(
+            string basePath,
+            string moduleName,
+            Func<string, bool> isPackage = null,
+            Func<string, string, string> getModule = null
+        ) {
+            var bits = moduleName.Split('.');
+            var lastBit = bits.Last();
+
+            if (isPackage == null) {
+                isPackage = f => Directory.Exists(f) && File.Exists(PathUtils.GetAbsoluteFilePath(f, "__init__.py"));
+            }
+            if (getModule == null) {
+                getModule = (dir, mod) => {
+                    var pack = PathUtils.GetAbsoluteFilePath(PathUtils.GetAbsoluteFilePath(dir, mod), "__init__.py");
+                    if (File.Exists(pack)) {
+                        return pack;
+                    }
+                    var mods = PathUtils.EnumerateFiles(dir, mod + "*", recurse: false).ToArray();
+                    return mods.FirstOrDefault(p => PythonBinaryRegex.IsMatch(PathUtils.GetFileOrDirectoryName(p))) ??
+                        mods.FirstOrDefault(p => PythonFileRegex.IsMatch(PathUtils.GetFileOrDirectoryName(p)));
+                };
+            }
+
+            var path = basePath;
+
+            foreach (var bit in bits.Take(bits.Length - 1)) {
+                if (!PythonPackageRegex.IsMatch(bit)) {
+                    throw new ArgumentException("Not a valid Python package: " + bit);
+                }
+                if (string.IsNullOrEmpty(path)) {
+                    path = bit;
+                } else {
+                    path = PathUtils.GetAbsoluteFilePath(path, bit);
+                }
+                if (!isPackage(path)) {
+                    throw new ArgumentException("Python package not found: " + path);
+                }
+            }
+
+            if (!PythonPackageRegex.IsMatch(lastBit)) {
+                throw new ArgumentException("Not a valid Python module: " + moduleName);
+            }
+            path = getModule(path, lastBit);
+            if (string.IsNullOrEmpty(path)) {
+                throw new ArgumentException("Python module not found: " + moduleName);
+            }
+            return new ModulePath(moduleName, path, basePath);
+        }
+
         internal static IEnumerable<string> GetParents(string name, bool includeFullName = true) {
             if (string.IsNullOrEmpty(name)) {
                 yield break;
