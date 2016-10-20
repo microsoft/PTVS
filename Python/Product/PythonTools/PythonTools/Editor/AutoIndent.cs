@@ -26,8 +26,6 @@ using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 
 namespace Microsoft.PythonTools.Editor {
     internal static class AutoIndent {
-        private static readonly Version RequireMapIndentToSurfaceBuffer = new Version(1, 0, 0, 50618);
-
         internal static int GetIndentation(string line, int tabSize) {
             int res = 0;
             for (int i = 0; i < line.Length; i++) {
@@ -180,11 +178,9 @@ namespace Microsoft.PythonTools.Editor {
 
             // Map indentation back to the view's text buffer.
             int offset = 0;
-            if (Repl.PythonInteractiveEvaluator.VSInteractiveVersion > RequireMapIndentToSurfaceBuffer) {
-                var viewLineStart = textView.BufferGraph.MapUpToSnapshot(line.Start, PointTrackingMode.Positive, PositionAffinity.Successor, textView.TextSnapshot);
-                if (viewLineStart.HasValue) {
-                    offset = viewLineStart.Value.Position - viewLineStart.Value.GetContainingLine().Start.Position;
-                }
+            var viewLineStart = textView.BufferGraph.MapUpToSnapshot(line.Start, PointTrackingMode.Positive, PositionAffinity.Successor, textView.TextSnapshot);
+            if (viewLineStart.HasValue) {
+                offset = viewLineStart.Value.Position - viewLineStart.Value.GetContainingLine().Start.Position;
             }
 
             return offset + indentation;

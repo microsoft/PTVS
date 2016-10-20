@@ -851,26 +851,6 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         #endregion
-
-        #region Compatibility
-
-        private static Version _vsInteractiveVersion;
-
-        internal static Version VSInteractiveVersion {
-            get {
-                if (_vsInteractiveVersion == null) {
-                    _vsInteractiveVersion = typeof(IInteractiveWindow).Assembly
-                        .GetCustomAttributes(typeof(System.Reflection.AssemblyInformationalVersionAttribute), false)
-                        .OfType<System.Reflection.AssemblyInformationalVersionAttribute>()
-                        .Select(a => { Version v; return Version.TryParse(a.InformationalVersion, out v) ? v : null; })
-                        .FirstOrDefault(v => v != null) ?? new Version();
-                }
-                return _vsInteractiveVersion;
-            }
-        }
-
-
-        #endregion
     }
 
     internal static class PythonInteractiveEvaluatorExtensions {
