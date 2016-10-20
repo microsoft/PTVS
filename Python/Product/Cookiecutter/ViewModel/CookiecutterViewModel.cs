@@ -27,6 +27,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
+using Microsoft.CookiecutterTools.Resources;
 using Microsoft.CookiecutterTools.Telemetry;
 using Microsoft.VisualStudio.Imaging;
 using Newtonsoft.Json;
@@ -369,14 +370,16 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (searchTerm.StartsWith("http")) {
                     searchTermTemplate.DisplayName = searchTerm;
                     searchTermTemplate.RemoteUrl = searchTerm;
-                    searchTermTemplate.Image = KnownMonikers.GitNoColor;
+                    searchTermTemplate.Image = ImageMonikers.CookiecutterTemplate;
+                    searchTermTemplate.UpdateableImage = ImageMonikers.CookiecutterTemplate;
                     Custom.Templates.Add(searchTermTemplate);
                     SearchResults.Add(Custom);
                     return;
                 } else if (Directory.Exists(searchTerm)) {
                     searchTermTemplate.DisplayName = searchTerm;
                     searchTermTemplate.ClonedPath = searchTerm;
-                    searchTermTemplate.Image = KnownMonikers.TestSuite;
+                    searchTermTemplate.Image = ImageMonikers.CookiecutterTemplateOK;
+                    searchTermTemplate.UpdateableImage = ImageMonikers.CookiecutterTemplateUpdate;
                     Custom.Templates.Add(searchTermTemplate);
                     SearchResults.Add(Custom);
                     return;
@@ -488,7 +491,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     _templateRefreshCancelTokenSource = new CancellationTokenSource();
                     try {
                         Installed.Templates.Clear();
-                        await AddFromSource(_installedSource, SearchTerm, KnownMonikers.TestSuite, Installed, CancellationToken.None);
+                        await AddFromSource(_installedSource, SearchTerm, ImageMonikers.CookiecutterTemplateOK, Installed, CancellationToken.None);
                     } catch (OperationCanceledException) {
                     }
 
