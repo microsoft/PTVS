@@ -999,7 +999,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public static object CreateService(IServiceProvider container, Type serviceType) {
             if (serviceType.IsEquivalentTo(typeof(CommentTaskProvider))) {
-                var errorList = container.GetService(typeof(SVsErrorList)) as IVsTaskList;
+                var errorList = container.GetService(typeof(SVsTaskList)) as IVsTaskList;
                 var model = container.GetComponentModel();
                 var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
                 return new CommentTaskProvider(container, errorList, errorProvider);

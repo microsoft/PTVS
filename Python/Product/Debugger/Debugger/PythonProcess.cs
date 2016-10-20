@@ -438,9 +438,11 @@ namespace Microsoft.PythonTools.Debugger {
             } catch (InvalidOperationException) {
                 // Process termination - let any listeners know
                 _process_Exited(this, EventArgs.Empty);
+                return;
             } catch (System.ComponentModel.Win32Exception) {
                 // Process termination - let any listeners know
                 _process_Exited(this, EventArgs.Empty);
+                return;
             }
 
             try {
