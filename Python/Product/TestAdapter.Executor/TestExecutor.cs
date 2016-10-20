@@ -99,7 +99,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                     project.GetAttribute("workingDir", ""),
                     project.GetAttribute("interpreter", ""),
                     project.GetAttribute("pathEnv", ""),
-                    ParseBoolAttribute(project, "nativeDebugging")
+                    project.GetAttribute("nativeDebugging", "").IsTrue()
                 );
 
                 foreach (XPathNavigator environment in project.Select("Environment/Variable")) {
@@ -122,17 +122,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                 }
             }
             return res;
-        }
-
-        private static bool ParseBoolAttribute(XPathNavigator project, string name) {
-            var nativeDebugging = project.GetAttribute(name, "");
-            bool enabled = false;
-            bool enableNative;
-            if (bool.TryParse(nativeDebugging, out enableNative)) {
-                enabled = true;
-            }
-
-            return enabled;
         }
 
         public void RunTests(IEnumerable<TestCase> tests, IRunContext runContext, IFrameworkHandle frameworkHandle) {
