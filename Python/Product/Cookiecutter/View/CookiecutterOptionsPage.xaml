@@ -49,7 +49,7 @@
                                                               Watermark="{Binding Default}" />
                         </StackPanel>
                     </DataTemplate>
-                    <DataTemplate x:Key="connectionTemplate">
+                    <DataTemplate x:Key="odbcconnectionTemplate">
                         <StackPanel Orientation="Vertical">
                             <TextBlock Margin="8 4 4 0" Text="{Binding Label}"/>
                             <wpf:ConfigurationTextBoxWithHelp Margin="4 0 8 4"
