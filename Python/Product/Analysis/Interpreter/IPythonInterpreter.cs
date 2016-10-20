@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Interpreter {
     /// An interpreter is provided by an object implementing 
     /// <see cref="IPythonInterpreterFactory"/>.
     /// </summary>
-    public interface IPythonInterpreter {
+    public interface IPythonInterpreter : IDisposable {
         /// <summary>
         /// Performs any interpreter-specific initialization that is required.
         /// </summary>

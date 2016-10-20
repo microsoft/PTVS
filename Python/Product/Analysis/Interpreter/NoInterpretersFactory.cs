@@ -45,6 +45,8 @@ namespace Microsoft.PythonTools.Interpreter {
             _database = database;
         }
 
+        public void Dispose() { }
+
         public event EventHandler ModuleNamesChanged { add { } remove { } }
 
         public void Initialize(PythonAnalyzer state) { }

@@ -28,7 +28,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
     /// <summary>
     /// Implements a simple library that tracks project symbols, objects etc.
     /// </summary>
-    class Library : IVsSimpleLibrary2 {
+    sealed class Library : IVsSimpleLibrary2, IDisposable {
         private Guid _guid;
         private _LIB_FLAGS2 _capabilities;
         private readonly SemaphoreSlim _searching;
@@ -43,6 +43,10 @@ namespace Microsoft.VisualStudioTools.Navigation {
             _root = new LibraryNode(null, String.Empty, String.Empty, LibraryNodeType.Package);
             _updates = new List<KeyValuePair<UpdateType, LibraryNode>>();
             _searching = new SemaphoreSlim(1);
+        }
+
+        public void Dispose() {
+            _searching.Dispose();
         }
 
         public _LIB_FLAGS2 LibraryCapabilities {

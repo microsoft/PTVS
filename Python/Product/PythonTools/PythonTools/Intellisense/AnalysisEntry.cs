@@ -40,8 +40,6 @@ namespace Microsoft.PythonTools.Intellisense {
         public event EventHandler AnalysisComplete;
         public readonly bool IsTemporaryFile;
 
-        private static readonly object _searchPathEntryKey = new { Name = "SearchPathEntry" };
-
         public AnalysisEntry(VsProjectAnalyzer analyzer, string path, int fileId, bool isTemporaryFile = false) {
             _analyzer = analyzer;
             _path = path;
@@ -104,17 +102,6 @@ namespace Microsoft.PythonTools.Intellisense {
                         notify(this);
                     }
                 }
-            }
-        }
-
-        public string SearchPathEntry {
-            get {
-                object result;
-                Properties.TryGetValue(_searchPathEntryKey, out result);
-                return (string)result;
-            }
-            set {
-                Properties[_searchPathEntryKey] = value;
             }
         }
 

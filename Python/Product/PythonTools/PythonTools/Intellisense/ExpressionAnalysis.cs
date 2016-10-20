@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -54,7 +55,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// references and definitions for variables, fields, etc... as well as actual
         /// values stored in those fields.
         /// </summary>
-        public AnalysisVariable[] Variables => _variables;
+        public IReadOnlyList<AnalysisVariable> Variables => _variables;
 
         /// <summary>
         /// Gets the private prefix for this expression analysis.  This will be set

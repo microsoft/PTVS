@@ -277,6 +277,8 @@
     <Compile Include="PythonTools\Intellisense\VersionedResponse.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />
+    <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
+    <Compile Include="PythonTools\SearchPathManager.cs" />
     <Compile Include="PythonTools\Project\VsPackageManagerUI.cs" />
     <Compile Include="PythonTools\ProvideBraceCompletionAttribute.cs" />
     <Compile Include="PythonTools\Options\PythonInteractiveOptionsControl.cs">
@@ -476,9 +478,7 @@
     </Compile>
     <Compile Include="PythonTools\Options\PythonInteractiveOptions.cs" />
     <Compile Include="PythonTools\Project\PythonAssemblyReferenceNode.cs" />
-    <Compile Include="PythonTools\Project\Automation\OAWebPiReference.cs" />
-    <Compile Include="PythonTools\Project\Automation\OAPythonExtensionReference.cs" />
-    <Compile Include="PythonTools\Project\PythonExtensionReferenceNode.cs" />
+    <Compile Include="PythonTools\Project\Automation\OADeprecatedReference.cs" />
     <Compile Include="PythonTools\Project\PythonEncodingDetector.cs" />
     <Compile Include="PythonTools\Project\PythonProjectReferenceNode.cs" />
     <Compile Include="PythonTools\Project\PythonReferenceContainerNode.cs" />
@@ -555,7 +555,6 @@
     <Compile Include="PythonTools\Options\NewInterpreter.Designer.cs">
       <DependentUpon>NewInterpreter.cs</DependentUpon>
     </Compile>
-    <Compile Include="PythonTools\Project\WebPiReferenceNode.cs" />
     <Compile Include="PythonTools\Project\BaseSearchPathNode.cs" />
     <Compile Include="PythonTools\Project\CommonSearchPathContainerNodeProperties.cs" />
     <Compile Include="PythonTools\Project\CommonSearchPathContainerNode.cs" />

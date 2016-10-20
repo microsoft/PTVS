@@ -463,6 +463,8 @@ namespace Microsoft.VisualStudioTools.Navigation {
 
             // Unregister this object from the RDT events.
             UnregisterRDTEvents();
+
+            _library.Dispose();
         }
 
         #endregion

@@ -32,9 +32,13 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly Dictionary<string, PythonInterpreterInformation> _factories = new Dictionary<string, PythonInterpreterInformation>();
         const string PythonPath = "Software\\Python";
         internal const string FactoryProviderName = "Global";
+        private bool _watchRegistry;
         private bool _initialized;
 
-        public CPythonInterpreterFactoryProvider() {
+        public CPythonInterpreterFactoryProvider() : this(true) { }
+
+        public CPythonInterpreterFactoryProvider(bool watchRegistry) {
+            _watchRegistry = watchRegistry;
         }
 
         private void EnsureInitialized() {
@@ -43,10 +47,12 @@ namespace Microsoft.PythonTools.Interpreter {
                     _initialized = true;
                     DiscoverInterpreterFactories();
 
-                    StartWatching(RegistryHive.CurrentUser, RegistryView.Default);
-                    StartWatching(RegistryHive.LocalMachine, RegistryView.Registry32);
-                    if (Environment.Is64BitOperatingSystem) {
-                        StartWatching(RegistryHive.LocalMachine, RegistryView.Registry64);
+                    if (_watchRegistry) {
+                        StartWatching(RegistryHive.CurrentUser, RegistryView.Default);
+                        StartWatching(RegistryHive.LocalMachine, RegistryView.Registry32);
+                        if (Environment.Is64BitOperatingSystem) {
+                            StartWatching(RegistryHive.LocalMachine, RegistryView.Registry64);
+                        }
                     }
                 }
             }

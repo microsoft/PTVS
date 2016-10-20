@@ -79,6 +79,7 @@ namespace Microsoft.PythonTools.Repl {
             _analysisFilename = Guid.NewGuid().ToString() + ".py";
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", MessageId = "_analyzer")]
         protected void Dispose(bool disposing) {
             if (_isDisposed) {
                 return;
