@@ -20,11 +20,19 @@ using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using TestUtilities;
 using TestUtilities.Mocks;
+using TestUtilities.Python;
 
 namespace IronPythonTests {
     [TestClass]
     public class IronPythonDatabaseTest {
+        [ClassInitialize]
+        public static void DoDeployment(TestContext context) {
+            AssertListener.Initialize();
+            PythonTestData.Deploy();
+        }
+
         [TestMethod, Priority(1)]
         public void InvalidIronPythonDatabase() {
             using (var db = MockCompletionDB.Create(PythonLanguageVersion.V27,
