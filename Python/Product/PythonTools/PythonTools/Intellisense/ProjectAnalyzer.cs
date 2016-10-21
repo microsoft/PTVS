@@ -294,6 +294,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             _processExitedCancelSource.Cancel();
             _processExitedCancelSource.Dispose();
+            _conn?.Dispose();
         }
 
         #endregion
@@ -1455,15 +1456,17 @@ namespace Microsoft.PythonTools.Intellisense {
             CancellationToken cancel;
             CancellationTokenSource linkedSource = null, timeoutSource = null;
 
+            try {
+                cancel = _processExitedCancelSource.Token;
+            } catch (ObjectDisposedException) {
+                // Raced with disposal
+                return res;
+            }
+
             if (timeout.HasValue) {
                 timeoutSource = new CancellationTokenSource(timeout.Value);
-                linkedSource = CancellationTokenSource.CreateLinkedTokenSource(
-                    _processExitedCancelSource.Token,
-                    timeoutSource.Token
-                );
+                linkedSource = CancellationTokenSource.CreateLinkedTokenSource(cancel, timeoutSource.Token);
                 cancel = linkedSource.Token;
-            } else {
-                cancel = _processExitedCancelSource.Token;
             }
 
             try {
