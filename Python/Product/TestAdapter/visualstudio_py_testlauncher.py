@@ -148,7 +148,7 @@ class VsTestResult(unittest.TextTestResult):
             tb = None
             message = None
             if trace is not None:
-                traceback.print_exc()
+                traceback.print_exception(*trace)
                 formatted = traceback.format_exception(*trace)
                 # Remove the 'Traceback (most recent call last)'
                 formatted = formatted[1:]
@@ -223,10 +223,35 @@ def main():
                 cov.start()
             except:
                 pass
-        tests = unittest.defaultTestLoader.loadTestsFromNames(opts.tests)
+
+        tests = []
+        for test in opts.tests:
+            try:
+                tests.extend(unittest.defaultTestLoader.loadTestsFromName(test))
+            except Exception as err:
+                traceback.print_exc()
+                formatted = traceback.format_exc().splitlines()
+                # Remove the 'Traceback (most recent call last)'
+                formatted = formatted[1:]
+                tb = '\n'.join(formatted)
+                message = str(err)
+
+                if _channel is not None:
+                    _channel.send_event(
+                        name='start', 
+                        test = test
+                    )
+                    _channel.send_event(
+                        name='result', 
+                        outcome='failed',
+                        traceback = tb,
+                        message = message,
+                        test = test
+                    )
+
         runner = unittest.TextTestRunner(verbosity=0, resultclass=VsTestResult)
         
-        result = runner.run(tests)
+        result = runner.run(unittest.defaultTestLoader.suiteClass(tests))
 
         sys.exit(not result.wasSuccessful())
     finally:
