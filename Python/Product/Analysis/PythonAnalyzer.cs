@@ -211,7 +211,7 @@ namespace Microsoft.PythonTools.Analysis {
             ClassInfos = (IKnownClasses)Types;
             _noneInst = (ConstantInfo)GetCached(
                 _nullKey,
-                () => new ConstantInfo(ClassInfos[BuiltinTypeId.NoneType], (object)null, PythonMemberType.Constant)
+                () => new ConstantInfo(ClassInfos[BuiltinTypeId.NoneType], null, PythonMemberType.Constant)
             );
 
             DoNotUnionInMro = AnalysisSet.Create(new AnalysisValue[] {

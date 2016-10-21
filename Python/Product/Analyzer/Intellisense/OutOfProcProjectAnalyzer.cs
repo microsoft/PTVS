@@ -110,9 +110,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 _registeredExtensions.UnionWith(newExtensions);
             }
 
-            // inform them of the analyzer...
-            foreach (var extension in newExtensions) {
-                extension.Register(_pyAnalyzer);
+            if (_pyAnalyzer != null) {
+                // inform them of the analyzer...
+                foreach (var extension in newExtensions) {
+                    extension.Register(_pyAnalyzer);
+                }
             }
         }
 
@@ -323,7 +325,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetModuleImports(AP.ModuleImportsRequest request) {
-            var res = Project.GetEntriesThatImportModule(
+            var res = Analyzer.GetEntriesThatImportModule(
                 request.moduleName,
                 request.includeUnresolved
             );
@@ -338,7 +340,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response SetSearchPath(AP.SetSearchPathRequest request) {
-            _pyAnalyzer.SetSearchPaths(request.dir);
+            Analyzer.SetSearchPaths(request.dir);
 
             return new Response();
         }
@@ -386,7 +388,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 int version;
                 string code;
                 var ast = analysis.GetVerbatimAstAndCode(
-                    Project.LanguageVersion,
+                    Analyzer.LanguageVersion,
                     request.bufferId,
                     out version,
                     out code
@@ -423,7 +425,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 int version;
                 string code;
                 var ast = analysis.GetVerbatimAstAndCode(
-                    Project.LanguageVersion,
+                    Analyzer.LanguageVersion,
                     request.bufferId,
                     out version,
                     out code
@@ -737,7 +739,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private Response AvailableImports(AP.AvailableImportsRequest request) {
             return new AP.AvailableImportsResponse() {
-                imports = _pyAnalyzer.FindNameInAllModules(request.name)
+                imports = Analyzer.FindNameInAllModules(request.name)
                     .Select(
                         x => new AP.ImportInfo() {
                             importName = x.ImportName,
@@ -911,7 +913,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 var walker = new ImportStatementWalker(
                     bufferVersion.Ast,
                     entry,
-                    _pyAnalyzer
+                    Analyzer
                 );
 
                 bufferVersion.Ast.Walk(walker);
@@ -1370,7 +1372,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return new AP.CompletionsResponse() {
                 completions = ToCompletions(
-                    _pyAnalyzer.GetModuleMembers(
+                    Analyzer.GetModuleMembers(
                         _projectFiles[getModuleMembers.fileId].AnalysisContext,
                         getModuleMembers.package,
                         getModuleMembers.includeMembers
@@ -1385,7 +1387,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return new AP.CompletionsResponse() {
                 completions = ToCompletions(
-                    _pyAnalyzer.GetModules(getModules.topLevelOnly),
+                    Analyzer.GetModules(getModules.topLevelOnly),
                     GetMemberOptions.None
                 )
             };
@@ -1712,8 +1714,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private async void OnModulesChanged(object sender, EventArgs args) {
-            Debug.Assert(_pyAnalyzer != null, "Should not have null _pyAnalyzer here");
             if (_pyAnalyzer == null) {
+                Debug.Fail("Should not have null _pyAnalyzer here");
                 return;
             }
 
@@ -1736,6 +1738,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private IProjectEntry AnalyzeNewFile(string path, string addingFromDirectory) {
+            if (_pyAnalyzer == null) {
+                Debug.Fail("AnalyzeNewFile should only be called when _pyAnalyzer exists");
+                return null;
+            }
+
             IProjectEntry item = null;
 
             if (Path.GetExtension(path).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
@@ -1754,7 +1761,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 IPythonProjectEntry[] reanalyzeEntries = null;
                 if (!string.IsNullOrEmpty(modName)) {
-                    reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
+                    reanalyzeEntries = _pyAnalyzer.GetEntriesThatImportModule(modName, true).ToArray();
                 }
 
                 var pyEntry = _pyAnalyzer.AddModule(modName, path, null);
@@ -1817,7 +1824,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (modName != null && module.ModuleName != modName) {
                     _pyAnalyzer.AddModuleAlias(module.ModuleName, modName);
 
-                    var reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
+                    var reanalyzeEntries = _pyAnalyzer.GetEntriesThatImportModule(modName, true).ToArray();
                     foreach (var entryRef in reanalyzeEntries) {
                         _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
                     }
@@ -1919,10 +1926,31 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal IPythonInterpreter Interpreter {
             get {
-                return _pyAnalyzer != null ? _pyAnalyzer.Interpreter : null;
+                return _pyAnalyzer?.Interpreter;
             }
         }
 
+        // Returns the current analyzer or throws InvalidOperationException.
+        // This should be used in request handlers that should fail when
+        // analysis is impossible. Callers that explicitly check for null before
+        // use should use _pyAnalyzer directly.
+        private PythonAnalyzer Analyzer {
+            get {
+                if (_pyAnalyzer == null) {
+                    throw new InvalidOperationException("Unable to analyze code");
+                }
+
+                return _pyAnalyzer;
+            }
+        }
+
+        /// <summary>
+        /// Returns the current analyzer or null if unable to analyze code.
+        /// </summary>
+        /// <remarks>
+        /// This is for public consumption only and should not be used within
+        /// <see cref="OutOfProcProjectAnalyzer"/>.
+        /// </remarks>
         public PythonAnalyzer Project {
             get {
                 return _pyAnalyzer;
@@ -2141,104 +2169,21 @@ namespace Microsoft.PythonTools.Intellisense {
             return false;
         }
 
-        /// <summary>
-        /// Analyzes a complete directory including all of the contained files and packages.
-        /// </summary>
-        /// <param name="dir">Directory to analyze.</param>
-        /// <param name="onFileAnalyzed">If specified, this callback is invoked for every <see cref="IProjectEntry"/>
-        /// that is analyzed while analyzing this directory.</param>
-        /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
-        public void AnalyzeDirectory(string dir) {
-            _analysisQueue.Enqueue(new AddDirectoryAnalysis(dir, this), AnalysisPriority.High);
-        }
-
-        class AddDirectoryAnalysis : IAnalyzable {
-            private readonly string _dir;
-            private readonly OutOfProcProjectAnalyzer _analyzer;
-
-            public AddDirectoryAnalysis(string dir, OutOfProcProjectAnalyzer analyzer) {
-                _dir = dir;
-                _analyzer = analyzer;
-            }
-
-            #region IAnalyzable Members
-
-            public void Analyze(CancellationToken cancel) {
-                if (cancel.IsCancellationRequested) {
-                    return;
-                }
-
-                AnalyzeDirectoryWorker(_dir, cancel);
-            }
-
-            #endregion
-
-            private void AnalyzeDirectoryWorker(string dir, CancellationToken cancel) {
-                if (_analyzer._pyAnalyzer == null) {
-                    // We aren't able to analyze code.
-                    return;
-                }
-
-                if (string.IsNullOrEmpty(dir)) {
-                    Debug.Assert(false, "Unexpected empty dir");
-                    return;
-                }
-
-                try {
-                    var filenames = PathUtils.EnumerateFiles(dir, "*.py", recurse: false)
-                        .Concat(PathUtils.EnumerateFiles(dir, "*.pyw", recurse: false));
-                    foreach (string filename in filenames) {
-                        if (cancel.IsCancellationRequested) {
-                            break;
-                        }
-                        IProjectEntry entry = _analyzer.AnalyzeFile(filename, _dir);
-
-                        _analyzer._connection.SendEventAsync(new AP.ChildFileAnalyzed() {
-                            fileId = ProjectEntryMap.GetId(entry),
-                            filename = entry.FilePath
-                        }).DoNotWait();
-                    }
-                } catch (IOException) {
-                    // We want to handle DirectoryNotFound, DriveNotFound, PathTooLong
-                } catch (UnauthorizedAccessException) {
-                }
-
-                try {
-                    foreach (string innerDir in Directory.GetDirectories(dir)) {
-                        if (cancel.IsCancellationRequested) {
-                            break;
-                        }
-                        if (File.Exists(PathUtils.GetAbsoluteFilePath(innerDir, "__init__.py"))) {
-                            AnalyzeDirectoryWorker(innerDir, cancel);
-                        }
-                    }
-                } catch (IOException) {
-                    // We want to handle DirectoryNotFound, DriveNotFound, PathTooLong
-                } catch (UnauthorizedAccessException) {
-                }
-            }
-        }
-
         internal void Cancel() {
             _analysisQueue.Stop();
         }
 
         internal void UnloadFile(IProjectEntry entry) {
-            if (_pyAnalyzer == null) {
-                // We aren't able to analyze code.
-                return;
-            }
-
             if (entry != null) {
                 // If we remove a Python module, reanalyze any other modules
                 // that referenced it.
                 IPythonProjectEntry[] reanalyzeEntries = null;
                 var pyEntry = entry as IPythonProjectEntry;
                 if (pyEntry != null && !string.IsNullOrEmpty(pyEntry.ModuleName)) {
-                    reanalyzeEntries = _pyAnalyzer.GetEntriesThatImportModule(pyEntry.ModuleName, false).ToArray();
+                    reanalyzeEntries = Analyzer.GetEntriesThatImportModule(pyEntry.ModuleName, false).ToArray();
                 }
 
-                _pyAnalyzer.RemoveModule(entry);
+                Analyzer.RemoveModule(entry);
                 _projectFiles.Remove(entry);
 
                 if (reanalyzeEntries != null) {
