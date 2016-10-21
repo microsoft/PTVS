@@ -83,11 +83,21 @@ namespace Microsoft.PythonTools {
         private const string DefaultInterpreterSetting = "DefaultInterpreterId";
         private readonly IEnumerable<Lazy<IPythonInterpreterFactoryProvider, Dictionary<string, object>>> _factoryProviders;
 
+        public static object CreateService(IServiceContainer container, Type serviceType) {
+            if (serviceType.IsEquivalentTo(typeof(PythonToolsService))) {
+                // register our PythonToolsService which provides access to core PTVS functionality
+                try {
+                    return new PythonToolsService(container);
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    ex.ReportUnhandledException(container, typeof(PythonToolsService), allowUI: false);
+                    throw;
+                }
+            }
+            return null;
+        }
+
         internal PythonToolsService(IServiceContainer container) {
             _container = container;
-
-            var langService = new PythonLanguageInfo(container);
-            _container.AddService(langService.GetType(), langService, true);
 
             _langPrefs = new Lazy<LanguagePreferences>(() => new LanguagePreferences(this, typeof(PythonLanguageInfo).GUID));
 

@@ -430,9 +430,19 @@ namespace Microsoft.PythonTools.Debugger {
 
         private void DebugEventThread() {
             Debug.WriteLine("DebugEvent Thread Started " + _processGuid);
-            while ((_process == null || !_process.HasExited) && _stream == null) {
-                // wait for connection...
-                System.Threading.Thread.Sleep(10);
+            try {
+                while ((_process == null || !_process.HasExited) && _stream == null) {
+                    // wait for connection...
+                    System.Threading.Thread.Sleep(10);
+                }
+            } catch (InvalidOperationException) {
+                // Process termination - let any listeners know
+                _process_Exited(this, EventArgs.Empty);
+                return;
+            } catch (System.ComponentModel.Win32Exception) {
+                // Process termination - let any listeners know
+                _process_Exited(this, EventArgs.Empty);
+                return;
             }
 
             try {

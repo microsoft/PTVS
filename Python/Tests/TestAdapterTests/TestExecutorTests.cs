@@ -119,7 +119,7 @@ namespace TestAdapterTests {
             doc.Load(projectFile);
             var ns = new XmlNamespaceManager(doc.NameTable);
             ns.AddNamespace("m", "http://schemas.microsoft.com/developer/msbuild/2003");
-            var env = doc.SelectSingleNode("/m:Project/m:PropertyGroup/m:Environment", ns)?.FirstChild.Value;
+            var env = doc.SelectSingleNode("/m:Project/m:PropertyGroup/m:Environment", ns)?.FirstChild?.Value;
             if (env == null) {
                 return Enumerable.Empty<string>();
             }
@@ -131,7 +131,7 @@ namespace TestAdapterTests {
             doc.Load(projectFile);
             var ns = new XmlNamespaceManager(doc.NameTable);
             ns.AddNamespace("m", "http://schemas.microsoft.com/developer/msbuild/2003");
-            var searchPaths = doc.SelectSingleNode("/m:Project/m:PropertyGroup/m:SearchPath", ns)?.FirstChild.Value;
+            var searchPaths = doc.SelectSingleNode("/m:Project/m:PropertyGroup/m:SearchPath", ns)?.FirstChild?.Value;
 
             var projectDir = PathUtils.GetParent(projectFile);
             var elements = new List<string> { _runSettingSearch.FormatInvariant(projectDir) };
@@ -263,6 +263,8 @@ namespace TestAdapterTests {
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
         public void TestMultiprocessing() {
+            PythonPaths.Python27_x64.AssertInstalled();
+
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
             var expectedTests = TestInfo.TestAdapterMultiprocessingTests;
@@ -282,7 +284,61 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
+        public void TestInheritance() {
+            // TODO: Figure out the proper fix to make this test pass.
+            // There's a confusion between source file path and class file path.
+            // Note that the equivalent manual test in IDE works fine.
+            PythonPaths.Python27_x64.AssertInstalled();
+            PythonPaths.Python33_x64.AssertInstalled();
+
+            var executor = new TestExecutor();
+            var recorder = new MockTestExecutionRecorder();
+            var expectedTests = TestInfo.TestAdapterBInheritanceTests;
+            var runContext = CreateRunContext(expectedTests);
+            var testCases = expectedTests.Select(tr => tr.TestCase);
+
+            executor.RunTests(testCases, runContext, recorder);
+            PrintTestResults(recorder);
+
+            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
+            foreach (var expectedResult in expectedTests) {
+                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
+                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
+                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
+        public void TestLoadError() {
+            PythonPaths.Python27_x64.AssertInstalled();
+
+            // A load error is when unittest module fails to load the test (prior to running it)
+            // For example, if the file where the test is defined has an unhandled ImportError.
+            // We check that this only causes the tests that can't be loaded to fail,
+            // all other tests in the test run which can be loaded successfully will be run.
+            var executor = new TestExecutor();
+            var recorder = new MockTestExecutionRecorder();
+            var expectedTests = TestInfo.TestAdapterLoadErrorTests;
+            var runContext = CreateRunContext(expectedTests);
+            var testCases = expectedTests.Select(tr => tr.TestCase);
+
+            executor.RunTests(testCases, runContext, recorder);
+            PrintTestResults(recorder);
+
+            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
+            foreach (var expectedResult in expectedTests) {
+                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
+                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
+                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestEnvironment() {
+            PythonPaths.Python27_x64.AssertInstalled();
+
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
             var expectedTests = new[] { TestInfo.EnvironmentTestSuccess };
