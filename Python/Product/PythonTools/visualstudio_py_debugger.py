@@ -1459,7 +1459,7 @@ class Thread(object):
                 # collect globals used locally, skipping undefined found in builtins
                 f_globals = cur_frame.f_globals
                 if f_globals: # ensure globals to work with (IPy may have None for cur_frame.f_globals for frames within stdlib)
-                    self.collect_variables(vars, f_globals, cur_frame.f_code.co_names, treated, skip_unknown = True)
+                    self.collect_variables(vars, f_globals, cur_frame.f_code.co_name, treated, skip_unknown = True)
             
             frame_info = None
 
