@@ -369,13 +369,16 @@ namespace Microsoft.PythonTools.Project {
             }
 
             var subid = MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(BuildProject.FullPath, factory.Configuration.Id);
+            bool projectChanged = false;
 
             if (!string.IsNullOrEmpty(subid)) {
                 foreach (var item in BuildProject.GetItems(MSBuildConstants.InterpreterItem)) {
                     if (item.GetMetadataValue(MSBuildConstants.IdKey) == subid) {
-                        BuildProject.RemoveItem(item);
-                        BuildProject.MarkDirty();
-                        Site.GetComponentModel().GetService<VsProjectContextProvider>().OnProjectChanged(BuildProject);
+                        try {
+                            BuildProject.RemoveItem(item);
+                            projectChanged = true;
+                        } catch (InvalidOperationException) {
+                        }
                         break;
                     }
                 }
@@ -384,11 +387,18 @@ namespace Microsoft.PythonTools.Project {
             foreach (var item in BuildProject.GetItems(MSBuildConstants.InterpreterReferenceItem)) {
                 var id = item.EvaluatedInclude;
                 if (id == factory.Configuration.Id) {
-                    BuildProject.RemoveItem(item);
-                    BuildProject.MarkDirty();
-                    Site.GetComponentModel().GetService<VsProjectContextProvider>().OnProjectChanged(BuildProject);
+                    try {
+                        BuildProject.RemoveItem(item);
+                        projectChanged = true;
+                    } catch (InvalidOperationException) {
+                    }
                     break;
                 }
+            }
+
+            if (projectChanged) {
+                BuildProject.MarkDirty();
+                Site.GetComponentModel().GetService<VsProjectContextProvider>().OnProjectChanged(BuildProject);
             }
 
             lock (_validFactories) {
