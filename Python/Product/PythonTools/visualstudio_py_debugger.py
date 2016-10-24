@@ -564,7 +564,7 @@ def should_debug_code(code):
 
     return True
 
-attach_lock = thread.allocate()
+attach_lock = thread.allocate_lock()
 attach_sent_break = False
 
 local_path_to_vs_path = {}
@@ -2318,7 +2318,7 @@ def detach_threads():
 
 def new_thread(tid = None, set_break = False, frame = None):
     # called during attach w/ a thread ID provided.
-    if tid == debugger_thread_id:
+    if tid and tid == debugger_thread_id:
         return None
 
     cur_thread = Thread(tid)    
