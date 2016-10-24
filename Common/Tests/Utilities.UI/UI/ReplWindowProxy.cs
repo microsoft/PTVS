@@ -137,6 +137,7 @@ namespace TestUtilities.UI {
 
         public void Hide() {
             ErrorHandler.ThrowOnFailure(((IVsWindowFrame)_toolWindow.Frame).Hide());
+            ErrorHandler.ThrowOnFailure(((IVsWindowPane)_toolWindow.GetIVsWindowPane()).ClosePane());
         }
 
         public void Invoke(Action action) {

@@ -19,7 +19,7 @@ using System.Data.Odbc;
 using System.Data.SqlClient;
 
 namespace Microsoft.CookiecutterTools.Model {
-    public static class ConnectionStringConverter {
+    static class ConnectionStringConverter {
         public const string OdbcSqlDriver = "{SQL Server}";
 
         public const string OdbcDriverKey = "Driver";

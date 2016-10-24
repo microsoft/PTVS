@@ -14,7 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Interpreter;
@@ -55,13 +57,18 @@ namespace Microsoft.PythonTools.PyAnalysis {
             var fallback = fallbackDb.BuiltinModule;
 
             for (int value = 0; value < res._types.Length; ++value) {
+                IPythonType type;
                 try {
-                    res._types[value] = interpreter.GetBuiltinType((BuiltinTypeId)value);
+                    type = interpreter.GetBuiltinType((BuiltinTypeId)value);
                 } catch (KeyNotFoundException) {
-                    res._types[value] = (IPythonType)fallback.GetAnyMember(
+                    type = null;
+                }
+                if (type == null) {
+                    type = (IPythonType)fallback.GetAnyMember(
                         ((ITypeDatabaseReader)fallbackDb).GetBuiltinTypeName((BuiltinTypeId)value)
                     );
                 }
+                res._types[value] = type ?? new FallbackBuiltinPythonType(state.LanguageVersion, (BuiltinTypeId)value);
             }
 
             res.SetClassInfo(state);
@@ -93,5 +100,41 @@ namespace Microsoft.PythonTools.PyAnalysis {
                 return _classInfos[(int)id];
             }
         }
+    }
+
+    class FallbackBuiltinModule : IPythonModule {
+        public static readonly IPythonModule Instance2x = new FallbackBuiltinModule(SharedDatabaseState.BuiltinName2x);
+        public static readonly IPythonModule Instance3x = new FallbackBuiltinModule(SharedDatabaseState.BuiltinName3x);
+
+        private FallbackBuiltinModule(string name) {
+            Name = name;
+        }
+
+        public string Documentation => string.Empty;
+        public PythonMemberType MemberType => PythonMemberType.Module;
+        public string Name { get; }
+        public IEnumerable<string> GetChildrenModules() => Enumerable.Empty<string>();
+        public IMember GetMember(IModuleContext context, string name) => null;
+        public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) => Enumerable.Empty<string>();
+        public void Imported(IModuleContext context) { }
+    }
+
+    class FallbackBuiltinPythonType : IPythonType {
+        public FallbackBuiltinPythonType(PythonLanguageVersion version, BuiltinTypeId typeId) {
+            DeclaringModule = version.Is3x() ? FallbackBuiltinModule.Instance3x : FallbackBuiltinModule.Instance2x;
+            Name = SharedDatabaseState.GetBuiltinTypeName(typeId, version.ToVersion());
+            TypeId = typeId;
+        }
+
+        public IPythonModule DeclaringModule { get; }
+        public string Documentation => string.Empty;
+        public bool IsBuiltin => true;
+        public PythonMemberType MemberType => PythonMemberType.Class;
+        public IList<IPythonType> Mro => new[] { (IPythonType)this };
+        public string Name { get; }
+        public BuiltinTypeId TypeId {get;}
+        public IPythonFunction GetConstructors() => null;
+        public IMember GetMember(IModuleContext context, string name) => null;
+        public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) => Enumerable.Empty<string>();
     }
 }

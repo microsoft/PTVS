@@ -155,7 +155,7 @@ namespace Microsoft.CookiecutterTools.Model {
             //   "var2" : {
             //     "label" : "Variable 2",
             //     "description" : "Description for variable 2",
-            //     "selector" : "connection"
+            //     "selector" : "odbcConnection"
             //   }
             // }
             //
@@ -163,7 +163,7 @@ namespace Microsoft.CookiecutterTools.Model {
             // - string
             // - list
             // - yesno: generates 'y' or 'n'
-            // - connection
+            // - odbcConnection
             if (vsExtrasProp.Value.Type == JTokenType.Object) {
                 var vsExtrasObj = (JObject)vsExtrasProp.Value;
                 foreach (JProperty prop in vsExtrasObj.Properties()) {

@@ -541,9 +541,14 @@ namespace TestUtilities.Python {
             AssertReferencesWorker(module, expr, index, false, expectedVars);
         }
 
+        sealed class LocationComparer : IEqualityComparer<LocationInfo> {
+            public bool Equals(LocationInfo x, LocationInfo y) => x.StartLine == y.StartLine && x.StartColumn == y.StartColumn;
+            public int GetHashCode(LocationInfo obj) => obj.StartLine.GetHashCode() ^ obj.StartColumn.GetHashCode();
+        }
+
         private void AssertReferencesWorker(IPythonProjectEntry module, string expr, int index, bool exact, VariableLocation[] expectedVars) {
             var vars = module.Analysis.GetVariablesByIndex(expr, index)
-                .GroupBy(v => v.Location)
+                .GroupBy(v => v.Location, new LocationComparer())
                 .OrderBy(g => g.Key.StartLine)
                 .ThenBy(g => g.Key.StartColumn)
                 .SelectMany(UniquifyReferences)

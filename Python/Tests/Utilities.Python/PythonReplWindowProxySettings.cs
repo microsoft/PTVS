@@ -72,19 +72,6 @@ namespace TestUtilities.UI.Python {
             app.OnDispose(() => options.Intellisense.AddNewLineAtEndOfFullyTypedWord = oldAddNewLineAtEndOfFullyTypedWord);
             options.Intellisense.AddNewLineAtEndOfFullyTypedWord = AddNewLineAtEndOfFullyTypedWord;
 
-            bool success = false;
-            for (int retries = 1; retries < 20; ++retries) {
-                try {
-                    app.ExecuteCommand("Python.Interactive", "/e:\"" + description + "\"");
-                    success = true;
-                    break;
-                } catch (AggregateException) {
-                }
-                app.DismissAllDialogs();
-                app.SetFocus();
-                Thread.Sleep(retries * 100);
-            }
-            Assert.IsTrue(success, "Unable to open " + description + " through DTE");
             var interpreters = app.ComponentModel.GetService<IInterpreterRegistryService>();
             var replId = PythonReplEvaluatorProvider.GetEvaluatorId(
                 interpreters.FindConfiguration(Version.Id)

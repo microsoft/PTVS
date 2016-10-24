@@ -105,17 +105,24 @@ namespace TestAdapterTests {
         public static TestInfo[] TestAdapterBTests {
             get {
                 return new TestInfo[] {
+                    RenamedImportSuccess,
+                    RenamedImportFailure,
+                    TimeoutSuccess,
+                    TestInPackageSuccess,
+                    TestInPackageFailure
+                };
+            }
+        }
+
+        public static TestInfo[] TestAdapterBInheritanceTests {
+            get {
+                return new TestInfo[] {
                     BaseSuccess,
                     BaseFailure,
                     DerivedBaseSuccess,
                     DerivedBaseFailure,
                     DerivedSuccess,
                     DerivedFailure,
-                    RenamedImportSuccess,
-                    RenamedImportFailure,
-                    TimeoutSuccess,
-                    TestInPackageSuccess,
-                    TestInPackageFailure
                 };
             }
         }
@@ -127,6 +134,17 @@ namespace TestAdapterTests {
         public static TestInfo[] TestAdapterMultiprocessingTests {
             get {
                 return new[] { MultiprocessingSuccess };
+            }
+        }
+
+        private static TestInfo LoadErrorImportError = TestInfo.FromRelativePaths("ImportErrorTests", "test_import_error", @"TestData\TestAdapterTests\LoadErrorTest.pyproj", @"TestData\TestAdapterTests\LoadErrorTestImportError.py", 5, TestOutcome.Failed);
+        private static TestInfo LoadErrorNoError = TestInfo.FromRelativePaths("NoErrorTests", "test_no_error", @"TestData\TestAdapterTests\LoadErrorTest.pyproj", @"TestData\TestAdapterTests\LoadErrorTestNoError.py", 4, TestOutcome.Passed);
+
+        public static string TestAdapterLoadErrorTestProjectFilePath = TestData.GetPath(@"TestData\TestAdapterTests\LoadErrorTest.pyproj");
+
+        public static TestInfo[] TestAdapterLoadErrorTests {
+            get {
+                return new[] { LoadErrorImportError, LoadErrorNoError };
             }
         }
 

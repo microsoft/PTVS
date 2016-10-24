@@ -62,6 +62,7 @@ namespace CookiecutterTests {
             new ContextItem("project_slug", Selectors.String, "{{ cookiecutter.project_name.lower().replace(' ', '_') }}") { Label="Package Name", Description="Pythonic name for the application." },
             new ContextItem("pypi_username", Selectors.String, "{{ cookiecutter.github_username }}"),
             new ContextItem("version", Selectors.String, "0.1.0"),
+            new ContextItem("db_connection", Selectors.OdbcConnection, "") { Label="ODBC Connection String" },
             new ContextItem("use_azure", Selectors.YesNo, "y") { Description="Enable Azure support." },
             new ContextItem("open_source_license", Selectors.List, "MIT license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }) { Label="Open Source License", Description="License under which you will distribute the generated files." },
             new ContextItem("port", Selectors.String, "5000") { Label="Port" },

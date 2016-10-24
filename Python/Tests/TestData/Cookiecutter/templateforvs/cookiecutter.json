@@ -6,35 +6,40 @@
   "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_') }}",
   "pypi_username": "{{ cookiecutter.github_username }}",
   "version": "0.1.0",
+  "db_connection": "",
   "use_azure": "y",
-  "open_source_license": ["MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source"],
+  "open_source_license": [ "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" ],
   "port": 5000,
   "_copy_without_render": [
     "media/*"
   ],
   "_visual_studio": {
     "full_name": {
-      "label" :  "Author",
+      "label": "Author",
       "description": "Full name of author."
     },
     "project_name": {
-      "label" :  "Project Name",
+      "label": "Project Name",
       "description": "Description for the application."
     },
     "project_slug": {
-      "label" :  "Package Name",
-      "description":  "Pythonic name for the application."
+      "label": "Package Name",
+      "description": "Pythonic name for the application."
+    },
+    "db_connection": {
+      "label": "ODBC Connection String",
+      "selector": "odbcConnection"
     },
     "use_azure": {
       "description": "Enable Azure support.",
-      "selector":  "yesno"
+      "selector": "yesno"
     },
     "open_source_license": {
-      "label" :  "Open Source License",
+      "label": "Open Source License",
       "description": "License under which you will distribute the generated files."
     },
     "port": {
-      "label" : "Port",
+      "label": "Port",
       "selector": "string"
     }
   }
