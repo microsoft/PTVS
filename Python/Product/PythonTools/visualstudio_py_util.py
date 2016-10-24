@@ -134,7 +134,9 @@ NONE_PREFIX = to_bytes('N')
 def read_bytes(conn, count):
     b = to_bytes('')
     while len(b) < count:
-        b += conn.recv(count - len(b))
+        received_data = conn.recv(count - len(b))
+        if received_data:
+            b += received_data
     return b
 
 
