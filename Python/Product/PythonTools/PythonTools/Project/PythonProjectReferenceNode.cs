@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -26,16 +25,24 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
-    class PythonProjectReferenceNode : ProjectReferenceNode {
-        public PythonProjectReferenceNode(ProjectNode root, ProjectElement element)
-            : base(root, element) {
-            Initialize();
+    sealed class PythonProjectReferenceNode : ProjectReferenceNode {
+        public static PythonProjectReferenceNode Create(ProjectNode root, ProjectElement element) {
+            var node = new PythonProjectReferenceNode(root, element);
+            node.Initialize();
+            return node;
         }
 
-        public PythonProjectReferenceNode(ProjectNode project, string referencedProjectName, string projectPath, string projectReference)
-            : base(project, referencedProjectName, projectPath, projectReference) {
-            Initialize();
+        public static PythonProjectReferenceNode Create(ProjectNode root, string referencedProjectName, string projectPath, string projectReference) {
+            var node = new PythonProjectReferenceNode(root, referencedProjectName, projectPath, projectReference);
+            node.Initialize();
+            return node;
         }
+
+        private PythonProjectReferenceNode(ProjectNode root, ProjectElement element)
+            : base(root, element) { }
+
+        private PythonProjectReferenceNode(ProjectNode project, string referencedProjectName, string projectPath, string projectReference)
+            : base(project, referencedProjectName, projectPath, projectReference) { }
 
         private void Initialize() {
             var solutionEvents = ProjectMgr.Site.GetSolutionEvents();
