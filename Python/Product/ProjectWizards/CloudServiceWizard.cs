@@ -161,7 +161,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 IVsProjectAcquisitionSetupDriver driver;
                 if (ErrorHandler.Succeeded(svc.GetSetupDriver(VSConstants.SetupDrivers.SetupDriver_VS, out driver)) &&
                     driver != null) {
-                    var task = driver.Install("Microsoft.VisualStudio.Workload.Azure");
+                    var task = driver.Install("Microsoft.VisualStudio.Component.Azure.Waverton");
                     if (task != null) {
                         task.Start();
                         throw new WizardCancelledException();
