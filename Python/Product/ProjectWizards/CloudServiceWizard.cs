@@ -21,7 +21,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Settings;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TemplateWizard;
 using Project = EnvDTE.Project;
 using ProjectItem = EnvDTE.ProjectItem;
@@ -29,18 +31,18 @@ using ProjectItem = EnvDTE.ProjectItem;
 namespace Microsoft.PythonTools.ProjectWizards {
     public sealed class CloudServiceWizard : IWizard {
         private IWizard _wizard;
-        private readonly bool _recommendUpgrade;
 
 #if DEV14
+        private readonly bool _recommendUpgrade;
         const string AzureToolsDownload = "http://go.microsoft.com/fwlink/?linkid=518003";
-#elif DEV15
-        const string AzureToolsDownload = "http://go.microsoft.com/fwlink/?LinkId=760649";
+#elif DEV15_OR_LATER
 #else
 #error Unsupported VS version
 #endif
 
         const string DontShowUpgradeDialogAgainProperty = "SuppressUpgradeAzureTools";
 
+#if DEV14
         private static bool ShouldRecommendUpgrade(Assembly asm) {
             var attr = asm.GetCustomAttributes(typeof(AssemblyFileVersionAttribute), false)
                 .OfType<AssemblyFileVersionAttribute>()
@@ -55,6 +57,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
             }
             return false;
         }
+#endif
 
         public CloudServiceWizard() {
             try {
@@ -62,7 +65,9 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 // the WebPI download.
                 var asm = Assembly.Load("Microsoft.VisualStudio.CloudService.Wizard,Version=1.0.0.0,Culture=neutral,PublicKeyToken=b03f5f7f11d50a3a");
 
+#if DEV14
                 _recommendUpgrade = ShouldRecommendUpgrade(asm);
+#endif
 
                 var type = asm.GetType("Microsoft.VisualStudio.CloudService.Wizard.CloudServiceWizard");
                 _wizard = type.InvokeMember(null, BindingFlags.CreateInstance, null, null, new object[0]) as IWizard;
@@ -104,6 +109,71 @@ namespace Microsoft.PythonTools.ProjectWizards {
             return false;
         }
 
+#if DEV14
+        private void StartDownload(IServiceProvider provider) {
+            Process.Start(new ProcessStartInfo(AzureToolsDownload));
+        }
+
+        private void OfferUpgrade(IServiceProvider provider) {
+            if (!_recommendUpgrade) {
+                return;
+            }
+
+            var sm = SettingsManagerCreator.GetSettingsManager(provider);
+            var store = sm.GetReadOnlySettingsStore(SettingsScope.UserSettings);
+
+            if (!store.CollectionExists(PythonConstants.DontShowUpgradeDialogAgainCollection) ||
+                !store.GetBoolean(PythonConstants.DontShowUpgradeDialogAgainCollection, DontShowUpgradeDialogAgainProperty, false)) {
+                var dlg = new TaskDialog(provider) {
+                    Title = Strings.ProductTitle,
+                    MainInstruction = Strings.AzureToolsUpgradeRecommended,
+                    Content = Strings.AzureToolsUpgradeInstructions,
+                    AllowCancellation = true,
+                    VerificationText = Strings.DontShowAgain
+                };
+                var download = new TaskDialogButton(Strings.DownloadAndInstall);
+                dlg.Buttons.Add(download);
+                var cont = new TaskDialogButton(Strings.ContinueWithoutAzureToolsUpgrade);
+                dlg.Buttons.Add(cont);
+                dlg.Buttons.Add(TaskDialogButton.Cancel);
+
+                var response = dlg.ShowModal();
+
+                if (dlg.SelectedVerified) {
+                    var rwStore = sm.GetWritableSettingsStore(SettingsScope.UserSettings);
+                    rwStore.CreateCollection(PythonConstants.DontShowUpgradeDialogAgainCollection);
+                    rwStore.SetBoolean(PythonConstants.DontShowUpgradeDialogAgainCollection, DontShowUpgradeDialogAgainProperty, true);
+                }
+
+                if (response == download) {
+                    Process.Start(new ProcessStartInfo(AzureToolsDownload));
+                    throw new WizardCancelledException();
+                } else if (response == TaskDialogButton.Cancel) {
+                    // User cancelled, so go back to the New Project dialog
+                    throw new WizardBackoutException();
+                }
+            }
+        }
+#else
+        private void StartDownload(IServiceProvider provider) {
+            var svc = (IVsTrackProjectRetargeting2)provider.GetService(typeof(SVsTrackProjectRetargeting));
+            if (svc != null) {
+                IVsProjectAcquisitionSetupDriver driver;
+                if (ErrorHandler.Succeeded(svc.GetSetupDriver(VSConstants.SetupDrivers.SetupDriver_VS, out driver)) &&
+                    driver != null) {
+                    var task = driver.Install("Microsoft.VisualStudio.Workload.Azure");
+                    if (task != null) {
+                        task.Start();
+                        throw new WizardCancelledException();
+                    }
+                }
+            }
+        }
+
+        private void OfferUpgrade(IServiceProvider provider) {
+        }
+#endif
+
         public void RunStarted(object automationObject, Dictionary<string, string> replacementsDictionary, WizardRunKind runKind, object[] customParams) {
             var provider = WizardHelpers.GetProvider(automationObject);
 
@@ -121,12 +191,12 @@ namespace Microsoft.PythonTools.ProjectWizards {
                     Content = Strings.AzureToolsInstallInstructions,
                     AllowCancellation = true
                 };
-                var download = new TaskDialogButton(Strings.DownloadAndInstall);
-                dlg.Buttons.Add(download);
                 dlg.Buttons.Add(TaskDialogButton.Cancel);
+                var download = new TaskDialogButton(Strings.DownloadAndInstall);
+                dlg.Buttons.Insert(0, download);
 
                 if (dlg.ShowModal() == download) {
-                    Process.Start(new ProcessStartInfo(AzureToolsDownload));
+                    StartDownload(provider);
                     throw new WizardCancelledException();
                 }
 
@@ -134,51 +204,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 throw new WizardBackoutException();
             }
 
-            if (_recommendUpgrade) {
-                var sm = SettingsManagerCreator.GetSettingsManager(provider);
-                var store = sm.GetReadOnlySettingsStore(SettingsScope.UserSettings);
-
-                if (!store.CollectionExists(PythonConstants.DontShowUpgradeDialogAgainCollection) ||
-                    !store.GetBoolean(PythonConstants.DontShowUpgradeDialogAgainCollection, DontShowUpgradeDialogAgainProperty, false)) {
-                    var dlg = new TaskDialog(provider) {
-                        Title = Strings.ProductTitle,
-                        MainInstruction = Strings.AzureToolsUpgradeRecommended,
-                        Content = Strings.AzureToolsUpgradeInstructions,
-                        AllowCancellation = true,
-                        VerificationText = Strings.DontShowAgain
-                    };
-                    var download = new TaskDialogButton(Strings.DownloadAndInstall);
-                    dlg.Buttons.Add(download);
-                    var cont = new TaskDialogButton(Strings.ContinueWithoutAzureToolsUpgrade);
-                    dlg.Buttons.Add(cont);
-                    dlg.Buttons.Add(TaskDialogButton.Cancel);
-
-                    var response = dlg.ShowModal();
-
-                    if (response != cont) {
-                        try {
-                            Directory.Delete(replacementsDictionary["$destinationdirectory$"]);
-                            Directory.Delete(replacementsDictionary["$solutiondirectory$"]);
-                        } catch {
-                            // If it fails (doesn't exist/contains files/read-only), let the directory stay.
-                        }
-                    }
-
-                    if (dlg.SelectedVerified) {
-                        var rwStore = sm.GetWritableSettingsStore(SettingsScope.UserSettings);
-                        rwStore.CreateCollection(PythonConstants.DontShowUpgradeDialogAgainCollection);
-                        rwStore.SetBoolean(PythonConstants.DontShowUpgradeDialogAgainCollection, DontShowUpgradeDialogAgainProperty, true);
-                    }
-
-                    if (response == download) {
-                        Process.Start(new ProcessStartInfo(AzureToolsDownload));
-                        throw new WizardCancelledException();
-                    } else if (response == TaskDialogButton.Cancel) {
-                        // User cancelled, so go back to the New Project dialog
-                        throw new WizardBackoutException();
-                    }
-                }
-            }
+            OfferUpgrade(provider);
 
             // Run the original wizard to get the right replacements
             _wizard.RunStarted(automationObject, replacementsDictionary, runKind, customParams);
