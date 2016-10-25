@@ -56,6 +56,10 @@ namespace Microsoft.PythonTools {
 
         public const uint cmdidOpenInteractiveScopeInEditor = 0x4035;
 
+        public const uint cmdidWebPythonAtMicrosoft = 0x4040;
+        public const uint cmdidWebPTVSSupport = 0x4041;
+        public const uint cmdidWebDGProducts = 0x4042;
+
         public const uint comboIdReplScopes = 0x5000;
         public const uint comboIdReplScopesGetList = 0x5001;
         public const uint comboIdReplEvaluators = 0x5002;

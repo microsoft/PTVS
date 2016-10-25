@@ -1,9 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ImageManifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                           xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-                           xmlns="http://schemas.microsoft.com/VisualStudio/ImageManifestSchema/2014">
+               xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+               xmlns="http://schemas.microsoft.com/VisualStudio/ImageManifestSchema/2014">
   <Symbols>
-    <String Name="Resources" Value="/Microsoft.CookiecutterTools;Component/Resources"/>
+    <!-- The value of AssemblyName will be replaced at build with the full name -->
+    <String Name="AssemblyName" Value="Microsoft.CookiecutterTools"/>
+    <String Name="Resources" Value="/$(AssemblyName);Component/Resources"/>
     <Guid Name="CookiecutterImagesGuid" Value="{50EDF200-5C99-4968-ABC0-CF1A2C490F00}"/>
     <ID Name="Cancel" Value="1"/>
     <ID Name="Cookiecutter" Value="2"/>

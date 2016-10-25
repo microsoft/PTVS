@@ -276,10 +276,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Shared\readme.txt" />
-    <Content Include="Resources\Images.imagemanifest">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    <ImageManifest Include="Resources\Images.imagemanifest">
+      <SubType>Designer</SubType>
+    </ImageManifest>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
     </None>

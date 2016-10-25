@@ -258,6 +258,7 @@
       <DependentUpon>DiagnosticsWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="PythonTools\Commands\ImportCoverageCommand.cs" />
+    <Compile Include="PythonTools\Commands\OpenWebUrlCommand.cs" />
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
     <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisLocation.cs" />
