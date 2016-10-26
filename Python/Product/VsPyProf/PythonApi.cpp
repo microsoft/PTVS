@@ -236,8 +236,8 @@ wstring VsPyProf::GetClassNameFromFrame(PyFrameObject* frameObj, PyObject *codeO
         }
     } else {
         // try and get self from the fast locals if we don't have a dictionary
-        int argCount;
-        PyTupleObject* argNames;
+        int argCount = 0;
+        PyTupleObject* argNames = NULL;
         if (PyCodeObject25_27::IsFor(MajorVersion, MinorVersion)) {
             argCount = ((PyCodeObject25_27*)codeObj)->co_argcount;
             argNames = (PyTupleObject*)((PyCodeObject25_27*)codeObj)->co_varnames;
@@ -252,7 +252,7 @@ wstring VsPyProf::GetClassNameFromFrame(PyFrameObject* frameObj, PyObject *codeO
             argNames = (PyTupleObject*)((PyCodeObject36*)codeObj)->co_varnames;
         }
 
-        if (argCount != 0 && argNames->ob_type == PyTuple_Type) {
+        if (argCount != 0 && argNames && argNames->ob_type == PyTuple_Type) {
             string argName;
             GetNameAscii(argNames->ob_item[0], argName);
 
