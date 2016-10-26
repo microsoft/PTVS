@@ -21,6 +21,8 @@ using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Threading;
 using Microsoft.CookiecutterTools.Commands;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
@@ -35,8 +37,6 @@ using Microsoft.VisualStudio.Shell.Interop;
 namespace Microsoft.CookiecutterTools {
     [Guid("AC207EBF-16F8-4AA4-A0A8-70AF37308FCD")]
     sealed class CookiecutterToolWindow : ToolWindowPane, IVsInfoBarUIEvents {
-        private Redirector _outputWindow;
-        private IVsStatusbar _statusBar;
         private IVsUIShell _uiShell;
         private EnvDTE.DTE _dte;
 
@@ -64,32 +64,14 @@ namespace Microsoft.CookiecutterTools {
         }
 
         protected override void OnCreate() {
-            _outputWindow = OutputWindowRedirector.GetGeneral(this);
-            Debug.Assert(_outputWindow != null);
-            _statusBar = GetService(typeof(SVsStatusbar)) as IVsStatusbar;
-            _uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
-            _dte = GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
-            _infoBarFactory = GetService(typeof(SVsInfoBarUIFactory)) as IVsInfoBarUIFactory;
+            base.OnCreate();
 
-            object control = null;
+            var presenter = new CookiecutterPresenter();
+            Content = presenter;
 
-            if (!CookiecutterClientProvider.IsCompatiblePythonAvailable()) {
-                ReportPrereqsEvent(false);
-                control = new MissingDependencies();
-            } else {
-                ReportPrereqsEvent(true);
-                string feedUrl = CookiecutterPackage.Instance.RecommendedFeed;
-                if (string.IsNullOrEmpty(feedUrl)) {
-                    feedUrl = UrlConstants.DefaultRecommendedFeed;
-                }
-
-                _cookiecutterControl = new CookiecutterControl(_outputWindow, CookiecutterTelemetry.Current, new Uri(feedUrl), OpenGeneratedFolder, UpdateCommandUI);
-                _cookiecutterControl.ContextMenuRequested += OnContextMenuRequested;
-                control = _cookiecutterControl;
-                _cookiecutterControl.InitializeAsync(CookiecutterPackage.Instance.CheckForTemplateUpdate).HandleAllExceptions(this, GetType()).DoNotWait();
-            }
-
-            Content = control;
+            // Postpone initialization of the control until VS has created
+            // all tool windows (we need the output window)
+            presenter.Dispatcher.InvokeAsync(InitializePresenter, DispatcherPriority.ApplicationIdle);
 
             RegisterCommands(new Command[] {
                 new HomeCommand(this),
@@ -104,10 +86,36 @@ namespace Microsoft.CookiecutterTools {
             RegisterCommands(new Command[] {
                 new DeleteInstalledTemplateCommand(this),
             }, VSConstants.GUID_VSStandardCommandSet97);
+        }
 
-            base.OnCreate();
+        public void InitializePresenter() {
+            var outputWindow = OutputWindowRedirector.GetGeneral(this);
+            Debug.Assert(outputWindow != null);
+            _uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
+            _dte = GetService(typeof(EnvDTE.DTE)) as EnvDTE.DTE;
+            _infoBarFactory = GetService(typeof(SVsInfoBarUIFactory)) as IVsInfoBarUIFactory;
 
-            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
+            UIElement control = null;
+
+            if (!CookiecutterClientProvider.IsCompatiblePythonAvailable()) {
+                ReportPrereqsEvent(false);
+                control = new MissingDependencies();
+            } else {
+                ReportPrereqsEvent(true);
+                string feedUrl = CookiecutterPackage.Instance.RecommendedFeed;
+                if (string.IsNullOrEmpty(feedUrl)) {
+                    feedUrl = UrlConstants.DefaultRecommendedFeed;
+                }
+
+                _cookiecutterControl = new CookiecutterControl(outputWindow, CookiecutterTelemetry.Current, new Uri(feedUrl), OpenGeneratedFolder, UpdateCommandUI);
+                _cookiecutterControl.ContextMenuRequested += OnContextMenuRequested;
+                control = _cookiecutterControl;
+                _cookiecutterControl.InitializeAsync(CookiecutterPackage.Instance.CheckForTemplateUpdate).HandleAllExceptions(this, GetType()).DoNotWait();
+            }
+
+            var presenter = ((CookiecutterPresenter)Content);
+            presenter.Container.Children.Clear();
+            presenter.Container.Children.Add(control);
 
             if (CookiecutterPackage.Instance.ShowHelp) {
                 AddInfoBar();

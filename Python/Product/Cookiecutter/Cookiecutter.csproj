@@ -151,6 +151,9 @@
     <Compile Include="Commands\UpdateCommand.cs" />
     <Compile Include="Model\Selectors.cs" />
     <Compile Include="Model\ILocalTemplateSource.cs" />
+    <Compile Include="View\CookiecutterPresenter.xaml.cs">
+      <DependentUpon>CookiecutterPresenter.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\SqlCommands.cs" />
     <Compile Include="Model\ConnectionStringConverter.cs" />
     <Compile Include="Resources\ImageMonikers.cs" />
@@ -369,6 +372,10 @@
     <Page Include="View\CookiecutterDictionary.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="View\CookiecutterPresenter.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\CookiecutterSearchPage.xaml">
       <Generator>MSBuild:Compile</Generator>
