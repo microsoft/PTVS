@@ -135,8 +135,9 @@ def read_bytes(conn, count):
     b = to_bytes('')
     while len(b) < count:
         received_data = conn.recv(count - len(b))
-        if received_data:
-            b += received_data
+        if received_data is None:
+            break
+        b += received_data
     return b
 
 
