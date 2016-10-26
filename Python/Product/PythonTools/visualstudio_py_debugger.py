@@ -2324,7 +2324,7 @@ def detach_threads():
 
 def new_thread(tid = None, set_break = False, frame = None):
     # called during attach w/ a thread ID provided.
-    if tid and tid == debugger_thread_id:
+    if tid == debugger_thread_id:
         return None
 
     cur_thread = Thread(tid)    
