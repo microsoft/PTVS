@@ -606,7 +606,7 @@ You can get more information by running Visual Studio with the /log parameter on
     <value>&amp;Retry</value>
   </data>
   <data name="AzureToolsInstallInstructions" xml:space="preserve">
-    <value>These tools are a free download for your version of Visual Studio that allow you to write, deploy and debug applications for Microsoft Azure in a range of programming languages.</value>
+    <value>These tools are an installable workload for your version of Visual Studio that allow you to write, deploy and debug applications for Microsoft Azure in a range of programming languages.</value>
   </data>
   <data name="AzureToolsRequired" xml:space="preserve">
     <value>This project requires Microsoft Azure Tools for Visual Studio.</value>
