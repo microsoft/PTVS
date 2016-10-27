@@ -33,9 +33,9 @@ using Microsoft.CookiecutterTools.ViewModel;
 
 namespace Microsoft.CookiecutterTools.View {
     /// <summary>
-    /// Interaction logic for CookiecutterControl.xaml
+    /// Interaction logic for CookiecutterContainerPage.xaml
     /// </summary>
-    internal partial class CookiecutterControl : UserControl {
+    internal partial class CookiecutterContainerPage : Page {
         private CookiecutterSearchPage _searchPage;
         private CookiecutterOptionsPage _optionsPage;
         private Action _updateCommandUI;
@@ -46,11 +46,11 @@ namespace Microsoft.CookiecutterTools.View {
         private static TimeSpan CheckForUpdateInitialDelay = TimeSpan.FromSeconds(15);
         private static TimeSpan CheckForUpdateRetryDelay = TimeSpan.FromMinutes(2);
 
-        public CookiecutterControl() {
+        public CookiecutterContainerPage() {
             InitializeComponent();
         }
 
-        public CookiecutterControl(Redirector outputWindow, ICookiecutterTelemetry telemetry, Uri feedUrl, Action<string> openFolder, Action updateCommandUI) {
+        public CookiecutterContainerPage(Redirector outputWindow, ICookiecutterTelemetry telemetry, Uri feedUrl, Action<string> openFolder, Action updateCommandUI) {
             _updateCommandUI = updateCommandUI;
 
             _checkForUpdatesTimer = new DispatcherTimer();
@@ -150,7 +150,7 @@ namespace Microsoft.CookiecutterTools.View {
             private set { SetValue(SettingsPropertyKey, value); }
         }
 
-        private static readonly DependencyPropertyKey SettingsPropertyKey = DependencyProperty.RegisterReadOnly("Settings", typeof(CookiecutterViewModel), typeof(CookiecutterControl), new PropertyMetadata());
+        private static readonly DependencyPropertyKey SettingsPropertyKey = DependencyProperty.RegisterReadOnly("Settings", typeof(CookiecutterViewModel), typeof(CookiecutterContainerPage), new PropertyMetadata());
         public static readonly DependencyProperty SettingsProperty = SettingsPropertyKey.DependencyProperty;
 
         public int PageCount {
@@ -158,7 +158,7 @@ namespace Microsoft.CookiecutterTools.View {
             private set { SetValue(PageCountPropertyKey, value); }
         }
 
-        private static readonly DependencyPropertyKey PageCountPropertyKey = DependencyProperty.RegisterReadOnly("PageCount", typeof(int), typeof(CookiecutterControl), new PropertyMetadata(0));
+        private static readonly DependencyPropertyKey PageCountPropertyKey = DependencyProperty.RegisterReadOnly("PageCount", typeof(int), typeof(CookiecutterContainerPage), new PropertyMetadata(0));
         public static readonly DependencyProperty PageCountProperty = PageCountPropertyKey.DependencyProperty;
 
         private CollectionViewSource _pageSequence;
@@ -168,7 +168,7 @@ namespace Microsoft.CookiecutterTools.View {
             private set { SetValue(PageSequencePropertyKey, value); }
         }
 
-        private static readonly DependencyPropertyKey PageSequencePropertyKey = DependencyProperty.RegisterReadOnly("PageSequence", typeof(ICollectionView), typeof(CookiecutterControl), new PropertyMetadata());
+        private static readonly DependencyPropertyKey PageSequencePropertyKey = DependencyProperty.RegisterReadOnly("PageSequence", typeof(ICollectionView), typeof(CookiecutterContainerPage), new PropertyMetadata());
         public static readonly DependencyProperty PageSequenceProperty = PageSequencePropertyKey.DependencyProperty;
 
         internal void NavigateToGitHubHome() {
