@@ -151,8 +151,8 @@
     <Compile Include="Commands\UpdateCommand.cs" />
     <Compile Include="Model\Selectors.cs" />
     <Compile Include="Model\ILocalTemplateSource.cs" />
-    <Compile Include="View\CookiecutterPresenter.xaml.cs">
-      <DependentUpon>CookiecutterPresenter.xaml</DependentUpon>
+    <Compile Include="View\LoadingPage.xaml.cs">
+      <DependentUpon>LoadingPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\SqlCommands.cs" />
     <Compile Include="Model\ConnectionStringConverter.cs" />
@@ -199,8 +199,8 @@
     <Compile Include="View\CookiecutterOptionsPage.xaml.cs">
       <DependentUpon>CookiecutterOptionsPage.xaml</DependentUpon>
     </Compile>
-    <Compile Include="View\CookiecutterControl.xaml.cs">
-      <DependentUpon>CookiecutterControl.xaml</DependentUpon>
+    <Compile Include="View\CookiecutterContainerPage.xaml.cs">
+      <DependentUpon>CookiecutterContainerPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\CookiecutterSearchPage.xaml.cs">
       <DependentUpon>CookiecutterSearchPage.xaml</DependentUpon>
@@ -248,8 +248,8 @@
     <Compile Include="ViewModel\ContextItemViewModel.cs" />
     <Compile Include="ViewModel\CookiecutterViewModel.cs" />
     <Compile Include="ViewModel\TemplateViewModel.cs" />
-    <Compile Include="View\MissingDependencies.xaml.cs">
-      <DependentUpon>MissingDependencies.xaml</DependentUpon>
+    <Compile Include="View\MissingDependenciesPage.xaml.cs">
+      <DependentUpon>MissingDependenciesPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\PointEventArgs.cs" />
     <Compile Include="VsMenus.cs" />
@@ -357,11 +357,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Page Include="View\LoadingPage.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="View\CookiecutterOptionsPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="View\CookiecutterControl.xaml">
+    <Page Include="View\CookiecutterContainerPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
@@ -373,15 +377,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="View\CookiecutterPresenter.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="View\CookiecutterSearchPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="View\MissingDependencies.xaml">
+    <Page Include="View\MissingDependenciesPage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
