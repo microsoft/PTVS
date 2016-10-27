@@ -6,7 +6,7 @@
     <BaseInstall>InstallDir:\Common7\IDE\Extensions\Microsoft\Python\Core</BaseInstall>
     <SourcePath>$(LayoutOutputPath)Microsoft.PythonTools.Core</SourcePath>
 
-    <ExtraOptions>-x "\.targets$" -x "\.AzureSetup\.exe(\.config)?$" -x "\.WebRole\.dll$" -x "ptvs_virtualenv_proxy\.py$" -x "web_(debug_)?config\.xml$" -x "wfastcgi\.py$" -x "Microsoft\.PythonTools\.Core.+$"</ExtraOptions>
+    <ExtraOptions>-x "\.targets$" -x "\.AzureSetup\.exe(\.config)?$" -x "\.WebRole\.dll$" -x "ptvs_virtualenv_proxy\.py$" -x "web_(debug_)?config\.xml$" -x "wfastcgi\.py$" -x "Microsoft\.PythonTools\.Core\.dll$"</ExtraOptions>
   </PropertyGroup>
 
   <ItemGroup>
