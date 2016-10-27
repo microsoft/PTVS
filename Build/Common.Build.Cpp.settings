@@ -49,6 +49,8 @@
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <TreatWarningAsError>$(TreatWarningsAsErrors)</TreatWarningAsError>
+      <SDLCheck Condition="'$(RunCodeAnalysis)' == 'true'">true</SDLCheck>
+      <EnablePREfast Condition="'$(RunCodeAnalysis)' == 'true'">true</EnablePREfast>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
