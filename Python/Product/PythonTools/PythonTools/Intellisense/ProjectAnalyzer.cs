@@ -1477,6 +1477,8 @@ namespace Microsoft.PythonTools.Intellisense {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
             } catch (FailedRequestException e) {
                 _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, e.Message);
+            } catch (ObjectDisposedException) {
+                _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationCancelled);
             } finally {
                 linkedSource?.Dispose();
                 timeoutSource?.Dispose();
