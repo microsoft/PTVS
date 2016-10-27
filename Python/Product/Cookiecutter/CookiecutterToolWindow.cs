@@ -18,10 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Threading;
 using Microsoft.CookiecutterTools.Commands;
 using Microsoft.CookiecutterTools.Infrastructure;
@@ -88,7 +86,7 @@ namespace Microsoft.CookiecutterTools {
             }, VSConstants.GUID_VSStandardCommandSet97);
         }
 
-        public void InitializePresenter() {
+        private void InitializePresenter() {
             var outputWindow = OutputWindowRedirector.GetGeneral(this);
             Debug.Assert(outputWindow != null);
             _uiShell = GetService(typeof(SVsUIShell)) as IVsUIShell;
