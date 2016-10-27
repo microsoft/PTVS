@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Workspace {
         ""type"": {""type"": ""string"", ""enum"": [ ""python"" ]},
         ""interpreter"": { ""type"": ""string"" },
         ""interpreterArguments"": { ""type"": ""string"" },
-        ""scriptArgument"": { ""type"": ""string"" },
+        ""scriptArguments"": { ""type"": ""string"" },
         ""workingDirectory"": { ""type"": ""string"" },
         ""nativeDebug"": { ""type"": ""boolean"" },
         ""webBrowserUrl"": { ""type"": ""string"" }

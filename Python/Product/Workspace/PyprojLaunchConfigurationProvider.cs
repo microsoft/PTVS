@@ -22,17 +22,19 @@ using Microsoft.VisualStudio.Workspace.Debug;
 namespace Microsoft.PythonTools.Workspace {
     [ExportLaunchConfigurationProvider(
         ProviderType,
-        new[] { PythonConstants.FileExtension, PythonConstants.WindowsFileExtension },
+        new[] { FileExtension },
         PyprojLaunchDebugTargetProvider.LaunchTypeName,
         PyprojLaunchDebugTargetProvider.JsonSchema
     )]
     class PyprojLaunchConfigurationProvider : ILaunchConfigurationProvider {
         public const string ProviderType = "CCA8088B-06BC-4AE7-8521-FC66628ABE13";
 
+        private const string FileExtension = ".pyproj";
+
         public bool IsDebugLaunchActionSupported(DebugLaunchActionContext debugLaunchActionContext) {
             var settings = debugLaunchActionContext.LaunchConfiguration;
             var moniker = settings.GetValue(PyprojLaunchDebugTargetProvider.ProjectKey, string.Empty);
-            if (string.IsNullOrEmpty(moniker) || !string.Equals(Path.GetExtension(moniker), ".pyproj", StringComparison.OrdinalIgnoreCase)) {
+            if (string.IsNullOrEmpty(moniker) || !FileExtension.Equals(Path.GetExtension(moniker), StringComparison.OrdinalIgnoreCase)) {
                 return false;
             }
 
