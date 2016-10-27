@@ -57,8 +57,12 @@ namespace TestUtilities {
                 }
             }).ToArray();
             if (ex.Length > 1) {
+                foreach (var e in ex) {
+                    Console.Error.WriteLine(e.SourceException.ToString());
+                }
                 throw new AggregateException(ex.Select(e => e.SourceException));
             } else if (ex.Length == 1) {
+                Console.Error.WriteLine(ex[0].ToString());
                 ex[0].Throw();
             }
         }
