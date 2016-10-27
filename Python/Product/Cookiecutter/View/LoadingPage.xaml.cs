@@ -14,30 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Diagnostics;
 using System.Windows.Controls;
-using System.Windows.Input;
 
 namespace Microsoft.CookiecutterTools.View {
     /// <summary>
-    /// Interaction logic for MissingDependencies.xaml
+    /// Interaction logic for LoadingPage.xaml
     /// </summary>
-    internal partial class MissingDependencies : UserControl {
-        public static readonly ICommand InstallPython = new RoutedCommand();
-
-        public MissingDependencies() {
+    internal partial class LoadingPage : Page {
+        public LoadingPage() {
             InitializeComponent();
-        }
-
-        private void InstallPython_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            var url = (string)e.Parameter;
-            e.CanExecute = true;
-            e.Handled = true;
-        }
-
-        private void InstallPython_Executed(object sender, ExecutedRoutedEventArgs e) {
-            var url = (string)e.Parameter;
-            Process.Start(UrlConstants.InstallPythonUrl)?.Dispose();
         }
     }
 }
