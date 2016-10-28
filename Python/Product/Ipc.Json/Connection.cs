@@ -350,7 +350,13 @@ namespace Microsoft.PythonTools.Ipc.Json {
         private async Task SendMessage(ProtocolMessage packet, CancellationToken cancel) {
             var str = JsonConvert.SerializeObject(packet);
             var bytes = Encoding.UTF8.GetBytes(str);
-            await _writeLock.WaitAsync(cancel).ConfigureAwait(false);
+            try {
+                await _writeLock.WaitAsync(cancel).ConfigureAwait(false);
+            } catch (ArgumentNullException) {
+                throw new ObjectDisposedException(nameof(_writeLock));
+            } catch (ObjectDisposedException) {
+                throw new ObjectDisposedException(nameof(_writeLock));
+            }
             try {
                 var contentLengthStr = "Content-Length: " + bytes.Length + "\n\n";
                 var contentLength = Encoding.UTF8.GetBytes(contentLengthStr);
