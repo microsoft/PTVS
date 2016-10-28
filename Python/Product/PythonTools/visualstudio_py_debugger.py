@@ -374,9 +374,11 @@ def is_file_in_zip(filename):
     elif path.isfile(parent):
         KNOWN_ZIPS.add(parent) 
         return True     
-    else:    
+    elif path.isdir(parent):    
         KNOWN_DIRECTORIES.add(parent)
         return False
+    else:
+        return is_file_in_zip(parent)
 
 def lookup_builtin(name, frame):
     try:
