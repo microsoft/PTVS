@@ -110,7 +110,21 @@ def thread_creator(func, args, kwargs = {}, *extra_args):
 
     return _start_new_thread(new_thread_wrapper, (func, args, kwargs))
 
-_start_new_thread = thread.start_new_thread
+_thread_start_new_thread = thread.start_new_thread
+def _start_new_thread(func, args, kwargs = {}):
+    t_lock = thread.allocate_lock()
+    t_lock.acquire()
+    
+    tid = []
+    def thread_starter(a, kw):
+        tid.append(thread.get_ident())
+        t_lock.release()
+        return func(*a, **kw)
+    
+    _thread_start_new_thread(thread_starter, (args, kwargs))
+    with t_lock:
+        return tid[0]
+
 THREADS = {}
 THREADS_LOCK = thread.allocate_lock()
 MODULES = []
