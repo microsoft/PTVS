@@ -205,6 +205,9 @@
   <data name="411" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\JS.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="412" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>_BUILDROOT_\Python\Product\Icons\dev_VSVERSION_\Config.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="3006" xml:space="preserve">
     <value>Python</value>
   </data>

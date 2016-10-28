@@ -198,12 +198,7 @@
                           Microsoft.PythonTools.Web.targets;
                           Microsoft.PythonTools.Worker.targets;
                           wfastcgi.py;
-                          web_config.xml;
-                          web_debug_config.xml;
-                          ptvs_virtualenv_proxy.py;
-                          !(bindpath.bin)\Microsoft.PythonTools.WebRole.dll;
-                          !(bindpath.bin)\Microsoft.PythonTools.AzureSetup.exe;
-                          Microsoft.PythonTools.AzureSetup.exe.config" />
+                          !(bindpath.bin)\Microsoft.PythonTools.WebRole.dll" />
     
     <!-- Mixed-mode Debugging -->
     <File Include="!(bindpath.bin)\Microsoft.PythonTools.Debugger.Helper.x86.dll;

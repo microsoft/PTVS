@@ -204,7 +204,7 @@ namespace PythonToolsTests {
   <WebRole name=""PythonApplication2"" />
 </ServiceDefinition>");
 
-            PythonProjectNode.UpdateServiceDefinition(doc, "Worker", "PythonApplication1");
+            PythonProjectNode.UpdateServiceDefinition(doc, "Worker", "PythonApplication1", "PythonCore\\2.7");
 
             AssertUtil.AreEqual(@"<?xml version=""1.0"" encoding=""utf-8""?>
 <ServiceDefinition name=""Azure1"" xmlns=""http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition"" schemaVersion=""2014-01.2.3"">
@@ -223,6 +223,7 @@ namespace PythonToolsTests {
         <Variable name=""EMULATED"">
           <RoleInstanceValue xpath=""/RoleEnvironment/Deployment/@emulated"" />
         </Variable>
+        <Variable name=""PYTHON"" value=""PythonCore\2.7"" />
       </Environment>
       <EntryPoint>
         <ProgramEntryPoint commandLine=""bin\ps.cmd LaunchWorker.ps1"" setReadyOnProcessStart=""true"" />
@@ -242,7 +243,7 @@ namespace PythonToolsTests {
   <WebRole name=""PythonApplication2"" />
 </ServiceDefinition>");
 
-            PythonProjectNode.UpdateServiceDefinition(doc, "Web", "PythonApplication2");
+            PythonProjectNode.UpdateServiceDefinition(doc, "Web", "PythonApplication2", "PythonCore\\3.5-32");
 
             AssertUtil.AreEqual(@"<?xml version=""1.0"" encoding=""utf-8""?>
 <ServiceDefinition name=""Azure1"" xmlns=""http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition"" schemaVersion=""2014-01.2.3"">
@@ -254,6 +255,7 @@ namespace PythonToolsTests {
           <Variable name=""EMULATED"">
             <RoleInstanceValue xpath=""/RoleEnvironment/Deployment/@emulated"" />
           </Variable>
+          <Variable name=""PYTHON"" value=""PythonCore\3.5-32"" />
         </Environment>
       </Task>
     </Startup>

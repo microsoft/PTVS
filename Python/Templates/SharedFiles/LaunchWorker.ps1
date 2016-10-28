@@ -30,16 +30,22 @@
 
 
     Ensure the following entry point specification is added to the
-    ServiceDefinition.csdef file in your Cloud project:
+    ServiceDefinition.csdef file in your Cloud project. Note that the value for
+    PYTHON should be set to either a Company\Tag pair (suitable for locating an
+    installation in the registry), or the full path to your Python executable.
+    PYTHONPATH may be freely configured, and extra environment variables should
+    be added here.
 
     <Runtime>
       <Environment>
           <Variable name="EMULATED">
             <RoleInstanceValue xpath="/RoleEnvironment/Deployment/@emulated"/>
           </Variable>
+          <Variable name="PYTHON" value="..." />
+          <Variable name="PYTHONPATH" value="" />
       </Environment>
       <EntryPoint>
-        <ProgramEntryPoint commandLine="bin\ps.cmd LaunchWorker.ps1" setReadyOnProcessStart="true" />
+        <ProgramEntryPoint commandLine="bin\ps.cmd LaunchWorker.ps1 worker.py" setReadyOnProcessStart="true" />
       </EntryPoint>
     </Runtime>
 #>
@@ -50,43 +56,24 @@ $ns = @{ sd="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefiniti
 $is_debug = (Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Properties/sd:Property[@name='Configuration'][@value='Debug']").Count -eq 1
 $is_emulated = $env:EMULATED -eq 'true'
 
-$env:RootDir = (gi "$($MyInvocation.MyCommand.Path)\..\..").FullName
-cd "${env:RootDir}"
-
-$config = Get-Content "$(Get-Location)\bin\AzureSetup.cfg" -EA:Stop
-
-function read_value($name, $default) {
-    $value = (@($default) + @($config | %{ [regex]::Match($_, $name + '=(.+)') } | ?{ $_.Success } | %{ $_.Groups[1].Value }))[-1]
-    return [Environment]::ExpandEnvironmentVariables($value)
-}
-
-$interpreter_path = read_value 'interpreter_path'
-$interpreter_path_emulated = read_value 'interpreter_path_emulated'
-
-if ($is_emulated -and $interpreter_path_emulated -and (Test-Path $interpreter_path_emulated)) {
-    $interpreter_path = $interpreter_path_emulated
-}
-
-if (-not $interpreter_path -or -not (Test-Path $interpreter_path)) {
-    $interpreter_version = read_value 'interpreter_version' '2.7'
+if ($env:PYTHON -eq $null) {
+    $interpreter_path = "${env:WINDIR}\py.exe"
+} elseif (Test-Path -PathType Leaf $env:PYTHON) {
+    $interpreter_path = $env:PYTHON
+} else {
     foreach ($key in @('HKLM:\Software\Wow6432Node', 'HKLM:\Software', 'HKCU:\Software')) {
-        $regkey = gp "$key\Python\PythonCore\$interpreter_version\InstallPath" -EA SilentlyContinue
+        $regkey = gp "$key\Python\${env:PYTHON}\InstallPath" -EA SilentlyContinue
         if ($regkey) {
-            $interpreter_path = "$($regkey.'(default)')\python.exe"
-            if (Test-Path $interpreter_path) {
+            if ($regkey.ExecutablePath) {
+                $interpreter_path = $regkey.ExecutablePath;
+            } else {
+                $interpreter_path = "$($regkey.'(default)')\python.exe"
+            }
+            if (Test-Path -PathType Leaf $interpreter_path) {
                 break
             }
         }
     }
 }
 
-Set-Alias py (gi $interpreter_path -EA Stop)
-
-$python_path_variable = read_value 'python_path_variable' 'PYTHONPATH'
-[Environment]::SetEnvironmentVariable($python_path_variable, (read_value 'python_path' ''))
-
-$worker_directory = read_value 'worker_directory' '.'
-cd $worker_directory
-
-$worker_command = read_value 'worker_command' 'worker.py'
-iex "py $worker_command"
+Start-Process -Wait -NoNewWindow $interpreter_path -ArgumentList $args

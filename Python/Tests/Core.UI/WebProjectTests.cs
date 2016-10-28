@@ -484,7 +484,7 @@ namespace PythonToolsUITests {
                 ErrorHandler.ThrowOnFailure(sln.GetProjectOfUniqueName(ccproj.FullName, out hier));
 
                 app.ServiceProvider.GetUIThread().InvokeAsync(() =>
-                    PythonProjectNode.UpdateServiceDefinition(hier, roleType, roleType + "Role1", app.ServiceProvider)
+                    PythonProjectNode.UpdateServiceDefinition(hier, roleType, roleType + "Role1", app.ServiceProvider, null)
                 ).GetAwaiter().GetResult();
 
                 var doc = new XmlDocument();

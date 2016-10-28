@@ -15,6 +15,7 @@
     <StaticUriPattern>^/static/.*</StaticUriPattern>
     <StaticUriRewrite>^/$(MSBuildProjectName)/static/.*</StaticUriRewrite>
     <PythonWsgiHandler>$(MSBuildProjectName).app</PythonWsgiHandler>
+    <SuppressCollectPythonCloudServiceFiles>true</SuppressCollectPythonCloudServiceFiles>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
