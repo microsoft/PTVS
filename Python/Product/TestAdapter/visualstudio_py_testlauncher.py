@@ -116,7 +116,7 @@ class VsTestResult(unittest.TextTestResult):
         if _channel is not None:
             _channel.send_event(
                 name='start', 
-                test = test.id()
+                test = test.test_id
             )
 
     def addError(self, test, err):
@@ -159,7 +159,7 @@ class VsTestResult(unittest.TextTestResult):
                 outcome=outcome,
                 traceback = tb,
                 message = message,
-                test = test.id()
+                test = test.test_id
             )
 
 def main():
@@ -227,7 +227,15 @@ def main():
         tests = []
         for test in opts.tests:
             try:
-                tests.extend(unittest.defaultTestLoader.loadTestsFromName(test))
+                for loaded_test in unittest.defaultTestLoader.loadTestsFromName(test):
+                    # Starting with Python 3.5, rather than letting any import error
+                    # exception propagate out of loadTestsFromName, unittest catches it and
+                    # creates instance(s) of unittest.loader._FailedTest.
+                    # Those have an unexpected test.id(), ex: 'unittest.loader._FailedTest.test1'
+                    # Store the test id passed in as an additional attribute and
+                    # VsTestResult will use that instead of test.id().
+                    loaded_test.test_id = test
+                    tests.append(loaded_test)
             except Exception as err:
                 traceback.print_exc()
                 formatted = traceback.format_exc().splitlines()
