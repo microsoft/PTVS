@@ -1,19 +1,19 @@
 From: "Saved by Internet Explorer 11"
 Subject: Python Worker Role Configuration
-Date: Mon, 29 Feb 2016 15:57:37 -0800
+Date: Mon, 31 Oct 2016 12:06:03 -0700
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----=_NextPart_000_0005_01D17309.E972F4A0"
-X-MimeOLE: Produced By Microsoft MimeOLE V10.0.10011.16384
+	boundary="----=_NextPart_000_0005_01D2336F.26F6CA60"
+X-MimeOLE: Produced By Microsoft MimeOLE
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0005_01D17309.E972F4A0
+------=_NextPart_000_0005_01D2336F.26F6CA60
 Content-Type: text/html;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
-Content-Location: file://D:\PTVS\PTVS\Python\Product\PythonTools\Templates\SharedFiles\Readme\WorkerRoleConfiguration.html
+Content-Location: file://D:\PTVS\PTVS\Python\Templates\SharedFiles\WorkerRoleConfiguration.html
 
 =EF=BB=BF<!DOCTYPE HTML>
 <!DOCTYPE html PUBLIC "" ""><!--=0A=
@@ -47,44 +47,40 @@ Configuration</TITLE>    =20
 href=3D"file:///D:/PTVS/PTVS/Python/Product/PythonTools/ReadmeStyle.css" =
 
 rel=3D"stylesheet" type=3D"text/css">=20
-<META name=3D"GENERATOR" content=3D"MSHTML 11.00.10586.103"></HEAD>=20
+<META name=3D"GENERATOR" content=3D"MSHTML 11.00.10570.1001"></HEAD>=20
 <BODY>
 <H1 class=3D"top">Configuring Deployment</H1>
-<P>        While the included PowerShell scripts may be edited freely, =
-it is    =20
-   possible to set most configuration options through your Python =
-project.    =20
-</P>
-<P>        To specify the version of Python your worker should run with, =
-make it=20
-       the active environment for your project. (Ensure that you have a =
-WebPI   =20
-    reference or startup task to install this version on the instance - =
-see     =20
-  the documentation in <CODE>ConfigureCloudService.ps1</CODE> for more   =
+<P>        Some PowerShell scripts have been added to your project to =
+configure=20
+and        launch your worker. These may be edited freely to customize =
+your     =20
+  deployment.     </P>
+<P>        To change the version of Python your worker should run with, =
+set the =20
+       <CODE>PYTHON</CODE> property in the =
+<CODE>ServiceDefinition.csdef</CODE> =20
+      file in your cloud project. This has already been set based on =
+your       =20
+current active environment. See <CODE>ConfigureCloudService.ps1</CODE>   =
     =20
-details.)     </P>
-<P>        If your version of Python cannot be detected using the =
-CPython=20
-registry        keys after it has been installed, you can add the        =
-=20
-<CODE>DeployedPythonInterpreterPath</CODE> property to your Python       =
-=20
-project by editing the .pyproj file. This path will take precedence over =
-      =20
-the active environment.     </P>
+for more details.     </P>
 <P>        To install packages using pip, update the=20
 <CODE>requirements.txt</CODE>        file in the root directory of your =
 project.=20
-    </P>
+The PowerShell script will        install packages listed in it on =
+deployment.  =20
+  </P>
 <P>        To set <CODE>PYTHONPATH</CODE> (or equivalent) before running =
 the    =20
-   worker, add the necessary Search Paths to your project.     </P>
-<P>To specify the script to run, make it the startup file in your =
-project.</P>
-<P>        To specify command-line arguments, add them to the Command =
-Line      =20
- Arguments property under Project Properties\Debug.     </P>
+   worker, add the environment variable to your        =20
+<CODE>ServiceDefinition.csdef</CODE>.     </P>
+<P>        To specify the script to run and any arguments, modify the =
+command=20
+line        in <CODE>ServiceDefinition.csdef</CODE>. The startup file =
+and debug =20
+       options in your local project do not automatically transfer to =
+the       =20
+deployed service.     </P>
 <H1>Troubleshooting Deployment</H1>
 <P>If your worker role does not behave correctly after deployment, check =
 the=20
@@ -98,16 +94,13 @@ following:</P>
     <LI><CODE>ps.cmd</CODE></LI></UL></LI>
   <LI>Your Cloud project references those files from the service=20
 definition.</LI>
-  <LI>Your Python project includes either:            =20
-  <UL>
-    <LI>a <CODE>requirements.txt</CODE> file listing all dependencies, =
-OR</LI>
-    <LI>a virtual environment containing all =
-dependencies.</LI></UL></LI>
+  <LI>Your Python project includes a <CODE>requirements.txt</CODE> file =
+listing=20
+  all dependencies.</LI>
   <LI>
-  <P>                Enable Remote Desktop on your Cloud Service and =
-investigate=20
-  the                log files.             </P>
+  <P>Enable Remote Desktop on your Cloud Service and investigate the log =
+
+  files.</P>
   <P>                Logs for <CODE>ConfigureCloudService.ps1</CODE> and =
        =20
           <CODE>LaunchWorker.ps1</CODE> are stored in the following path =
@@ -131,7 +124,7 @@ href=3D"http://go.microsoft.com/fwlink/?LinkId=3D293415">our=20
 need=20
 it.</P></BODY></HTML>
 
-------=_NextPart_000_0005_01D17309.E972F4A0
+------=_NextPart_000_0005_01D2336F.26F6CA60
 Content-Type: text/css;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
@@ -179,4 +172,4 @@ li > img {
 	vertical-align: middle;
 }
 
-------=_NextPart_000_0005_01D17309.E972F4A0--
+------=_NextPart_000_0005_01D2336F.26F6CA60--

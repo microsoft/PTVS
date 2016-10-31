@@ -1,19 +1,19 @@
 From: "Saved by Internet Explorer 11"
 Subject: Python Web Role Configuration
-Date: Mon, 29 Feb 2016 15:57:26 -0800
+Date: Mon, 31 Oct 2016 12:05:48 -0700
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----=_NextPart_000_0000_01D17309.E29328D0"
-X-MimeOLE: Produced By Microsoft MimeOLE V10.0.10011.16384
+	boundary="----=_NextPart_000_0000_01D2336F.1DDA5500"
+X-MimeOLE: Produced By Microsoft MimeOLE
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0000_01D17309.E29328D0
+------=_NextPart_000_0000_01D2336F.1DDA5500
 Content-Type: text/html;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
-Content-Location: file://D:\PTVS\PTVS\Python\Product\PythonTools\Templates\SharedFiles\Readme\WebRoleConfiguration.html
+Content-Location: file://D:\PTVS\PTVS\Python\Templates\SharedFiles\WebRoleConfiguration.html
 
 =EF=BB=BF<!DOCTYPE HTML>
 <!DOCTYPE html PUBLIC "" ""><!--=0A=
@@ -47,44 +47,31 @@ Configuration</TITLE>    =20
 href=3D"file:///D:/PTVS/PTVS/Python/Product/PythonTools/ReadmeStyle.css" =
 
 rel=3D"stylesheet" type=3D"text/css">=20
-<META name=3D"GENERATOR" content=3D"MSHTML 11.00.10586.103"></HEAD>=20
+<META name=3D"GENERATOR" content=3D"MSHTML 11.00.10570.1001"></HEAD>=20
 <BODY>
 <H1 class=3D"top">Configuring Deployment</H1>
-<P>        While the included PowerShell scripts may be edited freely, =
-it is    =20
-   possible to set most configuration options through your Python =
-project.    =20
-</P>
-<P>        To specify the version of Python your web should run with, =
-make it   =20
-    the active environment for your project. (Ensure that you have a =
-WebPI      =20
- reference or startup task to install this version on the instance - see =
-      =20
-the documentation in <CODE>ConfigureCloudService.ps1</CODE> for more     =
-  =20
-details.)     </P>
-<P>        If your version of Python cannot be detected using the =
-CPython=20
-registry        keys after it has been installed, you can add the        =
-=20
-<CODE>DeployedPythonInterpreterPath</CODE> property to your Python       =
-=20
-project by editing the .pyproj file. This path will take precedence over =
-      =20
-the active environment.     </P>
+<P>        Some PowerShell scripts have been added to your project to =
+configure=20
+and        launch your worker. These may be edited freely to customize =
+your     =20
+  deployment.     </P>
+<P>        To change the version of Python your web role should run =
+with, set=20
+the         <CODE>PYTHON</CODE> property in the=20
+<CODE>ServiceDefinition.csdef</CODE>        file in your cloud project. =
+This has=20
+already been set based on your        current active environment. See=20
+<CODE>ConfigureCloudService.ps1</CODE>        for more details.     </P>
 <P>        To install packages using pip, update the=20
 <CODE>requirements.txt</CODE>        file in the root directory of your =
 project.=20
-    </P>
+The PowerShell script will        install packages listed in it on =
+deployment.  =20
+  </P>
 <P>        To set <CODE>PYTHONPATH</CODE> (or equivalent) before running =
 the    =20
-   web, add the necessary Search Paths to your project.     </P>
-<P>        To specify your main handler script, make it the startup file =
-in your=20
-       project. Alternatively, you can set the full importable name of =
-your     =20
-  WSGI app in Project Properties\Web\WSGI Handler.     </P>
+   web service, add the environment variable to your        =20
+<CODE>web.config</CODE> file.     </P>
 <H1>Troubleshooting Deployment</H1>
 <P>If your web role does not behave correctly after deployment, check =
 the=20
@@ -97,13 +84,9 @@ following:</P>
     <LI><CODE>ps.cmd</CODE></LI></UL></LI>
   <LI>Your Cloud project references those files from the service=20
 definition.</LI>
-  <LI>
-  <P>Your Python project includes either:</P>
-  <UL>
-    <LI>a <CODE>requirements.txt</CODE> file listing all dependencies, =
-OR</LI>
-    <LI>a virtual environment containing all =
-dependencies.</LI></UL></LI>
+  <LI>Your Python project includes a <CODE>requirements.txt</CODE> file =
+listing=20
+  all dependencies.</LI>
   <LI>
   <P>Enable Remote Desktop on your Cloud Service and investigate the log =
 
@@ -114,7 +97,17 @@ on the=20
   <UL>
     =
 <LI><CODE>C:\Resources\Directory\%RoleId%.DiagnosticStore\LogFiles</CODE>=
-</LI></UL></LI>
+</LI></UL>
+  <P>
+  <P>Logs for your web service can be specified in your =
+<CODE>web.config</CODE>=20
+  file:</P>
+  <UL>
+    <LI>The <CODE>WSGI_LOG</CODE> app setting controls logs for =
+FastCGI-based=20
+    sites</LI>
+    <LI>The <CODE>stdoutLogFile</CODE> attribute controls logs for HTTP=20
+    Platform-based sites</LI></UL></LI>
   <LI>            Start a discussion at             <A =
 href=3D"http://go.microsoft.com/fwlink/?LinkId=3D293415">our=20
   discussion forum</A>            for further help.         </LI></OL>
@@ -124,7 +117,7 @@ href=3D"http://go.microsoft.com/fwlink/?LinkId=3D293415">our=20
 need=20
 it.</P></BODY></HTML>
 
-------=_NextPart_000_0000_01D17309.E29328D0
+------=_NextPart_000_0000_01D2336F.1DDA5500
 Content-Type: text/css;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
@@ -172,4 +165,4 @@ li > img {
 	vertical-align: middle;
 }
 
-------=_NextPart_000_0000_01D17309.E29328D0--
+------=_NextPart_000_0000_01D2336F.1DDA5500--

@@ -42,7 +42,7 @@
           <Variable name="EMULATED">
             <RoleInstanceValue xpath="/RoleEnvironment/Deployment/@emulated"/>
           </Variable>
-          <Variable name="PYTHON" value="..." />
+          <Variable name="PYTHON" value="PythonCore\3.5" />
         </Environment>
       </Task>
     </Startup>
@@ -57,7 +57,7 @@
           <Variable name="EMULATED">
             <RoleInstanceValue xpath="/RoleEnvironment/Deployment/@emulated"/>
           </Variable>
-          <Variable name="PYTHON" value="..." />
+          <Variable name="PYTHON" value="PythonCore\3.5" />
         </Environment>
       </Task>
     </Startup>
@@ -121,64 +121,66 @@ if ($env:PYTHON -eq $null) {
         }
     }
 }
-Set-Alias py (gi $interpreter_path -EA Stop)
 
-if (Test-Path requirements.txt) {
-    py -m pip -V
-    if (-not $?) {
-        $pip_downloader = gi "$(Get-Location)\pip_downloader.py" -EA SilentlyContinue
-        if (-not $pip_downloader) {
-            $pip_downloader = gi "$(Get-Location)\bin\pip_downloader.py" -EA SilentlyContinue
+if (Test-Path $interpreter_path) {
+    if (Test-Path requirements.txt) {
+        Set-Alias py (gi $interpreter_path -EA Stop)
+        py -m pip -V
+        if (-not $?) {
+            $pip_downloader = gi "$(Get-Location)\pip_downloader.py" -EA SilentlyContinue
+            if (-not $pip_downloader) {
+                $pip_downloader = gi "$(Get-Location)\bin\pip_downloader.py" -EA SilentlyContinue
+            }
+            if (-not $pip_downloader) {
+                $req = Invoke-WebRequest "https://go.microsoft.com/fwlink/?LinkID=393490" -UseBasicParsing
+                [System.IO.File]::WriteAllBytes("$(Get-Location)\bin\pip_downloader.py", $req.Content)
+                $pip_downloader = gi "$(Get-Location)\bin\pip_downloader.py" -EA Stop
+            }
+            py $pip_downloader
         }
-        if (-not $pip_downloader) {
-            $req = Invoke-WebRequest "https://go.microsoft.com/fwlink/?LinkID=393490" -UseBasicParsing
-            [System.IO.File]::WriteAllBytes("$(Get-Location)\bin\pip_downloader.py", $req.Content)
-            $pip_downloader = gi "$(Get-Location)\bin\pip_downloader.py" -EA Stop
-        }
-        py $pip_downloader
-    }
-    py -m pip install -r requirements.txt
-}
-
-if ($is_web) {
-    $appcmdargs = ''
-    if ($env:appcmd) {
-        Set-Alias appcmd (gi ($env:appcmd -replace '^("(.+?)"|(\S+)).*$', '$2$3'))
-        $appcmdargs = $env:appcmd -replace '^(".+?"|\S+)\s*(.*)$', '$2'
-    } else {
-        try {
-            gcm appcmd -EA Stop
-        } catch {
-            Set-Alias appcmd (gi "$env:SystemRoot\System32\inetsrv\appcmd.exe" -EA Stop)
-        }
+        py -m pip install -r requirements.txt
     }
 
-    # The first -replace parameter needs backslashes escaped, while the second
-    # does not. So we are really replacing 1 backslash with 2.
-    $interp = $interpreter_path -replace '\\', '\\'
-    $wfastcgi = (gi "$(Get-Location)\bin\wfastcgi.py" -EA Stop).FullName -replace '\\', '\\'
+    if ($is_web) {
+        $appcmdargs = ''
+        if ($env:appcmd) {
+            Set-Alias appcmd (gi ($env:appcmd -replace '^("(.+?)"|(\S+)).*$', '$2$3'))
+            $appcmdargs = $env:appcmd -replace '^(".+?"|\S+)\s*(.*)$', '$2'
+        } else {
+            try {
+                gcm appcmd -EA Stop
+            } catch {
+                Set-Alias appcmd (gi "$env:SystemRoot\System32\inetsrv\appcmd.exe" -EA Stop)
+            }
+        }
 
-    if ($is_debug) {
-        $max_requests = 1
-    } else {
-        $max_requests = 1000
-    }
+        # The first -replace parameter needs backslashes escaped, while the second
+        # does not. So we are really replacing 1 backslash with 2.
+        $interp = $interpreter_path -replace '\\', '\\'
+        $wfastcgi = (gi "$(Get-Location)\bin\wfastcgi.py" -EA Stop).FullName -replace '\\', '\\'
 
-    iex "appcmd $appcmdargs set config /section:system.webServer/fastCGI ""/+[fullPath='$interp',arguments='\""""$wfastcgi\""""',instanceMaxRequests='$max_requests',signalBeforeTerminateSeconds='30']"""
+        if ($is_debug) {
+            $max_requests = 1
+        } else {
+            $max_requests = 1000
+        }
 
-    if ($is_emulated) {
-        $webconfig = gi web.config -EA Stop
-    } else {
-        $webconfig = gi web.cloud.config -EA SilentlyContinue
-        if (-not $webconfig) {
+        iex "appcmd $appcmdargs set config /section:system.webServer/fastCGI ""/+[fullPath='$interp',arguments='\""""$wfastcgi\""""',instanceMaxRequests='$max_requests',signalBeforeTerminateSeconds='30']"""
+
+        if ($is_emulated) {
             $webconfig = gi web.config -EA Stop
+        } else {
+            $webconfig = gi web.cloud.config -EA SilentlyContinue
+            if (-not $webconfig) {
+                $webconfig = gi web.config -EA Stop
+            }
         }
-    }
 
-    copy -force $webconfig "$webconfig.bak"
-    Get-Content "$webconfig.bak" | `
-        %{ $_ -replace '%wfastcgipath%', "&quot;$wfastcgi&quot;" } | `
-        %{ $_ -replace '%interpreterpath%', $interp } | `
-        %{ $_ -replace '%rootdir%', $env:RootDir } | `
-        Out-File -Encoding UTF8 "web.config" -Force
+        copy -force $webconfig "$webconfig.bak"
+        Get-Content "$webconfig.bak" | `
+            %{ $_ -replace '%wfastcgipath%', "&quot;$wfastcgi&quot;" } | `
+            %{ $_ -replace '%interpreterpath%', $interp } | `
+            %{ $_ -replace '%rootdir%', $env:RootDir } | `
+            Out-File -Encoding UTF8 "web.config" -Force
+    }
 }
