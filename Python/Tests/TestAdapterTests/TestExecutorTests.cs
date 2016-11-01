@@ -310,16 +310,38 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
-        public void TestLoadError() {
+        public void TestLoadError27() {
             PythonPaths.Python27_x64.AssertInstalled();
 
+            TestLoadError("LoadErrorTest27");
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
+        public void TestLoadError34() {
+            PythonPaths.Python34_x64.AssertInstalled();
+
+            TestLoadError("LoadErrorTest34");
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
+        public void TestLoadError35() {
+            // Handling of import error when loading a test changed in Python 3.5
+            // so it's important to test 3.4 and 3.5
+            PythonPaths.Python35_x64.AssertInstalled();
+
+            TestLoadError("LoadErrorTest35");
+        }
+
+        private static void TestLoadError(string projectName) {
             // A load error is when unittest module fails to load the test (prior to running it)
             // For example, if the file where the test is defined has an unhandled ImportError.
             // We check that this only causes the tests that can't be loaded to fail,
             // all other tests in the test run which can be loaded successfully will be run.
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
-            var expectedTests = TestInfo.TestAdapterLoadErrorTests;
+            var expectedTests = TestInfo.GetTestAdapterLoadErrorTests(projectName);
             var runContext = CreateRunContext(expectedTests);
             var testCases = expectedTests.Select(tr => tr.TestCase);
 
