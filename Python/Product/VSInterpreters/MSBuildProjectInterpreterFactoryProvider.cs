@@ -671,6 +671,9 @@ namespace Microsoft.PythonTools.Interpreter {
 
 
         private IPythonInterpreterFactoryProvider GetFactoryProvider(string id) {
+            if (string.IsNullOrEmpty(id)) {
+                return null;
+            }
             var interpAndId = id.Split(new[] { '|' }, 2);
             if (interpAndId.Length == 2) {
                 foreach (var provider in GetProvidersAndMetadata()) {
