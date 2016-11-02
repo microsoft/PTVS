@@ -1363,7 +1363,11 @@ namespace Microsoft.PythonTools.Analysis {
                         _updater.UpdateStatus(_progressOffset, _progressTotal, "Saving " + currentLibrary);
                     }
                     Directory.CreateDirectory(outDir);
-                    new SaveAnalysis().Save(projectState, outDir);
+                    var saver = new SaveAnalysis();
+                    saver.Save(projectState, outDir);
+                    foreach (var err in saver.Errors) {
+                        TraceError("{0}", err);
+                    }
                     TraceInformation("End of group \"{0}\"", files[0].LibraryPath);
                     AnalysisLog.EndFileGroup();
 

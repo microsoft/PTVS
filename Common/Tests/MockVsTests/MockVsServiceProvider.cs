@@ -20,10 +20,7 @@ using System.ComponentModel.Composition;
 using System.ComponentModel.Design;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.TextManager.Interop;
 using IOleServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace Microsoft.VisualStudioTools.MockVsTests {
@@ -31,20 +28,18 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
     [Export(typeof(MockVsServiceProvider))]
     public class MockVsServiceProvider : SVsServiceProvider, IOleServiceProvider, IServiceContainer, IDisposable {
         private readonly MockVs _vs;
-        private readonly Dictionary<Type, object> _servicesByType = new Dictionary<Type, object>();
         private readonly Dictionary<Guid, object> _servicesByGuid = new Dictionary<Guid, object>();
-        private readonly Dictionary<Type, ServiceCreatorCallback> _serviceCreatorByType = new Dictionary<Type, ServiceCreatorCallback>();
+        private readonly Dictionary<Guid, ServiceCreatorCallback> _serviceCreatorByGuid = new Dictionary<Guid, ServiceCreatorCallback>();
         private readonly List<IDisposable> _disposeAtEnd = new List<IDisposable>();
         private bool _isDisposed;
 
         [ImportingConstructor]
         public MockVsServiceProvider(MockVs mockVs) {
             _vs = mockVs;
-            _servicesByType.Add(typeof(IOleServiceProvider), this);
+            _servicesByGuid.Add(typeof(IOleServiceProvider).GUID, this);
         }
 
         public void AddService(Type type, object inst) {
-            _servicesByType[type] = inst;
             _servicesByGuid[type.GUID] = inst;
         }
 
@@ -57,24 +52,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             if (_servicesByGuid.TryGetValue(serviceType, out res)) {
                 return res;
             }
-            Console.WriteLine("Unknown service: " + serviceType);
-            throw new NotImplementedException();
-        }
-
-        public object GetService(Type serviceType) {
-            object res;
-            if (_servicesByType.TryGetValue(serviceType, out res)) {
-                return res;
-            }
-
-            if (_servicesByGuid.TryGetValue(serviceType.GUID, out res)) {
-                return res;
-            }
 
             ServiceCreatorCallback creator;
-            if (_serviceCreatorByType.TryGetValue(serviceType, out creator)) {
-                _servicesByType[serviceType] = res = creator(this, serviceType);
-                _serviceCreatorByType.Remove(serviceType);
+            if (_serviceCreatorByGuid.TryGetValue(serviceType, out creator)) {
+                _servicesByGuid[serviceType] = res = creator(this, Type.GetTypeFromCLSID(serviceType));
+                _serviceCreatorByGuid.Remove(serviceType);
                 var disposable = res as IDisposable;
                 if (disposable != null) {
                     _disposeAtEnd.Add(disposable);
@@ -82,13 +64,21 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 return res;
             }
 
-            Console.WriteLine("Unknown service: " + serviceType.FullName);
+            Console.WriteLine(
+                "Unknown Service {0} ({1:B})",
+                Type.GetTypeFromCLSID(serviceType, false)?.FullName ?? "(unknown)",
+                serviceType
+            );
             return null;
+        }
+
+        public object GetService(Type serviceType) {
+            return GetService(serviceType.GUID);
         }
 
         public int QueryService(ref Guid guidService, ref Guid riid, out IntPtr ppvObject) {
             object res;
-            if (_servicesByGuid.TryGetValue(guidService, out res)) {
+            if ((res = GetService(guidService)) != null) {
                 IntPtr punk = Marshal.GetIUnknownForObject(res);
                 try {
                     return Marshal.QueryInterface(punk, ref riid, out ppvObject);
@@ -103,22 +93,21 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
         }
 
         public void AddService(Type serviceType, ServiceCreatorCallback callback, bool promote) {
-            _serviceCreatorByType[serviceType] = callback;
+            _serviceCreatorByGuid[serviceType.GUID] = callback;
         }
 
         public void AddService(Type serviceType, ServiceCreatorCallback callback) {
-            _serviceCreatorByType[serviceType] = callback;
+            _serviceCreatorByGuid[serviceType.GUID] = callback;
         }
 
         public void RemoveService(Type serviceType, bool promote) {
-            _servicesByType.Remove(serviceType);
             _servicesByGuid.Remove(serviceType.GUID);
-            _serviceCreatorByType.Remove(serviceType);
+            _serviceCreatorByGuid.Remove(serviceType.GUID);
         }
 
         public void RemoveService(Type serviceType) {
-            _servicesByType.Remove(serviceType);
-            _serviceCreatorByType.Remove(serviceType);
+            _servicesByGuid.Remove(serviceType.GUID);
+            _serviceCreatorByGuid.Remove(serviceType.GUID);
         }
 
         public void Dispose() {
@@ -128,9 +117,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     d.Dispose();
                 }
                 _disposeAtEnd.Clear();
-                _servicesByType.Clear();
                 _servicesByGuid.Clear();
-                _serviceCreatorByType.Clear();
+                _serviceCreatorByGuid.Clear();
             }
         }
     }

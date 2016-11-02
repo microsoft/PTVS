@@ -42,7 +42,10 @@ namespace Microsoft.VisualStudioTools {
 
         public override bool InvokeRequired {
             get {
-                return Thread.CurrentThread != _uiThread;
+                // The UI thread may no longer be alive in test situations, as
+                // it is not the main thread. In actual installs this is very
+                // unlikely to ever occur.
+                return Thread.CurrentThread != _uiThread && _uiThread.IsAlive;
             }
         }
 

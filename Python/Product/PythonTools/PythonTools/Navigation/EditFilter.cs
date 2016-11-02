@@ -669,14 +669,22 @@ namespace Microsoft.PythonTools.Language {
                             // are splitting the text, automatically insert the
                             // comment marker on the new line.
                             var line = pyPoint.Value.GetContainingLine();
-                            var lineText = line.GetText();
+                            var lineText = pyPoint.Value.Snapshot.GetText(line.Start, pyPoint.Value - line.Start);
                             int comment = lineText.IndexOf('#');
                             if (comment >= 0 &&
                                 pyPoint.Value < line.End &&
                                 line.Start + comment < pyPoint.Value &&
-                                string.IsNullOrWhiteSpace(lineText.Remove(comment))) {
-                                _editorOps.InsertNewLine();
-                                _editorOps.InsertText(lineText.Substring(0, comment + 1));
+                                string.IsNullOrWhiteSpace(lineText.Remove(comment))
+                            ) {
+                                int extra = lineText.Skip(comment + 1).TakeWhile(char.IsWhiteSpace).Count() + 1;
+                                using (var edit = line.Snapshot.TextBuffer.CreateEdit()) {
+                                    edit.Insert(
+                                        pyPoint.Value.Position,
+                                        _textView.Options.GetNewLineCharacter() + lineText.Substring(0, comment + extra)
+                                    );
+                                    edit.Apply();
+                                }
+                                
                                 return VSConstants.S_OK;
                             }
                         }

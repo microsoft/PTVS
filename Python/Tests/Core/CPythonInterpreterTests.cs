@@ -32,7 +32,7 @@ using TestUtilities.Python;
 namespace PythonToolsTests {
     [TestClass]
     public class CPythonInterpreterTests {
-        internal static readonly CPythonInterpreterFactoryProvider InterpFactory = new CPythonInterpreterFactoryProvider();
+        internal static readonly CPythonInterpreterFactoryProvider InterpFactory = new CPythonInterpreterFactoryProvider(false);
 
         [ClassInitialize]
         public static void DoDeployment(TestContext context) {

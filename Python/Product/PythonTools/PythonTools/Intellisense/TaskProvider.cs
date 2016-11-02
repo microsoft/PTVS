@@ -606,7 +606,14 @@ namespace Microsoft.PythonTools.Intellisense {
             // Otherwise abort and we'll try again later
             var cts = new CancellationTokenSource(1000);
             try {
-                RefreshAsync(cts.Token).WaitAndUnwrapExceptions();
+                try {
+                    RefreshAsync(cts.Token).Wait(cts.Token);
+                } catch (AggregateException ex) {
+                    if (ex.InnerExceptions.Count == 1) {
+                        throw ex.InnerException;
+                    }
+                    throw;
+                }
             } catch (OperationCanceledException) {
                 return false;
             } catch (Exception ex) when (!ex.IsCriticalException()) {
