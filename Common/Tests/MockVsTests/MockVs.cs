@@ -171,6 +171,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             ThrowPendingException();
             _monSel.UnadviseSelectionEvents(_monSelCookie);
             AssertListener.ThrowUnhandled();
+            _serviceProvider.Dispose();
             Container.Dispose();
         }
 
@@ -218,13 +219,15 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         private void UIThreadWorker(object evt) {
             try {
-                SynchronizationContext.SetSynchronizationContext(new MockSyncContext(this));
-                foreach (var package in Container.GetExportedValues<IMockPackage>()) {
-                    _loadedPackages.Add(package);
-                    package.Initialize();
+                try {
+                    SynchronizationContext.SetSynchronizationContext(new MockSyncContext(this));
+                    foreach (var package in Container.GetExportedValues<IMockPackage>()) {
+                        _loadedPackages.Add(package);
+                        package.Initialize();
+                    }
+                } finally {
+                    ((AutoResetEvent)evt).Set();
                 }
-
-                ((AutoResetEvent)evt).Set();
                 RunMessageLoop();
             } catch (Exception ex) {
                 Trace.TraceError("Captured exception on mock UI thread: {0}", ex);
@@ -372,6 +375,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 var id = info.Attribute.LanguageServiceSid;
                 var serviceProvider = Container.GetExportedValue<MockVsServiceProvider>();
                 var langInfo = (IVsLanguageInfo)serviceProvider.GetService(id);
+                if (langInfo == null) {
+                    throw new NotImplementedException("Unable to get IVsLanguageInfo for " + info.Attribute.LanguageName);
+                }
                 IVsCodeWindowManager mgr;
                 var codeWindow = new MockCodeWindow(serviceProvider, view);
                 view.Properties[typeof(MockCodeWindow)] = codeWindow;

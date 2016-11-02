@@ -32,7 +32,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly Dictionary<string, PythonInterpreterInformation> _factories = new Dictionary<string, PythonInterpreterInformation>();
         const string PythonPath = "Software\\Python";
         internal const string FactoryProviderName = "Global";
-        private bool _watchRegistry;
+        internal bool _watchRegistry;
         private bool _initialized;
 
         public CPythonInterpreterFactoryProvider() : this(true) { }

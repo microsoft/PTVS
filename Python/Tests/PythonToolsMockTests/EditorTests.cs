@@ -404,7 +404,7 @@ class B:
                 view.Enter();
                 Assert.AreEqual(2, view.CurrentSnapshot.LineCount);
                 Assert.AreEqual("# ", view.CurrentSnapshot.GetLineFromLineNumber(0).GetText());
-                Assert.AreEqual("#comment", view.CurrentSnapshot.GetLineFromLineNumber(1).GetText());
+                Assert.AreEqual("# comment", view.CurrentSnapshot.GetLineFromLineNumber(1).GetText());
             }
 
             using (var view = new PythonEditor(@"# comment")) {
@@ -420,7 +420,7 @@ class B:
                 view.Enter();
                 Assert.AreEqual(2, view.CurrentSnapshot.LineCount);
                 Assert.AreEqual("    # ", view.CurrentSnapshot.GetLineFromLineNumber(0).GetText());
-                Assert.AreEqual("    #comment", view.CurrentSnapshot.GetLineFromLineNumber(1).GetText());
+                Assert.AreEqual("    # comment", view.CurrentSnapshot.GetLineFromLineNumber(1).GetText());
             }
         }
     }
