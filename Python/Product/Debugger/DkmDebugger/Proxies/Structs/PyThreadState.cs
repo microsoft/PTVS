@@ -41,6 +41,13 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             InitializeStruct(this, out _fields);
         }
 
+        public static PyThreadState TryCreate(DkmProcess process, ulong address) {
+            if (address == 0) {
+                return null;
+            }
+            return new PyThreadState(process, address);
+        }
+
         public PointerProxy<PyThreadState> next {
             get { return GetFieldProxy(_fields.next); }
         }

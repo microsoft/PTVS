@@ -22,6 +22,8 @@ struct PyObject {};
 
 template<class T>
 T ReadField(const void* p, int64_t offset) {
+    if (offset < 0)
+        return 0;
     return *reinterpret_cast<const T*>(reinterpret_cast<const char*>(p) + offset);
 }
 
@@ -49,7 +51,7 @@ struct {
         int64_t ob_size;
     } PyVarObject;
     struct {
-        int64_t f_code, f_globals, f_locals, f_lineno;
+        int64_t f_back, f_code, f_globals, f_locals, f_lineno;
     } PyFrameObject;
     struct {
         int64_t co_varnames, co_filename, co_name;
@@ -551,6 +553,19 @@ int TraceFunc(void* obj, void* frame, int what, void* arg) {
     }
 
     return 0;
+}
+
+typedef void* (*_PyFrameEvalFunction)(void*, int);
+__declspec(dllexport)
+_PyFrameEvalFunction DefaultEvalFrameFunc = nullptr;
+
+__declspec(dllexport)
+void *EvalFrameFunc(void* f, int throwFlag)
+{
+    if (DefaultEvalFrameFunc)
+        return (*DefaultEvalFrameFunc)(f, throwFlag);
+
+    return nullptr;
 }
 
 }
