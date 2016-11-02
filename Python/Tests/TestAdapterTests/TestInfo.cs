@@ -137,15 +137,11 @@ namespace TestAdapterTests {
             }
         }
 
-        private static TestInfo LoadErrorImportError = TestInfo.FromRelativePaths("ImportErrorTests", "test_import_error", @"TestData\TestAdapterTests\LoadErrorTest.pyproj", @"TestData\TestAdapterTests\LoadErrorTestImportError.py", 5, TestOutcome.Failed);
-        private static TestInfo LoadErrorNoError = TestInfo.FromRelativePaths("NoErrorTests", "test_no_error", @"TestData\TestAdapterTests\LoadErrorTest.pyproj", @"TestData\TestAdapterTests\LoadErrorTestNoError.py", 4, TestOutcome.Passed);
+        private static TestInfo GetLoadErrorImportError(string projectName) => TestInfo.FromRelativePaths("ImportErrorTests", "test_import_error", $"TestData\\TestAdapterTests\\{projectName}.pyproj", @"TestData\TestAdapterTests\LoadErrorTestImportError.py", 5, TestOutcome.Failed);
+        private static TestInfo GetLoadErrorNoError(string projectName) => TestInfo.FromRelativePaths("NoErrorTests", "test_no_error", $"TestData\\TestAdapterTests\\{projectName}.pyproj", @"TestData\TestAdapterTests\LoadErrorTestNoError.py", 4, TestOutcome.Passed);
 
-        public static string TestAdapterLoadErrorTestProjectFilePath = TestData.GetPath(@"TestData\TestAdapterTests\LoadErrorTest.pyproj");
-
-        public static TestInfo[] TestAdapterLoadErrorTests {
-            get {
-                return new[] { LoadErrorImportError, LoadErrorNoError };
-            }
+        public static TestInfo[] GetTestAdapterLoadErrorTests(string projectName) {
+            return new[] { GetLoadErrorImportError(projectName), GetLoadErrorNoError(projectName) };
         }
 
         public static string TestAdapterEnvironmentProject = TestData.GetPath(@"TestData\TestAdapterTests\EnvironmentTest.pyproj");
