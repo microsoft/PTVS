@@ -60,7 +60,6 @@ namespace Microsoft.PythonTools.Analysis {
                         WriteModule(outDir, name, info, moduleInfo.Scope.AllVariables.Keys());
                     } catch (Exception ex) {
                         AddError(ex.ToString());
-                        _errorStack.Clear();
                     }
                 }
             }
