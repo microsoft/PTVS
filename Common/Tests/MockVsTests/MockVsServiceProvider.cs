@@ -64,14 +64,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 return res;
             }
 
-            var msg = string.Format(
+            Console.WriteLine(
                 "Unknown Service {0} ({1:B})",
                 Type.GetTypeFromCLSID(serviceType, false)?.FullName ?? "(unknown)",
                 serviceType
             );
-
-            Console.WriteLine(msg);
-            //throw new NotImplementedException(msg);
             return null;
         }
 
