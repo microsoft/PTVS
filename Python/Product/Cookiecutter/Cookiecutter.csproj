@@ -149,6 +149,7 @@
     <Compile Include="Commands\RunCommand.cs" />
     <Compile Include="Commands\CheckForUpdatesCommand.cs" />
     <Compile Include="Commands\UpdateCommand.cs" />
+    <Compile Include="Model\GitClientProvider.cs" />
     <Compile Include="Model\Selectors.cs" />
     <Compile Include="Model\ILocalTemplateSource.cs" />
     <Compile Include="View\LoadingPage.xaml.cs">
