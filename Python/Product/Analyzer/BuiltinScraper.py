@@ -141,7 +141,7 @@ def type_name_to_typeref(name, mod, type_overrides = TYPE_OVERRIDES):
             arg_type = PythonScraper.type_to_typeref(list)
         else:
             # see if we can find it in any module we've imported...
-            for mod_name, mod in sys.modules.items():
+            for mod_name, mod in list(sys.modules.items()):
                 if mod is not None and name in mod.__dict__ and isinstance(mod.__dict__[name], type):
                     arg_type = PythonScraper.typename_to_typeref(mod_name, name)
                     break

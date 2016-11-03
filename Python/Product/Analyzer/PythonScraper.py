@@ -403,7 +403,7 @@ def generate_member(obj, is_hidden=False, from_type=False):
 
         # Callable objects with a docstring that provides us with at least one
         # overload will be treated as functions rather than data.
-        if hasattr(obj, '__call__'):
+        if safe_hasattr(obj, '__call__'):
             try:
                 info = generate_builtin_function(obj, from_type)
                 if info and info['overloads']:
