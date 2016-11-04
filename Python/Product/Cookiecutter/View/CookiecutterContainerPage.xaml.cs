@@ -182,7 +182,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         internal void Home() {
-            ViewModel.Reset();
+            ViewModel.ResetAsync().DoNotWait();
             _updateCommandUI();
         }
 

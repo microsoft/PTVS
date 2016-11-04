@@ -595,12 +595,15 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
-        public void Reset() {
+        public async Task ResetAsync() {
             ContextItems.Clear();
 
             ResetStatus();
 
             _templateLocalFolderPath = null;
+
+            SearchTerm = string.Empty;
+            await SearchAsync();
 
             HomeClicked?.Invoke(this, EventArgs.Empty);
         }
@@ -640,15 +643,14 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 } catch (IOException) {
                 }
 
-                OpenInExplorerFolderPath = OutputFolderPath;
-
-                Reset();
-
-                CreatingStatus = OperationStatus.Succeeded;
-
                 _outputWindow.WriteLine(Strings.RunningTemplateSuccess.FormatUI(selection.DisplayName, OutputFolderPath));
 
                 ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Run, selection);
+
+                await ResetAsync();
+
+                OpenInExplorerFolderPath = OutputFolderPath;
+                CreatingStatus = OperationStatus.Succeeded;
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 CreatingStatus = OperationStatus.Failed;
 
