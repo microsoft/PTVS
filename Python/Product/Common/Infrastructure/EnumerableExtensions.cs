@@ -63,5 +63,32 @@ namespace Microsoft.PythonTools.Infrastructure {
                 yield return new KeyValuePair<TKey, TValue>((TKey)entry.Key, (TValue)entry.Value);
             }
         }
+
+        private class TakeWhileCounter<T> {
+            private ulong _remaining;
+
+            public TakeWhileCounter(ulong count) {
+                _remaining = count;
+            }
+
+            public bool ShouldTake(T value) {
+                if (_remaining == 0) {
+                    return false;
+                }
+                _remaining -= 1;
+                return true;
+            }
+        }
+
+        public static IEnumerable<T> Take<T>(this IEnumerable<T> source, ulong count) {
+            return source.TakeWhile(new TakeWhileCounter<T>(count).ShouldTake);
+        }
+
+        public static IEnumerable<T> Take<T>(this IEnumerable<T> source, long count) {
+            if (count > 0) {
+                return source.TakeWhile(new TakeWhileCounter<T>((ulong)count).ShouldTake);
+            }
+            return Enumerable.Empty<T>();
+        }
     }
 }

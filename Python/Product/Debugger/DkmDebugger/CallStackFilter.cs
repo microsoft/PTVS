@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using Microsoft.PythonTools.Debugger;
 using Microsoft.PythonTools.DkmDebugger.Proxies.Structs;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.CallStack;
 using Microsoft.VisualStudio.Debugger.CustomRuntimes;
@@ -41,38 +42,45 @@ namespace Microsoft.PythonTools.DkmDebugger {
         }
 
         public DkmStackWalkFrame[] FilterNextFrame(DkmStackContext stackContext, DkmStackWalkFrame nativeFrame) {
+            PyFrameObject pythonFrame = null;
             var nativeModuleInstance = nativeFrame.ModuleInstance;
             if (nativeModuleInstance == _pyrtInfo.DLLs.DebuggerHelper) {
-                return DebuggerOptions.ShowNativePythonFrames ? new[] { nativeFrame } : new DkmStackWalkFrame[0];
+                if (_pyrtInfo.LanguageVersion < PythonLanguageVersion.V36 ||
+                    (pythonFrame = PyFrameObject.TryCreate(nativeFrame)) == null) {
+                    return DebuggerOptions.ShowNativePythonFrames ? new[] { nativeFrame } : new DkmStackWalkFrame[0];
+                }
             }
 
             var result = new List<DkmStackWalkFrame>();
-            var stackWalkData = stackContext.GetDataItem<StackWalkContextData>();
-            if (stackWalkData == null) {
-                stackWalkData = new StackWalkContextData();
-                stackContext.SetDataItem(DkmDataCreationDisposition.CreateNew, stackWalkData);
-            }
-            bool? wasLastFrameNative = stackWalkData.IsLastFrameNative;
 
-            if (nativeModuleInstance != _pyrtInfo.DLLs.Python && nativeModuleInstance != _pyrtInfo.DLLs.CTypes) {
-                stackWalkData.IsLastFrameNative = true;
-                if (wasLastFrameNative == false) {
-                    result.Add(DkmStackWalkFrame.Create(nativeFrame.Thread, null, nativeFrame.FrameBase, nativeFrame.FrameSize,
-                        DkmStackWalkFrameFlags.NonuserCode, "[Native to Python Transition]", null, null));
-                } else {
+            if (pythonFrame == null) {
+                var stackWalkData = stackContext.GetDataItem<StackWalkContextData>();
+                if (stackWalkData == null) {
+                    stackWalkData = new StackWalkContextData();
+                    stackContext.SetDataItem(DkmDataCreationDisposition.CreateNew, stackWalkData);
+                }
+                bool? wasLastFrameNative = stackWalkData.IsLastFrameNative;
+
+                if (nativeModuleInstance != _pyrtInfo.DLLs.Python && nativeModuleInstance != _pyrtInfo.DLLs.CTypes) {
                     stackWalkData.IsLastFrameNative = true;
+                    if (wasLastFrameNative == false) {
+                        result.Add(DkmStackWalkFrame.Create(nativeFrame.Thread, null, nativeFrame.FrameBase, nativeFrame.FrameSize,
+                            DkmStackWalkFrameFlags.NonuserCode, "[Native to Python Transition]", null, null));
+                    } else {
+                        stackWalkData.IsLastFrameNative = true;
+                    }
+                    result.Add(nativeFrame);
+                    return result.ToArray();
+                } else {
+                    stackWalkData.IsLastFrameNative = false;
+                    if (wasLastFrameNative == true) {
+                        result.Add(DkmStackWalkFrame.Create(nativeFrame.Thread, null, nativeFrame.FrameBase, nativeFrame.FrameSize,
+                            DkmStackWalkFrameFlags.NonuserCode, "[Python to Native Transition]", null, null));
+                    }
                 }
-                result.Add(nativeFrame);
-                return result.ToArray();
-            } else {
-                stackWalkData.IsLastFrameNative = false;
-                if (wasLastFrameNative == true) {
-                    result.Add(DkmStackWalkFrame.Create(nativeFrame.Thread, null, nativeFrame.FrameBase, nativeFrame.FrameSize,
-                        DkmStackWalkFrameFlags.NonuserCode, "[Python to Native Transition]", null, null));
-                }
-            }
 
-            var pythonFrame = PyFrameObject.TryCreate(nativeFrame);
+                pythonFrame = PyFrameObject.TryCreate(nativeFrame);
+            }
             if (pythonFrame == null) {
                 if (DebuggerOptions.ShowNativePythonFrames) {
                     result.Add(nativeFrame);

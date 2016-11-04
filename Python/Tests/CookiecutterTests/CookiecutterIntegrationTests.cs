@@ -89,7 +89,7 @@ namespace CookiecutterTests {
             var installedPath = TestInstalledTemplateFolderPath;
             var userConfigFilePath = TestUserConfigFilePath;
 
-            _gitClient = new GitClient(GitClient.RecommendedGitFilePath, _redirector);
+            _gitClient = GitClientProvider.Create(_redirector, null);
             _gitHubClient = new GitHubClient();
             _cutterClient = CookiecutterClientProvider.Create(_redirector);
             _telemetry = new CookiecutterTelemetry(new TelemetryTestService());

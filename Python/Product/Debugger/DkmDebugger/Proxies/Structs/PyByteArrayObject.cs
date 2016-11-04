@@ -17,6 +17,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio.Debugger;
@@ -80,7 +81,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             };
 
             if (count > 0) {
-                foreach (var b in GetDataProxy().Take((int)count)) {
+                foreach (var b in GetDataProxy().Take(count)) {
                     yield return new PythonEvaluationResult(b);
                 }
             }

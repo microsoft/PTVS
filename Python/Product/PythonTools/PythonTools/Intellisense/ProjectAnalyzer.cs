@@ -494,7 +494,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
 
                 var monitoredResult = await MonitorTextBufferAsync(buffers[0]);
-                if (monitoredResult.AnalysisEntry != null) {
+                if (monitoredResult?.AnalysisEntry != null) {
                     for (int i = 1; i < buffers.Length; i++) {
                         monitoredResult.AddBuffer(buffers[i]);
                     }

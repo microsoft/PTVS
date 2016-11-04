@@ -50,14 +50,12 @@ namespace Microsoft.CookiecutterTools.View {
             InitializeComponent();
         }
 
-        public CookiecutterContainerPage(Redirector outputWindow, ICookiecutterTelemetry telemetry, Uri feedUrl, Action<string> openFolder, Action updateCommandUI) {
+        public CookiecutterContainerPage(Redirector outputWindow, ICookiecutterTelemetry telemetry, IGitClient gitClient, Uri feedUrl, Action<string> openFolder, Action updateCommandUI) {
             _updateCommandUI = updateCommandUI;
 
             _checkForUpdatesTimer = new DispatcherTimer();
             _checkForUpdatesTimer.Tick += new EventHandler(CheckForUpdateTimer_Tick);
 
-            string gitExeFilePath = GitClient.RecommendedGitFilePath;
-            var gitClient = new GitClient(gitExeFilePath, outputWindow);
             var gitHubClient = new GitHubClient();
             ViewModel = new CookiecutterViewModel(
                 CookiecutterClientProvider.Create(outputWindow),

@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Evaluation;
@@ -81,7 +82,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             }
 
             var count = mask.Read() + 1;
-            var entries = table.Read().Take((int)count);
+            var entries = table.Read().Take(count);
             var items = from entry in entries
                         let key = entry.key.TryRead()
                         where key != null && key != _dummy

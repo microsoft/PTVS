@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Evaluation;
 
@@ -38,7 +39,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         }
 
         public IEnumerable<PointerProxy<PyObject>> ReadElements() {
-            return ob_item.Take((int)ob_size.Read());
+            return ob_item.Take(ob_size.Read());
         }
 
         public override void Repr(ReprBuilder builder) {

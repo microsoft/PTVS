@@ -51,11 +51,24 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     var ip = reader.ReadUInt64();
                     var rva = reader.ReadUInt32();
 
-                    NativeAddress = DkmNativeInstructionAddress.Create(
-                        process.GetNativeRuntimeInstance(),
-                        process.GetPythonRuntimeInfo().DLLs.Python,
-                        rva,
-                        new DkmNativeInstructionAddress.CPUInstruction(ip));
+                    var dlls = process.GetPythonRuntimeInfo().DLLs;
+                    DkmNativeModuleInstance dll = null;
+                    switch (reader.ReadInt32()) {
+                        case 0:
+                            dll = dlls.Python;
+                            break;
+                        case 1:
+                            dll = dlls.DebuggerHelper;
+                            break;
+                    }
+
+                    if (dll != null) {
+                        NativeAddress = DkmNativeInstructionAddress.Create(
+                            process.GetNativeRuntimeInstance(),
+                            dll,
+                            rva,
+                            new DkmNativeInstructionAddress.CPUInstruction(ip));
+                    }
                 } else {
                     NativeAddress = null;
                 }
@@ -77,6 +90,12 @@ namespace Microsoft.PythonTools.DkmDebugger {
                     writer.Write(true);
                     writer.Write(NativeAddress.CPUInstructionPart.InstructionPointer);
                     writer.Write(NativeAddress.RVA);
+                    var dlls = NativeAddress.Process.GetPythonRuntimeInfo().DLLs;
+                    if (NativeAddress.ModuleInstance == dlls.Python) {
+                        writer.Write(0);
+                    } else if (NativeAddress.ModuleInstance == dlls.DebuggerHelper) {
+                        writer.Write(1);
+                    }
                 } else {
                     writer.Write(false);
                 }

@@ -269,22 +269,18 @@ namespace PythonToolsTests {
                     "A"
                 );
 
-                var env = proj.Descendant("Interpreter");
-                Assert.AreEqual("env\\", env.Attribute("Include").Value);
-                Assert.AreEqual("lib\\", env.Descendant("LibraryPath").Value, true);
+                var env = proj.Descendants(proj.GetName("Interpreter")).SingleOrDefault();
                 if (brokenBaseInterpreter) {
-                    Assert.AreEqual("env", env.Descendant("Description").Value);
-                    Assert.AreEqual("", env.Descendant("InterpreterPath").Value);
-                    Assert.AreEqual("", env.Descendant("WindowsInterpreterPath").Value);
-                    Assert.AreEqual("", env.Descendant("BaseInterpreter").Value);
-                    Assert.AreEqual("", env.Descendant("PathEnvironmentVariable").Value);
+                    Assert.IsNull(env);
                 } else {
-                    Assert.AreEqual("env", env.Descendant("Description").Value);
+                    Assert.AreEqual("env\\", env.Attribute("Include").Value);
+                    Assert.AreNotEqual("", env.Descendant("Id").Value);
+                    Assert.AreEqual(string.Format("env ({0})", python.Configuration.Description), env.Descendant("Description").Value);
                     Assert.AreEqual("scripts\\python.exe", env.Descendant("InterpreterPath").Value, true);
-                    // The mock configuration uses python.exe for both paths.
-                    Assert.AreEqual("scripts\\python.exe", env.Descendant("WindowsInterpreterPath").Value, true);
-                    Assert.AreEqual(python.Id, env.Descendant("BaseInterpreter").Value, true);
+                    Assert.AreEqual("scripts\\pythonw.exe", env.Descendant("WindowsInterpreterPath").Value, true);
                     Assert.AreEqual("PYTHONPATH", env.Descendant("PathEnvironmentVariable").Value, true);
+                    Assert.AreEqual(python.Configuration.Version.ToString(), env.Descendant("Version").Value, true);
+                    Assert.AreEqual(python.Configuration.Architecture.ToString("X"), env.Descendant("Architecture").Value, true);
                 }
             }
         }
@@ -360,21 +356,21 @@ namespace PythonToolsTests {
         public void ImportWizardCustomizations() {
             ImportWizardCustomizationsWorker(DefaultProjectCustomization.Instance, proj => {
                 Assert.AreEqual("Program.py", proj.Descendant("StartupFile").Value);
-                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value == "$(PtvsTargetsFile)"));
+                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value == @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets"));
             });
             ImportWizardCustomizationsWorker(BottleProjectCustomization.Instance, proj => {
                 Assert.AreNotEqual(-1, proj.Descendant("ProjectTypeGuids").Value.IndexOf("e614c764-6d9e-4607-9337-b7073809a0bd", StringComparison.OrdinalIgnoreCase));
-                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value.Contains("Web.targets")));
+                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value == @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets"));
                 Assert.AreEqual("Web launcher", proj.Descendant("LaunchProvider").Value);
             });
             ImportWizardCustomizationsWorker(DjangoProjectCustomization.Instance, proj => {
                 Assert.AreNotEqual(-1, proj.Descendant("ProjectTypeGuids").Value.IndexOf("5F0BE9CA-D677-4A4D-8806-6076C0FAAD37", StringComparison.OrdinalIgnoreCase));
-                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value.Contains("Django.targets")));
+                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value == @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Django.targets"));
                 Assert.AreEqual("Django launcher", proj.Descendant("LaunchProvider").Value);
             });
             ImportWizardCustomizationsWorker(FlaskProjectCustomization.Instance, proj => {
                 Assert.AreNotEqual(-1, proj.Descendant("ProjectTypeGuids").Value.IndexOf("789894c7-04a9-4a11-a6b5-3f4435165112", StringComparison.OrdinalIgnoreCase));
-                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value.Contains("Web.targets")));
+                Assert.IsTrue(proj.Descendants(proj.GetName("Import")).Any(d => d.Attribute("Project").Value == @"$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets"));
                 Assert.AreEqual("Web launcher", proj.Descendant("LaunchProvider").Value);
             });
         }
