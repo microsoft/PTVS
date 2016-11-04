@@ -595,22 +595,16 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
-        public void Reset() {
-            ContextItems.Clear();
-
-            ResetStatus();
-
-            _templateLocalFolderPath = null;
-
-            HomeClicked?.Invoke(this, EventArgs.Empty);
-        }
-
         private void ResetStatus() {
             CloningStatus = OperationStatus.NotStarted;
             LoadingStatus = OperationStatus.NotStarted;
             CreatingStatus = OperationStatus.NotStarted;
             CheckingUpdateStatus = OperationStatus.NotStarted;
             UpdatingStatus = OperationStatus.NotStarted;
+        }
+
+        public void Home() {
+            HomeClicked?.Invoke(this, EventArgs.Empty);
         }
 
         public async Task CreateFilesAsync() {
@@ -640,15 +634,17 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 } catch (IOException) {
                 }
 
-                OpenInExplorerFolderPath = OutputFolderPath;
-
-                Reset();
-
-                CreatingStatus = OperationStatus.Succeeded;
-
                 _outputWindow.WriteLine(Strings.RunningTemplateSuccess.FormatUI(selection.DisplayName, OutputFolderPath));
 
                 ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.Run, selection);
+
+                ContextItems.Clear();
+                ResetStatus();
+                _templateLocalFolderPath = null;
+                OpenInExplorerFolderPath = OutputFolderPath;
+                CreatingStatus = OperationStatus.Succeeded;
+
+                Home();
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 CreatingStatus = OperationStatus.Failed;
 
