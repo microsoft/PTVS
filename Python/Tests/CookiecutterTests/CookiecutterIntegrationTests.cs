@@ -156,23 +156,6 @@ namespace CookiecutterTests {
         }
 
         [TestMethod]
-        public async Task ResetClearsSearch() {
-            _vm.SearchTerm = OnlineTemplateUrl;
-            await _vm.SearchAsync();
-
-            Assert.AreEqual(0, _vm.Installed.Templates.Count);
-            Assert.AreEqual(0, _vm.GitHub.Templates.Count);
-            Assert.AreEqual(0, _vm.Recommended.Templates.Count);
-            Assert.AreEqual(1, _vm.Custom.Templates.Count);
-
-            await _vm.ResetAsync();
-
-            Assert.AreEqual("", _vm.SearchTerm);
-            Assert.AreEqual(1, _vm.Installed.Templates.Count);
-            Assert.AreEqual(6, _vm.Recommended.Templates.Count);
-        }
-
-        [TestMethod]
         public async Task SearchNonExistingLocalTemplate() {
             _vm.SearchTerm = NonExistingLocalTemplatePath;
             await _vm.SearchAsync();

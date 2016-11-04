@@ -57,7 +57,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         private void Home_Executed(object sender, ExecutedRoutedEventArgs e) {
-            ViewModel.ResetAsync().DoNotWait();
+            ViewModel.Home();
         }
 
         private void CreateFiles_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
