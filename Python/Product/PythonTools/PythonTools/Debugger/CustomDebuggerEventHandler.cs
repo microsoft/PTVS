@@ -40,9 +40,10 @@ namespace Microsoft.PythonTools.Debugger {
                 case VsPackageMessage.WarnAboutPythonSymbols:
                     WarnAboutPythonSymbols((string)message.Parameter1);
                     return VSConstants.S_OK;
-                case VsPackageMessage.WarnAboutPGO:
-                    WarnAboutPGO((string)message.Parameter1);
-                    return VSConstants.S_OK;
+                // TODO: Evaluate if this is still necessary
+                //case VsPackageMessage.WarnAboutPGO:
+                //    WarnAboutPGO((string)message.Parameter1);
+                //    return VSConstants.S_OK;
                 case VsPackageMessage.SetDebugOptions:
                     SetDebugOptions((IDebugEngine2)message.Parameter1);
                     return VSConstants.S_OK;
@@ -80,13 +81,14 @@ namespace Microsoft.PythonTools.Debugger {
             }
         }
 
-        private void WarnAboutPGO(string moduleName) {
-            const string content =
-                "Python/native mixed-mode debugging does not support Python interpreters that are built with PGO (profile-guided optimization) enabled. " +
-                "If you are using a stock Python interpreter, you should upgrade to a more recent version of it. If you're using a custom built " +
-                "interpreter, please disable PGO.";
-            MessageBox.Show(content, "PGO Is Not Supported", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
+        // TODO: Evaluate if this is still necessary
+        //private void WarnAboutPGO(string moduleName) {
+        //    const string content =
+        //        "Python/native mixed-mode debugging does not support Python interpreters that are built with PGO (profile-guided optimization) enabled. " +
+        //        "If you are using a stock Python interpreter, you should upgrade to a more recent version of it. If you're using a custom built " +
+        //        "interpreter, please disable PGO.";
+        //    MessageBox.Show(content, "PGO Is Not Supported", MessageBoxButton.OK, MessageBoxImage.Error);
+        //}
 
         private void SetDebugOptions(IDebugEngine2 engine) {
             var pyService = _serviceProvider.GetPythonToolsService();
