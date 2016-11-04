@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Debugger.Evaluation;
@@ -91,7 +92,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
                 Category = DkmEvaluationResultCategory.Method
             };
 
-            foreach (var b in ob_sval.Take((int)count)) {
+            foreach (var b in ob_sval.Take(count)) {
                 if (reprOptions.LanguageVersion <= PythonLanguageVersion.V27) {
                     // In 2.x, bytes is a string type, so display characters in object expansion.
                     byte[] bytes = new[] { b.Read() };

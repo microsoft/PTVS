@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
@@ -50,7 +51,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             }
 
             var keys = this.ma_keys.Read();
-            var entries = keys.dk_entries.Take((int)keys.dk_size.Read());
+            var entries = keys.dk_entries.Take(keys.dk_size.Read());
 
             var ma_values = this.ma_values;
             if (ma_values.IsNull) {
