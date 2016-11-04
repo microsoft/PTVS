@@ -454,7 +454,6 @@ namespace Microsoft.PythonTools.Project.ImportWizard {
                 new Dictionary<string, string> {
                     { MSBuildConstants.IdKey, Path.GetFileName(sourcePath) },
                     { MSBuildConstants.DescriptionKey, config.Description },
-                    { MSBuildConstants.BaseInterpreterKey, config.Id },
                     { MSBuildConstants.InterpreterPathKey, interpreterPath },
                     { MSBuildConstants.WindowsPathKey, windowInterpreterPath },
                     { MSBuildConstants.VersionKey, config.Version.ToString() },
