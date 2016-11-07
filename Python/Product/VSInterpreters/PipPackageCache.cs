@@ -57,9 +57,11 @@ namespace Microsoft.PythonTools.Interpreter {
 
         // These constants are substituted where necessary, but are not stored
         // in instance variables so we can differentiate between set and unset.
-        private static readonly Uri DefaultIndex = new Uri("https://pypi.python.org/pypi/");
+        private const string DefaultIndexFwLink = "https://go.microsoft.com/fwlink/?linkid=834538";
+        private static Task<Uri> _DefaultIndexTask = Task.Run(() => Resolve(DefaultIndexFwLink));
+        private static Uri DefaultIndex => _DefaultIndexTask.Result;
         private const string DefaultIndexName = "PyPI";
-
+        
         protected PipPackageCache(
             Uri index,
             string indexName,
@@ -184,7 +186,8 @@ namespace Microsoft.PythonTools.Interpreter {
             using (var client = new WebClient()) {
                 Stream data;
                 try {
-                    data = await client.OpenReadTaskAsync(new Uri(_index ?? DefaultIndex, entry.Name + "/json"));
+                    data = await client.OpenReadTaskAsync(new Uri(Index, entry.Name + "/json"))
+                        .ConfigureAwait(false);
                 } catch (WebException ex) {
                     if ((ex.Response as HttpWebResponse)?.StatusCode == HttpStatusCode.NotFound) {
                         lock (NotOnPyPI) {
@@ -307,9 +310,7 @@ namespace Microsoft.PythonTools.Interpreter {
             using (var client = new WebClient()) {
                 // ../simple is a list of <a href="package">package</a>
                 try {
-                    htmlList = await client.DownloadStringTaskAsync(
-                        new Uri(_index ?? DefaultIndex, "../simple")
-                    ).ConfigureAwait(false);
+                    htmlList = await client.DownloadStringTaskAsync(new Uri(Index, "../simple")).ConfigureAwait(false);
                 } catch (WebException) {
                     // No net access, so can't refresh
                     return;
@@ -446,6 +447,21 @@ namespace Microsoft.PythonTools.Interpreter {
                     AssemblyVersionInfo.Version
                 );
             }
+        }
+
+        private static Uri Resolve(string uri) {
+            var req = WebRequest.CreateHttp(uri);
+            req.Method = "HEAD";
+            req.AllowAutoRedirect = false;
+            try {
+                using (var resp = req.GetResponse()) {
+                    return new Uri(resp.Headers.Get("Location") ?? uri);
+                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                Debug.Fail(ex.ToString());
+                // Nowhere else to report this error, so just swallow it
+            }
+            return new Uri(uri);
         }
 
         private static string GetCachePath(Uri index, string indexName) {
