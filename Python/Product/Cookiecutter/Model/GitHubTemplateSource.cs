@@ -55,6 +55,8 @@ namespace Microsoft.CookiecutterTools.Model {
                         template.RemoteUrl = repo.HtmlUrl;
                         template.Name = repo.FullName;
                         template.Description = repo.Description;
+                        template.AvatarUrl = repo.Owner.AvatarUrl;
+                        template.OwnerUrl = repo.Owner.HtmlUrl;
                         templates.Add(template);
                     }
                 }

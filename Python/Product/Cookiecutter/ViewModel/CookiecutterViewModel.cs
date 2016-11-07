@@ -25,6 +25,8 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.Telemetry;
@@ -51,6 +53,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private string _outputFolderPath;
         private string _openInExplorerFolderPath;
         private string _selectedDescription;
+        private ImageSource _selectedImage;
         private string _selectedLocation;
 
         private OperationStatus _installingStatus;
@@ -165,6 +168,17 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     _selectedDescription = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedDescription)));
                 }
+            }
+        }
+
+        public ImageSource SelectedImage {
+            get {
+                return _selectedImage;
+            }
+
+            set {
+                _selectedImage = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedImage)));
             }
         }
 
@@ -315,6 +329,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public bool CanNavigateToGitHub {
             get {
                 return !string.IsNullOrEmpty(SelectedTemplate?.GitHubHomeUrl);
+            }
+        }
+
+        public bool CanNavigateToOwner {
+            get {
+                return !string.IsNullOrEmpty(SelectedTemplate?.OwnerUrl);
             }
         }
 
@@ -676,6 +696,13 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
+        public void NavigateToOwner() {
+            var url = SelectedTemplate?.OwnerUrl;
+            if (url != null) {
+                Process.Start(url)?.Dispose();
+            }
+        }
+
         public void NavigateToHelp() {
             Process.Start(UrlConstants.HelpUrl)?.Dispose();
         }
@@ -755,6 +782,8 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     var vm = new TemplateViewModel();
                     vm.DisplayName = t.Name;
                     vm.Description = t.Description;
+                    vm.AvatarUrl = t.AvatarUrl;
+                    vm.OwnerUrl = t.OwnerUrl;
                     vm.RemoteUrl = t.RemoteUrl;
                     vm.ClonedPath = t.LocalFolderPath;
                     vm.IsUpdateAvailable = t.UpdateAvailable == true;
@@ -816,25 +845,36 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private async Task RefreshSelectedDescriptionAsync(TemplateViewModel selection) {
             if (selection == null) {
                 SelectedDescription = string.Empty;
+                SelectedImage = null;
                 return;
             }
 
-            if (string.IsNullOrEmpty(selection.Description)) {
-                await InitializeDescription(selection);
+            if (!selection.HasDetails) {
+                await InitializeDetails(selection);
             }
 
             SelectedDescription = selection.Description ?? string.Empty;
+            try {
+                // Create an ImageSource because binding to that feels significantly faster than binding to the image url
+                SelectedImage = !string.IsNullOrEmpty(selection.AvatarUrl) ? new BitmapImage(new Uri(selection.AvatarUrl)) : null;
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                SelectedImage = null;
+            }
         }
 
-        private async Task InitializeDescription(TemplateViewModel selection) {
+        private async Task InitializeDetails(TemplateViewModel selection) {
             if (!string.IsNullOrEmpty(selection.RemoteUrl)) {
                 try {
-                    var repo = await _githubClient.GetDescription(selection.RepositoryOwner, selection.RepositoryName);
+                    var repo = await _githubClient.GetRepositoryDetails(selection.RepositoryOwner, selection.RepositoryName);
                     selection.Description = repo.Description;
+                    selection.AvatarUrl = repo.Owner.AvatarUrl;
+                    selection.OwnerUrl = repo.Owner.HtmlUrl;
                 } catch (WebException) {
                 }
             } else {
                 selection.Description = string.Empty;
+                selection.AvatarUrl = string.Empty;
+                selection.OwnerUrl = string.Empty;
             }
         }
 
