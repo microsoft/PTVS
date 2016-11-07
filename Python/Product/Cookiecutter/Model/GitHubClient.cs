@@ -47,7 +47,7 @@ namespace Microsoft.CookiecutterTools.Model {
             return await SearchRepositoriesAsync(queryUrl);
         }
 
-        public async Task<GitHubRepoSearchItem> GetDescription(string owner, string name) {
+        public async Task<GitHubRepoSearchItem> GetRepositoryDetails(string owner, string name) {
             if (owner == null) {
                 throw new ArgumentNullException(nameof(owner));
             }

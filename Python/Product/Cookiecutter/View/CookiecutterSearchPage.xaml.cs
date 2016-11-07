@@ -149,5 +149,11 @@ namespace Microsoft.CookiecutterTools.View {
         internal void CheckForUpdates() {
             ViewModel.CheckForUpdatesAsync().DoNotWait();
         }
+
+        private void Image_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
+            if (ViewModel.CanNavigateToOwner) {
+                ViewModel.NavigateToOwner();
+            }
+        }
     }
 }

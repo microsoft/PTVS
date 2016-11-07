@@ -222,6 +222,9 @@ namespace CookiecutterTests {
             var template = _vm.Custom.Templates[0] as TemplateViewModel;
             await _vm.SelectTemplate(template);
 
+            Assert.IsNull(_vm.SelectedImage);
+            Assert.IsTrue(string.IsNullOrEmpty(_vm.SelectedDescription));
+
             await _vm.LoadTemplateAsync();
 
             // Local template doesn't need to be cloned
@@ -266,6 +269,9 @@ namespace CookiecutterTests {
 
             var template = _vm.Custom.Templates[0] as TemplateViewModel;
             await _vm.SelectTemplate(template);
+
+            Assert.IsNotNull(_vm.SelectedImage);
+            Assert.IsFalse(string.IsNullOrEmpty(_vm.SelectedDescription));
 
             await _vm.LoadTemplateAsync();
 

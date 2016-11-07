@@ -21,7 +21,7 @@ namespace Microsoft.CookiecutterTools.Model {
     interface IGitHubClient {
         Task<GitHubRepoSearchResult> SearchRepositoriesAsync(string requestUrl);
         Task<GitHubRepoSearchResult> StartSearchRepositoriesAsync(string[] terms);
-        Task<GitHubRepoSearchItem> GetDescription(string owner, string name);
+        Task<GitHubRepoSearchItem> GetRepositoryDetails(string owner, string name);
         Task<bool> FileExistsAsync(GitHubRepoSearchItem repo, string filePath);
     }
 
@@ -59,6 +59,20 @@ namespace Microsoft.CookiecutterTools.Model {
 
         [JsonProperty("url")]
         public string Url;
+
+        [JsonProperty("owner")]
+        public GitHubRepoOwner Owner;
+    }
+
+    struct GitHubRepoOwner {
+        [JsonProperty("id")]
+        public int Id;
+
+        [JsonProperty("html_url")]
+        public string HtmlUrl;
+
+        [JsonProperty("avatar_url")]
+        public string AvatarUrl;
     }
 
     struct GitHubPaginationLinks {
