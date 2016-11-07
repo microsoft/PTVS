@@ -716,66 +716,66 @@ namespace Microsoft.PythonTools.Intellisense {
             // TODO: Take into account params arrays
             // TODO: need to parse and see if we have keyword arguments entered into the current signature yet
             PythonSignature sig = sigHelpSession.SelectedSignature as PythonSignature;
-            if (sig != null) {
-                var prevBuffer = sig.ApplicableToSpan.TextBuffer;
-                var textBuffer = _textView.TextBuffer;
+            if (sig == null) {
+                return;
+            }
 
-                var targetPt = _textView.BufferGraph.MapDownToFirstMatch(
-                    new SnapshotPoint(_textView.TextBuffer.CurrentSnapshot, position),
-                    PointTrackingMode.Positive,
-                    EditorExtensions.IsPythonContent,
-                    PositionAffinity.Successor
-                );
+            var prevBuffer = sig.ApplicableToSpan.TextBuffer;
+            var textBuffer = _textView.TextBuffer;
 
-                if (targetPt == null) {
-                    return;
-                }
-                var span = targetPt.Value.Snapshot.CreateTrackingSpan(targetPt.Value.Position, 0, SpanTrackingMode.EdgeInclusive);
+            var targetPt = _textView.BufferGraph.MapDownToFirstMatch(
+                new SnapshotPoint(_textView.TextBuffer.CurrentSnapshot, position),
+                PointTrackingMode.Positive,
+                EditorExtensions.IsPythonContent,
+                PositionAffinity.Successor
+            );
+            if (targetPt == null) {
+                return;
+            }
 
+            var span = targetPt.Value.Snapshot.CreateTrackingSpan(targetPt.Value.Position, 0, SpanTrackingMode.EdgeInclusive);
+            var sigs = _provider.PythonService.GetSignatures(_textView, targetPt.Value.Snapshot, span);
 
-                var sigs = _provider.PythonService.GetSignatures(_textView, targetPt.Value.Snapshot, span);
-                bool retrigger = false;
-                if (sigs.Signatures.Count == sigHelpSession.Signatures.Count) {
-                    for (int i = 0; i < sigs.Signatures.Count && !retrigger; i++) {
-                        var leftSig = sigs.Signatures[i];
-                        var rightSig = sigHelpSession.Signatures[i];
+            bool retrigger = false;
+            if (sigs.Signatures.Count == sigHelpSession.Signatures.Count) {
+                for (int i = 0; i < sigs.Signatures.Count && !retrigger; i++) {
+                    var leftSig = sigs.Signatures[i];
+                    var rightSig = sigHelpSession.Signatures[i];
 
-                        if (leftSig.Parameters.Count == rightSig.Parameters.Count) {
-                            for (int j = 0; j < leftSig.Parameters.Count; j++) {
-                                var leftParam = leftSig.Parameters[j];
-                                var rightParam = rightSig.Parameters[j];
+                    if (leftSig.Parameters.Count == rightSig.Parameters.Count) {
+                        for (int j = 0; j < leftSig.Parameters.Count; j++) {
+                            var leftParam = leftSig.Parameters[j];
+                            var rightParam = rightSig.Parameters[j];
 
-                                if (leftParam.Name != rightParam.Name || leftParam.Documentation != rightParam.Documentation) {
-                                    retrigger = true;
-                                    break;
-                                }
+                            if (leftParam == null || rightParam == null) {
+                                continue;
+                            }
+
+                            if (leftParam.Name != rightParam.Name || leftParam.Documentation != rightParam.Documentation) {
+                                retrigger = true;
+                                break;
                             }
                         }
-
-                        if (leftSig.Content != rightSig.Content || leftSig.Documentation != rightSig.Documentation) {
-                            retrigger = true;
-                        }
                     }
-                } else {
-                    retrigger = true;
-                }
 
-                if (retrigger) {
-                    sigHelpSession.Dismiss();
-                    TriggerSignatureHelp();
-                } else {
-                    CommaFindBestSignature(sigs.ParameterIndex, sigs.LastKeywordArgument);
+                    if (leftSig.Content != rightSig.Content || leftSig.Documentation != rightSig.Documentation) {
+                        retrigger = true;
+                    }
                 }
+            } else {
+                retrigger = true;
+            }
+
+            if (retrigger) {
+                sigHelpSession.Dismiss();
+                TriggerSignatureHelp();
+            } else {
+                CommaFindBestSignature(sigHelpSession, sigs.ParameterIndex, sigs.LastKeywordArgument);
             }
         }
 
-        private void CommaFindBestSignature(int curParam, string lastKeywordArg) {
+        private static void CommaFindBestSignature(ISignatureHelpSession sigHelpSession, int curParam, string lastKeywordArg) {
             // see if we have a signature which accomodates this...
-
-            var sigHelpSession = Volatile.Read(ref _sigHelpSession);
-            if (sigHelpSession == null) {
-                return;
-            }
 
             // TODO: We should also get the types of the arguments and use that to
             // pick the best signature when the signature includes types.
