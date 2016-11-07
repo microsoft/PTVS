@@ -56,8 +56,10 @@ namespace Microsoft.PythonTools.Intellisense {
         internal IOleCommandTarget _oldTarget;
         private IEditorOperations _editOps;
         private readonly HashSet<ITextBuffer> _subjectBuffers = new HashSet<ITextBuffer>();
-        private static string[] _allStandardSnippetTypes = { ExpansionClient.Expansion, ExpansionClient.SurroundsWith };
-        private static string[] _surroundsWithSnippetTypes = { ExpansionClient.SurroundsWith, ExpansionClient.SurroundsWithStatement };
+        private static readonly string[] _allStandardSnippetTypes = { ExpansionClient.Expansion, ExpansionClient.SurroundsWith };
+        private static readonly string[] _surroundsWithSnippetTypes = { ExpansionClient.SurroundsWith, ExpansionClient.SurroundsWithStatement };
+
+        public static readonly object SuppressErrorLists = new object();
 
         /// <summary>
         /// Attaches events for invoking Statement completion 
@@ -150,8 +152,8 @@ namespace Microsoft.PythonTools.Intellisense {
         public void ConnectSubjectBuffer(ITextBuffer subjectBuffer) {
             _subjectBuffers.Add(subjectBuffer);
 
-            bool isTemporaryFile = false;
             VsProjectAnalyzer analyzer;
+            bool isTemporaryFile = false;
             if (!_textView.TryGetAnalyzer(subjectBuffer, _serviceProvider, out analyzer)) {
                 // there's no analyzer for this file, but we can analyze it against either
                 // the default analyzer or some other analyzer (e.g. if it's a diff view, we want
@@ -162,7 +164,9 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (analyzer != null) {
-                analyzer.MonitorTextBufferAsync(subjectBuffer, isTemporaryFile).ContinueWith(task => {
+                bool suppressErrorList = _textView.Properties.ContainsProperty(SuppressErrorLists);
+
+                analyzer.MonitorTextBufferAsync(subjectBuffer, isTemporaryFile, suppressErrorList).ContinueWith(task => {
                     var newParser = task.Result;
 
                     if (newParser != null) {

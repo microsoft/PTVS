@@ -39,12 +39,14 @@ namespace Microsoft.PythonTools.Intellisense {
         /// </summary>
         public event EventHandler AnalysisComplete;
         public readonly bool IsTemporaryFile;
+        public readonly bool SuppressErrorList;
 
-        public AnalysisEntry(VsProjectAnalyzer analyzer, string path, int fileId, bool isTemporaryFile = false) {
+        public AnalysisEntry(VsProjectAnalyzer analyzer, string path, int fileId, bool isTemporaryFile = false, bool suppressErrorList = false) {
             _analyzer = analyzer;
             _path = path;
             _fileId = fileId;
             IsTemporaryFile = isTemporaryFile;
+            SuppressErrorList = suppressErrorList;
         }
 
         internal void OnAnalysisComplete() {

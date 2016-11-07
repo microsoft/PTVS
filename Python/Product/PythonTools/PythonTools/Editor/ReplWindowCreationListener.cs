@@ -30,12 +30,12 @@ using IOleCommandTarget = Microsoft.VisualStudio.OLE.Interop.IOleCommandTarget;
 namespace Microsoft.PythonTools.Editor {
     [Export(typeof(IVsInteractiveWindowOleCommandTargetProvider))]
     [ContentType(PythonCoreConstants.ContentType)]
-    public class PythonOleCommandTargetProvider : IVsInteractiveWindowOleCommandTargetProvider {
+    public class ReplWindowCreationListener : IVsInteractiveWindowOleCommandTargetProvider {
         private readonly IServiceProvider _serviceProvider;
         private readonly IComponentModel _componentModel;
 
         [ImportingConstructor]
-        public PythonOleCommandTargetProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
+        public ReplWindowCreationListener([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
             _componentModel = _serviceProvider.GetComponentModel();
         }
@@ -56,6 +56,7 @@ namespace Microsoft.PythonTools.Editor {
                 return editFilter;
             }
 
+            textView.Properties[IntellisenseController.SuppressErrorLists] = IntellisenseController.SuppressErrorLists;
             return ReplEditFilter.GetOrCreate(_serviceProvider, _componentModel, textView, editFilter);
         }
     }

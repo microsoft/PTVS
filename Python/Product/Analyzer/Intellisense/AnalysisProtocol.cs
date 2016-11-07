@@ -289,6 +289,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public string path;
             public string addingFromDir;
+            public bool isTemporaryFile, suppressErrorLists;
 
             public override string command => Command;
         }
@@ -584,6 +585,8 @@ namespace Microsoft.PythonTools.Intellisense {
             public string filename;
 
             public int fileId;
+
+            public bool isTemporaryFile, suppressErrorList;
 
             public override string name => Name;
         }
