@@ -324,39 +324,52 @@
 
         <!-- Description -->
         <Grid Grid.Row="4" Height="100">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*"/>
-                <RowDefinition Height="Auto"/>
-            </Grid.RowDefinitions>
-            <ScrollViewer Grid.Row="0"
-                          Margin="4"
-                          VerticalScrollBarVisibility="Hidden"
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Image Grid.Column="0"
+                   Source="{Binding SelectedImage}"
+                   Width="96"
+                   Height="96"
+                   Stretch="Uniform"
+                   Cursor="Hand"
+                   MouseLeftButtonDown="Image_MouseLeftButtonDown"/>
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <ScrollViewer Grid.Row="0"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
                           Visibility="{Binding Path=SelectedTemplate, Converter={StaticResource NullToNotVisible}}">
-                <StackPanel Orientation="Vertical">
-                    <TextBlock Margin="8"
-                               Visibility="{Binding SelectedDescription, Converter={StaticResource EmptyStringToNotVisibleOrCollapsed}}"
-                               TextWrapping="Wrap"
-                               Text="{Binding Path=SelectedDescription}"/>
-                    <TextBlock Margin="8"
-                               Visibility="{Binding SelectedDescription, Converter={StaticResource EmptyStringToVisibleOrCollapsed}}"
-                               TextWrapping="Wrap"
-                               Text="No description available."/>
-                </StackPanel>
-            </ScrollViewer>
-            <StackPanel Grid.Row="1" Orientation="Horizontal" Visibility="{Binding Path=SelectedTemplate, Converter={StaticResource NullToNotVisible}}">
-                <Button Margin="8"
+                    <Grid>
+                        <TextBlock Margin="8"
+                            Visibility="{Binding SelectedDescription, Converter={StaticResource EmptyStringToNotVisibleOrCollapsed}}"
+                            TextWrapping="Wrap"
+                            Text="{Binding Path=SelectedDescription}"/>
+                        <TextBlock Margin="8"
+                            Visibility="{Binding SelectedDescription, Converter={StaticResource EmptyStringToVisibleOrCollapsed}}"
+                            TextWrapping="Wrap"
+                            Text="No description available."/>
+                    </Grid>
+                </ScrollViewer>
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Visibility="{Binding Path=SelectedTemplate, Converter={StaticResource NullToNotVisible}}">
+                    <Button Margin="8"
                     Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
                     CommandParameter="{Binding SelectedTemplate.GitHubHomeUrl,Mode=OneWay}"
                     Style="{StaticResource NavigationButton}">GitHub</Button>
-                <Button Margin="8"
+                    <Button Margin="8"
                     Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
                     CommandParameter="{Binding SelectedTemplate.GitHubIssuesUrl,Mode=OneWay}"
                     Style="{StaticResource NavigationButton}">Issues</Button>
-                <Button Margin="8"
+                    <Button Margin="8"
                     Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
                     CommandParameter="{Binding SelectedTemplate.GitHubWikiUrl,Mode=OneWay}"
                     Style="{StaticResource NavigationButton}">Wiki</Button>
-            </StackPanel>
+                </StackPanel>
+            </Grid>
         </Grid>
     </Grid>
 </Page>

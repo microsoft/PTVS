@@ -31,7 +31,7 @@ namespace CookiecutterTests {
             throw new NotImplementedException();
         }
 
-        public Task<GitHubRepoSearchItem> GetDescription(string owner, string name) {
+        public Task<GitHubRepoSearchItem> GetRepositoryDetails(string owner, string name) {
             string description;
             if (Descriptions.TryGetValue(Tuple.Create(owner, name), out description)) {
                 var item = new GitHubRepoSearchItem();
