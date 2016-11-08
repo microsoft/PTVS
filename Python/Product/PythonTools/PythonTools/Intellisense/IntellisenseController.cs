@@ -721,7 +721,6 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             var prevBuffer = sig.ApplicableToSpan.TextBuffer;
-            var textBuffer = _textView.TextBuffer;
 
             var targetPt = _textView.BufferGraph.MapDownToFirstMatch(
                 new SnapshotPoint(_textView.TextBuffer.CurrentSnapshot, position),
