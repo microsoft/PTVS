@@ -167,6 +167,9 @@
     <Compile Include="DkmDebugger\Proxies\DataProxy.cs" />
     <Compile Include="DkmDebugger\ExpressionEvaluator.cs" />
     <Compile Include="DkmDebugger\LocalStackWalkingComponent.cs" />
+    <Compile Include="DkmDebugger\Proxies\Structs\PyDictObject27.cs" />
+    <Compile Include="DkmDebugger\Proxies\Structs\PyDictObject36.cs" />
+    <Compile Include="DkmDebugger\Proxies\Structs\PyDictObject33.cs" />
     <Compile Include="DkmDebugger\Proxies\Structs\PyEllipsisObject.cs" />
     <Compile Include="DkmDebugger\Proxies\Structs\PyComplexObject.cs" />
     <Compile Include="DkmDebugger\Proxies\Structs\PyBaseExceptionObject.cs" />

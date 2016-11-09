@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Windows.Input;
 using Microsoft.PythonTools.Editor;
 using Microsoft.PythonTools.Editor.Core;
@@ -243,10 +244,12 @@ namespace Microsoft.PythonTools.Intellisense {
             if (!_incSearch.IsActive) {
                 var prefs = _provider.PythonService.LangPrefs;
 
+                var session = Volatile.Read(ref _activeSession);
+                var sigHelpSession = Volatile.Read(ref _sigHelpSession);
                 var literalSpan = GetStringLiteralSpan();
                 if (literalSpan.HasValue &&
                     ShouldTriggerStringCompletionSession(prefs, literalSpan.Value) &&
-                    (_activeSession?.IsDismissed ?? true)) {
+                    (session?.IsDismissed ?? true)) {
                     TriggerCompletionSession(false);
                     return;
                 }
@@ -269,9 +272,8 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                         break;
                     case ')':
-                        if (_sigHelpSession != null) {
-                            _sigHelpSession.Dismiss();
-                            _sigHelpSession = null;
+                        if (sigHelpSession != null) {
+                            sigHelpSession.Dismiss();
                         }
 
                         if (prefs.AutoListParams) {
@@ -281,7 +283,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         break;
                     case '=':
                     case ',':
-                        if (_sigHelpSession == null) {
+                        if (sigHelpSession == null) {
                             if (prefs.AutoListParams) {
                                 CommaStartSignatureSession();
                             }
@@ -291,7 +293,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         break;
                     default:
                         if (Tokenizer.IsIdentifierStartChar(ch) &&
-                            (_activeSession == null || _activeSession.CompletionSets.Count == 0)) {
+                            ((session?.CompletionSets.Count ?? 0) == 0)) {
                             bool commitByDefault;
                             if (ShouldTriggerIdentifierCompletionSession(out commitByDefault)) {
                                 TriggerCompletionSession(false, commitByDefault);
@@ -645,10 +647,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private bool Backspace() {
-            if (_sigHelpSession != null) {
+            var sigHelpSession = Volatile.Read(ref _sigHelpSession);
+            if (sigHelpSession != null) {
                 if (_textView.Selection.IsActive && !_textView.Selection.IsEmpty) {
                     // when deleting a selection don't do anything to pop up signature help again
-                    _sigHelpSession.Dismiss();
+                    sigHelpSession.Dismiss();
                     return false;
                 }
 
@@ -666,7 +669,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         UpdateCurrentParameter();
                         return true;
                     } else if (deleting == '(' || deleting == ')') {
-                        _sigHelpSession.Dismiss();
+                        sigHelpSession.Dismiss();
                         // delete the ( before triggering help again
                         caretPoint.Value.Snapshot.TextBuffer.Delete(new Span(caretPoint.Value.Position - 1, 1));
 
@@ -683,12 +686,8 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OpenParenStartSignatureSession() {
-            if (_activeSession != null) {
-                _activeSession.Dismiss();
-            }
-            if (_sigHelpSession != null) {
-                _sigHelpSession.Dismiss();
-            }
+            Volatile.Read(ref _activeSession)?.Dismiss();
+            Volatile.Read(ref _sigHelpSession)?.Dismiss();
 
             TriggerSignatureHelp();
         }
@@ -705,7 +704,8 @@ namespace Microsoft.PythonTools.Intellisense {
         /// signature does not have enough parameters we'll find a signature which does.
         /// </summary>
         private void UpdateCurrentParameter() {
-            if (_sigHelpSession == null) {
+            var sigHelpSession = Volatile.Read(ref _sigHelpSession);
+            if (sigHelpSession == null) {
                 // we moved out of the original span for sig help, re-trigger based upon the position
                 TriggerSignatureHelp();
                 return;
@@ -715,87 +715,91 @@ namespace Microsoft.PythonTools.Intellisense {
             // we advance to the next parameter
             // TODO: Take into account params arrays
             // TODO: need to parse and see if we have keyword arguments entered into the current signature yet
-            PythonSignature sig = _sigHelpSession.SelectedSignature as PythonSignature;
-            if (sig != null) {
-                var prevBuffer = sig.ApplicableToSpan.TextBuffer;
-                var textBuffer = _textView.TextBuffer;
+            PythonSignature sig = sigHelpSession.SelectedSignature as PythonSignature;
+            if (sig == null) {
+                return;
+            }
 
-                var targetPt = _textView.BufferGraph.MapDownToFirstMatch(
-                    new SnapshotPoint(_textView.TextBuffer.CurrentSnapshot, position),
-                    PointTrackingMode.Positive,
-                    EditorExtensions.IsPythonContent,
-                    PositionAffinity.Successor
-                );
+            var prevBuffer = sig.ApplicableToSpan.TextBuffer;
 
-                if (targetPt == null) {
-                    return;
-                }
-                var span = targetPt.Value.Snapshot.CreateTrackingSpan(targetPt.Value.Position, 0, SpanTrackingMode.EdgeInclusive);
+            var targetPt = _textView.BufferGraph.MapDownToFirstMatch(
+                new SnapshotPoint(_textView.TextBuffer.CurrentSnapshot, position),
+                PointTrackingMode.Positive,
+                EditorExtensions.IsPythonContent,
+                PositionAffinity.Successor
+            );
+            if (targetPt == null) {
+                return;
+            }
 
+            var span = targetPt.Value.Snapshot.CreateTrackingSpan(targetPt.Value.Position, 0, SpanTrackingMode.EdgeInclusive);
+            var sigs = _provider.PythonService.GetSignatures(_textView, targetPt.Value.Snapshot, span);
 
-                var sigs = _provider.PythonService.GetSignatures(_textView, targetPt.Value.Snapshot, span);
-                bool retrigger = false;
-                if (sigs.Signatures.Count == _sigHelpSession.Signatures.Count) {
-                    for (int i = 0; i < sigs.Signatures.Count && !retrigger; i++) {
-                        var leftSig = sigs.Signatures[i];
-                        var rightSig = _sigHelpSession.Signatures[i];
+            bool retrigger = false;
+            if (sigs.Signatures.Count == sigHelpSession.Signatures.Count) {
+                for (int i = 0; i < sigs.Signatures.Count && !retrigger; i++) {
+                    var leftSig = sigs.Signatures[i];
+                    var rightSig = sigHelpSession.Signatures[i];
 
-                        if (leftSig.Parameters.Count == rightSig.Parameters.Count) {
-                            for (int j = 0; j < leftSig.Parameters.Count; j++) {
-                                var leftParam = leftSig.Parameters[j];
-                                var rightParam = rightSig.Parameters[j];
+                    if (leftSig.Parameters.Count == rightSig.Parameters.Count) {
+                        for (int j = 0; j < leftSig.Parameters.Count; j++) {
+                            var leftParam = leftSig.Parameters[j];
+                            var rightParam = rightSig.Parameters[j];
 
-                                if (leftParam.Name != rightParam.Name || leftParam.Documentation != rightParam.Documentation) {
-                                    retrigger = true;
-                                    break;
-                                }
+                            if (leftParam == null || rightParam == null) {
+                                continue;
+                            }
+
+                            if (leftParam.Name != rightParam.Name || leftParam.Documentation != rightParam.Documentation) {
+                                retrigger = true;
+                                break;
                             }
                         }
-
-                        if (leftSig.Content != rightSig.Content || leftSig.Documentation != rightSig.Documentation) {
-                            retrigger = true;
-                        }
                     }
-                } else {
-                    retrigger = true;
-                }
 
-                if (retrigger) {
-                    _sigHelpSession.Dismiss();
-                    TriggerSignatureHelp();
-                } else {
-                    CommaFindBestSignature(sigs.ParameterIndex, sigs.LastKeywordArgument);
+                    if (leftSig.Content != rightSig.Content || leftSig.Documentation != rightSig.Documentation) {
+                        retrigger = true;
+                    }
                 }
+            } else {
+                retrigger = true;
+            }
+
+            if (retrigger) {
+                sigHelpSession.Dismiss();
+                TriggerSignatureHelp();
+            } else {
+                CommaFindBestSignature(sigHelpSession, sigs.ParameterIndex, sigs.LastKeywordArgument);
             }
         }
 
-        private void CommaFindBestSignature(int curParam, string lastKeywordArg) {
+        private static void CommaFindBestSignature(ISignatureHelpSession sigHelpSession, int curParam, string lastKeywordArg) {
             // see if we have a signature which accomodates this...
 
             // TODO: We should also get the types of the arguments and use that to
             // pick the best signature when the signature includes types.
-            var bestSig = _sigHelpSession.SelectedSignature as PythonSignature;
+            var bestSig = sigHelpSession.SelectedSignature as PythonSignature;
             if (bestSig != null) {
                 for (int i = 0; i < bestSig.Parameters.Count; ++i) {
                     if (bestSig.Parameters[i].Name == lastKeywordArg ||
                         lastKeywordArg == null && (i == curParam || PythonSignature.IsParamArray(bestSig.Parameters[i].Name))
                     ) {
                         bestSig.SetCurrentParameter(bestSig.Parameters[i]);
-                        _sigHelpSession.SelectedSignature = bestSig;
+                        sigHelpSession.SelectedSignature = bestSig;
                         return;
                     }
                 }
             }
 
             PythonSignature fallback = null;
-            foreach (var sig in _sigHelpSession.Signatures.OfType<PythonSignature>().OrderBy(s => s.Parameters.Count)) {
+            foreach (var sig in sigHelpSession.Signatures.OfType<PythonSignature>().OrderBy(s => s.Parameters.Count)) {
                 fallback = sig;
                 for (int i = 0; i < sig.Parameters.Count; ++i) {
                     if (sig.Parameters[i].Name == lastKeywordArg ||
                         lastKeywordArg == null && (i == curParam || PythonSignature.IsParamArray(sig.Parameters[i].Name))
                     ) {
                         sig.SetCurrentParameter(sig.Parameters[i]);
-                        _sigHelpSession.SelectedSignature = sig;
+                        sigHelpSession.SelectedSignature = sig;
                         return;
                     }
                 }
@@ -803,9 +807,9 @@ namespace Microsoft.PythonTools.Intellisense {
 
             if (fallback != null) {
                 fallback.SetCurrentParameter(null);
-                _sigHelpSession.SelectedSignature = fallback;
+                sigHelpSession.SelectedSignature = fallback;
             } else {
-                _sigHelpSession.Dismiss();
+                sigHelpSession.Dismiss();
             }
         }
 
@@ -834,7 +838,7 @@ namespace Microsoft.PythonTools.Intellisense {
             var session = CompletionBroker.TriggerCompletion(_textView);
 
             if (session == null) {
-                _activeSession = null;
+                Volatile.Write(ref _activeSession, null);
             } else if (completeWord && SelectSingleBestCompletion(session)) {
                 session.Commit();
             } else {
@@ -846,43 +850,53 @@ namespace Microsoft.PythonTools.Intellisense {
                 session.Filter();
                 session.Dismissed += OnCompletionSessionDismissedOrCommitted;
                 session.Committed += OnCompletionSessionDismissedOrCommitted;
-                _activeSession = session;
+                Volatile.Write(ref _activeSession, session);
             }
         }
 
         internal void TriggerSignatureHelp() {
-            if (_sigHelpSession != null) {
-                _sigHelpSession.Dismiss();
-            }
+            Volatile.Read(ref _sigHelpSession)?.Dismiss();
 
-            _sigHelpSession = SignatureBroker.TriggerSignatureHelp(_textView);
+            var sigHelpSession = SignatureBroker.TriggerSignatureHelp(_textView);
 
-            if (_sigHelpSession != null) {
-                _sigHelpSession.Dismissed += OnSignatureSessionDismissed;
+            if (sigHelpSession != null) {
+                sigHelpSession.Dismissed += OnSignatureSessionDismissed;
 
                 ISignature sig;
-                if (_sigHelpSession.Properties.TryGetProperty(typeof(PythonSignature), out sig)) {
-                    _sigHelpSession.SelectedSignature = sig;
+                if (sigHelpSession.Properties.TryGetProperty(typeof(PythonSignature), out sig)) {
+                    sigHelpSession.SelectedSignature = sig;
 
                     IParameter param;
-                    if (_sigHelpSession.Properties.TryGetProperty(typeof(PythonParameter), out param)) {
+                    if (sigHelpSession.Properties.TryGetProperty(typeof(PythonParameter), out param)) {
                         ((PythonSignature)sig).SetCurrentParameter(param);
                     }
                 }
+
+                _sigHelpSession = sigHelpSession;
             }
         }
 
         private void OnCompletionSessionDismissedOrCommitted(object sender, EventArgs e) {
             // We've just been told that our active session was dismissed.  We should remove all references to it.
-            _activeSession.Committed -= OnCompletionSessionDismissedOrCommitted;
-            _activeSession.Dismissed -= OnCompletionSessionDismissedOrCommitted;
-            _activeSession = null;
+            var session = sender as ICompletionSession;
+            if (session == null) {
+                Debug.Fail("invalid type passed to event");
+                return;
+            }
+            session.Committed -= OnCompletionSessionDismissedOrCommitted;
+            session.Dismissed -= OnCompletionSessionDismissedOrCommitted;
+            Interlocked.CompareExchange(ref _activeSession, null, session);
         }
 
         private void OnSignatureSessionDismissed(object sender, EventArgs e) {
             // We've just been told that our active session was dismissed.  We should remove all references to it.
-            _sigHelpSession.Dismissed -= OnSignatureSessionDismissed;
-            _sigHelpSession = null;
+            var session = sender as ISignatureHelpSession;
+            if (session == null) {
+                Debug.Fail("invalid type passed to event");
+                return;
+            }
+            session.Dismissed -= OnSignatureSessionDismissed;
+            Interlocked.CompareExchange(ref _sigHelpSession, null, session);
         }
 
         private void DeleteSelectedSpans() {
@@ -937,24 +951,27 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            var session = Volatile.Read(ref _activeSession);
+            ISignatureHelpSession sigHelpSession;
+
             if (pguidCmdGroup == VSConstants.VSStd2K && nCmdID == (int)VSConstants.VSStd2KCmdID.TYPECHAR) {
                 var ch = (char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn);
 
-                if (_activeSession != null && !_activeSession.IsDismissed) {
-                    if (_activeSession.SelectedCompletionSet != null &&
-                        _activeSession.SelectedCompletionSet.SelectionStatus.IsSelected &&
+                if (session != null && !session.IsDismissed) {
+                    if (session.SelectedCompletionSet != null &&
+                        session.SelectedCompletionSet.SelectionStatus.IsSelected &&
                         _provider.PythonService.AdvancedOptions.CompletionCommittedBy.IndexOf(ch) != -1) {
 
-                        if ((ch == '\\' || ch == '/') && _activeSession.SelectedCompletionSet.Moniker == "PythonFilenames") {
+                        if ((ch == '\\' || ch == '/') && session.SelectedCompletionSet.Moniker == "PythonFilenames") {
                             // We want to dismiss filename completions on slashes
                             // rather than committing them. Then it will probably
                             // be retriggered after the slash is inserted.
-                            _activeSession.Dismiss();
+                            session.Dismiss();
                         } else {
-                            _activeSession.Commit();
+                            session.Commit();
                         }
                     } else if (!Tokenizer.IsIdentifierChar(ch)) {
-                        _activeSession.Dismiss();
+                        session.Dismiss();
                     }
                 }
 
@@ -962,20 +979,20 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 HandleChar((char)(ushort)System.Runtime.InteropServices.Marshal.GetObjectForNativeVariant(pvaIn));
 
-                if (_activeSession != null && !_activeSession.IsDismissed) {
-                    _activeSession.Filter();
+                if (session != null && !session.IsDismissed) {
+                    session.Filter();
                 }
 
                 return res;
             }
 
-            if (_activeSession != null) {
+            if (session != null) {
                 if (pguidCmdGroup == VSConstants.VSStd2K) {
                     switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                         case VSConstants.VSStd2KCmdID.RETURN:
                             if (_provider.PythonService.AdvancedOptions.EnterCommitsIntellisense &&
-                                !_activeSession.IsDismissed &&
-                                _activeSession.SelectedCompletionSet.SelectionStatus.IsSelected) {
+                                !session.IsDismissed &&
+                                session.SelectedCompletionSet.SelectionStatus.IsSelected) {
 
                                 // If the user has typed all of the characters as the completion and presses
                                 // enter we should dismiss & let the text editor receive the enter.  For example 
@@ -983,21 +1000,21 @@ namespace Microsoft.PythonTools.Intellisense {
                                 // sys the user wants a new line and doesn't want to type enter twice.
 
                                 bool enterOnComplete = _provider.PythonService.AdvancedOptions.AddNewLineAtEndOfFullyTypedWord &&
-                                        EnterOnCompleteText();
+                                        EnterOnCompleteText(session);
 
-                                _activeSession.Commit();
+                                session.Commit();
 
                                 if (!enterOnComplete) {
                                     return VSConstants.S_OK;
                                 }
                             } else {
-                                _activeSession.Dismiss();
+                                session.Dismiss();
                             }
 
                             break;
                         case VSConstants.VSStd2KCmdID.TAB:
-                            if (!_activeSession.IsDismissed) {
-                                _activeSession.Commit();
+                            if (!session.IsDismissed) {
+                                session.Commit();
                                 return VSConstants.S_OK;
                             }
 
@@ -1007,13 +1024,13 @@ namespace Microsoft.PythonTools.Intellisense {
                         case VSConstants.VSStd2KCmdID.DELETEWORDLEFT:
                         case VSConstants.VSStd2KCmdID.DELETEWORDRIGHT:
                             int res = _oldTarget != null ? _oldTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut) : VSConstants.S_OK;
-                            if (_activeSession != null && !_activeSession.IsDismissed) {
-                                _activeSession.Filter();
+                            if (session != null && !session.IsDismissed) {
+                                session.Filter();
                             }
                             return res;
                     }
                 }
-            } else if (_sigHelpSession != null) {
+            } else if ((sigHelpSession = Volatile.Read(ref _sigHelpSession)) != null) {
                 if (pguidCmdGroup == VSConstants.VSStd2K) {
                     switch ((VSConstants.VSStd2KCmdID)nCmdID) {
                         case VSConstants.VSStd2KCmdID.BACKSPACE:
@@ -1039,8 +1056,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         case VSConstants.VSStd2KCmdID.WORDPREV:
                         case VSConstants.VSStd2KCmdID.WORDPREV_EXT:
                         case VSConstants.VSStd2KCmdID.DELETEWORDLEFT:
-                            _sigHelpSession.Dismiss();
-                            _sigHelpSession = null;
+                            sigHelpSession.Dismiss();
                             break;
                     }
                 }
@@ -1154,10 +1170,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
 
-        private bool EnterOnCompleteText() {
-            var selectionStatus = _activeSession.SelectedCompletionSet.SelectionStatus;
+        private bool EnterOnCompleteText(ICompletionSession session) {
+            var selectionStatus = session.SelectedCompletionSet.SelectionStatus;
             var caret = _textView.Caret.Position.BufferPosition;
-            var span = _activeSession.GetApplicableSpan(_textView.TextBuffer).GetSpan(caret.Snapshot);
+            var span = session.GetApplicableSpan(_textView.TextBuffer).GetSpan(caret.Snapshot);
 
             return caret == span.End &&
                 span.Length == selectionStatus.Completion?.InsertionText.Length &&

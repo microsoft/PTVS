@@ -35,7 +35,7 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
             return default(T);
         }
-        
+
         /// <summary>
         /// Waits for a task to complete. If an exception occurs, the exception
         /// will be raised without being wrapped in a
@@ -106,25 +106,37 @@ namespace Microsoft.PythonTools.Infrastructure {
             }
 
             void IDisposable.Dispose() {
-                _semaphore?.Release();
-                _semaphore = null;
-                GC.SuppressFinalize(this);
+                try {
+                    _semaphore?.Release();
+                } catch (ObjectDisposedException ex) {
+                    throw new OperationCanceledException("semaphore was disposed", ex);
+                } finally {
+                    _semaphore = null;
+                    GC.SuppressFinalize(this);
+                }
             }
 
             ~SemaphoreLock() {
-                _semaphore?.Release();
+                try {
+                    _semaphore?.Release();
+                } catch (ObjectDisposedException) {
+                }
             }
         }
 
         public static async Task<IDisposable> LockAsync(this SemaphoreSlim semaphore, CancellationToken cancellationToken) {
             var res = new SemaphoreLock(semaphore);
             try {
-                await semaphore.WaitAsync(cancellationToken);
-                var res2 = res;
-                res = null;
-                return res2;
-            } finally {
-                res?.Reset();
+                try {
+                    await semaphore.WaitAsync(cancellationToken);
+                    var res2 = res;
+                    res = null;
+                    return res2;
+                } finally {
+                    res?.Reset();
+                }
+            } catch (ObjectDisposedException ex) {
+                throw new OperationCanceledException("semaphore was disposed", ex);
             }
         }
     }

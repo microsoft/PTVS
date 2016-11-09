@@ -3,14 +3,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>$guid1$</ProjectGuid>
+    <ProjectGuid>41C5103E-0A73-40D4-9B81-13DC704B715E</ProjectGuid>
     <ProjectHome>.</ProjectHome>
-    <StartupFile>$safeprojectname$.py</StartupFile>
-    <SearchPath>
-    </SearchPath>
+    <StartupFile>LoadErrorTest.py</StartupFile>
+    <SearchPath></SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
-    <InterpreterId>Global|PythonCore|2.7-32</InterpreterId>
+    <Name>LoadErrorTest</Name>
+    <RootNamespace>LoadErrorTest</RootNamespace>
+    <IsWindowsApplication>False</IsWindowsApplication>
+    <InterpreterId>Global|PythonCore|3.5</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,29 +23,8 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$safeprojectname$.py" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="requirements.txt" />
-    <Content Include="PyvotSample.xlsx">
-      <Publish>True</Publish>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="readme.mht">
-      <SubType>WebBrowser</SubType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <InterpreterReference Include="Global|PythonCore|2.7-32" />
+    <Compile Include="LoadErrorTestImportError.py" />
+    <Compile Include="LoadErrorTestNoError.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
-  <!-- Uncomment the CoreCompile target to enable the Build command in
-       Visual Studio and specify your pre- and post-build commands in
-       the BeforeBuild and AfterBuild targets below. -->
-  <!--<Target Name="CoreCompile" />-->
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
 </Project>
