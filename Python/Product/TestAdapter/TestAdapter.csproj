@@ -34,7 +34,6 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.PythonTools.TestAdapter</RootNamespace>
     <AssemblyName>Microsoft.PythonTools.TestAdapter</AssemblyName>
-    <DefineConstants Condition="$(IncludeCodeCoverage)">$(DefineConstants);INCLUDE_CODE_COVERAGE</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Platform)' == 'AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -103,13 +102,7 @@
     </Otherwise>
   </Choose>
   <Choose>
-    <When Condition="$(IncludeCodeCoverage)">
-      <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.TestWindow.CodeCoverage">
-          <HintPath>$(DevEnvDir)\CommonExtensions\Microsoft\AnalyzeCodeCoverage\Microsoft.VisualStudio.TestWindow.CodeCoverage.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
+    <When Condition="$(IncludeCodeCoverage)" />
   </Choose>
   <ItemGroup>
     <Compile Include="..\..\..\Common\Product\SharedProject\CommonConstants.cs">
