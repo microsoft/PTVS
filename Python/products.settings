@@ -12,9 +12,5 @@
     
     <!-- Include UWP by default -->
     <IncludeUwp Condition="'$(IncludeUwp)' == ''">true</IncludeUwp>
-    
-    <!-- Include code coverage if available -->
-    <IncludeCodeCoverage Condition="'$(IncludeCodeCoverage)' == '' and Exists('$(DevEnvDir)\CommonExtensions\Microsoft\AnalyzeCodeCoverage\Microsoft.VisualStudio.TestWindow.CodeCoverage.dll')">true</IncludeCodeCoverage>
-    <IncludeCodeCoverage Condition="'$(IncludeCodeCoverage)' == ''">$(ReleaseBuild)</IncludeCodeCoverage>
   </PropertyGroup>
 </Project>
