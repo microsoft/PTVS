@@ -49,7 +49,10 @@ namespace Microsoft.PythonTools.Interpreter {
         protected bool _isDisposed;
 
         private readonly static Regex IndexNameSanitizerRegex = new Regex(@"\W");
-        private static readonly Regex SimpleListRegex = new Regex(@"a href=['""](?<package>[^'""]+)");
+        private static readonly Regex SimpleListRegex = new Regex(@"\<a.*?\>(?<package>.+?)\<",
+            RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase,
+            TimeSpan.FromSeconds(1.0)
+        );
 
         // When files return 404 from PyPI, we put them in here to avoid trying
         // to request them again.
