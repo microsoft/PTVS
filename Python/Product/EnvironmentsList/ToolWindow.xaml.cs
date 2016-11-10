@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -32,6 +33,7 @@ using System.Windows.Threading;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio.ComponentModelHost;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
@@ -40,7 +42,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         internal readonly ObservableCollection<object> _extensions;
 
         private readonly CollectionViewSource _environmentsView, _extensionsView;
-        private readonly HashSet<IPythonInterpreterFactory> _currentlyRefreshing;
         private IInterpreterRegistryService _interpreters;
         private IInterpreterOptionsService _service;
         private IServiceProvider _site;
@@ -49,6 +50,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private readonly object _listenerLock = new object();
         private int _listenerTimeToLive;
         const int _listenerDefaultTimeToLive = 120;
+
+        // lock(_environments) when accessing _currentlyRefreshing
+        private readonly Dictionary<IPythonInterpreterFactory, AnalysisProgress> _currentlyRefreshing;
 
         private bool _isDisposed;
 
@@ -63,7 +67,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _extensionsView.SortDescriptions.Add(new SortDescription("SortPriority", ListSortDirection.Ascending));
             _extensionsView.SortDescriptions.Add(new SortDescription("LocalizedDisplayName", ListSortDirection.Ascending));
             _environmentsView.View.CurrentChanged += EnvironmentsView_CurrentChanged;
-            _currentlyRefreshing = new HashSet<IPythonInterpreterFactory>();
+            _currentlyRefreshing = new Dictionary<IPythonInterpreterFactory, AnalysisProgress>();
             DataContext = this;
             InitializeComponent();
             CreateListener();
@@ -107,6 +111,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 }
             }
         }
+
+        public IPythonToolsLogger TelemetryLogger { get; set; }
 
         internal static async void SendUnhandledException(UIElement element, ExceptionDispatchInfo edi) {
             try {
@@ -236,7 +242,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
                         AnalysisProgress progress;
                         if (status.TryGetValue(AnalyzerStatusUpdater.GetIdentifier(env.Factory), out progress)) {
-                            _currentlyRefreshing.Add(env.Factory);
+                            _currentlyRefreshing[env.Factory] = progress;
 
                             updates.Add(env.Dispatcher.InvokeAsync(() => {
                                 if (progress.Maximum > 0) {
@@ -254,7 +260,16 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                                 env.RefreshDBMessage = progress.Message;
                                 env.IsRefreshingDB = true;
                             }));
-                        } else if (_currentlyRefreshing.Remove(env.Factory)) {
+                        } else if (_currentlyRefreshing.TryGetValue(env.Factory, out progress)) {
+                            _currentlyRefreshing.Remove(env.Factory);
+                            try {
+                                TelemetryLogger?.LogEvent(PythonLogEvent.AnalysisCompleted, new AnalysisInfo {
+                                    InterpreterId = env.Factory.Configuration.Id,
+                                    AnalysisSeconds = progress.Seconds
+                                });
+                            } catch (Exception ex) {
+                                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                            }
                             updates.Add(env.Dispatcher.InvokeAsync(() => {
                                 env.IsRefreshingDB = false;
                                 env.IsRefreshDBProgressIndeterminate = false;
@@ -322,7 +337,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             // If an update has arrived, this causes a benign refresh of the
             // command state.
             lock (_environments) {
-                _currentlyRefreshing.Add(view.Factory);
+                if (!_currentlyRefreshing.ContainsKey(view.Factory)) {
+                    _currentlyRefreshing[view.Factory] = default(AnalysisProgress);
+                }
             }
         }
 
