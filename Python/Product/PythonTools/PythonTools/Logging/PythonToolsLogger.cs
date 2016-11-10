@@ -19,7 +19,7 @@ namespace Microsoft.PythonTools.Logging {
     /// Main entry point for logging events.  A single instance of this logger is created
     /// by our package and can be used to dispatch log events to all installed loggers.
     /// </summary>
-    class PythonToolsLogger {
+    class PythonToolsLogger : IPythonToolsLogger {
         private readonly IPythonToolsLogger[] _loggers;
 
         public PythonToolsLogger(IPythonToolsLogger[] loggers) {

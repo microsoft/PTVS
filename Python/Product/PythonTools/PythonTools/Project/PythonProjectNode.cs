@@ -135,6 +135,12 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
+            try {
+                Site.GetPythonToolsService().Logger.LogEvent(PythonLogEvent.VirtualEnvironments, _validFactories.Count);
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+            }
+
             foreach (var item in project.GetItems(MSBuildConstants.InterpreterReferenceItem)) {
                 var id = item.EvaluatedInclude;
                 if (!String.IsNullOrWhiteSpace(id)) {

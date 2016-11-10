@@ -79,7 +79,7 @@ namespace TestUtilities.Python {
                 _updater = new AnalyzerStatusUpdater(_config.Id);
                 _updater.WaitForWorkerStarted();
                 _updater.ThrowPendingExceptions();
-                _updater.UpdateStatus(0, 0);
+                _updater.UpdateStatus(0, 0, 0);
             }
         }
 
@@ -90,7 +90,7 @@ namespace TestUtilities.Python {
         public void EndGenerateCompletionDatabase(string id, bool success) {
             if (_updater != null) {
                 for (int i = 0; i <= 100; i += 30) {
-                    _updater.UpdateStatus(i, 100);
+                    _updater.UpdateStatus(i, 100, 0);
                     // Need to sleep to allow the update to go through.
                     Thread.Sleep(500);
                 }

@@ -24,6 +24,7 @@ using System.Threading;
 using Microsoft.Build.Evaluation;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
@@ -129,6 +130,15 @@ namespace Microsoft.PythonTools.Project {
             await ProjectMgr.Site.GetUIThread().InvokeAsync(() => {
                 if (ProjectMgr == null || ProjectMgr.IsClosed) {
                     return;
+                }
+
+                try {
+                    var logger = ProjectMgr.Site.GetPythonToolsService().Logger;
+                    foreach (var p in packages) {
+                        logger.LogEvent(PythonLogEvent.PythonPackage, new PackageInfo { Name = p.Value.Name });
+                    }
+                } catch (Exception ex) {
+                    Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
                 }
 
                 bool anyChanges = false;
