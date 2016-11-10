@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Logging {
                 return;
             }
 
-            var evt = new TelemetryEvent(logEvent.ToString());
+            var evt = new TelemetryEvent(EventPrefix + logEvent.ToString());
             var props = PythonToolsLoggerData.AsDictionary(argument);
             if (props != null) {
                 foreach (var kv in props) {
