@@ -107,7 +107,7 @@
     </ProjectReference>
     <Reference Include="Microsoft.PythonTools.InteractiveWindow" />
     <Reference Include="Microsoft.PythonTools.VsInteractiveWindow" />
-    <Reference Include="Microsoft.VisualStudio.Telemetry, Version=14.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="Microsoft.VisualStudio.Telemetry" />
     <Reference Include="Microsoft.VisualStudio.Threading, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
