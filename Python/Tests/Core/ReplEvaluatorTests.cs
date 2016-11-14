@@ -97,6 +97,12 @@ namespace PythonToolsTests {
                 Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    \r\n"));
                 Assert.IsFalse(evaluator.CanExecuteCode("x = \\"));
                 Assert.IsTrue(evaluator.CanExecuteCode("x = \\\r\n42\r\n\r\n"));
+
+                Assert.IsTrue(evaluator.CanExecuteCode(""));
+                Assert.IsFalse(evaluator.CanExecuteCode(" "));
+                Assert.IsFalse(evaluator.CanExecuteCode("# Comment"));
+                Assert.IsTrue(evaluator.CanExecuteCode("\r\n"));
+                Assert.IsFalse(evaluator.CanExecuteCode("\r\n#Comment"));
             }
         }
 
@@ -178,6 +184,13 @@ g()",
     f()
     g()",
                     Expected = new[] { "def f():\r\n    pass\r\n", "f()", "f()", "def g():\r\n    pass\r\n", "f()", "g()" }
+                },
+                new {
+                    Code = @"# Comment
+
+f()
+f()",
+                    Expected = new[] { "# Comment\r\n\r\nf()\r\n", "f()" }
                 }
             };
 
