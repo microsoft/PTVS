@@ -354,7 +354,7 @@ namespace Microsoft.PythonTools.Language {
                 _pathText = GetSearchDisplayText();
                 AnalysisEntry entry = analyzer.GetAnalysisEntryFromPath(_locationInfo.FilePath);
                 if (entry != null) {
-                    _lineText = entry.GetLine(_locationInfo.Line);
+                    _lineText = entry.GetLine(_locationInfo.Line) ?? "";
                 } else {
                     _lineText = "";
                 }
