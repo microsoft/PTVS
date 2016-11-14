@@ -136,8 +136,6 @@ namespace Microsoft.PythonTools {
             // tests to avoid leaking memory when we reinitialize state between
             // each test.
 
-            IDisposable disposable;
-
             if (_langPrefs.IsValueCreated) {
                 _langPrefs.Value.Dispose();
             }
@@ -150,10 +148,7 @@ namespace Microsoft.PythonTools {
                 _interpreterOptionsService.DefaultInterpreterChanged -= UpdateDefaultAnalyzer;
             }
 
-            if ((disposable = _interpreterOptionsService as IDisposable) != null) {
-                disposable.Dispose();
-            }
-
+            (_interpreterOptionsService as IDisposable)?.Dispose();
             _idleManager.Dispose();
 
             foreach (var window in _codeWindowManagers.Values.ToArray()) {
@@ -163,27 +158,24 @@ namespace Microsoft.PythonTools {
         }
 
         private void InitializeLogging() {
-            if (_interpreterOptionsService != null) { // not available in some test cases...
-                                                      // log interesting stats on startup
-                var knownProviders = ComponentModel.GetExtensions<IPythonInterpreterFactoryProvider>();
+            try {
+                if (_interpreterRegistry != null) { // not available in some test cases...
+                                                    // log interesting stats on startup
+                    var installed = _interpreterRegistry.Configurations.Count();
+                    var installedV2 = _interpreterRegistry.Configurations.Count(c => c.Version.Major == 2);
+                    var installedV3 = _interpreterRegistry.Configurations.Count(c => c.Version.Major == 3);
 
-                var installed = knownProviders
-                    //.Where(x => !(x is ConfigurablePythonInterpreterFactoryProvider) &&
-                    //            !(x is LoadedProjectInterpreterFactoryProvider))
-                    .SelectMany(x => x.GetInterpreterConfigurations())
-                    .Count();
+                    _logger.LogEvent(PythonLogEvent.InstalledInterpreters, new Dictionary<string, object> {
+                        { "Total", installed },
+                        { "3x", installedV3 },
+                        { "2x", installedV2 }
+                    });
+                }
 
-                var configured = knownProviders.
-                    SelectMany(x => x.GetInterpreterConfigurations()).
-                    Select(x => x.Id).
-                    Where(x => _interpreterOptionsService.IsConfigurable(x)).
-                    Count();
-
-                _logger.LogEvent(PythonLogEvent.InstalledInterpreters, installed);
-                _logger.LogEvent(PythonLogEvent.ConfiguredInterpreters, configured);
+                _logger.LogEvent(PythonLogEvent.SurveyNewsFrequency, GeneralOptions.SurveyNewsCheck.ToString());
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
             }
-
-            _logger.LogEvent(PythonLogEvent.SurveyNewsFrequency, GeneralOptions.SurveyNewsCheck);
         }
 
         private void UpdateDefaultAnalyzer(object sender, EventArgs args) {

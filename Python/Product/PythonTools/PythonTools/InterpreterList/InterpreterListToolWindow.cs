@@ -61,6 +61,11 @@ namespace Microsoft.PythonTools.InterpreterList {
             
             var list = new ToolWindow();
             list.Site = _site;
+            try {
+                list.TelemetryLogger = _site.GetPythonToolsService().Logger;
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+            }
             list.ViewCreated += List_ViewCreated;
 
             list.CommandBindings.Add(new CommandBinding(
