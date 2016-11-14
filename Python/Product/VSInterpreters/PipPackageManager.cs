@@ -447,11 +447,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         null
                     )) {
                         try {
-                            var exitCode = await proc;
-                            Debug.WriteLine(string.Join("\r\n", proc.StandardOutputLines));
-                            Debug.WriteLine(string.Join("\r\n", proc.StandardErrorLines));
-
-                            if (exitCode == 0) {
+                            if ((await proc) == 0) {
                                 if (_pipListHasFormatOption) {
                                     var json = string.Join(Environment.NewLine, proc.StandardOutputLines);
                                     try {
