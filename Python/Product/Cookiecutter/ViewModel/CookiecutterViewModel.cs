@@ -55,6 +55,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private string _selectedDescription;
         private ImageSource _selectedImage;
         private string _selectedLocation;
+        private int _checkingUpdatePercentComplete;
 
         private OperationStatus _installingStatus;
         private OperationStatus _cloningStatus;
@@ -286,6 +287,19 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     LoadingStatus == OperationStatus.InProgress ||
                     CreatingStatus == OperationStatus.InProgress ||
                     UpdatingStatus == OperationStatus.InProgress;
+            }
+        }
+
+        public int CheckingUpdatePercentComplete {
+            get {
+                return _checkingUpdatePercentComplete;
+            }
+
+            set {
+                if (value != _checkingUpdatePercentComplete) {
+                    _checkingUpdatePercentComplete = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CheckingUpdatePercentComplete)));
+                }
             }
         }
 
@@ -539,6 +553,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 _checkUpdatesCancelTokenSource = new CancellationTokenSource();
 
                 CheckingUpdateStatus = OperationStatus.InProgress;
+                CheckingUpdatePercentComplete = 0;
 
 #if DEBUG || VERBOSE_UPDATES
                 _outputWindow.WriteLine(String.Empty);
@@ -546,7 +561,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 #endif
 
                 var templatesResult = await _installedSource.GetTemplatesAsync(null, null, CancellationToken.None);
-                foreach (var template in templatesResult.Templates) {
+                for (int i = 0; i < templatesResult.Templates.Count; i++) {
+                    CheckingUpdatePercentComplete = (int)((i / (double)templatesResult.Templates.Count) * 100);
+                    var template = templatesResult.Templates[i];
+
                     _checkUpdatesCancelTokenSource.Token.ThrowIfCancellationRequested();
 
                     try {
@@ -583,11 +601,18 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
                         _outputWindow.WriteLine(Strings.CheckingTemplateUpdateStarted.FormatUI(template.Name, template.RemoteUrl));
                         _outputWindow.WriteErrorLine(ex.Message);
+
+                        var pex = ex as ProcessException;
+                        if (pex != null) {
+                            _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, pex.Result.StandardErrorLines ?? new string[0]));
+                        }
+
                         _outputWindow.WriteLine(Strings.CheckingTemplateUpdateError);
                     }
                 }
 
                 CheckingUpdateStatus = anyError ? OperationStatus.Failed : OperationStatus.Succeeded;
+                CheckingUpdatePercentComplete = 100;
 
                 if (anyError) {
                     _outputWindow.WriteLine(Strings.CheckingForAllUpdatesFailed);

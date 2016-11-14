@@ -280,7 +280,7 @@
                         Visibility="{Binding Path=CheckingUpdateStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
                 <Separator/>
                 <TextBlock Text="Checking for updates..."/>
-                <ProgressBar Margin="4" IsIndeterminate="True"/>
+                <ProgressBar Margin="4" Value="{Binding Path=CheckingUpdatePercentComplete,Mode=OneWay}" Maximum="100"/>
             </StackPanel>
 
             <StackPanel Margin="4 4 4 8"
