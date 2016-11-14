@@ -61,9 +61,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Check for template updates canceled -----
-        ///.
+        ///   Looks up a localized string similar to ----- Check for template updates canceled -----.
         /// </summary>
         internal static string CheckingForAllUpdatesCanceled {
             get {
@@ -72,9 +70,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Failed to check for template updates -----
-        ///.
+        ///   Looks up a localized string similar to ----- Failed to check for template updates -----.
         /// </summary>
         internal static string CheckingForAllUpdatesFailed {
             get {
@@ -83,9 +79,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Checking for template updates -----
-        ///.
+        ///   Looks up a localized string similar to ----- Checking for template updates -----.
         /// </summary>
         internal static string CheckingForAllUpdatesStarted {
             get {
@@ -94,9 +88,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Successfully checked for template updates -----
-        ///.
+        ///   Looks up a localized string similar to ----- Successfully checked for template updates -----.
         /// </summary>
         internal static string CheckingForAllUpdatesSuccess {
             get {
@@ -141,9 +133,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Checking for update to template &apos;{0}&apos; from &apos;{1}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Checking for update to template &apos;{0}&apos; from &apos;{1}&apos; -----.
         /// </summary>
         internal static string CheckingTemplateUpdateStarted {
             get {
@@ -163,9 +153,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Failed to clone template &apos;{0}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Failed to clone template &apos;{0}&apos; -----.
         /// </summary>
         internal static string CloningTemplateFailed {
             get {
@@ -174,9 +162,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Cloning template &apos;{0}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Cloning template &apos;{0}&apos; -----.
         /// </summary>
         internal static string CloningTemplateStarted {
             get {
@@ -185,9 +171,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Successfully cloned template &apos;{0}&apos; to &apos;{1}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Successfully cloned template &apos;{0}&apos; to &apos;{1}&apos; -----.
         /// </summary>
         internal static string CloningTemplateSuccess {
             get {
@@ -216,9 +200,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Failed to delete template &apos;{0}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Failed to delete template &apos;{0}&apos; -----.
         /// </summary>
         internal static string DeletingTemplateFailed {
             get {
@@ -227,9 +209,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Deleting template &apos;{0}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Deleting template &apos;{0}&apos; -----.
         /// </summary>
         internal static string DeletingTemplateStarted {
             get {
@@ -238,9 +218,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Successfully deleted template &apos;{0}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Successfully deleted template &apos;{0}&apos; -----.
         /// </summary>
         internal static string DeletingTemplateSuccess {
             get {
@@ -294,9 +272,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Failed to install cookiecutter -----
-        ///.
+        ///   Looks up a localized string similar to ----- Failed to install cookiecutter -----.
         /// </summary>
         internal static string InstallingCookiecutterFailed {
             get {
@@ -305,9 +281,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Installing cookiecutter -----
-        ///.
+        ///   Looks up a localized string similar to ----- Installing cookiecutter -----.
         /// </summary>
         internal static string InstallingCookiecutterStarted {
             get {
@@ -316,9 +290,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Successfully installed cookiecutter -----
-        ///.
+        ///   Looks up a localized string similar to ----- Successfully installed cookiecutter -----.
         /// </summary>
         internal static string InstallingCookiecutterSuccess {
             get {
@@ -345,9 +317,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Failed to load template &apos;{0}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Failed to load template &apos;{0}&apos; -----.
         /// </summary>
         internal static string LoadingTemplateFailed {
             get {
@@ -356,9 +326,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Loading template &apos;{0}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Loading template &apos;{0}&apos; -----.
         /// </summary>
         internal static string LoadingTemplateStarted {
             get {
@@ -367,9 +335,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Successfully loaded template &apos;{0}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Successfully loaded template &apos;{0}&apos; -----.
         /// </summary>
         internal static string LoadingTemplateSuccess {
             get {
@@ -423,9 +389,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Failed to create files using template &apos;{0}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Failed to create files using template &apos;{0}&apos; -----.
         /// </summary>
         internal static string RunningTemplateFailed {
             get {
@@ -434,9 +398,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Creating files using template &apos;{0}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Creating files using template &apos;{0}&apos; -----.
         /// </summary>
         internal static string RunningTemplateStarted {
             get {
@@ -445,9 +407,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Successfully created files using template &apos;{0}&apos; into &apos;{1}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Successfully created files using template &apos;{0}&apos; into &apos;{1}&apos; -----.
         /// </summary>
         internal static string RunningTemplateSuccess {
             get {
@@ -522,9 +482,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Failed to update template &apos;{0}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Failed to update template &apos;{0}&apos; -----.
         /// </summary>
         internal static string UpdatingTemplateFailed {
             get {
@@ -533,9 +491,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Updating template &apos;{0}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Updating template &apos;{0}&apos; -----.
         /// </summary>
         internal static string UpdatingTemplateStarted {
             get {
@@ -544,9 +500,7 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 
-        ///----- Successfully updated template &apos;{0}&apos; -----
-        ///.
+        ///   Looks up a localized string similar to ----- Successfully updated template &apos;{0}&apos; -----.
         /// </summary>
         internal static string UpdatingTemplateSuccess {
             get {
