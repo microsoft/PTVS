@@ -178,6 +178,13 @@ g()",
     f()
     g()",
                     Expected = new[] { "def f():\r\n    pass\r\n", "f()", "f()", "def g():\r\n    pass\r\n", "f()", "g()" }
+                },
+                new {
+                    Code = @"# Comment
+
+f()
+f()",
+                    Expected = new[] { "# Comment\r\n\r\nf()\r\n", "f()" }
                 }
             };
 
