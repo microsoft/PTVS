@@ -244,13 +244,13 @@ namespace Microsoft.PythonTools.Profiling {
             }
 
             if (projectToProfile != null) {
-                ProfileProject(session, projectToProfile, openReport);
+                ProfileProject(session, projectToProfile, openReport, projectTarget.UseVTune);
             } else {
                 MessageBox.Show("Project could not be found in current solution.", "Python Tools for Visual Studio");
             }
         }
 
-        private static void ProfileProject(SessionNode session, EnvDTE.Project projectToProfile, bool openReport) {
+        private static void ProfileProject(SessionNode session, EnvDTE.Project projectToProfile, bool openReport, bool useVTune) {
             var project = projectToProfile.AsPythonProject();
 
             var config = project?.GetLaunchConfigurationOrThrow();
@@ -271,7 +271,7 @@ namespace Microsoft.PythonTools.Profiling {
                 }
             }
 
-            RunProfiler(session, config, openReport);
+            RunProfiler(session, config, openReport, useVTune);
         }
 
         private static void ProfileStandaloneTarget(SessionNode session, StandaloneTarget runTarget, bool openReport) {
@@ -292,17 +292,18 @@ namespace Microsoft.PythonTools.Profiling {
             config.ScriptArguments = runTarget.Arguments;
             config.WorkingDirectory = runTarget.WorkingDirectory;
 
-            RunProfiler(session, config, openReport);
+            RunProfiler(session, config, openReport, false);
         }
 
 
-        private static void RunProfiler(SessionNode session, LaunchConfiguration config, bool openReport) {
+        private static void RunProfiler(SessionNode session, LaunchConfiguration config, bool openReport, bool useVTune) {
             var process = new ProfiledProcess(
                 (PythonToolsService)session._serviceProvider.GetService(typeof(PythonToolsService)),
                 config.GetInterpreterPath(),
                 string.Join(" ", ProcessOutput.QuoteSingleArgument(config.ScriptName), config.ScriptArguments),
                 config.WorkingDirectory,
-                session._serviceProvider.GetPythonToolsService().GetFullEnvironment(config)
+                session._serviceProvider.GetPythonToolsService().GetFullEnvironment(config),
+                useVTune
             );
 
             string baseName = Path.GetFileNameWithoutExtension(session.Filename);

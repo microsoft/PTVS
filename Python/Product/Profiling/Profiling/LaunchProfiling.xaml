@@ -22,6 +22,7 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="auto" />
             <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
         </Grid.RowDefinitions>
         <Grid Grid.Row="0">
             <Grid.RowDefinitions>
@@ -130,7 +131,14 @@
                 </Grid>
             </GroupBox>
         </Grid>
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+        <Grid Grid.Row="1">
+            <CheckBox Grid.Row="1" Margin="12 12 12 4"
+             Content="_VTune Mixed Mode Profiling"
+             AutomationProperties.AutomationId="VTuneProfile"
+             IsEnabled="{Binding IsAnyAvailableProjects}"
+             IsChecked="{Binding UseVTune}" />           
+        </Grid>
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
             <Button IsDefault="True" Click="OkClick" IsEnabled="{Binding IsValid}"
                     MinWidth="86" MinHeight="24"
                     AutomationProperties.AutomationId="OK" Content="{Binding StartText}"/>

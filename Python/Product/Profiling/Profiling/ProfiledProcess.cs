@@ -30,8 +30,9 @@ namespace Microsoft.PythonTools.Profiling {
         private readonly ProcessorArchitecture _arch;
         private readonly Process _process;
         private readonly PythonToolsService _pyService;
+        private readonly bool _useVTune;
 
-        public ProfiledProcess(PythonToolsService pyService, string exe, string args, string dir, Dictionary<string, string> envVars) {
+        public ProfiledProcess(PythonToolsService pyService, string exe, string args, string dir, Dictionary<string, string> envVars, bool useVTune) {
             var arch = NativeMethods.GetBinaryType(exe);
             if (arch != ProcessorArchitecture.X86 && arch != ProcessorArchitecture.Amd64) {
                 throw new InvalidOperationException(String.Format("Unsupported architecture: {0}", arch));
@@ -47,6 +48,7 @@ namespace Microsoft.PythonTools.Profiling {
             _args = args;
             _dir = dir;
             _arch = arch;
+            _useVTune = useVTune;
 
             ProcessStartInfo processInfo;
             string pythonInstallDir = Path.GetDirectoryName(PythonToolsInstallPath.GetFile("VsPyProf.dll", typeof(ProfiledProcess).Assembly));
