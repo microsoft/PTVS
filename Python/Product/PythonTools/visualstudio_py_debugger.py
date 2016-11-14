@@ -110,7 +110,21 @@ def thread_creator(func, args, kwargs = {}, *extra_args):
 
     return _start_new_thread(new_thread_wrapper, (func, args, kwargs))
 
-_start_new_thread = thread.start_new_thread
+_thread_start_new_thread = thread.start_new_thread
+def _start_new_thread(func, args, kwargs = {}):
+    t_lock = thread.allocate_lock()
+    t_lock.acquire()
+    
+    tid = []
+    def thread_starter(a, kw):
+        tid.append(thread.get_ident())
+        t_lock.release()
+        return func(*a, **kw)
+    
+    _thread_start_new_thread(thread_starter, (args, kwargs))
+    with t_lock:
+        return tid[0]
+
 THREADS = {}
 THREADS_LOCK = thread.allocate_lock()
 MODULES = []
@@ -371,12 +385,14 @@ def is_file_in_zip(filename):
         return False
     elif parent in KNOWN_ZIPS:
         return True
-    elif path.isdir(parent):
+    elif path.isfile(parent):
+        KNOWN_ZIPS.add(parent) 
+        return True     
+    elif path.isdir(parent):    
         KNOWN_DIRECTORIES.add(parent)
         return False
     else:
-        KNOWN_ZIPS.add(parent)
-        return True
+        return is_file_in_zip(parent)
 
 def lookup_builtin(name, frame):
     try:
@@ -564,7 +580,7 @@ def should_debug_code(code):
 
     return True
 
-attach_lock = thread.allocate()
+attach_lock = thread.allocate_lock()
 attach_sent_break = False
 
 local_path_to_vs_path = {}
@@ -1459,7 +1475,13 @@ class Thread(object):
                 # collect globals used locally, skipping undefined found in builtins
                 f_globals = cur_frame.f_globals
                 if f_globals: # ensure globals to work with (IPy may have None for cur_frame.f_globals for frames within stdlib)
-                    self.collect_variables(vars, f_globals, cur_frame.f_code.co_names, treated, skip_unknown = True)
+                    self.collect_variables(
+                        vars,
+                        f_globals,
+                        getattr(cur_frame.f_code, 'co_names', ()),
+                        treated,
+                        skip_unknown = True
+                    )
             
             frame_info = None
 
