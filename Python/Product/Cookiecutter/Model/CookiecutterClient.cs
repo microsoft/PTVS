@@ -155,6 +155,7 @@ namespace Microsoft.CookiecutterTools.Model {
             //   "var2" : {
             //     "label" : "Variable 2",
             //     "description" : "Description for variable 2",
+            //     "url" : "http://azure.microsoft.com",
             //     "selector" : "odbcConnection"
             //   }
             // }
@@ -173,6 +174,7 @@ namespace Microsoft.CookiecutterTools.Model {
                             var itemObj = (JObject)prop.Value;
                             ReadLabel(item, itemObj);
                             ReadDescription(item, itemObj);
+                            ReadUrl(item, itemObj);
                             ReadSelector(item, itemObj);
                         } else {
                             WrongJsonType(prop.Name, JTokenType.Object, prop.Value.Type);
@@ -210,6 +212,19 @@ namespace Microsoft.CookiecutterTools.Model {
             }
 
             return descriptionToken;
+        }
+
+        private JToken ReadUrl(ContextItem item, JObject itemObj) {
+            var urlToken = itemObj.SelectToken("url");
+            if (urlToken != null) {
+                if (urlToken.Type == JTokenType.String) {
+                    item.Url = urlToken.Value<string>();
+                } else {
+                    WrongJsonType("url", JTokenType.String, urlToken.Type);
+                }
+            }
+
+            return urlToken;
         }
 
         private void ReadSelector(ContextItem item, JObject itemObj) {

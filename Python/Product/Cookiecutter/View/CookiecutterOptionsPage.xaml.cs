@@ -80,6 +80,17 @@ namespace Microsoft.CookiecutterTools.View {
 
             ViewModel.CreateFilesAsync().DoNotWait();
         }
+
+        private void OpenInBrowser_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var url = (string)e.Parameter;
+            e.CanExecute = !string.IsNullOrEmpty(url);
+            e.Handled = true;
+        }
+
+        private void OpenInBrowser_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var url = (string)e.Parameter;
+            Process.Start(url)?.Dispose();
+        }
     }
 
     class TemplateContextItemTemplateSelector : DataTemplateSelector {

@@ -24,19 +24,23 @@
     },
     "project_slug": {
       "label": "Package Name",
-      "description": "Pythonic name for the application."
+      "description": "Pythonic name for the application.",
+      "url": "http://www.python.org"
     },
     "db_connection": {
       "label": "ODBC Connection String",
-      "selector": "odbcConnection"
+      "selector": "odbcConnection",
+      "url": "https://www.microsoft.com/en-us/sql-server/sql-server-2016"
     },
     "use_azure": {
       "description": "Enable Azure support.",
-      "selector": "yesno"
+      "selector": "yesno",
+      "url": "http://azure.microsoft.com"
     },
     "open_source_license": {
       "label": "Open Source License",
-      "description": "License under which you will distribute the generated files."
+      "description": "License under which you will distribute the generated files.",
+      "url": "https://opensource.org/licenses"
     },
     "port": {
       "label": "Port",
