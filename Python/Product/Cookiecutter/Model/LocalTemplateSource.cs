@@ -59,13 +59,15 @@ namespace Microsoft.CookiecutterTools.Model {
 
             ShellUtils.DeleteDirectory(repoPath);
 
-            _cache.RemoveAll(t => t.LocalFolderPath == repoPath);
+            _cache.RemoveAll(t => PathUtils.IsSameDirectory(t.LocalFolderPath, repoPath));
         }
 
         public async Task AddTemplateAsync(string repoPath) {
             if (_cache == null) {
                 await BuildCacheAsync();
             } else {
+                // We may already have it in the cache if user installs a template that's already local
+                _cache.RemoveAll(t => PathUtils.IsSameDirectory(t.LocalFolderPath, repoPath));
                 await AddFolderToCache(repoPath);
             }
         }
@@ -77,7 +79,7 @@ namespace Microsoft.CookiecutterTools.Model {
 
             await _gitClient.MergeAsync(repoPath);
 
-            var template = _cache.SingleOrDefault(t => t.LocalFolderPath == repoPath);
+            var template = _cache.SingleOrDefault(t => PathUtils.IsSameDirectory(t.LocalFolderPath, repoPath));
             if (template != null) {
                 template.ClonedLastUpdate = await _gitClient.GetLastCommitDateAsync(template.LocalFolderPath);
             }

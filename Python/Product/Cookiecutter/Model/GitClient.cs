@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools.Infrastructure;
 
@@ -100,11 +101,14 @@ namespace Microsoft.CookiecutterTools.Model {
 
         public async Task FetchAsync(string repoFolderPath) {
             var arguments = new string[] { "fetch" };
-            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, _redirector)) {
-                if (await output < 0) {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null)) {
+                await output;
+                if (output.ExitCode < 0 || output.StandardErrorLines.Any(line => line.StartsWith("fatal", StringComparison.InvariantCultureIgnoreCase))) {
                     throw new ProcessException(new ProcessOutputResult() {
                         ExeFileName = _gitExeFilePath,
                         ExitCode = output.ExitCode,
+                        StandardErrorLines = output.StandardErrorLines.ToArray(),
+                        StandardOutputLines = output.StandardOutputLines.ToArray(),
                     });
                 }
             }
