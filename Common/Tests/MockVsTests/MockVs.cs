@@ -444,13 +444,6 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             return container;
         }
 
-        private static readonly HashSet<string> ExcludedAssemblies = new HashSet<string>(new[] {
-            "VsLogger.dll",
-#if !DEV15_OR_LATER
-            "Microsoft.VisualStudio.Workspace.dll",
-#endif
-        }, StringComparer.OrdinalIgnoreCase);
-
         private static CachedVsInfo CreateCachedVsInfo() {
             var runningLoc = Path.GetDirectoryName(typeof(MockVs).Assembly.Location);
             // we want to pick up all of the MEF exports which are available, but they don't
@@ -468,8 +461,15 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
             try {
+                var _excludedAssemblies = new HashSet<string>(new[] {
+                    "VsLogger.dll",
+#if !DEV15_OR_LATER
+                    "Microsoft.VisualStudio.Workspace.dll",
+#endif
+                }, StringComparer.OrdinalIgnoreCase);
+
                 foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
-                    if (ExcludedAssemblies.Contains(Path.GetFileName(file))) {
+                    if (_excludedAssemblies.Contains(Path.GetFileName(file))) {
                         continue;
                     }
 
