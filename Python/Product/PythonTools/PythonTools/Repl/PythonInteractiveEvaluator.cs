@@ -60,6 +60,8 @@ namespace Microsoft.PythonTools.Repl {
         protected readonly IServiceProvider _serviceProvider;
         private readonly StringBuilder _deferredOutput;
 
+        private PythonProjectNode _projectWithHookedEvents;
+
         protected CommandProcessorThread _thread;
         private IInteractiveWindowCommands _commands;
         private IInteractiveWindow _window;
@@ -399,6 +401,12 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal void UpdatePropertiesFromProjectMoniker() {
+            if (_projectWithHookedEvents != null) {
+                _projectWithHookedEvents.ActiveInterpreterChanged -= Project_ConfigurationChanged;
+                _projectWithHookedEvents._searchPaths.Changed -= Project_ConfigurationChanged;
+                _projectWithHookedEvents = null;
+            }
+
             var pyProj = GetAssociatedPythonProject();
             if (pyProj == null) {
                 return;
@@ -410,6 +418,23 @@ namespace Microsoft.PythonTools.Repl {
                 PathUtils.GetAbsoluteDirectoryPath(pyProj.ProjectHome, "Scripts"),
                 pyProj.GetInterpreterFactory()?.Configuration
             );
+
+            _projectWithHookedEvents = pyProj;
+            pyProj.ActiveInterpreterChanged += Project_ConfigurationChanged;
+            pyProj._searchPaths.Changed += Project_ConfigurationChanged;
+        }
+
+        private void Project_ConfigurationChanged(object sender, EventArgs e) {
+            var pyProj = _projectWithHookedEvents;
+            _projectWithHookedEvents = null;
+
+            if (pyProj != null) {
+                Debug.Assert(pyProj == sender || pyProj._searchPaths == sender, "Unexpected project raised the event");
+                // Only warn once
+                pyProj.ActiveInterpreterChanged -= Project_ConfigurationChanged;
+                pyProj._searchPaths.Changed -= Project_ConfigurationChanged;
+                WriteError(Strings.ReplProjectConfigurationChanged.FormatUI(pyProj.Caption));
+            }
         }
 
         internal static string GetScriptsPath(

@@ -938,4 +938,7 @@ modified from these scripts.</value>
   <data name="WebPIReferenceDeprecated" xml:space="preserve">
     <value>WebPI references have been deprecated. We recommend replacing the reference with a custom installation script.</value>
   </data>
+  <data name="ReplProjectConfigurationChanged" xml:space="preserve">
+    <value>The associated project '{0}' has changed its configuration. These changes will not be reflected until you reset this interactive window.</value>
+  </data>
 </root>
