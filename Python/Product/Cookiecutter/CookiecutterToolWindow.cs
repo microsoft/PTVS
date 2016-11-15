@@ -129,7 +129,15 @@ namespace Microsoft.CookiecutterTools {
 
             var gitClient = GitClientProvider.Create(outputWindow, commonIdeFolderPath as string);
 
-            _cookiecutterPage = new CookiecutterContainerPage(outputWindow, CookiecutterTelemetry.Current, gitClient, new Uri(feedUrl), OpenGeneratedFolder, UpdateCommandUI);
+            _cookiecutterPage = new CookiecutterContainerPage(
+                this,
+                outputWindow,
+                CookiecutterTelemetry.Current,
+                gitClient,
+                new Uri(feedUrl),
+                OpenGeneratedFolder,
+                UpdateCommandUI
+            );
             _cookiecutterPage.ContextMenuRequested += OnContextMenuRequested;
             _cookiecutterPage.InitializeAsync(CookiecutterPackage.Instance.CheckForTemplateUpdate).HandleAllExceptions(this, GetType()).DoNotWait();
 

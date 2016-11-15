@@ -527,6 +527,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
                     _templateLocalFolderPath = selection.ClonedPath;
 
+                    await SetDefaultOutputFolder(_templateLocalFolderPath);
                     await RefreshContextAsync(selection);
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     CloningStatus = OperationStatus.Failed;
@@ -539,7 +540,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             } else {
                 Debug.Assert(!string.IsNullOrEmpty(selection.ClonedPath));
                 _templateLocalFolderPath = selection.ClonedPath;
-
+                await SetDefaultOutputFolder(_templateLocalFolderPath);
                 await RefreshContextAsync(selection);
             }
         }
@@ -859,6 +860,11 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             } finally {
                 parent.Templates.Remove(loading);
             }
+        }
+
+        private async Task SetDefaultOutputFolder(string localTemplatePath) {
+            OutputFolderPath = await _cutterClient.GetDefaultOutputFolderAsync(PathUtils.GetFileOrDirectoryName(_templateLocalFolderPath));
+            Debug.Assert(!Directory.Exists(OutputFolderPath) && !File.Exists(PathUtils.TrimEndSeparator(OutputFolderPath)));
         }
 
         private async Task RefreshContextAsync(TemplateViewModel selection) {
