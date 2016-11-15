@@ -280,6 +280,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The project cannot be launched because the startup file is not specified..
+        /// </summary>
+        public static string DebugLaunchScriptNameMissing {
+            get {
+                return ResourceManager.GetString("DebugLaunchScriptNameMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The project cannot be launched because the no working directory was provided. Please check the Project Properties window and correct any configuration errors..
         /// </summary>
         public static string DebugLaunchWorkingDirectoryMissing {
