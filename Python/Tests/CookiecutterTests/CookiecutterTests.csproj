@@ -79,6 +79,7 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="GitClientTests.cs" />
     <Compile Include="GitHubDiscoveryTests.cs" />
     <Compile Include="ITelemetryTestSupport.cs" />
     <Compile Include="StringTelemetryRecorderTests.cs" />
