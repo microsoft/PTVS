@@ -65,9 +65,14 @@
     The value for PYTHON should be set to either a Company\Tag pair (suitable
     for locating an installation in the registry), or the full path to your
     Python executable.
+
+    If omitted, Python will be installed from nuget.org
 #>
 
 [xml]$rolemodel = Get-Content $env:RoleRoot\RoleModel.xml
+
+$defaultpython = "python"       # or pythonx86, python2, python2x86
+$defaultpythonversion = "3.5.2" # see nuget.org for current available versions
 
 $ns = @{ sd="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition" };
 $is_worker = (Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Properties/sd:Property[@name='RoleType'][@value='Worker']").Count -eq 1
@@ -100,12 +105,31 @@ if ($is_web -and -not $is_emulated) {
     }
 }
 
-# TODO: INSTALL PYTHON (from nuget?)
+function install-python-from-nuget {
+    param([string]$package=$defaultpython, [string]$version=$defaultpythonversion)
+
+    if (Test-Path "$(Get-Location)\bin\$package\tools\python.exe") {
+        return (gi "$(Get-Location)\bin\$package\tools\python.exe");
+    }
+
+    $nuget = gcm .\nuget.exe -EA SilentlyContinue;
+    if (-not $nuget) {
+        $nuget = gcm nuget.exe -EA SilentlyContinue;
+    }
+    if (-not $nuget) {
+        Invoke-WebRequest https://aka.ms/nugetclidl -OutFile nuget.exe;
+        $nuget = gcm .\nuget.exe -EA SilentlyContinue;
+    }
+    & $nuget install -OutputDirectory "$(Get-Location)\bin" -ExcludeVersion -Version "$version" "$package" | Out-Null;
+    if ($?) {
+        return (gi "$(Get-Location)\bin\$package\tools\python.exe");
+    }
+}
 
 if ($env:PYTHON -eq $null) {
-    $interpreter_path = "${env:WINDIR}\py.exe"
+    $interpreter_path = $null;
 } elseif (Test-Path -PathType Leaf $env:PYTHON) {
-    $interpreter_path = $env:PYTHON
+    $interpreter_path = $env:PYTHON;
 } else {
     foreach ($key in @('HKLM:\Software\Wow6432Node', 'HKLM:\Software', 'HKCU:\Software')) {
         $regkey = gp "$key\Python\${env:PYTHON}\InstallPath" -EA SilentlyContinue
@@ -113,7 +137,7 @@ if ($env:PYTHON -eq $null) {
             if ($regkey.ExecutablePath) {
                 $interpreter_path = $regkey.ExecutablePath;
             } else {
-                $interpreter_path = "$($regkey.'(default)')\python.exe"
+                $interpreter_path = "$($regkey.'(default)')\python.exe";
             }
             if (Test-Path -PathType Leaf $interpreter_path) {
                 break
@@ -122,65 +146,63 @@ if ($env:PYTHON -eq $null) {
     }
 }
 
-if (Test-Path $interpreter_path) {
-    if (Test-Path requirements.txt) {
-        Set-Alias py (gi $interpreter_path -EA Stop)
-        py -m pip -V
-        if (-not $?) {
-            $pip_downloader = gi "$(Get-Location)\pip_downloader.py" -EA SilentlyContinue
-            if (-not $pip_downloader) {
-                $pip_downloader = gi "$(Get-Location)\bin\pip_downloader.py" -EA SilentlyContinue
-            }
-            if (-not $pip_downloader) {
-                $req = Invoke-WebRequest "https://go.microsoft.com/fwlink/?LinkID=393490" -UseBasicParsing
-                [System.IO.File]::WriteAllBytes("$(Get-Location)\bin\pip_downloader.py", $req.Content)
-                $pip_downloader = gi "$(Get-Location)\bin\pip_downloader.py" -EA Stop
-            }
-            py $pip_downloader
+if (-not $interpreter_path) {
+    $interpreter_path = install-python-from-nuget;
+}
+
+if (Test-Path requirements.txt) {
+    Set-Alias py (gi $interpreter_path -EA Stop)
+    py -m pip -V
+    if (-not $?) {
+        $pip_downloader = gi "$(Get-Location)\pip_downloader.py" -EA SilentlyContinue
+        if (-not $pip_downloader) {
+            $pip_downloader = gi "$(Get-Location)\bin\pip_downloader.py" -EA SilentlyContinue
         }
-        py -m pip install -r requirements.txt
+        if (-not $pip_downloader) {
+            Invoke-WebRequest "https://go.microsoft.com/fwlink/?LinkID=393490" -OutFile "$(Get-Location)\bin\pip_downloader.py"
+            $pip_downloader = gi "$(Get-Location)\bin\pip_downloader.py" -EA Stop
+        }
+        py $pip_downloader
+    }
+    py -m pip install -r requirements.txt
+}
+
+if ($is_web) {
+    $appcmdargs = ''
+    if ($env:appcmd) {
+        Set-Alias appcmd (gi ($env:appcmd -replace '^("(.+?)"|(\S+)).*$', '$2$3'))
+        $appcmdargs = $env:appcmd -replace '^(".+?"|\S+)\s*(.*)$', '$2'
+    } else {
+        try {
+            gcm appcmd -EA Stop
+        } catch {
+            Set-Alias appcmd (gi "$env:SystemRoot\System32\inetsrv\appcmd.exe" -EA Stop)
+        }
     }
 
-    if ($is_web) {
-        $appcmdargs = ''
-        if ($env:appcmd) {
-            Set-Alias appcmd (gi ($env:appcmd -replace '^("(.+?)"|(\S+)).*$', '$2$3'))
-            $appcmdargs = $env:appcmd -replace '^(".+?"|\S+)\s*(.*)$', '$2'
-        } else {
-            try {
-                gcm appcmd -EA Stop
-            } catch {
-                Set-Alias appcmd (gi "$env:SystemRoot\System32\inetsrv\appcmd.exe" -EA Stop)
-            }
-        }
+    $fastcgihandler = iex "& `"$interpreter_path`" -c `"import wfastcgi; print('$%1s|%$2s'%wfastcgi._enable())`" $env:appcmd"
 
-        # The first -replace parameter needs backslashes escaped, while the second
-        # does not. So we are really replacing 1 backslash with 2.
-        $interp = $interpreter_path -replace '\\', '\\'
-        $wfastcgi = (gi "$(Get-Location)\bin\wfastcgi.py" -EA Stop).FullName -replace '\\', '\\'
+    # The first -replace parameter needs backslashes escaped, while the second
+    # does not. So we are really replacing 1 backslash with 2.
+    $interp = $interpreter_path -replace '\\', '\\'
+    $wfastcgi = (gi "$(Get-Location)\bin\wfastcgi.py" -EA Stop).FullName -replace '\\', '\\'
 
-        if ($is_debug) {
-            $max_requests = 1
-        } else {
-            $max_requests = 1000
-        }
-
-        iex "appcmd $appcmdargs set config /section:system.webServer/fastCGI ""/+[fullPath='$interp',arguments='\""""$wfastcgi\""""',instanceMaxRequests='$max_requests',signalBeforeTerminateSeconds='30']"""
-
-        if ($is_emulated) {
-            $webconfig = gi web.config -EA Stop
-        } else {
-            $webconfig = gi web.cloud.config -EA SilentlyContinue
-            if (-not $webconfig) {
-                $webconfig = gi web.config -EA Stop
-            }
-        }
-
-        copy -force $webconfig "$webconfig.bak"
-        Get-Content "$webconfig.bak" | `
-            %{ $_ -replace '%wfastcgipath%', "&quot;$wfastcgi&quot;" } | `
-            %{ $_ -replace '%interpreterpath%', $interp } | `
-            %{ $_ -replace '%rootdir%', $env:RootDir } | `
-            Out-File -Encoding UTF8 "web.config" -Force
+    if ($is_emulated -and (Test-Path web.emulator.config)) {
+        $webconfig = gi web.emulator.config -EA Stop
+    } else if (-not $is_emulated -and (Test-Path web.cloud.config)) {
+        $webconfig = gi web.cloud.config -EA Stop
+    } else {
+        $webconfig = gi web.config -EA Stop
     }
+
+    if (Test-Path web.config) {
+        copy -force web.config "$webconfig.bak"
+    }
+    $xml = [xml](gc "$webconfig")
+    foreach ($e in $xml.configuration.'system.webServer'.handlers.add) {
+        if ($e.scriptProcessor -ieq '%fastcgihandler%') {
+            $e.scriptProcessor = $fastcgihandler
+        }
+    }
+    $xml.Save("web.config")
 }

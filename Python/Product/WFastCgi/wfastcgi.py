@@ -865,15 +865,20 @@ def _run_appcmd(args):
 Ensure your user has sufficient privileges and try again.''' % args, file=sys.stderr)
         return ex.returncode
 
-def enable():
+def _enable():
     quoted_file = '"' + __file__ + '"' if ' ' in __file__ else __file__    
     res = _run_appcmd([
         "set", "config", "/section:system.webServer/fastCGI",
         "/+[fullPath='" + sys.executable + "', arguments='" + quoted_file + "', signalBeforeTerminateSeconds='30']"
     ])
-    
+
+    return res, sys.executable, quoted_file
+
+def enable():
+    res, executable, quoted_file = _enable()
+
     if res == 0:
-        print('"%s|%s" can now be used as a FastCGI script processor' % (sys.executable, quoted_file))
+        print('"%s|%s" can now be used as a FastCGI script processor' % (executable, quoted_file))
     return res
 
 def disable():
