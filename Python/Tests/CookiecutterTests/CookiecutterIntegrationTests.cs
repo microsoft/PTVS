@@ -320,6 +320,28 @@ namespace CookiecutterTests {
             Assert.AreEqual(_vm.OpenInExplorerFolderPath, _openedFolder);
         }
 
+        [TestMethod]
+        public async Task InstallFromOnlineMultipleTimes() {
+            await EnsureCookiecutterInstalledAsync();
+
+            for (int i = 0; i < 3; i++) {
+                _vm.SearchTerm = OnlineTemplateUrl;
+                await _vm.SearchAsync();
+
+                var template = _vm.Custom.Templates[0] as TemplateViewModel;
+                await _vm.SelectTemplate(template);
+                await _vm.LoadTemplateAsync();
+                Assert.AreEqual(OperationStatus.Succeeded, _vm.CloningStatus);
+            }
+
+            _vm.SearchTerm = string.Empty;
+            await _vm.SearchAsync();
+
+            // After cloning the same template multiple times, make sure it only appears once in the installed section
+            var installed = _vm.Installed.Templates.OfType<TemplateViewModel>().Where(t => t.DisplayName == OnlineTemplateRepoName).ToArray();
+            Assert.AreEqual(1, installed.Length);
+        }
+
         private async Task EnsureCookiecutterInstalledAsync() {
             if (!_cutterClient.CookiecutterInstalled) {
                 await _cutterClient.CreateCookiecutterEnv();

@@ -55,6 +55,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private string _selectedDescription;
         private ImageSource _selectedImage;
         private string _selectedLocation;
+        private int _checkingUpdatePercentComplete;
 
         private OperationStatus _installingStatus;
         private OperationStatus _cloningStatus;
@@ -289,6 +290,19 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
+        public int CheckingUpdatePercentComplete {
+            get {
+                return _checkingUpdatePercentComplete;
+            }
+
+            set {
+                if (value != _checkingUpdatePercentComplete) {
+                    _checkingUpdatePercentComplete = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CheckingUpdatePercentComplete)));
+                }
+            }
+        }
+
         public TemplateViewModel SelectedTemplate {
             get {
                 return _selectedTemplate;
@@ -416,6 +430,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 string remote = template.RemoteUrl;
 
                 _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(String.Empty);
                 _outputWindow.WriteLine(Strings.DeletingTemplateStarted.FormatUI(template.ClonedPath));
 
                 await _installedSource.DeleteTemplateAsync(template.ClonedPath);
@@ -487,6 +502,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
                 try {
                     _outputWindow.ShowAndActivate();
+                    _outputWindow.WriteLine(String.Empty);
                     _outputWindow.WriteLine(Strings.CloningTemplateStarted.FormatUI(selection.DisplayName));
 
                     Directory.CreateDirectory(InstalledFolderPath);
@@ -531,28 +547,41 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public async Task CheckForUpdatesAsync() {
             ResetStatus();
 
+            bool anyError = false;
             try {
                 _checkUpdatesCancelTokenSource?.Cancel();
                 _checkUpdatesCancelTokenSource = new CancellationTokenSource();
 
                 CheckingUpdateStatus = OperationStatus.InProgress;
+                CheckingUpdatePercentComplete = 0;
 
+#if DEBUG || VERBOSE_UPDATES
+                _outputWindow.WriteLine(String.Empty);
                 _outputWindow.WriteLine(Strings.CheckingForAllUpdatesStarted);
+#endif
 
-                bool anyError = false;
                 var templatesResult = await _installedSource.GetTemplatesAsync(null, null, CancellationToken.None);
-                foreach (var template in templatesResult.Templates) {
+                for (int i = 0; i < templatesResult.Templates.Count; i++) {
+                    CheckingUpdatePercentComplete = (int)((i / (double)templatesResult.Templates.Count) * 100);
+                    var template = templatesResult.Templates[i];
+
                     _checkUpdatesCancelTokenSource.Token.ThrowIfCancellationRequested();
 
                     try {
+#if DEBUG || VERBOSE_UPDATES
                         _outputWindow.WriteLine(Strings.CheckingTemplateUpdateStarted.FormatUI(template.Name, template.RemoteUrl));
+#endif
 
                         var available = await _installedSource.CheckForUpdateAsync(template.RemoteUrl);
 
-                        if (available.HasValue) {
-                            _outputWindow.WriteLine(available.Value ? Strings.CheckingTemplateUpdateFound : Strings.CheckingTemplateUpdateNotFound);
-                        } else {
+                        if (available == null) {
                             _outputWindow.WriteLine(Strings.CheckingTemplateUpdateInconclusive);
+#if DEBUG || VERBOSE_UPDATES
+                        } else if (available == true) {
+                            _outputWindow.WriteLine(Strings.CheckingTemplateUpdateFound);
+                        } else if (available == false) {
+                            _outputWindow.WriteLine(Strings.CheckingTemplateUpdateNotFound);
+#endif
                         }
 
                         var installed = Installed.Templates.OfType<TemplateViewModel>().SingleOrDefault(vm => vm.RemoteUrl == template.RemoteUrl);
@@ -562,23 +591,47 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     } catch (Exception ex) when (!ex.IsCriticalException()) {
                         if (!anyError) {
                             _outputWindow.ShowAndActivate();
+#if DEBUG || VERBOSE_UPDATES
+                            _outputWindow.WriteLine(String.Empty);
+                            _outputWindow.WriteLine(Strings.CheckingForAllUpdatesStarted);
+#endif
                         }
 
                         anyError = true;
 
+                        _outputWindow.WriteLine(Strings.CheckingTemplateUpdateStarted.FormatUI(template.Name, template.RemoteUrl));
                         _outputWindow.WriteErrorLine(ex.Message);
+
+                        var pex = ex as ProcessException;
+                        if (pex != null) {
+                            _outputWindow.WriteErrorLine(string.Join(Environment.NewLine, pex.Result.StandardErrorLines ?? new string[0]));
+                        }
+
                         _outputWindow.WriteLine(Strings.CheckingTemplateUpdateError);
                     }
                 }
 
                 CheckingUpdateStatus = anyError ? OperationStatus.Failed : OperationStatus.Succeeded;
+                CheckingUpdatePercentComplete = 100;
 
-                _outputWindow.WriteLine(anyError ? Strings.CheckingForAllUpdatesFailed : Strings.CheckingForAllUpdatesSuccess);
+                if (anyError) {
+                    _outputWindow.WriteLine(Strings.CheckingForAllUpdatesFailed);
+#if DEBUG || VERBOSE_UPDATES
+                } else {
+                    _outputWindow.WriteLine(Strings.CheckingForAllUpdatesSuccess);
+#endif
+                }
 
                 ReportEvent(CookiecutterTelemetry.TelemetryArea.Search, CookiecutterTelemetry.SearchEvents.CheckUpdate, (!anyError).ToString());
             } catch (OperationCanceledException) {
                 CheckingUpdateStatus = OperationStatus.Canceled;
+#if DEBUG || VERBOSE_UPDATES
                 _outputWindow.WriteLine(Strings.CheckingForAllUpdatesCanceled);
+#else
+                if (anyError) {
+                    _outputWindow.WriteLine(Strings.CheckingForAllUpdatesCanceled);
+                }
+#endif
             }
         }
 
@@ -595,6 +648,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 UpdatingStatus = OperationStatus.InProgress;
 
                 _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(String.Empty);
                 _outputWindow.WriteLine(Strings.UpdatingTemplateStarted.FormatUI(selection.DisplayName));
 
                 await _installedSource.UpdateTemplateAsync(selection.ClonedPath);
@@ -644,6 +698,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 SaveUserInput(contextFilePath);
 
                 _outputWindow.ShowAndActivate();
+                _outputWindow.WriteLine(String.Empty);
                 _outputWindow.WriteLine(Strings.RunningTemplateStarted.FormatUI(selection.DisplayName));
 
                 await _cutterClient.GenerateProjectAsync(_templateLocalFolderPath, UserConfigFilePath, contextFilePath, OutputFolderPath);

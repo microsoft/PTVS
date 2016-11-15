@@ -85,7 +85,7 @@ namespace AnalyzerStatusTests {
                     Assert.AreEqual(0, results["SendUpdates2"].Maximum, "SendUpdates2.Maximum not initialized to 0");
                     Assert.AreEqual(string.Empty, results["SendUpdates2"].Message, "SendUpdates2.Message not initialized to empty");
 
-                    sender1.UpdateStatus(100, 200, "Message1");
+                    sender1.UpdateStatus(100, 200, 300, "Message1");
                     sender1.FlushQueue(TimeSpan.FromSeconds(1.0));
 
                     ready.Reset();
@@ -93,12 +93,13 @@ namespace AnalyzerStatusTests {
                     ready.WaitOne();
                     Assert.AreEqual(100, results["SendUpdates1"].Progress, "SendUpdates1.Progress not set to 100");
                     Assert.AreEqual(200, results["SendUpdates1"].Maximum, "SendUpdates1.Maximum not set to 200");
+                    Assert.AreEqual(300, results["SendUpdates1"].Seconds, "SendUpdates1.Seconds not set to 300");
                     Assert.AreEqual("Message1", results["SendUpdates1"].Message, "SendUpdates1.Message not set");
                     Assert.AreEqual(int.MaxValue, results["SendUpdates2"].Progress, "SendUpdates2.Progress changed from MaxValue");
                     Assert.AreEqual(0, results["SendUpdates2"].Maximum, "SendUpdates2.Maximum changed from 0");
                     Assert.AreEqual(string.Empty, results["SendUpdates2"].Message, "SendUpdates2.Message changed from empty");
 
-                    sender2.UpdateStatus(1000, 2000, "Message2");
+                    sender2.UpdateStatus(1000, 2000, 3000, "Message2");
                     sender2.FlushQueue(TimeSpan.FromSeconds(1.0));
 
                     ready.Reset();
@@ -106,9 +107,11 @@ namespace AnalyzerStatusTests {
                     ready.WaitOne();
                     Assert.AreEqual(100, results["SendUpdates1"].Progress, "SendUpdates1.Progress changed from 100");
                     Assert.AreEqual(200, results["SendUpdates1"].Maximum, "SendUpdates1.Maximum changed from 200");
+                    Assert.AreEqual(300, results["SendUpdates1"].Seconds, "SendUpdates1.Seconds changed from 300");
                     Assert.AreEqual("Message1", results["SendUpdates1"].Message, "SendUpdates1.Message changed");
                     Assert.AreEqual(1000, results["SendUpdates2"].Progress, "SendUpdates2.Progress not set to 1000");
                     Assert.AreEqual(2000, results["SendUpdates2"].Maximum, "SendUpdates2.Maximum not set to 2000");
+                    Assert.AreEqual(3000, results["SendUpdates2"].Seconds, "SendUpdates2.Seconds not set to 3000");
                     Assert.AreEqual("Message2", results["SendUpdates2"].Message, "SendUpdates2.Message not set");
                 }
 
@@ -165,14 +168,14 @@ namespace AnalyzerStatusTests {
         [TestMethod, Priority(1)]
         public void IdentifierInUse() {
             using (var updater = new AnalyzerStatusUpdater("IdentifierInUse")) {
-                updater.UpdateStatus(1, 100);
+                updater.UpdateStatus(1, 100, 0);
                 updater.WaitForWorkerStarted();
                 // Should not throw
                 updater.ThrowPendingExceptions();
 
                 using (var updater2 = new AnalyzerStatusUpdater("IdentifierInUse")) {
                     updater2.WaitForWorkerStarted();
-                    updater2.UpdateStatus(99, 100);
+                    updater2.UpdateStatus(99, 100, 0);
 
                     try {
                         updater2.ThrowPendingExceptions();
@@ -216,7 +219,7 @@ namespace AnalyzerStatusTests {
 
                     // Create a message that is deliberately too long
                     string message = new string('x', AnalyzerStatusUpdater.MAX_MESSAGE_LENGTH * 2);
-                    sender.UpdateStatus(0, 0, message);
+                    sender.UpdateStatus(0, 0, 0, message);
                     sender.FlushQueue(TimeSpan.FromSeconds(1.0));
 
                     listener.RequestUpdate();

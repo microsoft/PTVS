@@ -25,17 +25,17 @@ namespace Microsoft.PythonTools.Logging {
         /// </summary>
         Launch,
         /// <summary>
-        /// Logs the number of installed (picked up automatically) interpreters.
+        /// Logs the number of available interpreters.
         /// 
         /// Data is an int indicating the number of interpreters.
         /// </summary>
         InstalledInterpreters,
         /// <summary>
-        /// Logs the number of configured (user added) interpreters.
+        /// Logs the number of virtual environments in a project.
         /// 
-        /// Data is an int indicating the number of interpreters.
+        /// Data is an int indicating the number of virtual environments.
         /// </summary>
-        ConfiguredInterpreters,
+        VirtualEnvironments,
         /// <summary>
         /// Logs the frequency at which users check for new Survey\News
         /// 
@@ -44,9 +44,13 @@ namespace Microsoft.PythonTools.Logging {
         SurveyNewsFrequency,
 
         /// <summary>
-        /// Logs package installs
+        /// Logs installed package
         /// </summary>
-        PackageInstalled,
+        PythonPackage,
+        /// <summary>
+        /// The number of seconds that it took to analyze a DB
+        /// </summary>
+        AnalysisCompleted,
         /// <summary>
         /// The analysis process exited abnormally for some reason...
         /// </summary>

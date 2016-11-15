@@ -44,13 +44,23 @@ namespace Microsoft.PythonTools.Infrastructure {
                 callerName = callerType.FullName + "." + callerName;
             }
 
-            return string.Format(
-                Strings.UnhandledException,
-                ex,
-                callerFile ?? String.Empty,
-                callerLineNumber,
-                callerName
-            );
+            try {
+                return string.Format(
+                    Strings.UnhandledException,
+                    ex,
+                    callerFile ?? String.Empty,
+                    callerLineNumber,
+                    callerName
+                );
+            } catch (Exception ex2) {
+                // Never throw out of this function.
+                try {
+                    return ex2.ToString();
+                } catch (Exception) {
+                    // Never -- NEVER -- throw out of this function.
+                    return "Unhandled exception constructing exception message.";
+                }
+            }
         }
 
     }
