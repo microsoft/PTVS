@@ -26,5 +26,6 @@ namespace Microsoft.CookiecutterTools.Model {
         Task InstallPackage();
         Task<ContextItem[]> LoadContextAsync(string localTemplateFolder, string userConfigFilePath);
         Task GenerateProjectAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath);
+        Task<string> GetDefaultOutputFolderAsync(string shortName);
     }
 }
