@@ -101,6 +101,7 @@ namespace Microsoft.PythonTools.Workspace {
                             path = candidate;
                             break;
                         }
+                        basePath = PathUtils.GetParent(basePath);
                     }
                 }
 
