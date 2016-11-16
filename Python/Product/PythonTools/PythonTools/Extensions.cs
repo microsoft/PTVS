@@ -650,9 +650,10 @@ namespace Microsoft.PythonTools {
 #if DEBUG
             // https://github.com/Microsoft/PTVS/issues/1205
             // Help see when this function is being incorrectly called from off
-            // the UI thread. There's a chance that GetUIThread() will fail in
+            // the UI thread. There's a chance that GetService() will fail in
             // this case too, but mostly it will succeed (and then assert).
-            serviceProvider.GetUIThread().MustBeCalledFromUIThread();
+            var uiThread = serviceProvider.GetService(typeof(UIThreadBase)) as UIThreadBase;
+            uiThread?.MustBeCalledFromUIThread();
 #endif
             return serviceProvider.GetPythonToolsService_NotThreadSafe();
         }
