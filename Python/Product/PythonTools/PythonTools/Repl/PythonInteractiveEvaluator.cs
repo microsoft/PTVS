@@ -86,8 +86,14 @@ namespace Microsoft.PythonTools.Repl {
             if (_isDisposed) {
                 return;
             }
-
             _isDisposed = true;
+
+            if (_projectWithHookedEvents != null) {
+                _projectWithHookedEvents.ActiveInterpreterChanged -= Project_ConfigurationChanged;
+                _projectWithHookedEvents._searchPaths.Changed -= Project_ConfigurationChanged;
+                _projectWithHookedEvents = null;
+            }
+
             if (disposing) {
                 var thread = Interlocked.Exchange(ref _thread, null);
                 if (thread != null) {
@@ -125,6 +131,8 @@ namespace Microsoft.PythonTools.Repl {
         internal virtual void OnConnected() { }
         internal virtual void OnAttach() { }
         internal virtual void OnDetach() { }
+
+        internal bool AssociatedProjectHasChanged { get; set; }
 
         private PythonProjectNode GetAssociatedPythonProject(InterpreterConfiguration interpreter = null) {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
@@ -407,6 +415,7 @@ namespace Microsoft.PythonTools.Repl {
                 _projectWithHookedEvents = null;
             }
 
+            AssociatedProjectHasChanged = false;
             var pyProj = GetAssociatedPythonProject();
             if (pyProj == null) {
                 return;
@@ -416,7 +425,7 @@ namespace Microsoft.PythonTools.Repl {
             ScriptsPath = GetScriptsPath(
                 _serviceProvider,
                 PathUtils.GetAbsoluteDirectoryPath(pyProj.ProjectHome, "Scripts"),
-                pyProj.GetInterpreterFactory()?.Configuration
+                Configuration.Interpreter
             );
 
             _projectWithHookedEvents = pyProj;
@@ -434,6 +443,7 @@ namespace Microsoft.PythonTools.Repl {
                 pyProj.ActiveInterpreterChanged -= Project_ConfigurationChanged;
                 pyProj._searchPaths.Changed -= Project_ConfigurationChanged;
                 WriteError(Strings.ReplProjectConfigurationChanged.FormatUI(pyProj.Caption));
+                AssociatedProjectHasChanged = true;
             }
         }
 

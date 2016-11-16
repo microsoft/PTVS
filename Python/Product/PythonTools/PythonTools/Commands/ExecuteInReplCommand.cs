@@ -50,11 +50,44 @@ namespace Microsoft.PythonTools.Commands {
             var provider = compModel.GetService<InteractiveWindowProvider>();
             var vsProjectContext = compModel.GetService<VsProjectContextProvider>();
 
-            string replId = config != null ?
-                PythonReplEvaluatorProvider.GetEvaluatorId(config) :
-                PythonReplEvaluatorProvider.GetEvaluatorId(project);
-            var window = provider.OpenOrCreate(replId);
-            project?.AddActionOnClose(window, InteractiveWindowProvider.Close);
+            var projectId = project != null ? PythonReplEvaluatorProvider.GetEvaluatorId(project) : null;
+            var configId = config != null ? PythonReplEvaluatorProvider.GetEvaluatorId(config) : null;
+
+            IVsInteractiveWindow window;
+
+            // If we find an open window for the project, prefer that to a per-config one
+            if (!string.IsNullOrEmpty(projectId)) {
+                window = provider.Open(projectId);
+                if (window != null) {
+                    if (window.InteractiveWindow.GetPythonEvaluator()?.AssociatedProjectHasChanged == true) {
+                        // We have an existing window, but it needs to be reset.
+                        // Let's create a new one
+                        window = provider.Create(projectId);
+                        project.AddActionOnClose(window, InteractiveWindowProvider.Close);
+                    }
+
+                    return window;
+                }
+            }
+
+            // If we find an open window for the configuration, return that
+            if (!string.IsNullOrEmpty(configId)) {
+                window = provider.Open(configId);
+                if (window != null) {
+                    return window;
+                }
+            }
+
+            // No window found, so let's create one
+            if (!string.IsNullOrEmpty(projectId)) {
+                window = provider.Create(projectId);
+                project.AddActionOnClose(window, InteractiveWindowProvider.Close);
+            } else if (!string.IsNullOrEmpty(configId)) {
+                window = provider.Create(configId);
+            } else {
+                var interpService = compModel.GetService<IInterpreterOptionsService>();
+                window = provider.Create(PythonReplEvaluatorProvider.GetEvaluatorId(interpService.DefaultInterpreter.Configuration));
+            }
 
             return window;
         }
