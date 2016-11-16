@@ -463,9 +463,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             try {
                 var _excludedAssemblies = new HashSet<string>(new[] {
                     "VsLogger.dll",
-#if !DEV15_OR_LATER
                     "Microsoft.VisualStudio.Workspace.dll",
-#endif
                 }, StringComparer.OrdinalIgnoreCase);
 
                 foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {

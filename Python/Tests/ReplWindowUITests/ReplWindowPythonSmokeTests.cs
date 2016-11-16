@@ -23,6 +23,7 @@ using Microsoft.PythonTools;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Microsoft.VisualStudioTools;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
@@ -178,7 +179,8 @@ namespace ReplWindowUITests {
                 Assert.IsTrue(interactive.Settings.EnableAttach, "EnableAttach was not set");
 
                 using (var dis = new DefaultInterpreterSetter(interactive.GetAnalyzer().InterpreterFactory)) {
-                    Assert.AreEqual(dis.CurrentDefault.Configuration.Description, project.GetPythonProject().GetInterpreterFactory().Configuration.Description);
+                    var activeDescr = app.GetService<UIThreadBase>().Invoke(() => project.GetPythonProject().GetInterpreterFactory().Configuration.Description);
+                    Assert.AreEqual(dis.CurrentDefault.Configuration.Description, activeDescr);
 
                     interactive.Reset();
                     interactive.ClearScreen();
