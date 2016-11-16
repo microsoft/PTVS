@@ -92,6 +92,22 @@ namespace Microsoft.PythonTools.Repl {
             return false;
         }
 
+        public IVsInteractiveWindow Open(string replId) {
+            EnsureInterpretersAvailable();
+
+            lock (_windows) {
+                foreach(var window in _windows.Values) {
+                    var eval = window.InteractiveWindow?.Evaluator as SelectableReplEvaluator;
+                    if (eval?.CurrentEvaluator == replId) {
+                        window.Show(true);
+                        return window;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         public IVsInteractiveWindow OpenOrCreate(string replId) {
             EnsureInterpretersAvailable();
 

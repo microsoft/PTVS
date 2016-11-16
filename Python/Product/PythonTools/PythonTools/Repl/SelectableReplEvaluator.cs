@@ -164,6 +164,7 @@ namespace Microsoft.PythonTools.Repl {
             if (oldEval != null) {
                 DetachWindow(oldEval);
                 DetachMultipleScopeHandling(oldEval);
+                oldEval.Dispose();
             }
 
             _evaluator = eval;

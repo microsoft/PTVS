@@ -1517,6 +1517,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The associated project &apos;{0}&apos; has changed its configuration. These changes will not be reflected until you reset this interactive window..
+        /// </summary>
+        public static string ReplProjectConfigurationChanged {
+            get {
+                return ResourceManager.GetString("ReplProjectConfigurationChanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Changing to {0} will reset your current state..
         /// </summary>
         public static string ReplQuerySwitchEvaluator {
