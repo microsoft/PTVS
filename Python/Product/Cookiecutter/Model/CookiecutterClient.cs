@@ -21,14 +21,19 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools.Infrastructure;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.CookiecutterTools.Model {
     class CookiecutterClient : ICookiecutterClient {
+        private readonly IServiceProvider _provider;
         private readonly CookiecutterPythonInterpreter _interpreter;
         private readonly string _envFolderPath;
         private readonly string _envInterpreterPath;
         private readonly Redirector _redirector;
+
+        internal string DefaultBasePath { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
         public bool CookiecutterInstalled {
             get {
@@ -40,7 +45,8 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
-        public CookiecutterClient(CookiecutterPythonInterpreter interpreter, Redirector redirector) {
+        public CookiecutterClient(IServiceProvider provider, CookiecutterPythonInterpreter interpreter, Redirector redirector) {
+            _provider = provider;
             _interpreter = interpreter;
             var localAppDataFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             _envFolderPath = Path.Combine(localAppDataFolderPath, "Microsoft", "CookiecutterTools", "env");
@@ -139,6 +145,26 @@ namespace Microsoft.CookiecutterTools.Model {
 
             var result = await RunRunScript(_redirector, _envInterpreterPath, localTemplateFolder, userConfigFilePath, tempFolder, contextFilePath);
             MoveToDesiredFolder(outputFolderPath, tempFolder);
+        }
+
+        public Task<string> GetDefaultOutputFolderAsync(string shortName) {
+            var shell = _provider?.GetService(typeof(SVsShell)) as IVsShell;
+            object o;
+            string vspp, baseName;
+            if (shell != null &&
+                ErrorHandler.Succeeded(shell.GetProperty((int)__VSSPROPID.VSSPROPID_VisualStudioProjDir, out o)) &&
+                PathUtils.IsValidPath((vspp = o as string))) {
+                baseName = vspp;
+            } else {
+                baseName = DefaultBasePath;
+            }
+
+            var candidate = PathUtils.GetAbsoluteDirectoryPath(baseName, shortName);
+            int counter = 1;
+            while (Directory.Exists(candidate) || File.Exists(PathUtils.TrimEndSeparator(candidate))) {
+                candidate = PathUtils.GetAbsoluteDirectoryPath(baseName, "{0}{1}".FormatInvariant(shortName, ++counter));
+            }
+            return Task.FromResult(candidate);
         }
 
         private void LoadVisualStudioSpecificContext(List<ContextItem> items, JProperty vsExtrasProp) {

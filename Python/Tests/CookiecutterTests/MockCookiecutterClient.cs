@@ -39,6 +39,10 @@ namespace CookiecutterTests {
             throw new NotImplementedException();
         }
 
+        public Task<string> GetDefaultOutputFolderAsync(string shortName) {
+            throw new NotImplementedException();
+        }
+
         public Task InstallPackage() {
             throw new NotImplementedException();
         }

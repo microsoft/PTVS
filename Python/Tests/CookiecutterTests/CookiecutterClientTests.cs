@@ -18,9 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CookiecutterTools;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.ViewModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -91,7 +89,7 @@ namespace CookiecutterTests {
 
         [TestInitialize]
         public void SetupTest() {
-            _client = CookiecutterClientProvider.Create(_redirector);
+            _client = CookiecutterClientProvider.Create(null, _redirector);
             Assert.IsNotNull(_client, "The system doesn't have any compatible Python interpreters.");
         }
 

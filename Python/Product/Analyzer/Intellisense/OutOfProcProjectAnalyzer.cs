@@ -1513,7 +1513,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         abstract class CodeInfo {
             public readonly int Version;
-            public object Code; // Stream or TextReader
 
             public CodeInfo(int version) {
                 Version = version;
