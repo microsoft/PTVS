@@ -93,12 +93,5 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
 
             return str.Substring(0, length);
         }
-
-        public static string GetSha512(this string input) {
-            SHA512 sha = SHA512.Create();
-            byte[] inputBytes = Encoding.Unicode.GetBytes(input);
-            byte[] hash = sha.ComputeHash(inputBytes);
-            return BitConverter.ToString(hash);
-        }
     }
 }
