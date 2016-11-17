@@ -117,8 +117,8 @@ namespace Microsoft.PythonTools.Profiling {
         
         [XmlElement("UseVTune")]
         public bool UseVTune {
-            get { return true; } // TODO: Stop-gap until the value flows through correctly
-            set {} 
+            get; 
+            set; 
         }
 
         internal ProjectTarget Clone() {

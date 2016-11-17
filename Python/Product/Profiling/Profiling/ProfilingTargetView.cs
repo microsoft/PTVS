@@ -109,10 +109,12 @@ namespace Microsoft.PythonTools.Profiling {
         /// </summary>
         public ProfilingTarget GetTarget() {
             if (IsValid) {
-                return new ProfilingTarget {
+                var t = new ProfilingTarget {
                     ProjectTarget = IsProjectSelected ? Project.GetTarget() : null,
                     StandaloneTarget = IsStandaloneSelected ? Standalone.GetTarget() : null
                 };
+                t.ProjectTarget.UseVTune = _project.GetTarget().UseVTune;
+                return t;
             } else {
                 return null;
             }

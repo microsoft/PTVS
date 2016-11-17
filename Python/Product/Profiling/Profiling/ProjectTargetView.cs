@@ -25,6 +25,7 @@ namespace Microsoft.PythonTools.Profiling {
     public class ProjectTargetView {
         readonly string _name;
         readonly Guid _guid;
+        readonly bool _useVTune;
         
         /// <summary>
         /// Create a ProjectTargetView with values from an EnvDTE.Project.
@@ -50,6 +51,7 @@ namespace Microsoft.PythonTools.Profiling {
         public ProjectTargetView(ProjectTarget project) {
             _name = project.FriendlyName;
             _guid = project.TargetProject;
+            _useVTune = project.UseVTune;
         }
 
         /// <summary>
@@ -58,7 +60,8 @@ namespace Microsoft.PythonTools.Profiling {
         public ProjectTarget GetTarget() {
             return new ProjectTarget {
                 FriendlyName = _name,
-                TargetProject = _guid
+                TargetProject = _guid,
+                UseVTune = _useVTune
             };
         }
 
@@ -77,6 +80,15 @@ namespace Microsoft.PythonTools.Profiling {
         public Guid Guid {
             get {
                 return _guid;
+            }
+        }
+        
+        /// <summary>
+        /// Should VTune mixed mode profiling be used?
+        /// </summary>
+        public bool UseVTune {
+            get {
+                return _useVTune;
             }
         }
 
