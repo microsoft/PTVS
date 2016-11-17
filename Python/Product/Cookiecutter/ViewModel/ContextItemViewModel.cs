@@ -47,6 +47,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             _items = new List<string>();
             if (items != null && items.Length > 0) {
                 _items.AddRange(items);
+            }
+
+            // These selectors don't have a way of showing the default value (watermark)
+            // when no value is set (and there's no way to unset the value once it is set).
+            // So we'll always start with the value set to default.
+            if (selector == Selectors.YesNo || selector == Selectors.List) {
                 _val = _default;
             }
         }
