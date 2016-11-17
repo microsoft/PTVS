@@ -45,8 +45,9 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             _val = string.Empty;
             _default = defaultValue;
             _items = new List<string>();
-            if (items != null) {
+            if (items != null && items.Length > 0) {
                 _items.AddRange(items);
+                _val = _default;
             }
         }
 

@@ -65,8 +65,7 @@
                             <wpf:ConfigurationComboBoxWithHelp Margin="4 0 8 4"
                                                                Value="{Binding Val, Mode=TwoWay}"
                                                                Values="{Binding Items}"
-                                                               HelpText="{Binding Description}"
-                                                               Watermark="{Binding Default}" />
+                                                               HelpText="{Binding Description}" />
                         </StackPanel>
                     </DataTemplate>
                     <DataTemplate x:Key="yesnoTemplate">
@@ -81,8 +80,7 @@
                             <wpf:ConfigurationComboBoxWithHelp Margin="4 0 8 4"
                                                                Value="{Binding Val, Mode=TwoWay}"
                                                                Values="{StaticResource ResourceKey=yesnoValues}"
-                                                               HelpText="{Binding Description}"
-                                                               Watermark="{Binding Default}" />
+                                                               HelpText="{Binding Description}" />
                         </StackPanel>
                     </DataTemplate>
                     <wpf:Lambda x:Key="OperationStatusInProgressToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.InProgress ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
