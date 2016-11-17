@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -83,7 +84,9 @@ namespace Microsoft.CookiecutterTools.View {
 
         private void OpenInBrowser_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var url = (string)e.Parameter;
-            e.CanExecute = !string.IsNullOrEmpty(url);
+            Uri uri;
+            e.CanExecute = Uri.TryCreate(url, UriKind.Absolute, out uri) &&
+                           (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
             e.Handled = true;
         }
 

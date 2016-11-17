@@ -58,6 +58,7 @@
                                        Text="{Binding Label}"/>
                             <Button Margin="8 4 4 0"
                                     Content="{Binding Label}"
+                                    ToolTip="{Binding Url}"
                                     Visibility="{Binding Path=Url, Converter={StaticResource EmptyStringToNotVisibleOrCollapsed}}"
                                     Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
                                     CommandParameter="{Binding Url,Mode=OneWay}"
@@ -75,6 +76,7 @@
                                        Text="{Binding Label}"/>
                             <Button Margin="8 4 4 0"
                                     Content="{Binding Label}"
+                                    ToolTip="{Binding Url}"
                                     Visibility="{Binding Path=Url, Converter={StaticResource EmptyStringToNotVisibleOrCollapsed}}"
                                     Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
                                     CommandParameter="{Binding Url,Mode=OneWay}"
@@ -93,6 +95,7 @@
                                        Text="{Binding Label}"/>
                             <Button Margin="8 4 4 0"
                                     Content="{Binding Label}"
+                                    ToolTip="{Binding Url}"
                                     Visibility="{Binding Path=Url, Converter={StaticResource EmptyStringToNotVisibleOrCollapsed}}"
                                     Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
                                     CommandParameter="{Binding Url,Mode=OneWay}"
@@ -117,6 +120,7 @@
                                        Text="{Binding Label}"/>
                             <Button Margin="8 4 4 0"
                                     Content="{Binding Label}"
+                                    ToolTip="{Binding Url}"
                                     Visibility="{Binding Path=Url, Converter={StaticResource EmptyStringToNotVisibleOrCollapsed}}"
                                     Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
                                     CommandParameter="{Binding Url,Mode=OneWay}"

@@ -244,7 +244,17 @@ namespace Microsoft.CookiecutterTools.Model {
             var urlToken = itemObj.SelectToken("url");
             if (urlToken != null) {
                 if (urlToken.Type == JTokenType.String) {
-                    item.Url = urlToken.Value<string>();
+                    var val = urlToken.Value<string>();
+                    Uri uri;
+                    if (Uri.TryCreate(val, UriKind.Absolute, out uri)) {
+                        if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) {
+                            item.Url = val;
+                        } else {
+                            InvalidUrl(val);
+                        }
+                    } else {
+                        InvalidUrl(val);
+                    }
                 } else {
                     WrongJsonType("url", JTokenType.String, urlToken.Type);
                 }
@@ -262,6 +272,10 @@ namespace Microsoft.CookiecutterTools.Model {
                     WrongJsonType("selector", JTokenType.String, selectorToken.Type);
                 }
             }
+        }
+
+        private void InvalidUrl(string url) {
+            _redirector.WriteErrorLine(string.Format("'{0}' from _visual_studio section in context file should be an absolute http or https url.", url));
         }
 
         private void WrongJsonType(string name, JTokenType expected, JTokenType actual) {

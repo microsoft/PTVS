@@ -20,7 +20,8 @@
     },
     "project_name": {
       "label": "Project Name",
-      "description": "Description for the application."
+      "description": "Description for the application.",
+      "url":  "c:\\foo.txt"
     },
     "project_slug": {
       "label": "Package Name",
@@ -44,7 +45,8 @@
     },
     "port": {
       "label": "Port",
-      "selector": "string"
+      "selector": "string",
+      "url": "/bad/url"
     }
   }
 }
