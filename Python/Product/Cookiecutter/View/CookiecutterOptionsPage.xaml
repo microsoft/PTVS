@@ -30,19 +30,39 @@
         <CommandBinding Command="{x:Static vm:CookiecutterViewModel.HomeCommand}"
                         CanExecute="Home_CanExecute"
                         Executed="Home_Executed" />
+        <CommandBinding Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
+                    CanExecute="OpenInBrowser_CanExecute"
+                    Executed="OpenInBrowser_Executed" />
     </Page.CommandBindings>
     <Page.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="CookiecutterDictionary.xaml" />
                 <ResourceDictionary>
+                    <wpf:Lambda x:Key="OperationStatusInProgressToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.InProgress ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+                    <wpf:Lambda x:Key="OperationStatusFailedToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.Failed ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+                    <wpf:Lambda x:Key="OperationStatusSucceededToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.Succeeded ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+                    <wpf:Lambda x:Key="BoolToVisibleOrCollapsed">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+                    <wpf:Lambda x:Key="BoolToVisible">(bool b) => b ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
+                    <wpf:Lambda x:Key="BoolToNotVisible">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
+                    <wpf:Lambda x:Key="EmptyStringToVisibleOrCollapsed">(string s) => !string.IsNullOrEmpty(s) ? Visibility.Collapsed: Visibility.Visible</wpf:Lambda>
+                    <wpf:Lambda x:Key="EmptyStringToNotVisibleOrCollapsed">(string s) => string.IsNullOrEmpty(s) ? Visibility.Collapsed : Visibility.Visible</wpf:Lambda>
                     <Style x:Key="BrowseOdbcButton" TargetType="{x:Type Button}" BasedOn="{StaticResource BrowseButton}">
                         <Setter Property="Command" Value="{x:Static view:SqlCommands.BrowseOdbc}" />
                     </Style>
                     <view:TemplateContextItemTemplateSelector x:Key="contextItemSelector"/>
                     <DataTemplate x:Key="stringTemplate">
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Margin="8 4 4 0" Text="{Binding Label}"/>
+                            <TextBlock Margin="8 4 4 0"
+                                       Visibility="{Binding Path=Url, Converter={StaticResource EmptyStringToVisibleOrCollapsed}}"
+                                       Text="{Binding Label}"/>
+                            <Button Margin="8 4 4 0"
+                                    Content="{Binding Label}"
+                                    ToolTip="{Binding Url}"
+                                    Visibility="{Binding Path=Url, Converter={StaticResource EmptyStringToNotVisibleOrCollapsed}}"
+                                    Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
+                                    CommandParameter="{Binding Url,Mode=OneWay}"
+                                    Style="{StaticResource NavigationButton}"/>
                             <wpf:ConfigurationTextBoxWithHelp Margin="4 0 8 4"
                                                               Text="{Binding Val, Mode=TwoWay}"
                                                               HelpText="{Binding Description}"
@@ -51,7 +71,16 @@
                     </DataTemplate>
                     <DataTemplate x:Key="odbcconnectionTemplate">
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Margin="8 4 4 0" Text="{Binding Label}"/>
+                            <TextBlock Margin="8 4 4 0"
+                                       Visibility="{Binding Path=Url, Converter={StaticResource EmptyStringToVisibleOrCollapsed}}"
+                                       Text="{Binding Label}"/>
+                            <Button Margin="8 4 4 0"
+                                    Content="{Binding Label}"
+                                    ToolTip="{Binding Url}"
+                                    Visibility="{Binding Path=Url, Converter={StaticResource EmptyStringToNotVisibleOrCollapsed}}"
+                                    Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
+                                    CommandParameter="{Binding Url,Mode=OneWay}"
+                                    Style="{StaticResource NavigationButton}"/>
                             <wpf:ConfigurationTextBoxWithHelp Margin="4 0 8 4"
                                                               Text="{Binding Val, Mode=TwoWay}"
                                                               HelpText="{Binding Description}"
@@ -61,7 +90,16 @@
                     </DataTemplate>
                     <DataTemplate x:Key="listTemplate">
                         <StackPanel Orientation="Vertical">
-                            <TextBlock Margin="8 4 4 0" Text="{Binding Label}"/>
+                            <TextBlock Margin="8 4 4 0"
+                                       Visibility="{Binding Path=Url, Converter={StaticResource EmptyStringToVisibleOrCollapsed}}"
+                                       Text="{Binding Label}"/>
+                            <Button Margin="8 4 4 0"
+                                    Content="{Binding Label}"
+                                    ToolTip="{Binding Url}"
+                                    Visibility="{Binding Path=Url, Converter={StaticResource EmptyStringToNotVisibleOrCollapsed}}"
+                                    Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
+                                    CommandParameter="{Binding Url,Mode=OneWay}"
+                                    Style="{StaticResource NavigationButton}"/>
                             <wpf:ConfigurationComboBoxWithHelp Margin="4 0 8 4"
                                                                Value="{Binding Val, Mode=TwoWay}"
                                                                Values="{Binding Items}"
@@ -77,7 +115,16 @@
                                     <sys:String>n</sys:String>
                                 </x:Array>
                             </StackPanel.Resources>
-                            <TextBlock Margin="8 4 4 0" Text="{Binding Label}"/>
+                            <TextBlock Margin="8 4 4 0"
+                                       Visibility="{Binding Path=Url, Converter={StaticResource EmptyStringToVisibleOrCollapsed}}"
+                                       Text="{Binding Label}"/>
+                            <Button Margin="8 4 4 0"
+                                    Content="{Binding Label}"
+                                    ToolTip="{Binding Url}"
+                                    Visibility="{Binding Path=Url, Converter={StaticResource EmptyStringToNotVisibleOrCollapsed}}"
+                                    Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
+                                    CommandParameter="{Binding Url,Mode=OneWay}"
+                                    Style="{StaticResource NavigationButton}"/>
                             <wpf:ConfigurationComboBoxWithHelp Margin="4 0 8 4"
                                                                Value="{Binding Val, Mode=TwoWay}"
                                                                Values="{StaticResource ResourceKey=yesnoValues}"
@@ -85,12 +132,6 @@
                                                                Watermark="{Binding Default}" />
                         </StackPanel>
                     </DataTemplate>
-                    <wpf:Lambda x:Key="OperationStatusInProgressToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.InProgress ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
-                    <wpf:Lambda x:Key="OperationStatusFailedToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.Failed ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
-                    <wpf:Lambda x:Key="OperationStatusSucceededToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.Succeeded ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
-                    <wpf:Lambda x:Key="BoolToVisibleOrCollapsed">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
-                    <wpf:Lambda x:Key="BoolToVisible">(bool b) => b ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
-                    <wpf:Lambda x:Key="BoolToNotVisible">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

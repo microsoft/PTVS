@@ -181,6 +181,7 @@ namespace Microsoft.CookiecutterTools.Model {
             //   "var2" : {
             //     "label" : "Variable 2",
             //     "description" : "Description for variable 2",
+            //     "url" : "http://azure.microsoft.com",
             //     "selector" : "odbcConnection"
             //   }
             // }
@@ -199,6 +200,7 @@ namespace Microsoft.CookiecutterTools.Model {
                             var itemObj = (JObject)prop.Value;
                             ReadLabel(item, itemObj);
                             ReadDescription(item, itemObj);
+                            ReadUrl(item, itemObj);
                             ReadSelector(item, itemObj);
                         } else {
                             WrongJsonType(prop.Name, JTokenType.Object, prop.Value.Type);
@@ -238,6 +240,29 @@ namespace Microsoft.CookiecutterTools.Model {
             return descriptionToken;
         }
 
+        private JToken ReadUrl(ContextItem item, JObject itemObj) {
+            var urlToken = itemObj.SelectToken("url");
+            if (urlToken != null) {
+                if (urlToken.Type == JTokenType.String) {
+                    var val = urlToken.Value<string>();
+                    Uri uri;
+                    if (Uri.TryCreate(val, UriKind.Absolute, out uri)) {
+                        if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) {
+                            item.Url = val;
+                        } else {
+                            InvalidUrl(val);
+                        }
+                    } else {
+                        InvalidUrl(val);
+                    }
+                } else {
+                    WrongJsonType("url", JTokenType.String, urlToken.Type);
+                }
+            }
+
+            return urlToken;
+        }
+
         private void ReadSelector(ContextItem item, JObject itemObj) {
             var selectorToken = itemObj.SelectToken("selector");
             if (selectorToken != null) {
@@ -247,6 +272,10 @@ namespace Microsoft.CookiecutterTools.Model {
                     WrongJsonType("selector", JTokenType.String, selectorToken.Type);
                 }
             }
+        }
+
+        private void InvalidUrl(string url) {
+            _redirector.WriteErrorLine(string.Format("'{0}' from _visual_studio section in context file should be an absolute http or https url.", url));
         }
 
         private void WrongJsonType(string name, JTokenType expected, JTokenType actual) {
