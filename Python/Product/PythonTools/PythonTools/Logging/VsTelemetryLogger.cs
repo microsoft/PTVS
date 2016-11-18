@@ -44,6 +44,15 @@ namespace Microsoft.PythonTools.Logging {
                 return;
             }
 
+            // Certain events are not collected
+            switch (logEvent) {
+                case PythonLogEvent.AnalysisWarning:
+                case PythonLogEvent.AnalysisOperationFailed:
+                case PythonLogEvent.AnalysisOperationCancelled:
+                case PythonLogEvent.AnalysisExitedAbnormally:
+                    return;
+            }
+
             var evt = new TelemetryEvent(EventPrefix + logEvent.ToString());
             var props = PythonToolsLoggerData.AsDictionary(argument);
             if (props != null) {
