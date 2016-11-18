@@ -100,14 +100,15 @@ namespace Microsoft.PythonTools.Profiling {
                 StartPerfMon(filename);
             }
             
-            if (!_useVTune) {
             _process.EnableRaisingEvents = true;
             _process.Exited += (sender, args) => {
+                if (!_useVTune) {
                 try {
                     // Exited event is fired on a random thread pool thread, we need to handle exceptions.
                     StopPerfMon();
                 } catch (InvalidOperationException e) {
                     MessageBox.Show(String.Format("Unable to stop performance monitor: {0}", e.Message), "Python Tools for Visual Studio");
+                }
                 }
                 var procExited = ProcessExited;
                 if (procExited != null) {
@@ -116,7 +117,6 @@ namespace Microsoft.PythonTools.Profiling {
             };
 
             _process.Start();
-            }
         }
 
         public event EventHandler ProcessExited;

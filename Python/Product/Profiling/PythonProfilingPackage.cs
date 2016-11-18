@@ -321,6 +321,9 @@ namespace Microsoft.PythonTools.Profiling {
                 _profilingProcess = null;
                 _stopCommand.Enabled = false;
                 _startCommand.Enabled = true;
+                if (useVTune) {
+                    outPath += "\\report.csv";
+                }
                 if (openReport && File.Exists(outPath)) {
                     dte.ItemOperations.OpenFile(outPath);
                 }
