@@ -317,18 +317,13 @@ namespace CookiecutterTests {
                 Assert.IsTrue(log.Contains("Test/Cookiecutter/Template/Load"));
                 Assert.IsTrue(log.Contains("Test/Cookiecutter/Template/Run"));
 
-                Assert.IsTrue(log.Contains(template.RemoteUrl.GetSha512()));
-                Assert.IsTrue(log.Contains(template.RepositoryFullName.GetSha512()));
-                Assert.IsTrue(log.Contains(template.RepositoryName.GetSha512()));
-                Assert.IsTrue(log.Contains(template.RepositoryOwner.GetSha512()));
-
-                Assert.IsFalse(log.Contains(template.DisplayName));
                 Assert.IsFalse(log.Contains(template.Description));
                 Assert.IsFalse(log.Contains(template.ClonedPath));
-                Assert.IsFalse(log.Contains(template.RemoteUrl));
-                Assert.IsFalse(log.Contains(template.RepositoryFullName));
-                Assert.IsFalse(log.Contains(template.RepositoryName));
-                Assert.IsFalse(log.Contains(template.RepositoryOwner));
+
+                Assert.IsTrue(log.Contains(PII(template.RemoteUrl)));
+                Assert.IsTrue(log.Contains(PII(template.RepositoryFullName)));
+                Assert.IsTrue(log.Contains(PII(template.RepositoryName)));
+                Assert.IsTrue(log.Contains(PII(template.RepositoryOwner)));
 
                 Assert.AreEqual(null, _openedFolder);
                 _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
@@ -358,6 +353,10 @@ namespace CookiecutterTests {
             // After cloning the same template multiple times, make sure it only appears once in the installed section
             var installed = _vm.Installed.Templates.OfType<TemplateViewModel>().Where(t => t.DisplayName == OnlineTemplateRepoName).ToArray();
             Assert.AreEqual(1, installed.Length);
+        }
+
+        private static string PII(string text) {
+            return $"PII({text})";
         }
 
         private async Task EnsureCookiecutterInstalledAsync() {
