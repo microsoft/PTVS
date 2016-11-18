@@ -32,6 +32,11 @@ namespace Microsoft.PythonTools.Profiling {
         private readonly PythonToolsService _pyService;
         private readonly bool _useVTune;
 
+        private static readonly string _vtunepath = "C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017";
+        private static readonly string _vtuneCl = _vtunepath + "\\bin32\\amplxe-cl.exe";
+        private static readonly string[] _vtuneCollectOptions =  {"-collect hotspots", "-d 5", "-user-data-dir="};
+        private static readonly string[] _vtuneReportOptions = {"-report hotspots", "-r r000hs",  "-user-data-dir="}; // TODO: Check for latest run
+
         public ProfiledProcess(PythonToolsService pyService, string exe, string args, string dir, Dictionary<string, string> envVars, bool useVTune) {
             var arch = NativeMethods.GetBinaryType(exe);
             if (arch != ProcessorArchitecture.X86 && arch != ProcessorArchitecture.Amd64) {
@@ -89,8 +94,13 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         public void StartProfiling(string filename) {
-            StartPerfMon(filename);
+            if (_useVTune) {
+                StartVTune(filename);
+            } else {
+                StartPerfMon(filename);
+            }
             
+            if (!_useVTune) {
             _process.EnableRaisingEvents = true;
             _process.Exited += (sender, args) => {
                 try {
@@ -106,10 +116,52 @@ namespace Microsoft.PythonTools.Profiling {
             };
 
             _process.Start();
+            }
         }
 
         public event EventHandler ProcessExited;
 
+        private void StartVTune(string filename) {
+            if (!File.Exists(_vtuneCl)) {
+                throw new InvalidOperationException("Cannot locate VTune");
+            }
+
+            string[] opts = new string[_vtuneCollectOptions.Length + 3];
+            _vtuneCollectOptions.CopyTo(opts, 0);
+            string outPath = ProcessOutput.QuoteSingleArgument(filename);
+            Directory.CreateDirectory(outPath);
+            string[] addtlOpts = {outPath, _exe, ProcessOutput.QuoteSingleArgument(_args.Trim('"')) };
+            addtlOpts.CopyTo(opts, _vtuneCollectOptions.Length);
+
+            using (var p = ProcessOutput.RunHiddenAndCapture(_vtuneCl, opts)) {
+                p.Wait();
+                if (p.ExitCode != 0) {
+                    throw new InvalidOperationException("Starting VTune failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}".FormatUI(
+                    Environment.NewLine,
+                    string.Join(Environment.NewLine, p.StandardOutputLines),
+                    string.Join(Environment.NewLine, p.StandardErrorLines)
+                    ));
+                }
+            };
+
+            string[] reportAddtlOpts = {outPath, "-csv-delimiter=\",\"", "-format=csv", "-report-output="+ outPath + "\\report.csv"};
+            string[] reportOpts = new string[_vtuneReportOptions.Length + reportAddtlOpts.Length];
+            _vtuneReportOptions.CopyTo(reportOpts, 0);
+            reportAddtlOpts.CopyTo(reportOpts, _vtuneReportOptions.Length);
+            using (var p = ProcessOutput.RunHiddenAndCapture(_vtuneCl, reportOpts))
+            {
+                p.Wait();
+                if (p.ExitCode != 0)
+                {
+                    throw new InvalidOperationException("Starting VTune failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}".FormatUI(
+                    Environment.NewLine,
+                    string.Join(Environment.NewLine, p.StandardOutputLines),
+                    string.Join(Environment.NewLine, p.StandardErrorLines)
+                    ));
+                }
+            };
+        }
+        
         private void StartPerfMon(string filename) {
             string perfToolsPath = GetPerfToolsPath();
 
