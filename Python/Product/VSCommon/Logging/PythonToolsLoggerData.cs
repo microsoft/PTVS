@@ -73,4 +73,10 @@ namespace Microsoft.PythonTools.Logging {
         public string InterpreterId { get; set; }
         public int AnalysisSeconds { get; set; }
     }
+
+    internal sealed class LaunchInfo : PythonToolsLoggerData {
+        public bool IsDebug { get; set; }
+        public bool IsWeb { get; set; }
+        public string Version { get; set; }
+    }
 }

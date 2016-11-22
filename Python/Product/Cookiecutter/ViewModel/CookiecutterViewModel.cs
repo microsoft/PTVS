@@ -30,6 +30,7 @@ using System.Windows.Media.Imaging;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.Telemetry;
+using Microsoft.VisualStudio.Telemetry;
 using Newtonsoft.Json;
 
 namespace Microsoft.CookiecutterTools.ViewModel {
@@ -882,7 +883,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
                 ContextItems.Clear();
                 foreach (var item in result) {
-                    ContextItems.Add(new ContextItemViewModel(item.Name, item.Selector, item.Label, item.Description, item.DefaultValue, item.Values));
+                    ContextItems.Add(new ContextItemViewModel(item.Name, item.Selector, item.Label, item.Description, item.Url, item.DefaultValue, item.Values));
                 }
 
                 LoadingStatus = OperationStatus.Succeeded;
@@ -968,10 +969,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
                 var obj = new {
                     Success = error == null,
-                    RepoUrl = repoUrl?.GetSha512(),
-                    RepoFullName = repoFullName?.GetSha512(),
-                    RepoOwner = repoOwner?.GetSha512(),
-                    RepoName = repoName?.GetSha512(),
+                    RepoUrl = new TelemetryPiiProperty(repoUrl),
+                    RepoFullName = new TelemetryPiiProperty(repoFullName),
+                    RepoOwner = new TelemetryPiiProperty(repoOwner),
+                    RepoName = new TelemetryPiiProperty(repoName),
                 };
                 ReportEvent(area, eventName, obj);
             } catch (Exception ex) {
