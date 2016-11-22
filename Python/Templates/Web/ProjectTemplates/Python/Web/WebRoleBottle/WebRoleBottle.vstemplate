@@ -15,10 +15,12 @@
     <Project File="WebRoleBottle.pyproj" ReplaceParameters="true">
       <ProjectItem>app.py</ProjectItem>
       <ProjectItem>requirements.txt</ProjectItem>
+      <ProjectItem>web.config</ProjectItem>
       <Folder Name="Bin">
         <ProjectItem OpenInWebBrowser="true" TargetFileName="Readme.mht">WebRoleConfiguration.mht</ProjectItem>
         <ProjectItem>ConfigureCloudService.ps1</ProjectItem>
         <ProjectItem>ps.cmd</ProjectItem>
+        <ProjectItem>wfastcgi.py</ProjectItem>
       </Folder>
     </Project>
   </TemplateContent>

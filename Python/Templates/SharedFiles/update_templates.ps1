@@ -3,7 +3,7 @@
 # in this directory. Modifications should be checked in.
 #
 
-$web_role_common = @('ps.cmd', 'ConfigureCloudService.ps1', 'WebRoleConfiguration.mht') | %{ gi $_ }
+$web_role_common = @('ps.cmd', 'ConfigureCloudService.ps1', 'WebRoleConfiguration.mht', '..\..\Product\WFastCgi\wfastcgi.py') | %{ gi $_ }
 $worker_role_common = @('ps.cmd', 'ConfigureCloudService.ps1', 'LaunchWorker.ps1', 'WorkerRoleConfiguration.mht') | %{ gi $_ }
 
 $web_role_targets = @(

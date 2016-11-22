@@ -39,6 +39,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
+using pythontools::Microsoft.VisualStudio.Azure;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
@@ -483,9 +484,16 @@ namespace PythonToolsUITests {
                 var sln = app.GetService<IVsSolution>(typeof(SVsSolution));
                 ErrorHandler.ThrowOnFailure(sln.GetProjectOfUniqueName(ccproj.FullName, out hier));
 
-                app.ServiceProvider.GetUIThread().InvokeAsync(() =>
-                    PythonProjectNode.UpdateServiceDefinition(hier, roleType, roleType + "Role1", app.ServiceProvider, null)
-                ).GetAwaiter().GetResult();
+                var pyproj = app.Dte.Solution.Projects.Cast<Project>().FirstOrDefault(p => p.Name == roleType + "Role1");
+                Assert.IsNotNull(pyproj);
+                app.ServiceProvider.GetUIThread().InvokeAsync(() => {
+                    Assert.IsNotNull(pyproj.GetPythonProject());
+                    ((IAzureRoleProject)pyproj.GetPythonProject()).AddedAsRole(hier, roleType);
+                }).GetAwaiter().GetResult();
+
+                // AddedAsRole runs in the background, so wait a second for it to
+                // do its thing.
+                Thread.Sleep(1000);
 
                 var doc = new XmlDocument();
                 for (int retries = 5; retries > 0; --retries) {
@@ -518,7 +526,7 @@ namespace PythonToolsUITests {
                         ns
                     ));
                     Assert.IsNotNull(nav.SelectSingleNode(
-                        "/sd:ServiceDefinition/sd:WorkerRole[@name='WorkerRole1']/sd:Runtime/sd:EntryPoint/sd:ProgramEntryPoint[@commandLine='bin\\ps.cmd LaunchWorker.ps1']",
+                        "/sd:ServiceDefinition/sd:WorkerRole[@name='WorkerRole1']/sd:Runtime/sd:EntryPoint/sd:ProgramEntryPoint[@commandLine='bin\\ps.cmd LaunchWorker.ps1 worker.py']",
                         ns
                     ));
                 }

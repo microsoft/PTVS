@@ -1,15 +1,15 @@
 From: "Saved by Internet Explorer 11"
 Subject: Python Web Role Configuration
-Date: Mon, 31 Oct 2016 12:05:48 -0700
+Date: Tue, 22 Nov 2016 13:18:56 -0800
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----=_NextPart_000_0000_01D2336F.1DDA5500"
+	boundary="----=_NextPart_000_0000_01D244C2.FA48B9A0"
 X-MimeOLE: Produced By Microsoft MimeOLE
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0000_01D2336F.1DDA5500
+------=_NextPart_000_0000_01D244C2.FA48B9A0
 Content-Type: text/html;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
@@ -59,8 +59,7 @@ your     =20
 with, set=20
 the         <CODE>PYTHON</CODE> property in the=20
 <CODE>ServiceDefinition.csdef</CODE>        file in your cloud project. =
-This has=20
-already been set based on your        current active environment. See=20
+See=20
 <CODE>ConfigureCloudService.ps1</CODE>        for more details.     </P>
 <P>        To install packages using pip, update the=20
 <CODE>requirements.txt</CODE>        file in the root directory of your =
@@ -117,7 +116,7 @@ href=3D"http://go.microsoft.com/fwlink/?LinkId=3D293415">our=20
 need=20
 it.</P></BODY></HTML>
 
-------=_NextPart_000_0000_01D2336F.1DDA5500
+------=_NextPart_000_0000_01D244C2.FA48B9A0
 Content-Type: text/css;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
@@ -165,4 +164,4 @@ li > img {
 	vertical-align: middle;
 }
 
-------=_NextPart_000_0000_01D2336F.1DDA5500--
+------=_NextPart_000_0000_01D244C2.FA48B9A0--

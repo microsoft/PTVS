@@ -5,43 +5,34 @@
 .Description
     This script is deployed with your worker role and is used to launch the
     correct version of Python with the worker script. You may freely modify it
-    to customize how your worker is run, though most customizations can be made
-    through your Python project.
+    to customize how your worker is run.
 
-    To specify the version of Python your worker should run with, make it the
-    active environment for your project. (Ensure that you have a WebPI reference
-    or startup task to install this version on the instance - see the
-    documentation for ConfigureCloudService.ps1 for more details.)
+    To specify the version of Python your worker should run with, add a PYTHON
+    environment variable with the path to the python.exe to run. If omitted,
+    all 'bin\python*\tools' directories will be searched for the last python.exe
+    available. These packages may be installed from nuget in
+    ConfigureCloudService.ps1.
 
-    If your version of Python cannot be detected normally, you can add the
-    DeployedPythonInterpreterPath property to your Python project by editing the
-    .pyproj file. This path will take precedence over the active environment.
+    To set PYTHONPATH (or equivalent) before running the worker, modify the
+    variable in your ServiceDefinition.csdef file.
 
-    To install packages using pip, include a requirements.txt file in the root
-    directory of your project.
-
-    To set PYTHONPATH (or equivalent) before running the worker, add the 
-    necessary Search Paths to your project.
-
-    To specify the script to run, make it the startup file in your project.
-
-    To specify command-line arguments, add them to the Command Line Arguments
-    property under Project Properties\Debug.
+    To specify the script to run or command line arguments to use, update the
+    ProgramEntryPoint element in the service definition.
 
 
     Ensure the following entry point specification is added to the
     ServiceDefinition.csdef file in your Cloud project. Note that the value for
-    PYTHON should be set to either a Company\Tag pair (suitable for locating an
-    installation in the registry), or the full path to your Python executable.
+    PYTHON should be set to the full path to your Python executable or omitted.
     PYTHONPATH may be freely configured, and extra environment variables should
-    be added here.
+    be added here. Modify ProgramEntryPoint to specify a different startup
+    script or arguments.
 
     <Runtime>
       <Environment>
           <Variable name="EMULATED">
             <RoleInstanceValue xpath="/RoleEnvironment/Deployment/@emulated"/>
           </Variable>
-          <Variable name="PYTHON" value="..." />
+          <Variable name="PYTHON" value="<path to python.exe of a previously installed Python>" />
           <Variable name="PYTHONPATH" value="" />
       </Environment>
       <EntryPoint>
@@ -52,28 +43,30 @@
 
 [xml]$rolemodel = Get-Content $env:RoleRoot\RoleModel.xml
 
+# These should match your ConfigureCloudService.ps1 file
+$defaultpython = "python"
+$defaultpythonversion = ""
+
 $ns = @{ sd="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition" };
 $is_debug = (Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Properties/sd:Property[@name='Configuration'][@value='Debug']").Count -eq 1
 $is_emulated = $env:EMULATED -eq 'true'
 
-if ($env:PYTHON -eq $null) {
-    $interpreter_path = "${env:WINDIR}\py.exe"
-} elseif (Test-Path -PathType Leaf $env:PYTHON) {
-    $interpreter_path = $env:PYTHON
-} else {
-    foreach ($key in @('HKLM:\Software\Wow6432Node', 'HKLM:\Software', 'HKCU:\Software')) {
-        $regkey = gp "$key\Python\${env:PYTHON}\InstallPath" -EA SilentlyContinue
-        if ($regkey) {
-            if ($regkey.ExecutablePath) {
-                $interpreter_path = $regkey.ExecutablePath;
-            } else {
-                $interpreter_path = "$($regkey.'(default)')\python.exe"
-            }
-            if (Test-Path -PathType Leaf $interpreter_path) {
-                break
-            }
-        }
+$bindir = split-path $MyInvocation.MyCommand.Path
+
+$interpreter_path = $env:PYTHON;
+if (-not $interpreter_path) {
+    if (-not $defaultpythonversion) {
+        $interpreter_path = "$bindir\$defaultpython\tools\python.exe"
+    } else {
+        $interpreter_path = "$bindir\$defaultpython.$defaultpythonversion\tools\python.exe"
     }
 }
 
+if (-not $interpreter_path) {
+    throw "Cannot find a Python installation.";
+} elseif (-not (Test-Path $interpreter_path)) {
+    throw "Cannot find Python installation at $interpreter_path.";
+}
+
+"Executing $interpreter_path $args"
 Start-Process -Wait -NoNewWindow $interpreter_path -ArgumentList $args

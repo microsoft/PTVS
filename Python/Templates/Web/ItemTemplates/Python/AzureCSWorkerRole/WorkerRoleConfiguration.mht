@@ -1,15 +1,15 @@
 From: "Saved by Internet Explorer 11"
 Subject: Python Worker Role Configuration
-Date: Mon, 31 Oct 2016 12:06:03 -0700
+Date: Tue, 22 Nov 2016 13:19:10 -0800
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----=_NextPart_000_0005_01D2336F.26F6CA60"
+	boundary="----=_NextPart_000_0000_01D244C3.02C7B680"
 X-MimeOLE: Produced By Microsoft MimeOLE
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0005_01D2336F.26F6CA60
+------=_NextPart_000_0000_01D244C3.02C7B680
 Content-Type: text/html;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
@@ -59,11 +59,9 @@ your     =20
 set the =20
        <CODE>PYTHON</CODE> property in the =
 <CODE>ServiceDefinition.csdef</CODE> =20
-      file in your cloud project. This has already been set based on =
-your       =20
-current active environment. See <CODE>ConfigureCloudService.ps1</CODE>   =
-    =20
-for more details.     </P>
+      file in your cloud project. See =
+<CODE>ConfigureCloudService.ps1</CODE>    =20
+   for more details.     </P>
 <P>        To install packages using pip, update the=20
 <CODE>requirements.txt</CODE>        file in the root directory of your =
 project.=20
@@ -124,7 +122,7 @@ href=3D"http://go.microsoft.com/fwlink/?LinkId=3D293415">our=20
 need=20
 it.</P></BODY></HTML>
 
-------=_NextPart_000_0005_01D2336F.26F6CA60
+------=_NextPart_000_0000_01D244C3.02C7B680
 Content-Type: text/css;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
@@ -172,4 +170,4 @@ li > img {
 	vertical-align: middle;
 }
 
-------=_NextPart_000_0005_01D2336F.26F6CA60--
+------=_NextPart_000_0000_01D244C3.02C7B680--

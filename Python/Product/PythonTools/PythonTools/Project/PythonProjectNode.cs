@@ -2361,7 +2361,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             Site.GetUIThread().Invoke(() => {
-                UpdateServiceDefinition(hier, roleType, Caption, Site, GetInterpreterFactory()?.Configuration);
+                UpdateServiceDefinition(hier, roleType, Caption, Site);
                 SetProjectProperty(PythonConstants.SuppressCollectPythonCloudServiceFiles, "false");
             });
         }
@@ -2399,8 +2399,7 @@ namespace Microsoft.PythonTools.Project {
             IVsHierarchy project,
             string roleType,
             string projectName,
-            IServiceProvider site,
-            InterpreterConfiguration config = null
+            IServiceProvider site
         ) {
             Utilities.ArgumentNotNull("project", project);
 
@@ -2410,19 +2409,6 @@ namespace Microsoft.PythonTools.Project {
                 (int)__VSHPROPID.VSHPROPID_FirstChild,
                 out obj
             ));
-
-            string python = null;
-            if (config != null) {
-                string company, tag;
-                if (CPythonInterpreterFactoryConstants.TryParseInterpreterId(config.Id, out company, out tag)) {
-                    if (PythonRegistrySearch.PythonCoreCompany.Equals(company, StringComparison.OrdinalIgnoreCase) &&
-                        config.Version < new Version(3, 5)) {
-                        // Our tag will include "-32" but shouldn't
-                        tag = tag.TrimSuffix("-32");
-                    }
-                    python = string.Format("{0}\\{1}", company, tag);
-                }
-            }
 
             uint id;
             while (TryGetItemId(obj, out id)) {
@@ -2460,8 +2446,7 @@ namespace Microsoft.PythonTools.Project {
                                     UpdateServiceDefinition(
                                         Marshal.GetObjectForIUnknown(pDocData) as IVsTextLines,
                                         roleType,
-                                        projectName, 
-                                        python
+                                        projectName
                                     );
 
                                     ErrorHandler.ThrowOnFailure(rdt.SaveDocuments(
@@ -2490,7 +2475,7 @@ namespace Microsoft.PythonTools.Project {
                         // File is not open, so edit it on disk
                         FileStream stream = null;
                         try {
-                            UpdateServiceDefinition(mkDoc, roleType, projectName, python);
+                            UpdateServiceDefinition(mkDoc, roleType, projectName);
                         } finally {
                             if (stream != null) {
                                 stream.Close();
@@ -2519,7 +2504,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private static void UpdateServiceDefinition(IVsTextLines lines, string roleType, string projectName, string python) {
+        private static void UpdateServiceDefinition(IVsTextLines lines, string roleType, string projectName) {
             if (lines == null) {
                 throw new ArgumentException("lines");
             }
@@ -2533,7 +2518,7 @@ namespace Microsoft.PythonTools.Project {
             var doc = new XmlDocument();
             doc.LoadXml(text);
 
-            UpdateServiceDefinition(doc, roleType, projectName, python);
+            UpdateServiceDefinition(doc, roleType, projectName);
 
             var encoding = Encoding.UTF8;
 
@@ -2618,11 +2603,11 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private static void UpdateServiceDefinition(string path, string roleType, string projectName, string python) {
+        private static void UpdateServiceDefinition(string path, string roleType, string projectName) {
             var doc = new XmlDocument();
             doc.Load(path);
 
-            UpdateServiceDefinition(doc, roleType, projectName, python);
+            UpdateServiceDefinition(doc, roleType, projectName);
 
             doc.Save(XmlWriter.Create(
                 path,
@@ -2645,7 +2630,7 @@ namespace Microsoft.PythonTools.Project {
         /// <exception cref="InvalidOperationException">
         /// A required element is missing from the document.
         /// </exception>
-        internal static void UpdateServiceDefinition(XmlDocument doc, string roleType, string projectName, string python) {
+        internal static void UpdateServiceDefinition(XmlDocument doc, string roleType, string projectName) {
             bool isWeb = roleType == "Web";
             bool isWorker = roleType == "Worker";
             if (isWeb == isWorker) {
@@ -2678,7 +2663,7 @@ namespace Microsoft.PythonTools.Project {
 
             startup.AppendChildElement(null, "Task", null, null);
             var task = startup.SelectSingleNode("sd:Task", ns);
-            AddEnvironmentNode(task, ns, python);
+            AddEnvironmentNode(task, ns);
             task.CreateAttribute(null, "executionContext", null, "elevated");
             task.CreateAttribute(null, "taskType", null, "simple");
 
@@ -2693,7 +2678,7 @@ namespace Microsoft.PythonTools.Project {
                 }
                 role.AppendChildElement(null, "Runtime", null, null);
                 runtime = role.SelectSingleNode("sd:Runtime", ns);
-                AddEnvironmentNode(runtime, ns, python);
+                AddEnvironmentNode(runtime, ns);
                 runtime.AppendChildElement(null, "EntryPoint", null, null);
                 var ep = runtime.SelectSingleNode("sd:EntryPoint", ns);
                 ep.AppendChildElement(null, "ProgramEntryPoint", null, null);
@@ -2703,13 +2688,10 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private static void AddEnvironmentNode(XPathNavigator nav, IXmlNamespaceResolver ns, string python) {
+        private static void AddEnvironmentNode(XPathNavigator nav, IXmlNamespaceResolver ns) {
             nav.AppendChildElement(null, "Environment", null, null);
             nav = nav.SelectSingleNode("sd:Environment", ns);
             nav.AppendChildElement(null, "Variable", null, null);
-            if (!string.IsNullOrEmpty(python)) {
-                nav.AppendChildElement(null, "Variable", null, null);
-            }
             var children = nav.SelectChildren(XPathNodeType.Element);
             if (children.MoveNext()) {
                 var emulatedNode = children.Current;
@@ -2717,12 +2699,6 @@ namespace Microsoft.PythonTools.Project {
                 emulatedNode.AppendChildElement(null, "RoleInstanceValue", null, null);
                 emulatedNode = emulatedNode.SelectSingleNode("sd:RoleInstanceValue", ns);
                 emulatedNode.CreateAttribute(null, "xpath", null, "/RoleEnvironment/Deployment/@emulated");
-
-                if (!string.IsNullOrEmpty(python) && children.MoveNext()) {
-                    var pythonNode = children.Current;
-                    pythonNode.CreateAttribute(null, "name", null, "PYTHON");
-                    pythonNode.CreateAttribute(null, "value", null, python);
-                }
             }
         }
     }

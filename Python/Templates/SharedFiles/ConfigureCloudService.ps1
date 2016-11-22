@@ -17,20 +17,20 @@
     configure dependencies before your role start. You may freely modify it
     to customize how your role is configured.
 
-
+    By default, Python will be downloaded and installed from nuget.org. Modify
+    the $defaultpython and $defaultpythonversion variables to change the version
+    installed. Alternatively, add a startup task to install your choice of
+    Python from any installer and add a PYTHON environment variable pointing at
+    the executable to run.
 
     To install packages using pip, include a requirements.txt file in the root
-    directory of your project.
-    
-    (If pip is not already available, it will be downloaded and installed
-    automatically. To avoid security risks and bandwidth charges associated with
-    downloads, you can deploy your own copy of the 'pip_downloader.py' script
-    downloaded from https://go.microsoft.com/fwlink/?LinkID=393490 and the
-    sources for pip and setuptools named 'pip.tar.gz' and 'setuptools.tar.gz'
-    alongside this file.)
-
-    As an alternative to WebPI and pip, you can deploy installers and add custom
-    startup tasks to your ServiceDefinition.csdef file.
+    directory of your project. If pip is not already available, it will be
+    downloaded and installed automatically. To avoid security risks and
+    bandwidth charges associated with downloads, you can deploy your own copy of
+    the 'pip_downloader.py' script downloaded from
+    https://go.microsoft.com/fwlink/?LinkID=393490 and the source packages for
+    pip and setuptools named 'pip.tar.gz' and 'setuptools.tar.gz' in your 'bin'
+    directory.
 
 
     For worker roles, ensure the following startup task specification is
@@ -42,7 +42,7 @@
           <Variable name="EMULATED">
             <RoleInstanceValue xpath="/RoleEnvironment/Deployment/@emulated"/>
           </Variable>
-          <Variable name="PYTHON" value="PythonCore\3.5" />
+          <Variable name="PYTHON" value="<optional path to python.exe installed by a prior Task>" />
         </Environment>
       </Task>
     </Startup>
@@ -57,22 +57,22 @@
           <Variable name="EMULATED">
             <RoleInstanceValue xpath="/RoleEnvironment/Deployment/@emulated"/>
           </Variable>
-          <Variable name="PYTHON" value="PythonCore\3.5" />
+          <Variable name="PYTHON" value="<optional path to python.exe installed by a prior Task>" />
         </Environment>
       </Task>
     </Startup>
 
-    The value for PYTHON should be set to either a Company\Tag pair (suitable
-    for locating an installation in the registry), or the full path to your
-    Python executable.
-
-    If omitted, Python will be installed from nuget.org
+    For web roles, you will also require a suitable web.config in your site's
+    root directory. An example is included in the bin folder containing this
+    file or in your project directory.
 #>
 
 [xml]$rolemodel = Get-Content $env:RoleRoot\RoleModel.xml
 
 $defaultpython = "python"       # or pythonx86, python2, python2x86
-$defaultpythonversion = "3.5.2" # see nuget.org for current available versions
+$defaultpythonversion = ""      # see nuget.org for current available versions
+
+$interpreter_path = $env:PYTHON
 
 $ns = @{ sd="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition" };
 $is_worker = (Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Properties/sd:Property[@name='RoleType'][@value='Worker']").Count -eq 1
@@ -80,11 +80,12 @@ $is_web = -not $is_worker
 $is_debug = (Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Properties/sd:Property[@name='Configuration'][@value='Debug']").Count -eq 1
 $is_emulated = $env:EMULATED -eq "true"
 
+$bindir = split-path $MyInvocation.MyCommand.Path
+
 if ($is_web) {
-    cd "${env:RoleRoot}\"
     $env:RootDir = (gi $((Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Sites/sd:Site")[0].Node.physicalDirectory)).FullName
 } else {
-    $env:RootDir = (gi "$($MyInvocation.MyCommand.Path)\..\..").FullName
+    $env:RootDir = split-path $bindir
 }
 cd $env:RootDir
 
@@ -108,41 +109,33 @@ if ($is_web -and -not $is_emulated) {
 function install-python-from-nuget {
     param([string]$package=$defaultpython, [string]$version=$defaultpythonversion)
 
-    if (Test-Path "$(Get-Location)\bin\$package\tools\python.exe") {
-        return (gi "$(Get-Location)\bin\$package\tools\python.exe");
+    if (-not $version) {
+        $expected = "$bindir\$package\tools\python.exe"
+    } else {
+        $expected = "$bindir\$package.$version\tools\python.exe"
+    }
+    if (Test-Path $expected) {
+        return (gi $expected);
     }
 
-    $nuget = gcm .\nuget.exe -EA SilentlyContinue;
+    # Find nuget.exe in the bin folder first
+    $nuget = gcm "$bindir\nuget.exe" -EA SilentlyContinue;
     if (-not $nuget) {
+        # Fall back on looking throughout the system
         $nuget = gcm nuget.exe -EA SilentlyContinue;
     }
     if (-not $nuget) {
-        Invoke-WebRequest https://aka.ms/nugetclidl -OutFile nuget.exe;
-        $nuget = gcm .\nuget.exe -EA SilentlyContinue;
+        # Finally, download it into the bin directory
+        Invoke-WebRequest https://aka.ms/nugetclidl -OutFile "$bindir\nuget.exe";
+        $nuget = gcm "$bindir\nuget.exe" -EA SilentlyContinue;
     }
-    & $nuget install -OutputDirectory "$(Get-Location)\bin" -ExcludeVersion -Version "$version" "$package" | Out-Null;
+    if (-not $version) {
+        & $nuget install -OutputDirectory $bindir -ExcludeVersion "$package" | Out-Null;
+    } else {
+        & $nuget install -OutputDirectory $bindir -Version "$version" "$package" | Out-Null;
+    }
     if ($?) {
-        return (gi "$(Get-Location)\bin\$package\tools\python.exe");
-    }
-}
-
-if ($env:PYTHON -eq $null) {
-    $interpreter_path = $null;
-} elseif (Test-Path -PathType Leaf $env:PYTHON) {
-    $interpreter_path = $env:PYTHON;
-} else {
-    foreach ($key in @('HKLM:\Software\Wow6432Node', 'HKLM:\Software', 'HKCU:\Software')) {
-        $regkey = gp "$key\Python\${env:PYTHON}\InstallPath" -EA SilentlyContinue
-        if ($regkey) {
-            if ($regkey.ExecutablePath) {
-                $interpreter_path = $regkey.ExecutablePath;
-            } else {
-                $interpreter_path = "$($regkey.'(default)')\python.exe";
-            }
-            if (Test-Path -PathType Leaf $interpreter_path) {
-                break
-            }
-        }
+        return (gi $expected);
     }
 }
 
@@ -150,17 +143,21 @@ if (-not $interpreter_path) {
     $interpreter_path = install-python-from-nuget;
 }
 
+if (-not $interpreter_path) {
+    throw "Cannot find a Python installation.";
+} elseif (-not (Test-Path $interpreter_path)) {
+    throw "Cannot find Python installation at $interpreter_path.";
+}
+
+
 if (Test-Path requirements.txt) {
     Set-Alias py (gi $interpreter_path -EA Stop)
     py -m pip -V
     if (-not $?) {
-        $pip_downloader = gi "$(Get-Location)\pip_downloader.py" -EA SilentlyContinue
+        $pip_downloader = gi "$bindir\pip_downloader.py" -EA SilentlyContinue
         if (-not $pip_downloader) {
-            $pip_downloader = gi "$(Get-Location)\bin\pip_downloader.py" -EA SilentlyContinue
-        }
-        if (-not $pip_downloader) {
-            Invoke-WebRequest "https://go.microsoft.com/fwlink/?LinkID=393490" -OutFile "$(Get-Location)\bin\pip_downloader.py"
-            $pip_downloader = gi "$(Get-Location)\bin\pip_downloader.py" -EA Stop
+            Invoke-WebRequest "https://go.microsoft.com/fwlink/?LinkID=393490" -OutFile "$bindir\pip_downloader.py"
+            $pip_downloader = gi "$bindir\pip_downloader.py" -EA Stop
         }
         py $pip_downloader
     }
@@ -182,11 +179,6 @@ if ($is_web) {
 
     $fastcgihandler = iex "& `"$interpreter_path`" -c `"import wfastcgi; print('$%1s|%$2s'%wfastcgi._enable())`" $env:appcmd"
 
-    # The first -replace parameter needs backslashes escaped, while the second
-    # does not. So we are really replacing 1 backslash with 2.
-    $interp = $interpreter_path -replace '\\', '\\'
-    $wfastcgi = (gi "$(Get-Location)\bin\wfastcgi.py" -EA Stop).FullName -replace '\\', '\\'
-
     if ($is_emulated -and (Test-Path web.emulator.config)) {
         $webconfig = gi web.emulator.config -EA Stop
     } else if (-not $is_emulated -and (Test-Path web.cloud.config)) {
@@ -195,6 +187,7 @@ if ($is_web) {
         $webconfig = gi web.config -EA Stop
     }
 
+    "Updating $($webconfig.FullName) to reference $fastcgihandler"
     if (Test-Path web.config) {
         copy -force web.config "$webconfig.bak"
     }
