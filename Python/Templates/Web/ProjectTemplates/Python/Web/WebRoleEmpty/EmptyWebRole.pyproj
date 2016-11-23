@@ -30,6 +30,7 @@
     <Content Include="requirements.txt" />
     <Content Include="bin\ConfigureCloudService.ps1" />
     <Content Include="bin\ps.cmd" />
+    <Content Include="bin\web.config" />
   </ItemGroup>
   <ItemGroup>
     <None Include="bin\Readme.mht">

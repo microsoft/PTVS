@@ -17,7 +17,6 @@
       <Folder Name="Bin">
         <ProjectItem>ConfigureCloudService.ps1</ProjectItem>
         <ProjectItem>ps.cmd</ProjectItem>
-        <ProjectItem>wfastcgi.py</ProjectItem>
       </Folder>
       <ProjectItem>requirements.txt</ProjectItem>
       <ProjectItem>manage.py</ProjectItem>

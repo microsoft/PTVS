@@ -70,7 +70,7 @@
 [xml]$rolemodel = Get-Content $env:RoleRoot\RoleModel.xml
 
 $defaultpython = "python"       # or pythonx86, python2, python2x86
-$defaultpythonversion = "3.5.2" # see nuget.org for current available versions
+$defaultpythonversion = ""      # see nuget.org for current available versions
 
 $interpreter_path = $env:PYTHON
 
@@ -83,7 +83,7 @@ $is_emulated = $env:EMULATED -eq "true"
 $bindir = split-path $MyInvocation.MyCommand.Path
 
 if ($is_web) {
-    $env:RootDir = (gi $((Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Sites/sd:Site")[0].Node.physicalDirectory)).FullName
+    $env:RootDir = join-path $env:RoleRoot (Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Sites/sd:Site")[0].Node.physicalDirectory
 } else {
     $env:RootDir = split-path $bindir
 }
@@ -109,8 +109,13 @@ if ($is_web -and -not $is_emulated) {
 function install-python-from-nuget {
     param([string]$package=$defaultpython, [string]$version=$defaultpythonversion)
 
-    if (Test-Path "$bindir\$package.$version\tools\python.exe") {
-        return (gi "$bindir\$package.$version\tools\python.exe");
+    if (-not $version) {
+        $expected = "$bindir\$package\tools\python.exe"
+    } else {
+        $expected = "$bindir\$package.$version\tools\python.exe"
+    }
+    if (Test-Path $expected) {
+        return (gi $expected);
     }
 
     # Find nuget.exe in the bin folder first
@@ -124,9 +129,13 @@ function install-python-from-nuget {
         Invoke-WebRequest https://aka.ms/nugetclidl -OutFile "$bindir\nuget.exe";
         $nuget = gcm "$bindir\nuget.exe" -EA SilentlyContinue;
     }
-    & $nuget install -OutputDirectory $bindir -Version "$version" "$package" | Out-Null;
+    if (-not $version) {
+        & $nuget install -OutputDirectory $bindir -ExcludeVersion "$package" | Out-Null;
+    } else {
+        & $nuget install -OutputDirectory $bindir -Version "$version" "$package" | Out-Null;
+    }
     if ($?) {
-        return (gi "$bindir\$package.$version\tools\python.exe");
+        return (gi $expected);
     }
 }
 
@@ -172,7 +181,7 @@ if ($is_web) {
 
     if ($is_emulated -and (Test-Path web.emulator.config)) {
         $webconfig = gi web.emulator.config -EA Stop
-    } else if (-not $is_emulated -and (Test-Path web.cloud.config)) {
+    } elseif (-not $is_emulated -and (Test-Path web.cloud.config)) {
         $webconfig = gi web.cloud.config -EA Stop
     } else {
         $webconfig = gi web.config -EA Stop

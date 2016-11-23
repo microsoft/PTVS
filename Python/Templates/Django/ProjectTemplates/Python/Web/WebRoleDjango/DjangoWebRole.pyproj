@@ -38,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="requirements.txt" />
+    <Content Include="web.config" />
     <Content Include="bin\ConfigureCloudService.ps1" />
     <Content Include="bin\ps.cmd" />
   </ItemGroup>

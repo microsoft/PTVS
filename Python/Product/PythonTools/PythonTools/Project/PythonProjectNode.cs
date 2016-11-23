@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Project {
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
                                              // Name                     ItemGroup (MSBuild)
-            new KeyValuePair<string, string>("Built",                 "BuiltProjectOutputGroupFast"),
+            new KeyValuePair<string, string>("Built",                 "BuiltProjectOutputGroup"),
             new KeyValuePair<string, string>("ContentFiles",          "ContentFilesProjectOutputGroup"),
             new KeyValuePair<string, string>("SourceFiles",           "SourceFilesProjectOutputGroup"),
         };

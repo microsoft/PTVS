@@ -83,7 +83,7 @@ $is_emulated = $env:EMULATED -eq "true"
 $bindir = split-path $MyInvocation.MyCommand.Path
 
 if ($is_web) {
-    $env:RootDir = (gi $((Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Sites/sd:Site")[0].Node.physicalDirectory)).FullName
+    $env:RootDir = join-path $env:RoleRoot (Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Sites/sd:Site")[0].Node.physicalDirectory
 } else {
     $env:RootDir = split-path $bindir
 }
@@ -181,7 +181,7 @@ if ($is_web) {
 
     if ($is_emulated -and (Test-Path web.emulator.config)) {
         $webconfig = gi web.emulator.config -EA Stop
-    } else if (-not $is_emulated -and (Test-Path web.cloud.config)) {
+    } elseif (-not $is_emulated -and (Test-Path web.cloud.config)) {
         $webconfig = gi web.cloud.config -EA Stop
     } else {
         $webconfig = gi web.config -EA Stop

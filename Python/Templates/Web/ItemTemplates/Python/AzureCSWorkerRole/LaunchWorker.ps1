@@ -43,6 +43,10 @@
 
 [xml]$rolemodel = Get-Content $env:RoleRoot\RoleModel.xml
 
+# These should match your ConfigureCloudService.ps1 file
+$defaultpython = "python"
+$defaultpythonversion = ""
+
 $ns = @{ sd="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition" };
 $is_debug = (Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Properties/sd:Property[@name='Configuration'][@value='Debug']").Count -eq 1
 $is_emulated = $env:EMULATED -eq 'true'
@@ -51,7 +55,11 @@ $bindir = split-path $MyInvocation.MyCommand.Path
 
 $interpreter_path = $env:PYTHON;
 if (-not $interpreter_path) {
-    $interpreter_path = gci "$bindir\python*\tools\python.exe" | sort -Desc | select -First 1
+    if (-not $defaultpythonversion) {
+        $interpreter_path = "$bindir\$defaultpython\tools\python.exe"
+    } else {
+        $interpreter_path = "$bindir\$defaultpython.$defaultpythonversion\tools\python.exe"
+    }
 }
 
 if (-not $interpreter_path) {

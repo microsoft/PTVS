@@ -34,9 +34,15 @@ permissions and limitations under the License.
   <Target Name="WatGetTargetFrameworkMoniker" Returns="" />
   <Target Name="WatGetTargetFrameworkMonikerDisplayName" Returns=""  />
 
+  <!-- These properties are required to convince the web targets that we're .NET -->
+  <PropertyGroup>
+    <TargetName Condition="$(TargetName) == ''">Microsoft.PythonTools.WebRole</TargetName>
+    <TargetExt Condition="$(TargetExt) == ''">.dll</TargetExt>
+    <TargetPath Condition="$(TargetPath) == ''">$(QualifiedProjectHome)bin\$(TargetName)$(TargetExt)</TargetPath>
+  </PropertyGroup>
+
   <Import Project="Microsoft.PythonTools.targets"/>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\WebApplications\Microsoft.WebApplication.targets" />
-
 
   <!-- *************************************************************************
        Targets files for specific frameworks can schedule their own targets to
@@ -95,18 +101,17 @@ permissions and limitations under the License.
   -->
 
   <PropertyGroup>
-    <BuiltProjectOutputGroupFastDependsOn>
-      _BuildingForUpToDateCheck;
-      $(BuiltProjectOutputGroupFastDependsOn)
-    </BuiltProjectOutputGroupFastDependsOn>
     <BuiltProjectOutputGroupDependsOn>
-      BuiltProjectOutputGroupFast;
-      _BuildingForUpToDateCheck2;
-      _GetPythonWebSitesFiles;
+      _BuildingForUpToDateCheck;
       _GetPythonCloudServiceFiles;
-      _GetPythonVirtualEnvFiles;
       $(BuiltProjectOutputGroupDependsOn)
     </BuiltProjectOutputGroupDependsOn>
+
+    <SourceFilesProjectOutputGroupDependsOn>
+      _BuildingForUpToDateCheck;
+      _GetPythonCloudServiceFiles;
+      $(SourceFilesProjectOutputGroupDependsOn)
+    </SourceFilesProjectOutputGroupDependsOn>
 
     <BuildingForUpToDateCheck>false</BuildingForUpToDateCheck>
   </PropertyGroup>
@@ -115,87 +120,6 @@ permissions and limitations under the License.
     <PropertyGroup>
       <BuildingForUpToDateCheck>true</BuildingForUpToDateCheck>
     </PropertyGroup>
-  </Target>
-  <Target Name="_BuildingForUpToDateCheck2">
-    <PropertyGroup>
-      <BuildingForUpToDateCheck>true</BuildingForUpToDateCheck>
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="BuiltProjectOutputGroupFast"
-          Returns="@(BuiltProjectOutputGroupFastOutput)"
-          DependsOnTargets="$(BuiltProjectOutputGroupFastDependsOn)">
-    <ItemGroup>
-      <BuiltProjectOutputGroupFastOutput Remove="@(BuiltProjectOutputGroupFastOutput)" />
-      <_BuiltProjectOutputGroupFastOutput Remove="@(_BuiltProjectOutputGroupFastOutput)" />
-
-      <_BuiltProjectOutputGroupFastInput Include="@(Compile);@(Content);@(OutputFiles);$(MSBuildProjectFile)" />
-
-      <_BuiltProjectOutputGroupFastInputWithTargetPath Include="@(_BuiltProjectOutputGroupFastInput)" Condition="'%(_BuiltProjectOutputGroupFastInput.TargetPath)' != ''" />
-      <_BuiltProjectOutputGroupFastInputWithoutTargetPath Include="@(_BuiltProjectOutputGroupFastInput)" Condition="'%(_BuiltProjectOutputGroupFastInput.TargetPath)' == ''" />
-    </ItemGroup>
-
-    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(_BuiltProjectOutputGroupFastInputWithoutTargetPath)">
-      <Output TaskParameter="AssignedFiles" ItemName="_BuiltProjectOutputGroupFastOutput" />
-    </AssignTargetPath>
-
-    <ItemGroup>
-      <BuiltProjectOutputGroupFastOutput Include="@(_BuiltProjectOutputGroupFastOutput->'%(FullPath)');
-                                                  @(_BuiltProjectOutputGroupFastInputWithTargetPath->'%(FullPath)')" />
-    </ItemGroup>
-
-    <!-- Finished checking, so reset this flag in case whoever is building us
-         immediately starts running an actual build. -->
-    <PropertyGroup>
-      <BuildingForUpToDateCheck>false</BuildingForUpToDateCheck>
-    </PropertyGroup>
-  </Target>
-
-  <!-- Worker Role deployment uses this target to select the files to deploy,
-       so we implement it and provide all the files. BuiltProjectOutputGroupFast
-       is the implementation we now use for up-to-date checks, since it is
-       significantly faster when projects include virtual environments. -->
-  <Target Name="BuiltProjectOutputGroup"
-          Returns="@(BuiltProjectOutputGroupOutput)"
-          DependsOnTargets="$(BuiltProjectOutputGroupDependsOn)">
-    <ItemGroup>
-      <BuiltProjectOutputGroupOutput Remove="@(BuiltProjectOutputGroupOutput)" />
-      <_BuiltProjectOutputGroupOutput Remove="@(_BuiltProjectOutputGroupOutput)" />
-
-      <_BuiltProjectOutputGroupInput Include="@(_PythonWebCommonFiles);@(_PythonCloudServiceFiles)" />
-
-      <_BuiltProjectOutputGroupInputWithTargetPath Include="@(_BuiltProjectOutputGroupInput)" Condition="'%(_BuiltProjectOutputGroupInput.TargetPath)' != ''" />
-      <_BuiltProjectOutputGroupInputWithoutTargetPath Include="@(_BuiltProjectOutputGroupInput)" Condition="'%(_BuiltProjectOutputGroupInput.TargetPath)' == ''" />
-    </ItemGroup>
-
-    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(_BuiltProjectOutputGroupInputWithoutTargetPath)">
-      <Output TaskParameter="AssignedFiles" ItemName="_BuiltProjectOutputGroupOutput" />
-    </AssignTargetPath>
-
-    <ItemGroup>
-      <BuiltProjectOutputGroupOutput Include="@(BuiltProjectOutputGroupFastOutput);
-                                              @(_BuiltProjectOutputGroupOutput->'%(FullPath)');
-                                              @(_BuiltProjectOutputGroupInputWithTargetPath->'%(FullPath)')" />
-    </ItemGroup>
-
-    <!-- Finished checking, so reset this flag in case whoever is building us
-         immediately starts running an actual build. -->
-    <PropertyGroup>
-      <BuildingForUpToDateCheck>false</BuildingForUpToDateCheck>
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="SourceFilesProjectOutputGroup" DependsOnTargets="$(SourceFilesProjectOutputGroupDependsOn)">
-    <!-- We don't change BuildingForUpToDateCheck here because we don't
-         have to invoke any stateful targets -->
-    <ItemGroup>
-      <SourceFilesProjectOutputGroupOutput Remove="@(SourceFilesProjectOutputGroupOutput)" />
-      <_SourceFilesProjectOutputGroupOutput Remove="@(_SourceFilesProjectOutputGroupOutput)" />
-    </ItemGroup>
-
-    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);@(InputFiles);$(MSBuildProjectFile)">
-      <Output TaskParameter="AssignedFiles" ItemName="_SourceFilesProjectOutputGroupOutput" />
-    </AssignTargetPath>
   </Target>
 
   <Target Name="_WarnAboutLegacySettings">
@@ -211,58 +135,7 @@ permissions and limitations under the License.
     <Warning Condition="'$(FastCgiRewriteConditions)' != ''" Text="TODO" />
   </Target>
 
-  <!-- *****************************************************************************
-       CollectPythonWebCommonFiles deploys and includes extra files that are used
-       by both web sites and web role cloud services.
-  -->
-  
-  <Target Name="CollectPythonWebCommonFiles"
-          Condition="'$(RoleType)' == 'Web'"
-          DependsOnTargets="_GetPythonWebCommonFiles;_DeployPythonWebCommonFiles;_CollectPythonWebCommonFiles"/>
 
-  <Target Name="_GetPythonWebCommonSourceFiles">
-    <ItemGroup>
-      <_WebCommonFiles Include="$(_AzureSupportPath)Microsoft.PythonTools.WebRole.dll" />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_GetPythonWebCommonFiles"
-          DependsOnTargets="_GetPythonWebCommonSourceFiles"
-          Returns="@(_WebCommonFiles)">
-    <ItemGroup Condition="'@(_WebCommonFiles)' != ''">
-      <_WebCommonFilesWithTargetPath Include="@(_WebCommonFiles)">
-        <SourceFile>%(FullPath)</SourceFile>
-        <TargetPath>$(QualifiedProjectHome)bin\%(Filename)%(Extension)</TargetPath>
-        <TargetPath Condition="'%(_WebCommonFiles.TargetPath)' != ''">%(_WebCommonFiles.TargetPath)</TargetPath>
-      </_WebCommonFilesWithTargetPath>
-
-      <_PythonWebCommonFiles Include="@(_WebCommonFilesWithTargetPath->'%(TargetPath)')" />
-    </ItemGroup>
-  </Target>
-  
-  <Target Name="_DeployPythonWebCommonFiles"
-          DependsOnTargets="_GetPythonWebCommonFiles">
-    <Error Text="Should not be invoked during up-to-date check" Condition="$(BuildingForUpToDateCheck)" />
-
-    <Copy SourceFiles="@(_PythonWebCommonFiles->'%(SourceFile)')"
-          DestinationFiles="@(_PythonWebCommonFiles->'%(TargetPath)')"
-          SkipUnchangedFiles="true">
-      <Output TaskParameter="CopiedFiles" ItemName="FileWrites"/>
-    </Copy>
-  </Target>
-
-  <Target Name="_CollectPythonWebCommonFiles"
-          DependsOnTargets="_GetPythonWebCommonFiles">
-    <ItemGroup>
-      <FilesForPackagingFromProject Include="@(_PythonWebCommonFiles->'%(TargetPath)')">
-        <DestinationRelativePath>bin\%(FileName)%(Extension)</DestinationRelativePath>
-        <FromTarget>CollectPythonWebCommonFiles</FromTarget>
-        <Category>Run</Category>
-      </FilesForPackagingFromProject>
-    </ItemGroup>
-  </Target>
-  
-  
   <!-- *************************************************************************
        CollectPythonCloudServiceFiles deploys extra files for cloud services.
        
@@ -277,6 +150,8 @@ permissions and limitations under the License.
        ensure they are deployed to approot\bin.
   -->
   <ItemGroup>
+    <!-- Common files -->
+    <_CloudServiceFiles Include="$(_AzureSupportPath)Microsoft.PythonTools.WebRole.dll" />
     <!-- Web Role files -->
     <_WebRoleFiles Include="$(_AzureSupportPath)wfastcgi.py" />
   </ItemGroup>
@@ -286,8 +161,7 @@ permissions and limitations under the License.
   </PropertyGroup>
 
   <Target Name="CollectPythonCloudServiceFiles"
-          DependsOnTargets="CollectPythonWebCommonFiles;
-                            _GetPythonCloudServiceFiles;
+          DependsOnTargets="_GetPythonCloudServiceFiles;
                             _DeployPythonCloudServiceFiles;
                             _CollectPythonCloudServiceFiles"
           Condition="!$(SuppressCollectPythonCloudServiceFiles)" />
@@ -309,6 +183,9 @@ permissions and limitations under the License.
       </_CloudServiceFilesWithTargetPath>
 
       <_PythonCloudServiceFiles Include="@(_CloudServiceFilesWithTargetPath->'%(TargetPath)')" />
+
+      <InputFiles Include="@(_CloudServiceFilesWithTargetPath->'%(SourceFile)')" />
+      <OutputFiles Include="@(_CloudServiceFilesWithTargetPath->'%(TargetPath)')" />
     </ItemGroup>
   </Target>
 
@@ -340,7 +217,7 @@ permissions and limitations under the License.
     </ItemGroup>
   </Target>
 
-  
+
   <!-- *************************************************************************
        GetTargetPath is invoked by Microsoft.WindowsAzure.targets when it is
        collecting web role files. It returns one item that is our WebRole.dll.
@@ -378,7 +255,7 @@ permissions and limitations under the License.
         SERVER_PORT=$(WebBrowserPort)
         $(PythonRunWebServerCommandEnvironment)
       </PythonRunWebServerCommandEnvironment>
-      
+
       <PythonRunWebServerCommand>$(PythonRunWebServerCommand.Replace(`{StartupModule}`, $(StartupModule)))</PythonRunWebServerCommand>
       <PythonRunWebServerCommandArguments>$(PythonRunWebServerCommandArguments.Replace(`{StartupModule}`, $(StartupModule)))</PythonRunWebServerCommandArguments>
       <PythonRunWebServerArguments>$(PythonRunWebServerArguments.Replace(`{StartupModule}`, $(StartupModule)))</PythonRunWebServerArguments>
