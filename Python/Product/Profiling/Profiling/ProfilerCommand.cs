@@ -27,10 +27,11 @@ namespace Microsoft.PythonTools.Profiling {
         
         public VTuneCollectCommand(collectType _t) {
             t = _t; 
+            options.Add(getMode(), "");
         } 
         
-        public void setDuration(string d) {
-            options.Add("-d ", d);
+        public void setDuration(int d) {
+            options.Add("-d ", d.ToString());
         }
         
         public void setUserDataDir(string d) {
@@ -47,7 +48,6 @@ namespace Microsoft.PythonTools.Profiling {
         public override string getMode() { return "-collect " + getCollectType(); }    
         
         public override string get() {
-            options.Add(getMode(), "");
             return base.get();
         }
     }
@@ -58,6 +58,7 @@ namespace Microsoft.PythonTools.Profiling {
         
         public VTuneReportCommand(collectType _t) {
             t = _t;
+            options.Add(getMode(), "");
         }
 
         private string getCollectType() {
@@ -72,7 +73,6 @@ namespace Microsoft.PythonTools.Profiling {
         
         public override string getMode() { return "-report " + getCollectType(); }
         public override string get() {
-            options.Add(getMode(), "");
             return base.get();
         }
     }
