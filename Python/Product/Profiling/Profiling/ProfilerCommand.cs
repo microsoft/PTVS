@@ -10,7 +10,7 @@ namespace Microsoft.PythonTools.Profiling {
         
         public VTuneCommand() {}
         public abstract string getMode();
-        virtual public string get() {
+        public virtual string get() {
             StringBuilder cmd = new StringBuilder(_vtuneCl);
             cmd.Append(" ");
             cmd.Append(getMode()); 
