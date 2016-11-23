@@ -67,6 +67,13 @@
     file or in your project directory.
 #>
 
+(Get-Host).UI.WriteLine("")
+(Get-Host).UI.WriteLine("=====================================")
+(Get-Host).UI.WriteLine("Script started at $(Get-Date -format s)")
+(Get-Host).UI.WriteErrorLine("")
+(Get-Host).UI.WriteErrorLine("=====================================")
+(Get-Host).UI.WriteErrorLine("Script started at $(Get-Date -format s)")
+
 [xml]$rolemodel = Get-Content $env:RoleRoot\RoleModel.xml
 
 $defaultpython = "python"       # or pythonx86, python2, python2x86
@@ -149,35 +156,54 @@ if (-not $interpreter_path) {
     throw "Cannot find Python installation at $interpreter_path.";
 }
 
+function py {
+    Start-Process -Wait -NoNewWindow $interpreter_path -ArgumentList $args -WorkingDirectory $env:RootDir
+}
 
 if (Test-Path requirements.txt) {
-    Set-Alias py (gi $interpreter_path -EA Stop)
     py -m pip -V
     if (-not $?) {
-        $pip_downloader = gi "$bindir\pip_downloader.py" -EA SilentlyContinue
-        if (-not $pip_downloader) {
+        if (-not (Test-Path "$bindir\pip_downloader.py")) {
             Invoke-WebRequest "https://go.microsoft.com/fwlink/?LinkID=393490" -OutFile "$bindir\pip_downloader.py"
-            $pip_downloader = gi "$bindir\pip_downloader.py" -EA Stop
         }
-        py $pip_downloader
+        py "$bindir\pip_downloader.py"
     }
     py -m pip install -r requirements.txt
 }
 
 if ($is_web) {
-    $appcmdargs = ''
+    $appcmd = $null
+    $appcmdargs = @()
     if ($env:appcmd) {
-        Set-Alias appcmd (gi ($env:appcmd -replace '^("(.+?)"|(\S+)).*$', '$2$3'))
-        $appcmdargs = $env:appcmd -replace '^(".+?"|\S+)\s*(.*)$', '$2'
+        function get-args { $args }
+        $appcmd = (iex "get-args $env:appcmd") | select -first 1
+        $appcmdargs = (iex "get-args $env:appcmd") | select -skip 1
     } else {
-        try {
-            gcm appcmd -EA Stop
-        } catch {
-            Set-Alias appcmd (gi "$env:SystemRoot\System32\inetsrv\appcmd.exe" -EA Stop)
+        $appcmd = (gcm appcmd -EA 0).Path
+        if (-not $appcmd) {
+            $appcmd = "$env:SystemRoot\System32\inetsrv\appcmd.exe"
         }
     }
 
-    $fastcgihandler = iex "& `"$interpreter_path`" -c `"import wfastcgi; print('$%1s|%$2s'%wfastcgi._enable())`" $env:appcmd"
+    $quoted_interpreter_path = $interpreter_path
+    if ($quoted_interpreter_path -contains ' ') {
+        $quoted_interpreter_path = "`"$quoted_interpreter_path`""
+    }
+    $quoted_wfastcgi_path = "$bindir\wfastcgi.py"
+    if ($quoted_wfastcgi_path -contains ' ') {
+        $quoted_wfastcgi_path = "`"$quoted_wfastcgi_path`""
+    }
+
+    $appcmdargs += @(
+        "set",
+        "config",
+        "/section:system.webServer/fastCGI",
+        "/+[fullPath='$quoted_interpreter_path',arguments='$quoted_wfastcgi_path',signalBeforeTerminateSeconds='30']"
+    )
+
+    "Configuring FastCGI with `"$appcmd`" $appcmdargs"
+    Start-Process -Wait -NoNewWindow $appcmd -ArgumentList $appcmdargs
+    $fastcgihandler = "$quoted_interpreter_path|$quoted_wfastcgi_path"
 
     if ($is_emulated -and (Test-Path web.emulator.config)) {
         $webconfig = gi web.emulator.config -EA Stop
@@ -189,13 +215,13 @@ if ($is_web) {
 
     "Updating $($webconfig.FullName) to reference $fastcgihandler"
     if (Test-Path web.config) {
-        copy -force web.config "$webconfig.bak"
+        copy -force web.config "web.config.bak"
     }
     $xml = [xml](gc "$webconfig")
     foreach ($e in $xml.configuration.'system.webServer'.handlers.add) {
-        if ($e.scriptProcessor -ieq '%fastcgihandler%') {
+        if ($e.name -ieq 'PythonHandler') {
             $e.scriptProcessor = $fastcgihandler
         }
     }
-    $xml.Save("web.config")
+    $xml.Save("$(get-location)\web.config")
 }

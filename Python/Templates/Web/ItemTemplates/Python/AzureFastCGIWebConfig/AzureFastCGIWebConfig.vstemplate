@@ -10,6 +10,6 @@ This file should normally be deployed at the root of your site. See https://aka.
     <SortOrder>300</SortOrder>
   </TemplateData>
   <TemplateContent>
-    <ProjectItem ReplaceParameters="true" TargetFileName="web.config">web.config</ProjectItem>
+    <ProjectItem ReplaceParameters="true" TargetFileName="web.config" ItemType="Content">web.config</ProjectItem>
   </TemplateContent>
 </VSTemplate>

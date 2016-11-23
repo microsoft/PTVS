@@ -8,10 +8,10 @@
     to customize how your worker is run.
 
     To specify the version of Python your worker should run with, add a PYTHON
-    environment variable with the path to the python.exe to run. If omitted,
-    all 'bin\python*\tools' directories will be searched for the last python.exe
-    available. These packages may be installed from nuget in
-    ConfigureCloudService.ps1.
+    environment variable with the path to the python.exe to run. If your
+    ConfigureCloudService.ps1 script is installing Python from Nuget, you can
+    also copy the values for $defaultpython and $defaultpythonversion into this
+    script to select that installation.
 
     To set PYTHONPATH (or equivalent) before running the worker, modify the
     variable in your ServiceDefinition.csdef file.
@@ -41,6 +41,13 @@
     </Runtime>
 #>
 
+(Get-Host).UI.WriteLine("")
+(Get-Host).UI.WriteLine("=====================================")
+(Get-Host).UI.WriteLine("Script started at $(Get-Date -format s)")
+(Get-Host).UI.WriteErrorLine("")
+(Get-Host).UI.WriteErrorLine("=====================================")
+(Get-Host).UI.WriteErrorLine("Script started at $(Get-Date -format s)")
+
 [xml]$rolemodel = Get-Content $env:RoleRoot\RoleModel.xml
 
 # These should match your ConfigureCloudService.ps1 file
@@ -69,4 +76,5 @@ if (-not $interpreter_path) {
 }
 
 "Executing $interpreter_path $args"
-Start-Process -Wait -NoNewWindow $interpreter_path -ArgumentList $args
+Start-Process -Wait -NoNewWindow $interpreter_path -ArgumentList $args -WorkingDirectory (split-path $bindir)
+"Process terminated"

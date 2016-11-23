@@ -11,9 +11,8 @@ These files are always added to a folder 'bin' at the root of your project.</Des
   </TemplateData>
   <TemplateContent>
     <ProjectItem ReplaceParameters="true" SubType="WebBrowser" OpenInWebBrowser="true" TargetFileName="\bin\Readme.mht">WebRoleConfiguration.mht</ProjectItem>
-    <ProjectItem ReplaceParameters="true" TargetFileName="\bin\ConfigureCloudService.ps1">ConfigureCloudService.ps1</ProjectItem>
-    <ProjectItem ReplaceParameters="true" TargetFileName="\bin\ps.cmd">ps.cmd</ProjectItem>
-    <ProjectItem ReplaceParameters="true" TargetFileName="\bin\web.config">web.config</ProjectItem>
-    <ProjectItem ReplaceParameters="true" TargetFileName="\bin\wfastcgi.py">wfastcgi.py</ProjectItem>
+    <ProjectItem ReplaceParameters="true" TargetFileName="\bin\ConfigureCloudService.ps1" ItemType="Content">ConfigureCloudService.ps1</ProjectItem>
+    <ProjectItem ReplaceParameters="true" TargetFileName="\bin\ps.cmd" ItemType="Content">ps.cmd</ProjectItem>
+    <ProjectItem ReplaceParameters="true" TargetFileName="\bin\web.config" ItemType="Content">web.config</ProjectItem>
   </TemplateContent>
 </VSTemplate>

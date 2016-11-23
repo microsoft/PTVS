@@ -10,6 +10,6 @@ This file should normally be deployed in your /static folder. See https://aka.ms
     <SortOrder>320</SortOrder>
   </TemplateData>
   <TemplateContent>
-    <ProjectItem ReplaceParameters="true" TargetFileName="web.config">web.config</ProjectItem>
+    <ProjectItem ReplaceParameters="true" TargetFileName="web.config" ItemType="Content">web.config</ProjectItem>
   </TemplateContent>
 </VSTemplate>
