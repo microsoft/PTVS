@@ -21,6 +21,8 @@ namespace ProfilingUITests {
         [TestMethod]
         public void BuildReportCommand()
         {
+            VTuneReportCommand c = new VTuneReportCommand(VTuneReportCommand.collectType.hotspots);
+            Assert.AreEqual("C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017\\bin32\\amplxe-cl.exe -report hotspots", c.get());
 
         }
     }

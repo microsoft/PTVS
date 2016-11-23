@@ -56,6 +56,10 @@ namespace Microsoft.PythonTools.Profiling {
         public enum collectType { callstacks, hotspots, hwevents, topdown };
         private collectType t = collectType.callstacks;
         
+        public VTuneReportCommand(collectType _t) {
+            t = _t;
+        }
+
         private string getCollectType() {
             switch (t) {
                 case collectType.callstacks: return "callstacks";
