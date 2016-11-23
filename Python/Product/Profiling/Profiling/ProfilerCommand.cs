@@ -2,18 +2,16 @@ using System.Collections;
 using System.Text;
 
 namespace Microsoft.PythonTools.Profiling {
-    abstract class VTuneCommand {
+    public abstract class VTuneCommand {
         private static readonly string _vtunepath = "C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017";
         private static readonly string _vtuneCl = _vtunepath + "\\bin32\\amplxe-cl.exe";
 
-        protected Hashtable options;
+        protected Hashtable options = new Hashtable();
         
-        public VTuneCommand() {}
         public abstract string getMode();
         public virtual string get() {
             StringBuilder cmd = new StringBuilder(_vtuneCl);
-            cmd.Append(" ");
-            cmd.Append(getMode()); 
+
             foreach (DictionaryEntry opt in options) 
             {
                 cmd.Append(opt.Key);
@@ -23,11 +21,9 @@ namespace Microsoft.PythonTools.Profiling {
         }
     }
     
-    sealed class VTuneCollectCommand : VTuneCommand {
+    public sealed class VTuneCollectCommand : VTuneCommand {
         public enum collectType { general, hotspots };
-        private collectType t;
-        
-        public VTuneCollectCommand() { } 
+        private collectType t = collectType.hotspots;
         
         public VTuneCollectCommand(collectType _t) {
             t = _t; 
@@ -56,7 +52,7 @@ namespace Microsoft.PythonTools.Profiling {
         }
     }
     
-    sealed class VTuneReportCommand : VTuneCommand {
+    public sealed class VTuneReportCommand : VTuneCommand {
         public enum collectType { callstacks, hotspots, hwevents, topdown };
         private collectType t = collectType.callstacks;
         
