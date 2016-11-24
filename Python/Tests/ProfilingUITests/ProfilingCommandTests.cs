@@ -18,7 +18,7 @@ namespace ProfilingUITests {
             Assert.AreEqual("C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017\\bin32\\amplxe-cl.exe -collect hotspots", c.get());
             c.setDuration(5);
             c.setUserDataDir("C:\\temp\\out");
-            Assert.AreEqual("C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017\\bin32\\amplxe-cl.exe -user-data-dir=C:\\temp\\out -d 5 -collect hotspots");
+            Assert.AreEqual("C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017\\bin32\\amplxe-cl.exe -user-data-dir=C:\\temp\\out -d 5 -collect hotspots", c.get());
         }
 
         [TestMethod]
