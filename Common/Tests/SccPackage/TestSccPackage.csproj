@@ -71,6 +71,7 @@
     <Reference Include="Microsoft.VisualStudio.Shell.$(VSTarget)">
       <Private>false</Private>
     </Reference>
+    <Reference Include="Microsoft.VisualStudio.Utilities" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
