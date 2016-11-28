@@ -18,6 +18,7 @@
         <ProjectItem OpenInWebBrowser="true" TargetFileName="Readme.mht">WebRoleConfiguration.mht</ProjectItem>
         <ProjectItem>ConfigureCloudService.ps1</ProjectItem>
         <ProjectItem>ps.cmd</ProjectItem>
+        <ProjectItem>web.config</ProjectItem>
       </Folder>
     </Project>
   </TemplateContent>

@@ -20,6 +20,7 @@
       </Folder>
       <ProjectItem>requirements.txt</ProjectItem>
       <ProjectItem>manage.py</ProjectItem>
+      <ProjectItem ReplaceParameters="true">web.config</ProjectItem>
       <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\__init__.py">__init__.py</ProjectItem>
       <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\urls.py">urls.py</ProjectItem>
       <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$\settings.py">settings.py</ProjectItem>

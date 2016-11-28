@@ -199,7 +199,7 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
 
         public string OutputPath {
             get {
-                return _project.Site.GetUIThread().Invoke(() => _project.GetProjectProperty("OutputPath"));
+                return _project.Site.GetUIThread().Invoke(() => _project.GetProjectProperty("OutputPath", false));
             }
             set {
                 _project.Site.GetUIThread().Invoke(() => _project.SetProjectProperty("OutputPath", value));

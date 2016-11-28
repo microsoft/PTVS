@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Project {
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
                                              // Name                     ItemGroup (MSBuild)
-            new KeyValuePair<string, string>("Built",                 "BuiltProjectOutputGroupFast"),
+            new KeyValuePair<string, string>("Built",                 "BuiltProjectOutputGroup"),
             new KeyValuePair<string, string>("ContentFiles",          "ContentFilesProjectOutputGroup"),
             new KeyValuePair<string, string>("SourceFiles",           "SourceFilesProjectOutputGroup"),
         };
@@ -2353,14 +2353,17 @@ namespace Microsoft.PythonTools.Project {
             return hr;
         }
 
-        public void AddedAsRole(object azureProjectHierarchy, string roleType) {
+        void IAzureRoleProject.AddedAsRole(object azureProjectHierarchy, string roleType) {
             var hier = azureProjectHierarchy as IVsHierarchy;
 
             if (hier == null) {
                 return;
             }
 
-            Site.GetUIThread().Invoke(() => UpdateServiceDefinition(hier, roleType, Caption, Site));
+            Site.GetUIThread().Invoke(() => {
+                UpdateServiceDefinition(hier, roleType, Caption, Site);
+                SetProjectProperty(PythonConstants.SuppressCollectPythonCloudServiceFiles, "false");
+            });
         }
 
         private static bool TryGetItemId(object obj, out uint id) {
@@ -2680,7 +2683,7 @@ namespace Microsoft.PythonTools.Project {
                 var ep = runtime.SelectSingleNode("sd:EntryPoint", ns);
                 ep.AppendChildElement(null, "ProgramEntryPoint", null, null);
                 var pep = ep.SelectSingleNode("sd:ProgramEntryPoint", ns);
-                pep.CreateAttribute(null, "commandLine", null, "bin\\ps.cmd LaunchWorker.ps1");
+                pep.CreateAttribute(null, "commandLine", null, "bin\\ps.cmd LaunchWorker.ps1 worker.py");
                 pep.CreateAttribute(null, "setReadyOnProcessStart", null, "true");
             }
         }
@@ -2689,11 +2692,14 @@ namespace Microsoft.PythonTools.Project {
             nav.AppendChildElement(null, "Environment", null, null);
             nav = nav.SelectSingleNode("sd:Environment", ns);
             nav.AppendChildElement(null, "Variable", null, null);
-            nav = nav.SelectSingleNode("sd:Variable", ns);
-            nav.CreateAttribute(null, "name", null, "EMULATED");
-            nav.AppendChildElement(null, "RoleInstanceValue", null, null);
-            nav = nav.SelectSingleNode("sd:RoleInstanceValue", ns);
-            nav.CreateAttribute(null, "xpath", null, "/RoleEnvironment/Deployment/@emulated");
+            var children = nav.SelectChildren(XPathNodeType.Element);
+            if (children.MoveNext()) {
+                var emulatedNode = children.Current;
+                emulatedNode.CreateAttribute(null, "name", null, "EMULATED");
+                emulatedNode.AppendChildElement(null, "RoleInstanceValue", null, null);
+                emulatedNode = emulatedNode.SelectSingleNode("sd:RoleInstanceValue", ns);
+                emulatedNode.CreateAttribute(null, "xpath", null, "/RoleEnvironment/Deployment/@emulated");
+            }
         }
     }
 }

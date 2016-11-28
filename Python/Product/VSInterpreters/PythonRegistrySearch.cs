@@ -26,6 +26,7 @@ namespace Microsoft.PythonTools.Interpreter {
     class PythonRegistrySearch {
         public const string PythonCoreCompanyDisplayName = "Python Software Foundation";
         public const string PythonCoreSupportUrl = "https://www.python.org/";
+        public const string PythonCoreCompany = "PythonCore";
 
         public const string CompanyPropertyKey = "Company";
         public const string SupportUrlPropertyKey = "SupportUrl";
@@ -72,7 +73,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 if ("PyLauncher".Equals(company, StringComparison.OrdinalIgnoreCase)) {
                     continue;
                 }
-                bool pythonCore = "PythonCore".Equals(company, StringComparison.OrdinalIgnoreCase);
+                bool pythonCore = PythonCoreCompany.Equals(company, StringComparison.OrdinalIgnoreCase);
 
                 using (var companyKey = root.OpenSubKey(company)) {
                     if (companyKey == null) {

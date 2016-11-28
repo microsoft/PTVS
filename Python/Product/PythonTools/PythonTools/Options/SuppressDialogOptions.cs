@@ -15,10 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Options {
     sealed class SuppressDialogOptions {
@@ -27,6 +23,7 @@ namespace Microsoft.PythonTools.Options {
         private const string Category = "SuppressDialog";
 
         private const string SwitchEvaluatorSetting = "SwitchEvaluator";
+        private const string PublishToAzure30Setting = "PublishToAzure30";
 
         internal SuppressDialogOptions(PythonToolsService service) {
             _service = service;
@@ -35,21 +32,25 @@ namespace Microsoft.PythonTools.Options {
 
         public void Load() {
             SwitchEvaluator = _service.LoadString(SwitchEvaluatorSetting, Category);
+            PublishToAzure30 = _service.LoadString(PublishToAzure30Setting, Category);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Save() {
             _service.SaveString(SwitchEvaluatorSetting, Category, SwitchEvaluator);
+            _service.SaveString(PublishToAzure30Setting, Category, PublishToAzure30);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Reset() {
             SwitchEvaluator = null;
+            PublishToAzure30 = null;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public event EventHandler Changed;
 
         public string SwitchEvaluator { get; set; }
+        public string PublishToAzure30 { get; set; }
     }
 }

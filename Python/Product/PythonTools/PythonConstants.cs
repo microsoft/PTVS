@@ -121,6 +121,12 @@ namespace Microsoft.PythonTools {
         public const string WebBrowserUrlSetting = "WebBrowserUrl";
 
         /// <summary>
+        /// When True, prevents web projects from copying Cloud Service files
+        /// into their bin directory.
+        /// </summary>
+        public const string SuppressCollectPythonCloudServiceFiles = "SuppressCollectPythonCloudServiceFiles";
+
+        /// <summary>
         /// Specifies local address for the web server to listen on.
         /// </summary>
         public const string WebServerHostSetting = "WebServerHost";
