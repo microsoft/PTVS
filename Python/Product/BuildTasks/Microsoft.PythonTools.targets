@@ -204,8 +204,8 @@ permissions and limitations under the License.
           Returns="@(BuiltProjectOutputGroupOutput)"
           DependsOnTargets="$(BuiltProjectOutputGroupDependsOn)">
     <ItemGroup>
-      <BuiltProjectOutputGroupFastOutput Remove="@(BuiltProjectOutputGroupOutput)" />
-      <_BuiltProjectOutputGroupFastOutput Remove="@(_BuiltProjectOutputGroupOutput)" />
+      <BuiltProjectOutputGroupOutput Remove="@(BuiltProjectOutputGroupOutput)" />
+      <_BuiltProjectOutputGroupOutput Remove="@(_BuiltProjectOutputGroupOutput)" />
     </ItemGroup>
 
     <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);@(OutputFiles);$(MSBuildProjectFile)">

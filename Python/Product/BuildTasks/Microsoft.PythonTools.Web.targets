@@ -93,6 +93,7 @@ permissions and limitations under the License.
     </ItemGroup>
   </Target>
 
+  <!-- This target is not useful, so we suppress it -->
   <Target Name="CollectFilesFromIntermediateAssembly" />
 
   <!-- *************************************************************************
@@ -122,17 +123,41 @@ permissions and limitations under the License.
     </PropertyGroup>
   </Target>
 
-  <Target Name="_WarnAboutLegacySettings">
-    <Warning Condition="'$(DeployedPythonInterpreterPath)' != ''" Text="TODO" />
-    <Warning Condition="'$(DeployedSiteRoot)' != ''" Text="TODO" />
-    <Warning Condition="'$(DeployedVirtualEnvPath)' != ''" Text="TODO" />
-    <Warning Condition="'$(DeployedWFastCgiPath)' != ''" Text="TODO" />
-    <Warning Condition="'$(WsgiAppSettings)' != ''" Text="TODO" />
-    <Warning Condition="'$(PythonWsgiHandler)' != ''" Text="TODO" />
-    <Warning Condition="'$(WsgiLogPath)' != ''" Text="TODO" />
-    <Warning Condition="'$(StaticUriPattern)' != ''" Text="TODO" />
-    <Warning Condition="'$(StaticUriRewrite)' != ''" Text="TODO" />
-    <Warning Condition="'$(FastCgiRewriteConditions)' != ''" Text="TODO" />
+  <Target Name="_WarnAboutLegacySettings" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <_WarningMessage>
+        <![CDATA[Publishing Python projects has recently changed, and the {{PROP}} property is now ignored.
+Please refer to https://aka.ms/pythononappservice for information about configuring and publishing to Azure App Service.]]>
+      </_WarningMessage>
+    </PropertyGroup>
+    <Warning Condition="'$(DeployedPythonInterpreterPath)' != ''" Text="$(_WarningMessage.Replace(`{{PROP}}`, `DeployedPythonInterpreterPath`))" />
+    <Warning Condition="'$(DeployedSiteRoot)' != ''" Text="$(_WarningMessage.Replace(`{{PROP}}`, `DeployedSiteRoot`))" />
+    <Warning Condition="'$(DeployedVirtualEnvPath)' != ''" Text="$(_WarningMessage.Replace(`{{PROP}}`, `DeployedVirtualEnvPath`))" />
+    <Warning Condition="'$(DeployedWFastCgiPath)' != ''" Text="$(_WarningMessage.Replace(`{{PROP}}`, `DeployedWFastCgiPath`))" />
+    <Warning Condition="'$(WsgiAppSettings)' != ''" Text="$(_WarningMessage.Replace(`{{PROP}}`, `WsgiAppSettings`))" />
+    <Warning Condition="'$(WsgiLogPath)' != ''" Text="$(_WarningMessage.Replace(`{{PROP}}`, `WsgiLogPath`))" />
+    <Warning Condition="'$(StaticUriPattern)' != ''" Text="$(_WarningMessage.Replace(`{{PROP}}`, `StaticUriPattern`))" />
+    <Warning Condition="'$(StaticUriRewrite)' != ''" Text="$(_WarningMessage.Replace(`{{PROP}}`, `StaticUriRewrite`))" />
+    <Warning Condition="'$(FastCgiRewriteConditions)' != ''" Text="$(_WarningMessage.Replace(`{{PROP}}`, `FastCgiRewriteConditions`))" />
+  </Target>
+
+  <Target Name="_ValidateLegacyWsgiHandler" BeforeTargets="PrepareForBuild" Condition="$(PythonWsgiHandler) != ''">
+    <PropertyGroup>
+      <_PythonWsgiHandler>$(PythonWsgiHandler.Replace(`{StartupModule}`, $(StartupModule)))</_PythonWsgiHandler>
+    </PropertyGroup>
+    <ItemGroup>
+      <_WebConfig Include="@(Content);@(None)" Condition="'%(Filename)%(Extension)' == 'web.config'" />
+    </ItemGroup>
+    <XmlPeek XmlInputPath="@(_WebConfig)" Query="/configuration/appSettings/add[@key='WSGI_HANDLER']/@value" Condition="@(_WebConfig) != ''">
+      <Output TaskParameter="Result" PropertyName="_WebConfigWsgiHandler" />
+    </XmlPeek>
+    <PropertyGroup Condition="@(_WebConfig) != ''">
+      <_WarningMessage>
+        Your web.config file contains a different WSGI handler ('$(_WebConfigWsgiHandler)') than specified in Project Properties ('$(_PythonWsgiHandler)').
+        Review and correct either value to suppress this warning.
+      </_WarningMessage>
+    </PropertyGroup>
+    <Warning Condition="@(_WebConfig) != '' and $(_WebConfigWsgiHandler) != $(_PythonWsgiHandler)" Text="$(_WarningMessage)" />
   </Target>
 
 
