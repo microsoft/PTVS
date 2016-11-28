@@ -860,6 +860,7 @@
       <ResourceName>1000</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
+    <None Include="source.extension.vsixmanifest" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="visualstudio_py_launcher.py">
@@ -989,6 +990,10 @@
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
+  <PropertyGroup>
+  <CreateVsixContainer>False</CreateVsixContainer>
+  <DeployExtensions>False</DeployExtensions>
+  </PropertyGroup>
   <PropertyGroup>
     <SharedProject_IncludeUIThreadBase>false</SharedProject_IncludeUIThreadBase>
   </PropertyGroup>
