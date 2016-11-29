@@ -795,6 +795,29 @@ def main():
                     response.error_message = 'Error occurred starting file watcher'
                     start_file_watcher(response.physical_path, env.get('WSGI_RESTART_FILE_REGEX'))
 
+                    # Enable debugging if possible. Default to local-only, but
+                    # allow a web.config to override where we listen
+                    ptvsd_secret = env.get('WSGI_PTVSD_SECRET')
+                    if ptvsd_secret:
+                        ptvsd_address = (env.get('WSGI_PTVSD_ADDRESS') or 'localhost:5678').split(':', 2)
+                        try:
+                            ptvsd_port = int(ptvsd_address[1])
+                        except LookupError:
+                            ptvsd_port = 5678
+                        except ValueError:
+                            log('"%s" is not a valid port number for debugging' % ptvsd_address[1])
+                            ptvsd_port = 0
+
+                        if ptvsd_address[0] and ptvsd_port:
+                            try:
+                                import ptvsd
+                            except ImportError:
+                                log('unable to import ptvsd to enable debugging')
+                            else:
+                                addr = ptvsd_address[0], ptvsd_port
+                                ptvsd.enable_attach(secret=ptvsd_secret, address=addr)
+                                log('debugging enabled on %s:%s' % addr)
+
                     response.error_message = ''
                     response.fatal_errors = False
 
