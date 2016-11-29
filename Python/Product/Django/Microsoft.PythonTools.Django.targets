@@ -29,64 +29,36 @@ permissions and limitations under the License.
     <PythonRunWebServerCommandType Condition="'$(PythonRunWebServerCommandType)' == ''">script</PythonRunWebServerCommandType>
     <PythonDebugWebServerCommandArguments Condition="'$(PythonDebugWebServerCommandArguments)' == ''">runserver --noreload --settings $(DjangoSettingsModule) %SERVER_PORT% $(CommandLineArguments)</PythonDebugWebServerCommandArguments>
     <PythonDebugWebServerCommandType Condition="'$(PythonDebugWebServerCommandType)' == ''">script</PythonDebugWebServerCommandType>
-
-    <PythonWsgiHandler Condition="'$(PythonWsgiHandler)' == ''">django.core.wsgi.get_wsgi_application()</PythonWsgiHandler>
   </PropertyGroup>
-
-  <Target Name="CreateDjangoAppSettings">
-    <PropertyGroup>
-      <WsgiAppSettings>
-        <![CDATA[$(WsgiAppSettings)
-        <add key="DJANGO_SETTINGS_MODULE" value="$(DjangoSettingsModule)" />]]>
-      </WsgiAppSettings>
-    </PropertyGroup>
-  </Target>
 
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.Web.targets" />
 
+  <Target Name="_ValidateDjangoSettingsModule"
+          AfterTargets="_ValidateLegacyWsgiHandler"
+          Condition="$(DjangoSettingsModule) != ''">
+    <ItemGroup>
+      <_WebConfig Remove="@(_WebConfig)" />
+      <_WebConfig Include="@(Content);@(None)" Condition="'%(Identity)' == 'web.config'" />
+    </ItemGroup>
+    <XmlPeek XmlInputPath="@(_WebConfig)" Query="/configuration/appSettings/add[@key='DJANGO_SETTINGS_MODULE']/@value" Condition="@(_WebConfig) != ''">
+      <Output TaskParameter="Result" PropertyName="_WebConfigDjangoSettingsModule" />
+    </XmlPeek>
+    <PropertyGroup Condition="@(_WebConfig) != ''">
+      <_WarningMessage>
+        Your web.config file contains a different Django settings module ('$(_WebConfigDjangoSettingsModule)') than specified in Project Properties ('$(DjangoSettingsModule)').
+        Review and correct either value to suppress this warning.
+      </_WarningMessage>
+    </PropertyGroup>
+    <Warning Condition="@(_WebConfig) != '' and $(_WebConfigDjangoSettingsModule) != $(DjangoSettingsModule)" Text="$(_WarningMessage)" />
+  </Target>
+
   <!-- Extend the standard Python web targets with our Django specific ones. -->
   <PropertyGroup>
-    <CreateWebConfigDependsOnTargets>
-      $(CreateWebConfigDependsOnTargets);
-      CreateDjangoAppSettings;
-      CreateFastCgiRewriteConditions;
-    </CreateWebConfigDependsOnTargets>
-    <PipelineCollectFilesPhaseDependsOn>
-      $(PipelineCollectFilesPhaseDependsOn);
+    <CoreCompileDependsOn>
+      $(CoreCompileDependsOn);
       DjangoCollectStaticFiles;
-    </PipelineCollectFilesPhaseDependsOn>
-    <CreatePythonAzureSetupConfigDependsOnTargets>
-      $(CreatePythonAzureSetupConfigDependsOnTargets);
-      ResolvePythonInterpreterPath;
-      EnsureDjangoWebPiReference
-    </CreatePythonAzureSetupConfigDependsOnTargets>
+    </CoreCompileDependsOn>
   </PropertyGroup>
-
-  <!-- *************************************************************************
-       Looks up the STATIC_URL setting in the Django project so that we can
-       ensure they are served directly.
-   -->
-  <Target Name="ResolveStaticUrlSetting" DependsOnTargets="ResolvePythonInterpreterPath">
-    <RunPythonCommand Target="import $(DjangoSettingsModule) as settings; print(settings.STATIC_URL)"
-                      TargetType="code"
-                      ExecuteIn="none"
-                      WorkingDirectory="$(WorkingDirectory)"
-                      ConsoleToMSBuild="true">
-      <Output TaskParameter="ConsoleOutput" PropertyName="DjangoStaticUrlSetting" />
-    </RunPythonCommand>
-
-    <Message Text="DjangoStaticUrlSetting=$(DjangoStaticUrlSetting)"/>
-  </Target>
-
-  <Target Name="CreateFastCgiRewriteConditions" DependsOnTargets="ResolveStaticUrlSetting">
-    <PropertyGroup Condition="'$(DjangoStaticUrlSetting)' != ''">
-      <EscapedDjangoStaticUrlSetting>$([System.Text.RegularExpressions.Regex]::Escape($(DjangoStaticUrlSetting)))</EscapedDjangoStaticUrlSetting>
-      <FastCgiRewriteConditions>
-        <![CDATA[$(FastCgiRewriteConditions)
-            <add input="{REQUEST_URI}" pattern="^$(EscapedDjangoStaticUrlSetting).*" ignoreCase="true" negate="true"/>]]>
-      </FastCgiRewriteConditions>
-    </PropertyGroup>
-  </Target>
 
 
   <!-- *************************************************************************
@@ -97,7 +69,7 @@ permissions and limitations under the License.
        This target is unconditional, to ensure we add the trailing slash if the
        user has provided their own value.
   -->
-  <Target Name="DetectStaticRootPath" DependsOnTargets="ResolvePythonInterpreterPath">
+  <Target Name="DetectStaticRootPath">
     <RunPythonCommand Target="import $(DjangoSettingsModule) as settings; print(settings.STATIC_ROOT or '')"
                       TargetType="code"
                       ExecuteIn="none"
@@ -121,7 +93,7 @@ permissions and limitations under the License.
           Condition="'$(DisableStaticFiles)' != 'true'" />
 
   <Target Name="_DjangoCollectStaticFiles"
-          DependsOnTargets="ResolvePythonInterpreterPath;SetStartupPathOrManagePy"
+          DependsOnTargets="SetStartupPathOrManagePy"
           Condition="'$(DjangoStaticRootSetting)' != ''">
     <RunPythonCommand Target="$(StartupPathOrManagePy)"
                       TargetType="script"
@@ -139,34 +111,6 @@ permissions and limitations under the License.
       </FilesForPackagingFromProject>
     </ItemGroup>
   </Target>
-
-  <!-- *************************************************************************
-       For back-compat, ensure Django is installed for 2.7 unless a
-       virtual environment is being used.
-  -->
-  <ItemGroup>
-    <_DjangoWebPiReference Include="https://www.microsoft.com/web/webpi/4.0/toolsproductlist.xml%3fDjango">
-      <Feed>https://www.microsoft.com/web/webpi/4.0/toolsproductlist.xml</Feed>
-      <ProductId>Django</ProductId>
-      <FriendlyName>Django 1.4</FriendlyName>
-    </_DjangoWebPiReference>
-    <_DjangoWebPiReferenceIncompatibilities Include="https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml%3fDjango" />
-  </ItemGroup>
-
-  <Target Name="EnsureDjangoWebPiReference"
-          Condition="!$(SuppressGenerateWebPiReference) and !$(VirtualEnvEnabled) and $(PythonVersion) == '2.7'">
-    <ItemGroup>
-      <_FilteredWebPiReference Remove="@(_FilteredWebPiReference)" />
-    </ItemGroup>
-    <RemoveDuplicates Inputs="@(WebPiReference);@(_DjangoWebPiReference)">
-      <Output TaskParameter="Filtered" ItemName="_FilteredWebPiReference"/>
-    </RemoveDuplicates>
-    <ItemGroup>
-      <WebPiReference Remove="@(WebPiReference)" />
-      <WebPiReference Include="@(_FilteredWebPiReference)" Exclude="@(_DjangoWebPiReferenceIncompatibilities)" />
-    </ItemGroup>
-  </Target>
-
 
   <!-- *************************************************************************
        Django-specific project commands

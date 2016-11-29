@@ -139,7 +139,8 @@ Please refer to https://aka.ms/pythononappservice for information about configur
       <_PythonWsgiHandler>$(PythonWsgiHandler.Replace(`{StartupModule}`, $(StartupModule)))</_PythonWsgiHandler>
     </PropertyGroup>
     <ItemGroup>
-      <_WebConfig Include="@(Content);@(None)" Condition="'%(Filename)%(Extension)' == 'web.config'" />
+      <_WebConfig Remove="@(_WebConfig)" />
+      <_WebConfig Include="@(Content);@(None)" Condition="'%(Identity)' == 'web.config'" />
     </ItemGroup>
     <XmlPeek XmlInputPath="@(_WebConfig)" Query="/configuration/appSettings/add[@key='WSGI_HANDLER']/@value" Condition="@(_WebConfig) != ''">
       <Output TaskParameter="Result" PropertyName="_WebConfigWsgiHandler" />
@@ -260,7 +261,7 @@ Please refer to https://aka.ms/pythononappservice for information about configur
   </PropertyGroup>
 
   <Target Name="PythonRunWebServerCommand"
-          Label="resource:Microsoft.PythonTools;Microsoft.PythonTools.Resources;RunWebServerLabel"
+          Label="resource:Microsoft.PythonTools.Common;Microsoft.PythonTools.Common.Strings;RunWebServerLabel"
           Returns="@(Commands)">
     <PropertyGroup>
       <PythonRunWebServerCommand Condition="'$(PythonRunWebServerCommand)' == ''">$(StartupPath)</PythonRunWebServerCommand>
@@ -290,7 +291,7 @@ Please refer to https://aka.ms/pythononappservice for information about configur
   </Target>
 
   <Target Name="PythonDebugWebServerCommand"
-          Label="resource:Microsoft.PythonTools;Microsoft.PythonTools.Resources;DebugWebServerLabel"
+          Label="resource:Microsoft.PythonTools.Common;Microsoft.PythonTools.Common.Strings;DebugWebServerLabel"
           Returns="@(Commands)">
     <PropertyGroup>
       <PythonDebugWebServerCommand Condition="'$(PythonDebugWebServerCommand)' == ''">$(StartupPath)</PythonDebugWebServerCommand>
