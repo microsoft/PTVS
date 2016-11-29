@@ -14,6 +14,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             foreach (DictionaryEntry opt in options) 
             {
+                cmd.Append(" ");
                 cmd.Append(opt.Key);
                 cmd.Append(opt.Value);
             }
@@ -59,6 +60,17 @@ namespace Microsoft.PythonTools.Profiling {
         public VTuneReportCommand(collectType _t) {
             t = _t;
             options.Add(getMode(), "");
+            options.Add("-format=", "csv");
+            options.Add("-csv-delimiter=", ",");
+            options.Add("-report-output=", "report.csv");
+        }
+
+        public void setResultDir(string d) {
+            options.Add("-r ", d);
+        }
+        
+        public void setGroupBy(string value) {
+            options.Add("-group-by ", value);
         }
 
         private string getCollectType() {
