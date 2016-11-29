@@ -14,6 +14,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             foreach (DictionaryEntry opt in options) 
             {
+                cmd.Append(" ");
                 cmd.Append(opt.Key);
                 cmd.Append(opt.Value);
             }
@@ -59,6 +60,10 @@ namespace Microsoft.PythonTools.Profiling {
         public VTuneReportCommand(collectType _t) {
             t = _t;
             options.Add(getMode(), "");
+        }
+
+        public void setResultDir(string d) {
+            options.Add("-r ", d);
         }
 
         private string getCollectType() {
