@@ -161,7 +161,7 @@ namespace Microsoft.PythonTools.Profiling {
                 }
             };
         }
-        
+
         private void StartPerfMon(string filename) {
             string perfToolsPath = GetPerfToolsPath();
 

@@ -7,12 +7,12 @@ namespace Microsoft.PythonTools.Profiling {
         private static readonly string _vtuneCl = _vtunepath + "\\bin32\\amplxe-cl.exe";
 
         protected Hashtable options = new Hashtable();
-        
+
         public abstract string getMode();
         public virtual string get() {
             StringBuilder cmd = new StringBuilder(_vtuneCl);
 
-            foreach (DictionaryEntry opt in options) 
+            foreach (DictionaryEntry opt in options)
             {
                 cmd.Append(" ");
                 cmd.Append(opt.Key);
@@ -21,24 +21,24 @@ namespace Microsoft.PythonTools.Profiling {
             return cmd.ToString();
         }
     }
-    
+
     public sealed class VTuneCollectCommand : VTuneCommand {
         public enum collectType { general, hotspots };
         private collectType t = collectType.hotspots;
-        
+
         public VTuneCollectCommand(collectType _t) {
-            t = _t; 
+            t = _t;
             options.Add(getMode(), "");
-        } 
-        
+        }
+
         public void setDuration(int d) {
             options.Add("-d ", d.ToString());
         }
-        
+
         public void setUserDataDir(string d) {
             options.Add("-user-data-dir=", d);
         }
-        
+
         public void setSearchDir(string d) {
             options.Add("-search-dir=", d);
         }
@@ -59,7 +59,7 @@ namespace Microsoft.PythonTools.Profiling {
             }
         }
         
-        public override string getMode() { return "-collect " + getCollectType(); }    
+        public override string getMode() { return "-collect " + getCollectType(); }
         
         public override string get() {
             return base.get();
@@ -69,7 +69,7 @@ namespace Microsoft.PythonTools.Profiling {
     public sealed class VTuneReportCommand : VTuneCommand {
         public enum collectType { callstacks, hotspots, hwevents, topdown };
         private collectType t = collectType.callstacks;
-        
+
         public VTuneReportCommand(collectType _t) {
             t = _t;
             options.Add(getMode(), "");
@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Profiling {
         public void setResultDir(string d) {
             options.Add("-r ", d);
         }
-        
+
         public void setGroupBy(string value) {
             options.Add("-group-by ", value);
         }
@@ -91,11 +91,11 @@ namespace Microsoft.PythonTools.Profiling {
                 case collectType.callstacks: return "callstacks";
                 case collectType.hwevents: return "hw-events";
                 case collectType.topdown: return "top-down";
-                case collectType.hotspots: 
+                case collectType.hotspots:
                 default: return "hotspots";
             }
         }
-        
+
         public override string getMode() { return "-report " + getCollectType(); }
         public override string get() {
             return base.get();

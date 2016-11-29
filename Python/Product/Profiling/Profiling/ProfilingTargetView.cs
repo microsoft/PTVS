@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Profiling {
             _isProjectSelected = true;
 
             _isValid = false;
-			_useVTune = true;
+            _useVTune = true;
 
             PropertyChanged += new PropertyChangedEventHandler(ProfilingTargetView_PropertyChanged);
             _standalone.PropertyChanged += new PropertyChangedEventHandler(Standalone_PropertyChanged);
@@ -97,7 +97,7 @@ namespace Microsoft.PythonTools.Profiling {
                 Project = new ProjectTargetView(template.ProjectTarget);
                 IsStandaloneSelected = false;
                 IsProjectSelected = true;
-				UseVTune = true;
+                UseVTune = true;
             } else if (template.StandaloneTarget != null) {
                 Standalone = new StandaloneTargetView(serviceProvider, template.StandaloneTarget);
                 IsProjectSelected = false;
@@ -116,7 +116,6 @@ namespace Microsoft.PythonTools.Profiling {
                     StandaloneTarget = IsStandaloneSelected ? Standalone.GetTarget() : null,
 					UseVTune = _useVTune
                 };
-                t.ProjectTarget.UseVTune = _project.GetTarget().UseVTune;
                 return t;
             } else {
                 return null;
@@ -181,7 +180,7 @@ namespace Microsoft.PythonTools.Profiling {
                 OnPropertyChanged("UseVTune");
             }
         }
-		
+
         /// <summary>
         /// A view of the details of the current standalone script.
         /// </summary>

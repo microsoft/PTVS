@@ -121,18 +121,11 @@ namespace Microsoft.PythonTools.Profiling {
             get;
             set;
         }
-        
-        [XmlElement("UseVTune")]
-        public bool UseVTune {
-            get; 
-            set; 
-        }
 
         internal ProjectTarget Clone() {
             var res = new ProjectTarget();
             res.TargetProject = TargetProject;
             res.FriendlyName = FriendlyName;
-            res.UseVTune = UseVTune;
             return res;
         }
 
