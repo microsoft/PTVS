@@ -12,7 +12,6 @@
     <LaunchProvider>Web launcher</LaunchProvider>
     <WebBrowserUrl>http://localhost</WebBrowserUrl>
     <OutputPath>.</OutputPath>
-    <PythonWsgiHandler>app.wsgi_app</PythonWsgiHandler>
     <SuppressCollectPythonCloudServiceFiles>false</SuppressCollectPythonCloudServiceFiles>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
