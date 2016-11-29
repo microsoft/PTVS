@@ -39,6 +39,19 @@ namespace Microsoft.PythonTools.Profiling {
             options.Add("-user-data-dir=", d);
         }
         
+        public void setSearchDir(string d) {
+            options.Add("-search-dir=", d);
+        }
+
+        public void setSourceSearchDir(string d) {
+            options.Add("-source-search-dir=", d);
+        }
+
+        // delay collection until t seconds after target starts
+        public void setResumeAfter(int t) {
+            options.Add("-resume-after=", t.ToString());
+        }
+
         private string getCollectType() {
             switch (t) {
                 case collectType.general: return "general-exploration";
