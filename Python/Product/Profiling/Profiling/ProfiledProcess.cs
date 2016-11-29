@@ -21,6 +21,7 @@ using System.IO;
 using System.Reflection;
 using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 
@@ -135,7 +136,7 @@ namespace Microsoft.PythonTools.Profiling {
 
             using (var p = ProcessOutput.RunHiddenAndCapture(_vtuneCl, opts)) {
                 p.Wait();
-                if (p.ExitCode != 0) {
+                if (p.ExitCode != 0 && p.ExitCode != 4 ) { /* FIXME: what does 4 mean? */
                     throw new InvalidOperationException("Starting VTune failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}".FormatUI(
                     Environment.NewLine,
                     string.Join(Environment.NewLine, p.StandardOutputLines),
@@ -160,7 +161,38 @@ namespace Microsoft.PythonTools.Profiling {
                     ));
                 }
             };
+
+	    Trace.WriteLine("**** Should have a result in [" + outPath + "\\report.csv" + "]");
+
+	    VTuneCSVToHTML(outPath, "\\report.csv");
+
+	    EnvDTE.DTE dte = Package.GetGlobalService(typeof(SDTE)) as EnvDTE.DTE;
+	    dte.ItemOperations.Navigate(VTuneCSVToHTML(outPath, "\\report.csv"));
         }
+
+	private string VTuneCSVToHTML(string dirname, string fname) {
+	  Trace.WriteLine("**** Just got parameters: [" + dirname + "], [" + fname + "]");
+
+	  IEnumerable<string> records = File.ReadLines(dirname + fname);
+
+	  using (StreamWriter outs = new StreamWriter(dirname + fname + ".html")) {
+	    outs.WriteLine("<!doctype html>");
+	    outs.WriteLine("<html>");
+	    outs.WriteLine("<head><title>VTune report</title></head>");
+	    outs.WriteLine("<body><table>");
+	    foreach (string r in records) {
+	    	    outs.WriteLine("<tr>");
+	    	    foreach (string f in r.Split(',')) {
+  	    	    	    outs.WriteLine("<td>" + f + "</td>");
+		    }
+	    	    outs.WriteLine("</tr>");
+	    }
+	    outs.WriteLine("</table></body>");
+	    outs.WriteLine("</html>");
+	  }
+
+	  return dirname + fname + ".html";
+	}
 
         private void StartPerfMon(string filename) {
             string perfToolsPath = GetPerfToolsPath();
