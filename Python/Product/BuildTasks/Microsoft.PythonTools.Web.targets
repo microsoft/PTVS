@@ -103,25 +103,15 @@ permissions and limitations under the License.
 
   <PropertyGroup>
     <BuiltProjectOutputGroupDependsOn>
-      _BuildingForUpToDateCheck;
       _GetPythonCloudServiceFiles;
       $(BuiltProjectOutputGroupDependsOn)
     </BuiltProjectOutputGroupDependsOn>
 
     <SourceFilesProjectOutputGroupDependsOn>
-      _BuildingForUpToDateCheck;
       _GetPythonCloudServiceFiles;
       $(SourceFilesProjectOutputGroupDependsOn)
     </SourceFilesProjectOutputGroupDependsOn>
-
-    <BuildingForUpToDateCheck>false</BuildingForUpToDateCheck>
   </PropertyGroup>
-
-  <Target Name="_BuildingForUpToDateCheck">
-    <PropertyGroup>
-      <BuildingForUpToDateCheck>true</BuildingForUpToDateCheck>
-    </PropertyGroup>
-  </Target>
 
   <Target Name="_WarnAboutLegacySettings" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -141,7 +131,10 @@ Please refer to https://aka.ms/pythononappservice for information about configur
     <Warning Condition="'$(FastCgiRewriteConditions)' != ''" Text="$(_WarningMessage.Replace(`{{PROP}}`, `FastCgiRewriteConditions`))" />
   </Target>
 
-  <Target Name="_ValidateLegacyWsgiHandler" BeforeTargets="PrepareForBuild" Condition="$(PythonWsgiHandler) != ''">
+  <Target Name="_ValidateLegacyWsgiHandler"
+          BeforeTargets="PrepareForBuild"
+          DependsOnTargets="ResolveStartupModule"
+          Condition="$(PythonWsgiHandler) != ''">
     <PropertyGroup>
       <_PythonWsgiHandler>$(PythonWsgiHandler.Replace(`{StartupModule}`, $(StartupModule)))</_PythonWsgiHandler>
     </PropertyGroup>
@@ -219,8 +212,6 @@ Please refer to https://aka.ms/pythononappservice for information about configur
           Outputs="@(_PythonCloudServiceFiles->'%(TargetPath)')"
           DependsOnTargets="_GetPythonCloudServiceFiles"
           Condition="!$(SuppressCollectPythonCloudServiceFiles) and '@(_PythonCloudServiceFiles)' != ''">
-    <Error Text="Should not be invoked during up-to-date check" Condition="$(BuildingForUpToDateCheck)" />
-
     <Copy SourceFiles="@(_PythonCloudServiceFiles->'%(SourceFile)')"
           DestinationFiles="@(_PythonCloudServiceFiles->'%(TargetPath)')"
           SkipUnchangedFiles="true"/>
