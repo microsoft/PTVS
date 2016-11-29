@@ -210,7 +210,7 @@ namespace Microsoft.PythonTools.Profiling {
                 }
 
                 if (target.ProjectTarget != null) {
-                    ProfileProjectTarget(session, target.ProjectTarget, openReport);
+                    ProfileProjectTarget(session, target.ProjectTarget, openReport, target.UseVTune);
                 } else if (target.StandaloneTarget != null) {
                     ProfileStandaloneTarget(session, target.StandaloneTarget, openReport);
                 } else {
@@ -224,7 +224,7 @@ namespace Microsoft.PythonTools.Profiling {
             });
         }
 
-        private void ProfileProjectTarget(SessionNode session, ProjectTarget projectTarget, bool openReport) {
+        private void ProfileProjectTarget(SessionNode session, ProjectTarget projectTarget, bool openReport, bool useVTune) {
             var targetGuid = projectTarget.TargetProject;
 
             var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
@@ -244,7 +244,7 @@ namespace Microsoft.PythonTools.Profiling {
             }
 
             if (projectToProfile != null) {
-                ProfileProject(session, projectToProfile, openReport, projectTarget.UseVTune);
+                ProfileProject(session, projectToProfile, openReport, useVTune);
             } else {
                 MessageBox.Show("Project could not be found in current solution.", "Python Tools for Visual Studio");
             }

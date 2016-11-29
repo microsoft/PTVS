@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Profiling {
         private ReadOnlyCollection<ProjectTargetView> _availableProjects;
         
         private ProjectTargetView _project;
-        private bool _isProjectSelected, _isStandaloneSelected;
+        private bool _isProjectSelected, _isStandaloneSelected, _useVTune;
         private StandaloneTargetView _standalone;
         private readonly string _startText;
 
@@ -61,6 +61,7 @@ namespace Microsoft.PythonTools.Profiling {
             _isProjectSelected = true;
 
             _isValid = false;
+			_useVTune = true;
 
             PropertyChanged += new PropertyChangedEventHandler(ProfilingTargetView_PropertyChanged);
             _standalone.PropertyChanged += new PropertyChangedEventHandler(Standalone_PropertyChanged);
@@ -96,6 +97,7 @@ namespace Microsoft.PythonTools.Profiling {
                 Project = new ProjectTargetView(template.ProjectTarget);
                 IsStandaloneSelected = false;
                 IsProjectSelected = true;
+				UseVTune = true;
             } else if (template.StandaloneTarget != null) {
                 Standalone = new StandaloneTargetView(serviceProvider, template.StandaloneTarget);
                 IsProjectSelected = false;
@@ -111,7 +113,8 @@ namespace Microsoft.PythonTools.Profiling {
             if (IsValid) {
                 var t = new ProfilingTarget {
                     ProjectTarget = IsProjectSelected ? Project.GetTarget() : null,
-                    StandaloneTarget = IsStandaloneSelected ? Standalone.GetTarget() : null
+                    StandaloneTarget = IsStandaloneSelected ? Standalone.GetTarget() : null,
+					UseVTune = _useVTune
                 };
                 t.ProjectTarget.UseVTune = _project.GetTarget().UseVTune;
                 return t;
@@ -166,6 +169,19 @@ namespace Microsoft.PythonTools.Profiling {
             }
         }
 
+        /// <summary>
+        /// True if useVTune is checked.
+        /// </summary>
+        public bool UseVTune {
+            get {
+                return _useVTune;
+            }
+            set {
+                _useVTune = value;
+                OnPropertyChanged("UseVTune");
+            }
+        }
+		
         /// <summary>
         /// A view of the details of the current standalone script.
         /// </summary>

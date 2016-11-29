@@ -135,7 +135,6 @@
             <CheckBox Grid.Row="1" Margin="12 12 12 4"
              Content="_VTune Mixed Mode Profiling"
              AutomationProperties.AutomationId="VTuneProfile"
-             IsEnabled="{Binding IsAnyAvailableProjects}"
              IsChecked="{Binding UseVTune}" />           
         </Grid>
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">

@@ -195,7 +195,6 @@ namespace Microsoft.PythonTools.Profiling {
             string perfToolsPath = GetPerfToolsPath();
 
             string perfMonPath = Path.Combine(perfToolsPath, "VSPerfCmd.exe");
-
             using (var p = ProcessOutput.RunHiddenAndCapture(perfMonPath, "/shutdown")) {
                 p.Wait();
                 if (p.ExitCode != 0) {
