@@ -63,7 +63,10 @@ namespace Microsoft.PythonTools.Logging {
         /// <summary>
         /// A call to the analysis process failed and raised an exception.
         /// </summary>
-        AnalysisOperationFailed
-
+        AnalysisOperationFailed,
+        /// <summary>
+        /// The analysis process raised a warning
+        /// </summary>
+        AnalysisWarning
     }
 }

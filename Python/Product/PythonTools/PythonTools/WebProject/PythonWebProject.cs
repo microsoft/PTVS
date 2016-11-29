@@ -20,6 +20,7 @@ using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -41,8 +42,11 @@ namespace Microsoft.PythonTools.Project.Web {
         internal IVsProject _innerProject;
         internal IVsProject3 _innerProject3;
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
-        private static Guid PythonProjectGuid = new Guid(PythonConstants.ProjectFactoryGuid);
+        private static readonly Guid PythonProjectGuid = new Guid(PythonConstants.ProjectFactoryGuid);
         private IOleCommandTarget _menuService;
+
+        private static readonly Guid PublishCmdGuid = new Guid("{1496a755-94de-11d0-8c3f-00c04fc2aae2}");
+        private static readonly int PublishCmdid = 2006;
 
         public PythonWebProject(IServiceProvider site) {
             _site = site;
@@ -214,6 +218,31 @@ namespace Microsoft.PythonTools.Project.Web {
                             }
                         }
                         return res;
+                    }
+                }
+            } else if (pguidCmdGroup == PublishCmdGuid) {
+                if (nCmdID == PublishCmdid) {
+                    var opts = _site.GetPythonToolsService().SuppressDialogOptions;
+                    if (string.IsNullOrEmpty(opts.PublishToAzure30)) {
+                        var td = new TaskDialog(_site) {
+                            Title = Strings.ProductTitle,
+                            MainInstruction = Strings.PublishToAzure30,
+                            Content = Strings.PublishToAzure30Message,
+                            VerificationText = Strings.DontShowAgain,
+                            SelectedVerified = true,
+                            AllowCancellation = true,
+                            EnableHyperlinks = true
+                        };
+                        td.Buttons.Add(TaskDialogButton.OK);
+                        td.Buttons.Add(TaskDialogButton.Cancel);
+                        if (td.ShowModal() == TaskDialogButton.Cancel) {
+                            return VSConstants.S_OK;
+                        }
+
+                        if (td.SelectedVerified) {
+                            opts.PublishToAzure30 = "true";
+                            opts.Save();
+                        }
                     }
                 }
             }

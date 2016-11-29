@@ -71,7 +71,6 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly Dictionary<string, IAnalysisExtension> _extensionsByName = new Dictionary<string, IAnalysisExtension>();
 
         private readonly Connection _connection;
-        internal Task ReloadTask;
 
         internal OutOfProcProjectAnalyzer(Stream writer, Stream reader) {
             _analysisQueue = new AnalysisQueue(this);
@@ -178,7 +177,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.ModuleImportsRequest.Command: response = GetModuleImports((AP.ModuleImportsRequest)request); break;
                 case AP.ValueDescriptionRequest.Command: response = GetValueDescriptions((AP.ValueDescriptionRequest)request); break;
                 case AP.ExtensionRequest.Command: response = ExtensionRequest((AP.ExtensionRequest)request); break;
-                case AP.InitializeRequest.Command: response = Initialize((AP.InitializeRequest)request); break;
+                case AP.InitializeRequest.Command: response = await Initialize((AP.InitializeRequest)request); break;
                 case AP.ExpressionForDataTipRequest.Command: response = ExpressionForDataTip((AP.ExpressionForDataTipRequest)request); break;
                 case AP.ExitRequest.Command: throw new OperationCanceledException();
                 default:
@@ -194,7 +193,7 @@ namespace Microsoft.PythonTools.Intellisense {
             ).Wait();
         }
 
-        private Response Initialize(AP.InitializeRequest request) {
+        private async Task<Response> Initialize(AP.InitializeRequest request) {
             List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
 
             HashSet<string> assemblies = new HashSet<string>(request.mefExtensions);
@@ -262,11 +261,13 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (factory == null) {
-                error = String.Format("No active interpreter found for interpreter ID: {0}", request.interpreterId);
-                return new AP.InitializeResponse() {
-                    failedLoads = failures.ToArray(),
-                    error = error
-                };
+                if (_connection != null) {
+                    await _connection.SendEventAsync(
+                        new AP.AnalyzerWarningEvent(string.Format("No active interpreter found for interpreter ID: {0}", request.interpreterId))
+                    );
+                }
+                var db = PythonTypeDatabase.CreateDefaultTypeDatabase();
+                factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(db.LanguageVersion, db);
             }
 
             _interpreterFactory = factory;
@@ -276,8 +277,7 @@ namespace Microsoft.PythonTools.Intellisense {
             if (interpreter != null) {
                 try {
                     _pyAnalyzer = PythonAnalyzer.Create(factory, interpreter);
-                    ReloadTask = _pyAnalyzer.ReloadModulesAsync()/*.HandleAllExceptions(_serviceProvider, GetType())*/;
-                    ReloadTask.ContinueWith(_ => ReloadTask = null);
+                    await _pyAnalyzer.ReloadModulesAsync();
                     interpreter.ModuleNamesChanged += OnModulesChanged;
                 } catch (InvalidOperationException ex) {
                     error = ex.ToString();
@@ -1513,7 +1513,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         abstract class CodeInfo {
             public readonly int Version;
-            public object Code; // Stream or TextReader
 
             public CodeInfo(int version) {
                 Version = version;

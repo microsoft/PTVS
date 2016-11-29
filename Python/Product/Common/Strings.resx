@@ -938,4 +938,22 @@ modified from these scripts.</value>
   <data name="WebPIReferenceDeprecated" xml:space="preserve">
     <value>WebPI references have been deprecated. We recommend replacing the reference with a custom installation script.</value>
   </data>
+  <data name="ReplProjectConfigurationChanged" xml:space="preserve">
+    <value>The associated project '{0}' has changed its configuration. These changes will not be reflected until you reset this interactive window.</value>
+  </data>
+  <data name="DebugLaunchScriptNameMissing" xml:space="preserve">
+    <value>The project cannot be launched because the startup file is not specified.</value>
+  </data>
+  <data name="PublishToAzure30" xml:space="preserve">
+    <value>Publishing Python projects has recently changed.</value>
+  </data>
+  <data name="PublishToAzure30Message" xml:space="preserve">
+    <value>These changes will allow you to deploy more reliably and quickly, but first you may need to configure your project or deployment target.
+
+When you publish, we will no longer automatically generate a web.config file. You can add one using Add New Item and customize as necessary for your site.
+
+There are no restrictions on the version of Python you may be using when you deploy, however, we will no longer include virtual environments or the Python runtime when you deploy. Only libraries that are directly included in your project will be published.
+
+Please refer to &lt;a href="https://aka.ms/pythononappservice"&gt;aka.ms/PythonOnAppService&lt;/a&gt; for information about configuring and publishing to Azure App Service.</value>
+  </data>
 </root>

@@ -13,6 +13,7 @@
     <WebBrowserUrl>http://localhost</WebBrowserUrl>
     <OutputPath>.</OutputPath>
     <PythonWsgiHandler>app.wsgi_app</PythonWsgiHandler>
+    <SuppressCollectPythonCloudServiceFiles>false</SuppressCollectPythonCloudServiceFiles>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -29,6 +30,7 @@
     <Content Include="requirements.txt" />
     <Content Include="bin\ConfigureCloudService.ps1" />
     <Content Include="bin\ps.cmd" />
+    <Content Include="bin\web.config" />
   </ItemGroup>
   <ItemGroup>
     <None Include="bin\Readme.mht">

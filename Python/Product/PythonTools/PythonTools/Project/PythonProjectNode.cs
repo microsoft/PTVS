@@ -98,7 +98,7 @@ namespace Microsoft.PythonTools.Project {
 
         private static KeyValuePair<string, string>[] outputGroupNames = {
                                              // Name                     ItemGroup (MSBuild)
-            new KeyValuePair<string, string>("Built",                 "BuiltProjectOutputGroupFast"),
+            new KeyValuePair<string, string>("Built",                 "BuiltProjectOutputGroup"),
             new KeyValuePair<string, string>("ContentFiles",          "ContentFilesProjectOutputGroup"),
             new KeyValuePair<string, string>("SourceFiles",           "SourceFilesProjectOutputGroup"),
         };
@@ -175,12 +175,14 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void OnInterpreterRegistryChanged(object sender, EventArgs e) {
-            // Check whether the active interpreter factory has changed.
-            var fact = InterpreterRegistry.FindInterpreter(ActiveInterpreter.Configuration.Id);
-            if (fact != null && fact != ActiveInterpreter) {
-                ActiveInterpreter = fact;
+            Site.GetUIThread().Invoke(() => {
+                // Check whether the active interpreter factory has changed.
+                var fact = InterpreterRegistry.FindInterpreter(ActiveInterpreter.Configuration.Id);
+                if (fact != null && fact != ActiveInterpreter) {
+                    ActiveInterpreter = fact;
+                }
                 InterpreterFactoriesChanged?.Invoke(this, EventArgs.Empty);
-            }
+            });
         }
 
         public IInterpreterOptionsService InterpreterOptions {
@@ -222,13 +224,10 @@ namespace Microsoft.PythonTools.Project {
 
                 if (_active != oldActive) {
                     if (oldActive == null) {
-                        // No longer need to listen to this event
                         var defaultInterp = InterpreterOptions.DefaultInterpreter as PythonInterpreterFactoryWithDatabase;
                         if (defaultInterp != null) {
                             defaultInterp.NewDatabaseAvailable -= OnNewDatabaseAvailable;
                         }
-
-                        InterpreterOptions.DefaultInterpreterChanged -= GlobalDefaultInterpreterChanged;
                     } else {
                         var oldInterpWithDb = oldActive as PythonInterpreterFactoryWithDatabase;
                         if (oldInterpWithDb != null) {
@@ -247,17 +246,19 @@ namespace Microsoft.PythonTools.Project {
                         );
                     } else {
                         BuildProject.SetProperty(MSBuildConstants.InterpreterIdProperty, "");
-                        // Need to start listening to this event
-
-                        InterpreterOptions.DefaultInterpreterChanged += GlobalDefaultInterpreterChanged;
-
                         var defaultInterp = InterpreterOptions.DefaultInterpreter as PythonInterpreterFactoryWithDatabase;
                         if (defaultInterp != null) {
                             defaultInterp.NewDatabaseAvailable += OnNewDatabaseAvailable;
                         }
                     }
                     BuildProject.MarkDirty();
+                }
 
+                // https://github.com/Microsoft/PTVS/issues/1739
+                // When we go from "no interpreters" to "global default", we see
+                // _active == oldActive == null. Previously we would not trigger
+                // new analysis in this case.
+                if (_active != oldActive || oldActive == null) {
                     ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
                 }
             }
@@ -276,11 +277,10 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void GlobalDefaultInterpreterChanged(object sender, EventArgs e) {
-            // This event is only raised when our active interpreter is the
-            // global default.
-            var evt = ActiveInterpreterChanged;
-            if (evt != null) {
-                evt(this, EventArgs.Empty);
+            if (_active == null) {
+                // This event is only raised when our active interpreter is the
+                // global default.
+                ActiveInterpreterChanged?.Invoke(this, EventArgs.Empty);
             }
         }
 
@@ -431,11 +431,7 @@ namespace Microsoft.PythonTools.Project {
             ActiveInterpreter = newActive;
         }
 
-        internal bool IsActiveInterpreterGlobalDefault {
-            get {
-                return _active == null;
-            }
-        }
+        internal bool IsActiveInterpreterGlobalDefault => _active == null;
 
         internal IEnumerable<InterpreterConfiguration> InterpreterConfigurations {
             get {
@@ -2357,14 +2353,17 @@ namespace Microsoft.PythonTools.Project {
             return hr;
         }
 
-        public void AddedAsRole(object azureProjectHierarchy, string roleType) {
+        void IAzureRoleProject.AddedAsRole(object azureProjectHierarchy, string roleType) {
             var hier = azureProjectHierarchy as IVsHierarchy;
 
             if (hier == null) {
                 return;
             }
 
-            Site.GetUIThread().Invoke(() => UpdateServiceDefinition(hier, roleType, Caption, Site));
+            Site.GetUIThread().Invoke(() => {
+                UpdateServiceDefinition(hier, roleType, Caption, Site);
+                SetProjectProperty(PythonConstants.SuppressCollectPythonCloudServiceFiles, "false");
+            });
         }
 
         private static bool TryGetItemId(object obj, out uint id) {
@@ -2684,7 +2683,7 @@ namespace Microsoft.PythonTools.Project {
                 var ep = runtime.SelectSingleNode("sd:EntryPoint", ns);
                 ep.AppendChildElement(null, "ProgramEntryPoint", null, null);
                 var pep = ep.SelectSingleNode("sd:ProgramEntryPoint", ns);
-                pep.CreateAttribute(null, "commandLine", null, "bin\\ps.cmd LaunchWorker.ps1");
+                pep.CreateAttribute(null, "commandLine", null, "bin\\ps.cmd LaunchWorker.ps1 worker.py");
                 pep.CreateAttribute(null, "setReadyOnProcessStart", null, "true");
             }
         }
@@ -2693,11 +2692,14 @@ namespace Microsoft.PythonTools.Project {
             nav.AppendChildElement(null, "Environment", null, null);
             nav = nav.SelectSingleNode("sd:Environment", ns);
             nav.AppendChildElement(null, "Variable", null, null);
-            nav = nav.SelectSingleNode("sd:Variable", ns);
-            nav.CreateAttribute(null, "name", null, "EMULATED");
-            nav.AppendChildElement(null, "RoleInstanceValue", null, null);
-            nav = nav.SelectSingleNode("sd:RoleInstanceValue", ns);
-            nav.CreateAttribute(null, "xpath", null, "/RoleEnvironment/Deployment/@emulated");
+            var children = nav.SelectChildren(XPathNodeType.Element);
+            if (children.MoveNext()) {
+                var emulatedNode = children.Current;
+                emulatedNode.CreateAttribute(null, "name", null, "EMULATED");
+                emulatedNode.AppendChildElement(null, "RoleInstanceValue", null, null);
+                emulatedNode = emulatedNode.SelectSingleNode("sd:RoleInstanceValue", ns);
+                emulatedNode.CreateAttribute(null, "xpath", null, "/RoleEnvironment/Deployment/@emulated");
+            }
         }
     }
 }

@@ -5,88 +5,76 @@
 .Description
     This script is deployed with your worker role and is used to launch the
     correct version of Python with the worker script. You may freely modify it
-    to customize how your worker is run, though most customizations can be made
-    through your Python project.
+    to customize how your worker is run.
 
-    To specify the version of Python your worker should run with, make it the
-    active environment for your project. (Ensure that you have a WebPI reference
-    or startup task to install this version on the instance - see the
-    documentation for ConfigureCloudService.ps1 for more details.)
+    To specify the version of Python your worker should run with, add a PYTHON
+    environment variable with the path to the python.exe to run. If your
+    ConfigureCloudService.ps1 script is installing Python from Nuget, you can
+    also copy the values for $defaultpython and $defaultpythonversion into this
+    script to select that installation.
 
-    If your version of Python cannot be detected normally, you can add the
-    DeployedPythonInterpreterPath property to your Python project by editing the
-    .pyproj file. This path will take precedence over the active environment.
+    To set PYTHONPATH (or equivalent) before running the worker, modify the
+    variable in your ServiceDefinition.csdef file.
 
-    To install packages using pip, include a requirements.txt file in the root
-    directory of your project.
-
-    To set PYTHONPATH (or equivalent) before running the worker, add the 
-    necessary Search Paths to your project.
-
-    To specify the script to run, make it the startup file in your project.
-
-    To specify command-line arguments, add them to the Command Line Arguments
-    property under Project Properties\Debug.
+    To specify the script to run or command line arguments to use, update the
+    ProgramEntryPoint element in the service definition.
 
 
     Ensure the following entry point specification is added to the
-    ServiceDefinition.csdef file in your Cloud project:
+    ServiceDefinition.csdef file in your Cloud project. Note that the value for
+    PYTHON should be set to the full path to your Python executable or omitted.
+    PYTHONPATH may be freely configured, and extra environment variables should
+    be added here. Modify ProgramEntryPoint to specify a different startup
+    script or arguments.
 
     <Runtime>
       <Environment>
           <Variable name="EMULATED">
             <RoleInstanceValue xpath="/RoleEnvironment/Deployment/@emulated"/>
           </Variable>
+          <Variable name="PYTHON" value="<path to python.exe of a previously installed Python>" />
+          <Variable name="PYTHONPATH" value="" />
       </Environment>
       <EntryPoint>
-        <ProgramEntryPoint commandLine="bin\ps.cmd LaunchWorker.ps1" setReadyOnProcessStart="true" />
+        <ProgramEntryPoint commandLine="bin\ps.cmd LaunchWorker.ps1 worker.py" setReadyOnProcessStart="true" />
       </EntryPoint>
     </Runtime>
 #>
 
+(Get-Host).UI.WriteLine("")
+(Get-Host).UI.WriteLine("=====================================")
+(Get-Host).UI.WriteLine("Script started at $(Get-Date -format s)")
+(Get-Host).UI.WriteErrorLine("")
+(Get-Host).UI.WriteErrorLine("=====================================")
+(Get-Host).UI.WriteErrorLine("Script started at $(Get-Date -format s)")
+
 [xml]$rolemodel = Get-Content $env:RoleRoot\RoleModel.xml
+
+# These should match your ConfigureCloudService.ps1 file
+$defaultpython = "python"
+$defaultpythonversion = ""
 
 $ns = @{ sd="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition" };
 $is_debug = (Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Properties/sd:Property[@name='Configuration'][@value='Debug']").Count -eq 1
 $is_emulated = $env:EMULATED -eq 'true'
 
-$env:RootDir = (gi "$($MyInvocation.MyCommand.Path)\..\..").FullName
-cd "${env:RootDir}"
+$bindir = split-path $MyInvocation.MyCommand.Path
 
-$config = Get-Content "$(Get-Location)\bin\AzureSetup.cfg" -EA:Stop
-
-function read_value($name, $default) {
-    $value = (@($default) + @($config | %{ [regex]::Match($_, $name + '=(.+)') } | ?{ $_.Success } | %{ $_.Groups[1].Value }))[-1]
-    return [Environment]::ExpandEnvironmentVariables($value)
-}
-
-$interpreter_path = read_value 'interpreter_path'
-$interpreter_path_emulated = read_value 'interpreter_path_emulated'
-
-if ($is_emulated -and $interpreter_path_emulated -and (Test-Path $interpreter_path_emulated)) {
-    $interpreter_path = $interpreter_path_emulated
-}
-
-if (-not $interpreter_path -or -not (Test-Path $interpreter_path)) {
-    $interpreter_version = read_value 'interpreter_version' '2.7'
-    foreach ($key in @('HKLM:\Software\Wow6432Node', 'HKLM:\Software', 'HKCU:\Software')) {
-        $regkey = gp "$key\Python\PythonCore\$interpreter_version\InstallPath" -EA SilentlyContinue
-        if ($regkey) {
-            $interpreter_path = "$($regkey.'(default)')\python.exe"
-            if (Test-Path $interpreter_path) {
-                break
-            }
-        }
+$interpreter_path = $env:PYTHON;
+if (-not $interpreter_path) {
+    if (-not $defaultpythonversion) {
+        $interpreter_path = "$bindir\$defaultpython\tools\python.exe"
+    } else {
+        $interpreter_path = "$bindir\$defaultpython.$defaultpythonversion\tools\python.exe"
     }
 }
 
-Set-Alias py (gi $interpreter_path -EA Stop)
+if (-not $interpreter_path) {
+    throw "Cannot find a Python installation.";
+} elseif (-not (Test-Path $interpreter_path)) {
+    throw "Cannot find Python installation at $interpreter_path.";
+}
 
-$python_path_variable = read_value 'python_path_variable' 'PYTHONPATH'
-[Environment]::SetEnvironmentVariable($python_path_variable, (read_value 'python_path' ''))
-
-$worker_directory = read_value 'worker_directory' '.'
-cd $worker_directory
-
-$worker_command = read_value 'worker_command' 'worker.py'
-iex "py $worker_command"
+"Executing $interpreter_path $args"
+Start-Process -Wait -NoNewWindow $interpreter_path -ArgumentList $args -WorkingDirectory (split-path $bindir)
+"Process terminated"

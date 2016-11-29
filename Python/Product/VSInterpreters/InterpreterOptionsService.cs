@@ -32,6 +32,7 @@ namespace Microsoft.PythonTools.Interpreter {
         private bool _defaultInterpreterWatched;
         private string _defaultInterpreterId;
         IPythonInterpreterFactory _defaultInterpreter;
+        private readonly object _defaultInterpreterLock = new object();
         private EventHandler _defaultInterpreterChanged;
 
         // The second is a static registry entry for the local machine and/or
@@ -117,7 +118,15 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void LoadDefaultInterpreterId() {
-            if (_defaultInterpreterId == null) {
+            if (_defaultInterpreterId != null) {
+                return;
+            }
+
+            lock (_defaultInterpreterLock) {
+                if (_defaultInterpreterId != null) {
+                    return;
+                }
+
                 string id = null;
                 using (var interpreterOptions = Registry.CurrentUser.OpenSubKey(DefaultInterpreterOptionsCollection)) {
                     if (interpreterOptions != null) {
@@ -128,9 +137,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
                     if (newDefault == null) {
                         var defaultConfig = _registryService.Value.Configurations.LastOrDefault(fact => fact.CanBeAutoDefault());
-                        if (defaultConfig != null) {
-                            id = defaultConfig.Id;
-                        }
+                        id = defaultConfig?.Id;
                     }
 
                     _defaultInterpreterId = id;
@@ -139,16 +146,27 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void LoadDefaultInterpreter(bool suppressChangeEvent = false) {
-            if (_defaultInterpreter == null) {
+            if (_defaultInterpreter != null) {
+                return;
+            }
+
+            IPythonInterpreterFactory newDefault = null;
+            lock (_defaultInterpreterLock) {
+                if (_defaultInterpreter != null) {
+                    return;
+                }
+
                 LoadDefaultInterpreterId();
                 if (_defaultInterpreterId != null) {
-                    var newDefault = _registryService.Value.FindInterpreter(_defaultInterpreterId);
+                    newDefault = _registryService.Value.FindInterpreter(_defaultInterpreterId);
+                }
+            }
 
-                    if (suppressChangeEvent) {
-                        _defaultInterpreter = newDefault;
-                    } else {
-                        DefaultInterpreter = newDefault;
-                    }
+            if (newDefault != null) {
+                if (suppressChangeEvent) {
+                    _defaultInterpreter = newDefault;
+                } else {
+                    DefaultInterpreter = newDefault;
                 }
             }
         }

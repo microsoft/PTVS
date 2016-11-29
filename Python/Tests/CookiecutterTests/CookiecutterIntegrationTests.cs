@@ -59,17 +59,19 @@ namespace CookiecutterTests {
         private ITemplateSource _feedTemplateSource;
         private string _openedFolder;
 
+        private string DefaultBasePath => ((CookiecutterClient)_cutterClient)?.DefaultBasePath;
+
         internal static ContextItemViewModel[] LocalTemplateWithUserConfigContextItems { get; } = new ContextItemViewModel[] {
-                new ContextItemViewModel("full_name", Selectors.String, null, null, "Configured User"),
-                new ContextItemViewModel("email", Selectors.String, null, null, "configured@email"),
-                new ContextItemViewModel("github_username", Selectors.String, null, null, "configuredgithubuser"),
-                new ContextItemViewModel("project_name", Selectors.String, null, null, "Default Project Name"),
-                new ContextItemViewModel("project_slug", Selectors.String, null, null, "{{ cookiecutter.project_name.lower().replace(' ', '_') }}"),
-                new ContextItemViewModel("pypi_username", Selectors.String, null, null, "{{ cookiecutter.github_username }}"),
-                new ContextItemViewModel("version", Selectors.String, null, null, "0.1.0"),
-                new ContextItemViewModel("use_azure", Selectors.String, null, null, "y"),
-                new ContextItemViewModel("open_source_license", Selectors.List, null, null, "BSD license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }),
-                new ContextItemViewModel("port", Selectors.String, null, null, "5000"),
+                new ContextItemViewModel("full_name", Selectors.String, null, null, null, "Configured User"),
+                new ContextItemViewModel("email", Selectors.String, null, null, null, "configured@email"),
+                new ContextItemViewModel("github_username", Selectors.String, null, null, null, "configuredgithubuser"),
+                new ContextItemViewModel("project_name", Selectors.String, null, null, null, "Default Project Name"),
+                new ContextItemViewModel("project_slug", Selectors.String, null, null, null, "{{ cookiecutter.project_name.lower().replace(' ', '_') }}"),
+                new ContextItemViewModel("pypi_username", Selectors.String, null, null, null, "{{ cookiecutter.github_username }}"),
+                new ContextItemViewModel("version", Selectors.String, null, null, null, "0.1.0"),
+                new ContextItemViewModel("use_azure", Selectors.String, null, null, null, "y"),
+                new ContextItemViewModel("open_source_license", Selectors.List, null, null, null, "BSD license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }),
+                new ContextItemViewModel("port", Selectors.String, null, null, null, "5000"),
                 // Note that _copy_without_render item should not appear
         };
 
@@ -91,15 +93,16 @@ namespace CookiecutterTests {
 
             _gitClient = GitClientProvider.Create(_redirector, null);
             _gitHubClient = new GitHubClient();
-            _cutterClient = CookiecutterClientProvider.Create(_redirector);
+            _cutterClient = CookiecutterClientProvider.Create(null, _redirector);
             _telemetry = new CookiecutterTelemetry(new TelemetryTestService());
             _installedTemplateSource = new LocalTemplateSource(installedPath, _gitClient);
             _gitHubTemplateSource = new GitHubTemplateSource(_gitHubClient);
             _feedTemplateSource = new FeedTemplateSource(feedUrl);
 
+
             _vm = new CookiecutterViewModel(_cutterClient, _gitHubClient, _gitClient, _telemetry, _redirector, _installedTemplateSource, _feedTemplateSource, _gitHubTemplateSource, OpenFolder);
             _vm.UserConfigFilePath = userConfigFilePath;
-            _vm.OutputFolderPath = outputProjectFolder;
+            ((CookiecutterClient)_cutterClient).DefaultBasePath = outputProjectFolder;
         }
 
         private void OpenFolder(string folderPath) {
@@ -113,8 +116,8 @@ namespace CookiecutterTests {
             Assert.AreEqual(1, _vm.Installed.Templates.Count);
             Assert.AreEqual(6, _vm.Recommended.Templates.Count);
 
-            Assert.AreEqual(27, _vm.GitHub.Templates.Count);
-            Assert.AreEqual(26, _vm.GitHub.Templates.OfType<TemplateViewModel>().Count());
+            Assert.AreEqual(28, _vm.GitHub.Templates.Count);
+            Assert.AreEqual(27, _vm.GitHub.Templates.OfType<TemplateViewModel>().Count());
             Assert.AreEqual(1, _vm.GitHub.Templates.OfType<ContinuationViewModel>().Count());
 
             var continuationVM = _vm.GitHub.Templates.Last() as ContinuationViewModel;
@@ -235,17 +238,22 @@ namespace CookiecutterTests {
 
             _vm.ContextItems.Single(item => item.Name == "full_name").Val = "Integration Test User";
             _vm.ContextItems.Single(item => item.Name == "open_source_license").Val = "Apache Software License 2.0";
-            _vm.OutputFolderPath = Path.Combine(_vm.OutputFolderPath, "LocalTemplate");
 
-            await _vm.CreateFilesAsync();
+            var targetPath = _vm.OutputFolderPath;
+            Assert.IsTrue(Path.IsPathRooted(targetPath), "{0} is not a full path".FormatInvariant(targetPath));
+            Assert.IsTrue(PathUtils.IsSubpathOf(DefaultBasePath, targetPath),
+                "{0} is not in the {1} folder".FormatInvariant(targetPath, DefaultBasePath));
 
-            Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
+            try {
+                await _vm.CreateFilesAsync();
 
-            var reportFilePath = Path.Combine(_vm.OutputFolderPath, "report.txt");
-            Assert.IsTrue(File.Exists(reportFilePath), "Failed to generate some project files.");
-            var report = CookiecutterClientTests.ReadReport(reportFilePath);
+                Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
 
-            var expected = new Dictionary<string, string>() {
+                var reportFilePath = Path.Combine(_vm.OutputFolderPath, "report.txt");
+                Assert.IsTrue(File.Exists(reportFilePath), "Failed to generate some project files.");
+                var report = CookiecutterClientTests.ReadReport(reportFilePath);
+
+                var expected = new Dictionary<string, string>() {
                 { "full_name", "Integration Test User" },
                 { "email", "configured@email" },
                 { "github_username", "configuredgithubuser" },
@@ -257,7 +265,10 @@ namespace CookiecutterTests {
                 { "open_source_license", "Apache Software License 2.0" },
                 { "port", "5000" },
             };
-            CollectionAssert.AreEqual(expected, report);
+                CollectionAssert.AreEqual(expected, report);
+            } finally {
+                FileUtils.DeleteDirectory(targetPath);
+            }
         }
 
         [TestMethod]
@@ -275,49 +286,51 @@ namespace CookiecutterTests {
 
             await _vm.LoadTemplateAsync();
 
-            // Local template needs to be cloned
+            // Online template needs to be cloned
             Assert.AreEqual(OperationStatus.Succeeded, _vm.CloningStatus);
 
             PrintContextItems(_vm.ContextItems);
 
             _vm.ContextItems.Single(item => item.Name == "static_assets_directory").Val = "static_files";
-            _vm.OutputFolderPath = Path.Combine(_vm.OutputFolderPath, "OnlineTemplate");
+            var targetPath = _vm.OutputFolderPath;
+            Assert.IsTrue(Path.IsPathRooted(targetPath), "{0} is not a full path".FormatInvariant(targetPath));
+            Assert.IsTrue(PathUtils.IsSubpathOf(DefaultBasePath, targetPath),
+                "{0} is not in the {1} folder".FormatInvariant(targetPath, DefaultBasePath));
 
-            await _vm.CreateFilesAsync();
+            try {
+                await _vm.CreateFilesAsync();
 
-            Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
-            Assert.AreEqual(_vm.OutputFolderPath, _vm.OpenInExplorerFolderPath);
+                Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
+                Assert.AreEqual(_vm.OutputFolderPath, _vm.OpenInExplorerFolderPath);
 
-            Assert.IsTrue(Directory.Exists(Path.Combine(_vm.OutputFolderPath, "static_files")));
-            Assert.IsTrue(Directory.Exists(Path.Combine(_vm.OutputFolderPath, "post-deployment")));
-            Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "web.config")));
-            Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "static_files", "web.config")));
-            Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "post-deployment", "install-requirements.ps1")));
-            Assert.IsFalse(File.Exists(Path.Combine(_vm.OutputFolderPath, "install-requirements.ps1")));
+                Assert.IsTrue(Directory.Exists(Path.Combine(_vm.OutputFolderPath, "static_files")));
+                Assert.IsTrue(Directory.Exists(Path.Combine(_vm.OutputFolderPath, "post-deployment")));
+                Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "web.config")));
+                Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "static_files", "web.config")));
+                Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "post-deployment", "install-requirements.ps1")));
+                Assert.IsFalse(File.Exists(Path.Combine(_vm.OutputFolderPath, "install-requirements.ps1")));
 
-            var log = ((ITelemetryTestSupport)_telemetry.TelemetryService).SessionLog;
+                var log = ((ITelemetryTestSupport)_telemetry.TelemetryService).SessionLog;
 
-            Assert.IsTrue(log.Contains("Test/Cookiecutter/Search/Load"));
-            Assert.IsTrue(log.Contains("Test/Cookiecutter/Template/Clone"));
-            Assert.IsTrue(log.Contains("Test/Cookiecutter/Template/Load"));
-            Assert.IsTrue(log.Contains("Test/Cookiecutter/Template/Run"));
+                Assert.IsTrue(log.Contains("Test/Cookiecutter/Search/Load"));
+                Assert.IsTrue(log.Contains("Test/Cookiecutter/Template/Clone"));
+                Assert.IsTrue(log.Contains("Test/Cookiecutter/Template/Load"));
+                Assert.IsTrue(log.Contains("Test/Cookiecutter/Template/Run"));
 
-            Assert.IsTrue(log.Contains(template.RemoteUrl.GetSha512()));
-            Assert.IsTrue(log.Contains(template.RepositoryFullName.GetSha512()));
-            Assert.IsTrue(log.Contains(template.RepositoryName.GetSha512()));
-            Assert.IsTrue(log.Contains(template.RepositoryOwner.GetSha512()));
+                Assert.IsFalse(log.Contains(template.Description));
+                Assert.IsFalse(log.Contains(template.ClonedPath));
 
-            Assert.IsFalse(log.Contains(template.DisplayName));
-            Assert.IsFalse(log.Contains(template.Description));
-            Assert.IsFalse(log.Contains(template.ClonedPath));
-            Assert.IsFalse(log.Contains(template.RemoteUrl));
-            Assert.IsFalse(log.Contains(template.RepositoryFullName));
-            Assert.IsFalse(log.Contains(template.RepositoryName));
-            Assert.IsFalse(log.Contains(template.RepositoryOwner));
+                Assert.IsTrue(log.Contains(PII(template.RemoteUrl)));
+                Assert.IsTrue(log.Contains(PII(template.RepositoryFullName)));
+                Assert.IsTrue(log.Contains(PII(template.RepositoryName)));
+                Assert.IsTrue(log.Contains(PII(template.RepositoryOwner)));
 
-            Assert.AreEqual(null, _openedFolder);
-            _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
-            Assert.AreEqual(_vm.OpenInExplorerFolderPath, _openedFolder);
+                Assert.AreEqual(null, _openedFolder);
+                _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
+                Assert.AreEqual(_vm.OpenInExplorerFolderPath, _openedFolder);
+            } finally {
+                FileUtils.DeleteDirectory(targetPath);
+            }
         }
 
         [TestMethod]
@@ -340,6 +353,10 @@ namespace CookiecutterTests {
             // After cloning the same template multiple times, make sure it only appears once in the installed section
             var installed = _vm.Installed.Templates.OfType<TemplateViewModel>().Where(t => t.DisplayName == OnlineTemplateRepoName).ToArray();
             Assert.AreEqual(1, installed.Length);
+        }
+
+        private static string PII(string text) {
+            return $"PII({text})";
         }
 
         private async Task EnsureCookiecutterInstalledAsync() {
