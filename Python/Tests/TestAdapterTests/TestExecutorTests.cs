@@ -78,9 +78,12 @@ namespace TestAdapterTests {
 
         // {0} is the test results directory
         // {1} is one or more formatted _runSettingProject lines
+        // {2} is 'true' or 'false' depending on whether the tests should be run
+        // {3} is 'true' or 'false' depending on whether the console should be shown
         private const string _runSettings = @"<?xml version=""1.0""?><RunSettings><DataCollectionRunSettings><DataCollectors /></DataCollectionRunSettings><RunConfiguration><ResultsDirectory>{0}</ResultsDirectory><TargetPlatform>X86</TargetPlatform><TargetFrameworkVersion>Framework45</TargetFrameworkVersion></RunConfiguration><Python><TestCases>
 {1}
-</TestCases></Python></RunSettings>";
+</TestCases>
+<DryRun value=""{2}"" /><ShowConsole value=""{3}"" /></Python></RunSettings>";
 
         // {0} is the project home directory, ending with a backslash
         // {1} is the project filename, including extension
@@ -144,7 +147,13 @@ namespace TestAdapterTests {
             return elements;
         }
 
-        private static MockRunContext CreateRunContext(IEnumerable<TestInfo> expected, string interpreter = null, string testResults = null) {
+        private static MockRunContext CreateRunContext(
+            IEnumerable<TestInfo> expected,
+            string interpreter = null,
+            string testResults = null,
+            bool dryRun = false,
+            bool showConsole = false
+        ) {
             var projects = new List<string>();
 
             foreach (var proj in expected.GroupBy(e => e.ProjectFilePath)) {
@@ -174,7 +183,9 @@ namespace TestAdapterTests {
 
             return new MockRunContext(new MockRunSettings(string.Format(_runSettings,
                 testResults ?? TestData.GetTempPath(),
-                string.Join(Environment.NewLine, projects)
+                string.Join(Environment.NewLine, projects),
+                dryRun ? "true" : "false",
+                showConsole ? "true" : "false"
             )));
         }
 
@@ -398,6 +409,44 @@ namespace TestAdapterTests {
                 var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
                 Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestPassOnCommandLine() {
+            PythonPaths.Python27.AssertInstalled();
+
+            var executor = new TestExecutor();
+            var recorder = new MockTestExecutionRecorder();
+            var expectedTests = TestInfo.TestAdapterATests;
+            var runContext = CreateRunContext(expectedTests, dryRun: true);
+            var testCases = expectedTests.Select(tr => tr.TestCase);
+
+            executor.RunTests(testCases, runContext, recorder);
+            PrintTestResults(recorder);
+
+            AssertUtil.ArrayEquals(
+                expectedTests.Select(t => t.TestCase.FullyQualifiedName).ToList(),
+                recorder.Results.Select(t => t.TestCase.FullyQualifiedName).ToList()
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestPassInTestList() {
+            PythonPaths.Python27.AssertInstalled();
+
+            var executor = new TestExecutor();
+            var recorder = new MockTestExecutionRecorder();
+            var expectedTests = Enumerable.Repeat(TestInfo.TestAdapterATests, 10).SelectMany();
+            var runContext = CreateRunContext(expectedTests, dryRun: true);
+            var testCases = expectedTests.Select(tr => tr.TestCase);
+
+            executor.RunTests(testCases, runContext, recorder);
+            PrintTestResults(recorder);
+
+            AssertUtil.ArrayEquals(
+                expectedTests.Select(t => t.TestCase.FullyQualifiedName).ToList(),
+                recorder.Results.Select(t => t.TestCase.FullyQualifiedName).ToList()
+            );
         }
 
         private static void PrintTestResults(MockTestExecutionRecorder recorder) {

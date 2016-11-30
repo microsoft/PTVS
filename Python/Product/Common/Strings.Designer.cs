@@ -1995,11 +1995,11 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to attach debugger because the process has already exited..
+        ///   Looks up a localized string similar to Failed to execute tests because the process has already exited..
         /// </summary>
-        public static string Test_FailedToAttachExited {
+        public static string Test_FailedToStartExited {
             get {
-                return ResourceManager.GetString("Test_FailedToAttachExited", resourceCulture);
+                return ResourceManager.GetString("Test_FailedToStartExited", resourceCulture);
             }
         }
         

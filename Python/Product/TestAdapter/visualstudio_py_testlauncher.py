@@ -14,6 +14,8 @@
 # See the Apache Version 2.0 License for specific language governing
 # permissions and limitations under the License.
 
+from __future__ import with_statement
+
 __author__ = "Microsoft Corporation <ptvshelp@microsoft.com>"
 __version__ = "3.0.0.0"
 
@@ -27,6 +29,13 @@ try:
     import thread
 except:
     import _thread as thread
+
+if sys.version_info[0] < 3:
+    if sys.version_info[:2] < (2, 6):
+        from codecs import open
+    else:
+        from io import open
+
 
 class _TestOutput(object):
     """file like object which redirects output to the repl window."""
@@ -97,6 +106,9 @@ class _IpcChannel(object):
         self.socket = socket
         self.seq = 0
         self.lock = thread.allocate_lock()
+
+    def close(self):
+        self.socket.close()
 
     def send_event(self, name, **args):
         with self.lock:
@@ -176,6 +188,8 @@ def main():
     parser.add_option('-t', '--test', type='str', dest='tests', action='append', help='specifies a test to run')
     parser.add_option('-c', '--coverage', type='str', help='enable code coverage and specify filename')
     parser.add_option('-r', '--result-port', type='int', help='connect to port on localhost and send test results')
+    parser.add_option('--test-list', metavar='<file>', type='str', help='read tests from this file')
+    parser.add_option('--dry-run', action='store_true', help='prints a list of tests without executing them')
     (opts, _) = parser.parse_args()
     
     sys.path[0] = os.getcwd()
@@ -213,6 +227,29 @@ def main():
                 break
             sleep(0.1)
 
+    all_tests = list(opts.tests or [])
+    if opts.test_list:
+        with open(opts.test_list, 'r', encoding='utf-8') as test_list:
+            all_tests.extend(t.strip() for t in test_list)
+
+    if opts.dry_run:
+        if _channel:
+            for test in all_tests:
+                print(test)
+                _channel.send_event(
+                    name='start', 
+                    test = test
+                )
+                _channel.send_event(
+                    name='result', 
+                    outcome='passed',
+                    test = test
+                )
+        else:
+            for test in all_tests:
+                print(test)
+        sys.exit(0)
+
     cov = None
     try:
         if opts.coverage:
@@ -225,7 +262,9 @@ def main():
                 pass
 
         tests = []
-        for test in opts.tests:
+        for test in all_tests:
+            if not test:
+                continue
             try:
                 for loaded_test in unittest.defaultTestLoader.loadTestsFromName(test):
                     # Starting with Python 3.5, rather than letting any import error
@@ -271,7 +310,7 @@ def main():
             _channel.send_event(
                 name='done'
             )
-            _channel.socket.close()
+            _channel.close()
 
 if __name__ == '__main__':
     main()
