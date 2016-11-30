@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Logging {
 
             switch (logEvent) {
                 case PythonLogEvent.Launch:
-                    if ((int)argument != 0) {
+                    if (((LaunchInfo)argument).IsDebug) {
                         _debugLaunchCount++;
                     } else {
                         _normalLaunchCount++;
