@@ -812,8 +812,8 @@ modified from these scripts.</value>
   <data name="Test_ErrorConnecting" xml:space="preserve">
     <value>Error occurred connecting to debuggee.</value>
   </data>
-  <data name="Test_FailedToAttachExited" xml:space="preserve">
-    <value>Failed to attach debugger because the process has already exited.</value>
+  <data name="Test_FailedToStartExited" xml:space="preserve">
+    <value>Failed to execute tests because the process has already exited.</value>
   </data>
   <data name="Test_InterpreterDoesNotExist" xml:space="preserve">
     <value>Interpreter path does not exist: {0}</value>
