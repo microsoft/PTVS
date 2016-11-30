@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
@@ -162,8 +163,6 @@ namespace Microsoft.PythonTools.Profiling {
                 }
             };
 
-	    Trace.WriteLine("**** Should have a result in [" + outPath + "\\report.csv" + "]");
-
 	    VTuneCSVToHTML(outPath, "\\report.csv");
 
 	    EnvDTE.DTE dte = Package.GetGlobalService(typeof(SDTE)) as EnvDTE.DTE;
@@ -171,21 +170,33 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
 	private string VTuneCSVToHTML(string dirname, string fname) {
-	  Trace.WriteLine("**** Just got parameters: [" + dirname + "], [" + fname + "]");
-
 	  IEnumerable<string> records = File.ReadLines(dirname + fname);
 
 	  using (StreamWriter outs = new StreamWriter(dirname + fname + ".html")) {
-	    outs.WriteLine("<!doctype html>");
-	    outs.WriteLine("<html>");
-	    outs.WriteLine("<head><title>VTune report</title></head>");
-	    outs.WriteLine("<body><table>");
-	    foreach (string r in records) {
-	    	    outs.WriteLine("<tr>");
-	    	    foreach (string f in r.Split(',')) {
-  	    	    	    outs.WriteLine("<td>" + f + "</td>");
+	    outs.WriteLine(@"<!doctype html>
+	    <html>
+	    <head>
+		<title>VTune report</title>
+		<style>
+		  body: { font-family: sans-serif; }
+		  table, td { border: 1px solid black; }
+		  th { background-color: gray; }
+	        </style>
+	    </head>
+	    <body><table>
+	    ");
+	    foreach (var ri in records.Select((v,i) => new { i, v })) {
+                    outs.WriteLine("<tr>");
+                    foreach (string f in ri.v.Split(',')) {
+		      if (0 == ri.i)
+                      {
+			outs.WriteLine("<th>" + f + "</th>");
+                      } else
+                      {
+			outs.WriteLine("<td>" + f + "</td>");
+                      }
 		    }
-	    	    outs.WriteLine("</tr>");
+                    outs.WriteLine("</tr>");
 	    }
 	    outs.WriteLine("</table></body>");
 	    outs.WriteLine("</html>");
