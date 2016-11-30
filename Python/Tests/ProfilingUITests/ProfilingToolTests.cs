@@ -8,7 +8,7 @@ using Microsoft.PythonTools.Profiling;
 
 namespace ProfilingUITests {
     [TestClass]
-    public class ProfilingCommandTests {
+    public class ProfilingToolTests {
         public TestContext TestContext { get; set; }
 
         [TestMethod]
