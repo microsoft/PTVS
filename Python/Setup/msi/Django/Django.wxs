@@ -9,7 +9,7 @@
     <DirectoryRef Id="Dir_$(var.key)WebProjectTemplates">
       <Directory Id="Dir_$(var.key)WebProjectTemplates_DjangoProject" Name="DjangoProject" />
       <Directory Id="Dir_$(var.key)WebProjectTemplates_StarterDjangoProject" Name="StarterDjangoProject" />
-      <Directory Id="Dir_$(var.key)WebProjectTemplates_DjangoWebRole" Name="DjangoWebRole" />
+      <Directory Id="Dir_$(var.key)WebProjectTemplates_DjangoWebRole" Name="WebRoleDjango" />
     </DirectoryRef>
     <DirectoryRef Id="Dir_$(var.key)ItemTemplates">
       <Directory Id="Dir_$(var.key)ItemTemplates_DjangoNewAppFiles14" Name="DjangoNewAppFiles14" />
