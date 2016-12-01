@@ -108,8 +108,6 @@ namespace Microsoft.PythonTools.Project.Web {
                     dsi.Launch();
                 }
             } else {
-                _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
-
                 var psi = DebugLaunchHelper.CreateProcessStartInfo(_serviceProvider, config);
 
                 var process = Process.Start(psi);
