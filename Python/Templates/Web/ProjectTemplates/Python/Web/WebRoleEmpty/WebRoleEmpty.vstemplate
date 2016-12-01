@@ -12,7 +12,7 @@
     <ProvideDefaultName>true</ProvideDefaultName>
   </TemplateData>
   <TemplateContent>
-    <Project File="EmptyWebRole.pyproj" ReplaceParameters="true">
+    <Project File="WebRoleEmpty.pyproj" ReplaceParameters="true">
       <ProjectItem>requirements.txt</ProjectItem>
       <Folder Name="Bin">
         <ProjectItem OpenInWebBrowser="true" TargetFileName="Readme.mht">WebRoleConfiguration.mht</ProjectItem>

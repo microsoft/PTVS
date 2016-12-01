@@ -47,8 +47,8 @@
       <InstallDirectory>ItemTemplates_CloudService_WebRole_Django</InstallDirectory>
       <IncludeInWD>false</IncludeInWD>
     </File>
-    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Django\ProjectTemplates\Python\Web\DjangoWebRole\*">
-      <TemplateName>DjangoWebRole</TemplateName>
+    <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Django\ProjectTemplates\Python\Web\WebRoleDjango\*">
+      <TemplateName>WebRoleDjango</TemplateName>
     </WebProjectTemplate>
 
     <!-- Targets -->

@@ -12,7 +12,7 @@
     <ProvideDefaultName>true</ProvideDefaultName>
   </TemplateData>
   <TemplateContent>
-    <Project File="DjangoWebRole.pyproj" ReplaceParameters="true">
+    <Project File="WebRoleDjango.pyproj" ReplaceParameters="true">
       <ProjectItem OpenInWebBrowser="true" TargetFileName="Readme.mht">WebRoleConfiguration.mht</ProjectItem>
       <Folder Name="Bin">
         <ProjectItem>ConfigureCloudService.ps1</ProjectItem>
