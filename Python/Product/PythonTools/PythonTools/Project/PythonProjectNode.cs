@@ -318,7 +318,7 @@ namespace Microsoft.PythonTools.Project {
             var projectHome = PathUtils.GetAbsoluteDirectoryPath(BuildProject.DirectoryPath, BuildProject.GetPropertyValue("ProjectHome"));
             var rootPath = PathUtils.EnsureEndSeparator(config.PrefixPath);
 
-            var id = MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(BuildProject.FullPath, config.Id);
+            var id = MSBuildProjectInterpreterFactoryProvider.GetProjectRelativeId(BuildProject.FullPath, config.Id);
             if (string.IsNullOrEmpty(id)) {
                 throw new InvalidOperationException("Adding project environment {0} to wrong project {1}".FormatInvariant(config.Id, BuildProject.FullPath));
             }
@@ -374,7 +374,7 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
 
-            var subid = MSBuildProjectInterpreterFactoryProvider.GetProjectiveRelativeId(BuildProject.FullPath, factory.Configuration.Id);
+            var subid = MSBuildProjectInterpreterFactoryProvider.GetProjectRelativeId(BuildProject.FullPath, factory.Configuration.Id);
             bool projectChanged = false;
 
             if (!string.IsNullOrEmpty(subid)) {

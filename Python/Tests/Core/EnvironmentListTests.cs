@@ -106,6 +106,39 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
+        public void InterpretersWithSameNames() {
+            var sp = new MockServiceProvider();
+            var mockService = new MockInterpreterOptionsService();
+
+            var fact1 = new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 1", new Version(2, 7)));
+            fact1.Properties[PythonRegistrySearch.CompanyPropertyKey] = "Company 1";
+            var fact2 = new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 1", new Version(2, 7)));
+            fact2.Properties[PythonRegistrySearch.CompanyPropertyKey] = "Company 2";
+
+            // Deliberately add fact2 twice, as we should only show that once.
+            mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 1", fact1, fact2, fact2));
+
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
+                list.Service = mockService;
+                list.Interpreters = mockService;
+                var environments = list.Environments;
+
+                Assert.AreEqual(2, environments.Count);
+                AssertUtil.ArrayEquals(
+                    wpf.Invoke(() => environments.Select(ev => ev.Description).ToList()),
+                    new[] { "Test Factory 1", "Test Factory 1" }
+                );
+                AssertUtil.ContainsExactly(
+                    wpf.Invoke(() => environments.Select(ev => ev.Company).ToList()),
+                    "Company 1",
+                    "Company 2"
+                );
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public async Task InterpretersRaceCondition() {
             var container = CreateCompositionContainer();
             var service = container.GetExportedValue<IInterpreterOptionsService>();
