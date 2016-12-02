@@ -21,6 +21,10 @@
       <ProjectItem OpenInWebBrowser="true">readme.mht</ProjectItem>
       <ProjectItem>requirements.txt</ProjectItem>
       <Folder Name="app" TargetFolderName="app">
+        <Folder Name="migrations" TargetFolderName="migrations">
+          <ProjectItem>__init__.py</ProjectItem>
+          <ProjectItem>0001_initial.py</ProjectItem>
+        </Folder>
         <Folder Name="static" TargetFolderName="static">
           <Folder Name="app" TargetFolderName="app">
             <Folder Name="content" TargetFolderName="content">

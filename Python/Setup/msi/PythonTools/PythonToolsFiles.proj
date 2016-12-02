@@ -138,7 +138,7 @@
       <TemplateName>WorkerRoleProject</TemplateName>
     </WebProjectTemplate>
     <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\WebRoleEmpty\*">
-      <TemplateName>EmptyWebRole</TemplateName>
+      <TemplateName>WebRoleEmpty</TemplateName>
     </WebProjectTemplate>
     <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\WebRoleBottle\*">
       <TemplateName>WebRoleBottle</TemplateName>
