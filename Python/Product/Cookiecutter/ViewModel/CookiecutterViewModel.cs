@@ -93,6 +93,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public ObservableCollection<ContextItemViewModel> ContextItems { get; } = new ObservableCollection<ContextItemViewModel>();
 
         public string UserConfigFilePath { get; set; }
+        public bool FixedOutputFolder { get; set; }
 
         public string InstalledFolderPath { get; set; } = DefaultInstalledFolderPath;
 
@@ -864,6 +865,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         }
 
         private async Task SetDefaultOutputFolder(string localTemplatePath) {
+            if (FixedOutputFolder) {
+                return;
+            }
+
             OutputFolderPath = await _cutterClient.GetDefaultOutputFolderAsync(PathUtils.GetFileOrDirectoryName(_templateLocalFolderPath));
             Debug.Assert(!Directory.Exists(OutputFolderPath) && !File.Exists(PathUtils.TrimEndSeparator(OutputFolderPath)));
         }

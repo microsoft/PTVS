@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -185,6 +186,7 @@ namespace Microsoft.CookiecutterTools.View {
             PageSequence.MoveCurrentToFirst();
             _updateCommandUI();
 
+            ViewModel.FixedOutputFolder = false;
             ViewModel.SearchTerm = string.Empty;
             ViewModel.SearchAsync().DoNotWait();
         }
@@ -245,6 +247,15 @@ namespace Microsoft.CookiecutterTools.View {
             _checkForUpdatesTimer.Stop();
 
             _searchPage.CheckForUpdates();
+        }
+
+        internal void NewSession(string targetFolder) {
+            Home();
+
+            if (Directory.Exists(targetFolder)) {
+                ViewModel.OutputFolderPath = targetFolder;
+                ViewModel.FixedOutputFolder = true;
+            }
         }
 
         private void UserControl_MouseRightButtonUp(object sender, MouseButtonEventArgs e) {

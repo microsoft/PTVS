@@ -294,6 +294,10 @@ namespace Microsoft.CookiecutterTools {
             return _cookiecutterPage != null ? _cookiecutterPage.CanUpdateSelection() : false;
         }
 
+        internal void NewSession(string targetFolder) {
+            _cookiecutterPage?.NewSession(targetFolder);
+        }
+
         private void OnContextMenuRequested(object sender, PointEventArgs e) {
             ShowContextMenu(e.Point);
         }

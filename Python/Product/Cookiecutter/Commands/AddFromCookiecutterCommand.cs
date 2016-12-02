@@ -15,6 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
+using System.IO;
+using System.Linq;
 using Microsoft.CookiecutterTools.Infrastructure;
 
 namespace Microsoft.CookiecutterTools.Commands {
@@ -26,7 +28,17 @@ namespace Microsoft.CookiecutterTools.Commands {
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            CookiecutterPackage.Instance.ShowWindowPane(typeof(CookiecutterToolWindow), true);
+            string targetFolder = GetTargetFolder();
+            CookiecutterPackage.Instance.NewCookiecutterSession(targetFolder);
+        }
+
+        public override EventHandler BeforeQueryStatus {
+            get {
+                return (sender, args) => {
+                    var oleMenuCmd = (Microsoft.VisualStudio.Shell.OleMenuCommand)sender;
+                    oleMenuCmd.Enabled = !string.IsNullOrEmpty(GetTargetFolder());
+                };
+            }
         }
 
         public string Description {
@@ -38,6 +50,19 @@ namespace Microsoft.CookiecutterTools.Commands {
 
         public override int CommandId {
             get { return (int)PackageIds.cmdidAddFromCookiecutter; }
+        }
+
+        private string GetTargetFolder() {
+            try {
+                var paths = CookiecutterPackage.GetSelectedItemPaths().ToArray();
+                if (paths.Length == 1) {
+                    var p = paths[0];
+                    return Directory.Exists(p) ? p : null;
+                }
+            } catch (Exception e) when (!e.IsCriticalException()) {
+            }
+
+            return null;
         }
     }
 }
