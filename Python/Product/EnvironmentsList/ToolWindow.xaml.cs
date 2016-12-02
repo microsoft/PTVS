@@ -549,10 +549,28 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     }
                 }
 
-                return StringComparer.CurrentCultureIgnoreCase.Compare(
+                int result = StringComparer.CurrentCultureIgnoreCase.Compare(
                     x.Description,
                     y.Description
                 );
+
+                if (result == 0) {
+                    // Any missing information means not equal, so we need to
+                    // pick a winner. We arbitrarily sort the non-null entry
+                    // first, or x if they both have nulls.
+                    if (y.Factory?.Configuration?.Id == null) {
+                        result = -1;
+                    } else if (x.Factory?.Configuration?.Id == null) {
+                        result = 1;
+                    } else {
+                        result = StringComparer.Ordinal.Compare(
+                            x.Factory.Configuration.Id,
+                            y.Factory.Configuration.Id
+                        );
+                    }
+                }
+
+                return result;
             }
         }
 
