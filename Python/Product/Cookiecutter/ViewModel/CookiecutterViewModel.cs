@@ -967,10 +967,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     return;
                 }
 
-                var repoUrl = selection.RemoteUrl?.ToLowerInvariant();
-                var repoFullName = selection.RepositoryFullName?.ToLowerInvariant();
-                var repoOwner = selection.RepositoryOwner?.ToLowerInvariant();
-                var repoName = selection.RepositoryName?.ToLowerInvariant();
+                var repoUrl = selection.RemoteUrl?.ToLowerInvariant() ?? string.Empty;
+                var repoFullName = selection.RepositoryFullName?.ToLowerInvariant() ?? string.Empty;
+                var repoOwner = selection.RepositoryOwner?.ToLowerInvariant() ?? string.Empty;
+                var repoName = selection.RepositoryName?.ToLowerInvariant() ?? string.Empty;
 
                 var obj = new {
                     Success = error == null,
