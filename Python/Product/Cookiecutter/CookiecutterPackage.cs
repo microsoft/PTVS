@@ -100,7 +100,7 @@ namespace Microsoft.CookiecutterTools {
 
         #endregion
 
-        public static T GetService<S, T>() where T : class {
+        public static T GetGlobalService<S, T>() where T : class {
             object service = Package.GetGlobalService(typeof(S));
             return service as T;
         }
@@ -111,23 +111,7 @@ namespace Microsoft.CookiecutterTools {
 
         public EnvDTE80.DTE2 DTE {
             get {
-                return GetService<EnvDTE.DTE, EnvDTE80.DTE2>();
-            }
-        }
-
-        internal static IEnumerable<string> GetSelectedItemPaths() {
-            var dte = CookiecutterPackage.Instance.DTE;
-            var items = (Array)dte.ToolWindows.SolutionExplorer.SelectedItems;
-            foreach (EnvDTE.UIHierarchyItem selItem in items) {
-                var item = selItem.Object as EnvDTE.ProjectItem;
-                if (item != null && item.Properties != null) {
-                    yield return item.Properties.Item("FullPath").Value.ToString();
-                }
-
-                var proj = selItem.Object as EnvDTE.Project;
-                if (proj != null && proj.Properties != null) {
-                    yield return proj.Properties.Item("FullPath").Value.ToString();
-                }
+                return GetGlobalService<EnvDTE.DTE, EnvDTE80.DTE2>();
             }
         }
 
