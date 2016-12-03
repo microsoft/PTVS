@@ -110,7 +110,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
                 new ProjectLibraryNode(commonProject)
             );
             _library.AddNode(node.ProjectLibraryNode);
-            listener.StartListening(true);
+            listener.StartListening(false);
             RegisterForRDTEvents();
         }
 
