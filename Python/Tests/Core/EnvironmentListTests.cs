@@ -922,7 +922,7 @@ namespace PythonToolsUITests {
                 get {
                     return _proxy.Invoke(() =>
                         Window._environments
-                            .Except(EnvironmentView.AddNewEnvironmentViewOnce.Value)
+                            .Where(ev => ! ev._addNewEnvironmentView)
                             .Except(EnvironmentView.OnlineHelpViewOnce.Value)
                             .ToList()
                     );

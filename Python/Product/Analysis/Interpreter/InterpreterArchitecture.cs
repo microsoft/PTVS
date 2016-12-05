@@ -15,6 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
+using System.Reflection;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
     public abstract class InterpreterArchitecture : IFormattable, IComparable<InterpreterArchitecture> {
@@ -67,6 +70,20 @@ namespace Microsoft.PythonTools.Interpreter {
                 throw new FormatException();
             }
             return result;
+        }
+
+        public static InterpreterArchitecture FromExe(string path) {
+            try {
+                switch (NativeMethods.GetBinaryType(path)) {
+                    case ProcessorArchitecture.X86:
+                        return x86;
+                    case ProcessorArchitecture.Amd64:
+                        return x64;
+                }
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(InterpreterArchitecture)));
+            }
+            return Unknown;
         }
 
         public int CompareTo(InterpreterArchitecture other) {
