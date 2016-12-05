@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -36,7 +37,12 @@ namespace Microsoft.PythonTools.Infrastructure {
 
             try {
                 return Run(port).WaitAndUnwrapExceptions();
+            } catch (OperationCanceledException) {
+                return 2;
             } catch (IOException) {
+                return 255;
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(Program)));
                 return 255;
             }
         }

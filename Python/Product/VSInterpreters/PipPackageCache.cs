@@ -62,7 +62,6 @@ namespace Microsoft.PythonTools.Interpreter {
         // in instance variables so we can differentiate between set and unset.
         private const string DefaultIndexFwLink = "https://go.microsoft.com/fwlink/?linkid=834538";
         private static Task<Uri> _DefaultIndexTask = Task.Run(() => Resolve(DefaultIndexFwLink));
-        private static Uri DefaultIndex => _DefaultIndexTask.Result;
         private const string DefaultIndexName = "PyPI";
         
         protected PipPackageCache(
@@ -78,13 +77,13 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public static PipPackageCache GetCache(Uri index = null, string indexName = null) {
             PipPackageCache cache;
-            var key = (index ?? DefaultIndex).AbsoluteUri;
+            var key = index?.AbsoluteUri ?? string.Empty;
             lock (_knownCachesLock) {
                 if (!_knownCaches.TryGetValue(key, out cache)) {
                     _knownCaches[key] = cache = new PipPackageCache(
                         index,
                         indexName,
-                        GetCachePath(index ?? DefaultIndex, indexName ?? DefaultIndexName)
+                        GetCachePath(indexName ?? DefaultIndexName)
                     );
                 }
                 cache._userCount += 1;
@@ -113,14 +112,14 @@ namespace Microsoft.PythonTools.Interpreter {
                     if (--_userCount <= 0) {
                         Debug.Assert(_userCount == 0);
                         _cacheLock.Dispose();
-                        _knownCaches.Remove((_index ?? DefaultIndex).AbsoluteUri);
+                        _knownCaches.Remove(_index?.AbsoluteUri ?? string.Empty);
                     }
                 }
             }
         }
 
         public Uri Index {
-            get { return _index ?? DefaultIndex; }
+            get { return _index ?? _DefaultIndexTask.Result; }
         }
 
         public string IndexName {
@@ -467,7 +466,7 @@ namespace Microsoft.PythonTools.Interpreter {
             return new Uri(uri);
         }
 
-        private static string GetCachePath(Uri index, string indexName) {
+        private static string GetCachePath(string indexName) {
             return Path.Combine(
                 BasePackageCachePath,
                 IndexNameSanitizerRegex.Replace(indexName, "_") + "_simple.cache"

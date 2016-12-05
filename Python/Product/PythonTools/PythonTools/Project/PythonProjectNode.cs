@@ -661,7 +661,13 @@ namespace Microsoft.PythonTools.Project {
 
             OnProjectPropertyChanged += PythonProjectNode_OnProjectPropertyChanged;
 
-            UpdateActiveInterpreter();
+            // Defer reanalysis until after we have loaded the project
+            ActiveInterpreterChanged -= OnActiveInterpreterChanged;
+            try {
+                UpdateActiveInterpreter();
+            } finally {
+                ActiveInterpreterChanged += OnActiveInterpreterChanged;
+            }
 
             base.Reload();
 
@@ -679,6 +685,11 @@ namespace Microsoft.PythonTools.Project {
             if (!this.IsAppxPackageableProject()) {
                 _searchPaths.LoadPathsFromString(ProjectHome, GetProjectProperty(PythonConstants.SearchPathSetting, false));
             }
+
+            Site.GetUIThread().InvokeTask(async () => {
+                await Task.Delay(10);
+                await ReanalyzeProject();
+            });
 
             try {
                 Site.GetPythonToolsService().SurveyNews.CheckSurveyNews(false);
