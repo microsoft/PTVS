@@ -68,7 +68,7 @@ namespace CookiecutterTests {
             var outputProjectFolder = Path.Combine(output, "project");
 
             _telemetry = new CookiecutterTelemetry(new TelemetryTestService());
-            _vm = new CookiecutterViewModel(_cutterClient, _gitHubClient, _gitClient, _telemetry, _redirector, _installedTemplateSource, _feedTemplateSource, _gitHubTemplateSource, null);
+            _vm = new CookiecutterViewModel(_cutterClient, _gitHubClient, _gitClient, _telemetry, _redirector, _installedTemplateSource, _feedTemplateSource, _gitHubTemplateSource, null, null);
             _vm.UserConfigFilePath = UserConfigFilePath;
             _vm.OutputFolderPath = outputProjectFolder;
         }

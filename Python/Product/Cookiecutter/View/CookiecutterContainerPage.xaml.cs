@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -51,7 +52,7 @@ namespace Microsoft.CookiecutterTools.View {
             InitializeComponent();
         }
 
-        public CookiecutterContainerPage(IServiceProvider provider, Redirector outputWindow, ICookiecutterTelemetry telemetry, IGitClient gitClient, Uri feedUrl, Action<string> openFolder, Action updateCommandUI) {
+        public CookiecutterContainerPage(IServiceProvider provider, Redirector outputWindow, ICookiecutterTelemetry telemetry, IGitClient gitClient, Uri feedUrl, Action<string> openFolder, Action<string, string> addToProject, Action updateCommandUI) {
             _updateCommandUI = updateCommandUI;
 
             _checkForUpdatesTimer = new DispatcherTimer();
@@ -67,7 +68,8 @@ namespace Microsoft.CookiecutterTools.View {
                 new LocalTemplateSource(CookiecutterViewModel.DefaultInstalledFolderPath, gitClient),
                 new FeedTemplateSource(feedUrl),
                 new GitHubTemplateSource(gitHubClient),
-                openFolder
+                openFolder,
+                addToProject
             );
 
             ViewModel.UserConfigFilePath = CookiecutterViewModel.GetUserConfigPath();
@@ -185,6 +187,7 @@ namespace Microsoft.CookiecutterTools.View {
             PageSequence.MoveCurrentToFirst();
             _updateCommandUI();
 
+            ViewModel.FixedOutputFolder = false;
             ViewModel.SearchTerm = string.Empty;
             ViewModel.SearchAsync().DoNotWait();
         }
@@ -245,6 +248,16 @@ namespace Microsoft.CookiecutterTools.View {
             _checkForUpdatesTimer.Stop();
 
             _searchPage.CheckForUpdates();
+        }
+
+        internal void NewSession(string targetFolder, string targetProjectUniqueName) {
+            Home();
+
+            if (Directory.Exists(targetFolder)) {
+                ViewModel.OutputFolderPath = targetFolder;
+                ViewModel.FixedOutputFolder = true;
+                ViewModel.TargetProjectUniqueName = targetProjectUniqueName;
+            }
         }
 
         private void UserControl_MouseRightButtonUp(object sender, MouseButtonEventArgs e) {

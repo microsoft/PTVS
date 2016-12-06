@@ -100,13 +100,18 @@ namespace Microsoft.CookiecutterTools {
 
         #endregion
 
+        public static T GetGlobalService<S, T>() where T : class {
+            object service = Package.GetGlobalService(typeof(S));
+            return service as T;
+        }
+
         internal new object GetService(Type serviceType) {
             return base.GetService(serviceType);
         }
 
-        public EnvDTE.DTE DTE {
+        public EnvDTE80.DTE2 DTE {
             get {
-                return (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
+                return GetGlobalService<EnvDTE.DTE, EnvDTE80.DTE2>();
             }
         }
 
@@ -118,7 +123,7 @@ namespace Microsoft.CookiecutterTools {
             shell.ShowContextMenu(0, commandId.Guid, commandId.ID, pts, commandTarget);
         }
 
-        internal void ShowWindowPane(Type windowType, bool focus) {
+        internal WindowPane ShowWindowPane(Type windowType, bool focus) {
             var window = FindWindowPane(windowType, 0, true) as ToolWindowPane;
             if (window != null) {
                 var frame = window.Frame as IVsWindowFrame;
@@ -133,6 +138,13 @@ namespace Microsoft.CookiecutterTools {
                     }
                 }
             }
+
+            return window;
+        }
+
+        internal void NewCookiecutterSession(string targetFolder = null, string targetProjectUniqueName = null) {
+            var pane = ShowWindowPane(typeof(CookiecutterToolWindow), true) as CookiecutterToolWindow;
+            pane.NewSession(targetFolder, targetProjectUniqueName);
         }
 
         internal void RegisterCommands(IEnumerable<Command> commands, Guid cmdSet) {
