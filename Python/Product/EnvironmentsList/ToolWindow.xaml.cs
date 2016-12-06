@@ -110,13 +110,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     var compModel = _site.GetService(typeof(SComponentModel)) as IComponentModel;
                     Service = compModel.GetService<IInterpreterOptionsService>();
                     Interpreters = compModel.GetService<IInterpreterRegistryService>();
-                    _addNewEnvironmentView = EnvironmentView.CreateAddNewEnvironmentView(Service);
-                    _addNewEnvironmentViewOnce = new[] { _addNewEnvironmentView };
                 } else {
                     Service = null;
                     Interpreters = null;
-                    _addNewEnvironmentView = null;
-                    _addNewEnvironmentViewOnce = null;
                 }
             }
         }
@@ -442,6 +438,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 _service = value;
                 if (_service != null) {
                     _service.DefaultInterpreterChanged += Service_DefaultInterpreterChanged;
+                    _addNewEnvironmentView = EnvironmentView.CreateAddNewEnvironmentView(_service);
+                    _addNewEnvironmentViewOnce = new[] { _addNewEnvironmentView };
+                } else {
+                    _addNewEnvironmentView = null;
+                    _addNewEnvironmentViewOnce = null;
                 }
                 if (_interpreters != null) {
                     Dispatcher.InvokeAsync(FirstUpdateEnvironments).Task.DoNotWait();
