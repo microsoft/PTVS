@@ -188,6 +188,8 @@ namespace Microsoft.CookiecutterTools.View {
             _updateCommandUI();
 
             ViewModel.FixedOutputFolder = false;
+            ViewModel.TargetProjectUniqueName = null;
+            ViewModel.AddingToProject = false;
             ViewModel.SearchTerm = string.Empty;
             ViewModel.SearchAsync().DoNotWait();
         }
@@ -257,6 +259,7 @@ namespace Microsoft.CookiecutterTools.View {
                 ViewModel.OutputFolderPath = targetFolder;
                 ViewModel.FixedOutputFolder = true;
                 ViewModel.TargetProjectUniqueName = targetProjectUniqueName;
+                ViewModel.AddingToProject = !string.IsNullOrEmpty(targetProjectUniqueName);
             }
         }
 

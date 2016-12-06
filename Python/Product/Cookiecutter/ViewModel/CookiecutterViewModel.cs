@@ -58,6 +58,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private ImageSource _selectedImage;
         private string _selectedLocation;
         private int _checkingUpdatePercentComplete;
+        private bool _addingToProject;
 
         private OperationStatus _installingStatus;
         private OperationStatus _cloningStatus;
@@ -317,6 +318,19 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _selectedTemplate) {
                     _selectedTemplate = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedTemplate)));
+                }
+            }
+        }
+
+        public bool AddingToProject {
+            get {
+                return _addingToProject;
+            }
+
+            set {
+                if (value != _addingToProject) {
+                    _addingToProject = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AddingToProject)));
                 }
             }
         }

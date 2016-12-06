@@ -186,7 +186,18 @@
         <StackPanel Grid.Row="2" Margin="4" Orientation="Vertical">
             <StackPanel Grid.Row="2" Orientation="Horizontal">
                 <Button MinWidth="100"
-                        Command="{x:Static vm:CookiecutterViewModel.CreateFilesCommand}">Create</Button>
+                        Command="{x:Static vm:CookiecutterViewModel.CreateFilesCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                            <Setter Property="Content" Value="Create"/>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Path=AddingToProject}" Value="True">
+                                    <Setter Property="Content" Value="Add to Project"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
                 <Button MinWidth="100"
                         Command="{x:Static vm:CookiecutterViewModel.HomeCommand}">Cancel</Button>
             </StackPanel>
