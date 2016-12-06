@@ -457,6 +457,7 @@ namespace Microsoft.PythonTools.Debugger {
 
                     switch (cmd) {
                         case "EXCP": HandleException(stream); break;
+                        case "EXC2": HandleRichException(stream); break;
                         case "BRKH": HandleBreakPointHit(stream); break;
                         case "NEWT": HandleThreadCreate(stream); break;
                         case "EXTT": HandleThreadExit(stream); break;
@@ -955,12 +956,32 @@ namespace Microsoft.PythonTools.Debugger {
             string desc = stream.ReadString();
             if (typeName != null && desc != null) {
                 Debug.WriteLine("Exception: " + desc);
-                var excepRaised = ExceptionRaised;
-                if (excepRaised != null) {
-                    excepRaised(this, new ExceptionRaisedEventArgs(_threads[tid], new PythonException(typeName, desc), breakType == 1 /* BREAK_TYPE_UNHANLDED */));
-                }
+                ExceptionRaised?.Invoke(this, new ExceptionRaisedEventArgs(
+                    _threads[tid],
+                    new PythonException {
+                        TypeName = typeName,
+                        FormattedDescription = desc,
+                        UserUnhandled = (breakType == 1) /* BREAK_TYPE_UNHANLDED */
+                    }
+                ));
             }
             _stoppedForException = true;
+        }
+
+        private void HandleRichException(Stream stream) {
+            var exc = new PythonException();
+            long tid = stream.ReadInt64();
+            int count = stream.ReadInt32();
+            while (--count >= 0) {
+                string key = stream.ReadString();
+                string value = stream.ReadString();
+                exc.SetValue(this, key, value);
+            }
+            if (tid != 0) {
+                Debug.WriteLine("Exception: " + exc.FormattedDescription ?? exc.ExceptionMessage ?? exc.TypeName);
+                ExceptionRaised?.Invoke(this, new ExceptionRaisedEventArgs(_threads[tid], exc));
+                _stoppedForException = true;
+            }
         }
 
         private static string CommandtoString(byte[] cmd_buffer) {

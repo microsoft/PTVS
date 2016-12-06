@@ -179,6 +179,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         public AD7Engine() {
             _breakpointManager = new BreakpointManager(this);
             _defaultBreakOnExceptionMode = (int)enum_EXCEPTION_STATE.EXCEPTION_STOP_USER_UNCAUGHT;
+            _debugOptions = PythonDebugOptions.RichExceptions;
             Debug.WriteLine("Python Engine Created " + GetHashCode());
             _engines.Add(new WeakReference(this));
         }
@@ -1386,7 +1387,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             AD7Thread thread;
             if (_threads.TryGetValue(e.Thread, out thread)) {
                 Send(
-                    new AD7DebugExceptionEvent(e.Exception.TypeName, e.Exception.Description, e.IsUnhandled),
+                    new AD7DebugExceptionEvent(this, e.Exception),
                     AD7DebugExceptionEvent.IID,
                     thread
                 );
