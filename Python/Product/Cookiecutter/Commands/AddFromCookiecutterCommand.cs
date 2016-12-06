@@ -32,15 +32,15 @@ namespace Microsoft.CookiecutterTools.Commands {
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            string targetFolder = GetTargetFolder();
-            CookiecutterPackage.Instance.NewCookiecutterSession(targetFolder);
+            var target = GetTargetFolder();
+            CookiecutterPackage.Instance.NewCookiecutterSession(target?.Item1, target?.Item2);
         }
 
         public override EventHandler BeforeQueryStatus {
             get {
                 return (sender, args) => {
                     var oleMenuCmd = (Microsoft.VisualStudio.Shell.OleMenuCommand)sender;
-                    oleMenuCmd.Enabled = !string.IsNullOrEmpty(GetTargetFolder());
+                    oleMenuCmd.Enabled = GetTargetFolder() != null;
                 };
             }
         }
@@ -56,12 +56,12 @@ namespace Microsoft.CookiecutterTools.Commands {
             get { return (int)PackageIds.cmdidAddFromCookiecutter; }
         }
 
-        private string GetTargetFolder() {
+        private Tuple<string, string> GetTargetFolder() {
             try {
                 var paths = GetSelectedItemPaths().ToArray();
                 if (paths.Length == 1) {
                     var p = paths[0];
-                    return Directory.Exists(p) ? p : null;
+                    return Directory.Exists(p.Item1) ? Tuple.Create(p.Item1, p.Item2) : null;
                 }
             } catch (Exception e) when (!e.IsCriticalException()) {
             }
@@ -69,25 +69,25 @@ namespace Microsoft.CookiecutterTools.Commands {
             return null;
         }
 
-        private IEnumerable<string> GetSelectedItemPaths() {
+        private IEnumerable<Tuple<string, string>> GetSelectedItemPaths() {
             var items = (Array)_dte.ToolWindows.SolutionExplorer.SelectedItems;
             foreach (EnvDTE.UIHierarchyItem selItem in items) {
                 var item = selItem.Object as EnvDTE.ProjectItem;
                 if (item != null && item.Properties != null) {
-                    yield return item.Properties.Item("FullPath").Value.ToString();
+                    yield return Tuple.Create(item.Properties.Item("FullPath").Value.ToString(), item.ContainingProject.UniqueName);
                 }
 
                 var proj = selItem.Object as EnvDTE.Project;
                 if (proj != null) {
                     var projFolder = GetProjectFolder(proj);
                     if (!string.IsNullOrEmpty(projFolder)) {
-                        yield return projFolder;
+                        yield return Tuple.Create(projFolder, proj.UniqueName);
                     }
                 }
             }
         }
 
-        private static string GetProjectFolder(EnvDTE.Project proj) {
+        internal static string GetProjectFolder(EnvDTE.Project proj) {
             try {
                 // Python and C# projects
                 if (proj.Properties != null) {

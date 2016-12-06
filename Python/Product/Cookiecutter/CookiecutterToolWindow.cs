@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -136,6 +138,7 @@ namespace Microsoft.CookiecutterTools {
                 gitClient,
                 new Uri(feedUrl),
                 OpenGeneratedFolder,
+                AddToProject,
                 UpdateCommandUI
             );
             _cookiecutterPage.ContextMenuRequested += OnContextMenuRequested;
@@ -205,6 +208,72 @@ namespace Microsoft.CookiecutterTools {
 
         private void UpdateCommandUI() {
             _uiShell.UpdateCommandUI(0);
+        }
+
+        private void AddToProject(string folderPath, string targetProjectUniqueName) {
+            var dte = CookiecutterPackage.Instance.DTE;
+            var items = (Array)dte.ToolWindows.SolutionExplorer.SelectedItems;
+            foreach (var proj in dte.ActiveSolutionProjects) {
+                var p = proj as EnvDTE.Project;
+                if (p != null && p.UniqueName == targetProjectUniqueName) {
+                    AddToProject(folderPath, p);
+                }
+            }
+        }
+
+        private void AddToProject(string folderPath, EnvDTE.Project p) {
+            var parentItems = GetTargetProjectItems(p, folderPath);
+            AddToProjectItems(parentItems, folderPath);
+        }
+
+        private void AddToProjectItems(EnvDTE.ProjectItems parentItems, string folderPath) {
+            var queue = new Queue<Tuple<EnvDTE.ProjectItems, string>>();
+            queue.Enqueue(Tuple.Create(parentItems, folderPath));
+
+            while (queue.Count > 0) {
+                var item = queue.Dequeue();
+                var pi = item.Item1;
+                var pf = item.Item2;
+
+                var filesToAdd = Directory.GetFiles(pf);
+                var dirsToAdd = Directory.GetDirectories(pf);
+
+                foreach (var filePath in filesToAdd) {
+                    pi.AddFromFile(filePath);
+                }
+
+                foreach (var dirPath in dirsToAdd) {
+                    var addedFolderItem = pi.AddFromDirectory(dirPath);
+
+                    queue.Enqueue(Tuple.Create(addedFolderItem.ProjectItems, dirPath));
+                }
+            }
+        }
+
+        private EnvDTE.ProjectItems GetTargetProjectItems(EnvDTE.Project p, string folderPath) {
+            var projectFolderPath = AddFromCookiecutterCommand.GetProjectFolder(p);
+            var relativeParentFolder = PathUtils.GetRelativeDirectoryPath(projectFolderPath, folderPath);
+            var relativeParentParts = relativeParentFolder.Split(new char[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
+            var parentItems = p.ProjectItems;
+            foreach (var relativeParentPart in relativeParentParts) {
+                var parentItem = FindItem(parentItems, relativeParentPart);
+                if (parentItem != null) {
+                    parentItems = parentItem.ProjectItems;
+                } else {
+                    return null;
+                }
+            }
+            return parentItems;
+        }
+
+        private EnvDTE.ProjectItem FindItem(EnvDTE.ProjectItems projectItems, string name) {
+            foreach (EnvDTE.ProjectItem item in projectItems) {
+                if (item.Name == name) {
+                    return item;
+                }
+            }
+
+            return null;
         }
 
         private void OpenGeneratedFolder(string folderPath) {
@@ -294,8 +363,8 @@ namespace Microsoft.CookiecutterTools {
             return _cookiecutterPage != null ? _cookiecutterPage.CanUpdateSelection() : false;
         }
 
-        internal void NewSession(string targetFolder) {
-            _cookiecutterPage?.NewSession(targetFolder);
+        internal void NewSession(string targetFolder, string targetProjectUniqueName) {
+            _cookiecutterPage?.NewSession(targetFolder, targetProjectUniqueName);
         }
 
         private void OnContextMenuRequested(object sender, PointEventArgs e) {

@@ -41,6 +41,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private readonly ICookiecutterTelemetry _telemetry;
         private readonly Redirector _outputWindow;
         private readonly Action<string> _openFolder;
+        private readonly Action<string, string> _addToProject;
 
         public static readonly ICommand LoadMore = new RoutedCommand();
         public static readonly ICommand OpenInBrowser = new RoutedCommand();
@@ -94,6 +95,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
         public string UserConfigFilePath { get; set; }
         public bool FixedOutputFolder { get; set; }
+        public string TargetProjectUniqueName { get; set; }
 
         public string InstalledFolderPath { get; set; } = DefaultInstalledFolderPath;
 
@@ -105,7 +107,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public CookiecutterViewModel() {
         }
 
-        public CookiecutterViewModel(ICookiecutterClient cutter, IGitHubClient githubClient, IGitClient gitClient, ICookiecutterTelemetry telemetry, Redirector outputWindow, ILocalTemplateSource installedTemplateSource, ITemplateSource feedTemplateSource, ITemplateSource gitHubTemplateSource, Action<string> openFolder) {
+        public CookiecutterViewModel(ICookiecutterClient cutter, IGitHubClient githubClient, IGitClient gitClient, ICookiecutterTelemetry telemetry, Redirector outputWindow, ILocalTemplateSource installedTemplateSource, ITemplateSource feedTemplateSource, ITemplateSource gitHubTemplateSource, Action<string> openFolder, Action<string, string> addToProject) {
             _cutterClient = cutter;
             _githubClient = githubClient;
             _gitClient = gitClient;
@@ -115,6 +117,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             _installedSource = installedTemplateSource;
             _githubSource = gitHubTemplateSource;
             _openFolder = openFolder;
+            _addToProject = addToProject;
 
             Installed = new CategorizedViewModel(Strings.TemplateCategoryInstalled);
             Recommended = new CategorizedViewModel(Strings.TemplateCategoryRecommended);
@@ -721,6 +724,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 _templateLocalFolderPath = null;
                 OpenInExplorerFolderPath = OutputFolderPath;
                 CreatingStatus = OperationStatus.Succeeded;
+
+                if (!string.IsNullOrEmpty(TargetProjectUniqueName)) {
+                    _addToProject?.Invoke(OpenInExplorerFolderPath, TargetProjectUniqueName);
+                }
 
                 Home();
             } catch (Exception ex) when (!ex.IsCriticalException()) {

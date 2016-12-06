@@ -100,7 +100,7 @@ namespace CookiecutterTests {
             _feedTemplateSource = new FeedTemplateSource(feedUrl);
 
 
-            _vm = new CookiecutterViewModel(_cutterClient, _gitHubClient, _gitClient, _telemetry, _redirector, _installedTemplateSource, _feedTemplateSource, _gitHubTemplateSource, OpenFolder);
+            _vm = new CookiecutterViewModel(_cutterClient, _gitHubClient, _gitClient, _telemetry, _redirector, _installedTemplateSource, _feedTemplateSource, _gitHubTemplateSource, OpenFolder, null);
             _vm.UserConfigFilePath = userConfigFilePath;
             ((CookiecutterClient)_cutterClient).DefaultBasePath = outputProjectFolder;
         }

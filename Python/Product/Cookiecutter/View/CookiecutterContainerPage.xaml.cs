@@ -52,7 +52,7 @@ namespace Microsoft.CookiecutterTools.View {
             InitializeComponent();
         }
 
-        public CookiecutterContainerPage(IServiceProvider provider, Redirector outputWindow, ICookiecutterTelemetry telemetry, IGitClient gitClient, Uri feedUrl, Action<string> openFolder, Action updateCommandUI) {
+        public CookiecutterContainerPage(IServiceProvider provider, Redirector outputWindow, ICookiecutterTelemetry telemetry, IGitClient gitClient, Uri feedUrl, Action<string> openFolder, Action<string, string> addToProject, Action updateCommandUI) {
             _updateCommandUI = updateCommandUI;
 
             _checkForUpdatesTimer = new DispatcherTimer();
@@ -68,7 +68,8 @@ namespace Microsoft.CookiecutterTools.View {
                 new LocalTemplateSource(CookiecutterViewModel.DefaultInstalledFolderPath, gitClient),
                 new FeedTemplateSource(feedUrl),
                 new GitHubTemplateSource(gitHubClient),
-                openFolder
+                openFolder,
+                addToProject
             );
 
             ViewModel.UserConfigFilePath = CookiecutterViewModel.GetUserConfigPath();
@@ -249,12 +250,13 @@ namespace Microsoft.CookiecutterTools.View {
             _searchPage.CheckForUpdates();
         }
 
-        internal void NewSession(string targetFolder) {
+        internal void NewSession(string targetFolder, string targetProjectUniqueName) {
             Home();
 
             if (Directory.Exists(targetFolder)) {
                 ViewModel.OutputFolderPath = targetFolder;
                 ViewModel.FixedOutputFolder = true;
+                ViewModel.TargetProjectUniqueName = targetProjectUniqueName;
             }
         }
 

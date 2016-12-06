@@ -142,9 +142,9 @@ namespace Microsoft.CookiecutterTools {
             return window;
         }
 
-        internal void NewCookiecutterSession(string targetFolder = null) {
+        internal void NewCookiecutterSession(string targetFolder = null, string targetProjectUniqueName = null) {
             var pane = ShowWindowPane(typeof(CookiecutterToolWindow), true) as CookiecutterToolWindow;
-            pane.NewSession(targetFolder);
+            pane.NewSession(targetFolder, targetProjectUniqueName);
         }
 
         internal void RegisterCommands(IEnumerable<Command> commands, Guid cmdSet) {
