@@ -157,11 +157,10 @@ def install_from_ensurepip(ensurepip):
     sys.stdout.flush()
 
 def main():
-    #try:
-    install_from_local_source()
-    return
-    #except Exception:
-    #    pass
+    try:
+        install_from_local_source()
+    except Exception:
+        pass
     
     try:
         import ensurepip

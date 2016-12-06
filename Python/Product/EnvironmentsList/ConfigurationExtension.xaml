@@ -64,8 +64,6 @@
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="auto" />
-                    <RowDefinition Height="auto" />
-                    <RowDefinition Height="auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
                 
@@ -119,20 +117,8 @@
                     </wpf:ConfigurationTextBoxWithHelp.HelpText>
                 </wpf:ConfigurationTextBoxWithHelp>
 
-                <Label Grid.Column="0" Grid.Row="8">Library path</Label>
-                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="9"
-                                                  Text="{Binding LibraryPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                                                  Watermark="e.g. C:\PythonXY\Lib"
-                                                  BrowseButtonStyle="{StaticResource BrowseFolderButton}">
-                    <wpf:ConfigurationTextBoxWithHelp.HelpText>
-                        The library path contains the standard library and the
-                        'site-packages' folder for this environment. Packages installed
-                        into this folder will be analyzed for the completion DB.
-                    </wpf:ConfigurationTextBoxWithHelp.HelpText>
-                </wpf:ConfigurationTextBoxWithHelp>
-
-                <Label Grid.Column="0" Grid.Row="10">Language version</Label>
-                <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="11"
+                <Label Grid.Column="0" Grid.Row="8">Language version</Label>
+                <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="9"
                                                    Value="{Binding VersionName,Mode=TwoWay}"
                                                    Values="{Binding VersionNames}"
                                                    Watermark="Language version">
@@ -143,8 +129,8 @@
                     </wpf:ConfigurationComboBoxWithHelp.HelpText>
                 </wpf:ConfigurationComboBoxWithHelp>
 
-                <Label Grid.Column="0" Grid.Row="12">Architecture</Label>
-                <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="13"
+                <Label Grid.Column="0" Grid.Row="10">Architecture</Label>
+                <wpf:ConfigurationComboBoxWithHelp Grid.Column="0" Grid.Row="11"
                                                    Value="{Binding ArchitectureName,Mode=TwoWay}"
                                                    Values="{Binding ArchitectureNames}"
                                                    Watermark="Architecture">
@@ -156,8 +142,8 @@
                     </wpf:ConfigurationComboBoxWithHelp.HelpText>
                 </wpf:ConfigurationComboBoxWithHelp>
 
-                <Label Grid.Column="0" Grid.Row="14">Path environment variable</Label>
-                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="15"
+                <Label Grid.Column="0" Grid.Row="12">Path environment variable</Label>
+                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0" Grid.Row="13"
                                                   Text="{Binding PathEnvironmentVariable,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                                                   Watermark="e.g. PYTHONPATH">
                     <wpf:ConfigurationTextBoxWithHelp.HelpText>
