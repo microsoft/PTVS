@@ -688,7 +688,16 @@ namespace Microsoft.PythonTools.Project {
 
             Site.GetUIThread().InvokeTask(async () => {
                 await Task.Delay(10);
-                await ReanalyzeProject();
+                for (int retries = 10; retries > 0; --retries) {
+                    try {
+                        await ReanalyzeProject();
+                        return;
+                    } catch (Exception ex) {
+                        // Cannot allow UI here or we will re-enter with async tasks
+                        ex.ReportUnhandledException(Site, GetType(), allowUI: false);
+                    }
+                    await Task.Delay(50);
+                }
             });
 
             try {
