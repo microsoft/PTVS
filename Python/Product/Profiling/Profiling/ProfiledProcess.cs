@@ -120,7 +120,10 @@ namespace Microsoft.PythonTools.Profiling {
                 }
             };
 
-            _process.Start();
+            if (!_useVTune)
+            {
+                _process.Start();
+            }
         }
 
         public event EventHandler ProcessExited;
@@ -168,11 +171,13 @@ namespace Microsoft.PythonTools.Profiling {
 	    VTuneCSVToHTML(outPath, "\\report.csv");
         }
 
-	private string VTuneCSVToHTML(string dirname, string fname) {
-	  IEnumerable<string> records = File.ReadLines(dirname + fname);
+        private string VTuneCSVToHTML(string dirname, string fname)
+        {
+            IEnumerable<string> records = File.ReadLines(dirname + fname);
 
-	  using (StreamWriter outs = new StreamWriter(dirname + fname + ".html")) {
-	    outs.WriteLine(@"<!doctype html>
+            using (StreamWriter outs = new StreamWriter(dirname + fname + ".html"))
+            {
+                outs.WriteLine(@"<!doctype html>
 	    <html>
 	    <head>
 		<title>VTune report</title>
@@ -184,25 +189,28 @@ namespace Microsoft.PythonTools.Profiling {
 	    </head>
 	    <body><table>
 	    ");
-	    foreach (var ri in records.Select((v,i) => new { i, v })) {
+                foreach (var ri in records.Select((v, i) => new { i, v }))
+                {
                     outs.WriteLine("<tr>");
-                    foreach (string f in ri.v.Split(',')) {
-		      if (0 == ri.i)
-                      {
-			outs.WriteLine("<th>" + f + "</th>");
-                      } else
-                      {
-			outs.WriteLine("<td>" + f + "</td>");
-                      }
-		    }
+                    foreach (string f in ri.v.Split(','))
+                    {
+                        if (0 == ri.i)
+                        {
+                            outs.WriteLine("<th>" + f + "</th>");
+                        }
+                        else
+                        {
+                            outs.WriteLine("<td>" + f + "</td>");
+                        }
+                    }
                     outs.WriteLine("</tr>");
-	    }
-	    outs.WriteLine("</table></body>");
-	    outs.WriteLine("</html>");
-	  }
+                }
+                outs.WriteLine("</table></body>");
+                outs.WriteLine("</html>");
+            }
 
-	  return dirname + fname + ".html";
-	}
+            return dirname + fname + ".html";
+        }
 
         private void StartPerfMon(string filename) {
             string perfToolsPath = GetPerfToolsPath();
