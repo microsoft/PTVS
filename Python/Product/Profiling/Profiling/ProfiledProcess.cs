@@ -163,16 +163,16 @@ namespace Microsoft.PythonTools.Profiling {
             using (StreamWriter outs = new StreamWriter(dirname + fname + ".html"))
             {
                 outs.WriteLine(@"<!doctype html>
-	    <html>
-	    <head>
-		<title>VTune report</title>
-		<style>
-		  body: { font-family: sans-serif; }
-		  table, td { border: 1px solid black; }
-		  th { background-color: gray; }
-	        </style>
-	    </head>
-	    <body><table>
+<html>
+<head>
+<title>VTune report</title>
+<style>
+body { font-family: sans-serif; }
+table, td { border: 1px solid black; }
+th { background-color: gray; }
+</style>
+</head>
+<body><table>
 	    ");
                 foreach (var ri in records.Select((v, i) => new { i, v }))
                 {
