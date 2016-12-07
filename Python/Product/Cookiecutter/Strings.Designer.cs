@@ -61,6 +61,15 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Files were successfully created, but there was an issue adding the files to your project.\n{0}.
+        /// </summary>
+        internal static string AddToProjectError {
+            get {
+                return ResourceManager.GetString("AddToProjectError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ----- Check for template updates canceled -----.
         /// </summary>
         internal static string CheckingForAllUpdatesCanceled {

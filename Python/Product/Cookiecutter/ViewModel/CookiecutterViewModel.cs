@@ -747,7 +747,11 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 CreatingStatus = OperationStatus.Succeeded;
 
                 if (!string.IsNullOrEmpty(TargetProjectUniqueName) && AddingToProject) {
-                    _addToProject?.Invoke(OpenInExplorerFolderPath, TargetProjectUniqueName, operationResult);
+                    try {
+                        _addToProject?.Invoke(OpenInExplorerFolderPath, TargetProjectUniqueName, operationResult);
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        _outputWindow.WriteErrorLine(Strings.AddToProjectError.FormatUI(ex.Message));
+                    }
                 }
 
                 Home();

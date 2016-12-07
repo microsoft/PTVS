@@ -218,10 +218,14 @@ namespace Microsoft.CookiecutterTools {
                 if (p != null && p.UniqueName == targetProjectUniqueName) {
                     var parentItems = GetTargetProjectItems(p, folderPath);
 
+                    // Remember which folder items we're adding, because we can't query them
+                    // in F# project system
+                    var folderItems = new Dictionary<string, EnvDTE.ProjectItems>();
                     try {
                         foreach (var createdFolderPath in creationResult.FoldersCreated) {
                             var absoluteFilePath = Path.Combine(folderPath, createdFolderPath);
-                            GetOrCreateFolderItem(parentItems, createdFolderPath);
+                            var folder = GetOrCreateFolderItem(parentItems, createdFolderPath);
+                            folderItems[createdFolderPath] = folder;
                         }
                     } catch (NotImplementedException) {
                         // Some project types such as C++ don't support creating folders
@@ -240,7 +244,9 @@ namespace Microsoft.CookiecutterTools {
                             // Some project types such as F# don't return folders as ProjectItem
                             // so we can't find the folder we just created above. Attempting to
                             // create it generates a ArgumentException saying the folder already exists.
-                            itemParent = parentItems;
+                            if (!folderItems.TryGetValue(Path.GetDirectoryName(createdFilePath), out itemParent)) {
+                                itemParent = parentItems;
+                            }
                         }
 
                         if (FindItemByName(itemParent, Path.GetFileName(createdFilePath)) == null) {
