@@ -324,7 +324,7 @@ namespace Microsoft.PythonTools.Profiling {
                 _stopCommand.Enabled = false;
                 _startCommand.Enabled = true;
                 if (useVTune) {
-                    outPath += "\\report.html";
+                    outPath += "\\report.csv.html";
                 }
                 if (openReport && File.Exists(outPath)) {
                     dte.ItemOperations.OpenFile(outPath);

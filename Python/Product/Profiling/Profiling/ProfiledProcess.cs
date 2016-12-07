@@ -98,8 +98,17 @@ namespace Microsoft.PythonTools.Profiling {
         }
 
         public void StartProfiling(string filename) {
+            string outPath = "";
             if (_useVTune) {
-                StartVTune(filename);
+                string[] opts = new string[_vtuneCollectOptions.Length + 3];
+                _vtuneCollectOptions.CopyTo(opts, 0);
+                outPath = ProcessOutput.QuoteSingleArgument(filename);
+                Directory.CreateDirectory(outPath);
+                string[] addtlOpts = { outPath, _exe, ProcessOutput.QuoteSingleArgument(_args.Trim('"')) };
+                addtlOpts.CopyTo(opts, _vtuneCollectOptions.Length);
+
+                ProcessStartInfo processInfo = new ProcessStartInfo(_vtuneCl, string.Join(" ", opts));
+                _process.StartInfo = processInfo;
             } else {
                 StartPerfMon(filename);
             }
@@ -114,62 +123,38 @@ namespace Microsoft.PythonTools.Profiling {
                         MessageBox.Show(String.Format("Unable to stop performance monitor: {0}", e.Message), "Python Tools for Visual Studio");
                     }
                 }
+                else
+                {
+                    string[] reportAddtlOpts = { outPath, "-csv-delimiter=\",\"", "-format=csv", "-report-output=" + outPath + "\\report.csv" };
+                    string[] reportOpts = new string[_vtuneReportOptions.Length + reportAddtlOpts.Length];
+                    _vtuneReportOptions.CopyTo(reportOpts, 0);
+                    reportAddtlOpts.CopyTo(reportOpts, _vtuneReportOptions.Length);
+                    using (var p = ProcessOutput.RunHiddenAndCapture(_vtuneCl, reportOpts))
+                    {
+                        p.Wait();
+                        if (p.ExitCode != 0)
+                        {
+                            throw new InvalidOperationException("Starting VTune failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}".FormatUI(
+                            Environment.NewLine,
+                            string.Join(Environment.NewLine, p.StandardOutputLines),
+                            string.Join(Environment.NewLine, p.StandardErrorLines)
+                            ));
+                        }
+                    };
+
+                    VTuneCSVToHTML(outPath, "\\report.csv");
+                }
                 var procExited = ProcessExited;
                 if (procExited != null) {
                     procExited(this, EventArgs.Empty);
                 }
             };
 
-            if (!_useVTune)
-            {
-                _process.Start();
-            }
+            _process.Start();
+            
         }
 
         public event EventHandler ProcessExited;
-
-        private void StartVTune(string filename) {
-            if (!File.Exists(_vtuneCl)) {
-                throw new InvalidOperationException("Cannot locate VTune");
-            }
-
-            string[] opts = new string[_vtuneCollectOptions.Length + 3];
-            _vtuneCollectOptions.CopyTo(opts, 0);
-            string outPath = ProcessOutput.QuoteSingleArgument(filename);
-            Directory.CreateDirectory(outPath);
-            string[] addtlOpts = {outPath, _exe, ProcessOutput.QuoteSingleArgument(_args.Trim('"')) };
-            addtlOpts.CopyTo(opts, _vtuneCollectOptions.Length);
-
-            using (var p = ProcessOutput.RunHiddenAndCapture(_vtuneCl, opts)) {
-                p.Wait();
-                if (p.ExitCode != 0 && p.ExitCode != 4 ) { /* FIXME: what does 4 mean? */
-                    throw new InvalidOperationException("Starting VTune failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}".FormatUI(
-                    Environment.NewLine,
-                    string.Join(Environment.NewLine, p.StandardOutputLines),
-                    string.Join(Environment.NewLine, p.StandardErrorLines)
-                    ));
-                }
-            };
-
-            string[] reportAddtlOpts = {outPath, "-csv-delimiter=\",\"", "-format=csv", "-report-output="+ outPath + "\\report.csv"};
-            string[] reportOpts = new string[_vtuneReportOptions.Length + reportAddtlOpts.Length];
-            _vtuneReportOptions.CopyTo(reportOpts, 0);
-            reportAddtlOpts.CopyTo(reportOpts, _vtuneReportOptions.Length);
-            using (var p = ProcessOutput.RunHiddenAndCapture(_vtuneCl, reportOpts))
-            {
-                p.Wait();
-                if (p.ExitCode != 0)
-                {
-                    throw new InvalidOperationException("Starting VTune failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}".FormatUI(
-                    Environment.NewLine,
-                    string.Join(Environment.NewLine, p.StandardOutputLines),
-                    string.Join(Environment.NewLine, p.StandardErrorLines)
-                    ));
-                }
-            };
-
-	    VTuneCSVToHTML(outPath, "\\report.csv");
-        }
 
         private string VTuneCSVToHTML(string dirname, string fname)
         {
