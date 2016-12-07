@@ -51,7 +51,8 @@
                         <TextBlock Text="{Binding}"
                                    TextTrimming="CharacterEllipsis"
                                    Margin="0"
-                                   Foreground="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}" />
+                                   FontSize="10"
+                                   Opacity="0.9" />
                     </Grid>
 
                     <ProgressBar x:Name="RefreshDBProgress"
