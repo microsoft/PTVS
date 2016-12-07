@@ -210,44 +210,41 @@ namespace Microsoft.CookiecutterTools {
             _uiShell.UpdateCommandUI(0);
         }
 
-        private void AddToProject(string folderPath, string targetProjectUniqueName) {
+        private void AddToProject(string folderPath, string targetProjectUniqueName, CreateFilesOperationResult creationResult) {
             var dte = CookiecutterPackage.Instance.DTE;
             var items = (Array)dte.ToolWindows.SolutionExplorer.SelectedItems;
             foreach (var proj in dte.ActiveSolutionProjects) {
                 var p = proj as EnvDTE.Project;
                 if (p != null && p.UniqueName == targetProjectUniqueName) {
-                    AddToProject(folderPath, p);
+                    var parentItems = GetTargetProjectItems(p, folderPath);
+
+                    foreach (var createdFolderPath in creationResult.FoldersCreated) {
+                        var absoluteFilePath = Path.Combine(folderPath, createdFolderPath);
+                        GetOrCreateFolderItem(parentItems, createdFolderPath);
+                    }
+
+                    foreach (var createdFilePath in creationResult.FilesCreated) {
+                        var absoluteFilePath = Path.Combine(folderPath, createdFilePath);
+                        var itemParent = GetOrCreateFolderItem(parentItems, Path.GetDirectoryName(createdFilePath));
+                        if (FindItemByName(itemParent, Path.GetFileName(createdFilePath)) == null) {
+                            itemParent.AddFromFile(absoluteFilePath);
+                        }
+                    }
                 }
             }
         }
 
-        private void AddToProject(string folderPath, EnvDTE.Project p) {
-            var parentItems = GetTargetProjectItems(p, folderPath);
-            AddToProjectItems(parentItems, folderPath);
-        }
-
-        private void AddToProjectItems(EnvDTE.ProjectItems parentItems, string folderPath) {
-            var queue = new Queue<Tuple<EnvDTE.ProjectItems, string>>();
-            queue.Enqueue(Tuple.Create(parentItems, folderPath));
-
-            while (queue.Count > 0) {
-                var item = queue.Dequeue();
-                var pi = item.Item1;
-                var pf = item.Item2;
-
-                var filesToAdd = Directory.GetFiles(pf);
-                var dirsToAdd = Directory.GetDirectories(pf);
-
-                foreach (var filePath in filesToAdd) {
-                    pi.AddFromFile(filePath);
+        private EnvDTE.ProjectItems GetOrCreateFolderItem(EnvDTE.ProjectItems parentItems, string folderPath) {
+            var relativeFolderParts = folderPath.Split(new char[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string relativefolderPart in relativeFolderParts) {
+                var folderItem = FindItemByName(parentItems, relativefolderPart);
+                if (folderItem == null) {
+                    folderItem = parentItems.AddFolder(relativefolderPart);
                 }
-
-                foreach (var dirPath in dirsToAdd) {
-                    var addedFolderItem = pi.AddFromDirectory(dirPath);
-
-                    queue.Enqueue(Tuple.Create(addedFolderItem.ProjectItems, dirPath));
-                }
+                parentItems = folderItem.ProjectItems;
             }
+
+            return parentItems;
         }
 
         private EnvDTE.ProjectItems GetTargetProjectItems(EnvDTE.Project p, string folderPath) {
@@ -256,7 +253,7 @@ namespace Microsoft.CookiecutterTools {
             var relativeParentParts = relativeParentFolder.Split(new char[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
             var parentItems = p.ProjectItems;
             foreach (var relativeParentPart in relativeParentParts) {
-                var parentItem = FindItem(parentItems, relativeParentPart);
+                var parentItem = FindItemByName(parentItems, relativeParentPart);
                 if (parentItem != null) {
                     parentItems = parentItem.ProjectItems;
                 } else {
@@ -266,7 +263,7 @@ namespace Microsoft.CookiecutterTools {
             return parentItems;
         }
 
-        private EnvDTE.ProjectItem FindItem(EnvDTE.ProjectItems projectItems, string name) {
+        private EnvDTE.ProjectItem FindItemByName(EnvDTE.ProjectItems projectItems, string name) {
             foreach (EnvDTE.ProjectItem item in projectItems) {
                 if (item.Name == name) {
                     return item;

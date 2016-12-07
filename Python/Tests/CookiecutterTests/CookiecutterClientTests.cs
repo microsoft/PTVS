@@ -185,7 +185,7 @@ namespace CookiecutterTests {
 
             Directory.CreateDirectory(outputProjectFolder);
 
-            await _client.GenerateProjectAsync(LocalTemplatePath, userConfigFilePath, contextFilePath, outputProjectFolder);
+            await _client.CreateFilesAsync(LocalTemplatePath, userConfigFilePath, contextFilePath, outputProjectFolder);
 
             var reportFilePath = Path.Combine(outputProjectFolder, "report.txt");
             Assert.IsTrue(File.Exists(reportFilePath), "Failed to generate some project files.");

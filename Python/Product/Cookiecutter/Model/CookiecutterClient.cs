@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.VisualStudio;
@@ -127,7 +128,7 @@ namespace Microsoft.CookiecutterTools.Model {
             return items.ToArray();
         }
 
-        public async Task GenerateProjectAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
+        public async Task<CreateFilesOperationResult> CreateFilesAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
             if (localTemplateFolder == null) {
                 throw new ArgumentNullException(nameof(localTemplateFolder));
             }
@@ -144,7 +145,7 @@ namespace Microsoft.CookiecutterTools.Model {
             Directory.CreateDirectory(tempFolder);
 
             var result = await RunRunScript(_redirector, _envInterpreterPath, localTemplateFolder, userConfigFilePath, tempFolder, contextFilePath);
-            MoveToDesiredFolder(outputFolderPath, tempFolder);
+            return MoveToDesiredFolder(outputFolderPath, tempFolder);
         }
 
         public Task<string> GetDefaultOutputFolderAsync(string shortName) {
@@ -344,7 +345,7 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
-        private void MoveToDesiredFolder(string desiredFolder, string tempFolder) {
+        private CreateFilesOperationResult MoveToDesiredFolder(string desiredFolder, string tempFolder) {
             if (!Directory.Exists(desiredFolder)) {
                 Directory.CreateDirectory(desiredFolder);
             }
@@ -358,31 +359,73 @@ namespace Microsoft.CookiecutterTools.Model {
                 throw new InvalidOperationException("Cookiecutter generated files must have a templated folder.");
             }
 
-            MoveFilesAndFolders(generatedFolder, desiredFolder);
+            var res = MoveFilesAndFolders(generatedFolder, desiredFolder);
 
             try {
                 Directory.Delete(tempFolder);
             } catch (IOException) {
             }
+
+            return res;
         }
 
-        private void CopyFiles(string sourceFolderPath, string targetFolderPath) {
+        private CreateFilesOperationResult MoveFilesAndFolders(string generatedFolder, string targetFolderPath) {
+            List<string> createdFolders = new List<string>();
+            List<string> createdFiles = new List<string>();
+            List<ReplacedFile> replacedFiles = new List<ReplacedFile>();
+
             Directory.CreateDirectory(targetFolderPath);
 
-            foreach (var sourceFilePath in PathUtils.EnumerateFiles(sourceFolderPath, recurse: false, fullPaths: true)) {
-                var fileName = PathUtils.GetFileOrDirectoryName(sourceFilePath);
-                var targetFilePath = Path.Combine(targetFolderPath, fileName);
-                File.Copy(sourceFilePath, targetFilePath, true);
+            foreach (var folderPath in PathUtils.EnumerateDirectories(generatedFolder, recurse: true, fullPaths: false)) {
+                createdFolders.Add(folderPath);
+
+                Directory.CreateDirectory(Path.Combine(targetFolderPath, folderPath));
             }
+
+            foreach (var filePath in PathUtils.EnumerateFiles(generatedFolder, recurse: true, fullPaths: false)) {
+                createdFiles.Add(filePath);
+
+                string targetFilePath = Path.Combine(targetFolderPath, filePath);
+                string generatedFilePath = Path.Combine(generatedFolder, filePath);
+
+                if (File.Exists(targetFilePath)) {
+                    if (!AreFilesSame(generatedFilePath, targetFilePath)) {
+                        // Need to backup the user's file before overwriting it
+                        string backupFilePath = GetBackupFilePath(targetFilePath);
+                        File.Move(targetFilePath, backupFilePath);
+                        File.Move(generatedFilePath, targetFilePath);
+                        replacedFiles.Add(new ReplacedFile(filePath, PathUtils.GetRelativeFilePath(targetFolderPath, backupFilePath)));
+                    }
+                } else {
+                    File.Move(generatedFilePath, targetFilePath);
+                }
+            }
+
+            return new Model.CreateFilesOperationResult(createdFolders.ToArray(), createdFiles.ToArray(), replacedFiles.ToArray());
         }
 
-        private void MoveFilesAndFolders(string sourceFolderPath, string targetFolderPath) {
-            var subFolderRelativePaths = PathUtils.EnumerateDirectories(sourceFolderPath, recurse: true, fullPaths: false).Concat(new string[] { "." });
-            foreach (var subFolderRelativePath in subFolderRelativePaths) {
-                CopyFiles(Path.Combine(sourceFolderPath, subFolderRelativePath), Path.Combine(targetFolderPath, subFolderRelativePath));
+        private string GetBackupFilePath(string filePath) {
+            return PathUtils.GetAvailableFilename(
+                Path.GetDirectoryName(filePath),
+                Path.GetFileNameWithoutExtension(filePath) + ".bak",
+                Path.GetExtension(filePath)
+            );
+        }
+
+        private bool AreFilesSame(string file1Path, string file2Path) {
+            if (new FileInfo(file1Path).Length != new FileInfo(file2Path).Length) {
+                return false;
             }
 
-            Directory.Delete(sourceFolderPath, true);
+            // Maybe change this to be calculating async, or just comparing streams async
+            return HashFile(file1Path).SequenceEqual(HashFile(file2Path));
+        }
+
+        private byte[] HashFile(string filePath) {
+            var sha = SHA512.Create();
+            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read)) {
+                return sha.ComputeHash(stream);
+            }
         }
     }
 }

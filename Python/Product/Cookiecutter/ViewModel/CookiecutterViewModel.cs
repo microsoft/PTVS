@@ -41,7 +41,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private readonly ICookiecutterTelemetry _telemetry;
         private readonly Redirector _outputWindow;
         private readonly Action<string> _openFolder;
-        private readonly Action<string, string> _addToProject;
+        private readonly Action<string, string, CreateFilesOperationResult> _addToProject;
 
         public static readonly ICommand LoadMore = new RoutedCommand();
         public static readonly ICommand OpenInBrowser = new RoutedCommand();
@@ -108,7 +108,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public CookiecutterViewModel() {
         }
 
-        public CookiecutterViewModel(ICookiecutterClient cutter, IGitHubClient githubClient, IGitClient gitClient, ICookiecutterTelemetry telemetry, Redirector outputWindow, ILocalTemplateSource installedTemplateSource, ITemplateSource feedTemplateSource, ITemplateSource gitHubTemplateSource, Action<string> openFolder, Action<string, string> addToProject) {
+        public CookiecutterViewModel(ICookiecutterClient cutter, IGitHubClient githubClient, IGitClient gitClient, ICookiecutterTelemetry telemetry, Redirector outputWindow, ILocalTemplateSource installedTemplateSource, ITemplateSource feedTemplateSource, ITemplateSource gitHubTemplateSource, Action<string> openFolder, Action<string, string, CreateFilesOperationResult> addToProject) {
             _cutterClient = cutter;
             _githubClient = githubClient;
             _gitClient = gitClient;
@@ -721,7 +721,14 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 _outputWindow.WriteLine(String.Empty);
                 _outputWindow.WriteLine(Strings.RunningTemplateStarted.FormatUI(selection.DisplayName));
 
-                await _cutterClient.GenerateProjectAsync(_templateLocalFolderPath, UserConfigFilePath, contextFilePath, OutputFolderPath);
+                var operationResult = await _cutterClient.CreateFilesAsync(_templateLocalFolderPath, UserConfigFilePath, contextFilePath, OutputFolderPath);
+
+                if (operationResult.FilesReplaced.Length > 0) {
+                    _outputWindow.WriteLine(Strings.ReplacedFilesHeader);
+                    foreach (var replacedfile in operationResult.FilesReplaced) {
+                        _outputWindow.WriteLine(Strings.ReplacedFile.FormatUI(replacedfile.OriginalFilePath, replacedfile.BackupFilePath));
+                    }
+                }
 
                 try {
                     File.Delete(contextFilePath);
@@ -739,8 +746,8 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 OpenInExplorerFolderPath = OutputFolderPath;
                 CreatingStatus = OperationStatus.Succeeded;
 
-                if (!string.IsNullOrEmpty(TargetProjectUniqueName)) {
-                    _addToProject?.Invoke(OpenInExplorerFolderPath, TargetProjectUniqueName);
+                if (!string.IsNullOrEmpty(TargetProjectUniqueName) && AddingToProject) {
+                    _addToProject?.Invoke(OpenInExplorerFolderPath, TargetProjectUniqueName, operationResult);
                 }
 
                 Home();
