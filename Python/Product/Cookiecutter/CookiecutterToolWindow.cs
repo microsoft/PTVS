@@ -218,14 +218,31 @@ namespace Microsoft.CookiecutterTools {
                 if (p != null && p.UniqueName == targetProjectUniqueName) {
                     var parentItems = GetTargetProjectItems(p, folderPath);
 
-                    foreach (var createdFolderPath in creationResult.FoldersCreated) {
-                        var absoluteFilePath = Path.Combine(folderPath, createdFolderPath);
-                        GetOrCreateFolderItem(parentItems, createdFolderPath);
+                    try {
+                        foreach (var createdFolderPath in creationResult.FoldersCreated) {
+                            var absoluteFilePath = Path.Combine(folderPath, createdFolderPath);
+                            GetOrCreateFolderItem(parentItems, createdFolderPath);
+                        }
+                    } catch (NotImplementedException) {
+                        // Some project types such as C++ don't support creating folders
                     }
 
                     foreach (var createdFilePath in creationResult.FilesCreated) {
                         var absoluteFilePath = Path.Combine(folderPath, createdFilePath);
-                        var itemParent = GetOrCreateFolderItem(parentItems, Path.GetDirectoryName(createdFilePath));
+                        EnvDTE.ProjectItems itemParent;
+                        try {
+                            itemParent = GetOrCreateFolderItem(parentItems, Path.GetDirectoryName(createdFilePath));
+                        } catch (NotImplementedException) {
+                            // Some project types such as C++ don't support creating folders
+                            // so we'll add everything flat
+                            itemParent = parentItems;
+                        } catch (ArgumentException) {
+                            // Some project types such as F# don't return folders as ProjectItem
+                            // so we can't find the folder we just created above. Attempting to
+                            // create it generates a ArgumentException saying the folder already exists.
+                            itemParent = parentItems;
+                        }
+
                         if (FindItemByName(itemParent, Path.GetFileName(createdFilePath)) == null) {
                             itemParent.AddFromFile(absoluteFilePath);
                         }
