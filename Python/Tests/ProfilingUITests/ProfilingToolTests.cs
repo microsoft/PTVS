@@ -23,9 +23,9 @@ namespace ProfilingUITests {
         public TestContext TestContext { get; set; }
 
         [TestMethod]
-        public void BuildCollectCommand()
+        public void BuildCollectTool()
         {
-            VTuneCollectCommand c = new VTuneCollectCommand(VTuneCollectCommand.collectType.hotspots);
+            VTuneCollectTool c = new VTuneCollectTool(VTuneCollectTool.collectType.hotspots);
             Assert.AreEqual("C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017\\bin32\\amplxe-cl.exe -collect hotspots", c.get());
             c.setDuration(5);
             c.setUserDataDir("C:\\temp\\out");
@@ -33,9 +33,9 @@ namespace ProfilingUITests {
         }
 
         [TestMethod]
-        public void BuildReportCommand()
+        public void BuildReportTool()
         {
-            VTuneReportCommand c = new VTuneReportCommand(VTuneReportCommand.collectType.hotspots);
+            VTuneReportTool c = new VTuneReportTool(VTuneReportTool.collectType.hotspots);
             Assert.AreEqual("C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017\\bin32\\amplxe-cl.exe -report hotspots -report-output=report.csv -format=csv -csv-delimiter=,", c.get());
             c.setResultDir("r000hs");
             Assert.AreEqual("C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017\\bin32\\amplxe-cl.exe -r r000hs -report hotspots -report-output=report.csv -format=csv -csv-delimiter=,", c.get());

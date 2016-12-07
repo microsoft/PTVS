@@ -14,11 +14,13 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections;
+using System.IO;
 using System.Text;
 
 namespace Microsoft.PythonTools.Profiling {
-    public abstract class VTuneCommand {
+    public abstract class VTuneTool {
         private static readonly string _vtunepath = "C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017";
         private static readonly string _vtuneCl = _vtunepath + "\\bin32\\amplxe-cl.exe";
 
@@ -26,6 +28,10 @@ namespace Microsoft.PythonTools.Profiling {
 
         public abstract string getMode();
         public virtual string get() {
+            if (!File.Exists(_vtuneCl))
+            {
+                throw new InvalidOperationException("Cannot locate VTune");
+            }
             StringBuilder cmd = new StringBuilder(_vtuneCl);
 
             foreach (DictionaryEntry opt in options)
@@ -38,11 +44,11 @@ namespace Microsoft.PythonTools.Profiling {
         }
     }
 
-    public sealed class VTuneCollectCommand : VTuneCommand {
+    public sealed class VTuneCollectTool : VTuneTool {
         public enum collectType { general, hotspots };
         private collectType t = collectType.hotspots;
 
-        public VTuneCollectCommand(collectType _t) {
+        public VTuneCollectTool(collectType _t) {
             t = _t;
             options.Add(getMode(), "");
         }
@@ -82,11 +88,11 @@ namespace Microsoft.PythonTools.Profiling {
         }
     }
     
-    public sealed class VTuneReportCommand : VTuneCommand {
+    public sealed class VTuneReportTool : VTuneTool {
         public enum collectType { callstacks, hotspots, hwevents, topdown };
         private collectType t = collectType.callstacks;
 
-        public VTuneReportCommand(collectType _t) {
+        public VTuneReportTool(collectType _t) {
             t = _t;
             options.Add(getMode(), "");
             options.Add("-format=", "csv");
