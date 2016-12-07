@@ -14,7 +14,8 @@
       mc:Ignorable="d" 
       d:DataContext="{Binding Source={d:DesignData Source=CookiecutterControlDesignData.xaml}}"
       d:DesignHeight="550" d:DesignWidth="300"
-      img:ImageThemingUtilities.ImageBackgroundColor="{Binding Background,RelativeSource={RelativeSource Self},Converter={StaticResource BrushToColorConverter}}"
+      Background="{DynamicResource {x:Static wpf:Controls.BackgroundKey}}"
+      img:ImageThemingUtilities.ImageBackgroundColor="{DynamicResource {x:Static wpf:Controls.BackgroundColorKey}}"
       Title="Search">
     <Page.CommandBindings>
         <CommandBinding Command="{x:Static vm:CookiecutterViewModel.LoadMore}"
@@ -68,13 +69,6 @@
                     <wpf:Lambda x:Key="EmptyStringToNotVisibleOrCollapsed">(string s) => string.IsNullOrEmpty(s) ? Visibility.Collapsed : Visibility.Visible</wpf:Lambda>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
-
-            <!-- see also https://msdn.microsoft.com/en-us/library/ms752048(v=vs.100).aspx -->
-            <Style TargetType="{x:Type TreeView}">
-                <Setter Property="Background" Value="{DynamicResource {x:Static wpf:Controls.BackgroundKey}}"/>
-                <Setter Property="BorderBrush" Value="{DynamicResource {x:Static wpf:Controls.ControlBorderKey}}"/>
-                <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}"/>
-            </Style>
         </ResourceDictionary>
     </Page.Resources>
     <Grid>
@@ -136,15 +130,10 @@
         <TreeView Grid.Row="2"
                   Margin="4 4 0 8"
                   ItemsSource="{Binding Path=SearchResults}"
-                  SelectedItemChanged="TreeView_SelectedItemChanged"
-                  >
+                  SelectedItemChanged="TreeView_SelectedItemChanged">
             <TreeView.Resources>
-                <Style x:Key="TreeViewItemTextBlock" TargetType="{x:Type TextBlock}">
-                    <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}" />
-                </Style>
                 <HierarchicalDataTemplate DataType="{x:Type vm:CategorizedViewModel}" ItemsSource="{Binding Path=Templates}">
                     <TextBlock Margin="0 4 0 4"
-                               Style="{StaticResource TreeViewItemTextBlock}"
                                FontWeight="Bold"
                                Text="{Binding Path=DisplayName}"/>
                 </HierarchicalDataTemplate>
@@ -154,7 +143,6 @@
                                             Margin="0 0 0 2"
                                             Moniker="{x:Static rc:ImageMonikers.CookiecutterTemplate}" />
                         <TextBlock Margin="3 3"
-                                   Style="{StaticResource TreeViewItemTextBlock}"
                                    Text="{Binding Path=DisplayName}" />
                     </StackPanel>
                     <DataTemplate.Triggers>
@@ -171,12 +159,11 @@
                                             Moniker="{x:Static rc:ImageMonikers.CookiecutterTemplateWarning}">
                         </imaging:CrispImage>
                         <TextBlock Margin="3 3"
-                                   Style="{StaticResource TreeViewItemTextBlock}"
                                    Text="{Binding Path=ErrorDescription}">
                             <TextBlock.ToolTip>
                                 <TextBlock TextWrapping="Wrap" Text="{Binding Path=ErrorDetails}"/>
                             </TextBlock.ToolTip>
-                    </TextBlock>
+                        </TextBlock>
                     </StackPanel>
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type vm:LoadingViewModel}">
@@ -186,12 +173,11 @@
                                             Moniker="{x:Static imagecatalog:KnownMonikers.Refresh}">
                         </imaging:CrispImage>
                         <TextBlock Margin="3 3"
-                                   Style="{StaticResource TreeViewItemTextBlock}"
                                    Text="Loading...">
                             <TextBlock.ToolTip>
                                 <TextBlock TextWrapping="Wrap" Text="Enumerating templates. This may take a few seconds."/>
                             </TextBlock.ToolTip>
-                    </TextBlock>
+                        </TextBlock>
                     </StackPanel>
                 </DataTemplate>
                 <DataTemplate DataType="{x:Type vm:ContinuationViewModel}">
@@ -207,14 +193,14 @@
                                 CommandParameter="{Binding Path=ContinuationToken,Mode=OneWay}"
                                 HorizontalAlignment="Left">
                             <TextBlock>
-                                    Load more...
+                                Load more...
                             </TextBlock>
                         </Button>
                     </StackPanel>
                 </DataTemplate>
             </TreeView.Resources>
             <TreeView.ItemContainerStyle>
-                <Style TargetType="{x:Type TreeViewItem}">
+                <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Type TreeViewItem}}">
                     <Setter Property="IsExpanded" Value="True" />
                     <Setter Property="Focusable" Value="{Binding Selectable}"/>
                     <EventSetter Event="MouseDoubleClick" Handler="OnItemMouseDoubleClick" />
@@ -333,8 +319,17 @@
                    Width="96"
                    Height="96"
                    Stretch="Uniform"
+                   RenderOptions.BitmapScalingMode="HighQuality"
                    Cursor="Hand"
-                   MouseLeftButtonDown="Image_MouseLeftButtonDown"/>
+                   MouseLeftButtonDown="Image_MouseLeftButtonDown">
+                <Image.ToolTip>
+                    <TextBlock>
+                        <Run>Visit</Run>
+                        <Run Text="{Binding SelectedTemplate.RepositoryOwner,FallbackValue='the creator',Mode=OneWay}" />
+                        <Run>on github</Run>
+                    </TextBlock>
+                </Image.ToolTip>
+            </Image>
             <Grid Grid.Column="1">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>
@@ -357,20 +352,20 @@
                 </ScrollViewer>
                 <StackPanel Grid.Row="1" Orientation="Horizontal" Visibility="{Binding Path=SelectedTemplate, Converter={StaticResource NullToNotVisible}}">
                     <Button Margin="8"
-                    Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
-                    CommandParameter="{Binding SelectedTemplate.GitHubHomeUrl,Mode=OneWay}"
-                    ToolTip="{Binding SelectedTemplate.GitHubHomeUrl,Mode=OneWay}"
-                    Style="{StaticResource NavigationButton}">GitHub</Button>
+                            Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
+                            CommandParameter="{Binding SelectedTemplate.GitHubHomeUrl,Mode=OneWay}"
+                            ToolTip="{Binding SelectedTemplate.GitHubHomeUrl,Mode=OneWay}"
+                            Style="{StaticResource NavigationButton}">GitHub</Button>
                     <Button Margin="8"
-                    Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
-                    CommandParameter="{Binding SelectedTemplate.GitHubIssuesUrl,Mode=OneWay}"
-                    ToolTip="{Binding SelectedTemplate.GitHubIssuesUrl,Mode=OneWay}"
-                    Style="{StaticResource NavigationButton}">Issues</Button>
+                            Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
+                            CommandParameter="{Binding SelectedTemplate.GitHubIssuesUrl,Mode=OneWay}"
+                            ToolTip="{Binding SelectedTemplate.GitHubIssuesUrl,Mode=OneWay}"
+                            Style="{StaticResource NavigationButton}">Issues</Button>
                     <Button Margin="8"
-                    Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
-                    CommandParameter="{Binding SelectedTemplate.GitHubWikiUrl,Mode=OneWay}"
-                    ToolTip="{Binding SelectedTemplate.GitHubWikiUrl,Mode=OneWay}"
-                    Style="{StaticResource NavigationButton}">Wiki</Button>
+                            Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
+                            CommandParameter="{Binding SelectedTemplate.GitHubWikiUrl,Mode=OneWay}"
+                            ToolTip="{Binding SelectedTemplate.GitHubWikiUrl,Mode=OneWay}"
+                            Style="{StaticResource NavigationButton}">Wiki</Button>
                 </StackPanel>
             </Grid>
         </Grid>
