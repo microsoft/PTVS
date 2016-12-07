@@ -36,8 +36,9 @@ namespace Microsoft.PythonTools.Profiling {
         private readonly PythonToolsService _pyService;
         private readonly bool _useVTune;
 
-        private static readonly string _vtunepath = "C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017";
-        private static readonly string _vtuneCl = _vtunepath + "\\bin32\\amplxe-cl.exe";
+        // Python mixed mode profiling is only available on VTune 2017 or later
+        private static readonly string _vtunePath = "C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017";
+        private static readonly string _vtuneCl = _vtunePath + "\\bin32\\amplxe-cl.exe";
         private static readonly string[] _vtuneCollectOptions =  {"-collect hotspots", "-d 5", "-user-data-dir="};
         private static readonly string[] _vtuneReportOptions = {"-report hotspots", "-r r000hs",  "-user-data-dir="}; // TODO: Check for latest run
 
@@ -97,13 +98,21 @@ namespace Microsoft.PythonTools.Profiling {
             _process.Dispose();
         }
 
-        public void StartProfiling(string filename) {
+        public bool StartProfiling(string filename) {
             string outPath = "";
             if (_useVTune) {
                 string[] opts = new string[_vtuneCollectOptions.Length + 3];
                 _vtuneCollectOptions.CopyTo(opts, 0);
                 outPath = ProcessOutput.QuoteSingleArgument(filename);
-                Directory.CreateDirectory(outPath);
+                try
+                {
+                    Directory.CreateDirectory(outPath);
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show(String.Format("Unable to create VTune output directory: {0}", e.Message), "Python Tools for Visual Studio");
+                    return false;
+                }
                 string[] addtlOpts = { outPath, _exe, ProcessOutput.QuoteSingleArgument(_args.Trim('"')) };
                 addtlOpts.CopyTo(opts, _vtuneCollectOptions.Length);
 
@@ -134,7 +143,7 @@ namespace Microsoft.PythonTools.Profiling {
                         p.Wait();
                         if (p.ExitCode != 0)
                         {
-                            throw new InvalidOperationException("Starting VTune failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}".FormatUI(
+                            throw new InvalidOperationException("Starting VTune report failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}".FormatUI(
                             Environment.NewLine,
                             string.Join(Environment.NewLine, p.StandardOutputLines),
                             string.Join(Environment.NewLine, p.StandardErrorLines)
@@ -142,7 +151,7 @@ namespace Microsoft.PythonTools.Profiling {
                         }
                     };
 
-                    VTuneCSVToHTML(outPath, "\\report.csv");
+                    VTuneCSVToHTML(outPath + "\\report.csv");
                 }
                 var procExited = ProcessExited;
                 if (procExited != null) {
@@ -150,17 +159,16 @@ namespace Microsoft.PythonTools.Profiling {
                 }
             };
 
-            _process.Start();
-            
+            return _process.Start();            
         }
 
         public event EventHandler ProcessExited;
 
-        private string VTuneCSVToHTML(string dirname, string fname)
+        private string VTuneCSVToHTML(string csvpath)
         {
-            IEnumerable<string> records = File.ReadLines(dirname + fname);
+            IEnumerable<string> records = File.ReadLines(csvpath);
 
-            using (StreamWriter outs = new StreamWriter(dirname + fname + ".html"))
+            using (StreamWriter outs = new StreamWriter(csvpath + ".html"))
             {
                 outs.WriteLine(@"<!doctype html>
 <html>
@@ -194,7 +202,7 @@ th { background-color: gray; }
                 outs.WriteLine("</html>");
             }
 
-            return dirname + fname + ".html";
+            return csvpath + ".html";
         }
 
         private void StartPerfMon(string filename) {

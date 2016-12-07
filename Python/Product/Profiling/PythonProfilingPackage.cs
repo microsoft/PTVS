@@ -310,11 +310,16 @@ namespace Microsoft.PythonTools.Profiling {
 
             string baseName = Path.GetFileNameWithoutExtension(session.Filename);
             string date = DateTime.Now.ToString("yyyyMMdd");
-            string outPath = Path.Combine(Path.GetTempPath(), baseName + "_" + date + ".vsp");
+            string ext = ".vsp"; 
+            if (useVTune)
+            {
+                ext = ".vt";
+            }
+            string outPath = Path.Combine(Path.GetTempPath(), baseName + "_" + date + ext);
 
             int count = 1;
             while (File.Exists(outPath)) {
-                outPath = Path.Combine(Path.GetTempPath(), baseName + "_" + date + "(" + count + ").vsp");
+                outPath = Path.Combine(Path.GetTempPath(), baseName + "_" + date + "(" + count + ")" + ext);
                 count++;
             }
 
