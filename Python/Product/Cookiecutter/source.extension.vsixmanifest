@@ -1,13 +1,13 @@
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
     <Identity Id="7B469DDE-BFCC-4975-9C6E-154583ED3672" Version="3.0" Language="en-US" Publisher="Microsoft Corporation" />
-    <DisplayName>Cookiecutter Tools</DisplayName>
-    <Description xml:space="preserve">Provides cookiecutter integration.</Description>
+    <DisplayName>Cookiecutter</DisplayName>
+    <Description xml:space="preserve">Provides tools for finding, instantiating and customizing templates in cookiecutter format.</Description>
     <MoreInfo>http://aka.ms/ptvs</MoreInfo>
-    <License>Python Tools for VS License.rtf</License>
+    <License>License_en-US.rtf</License>
     <GettingStartedGuide>http://aka.ms/ptvstutorial</GettingStartedGuide>
-    <Icon>PythonProject.ico</Icon>
-    <PreviewImage>PythonProjectBig.ico</PreviewImage>
+    <Icon>Resources\Cookiecutter_32x.png</Icon>
+    <PreviewImage>Resources\CookiecutterTemplate_200x.png</PreviewImage>
   </Metadata>
   <Installation SystemComponent="true" AllUsers="true" InstalledByMsi="true">
     <InstallationTarget Id="Microsoft.VisualStudio.Community" Version="[14.0,16.0)" />

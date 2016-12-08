@@ -21,7 +21,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 
-[assembly: AssemblyTitle("Python Tools for Visual Studio - TestAdapter Execution Extension")]
+[assembly: AssemblyTitle("Visual Studio - Python test execution engine")]
 [assembly: AssemblyDescription("Provides Python test execution support.")]
 
 [assembly: ComVisible(false)]

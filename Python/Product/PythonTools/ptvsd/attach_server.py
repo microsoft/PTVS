@@ -93,8 +93,8 @@ class AttachAlreadyEnabledError(Exception):
 
 
 def enable_attach(secret, address = ('0.0.0.0', DEFAULT_PORT), certfile = None, keyfile = None, redirect_output = True):
-    """Enables Python Tools for Visual Studio to attach to this process remotely
-    to debug Python code.
+    """Enables Visual Studio to attach to this process remotely to debug Python
+    code.
 
     Parameters
     ----------

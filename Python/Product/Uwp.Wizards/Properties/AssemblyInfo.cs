@@ -19,8 +19,8 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Python Tools for Visual Studio UWP integration")]
-[assembly: AssemblyDescription("Provides support for Python-based UWP projects.")]
+[assembly: AssemblyTitle("Visual Studio - Python UWP project wizards")]
+[assembly: AssemblyDescription("Provides project wizards for Python UWP projects.")]
 
 [assembly: AssemblyVersion("3.0.0.0")]
 

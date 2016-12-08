@@ -66,10 +66,10 @@
                 Description="Python Tools for Visual Studio Debugger package"
                 Target="[Dir_ptvsd]" />
       <Shortcut Id="LicenseShortcut"
-                Name="PTVS License"
+                Name="License"
                 Directory="Dir_StartMenu"
                 Description="Python Tools for Visual Studio License Agreement"
-                Target="[#File_VS_Python_Tools_for_VS_License.rtf]"/>
+                Target="[#File_VS_License_en_US.rtf]"/>
       <RegistryValue Root='HKCU' Key='SOFTWARE\Microsoft\PythonTools\$(var.VSTargetVersion)'
                      Type='string'
                      Name='ptvsd'

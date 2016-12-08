@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Profiling {
                     // Exited event is fired on a random thread pool thread, we need to handle exceptions.
                     StopPerfMon();
                 } catch (InvalidOperationException e) {
-                    MessageBox.Show(String.Format("Unable to stop performance monitor: {0}", e.Message), "Python Tools for Visual Studio");
+                    MessageBox.Show("Unable to stop performance monitor: {0}".FormatUI(e.Message), Strings.ProductTitle);
                 }
                 var procExited = ProcessExited;
                 if (procExited != null) {

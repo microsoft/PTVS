@@ -189,11 +189,10 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                         string errText;
                         switch (connEx.Error) {
                             case ConnErrorMessages.RemoteUnsupportedServer:
-                                errText = string.Format("Remote server at {0} is not a Python Tools for Visual Studio remote debugging server, or its version is not supported.", port.Uri);
+                                errText = Strings.RemoteUnsupportedServer_Host.FormatUI(port.Uri);
                                 break;
                             case ConnErrorMessages.RemoteSecretMismatch:
-                                errText = string.Format("Secret '{0}' did not match the server secret at {1}. Make sure that the secret is specified correctly in the Qualifier textbox, e.g. tcp://secret@localhost.",
-                                    port.Uri.UserInfo, new UriBuilder(port.Uri) { UserName = null, Password = null }.Uri);
+                                errText = Strings.RemoteSecretMismatch_Host.FormatUI(new UriBuilder(port.Uri) { UserName = null, Password = null }.Uri);
                                 break;
                             case ConnErrorMessages.RemoteSslError:
                                 // User has already got a warning dialog and clicked "Cancel" on that, so no further prompts are needed.
@@ -207,16 +206,16 @@ namespace Microsoft.PythonTools.Debugger.Remote {
                                         if (webEx != null) {
                                             var httpResponse = webEx.Response as HttpWebResponse;
                                             if (httpResponse != null && httpResponse.StatusCode == HttpStatusCode.ServiceUnavailable) {
-                                                errText = string.Format("Could not connect to remote Python process at {0}. Make sure that web sockets are enabled for the corresponding web site in Azure portal.", port.Uri);
+                                                errText = Strings.RemoteAzureServiceUnavailable_Host.FormatUI(port.Uri);
                                                 break;
                                             }
                                         }
                                     }
 
-                                    errText = string.Format("Could not connect to remote Python process at {0}. Make sure that the process is running, and has called ptvsd.enable_attach().", port.Uri);
+                                    errText = Strings.RemoteServiceUnavailable_Host.FormatUI(port.Uri);
                                     for (var ex = connEx.InnerException; ex != null; ex = ex.InnerException) {
                                         if (ex.InnerException == null) {
-                                            errText += "\r\n\r\nAdditional information:\r\n" + ex.Message;
+                                            errText += "\r\n\r\n{0}\r\n{1}".FormatUI(Strings.AdditionalInformation, ex.Message);
                                         }
                                     }
                                     break;

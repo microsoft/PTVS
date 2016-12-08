@@ -18,7 +18,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 
-[assembly: AssemblyTitle("Python Tools for Visual Studio environments host")]
+[assembly: AssemblyTitle("Visual Studio - Python environments host")]
 [assembly: AssemblyDescription("A standalone application for testing the environments list.")]
 
 

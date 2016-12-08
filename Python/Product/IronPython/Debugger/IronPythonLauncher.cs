@@ -88,7 +88,7 @@ namespace Microsoft.IronPythonTools.Debugger {
             //if (factory.Id == _cpyInterpreterGuid || factory.Id == _cpy64InterpreterGuid) {
             //    MessageBox.Show(
             //        "The project is currently set to use the .NET debugger for IronPython debugging but the project is configured to start with a CPython interpreter.\r\n\r\nTo fix this change the debugger type in project properties->Debug->Launch mode.\r\nIf IronPython is not an available interpreter you may need to download it from http://ironpython.codeplex.com.",
-            //        "Python Tools for Visual Studio");
+            //        "Visual Studio");
             //    return VSConstants.S_OK;
             //}
 
@@ -98,7 +98,7 @@ namespace Microsoft.IronPythonTools.Debugger {
                 try {
                     StartSilverlightApp(config, debug);
                 } catch (ChironNotFoundException ex) {
-                    MessageBox.Show(ex.Message, "Python Tools for Visual Studio");
+                    MessageBox.Show(ex.Message, "Visual Studio");
                 }
                 return VSConstants.S_OK;
             }
