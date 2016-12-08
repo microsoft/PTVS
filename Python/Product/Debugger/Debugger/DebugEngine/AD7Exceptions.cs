@@ -24,11 +24,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         IDebugExceptionEvent150,
 #endif
         IDebugExceptionEvent2 {
-//#if DEV15_OR_LATER
-//        public const string IID = "01096447-64AE-4ED1-86E8-08C0A3D889DF";
-//#else
         public const string IID = "51A94113-8788-4A54-AE15-08B74FF922D0";
-//#endif
         private readonly AD7Engine _engine;
         private readonly PythonException _exception;
 
@@ -60,8 +56,8 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             ppDetails = new AD7DebugExceptionDetails(_exception);
             return VSConstants.S_OK;
         }
-#endif
 
+#endif
         #endregion
 
         #region IDebugExceptionEvent2 Members
