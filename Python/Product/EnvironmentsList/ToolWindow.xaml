@@ -21,9 +21,12 @@
         <CommandBinding Command="{x:Static l:DBExtension.StartRefreshDB}"
                         CanExecute="StartRefreshDB_CanExecute"
                         Executed="StartRefreshDB_Executed" />
-        <CommandBinding Command="ApplicationCommands.New"
-                        CanExecute="AddCustomEnvironment_CanExecute"
-                        Executed="AddCustomEnvironment_Executed" />
+        <CommandBinding Command="{x:Static l:ConfigurationEnvironmentView.Added}"
+                        CanExecute="ConfigurableViewAdded_CanExecute"
+                        Executed="ConfigurableViewAdded_Executed" />
+        <CommandBinding Command="{x:Static l:EnvironmentPathsExtension.ConfigureEnvironment}"
+                        CanExecute="ConfigureEnvironment_CanExecute"
+                        Executed="ConfigureEnvironment_Executed" />
     </UserControl.CommandBindings>
 
     <UserControl.Resources>
@@ -92,7 +95,7 @@
             </Style>
         </Grid.Resources>
 
-        <Grid x:Name="HorizontalLayout">
+        <Grid x:Name="HorizontalLayout" Visibility="Collapsed">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="EnvironmentsColumn" Width="auto" />
                 <ColumnDefinition x:Name="ExtensionsColumn" Width="auto" />

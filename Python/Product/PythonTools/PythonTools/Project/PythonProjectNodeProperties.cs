@@ -137,5 +137,16 @@ namespace Microsoft.PythonTools.Project {
                 }
             }
         }
+
+        [Browsable(false)]
+        public override VSLangProj.prjOutputType OutputType {
+            get {
+                // This is probably not entirely true, but it helps us deal with
+                // extensions like Azure Tools that try to figure out whether we
+                // support WebForms.
+                return VSLangProj.prjOutputType.prjOutputTypeExe;
+            }
+            set { }
+        }
     }
 }

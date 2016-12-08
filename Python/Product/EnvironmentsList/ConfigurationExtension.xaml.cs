@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows;
@@ -28,7 +27,6 @@ using System.Windows.Input;
 using Microsoft.PythonTools.EnvironmentsList.Properties;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Wpf;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
@@ -60,12 +58,16 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private void Apply_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as ConfigurationEnvironmentView;
-            e.CanExecute = view != null && _provider.IsConfigurationChanged(view);
+            e.CanExecute = view != null && _provider.CanApply(view) && _provider.IsConfigurationChanged(view);
             e.Handled = true;
         }
 
         private void Apply_Executed(object sender, ExecutedRoutedEventArgs e) {
-            _provider.ApplyConfiguration((ConfigurationEnvironmentView)e.Parameter);
+            var cev = (ConfigurationEnvironmentView)e.Parameter;
+            var id = _provider.ApplyConfiguration(cev);
+            if (_provider._alwaysCreateNew) {
+                ConfigurationEnvironmentView.Added.Execute(id);
+            }
             e.Handled = true;
         }
 
@@ -82,7 +84,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         private void Remove_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
             var view = e.Parameter as ConfigurationEnvironmentView;
-            e.CanExecute = view != null;
+            e.CanExecute = !_provider._alwaysCreateNew && view != null;
             e.Handled = true;
         }
 
@@ -154,6 +156,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 return view;
             }
 
+            if (string.IsNullOrEmpty(view.Description)) {
+                view.Description = PathUtils.GetFileOrDirectoryName(view.PrefixPath);
+            }
+
             if (!File.Exists(view.InterpreterPath)) {
                 view.InterpreterPath = PathUtils.FindFile(
                     view.PrefixPath,
@@ -179,11 +185,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     }
                 }
 
-                var binaryType = Infrastructure.NativeMethods.GetBinaryType(view.InterpreterPath);
-                if (binaryType == ProcessorArchitecture.Amd64) {
-                    view.ArchitectureName = "64-bit";
-                } else if (binaryType == ProcessorArchitecture.X86) {
-                    view.ArchitectureName = "32-bit";
+                var arch = InterpreterArchitecture.FromExe(view.InterpreterPath);
+                if (arch != InterpreterArchitecture.Unknown) {
+                    view.ArchitectureName = arch.ToString();
                 }
             }
 
@@ -194,19 +198,28 @@ namespace Microsoft.PythonTools.EnvironmentsList {
     sealed class ConfigurationExtensionProvider : IEnvironmentViewExtension {
         private FrameworkElement _wpfObject;
         private readonly IInterpreterOptionsService _interpreterOptions;
+        internal readonly bool _alwaysCreateNew;
 
-        internal ConfigurationExtensionProvider(IInterpreterOptionsService interpreterOptions) {
+        internal ConfigurationExtensionProvider(IInterpreterOptionsService interpreterOptions, bool alwaysCreateNew) {
             _interpreterOptions = interpreterOptions;
+            _alwaysCreateNew = alwaysCreateNew;
         }
 
-        public void ApplyConfiguration(ConfigurationEnvironmentView view) {
-            var factory = view.EnvironmentView.Factory;
-            if (view.Description != factory.Configuration.Description) {
-                // We're renaming the interpreter, remove the old one...
-                _interpreterOptions.RemoveConfigurableInterpreter(factory.Configuration.Id);
+        public string ApplyConfiguration(ConfigurationEnvironmentView view) {
+            if (!_alwaysCreateNew) {
+                var factory = view.EnvironmentView.Factory;
+                if (view.Description != factory.Configuration.Description) {
+                    // We're renaming the interpreter, remove the old one...
+                    _interpreterOptions.RemoveConfigurableInterpreter(factory.Configuration.Id);
+                }
             }
 
-            var newInterp = _interpreterOptions.AddConfigurableInterpreter(
+            Version version;
+            if (!Version.TryParse(view.VersionName, out version)) {
+                version = null;
+            }
+
+            return _interpreterOptions.AddConfigurableInterpreter(
                 view.Description,
                 new InterpreterConfiguration(
                     "",
@@ -215,13 +228,24 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     view.InterpreterPath,
                     view.WindowsInterpreterPath,
                     view.PathEnvironmentVariable,
-                    InterpreterArchitecture.TryParse(view.ArchitectureName),
-                    Version.Parse(view.VersionName)
+                    InterpreterArchitecture.TryParse(view.ArchitectureName ?? ""),
+                    version
                 )
             );
         }
 
+        public bool CanApply(ConfigurationEnvironmentView view) {
+            if (string.IsNullOrEmpty(view.Description) || string.IsNullOrEmpty(view.InterpreterPath)) {
+                return false;
+            }
+            return true;
+        }
+
         public bool IsConfigurationChanged(ConfigurationEnvironmentView view) {
+            if (_alwaysCreateNew) {
+                return true;
+            }
+
             var factory = view.EnvironmentView.Factory;
             return view.Description != factory.Configuration.Description ||
                 view.PrefixPath != factory.Configuration.PrefixPath ||
@@ -233,17 +257,21 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         public void ResetConfiguration(ConfigurationEnvironmentView view) {
-            var factory = view.EnvironmentView.Factory;
-            view.Description = factory.Configuration.Description;
-            view.PrefixPath = factory.Configuration.PrefixPath;
-            view.InterpreterPath = factory.Configuration.InterpreterPath;
-            view.WindowsInterpreterPath = factory.Configuration.WindowsInterpreterPath;
-            view.PathEnvironmentVariable = factory.Configuration.PathEnvironmentVariable;
-            view.ArchitectureName = factory.Configuration.Architecture.ToString();
-            view.VersionName = factory.Configuration.Version.ToString();
+            var factory = view.EnvironmentView?.Factory;
+            view.Description = factory?.Configuration.Description;
+            view.PrefixPath = factory?.Configuration.PrefixPath;
+            view.InterpreterPath = factory?.Configuration.InterpreterPath;
+            view.WindowsInterpreterPath = factory?.Configuration.WindowsInterpreterPath;
+            view.PathEnvironmentVariable = factory?.Configuration.PathEnvironmentVariable;
+            view.ArchitectureName = factory?.Configuration.Architecture.ToString();
+            view.VersionName = factory?.Configuration.Version.ToString();
         }
 
         public void RemoveConfiguration(ConfigurationEnvironmentView view) {
+            if (_alwaysCreateNew) {
+                return;
+            }
+
             var factory = view.EnvironmentView.Factory;
             _interpreterOptions.RemoveConfigurableInterpreter(factory.Configuration.Id);
         }
@@ -281,9 +309,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
     }
 
     sealed class ConfigurationEnvironmentView : INotifyPropertyChanged {
+        public static readonly ICommand Added = new RoutedCommand();
+
         private static readonly string[] _architectureNames = new[] {
-            "32-bit",
-            "64-bit"
+            InterpreterArchitecture.x86.ToString(),
+            InterpreterArchitecture.x64.ToString()
         };
 
         private static readonly string[] _versionNames = new[] {
@@ -295,7 +325,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             "3.2",
             "3.3",
             "3.4",
-            "3.5"
+            "3.5",
+            "3.6"
         };
 
         private readonly EnvironmentView _view;
@@ -306,21 +337,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _view = view;
         }
 
-        public EnvironmentView EnvironmentView {
-            get { return _view; }
-        }
+        public EnvironmentView EnvironmentView => _view;
+        public static IList<string> ArchitectureNames => _architectureNames;
 
-        public static IList<string> ArchitectureNames {
-            get {
-                return _architectureNames;
-            }
-        }
-
-        public static IList<string> VersionNames {
-            get {
-                return _versionNames;
-            }
-        }
+        public static IList<string> VersionNames => _versionNames;
 
         public bool IsAutoDetectRunning {
             get { return _isAutoDetectRunning; }
@@ -419,10 +439,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public event PropertyChangedEventHandler PropertyChanged;
 
         private void OnPropertyChanged([CallerMemberName] string propertyName = null) {
-            var evt = PropertyChanged;
-            if (evt != null) {
-                evt(this, new PropertyChangedEventArgs(propertyName));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

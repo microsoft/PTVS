@@ -2116,6 +2116,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove this package.
+        /// </summary>
+        public static string UninstallMessage {
+            get {
+                return ResourceManager.GetString("UninstallMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove {0}.
+        /// </summary>
+        public static string UninstallMessage_Package {
+            get {
+                return ResourceManager.GetString("UninstallMessage_Package", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; will be uninstalled from {1} ({2})..
         /// </summary>
         public static string UninstallPackage {
@@ -2243,6 +2261,24 @@ namespace Microsoft.PythonTools {
         public static string UpgradedWebBrowserUrlProperty {
             get {
                 return ResourceManager.GetString("UpgradedWebBrowserUrlProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upgrade to the latest version of this package.
+        /// </summary>
+        public static string UpgradeMessage {
+            get {
+                return ResourceManager.GetString("UpgradeMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upgrade to {0} version {1}.
+        /// </summary>
+        public static string UpgradeMessage_Package {
+            get {
+                return ResourceManager.GetString("UpgradeMessage_Package", resourceCulture);
             }
         }
         

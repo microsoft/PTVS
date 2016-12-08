@@ -32,7 +32,8 @@ namespace Microsoft.PythonTools.Interpreter {
         private readonly Dictionary<string, PythonInterpreterInformation> _factories = new Dictionary<string, PythonInterpreterInformation>();
         const string PythonPath = "Software\\Python";
         internal const string FactoryProviderName = "Global";
-        private bool _watchRegistry;
+        private readonly bool _watchRegistry;
+        private int _ignoreNotifications;
         private bool _initialized;
 
         public CPythonInterpreterFactoryProvider() : this(true) { }
@@ -117,6 +118,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
 
         internal void DiscoverInterpreterFactories() {
+            if (Volatile.Read(ref _ignoreNotifications) > 0) {
+                return;
+            }
+            
             // Discover the available interpreters...
             bool anyChanged = false;
 
@@ -238,5 +243,24 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         #endregion
+
+        private sealed class DiscoverOnDispose : IDisposable {
+            private readonly CPythonInterpreterFactoryProvider _provider;
+
+            public DiscoverOnDispose(CPythonInterpreterFactoryProvider provider) {
+                _provider = provider;
+                Interlocked.Increment(ref _provider._ignoreNotifications);
+            }
+
+            public void Dispose() {
+                if (Interlocked.Decrement(ref _provider._ignoreNotifications) == 0) {
+                    _provider.DiscoverInterpreterFactories();
+                }
+            }
+        }
+
+        internal IDisposable SuppressDiscoverFactories() {
+            return new DiscoverOnDispose(this);
+        }
     }
 }

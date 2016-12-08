@@ -46,11 +46,16 @@ namespace Microsoft.PythonTools.Interpreter {
         private const string ArchitectureKey = "SysArchitecture";
         private const string VersionKey = "SysVersion";
         private const string PathEnvVarKey = "PathEnvironmentVariable";
-        private const string DescriptionKey = "Description";
-        private const string PythonInterpreterKey = "SOFTWARE\\Python\\VisualStudio";
+        private const string DescriptionKey = "DisplayName";
+
+        private const string CustomCompany = "VisualStudio";
+        private const string CustomInterpreterKey = "SOFTWARE\\Python\\" + CustomCompany;
 
         [ImportingConstructor]
-        public InterpreterOptionsService([Import]Lazy<IInterpreterRegistryService> registryService, Lazy<CPythonInterpreterFactoryProvider> cpythonProvider) {
+        public InterpreterOptionsService(
+            [Import] Lazy<IInterpreterRegistryService> registryService,
+            [Import] Lazy<CPythonInterpreterFactoryProvider> cpythonProvider
+        ) {
             _registryService = registryService;
             _cpythonProvider = cpythonProvider;
         }
@@ -238,52 +243,51 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public string AddConfigurableInterpreter(string name, InterpreterConfiguration config) {
-            var collection = PythonInterpreterKey + "\\" + name;
-            using (var key = Registry.CurrentUser.CreateSubKey(collection, true)) {
-                if (config.Architecture != InterpreterArchitecture.Unknown) {
-                    key.SetValue(ArchitectureKey, config.Architecture.ToPEP514());
-                } else {
-                    key.DeleteValue(ArchitectureKey, false);
-                }
-                if (config.Version != new Version()) {
-                    key.SetValue(VersionKey, config.Version.ToString());
-                } else {
-                    key.DeleteValue(VersionKey, false);
-                }
-                if (!string.IsNullOrEmpty(config.PathEnvironmentVariable)) {
-                    key.SetValue(PathEnvVarKey, config.PathEnvironmentVariable);
-                } else {
-                    key.DeleteValue(PathEnvVarKey, false);
-                }
-                if (!string.IsNullOrEmpty(config.Description)) {
-                    key.SetValue(DescriptionKey, config.Description);
-                } else {
-                    key.DeleteValue(DescriptionKey, false);
-                }
-                using (var installPath = key.CreateSubKey("InstallPath")) {
-                    string exePath = config.InterpreterPath ?? config.WindowsInterpreterPath ?? "";
-                    if (!string.IsNullOrEmpty(config.PrefixPath)) {
-                        installPath.SetValue("", config.PrefixPath);
-                    } else if (!string.IsNullOrWhiteSpace(exePath)) {
-                        installPath.SetValue("", Path.GetDirectoryName(exePath));
+            using (_cpythonProvider.Value.SuppressDiscoverFactories()) {
+                var collection = CustomInterpreterKey + "\\" + name;
+                using (var key = Registry.CurrentUser.CreateSubKey(collection, true)) {
+                    if (config.Architecture != InterpreterArchitecture.Unknown) {
+                        key.SetValue(ArchitectureKey, config.Architecture.ToPEP514());
+                    } else {
+                        key.DeleteValue(ArchitectureKey, false);
                     }
-                    installPath.SetValue(WindowsPathKey, config.WindowsInterpreterPath ?? string.Empty);
-                    installPath.SetValue(PathKey, config.InterpreterPath ?? string.Empty);
+                    if (config.Version != new Version()) {
+                        key.SetValue(VersionKey, config.Version.ToString());
+                    } else {
+                        key.DeleteValue(VersionKey, false);
+                    }
+                    if (!string.IsNullOrEmpty(config.PathEnvironmentVariable)) {
+                        key.SetValue(PathEnvVarKey, config.PathEnvironmentVariable);
+                    } else {
+                        key.DeleteValue(PathEnvVarKey, false);
+                    }
+                    if (!string.IsNullOrEmpty(config.Description)) {
+                        key.SetValue(DescriptionKey, config.Description);
+                    } else {
+                        key.DeleteValue(DescriptionKey, false);
+                    }
+                    using (var installPath = key.CreateSubKey("InstallPath")) {
+                        string exePath = config.InterpreterPath ?? config.WindowsInterpreterPath ?? "";
+                        if (!string.IsNullOrEmpty(config.PrefixPath)) {
+                            installPath.SetValue("", config.PrefixPath);
+                        } else if (!string.IsNullOrWhiteSpace(exePath)) {
+                            installPath.SetValue("", Path.GetDirectoryName(exePath));
+                        }
+                        installPath.SetValue(WindowsPathKey, config.WindowsInterpreterPath ?? string.Empty);
+                        installPath.SetValue(PathKey, config.InterpreterPath ?? string.Empty);
+                    }
                 }
             }
 
-            // ensure we're up to date...
-            _cpythonProvider.Value.DiscoverInterpreterFactories();
-
-            return CPythonInterpreterFactoryConstants.GetInterpreterId("VisualStudio", name);
+            return CPythonInterpreterFactoryConstants.GetInterpreterId(CustomCompany, name);
 
         }
 
         public void RemoveConfigurableInterpreter(string id) {
             string company, tag;
             if (CPythonInterpreterFactoryConstants.TryParseInterpreterId(id, out company, out tag) &&
-                company == "VisualStudio") {
-                var collection = PythonInterpreterKey + "\\" + tag;
+                company == CustomCompany) {
+                var collection = CustomInterpreterKey + "\\" + tag;
                 try {
                     Registry.CurrentUser.DeleteSubKeyTree(collection);
 
@@ -294,7 +298,9 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public bool IsConfigurable(string id) {
-            return id.StartsWith("Global|VisualStudio|");
+            string company, tag;
+            return CPythonInterpreterFactoryConstants.TryParseInterpreterId(id, out company, out tag) &&
+                company == CustomCompany;
         }
     }
 }

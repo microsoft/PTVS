@@ -222,6 +222,7 @@ namespace Microsoft.PythonTools.Project.Web {
                 }
             } else if (pguidCmdGroup == PublishCmdGuid) {
                 if (nCmdID == PublishCmdid) {
+                    // Approximately duplicated in DjangoProject
                     var opts = _site.GetPythonToolsService().SuppressDialogOptions;
                     if (string.IsNullOrEmpty(opts.PublishToAzure30)) {
                         var td = new TaskDialog(_site) {
@@ -229,7 +230,7 @@ namespace Microsoft.PythonTools.Project.Web {
                             MainInstruction = Strings.PublishToAzure30,
                             Content = Strings.PublishToAzure30Message,
                             VerificationText = Strings.DontShowAgain,
-                            SelectedVerified = true,
+                            SelectedVerified = false,
                             AllowCancellation = true,
                             EnableHyperlinks = true
                         };

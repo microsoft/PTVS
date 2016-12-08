@@ -22,6 +22,10 @@
                                 <ColumnDefinition Width="auto" />
                                 <ColumnDefinition Width="auto" />
                             </Grid.ColumnDefinitions>
+                            <Grid.Resources>
+                                <l:UpgradeMessageConverter x:Key="UpgradeMessageConverter" />
+                                <l:UninstallMessageConverter x:Key="UninstallMessageConverter" />
+                            </Grid.Resources>
                             
                             <Control Grid.Column="0"
                                      Margin="4 2 2 2"
@@ -41,6 +45,18 @@
                                     Cursor="Hand"
                                     Command="{x:Static l:PipExtension.UpgradePackage}"
                                     CommandParameter="{Binding}">
+                                <AutomationProperties.Name>
+                                    <MultiBinding Converter="{StaticResource UpgradeMessageConverter}">
+                                        <Binding Path="Name" />
+                                        <Binding Path="UpgradeVersion" />
+                                    </MultiBinding>
+                                </AutomationProperties.Name>
+                                <Button.ToolTip>
+                                    <MultiBinding Converter="{StaticResource UpgradeMessageConverter}">
+                                        <Binding Path="Name" />
+                                        <Binding Path="UpgradeVersion" />
+                                    </MultiBinding>
+                                </Button.ToolTip>
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <StackPanel Orientation="Horizontal">
@@ -66,9 +82,6 @@
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </Button.Template>
-                                <Button.ToolTip>
-                                    Upgrade to the newest version of this package.
-                                </Button.ToolTip>
                             </Button>
 
                             <Button Grid.Column="3"
@@ -77,7 +90,9 @@
                                     Margin="4"
                                     Cursor="Hand"
                                     Command="{x:Static l:PipExtension.UninstallPackage}"
-                                    CommandParameter="{Binding}">
+                                    CommandParameter="{Binding}"
+                                    AutomationProperties.Name="{Binding Converter={StaticResource UninstallMessageConverter}}"
+                                    ToolTip="{Binding Converter={StaticResource UninstallMessageConverter}}">
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Canvas Width="16" Height="16">
@@ -96,9 +111,6 @@
                                         </ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </Button.Template>
-                                <Button.ToolTip>
-                                    Uninstall this package.
-                                </Button.ToolTip>
                             </Button>
                         </Grid>
                     </DataTemplate>
@@ -216,6 +228,7 @@
                          Text="{Binding SearchQuery,UpdateSourceTrigger=PropertyChanged}">
                     <TextBox.InputBindings>
                         <KeyBinding Key="Escape" Command="ApplicationCommands.Delete" CommandTarget="{Binding ElementName=SearchQueryText}" />
+                        <KeyBinding Key="Return" Command="{x:Static l:PipExtension.InstallPackage}" CommandParameter="{Binding Text,ElementName=SearchQueryText}" />
                     </TextBox.InputBindings>
                 </TextBox>
             </Grid>

@@ -351,7 +351,7 @@ namespace Microsoft.VisualStudioTools.Project {
         }
 
         [Browsable(false)]
-        public VSLangProj.prjOutputType OutputType {
+        public virtual VSLangProj.prjOutputType OutputType {
             get {
                 throw new NotImplementedException();
             }

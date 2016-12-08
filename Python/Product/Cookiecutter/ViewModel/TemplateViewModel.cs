@@ -34,6 +34,8 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public TemplateViewModel() {
         }
 
+        public override string ToString() => DisplayName;
+
         public bool Selectable => true;
 
         public string GitHubHomeUrl => RemoteUrl;

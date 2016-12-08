@@ -51,7 +51,8 @@
                         <TextBlock Text="{Binding}"
                                    TextTrimming="CharacterEllipsis"
                                    Margin="0"
-                                   Foreground="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}" />
+                                   FontSize="10"
+                                   Opacity="0.9" />
                     </Grid>
 
                     <ProgressBar x:Name="RefreshDBProgress"
@@ -78,6 +79,8 @@
                             Margin="1"
                             Command="{x:Static l:DBExtension.StartRefreshDB}"
                             CommandParameter="{Binding}"
+                            AutomationProperties.Name="Refresh completion DB"
+                            AutomationProperties.HelpText="Completion DB is not up to date. Click to start refreshing"
                             Visibility="Hidden">
                         <Control Style="{StaticResource RefreshImage}" />
                         <Button.ToolTip>
@@ -91,7 +94,8 @@
                             Cursor="Hand"
                             Margin="1"
                             Command="{x:Static l:EnvironmentView.OpenInteractiveWindow}"
-                            CommandParameter="{Binding}">
+                            CommandParameter="{Binding}"
+                            AutomationProperties.Name="Open Interactive Window">
                         <Control Style="{StaticResource InteractiveWindowImage}" />
                         <Button.ToolTip>
                             Open Interactive Window
@@ -124,35 +128,28 @@
             </DataTemplate>
 
             <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="AddNewEnvironmentListItem">
-                <Button Style="{StaticResource NavigationButtonInList}"
-                        Margin="6"
-                        Name="Button"
-                        Command="ApplicationCommands.New">
-                    <Grid Background="Transparent">
-                        <Grid.Resources>
-                            <Geometry x:Key="AddGeometry">
-                                F1M9.765625,18.1081237792969L11.078125,18.1081237792969 11.078125,24.5456237792969 17.5,24.5456237792969 17.5,25.8581237792969 11.078125,25.8581237792969 11.078125,32.2956237792969 9.765625,32.2956237792969 9.765625,25.8581237792969 3.328125,25.8581237792969 3.328125,24.5456237792969 9.765625,24.5456237792969 9.765625,18.1081237792969z
-                            </Geometry>
-                        </Grid.Resources>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="auto" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <Path Width="12" Height="12"
-                              Margin="4"
-                              Stretch="Uniform"
-                              RenderOptions.EdgeMode="Aliased"
-                              Data="{StaticResource AddGeometry}"
-                              Fill="{Binding Foreground,ElementName=Button}">
-                        </Path>
-                        <Label Grid.Column="1"
-                               VerticalAlignment="Center"
-                               Foreground="{Binding Foreground,ElementName=Button}">
-                            Custom...
-                        </Label>
-                    </Grid>
-                    
-                </Button>
+                <Grid Background="Transparent" Margin="6">
+                    <Grid.Resources>
+                        <Geometry x:Key="AddGeometry">
+                            F1M9.765625,18.1081237792969L11.078125,18.1081237792969 11.078125,24.5456237792969 17.5,24.5456237792969 17.5,25.8581237792969 11.078125,25.8581237792969 11.078125,32.2956237792969 9.765625,32.2956237792969 9.765625,25.8581237792969 3.328125,25.8581237792969 3.328125,24.5456237792969 9.765625,24.5456237792969 9.765625,18.1081237792969z
+                        </Geometry>
+                    </Grid.Resources>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Path Width="12" Height="12"
+                          Margin="4"
+                          Stretch="Uniform"
+                          RenderOptions.EdgeMode="Aliased"
+                          Data="{StaticResource AddGeometry}"
+                          Fill="{Binding Foreground,ElementName=CustomLabel}">
+                    </Path>
+                    <Label Grid.Column="1" VerticalAlignment="Center" Name="CustomLabel"
+                           AutomationProperties.Name="Add new environment">
+                        Custom...
+                    </Label>
+                </Grid>
             </DataTemplate>
 
             <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="OnlineHelpListItem">

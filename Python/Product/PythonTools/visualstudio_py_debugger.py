@@ -133,6 +133,8 @@ BREAK_ON_SYSTEMEXIT_ZERO = False
 DEBUG_STDLIB = False
 DJANGO_DEBUG = False
 
+RICH_EXCEPTIONS = False
+
 # Py3k compat - alias unicode to str
 try:
     unicode
@@ -349,6 +351,7 @@ NEWT = to_bytes('NEWT')
 EXTT = to_bytes('EXTT')
 EXIT = to_bytes('EXIT')
 EXCP = to_bytes('EXCP')
+EXC2 = to_bytes('EXC2')
 MODL = to_bytes('MODL')
 STPD = to_bytes('STPD')
 BRKS = to_bytes('BRKS')
@@ -1627,10 +1630,11 @@ class DebuggerLoop(object):
 
     instance = None
 
-    def __init__(self, conn):
+    def __init__(self, conn, rich_exceptions=False):
         DebuggerLoop.instance = self
         self.conn = conn
         self.repl_backend = None
+        self.rich_exceptions = rich_exceptions
         self.command_table = {
             to_bytes('stpi') : self.command_step_into,
             to_bytes('stpo') : self.command_step_out,
@@ -2036,7 +2040,6 @@ def report_thread_exit(old_thread):
 
 def report_exception(frame, exc_info, tid, break_type):
     exc_type = exc_info[0]
-    exc_name = get_exception_name(exc_type)
     exc_value = exc_info[1]
     tb_value = exc_info[2]
     
@@ -2045,14 +2048,45 @@ def report_exception(frame, exc_info, tid, break_type):
         # so we can get the correct msg.
         exc_value = exc_type(*exc_value)
     
-    excp_text = str(exc_value)
+    data = {
+        'typename': get_exception_name(exc_type),
+        'message': str(exc_value),
+    }
+    if break_type == 1:
+        data['breaktype'] = 'unhandled'
+    if tb_value:
+        try:
+            data['trace'] = '\n'.join(','.join(repr(v) for v in line) for line in traceback.extract_tb(tb_value))
+        except:
+            pass
+    if not DJANGO_DEBUG or get_django_frame_source(frame) is None:
+        data['excvalue'] = '__exception_info'
+        i = 0
+        while data['excvalue'] in frame.f_locals:
+            i += 1
+            data['excvalue'] = '__exception_info_%d' % i
+        frame.f_locals[data['excvalue']] = {
+            'exception': exc_value,
+            'exception_type': exc_type,
+            'message': data['message'],
+        }
 
     with _SendLockCtx:
-        write_bytes(conn, EXCP)
-        write_string(conn, exc_name)
-        write_int(conn, tid)
-        write_int(conn, break_type)
-        write_string(conn, excp_text)
+        if RICH_EXCEPTIONS:
+            write_bytes(conn, EXC2)
+            write_int(conn, tid)
+            write_int(conn, len(data))
+            for key, value in data.items():
+                write_string(conn, key)
+                write_string(conn, str(value))
+        else:
+            # Old message is fixed format. If RichExceptions is not passed in
+            # debug options, we'll send this format.
+            write_bytes(conn, EXCP)
+            write_string(conn, str(data['typename']))
+            write_int(conn, tid)
+            write_int(conn, 1 if 'breaktype' in data else 0)
+            write_string(conn, str(data['message']))
 
 def new_module(frame):
     mod = Module(get_code_filename(frame.f_code))
@@ -2225,6 +2259,7 @@ def attach_process(port_num, debug_id, debug_options, report = False, block = Fa
 
 def attach_process_from_socket(sock, debug_options, report = False, block = False):
     global conn, attach_sent_break, DETACHED, DEBUG_STDLIB, BREAK_ON_SYSTEMEXIT_ZERO, DJANGO_DEBUG
+    global RICH_EXCEPTIONS
 
     BREAK_ON_SYSTEMEXIT_ZERO = 'BreakOnSystemExitZero' in debug_options
     DJANGO_DEBUG = 'DjangoDebugging' in debug_options
@@ -2238,6 +2273,8 @@ def attach_process_from_socket(sock, debug_options, report = False, block = Fals
 
     wait_on_normal_exit = 'WaitOnNormalExit' in debug_options
     wait_on_abnormal_exit = 'WaitOnAbnormalExit' in debug_options
+
+    RICH_EXCEPTIONS = 'RichExceptions' in debug_options
 
     def _excepthook(exc_type, exc_value, exc_tb):
         # Display the exception and wait on exit
