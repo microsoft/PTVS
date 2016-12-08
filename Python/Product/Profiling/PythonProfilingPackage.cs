@@ -331,8 +331,16 @@ namespace Microsoft.PythonTools.Profiling {
                 if (useVTune) {
                     outPath += "\\report.csv.html";
                 }
-                if (openReport && File.Exists(outPath)) {
-                    dte.ItemOperations.OpenFile(outPath);
+                if (openReport && File.Exists(outPath))
+                {
+                    if (useVTune)
+                    {
+                        dte.ItemOperations.Navigate(outPath);
+                    }
+                    else
+                    {
+                        dte.ItemOperations.OpenFile(outPath);
+                    }
                 }
             };
 
