@@ -24,11 +24,11 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         IDebugExceptionEvent150,
 #endif
         IDebugExceptionEvent2 {
-#if DEV15_OR_LATER
-        public const string IID = "01096447-64AE-4ED1-86E8-08C0A3D889DF";
-#else
+//#if DEV15_OR_LATER
+//        public const string IID = "01096447-64AE-4ED1-86E8-08C0A3D889DF";
+//#else
         public const string IID = "51A94113-8788-4A54-AE15-08B74FF922D0";
-#endif
+//#endif
         private readonly AD7Engine _engine;
         private readonly PythonException _exception;
 
@@ -92,7 +92,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
         }
 
         int IDebugExceptionEvent2.GetExceptionDescription(out string pbstrDescription) {
-            pbstrDescription = _exception.GetDescription();
+            pbstrDescription = _exception.GetDescription(false);
             return VSConstants.S_OK;
         }
 
@@ -119,41 +119,42 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
 
         int IDebugExceptionDetails.GetExceptionMessage(out string pbstrMessage) {
             pbstrMessage = _exception.ExceptionMessage;
-            return VSConstants.S_OK;
+            return string.IsNullOrEmpty(_exception.ExceptionMessage) ? VSConstants.S_FALSE : VSConstants.S_OK;
         }
 
         int IDebugExceptionDetails.GetExceptionObjectExpression(out string pbstrExceptionObjectExpression) {
             pbstrExceptionObjectExpression = _exception.ExceptionObjectExpression;
-            return VSConstants.S_OK;
+            return string.IsNullOrEmpty(_exception.ExceptionObjectExpression) ? VSConstants.S_FALSE : VSConstants.S_OK;
         }
 
         int IDebugExceptionDetails.GetFormattedDescription(out string pbstrDescription) {
-            pbstrDescription = _exception.FormattedDescription;
+            pbstrDescription = _exception.GetDescription(true);
             return VSConstants.S_OK;
         }
 
         int IDebugExceptionDetails.GetHResult(out uint pHResult) {
             pHResult = _exception.HResult;
-            return VSConstants.S_OK;
+            return _exception.HResult == 0 ? VSConstants.S_FALSE : VSConstants.S_OK;
         }
 
         int IDebugExceptionDetails.GetInnerExceptionDetails(out IDebugExceptionDetails ppDetails) {
             if (_exception.InnerException != null) {
                 ppDetails = new AD7DebugExceptionDetails(_exception.InnerException);
+                return VSConstants.S_OK;
             } else {
                 ppDetails = null;
+                return VSConstants.S_FALSE;
             }
-            return VSConstants.S_OK;
         }
 
         int IDebugExceptionDetails.GetSource(out string pbstrSource) {
             pbstrSource = _exception.Source;
-            return VSConstants.S_OK;
+            return string.IsNullOrEmpty(_exception.Source) ? VSConstants.S_FALSE : VSConstants.S_OK;
         }
 
         int IDebugExceptionDetails.GetStackTrace(out string pbstrMessage) {
             pbstrMessage = _exception.StackTrace;
-            return VSConstants.S_OK;
+            return string.IsNullOrEmpty(_exception.StackTrace) ? VSConstants.S_FALSE : VSConstants.S_OK;
         }
 
         int IDebugExceptionDetails.GetTypeName(int fFullName, out string pbstrTypeName) {
@@ -161,7 +162,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             if (fFullName == 0 && !string.IsNullOrEmpty(pbstrTypeName)) {
                 pbstrTypeName = pbstrTypeName.Substring(pbstrTypeName.LastIndexOf('.') + 1);
             }
-            return VSConstants.S_OK;
+            return string.IsNullOrEmpty(_exception.TypeName) ? VSConstants.S_FALSE : VSConstants.S_OK;
         }
     }
 #endif

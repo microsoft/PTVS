@@ -2055,10 +2055,21 @@ def report_exception(frame, exc_info, tid, break_type):
     if break_type == 1:
         data['breaktype'] = 'unhandled'
     if tb_value:
-        data['trace'] = '\n'.join(','.join(repr(v) for v in line) for line in traceback.extract_tb(tb_value))
+        try:
+            data['trace'] = '\n'.join(','.join(repr(v) for v in line) for line in traceback.extract_tb(tb_value))
+        except:
+            pass
     if not DJANGO_DEBUG or get_django_frame_source(frame) is None:
-        frame.f_locals['$exception'] = exc_value
-        data['excvalue'] = '$exception'
+        data['excvalue'] = '__exception_info'
+        i = 0
+        while data['excvalue'] in frame.f_locals:
+            i += 1
+            data['excvalue'] = '__exception_info_%d' % i
+        frame.f_locals[data['excvalue']] = {
+            'exception': exc_value,
+            'exception_type': exc_type,
+            'message': data['message'],
+        }
 
     with _SendLockCtx:
         if RICH_EXCEPTIONS:

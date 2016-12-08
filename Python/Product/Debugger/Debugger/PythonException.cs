@@ -35,8 +35,8 @@ namespace Microsoft.PythonTools.Debugger {
         public string TypeName { get; set; }
         public bool UserUnhandled { get; set; }
 
-        public string GetDescription() {
-            if (!string.IsNullOrEmpty(FormattedDescription)) {
+        public string GetDescription(bool formatted) {
+            if (formatted && !string.IsNullOrEmpty(FormattedDescription)) {
                 return FormattedDescription;
             }
 
@@ -49,11 +49,6 @@ namespace Microsoft.PythonTools.Debugger {
                 }
             } else if (!string.IsNullOrEmpty(ExceptionMessage)) {
                 sb.AppendLine(ExceptionMessage);
-            }
-
-            if (InnerException != null && InnerException != this) {
-                sb.AppendLine("  Inner Exception");
-                sb.AppendLine(InnerException.GetDescription());
             }
 
             return sb.ToString();
