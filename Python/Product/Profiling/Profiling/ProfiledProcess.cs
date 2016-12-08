@@ -187,13 +187,14 @@ th { background-color: gray; }
                     outs.WriteLine("<tr>");
                     foreach (string f in ri.v.Split(','))
                     {
+                        string ft = f.Trim('"');
                         if (0 == ri.i)
                         {
-                            outs.WriteLine("<th>" + f + "</th>");
+                            outs.WriteLine("<th>" + ft + "</th>");
                         }
                         else
                         {
-                            outs.WriteLine("<td>" + f + "</td>");
+                            outs.WriteLine("<td>" + ft + "</td>");
                         }
                     }
                     outs.WriteLine("</tr>");
