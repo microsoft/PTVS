@@ -1164,7 +1164,9 @@
                                Target="{Binding ElementName=Content}"
                                Foreground="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}"/>
                         <TextBlock Grid.Row="1" Text="{Binding HelpText}" Style="{StaticResource HelpText}" Name="HelpText" />
-                        <ContentPresenter Grid.Row="2" Content="{Binding Content}" Margin="3" Name="Content" />
+                        <ContentPresenter Grid.Row="2" Content="{Binding Content}" Margin="3" Name="Content"
+                                          AutomationProperties.Name="{TemplateBinding AutomationProperties.Name}"
+                                          AutomationProperties.HelpText="{Binding HelpText}"/>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="wpf:LabelledControl.HasHelpText" Value="False">
@@ -1210,7 +1212,9 @@
                                 Content="{Binding Content}"
                                 Command="{Binding Command}"
                                 CommandParameter="{Binding CommandParameter}"
-                                CommandTarget="{Binding CommandTarget}" />
+                                CommandTarget="{Binding CommandTarget}"
+                                AutomationProperties.Name="{TemplateBinding AutomationProperties.Name}"
+                                AutomationProperties.HelpText="{Binding HelpText}" />
                         <Label Grid.Column="1" Grid.Row="0"
                                Content="{Binding Title}"
                                Target="{Binding ElementName=Content}"
@@ -1243,14 +1247,29 @@
 
     <Style x:Key="BrowseFolderButton" TargetType="{x:Type Button}" BasedOn="{StaticResource BrowseButton}">
         <Setter Property="Command" Value="{x:Static wpf:Commands.BrowseFolder}" />
+        <Setter Property="AutomationProperties.HelpText">
+            <Setter.Value>
+                Opens a dialog to browse for a folder.
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style x:Key="BrowseOpenFileButton" TargetType="{x:Type Button}" BasedOn="{StaticResource BrowseButton}">
         <Setter Property="Command" Value="{x:Static wpf:Commands.BrowseOpenFile}" />
+        <Setter Property="AutomationProperties.HelpText">
+            <Setter.Value>
+                Opens a dialog to browse for an existing file.
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style x:Key="BrowseSaveFileButton" TargetType="{x:Type Button}" BasedOn="{StaticResource BrowseButton}">
         <Setter Property="Command" Value="{x:Static wpf:Commands.BrowseSaveFile}" />
+        <Setter Property="AutomationProperties.HelpText">
+            <Setter.Value>
+                Opens a dialog to select a location to save a file.
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <Style TargetType="{x:Type wpf:ConfigurationTextBoxWithHelp}">
@@ -1272,8 +1291,9 @@
                                  Margin="4 4 1 4"
                                  VerticalAlignment="Stretch"
                                  Style="{StaticResource {x:Type TextBox}}"
-                                 Text="{Binding Text,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent},UpdateSourceTrigger=PropertyChanged}"
-                                 AutomationProperties.HelpText="{TemplateBinding HelpText}">
+                                 AutomationProperties.Name="{TemplateBinding AutomationProperties.Name}"
+                                 AutomationProperties.HelpText="{TemplateBinding HelpText}"
+                                 Text="{Binding Text,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent},UpdateSourceTrigger=PropertyChanged}">
                             <TextBox.ToolTip>
                                 <ToolTip Placement="Bottom" Content="{TemplateBinding HelpText}">
                                     <ToolTip.ContentTemplate>
@@ -1337,6 +1357,7 @@
                                   SelectedValue="{Binding Value,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent}}"
                                   IsTextSearchEnabled="True"
                                   IsTextSearchCaseSensitive="False"
+                                  AutomationProperties.Name="{TemplateBinding AutomationProperties.Name}"
                                   AutomationProperties.HelpText="{TemplateBinding HelpText}">
                             <ComboBox.ToolTip>
                                 <ToolTip Placement="Bottom" Content="{TemplateBinding HelpText}">
