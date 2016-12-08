@@ -42,6 +42,7 @@ namespace Microsoft.CookiecutterTools.Commands {
                 return (sender, args) => {
                     var oleMenuCmd = (Microsoft.VisualStudio.Shell.OleMenuCommand)sender;
                     oleMenuCmd.Enabled = _projectSystem.GetSelectedFolderProjectLocation() != null;
+                    oleMenuCmd.Visible = oleMenuCmd.Enabled;
                 };
             }
         }

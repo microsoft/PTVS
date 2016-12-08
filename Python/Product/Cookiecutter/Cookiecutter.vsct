@@ -102,6 +102,7 @@
         <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
         <Icon guid="guidCookiecutterImages" id="NewCookiecutter"/>
         <CommandFlag>IconIsMoniker</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
         <Strings>
           <ButtonText>From &amp;Cookiecutter...</ButtonText>
           <ToolTipText>Adds files using a Cookiecutter template.</ToolTipText>
