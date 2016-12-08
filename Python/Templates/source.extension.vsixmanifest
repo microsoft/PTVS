@@ -2,10 +2,8 @@
   <Metadata>
     <Identity Id="6970B230-8BA1-4BB5-8EB9-4BDB894D55B0" Version="3.0" Language="en-US" Publisher="Microsoft Corporation" />
     <DisplayName>PTVSTemplates</DisplayName>
-    <Description xml:space="preserve">Provides templates for Python projects and items.</Description>
-    <MoreInfo>http://aka.ms/ptvs</MoreInfo>
-    <License>Python Tools for VS License.rtf</License>
-    <GettingStartedGuide>http://aka.ms/ptvstutorial</GettingStartedGuide>
+    <Description xml:space="preserve">Provides local debugging of templates when developing PTVS. *NOT FOR DISTRIBUTION*</Description>
+    <License>License_en-US.rtf</License>
     <Icon>PythonProject.ico</Icon>
     <PreviewImage>PythonProjectBig.ico</PreviewImage>
   </Metadata>

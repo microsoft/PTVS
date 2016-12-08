@@ -20,8 +20,8 @@ using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Python Tools for Visual Studio Django integration")]
-[assembly: AssemblyDescription("Provides support for Django projects and editing.")]
+[assembly: AssemblyTitle("Visual Studio - Python Django support")]
+[assembly: AssemblyDescription("Provides templates and integration for the Django web framework.")]
 [assembly: ComVisible(false)]     
 [assembly: CLSCompliant(false)]
 [assembly: NeutralResourcesLanguage("en-US")]

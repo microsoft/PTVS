@@ -1,15 +1,15 @@
 From: "Saved by Internet Explorer 11"
-Subject: Python Tools for Visual Studio
-Date: Mon, 26 Oct 2015 15:29:35 -0700
+Subject: IronPython was not found
+Date: Thu, 8 Dec 2016 11:34:39 -0800
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----=_NextPart_000_001D_01D11003.1E725250"
-X-MimeOLE: Produced By Microsoft MimeOLE V10.0.10011.16384
+	boundary="----=_NextPart_000_0000_01D25147.0FFA5E80"
+X-MimeOLE: Produced By Microsoft MimeOLE
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_001D_01D11003.1E725250
+------=_NextPart_000_0000_01D25147.0FFA5E80
 Content-Type: text/html;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
@@ -41,13 +41,12 @@ lang=3D"en" xmlns=3D"http://www.w3.org/1999/xhtml"><HEAD><META =
 content=3D"IE=3D11.0000"=20
 http-equiv=3D"X-UA-Compatible">
     =20
-<META charset=3D"utf-8">     <TITLE>Python Tools for Visual =
-Studio</TITLE>    =20
-<LINK =
+<META charset=3D"utf-8">     <TITLE>IronPython was not found</TITLE>     =
+<LINK=20
 href=3D"file:///D:/PTVS/PTVS/Python/Product/PythonTools/ReadmeStyle.css" =
-
-rel=3D"stylesheet" type=3D"text/css">=20
-<META name=3D"GENERATOR" content=3D"MSHTML 11.00.10240.16542"></HEAD>=20
+rel=3D"stylesheet"=20
+type=3D"text/css">=20
+<META name=3D"GENERATOR" content=3D"MSHTML 11.00.10570.1001"></HEAD>=20
 <BODY>
 <H1 class=3D"top">We didn't find IronPython</H1>
 <P>        This project is configured to run with IronPython, which is   =
@@ -70,7 +69,7 @@ find more         documentation, discussion forums, and updates for =
 Python Tools=20
        for Visual Studio.     </P></BODY></HTML>
 
-------=_NextPart_000_001D_01D11003.1E725250
+------=_NextPart_000_0000_01D25147.0FFA5E80
 Content-Type: text/css;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
@@ -118,4 +117,4 @@ li > img {
 	vertical-align: middle;
 }
 
-------=_NextPart_000_001D_01D11003.1E725250--
+------=_NextPart_000_0000_01D25147.0FFA5E80--

@@ -245,11 +245,11 @@ namespace Microsoft.PythonTools.EnvironmentsList.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python Tools for Visual Studio.
+        ///   Looks up a localized string similar to Visual Studio.
         /// </summary>
-        internal static string PythonToolsForVisualStudio {
+        internal static string ProductTitle {
             get {
-                return ResourceManager.GetString("PythonToolsForVisualStudio", resourceCulture);
+                return ResourceManager.GetString("ProductTitle", resourceCulture);
             }
         }
         

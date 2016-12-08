@@ -17,7 +17,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Python Tools for Visual Studio Profiling Support")]
+[assembly: AssemblyTitle("Visual Studio - Python profiling support")]
 [assembly: AssemblyDescription("Provides support for profiling Python projects.")]
 
 [assembly: ComVisible(false)]

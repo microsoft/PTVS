@@ -424,7 +424,7 @@ namespace Microsoft.PythonTools.Django.Project {
                 }
 
                 var td = new TaskDialog(new ServiceProvider(GetSite())) {
-                    Title = Resources.PythonToolsForVisualStudio,
+                    Title = Resources.ProductTitle,
                     MainInstruction = string.Format(Resources.DjangoAppAlreadyExistsTitle, name),
                     Content = string.Format(Resources.DjangoAppAlreadyExistsInstruction, name),
                     AllowCancellation = true

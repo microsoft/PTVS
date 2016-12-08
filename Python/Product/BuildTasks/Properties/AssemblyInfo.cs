@@ -17,7 +17,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Python Tools for Visual Studio Build Tasks")]
+[assembly: AssemblyTitle("Visual Studio - Python build tasks")]
 [assembly: AssemblyDescription("Contains build tasks for Python projects.")]
 
 [assembly: ComVisible(false)]

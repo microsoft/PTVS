@@ -19,10 +19,8 @@ using System.Reflection;
 using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio.Shell;
 
-
-[assembly: AssemblyTitle("Python Tools for Visual Studio")]
+[assembly: AssemblyTitle("Visual Studio - Python language support")]
 [assembly: AssemblyDescription("Provides Python support within Visual Studio.")]
 
 [assembly: ComVisible(false)]
