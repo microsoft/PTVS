@@ -24,6 +24,10 @@ namespace Microsoft.CookiecutterTools.Model {
     class ProjectSystemClient : IProjectSystemClient {
         private EnvDTE80.DTE2 _dte;
 
+        private static HashSet<Guid> UnsupportedProjectKinds = new HashSet<Guid>() {
+            new Guid("cc5fd16d-436d-48ad-a40c-5a424c6e3e79"), // Azure Cloud Service
+        };
+
         public ProjectSystemClient(EnvDTE80.DTE2 dte) {
             _dte = dte;
         }
@@ -152,7 +156,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 }
 
                 var proj = selItem.Object as EnvDTE.Project;
-                if (proj != null) {
+                if (proj != null && IsProjectSupported(proj)) {
                     var projFolder = GetProjectFolder(proj);
                     if (!string.IsNullOrEmpty(projFolder)) {
                         yield return new ProjectLocation() {
@@ -162,6 +166,17 @@ namespace Microsoft.CookiecutterTools.Model {
                     }
                 }
             }
+        }
+
+        private static bool IsProjectSupported(EnvDTE.Project proj) {
+            Guid guid;
+            if (Guid.TryParse(proj.Kind, out guid)) {
+                if (UnsupportedProjectKinds.Contains(guid)) {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         private static string GetProjectFolder(EnvDTE.Project proj) {
