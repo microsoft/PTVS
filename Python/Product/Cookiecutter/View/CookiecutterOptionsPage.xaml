@@ -192,7 +192,8 @@
                                               AutomationProperties.Name="Output folder path">
                 <wpf:ConfigurationTextBoxWithHelp.HelpText>
                     Folder location where the files will be created.
-                    Files may be replaced if the folder is not empty.
+                    Files may be replaced if the folder is not empty,
+                    but a backup of the existing files will be created as needed.
                 </wpf:ConfigurationTextBoxWithHelp.HelpText>
                 <wpf:ConfigurationTextBoxWithHelp.Resources>
                     <Style TargetType="{x:Type Button}">
@@ -202,7 +203,13 @@
             </wpf:ConfigurationTextBoxWithHelp>
             <StackPanel Margin="4 4 4 8" Orientation="Horizontal" Visibility="{Binding FixedOutputFolder, Converter={StaticResource BoolToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusInformation}"/>
-                <TextBlock Margin="4 0 0 0" Text="Files will be added to your project."/>
+                <TextBlock Margin="4 0 0 0" Text="Files will be added to your project.">
+                    <TextBlock.ToolTip>
+                        Cookiecutter was invoked using the Add From Cookiecutter command.
+                        To return to the global mode where files are not added to
+                        an existing project, click on Cancel or Home.
+                    </TextBlock.ToolTip>
+                </TextBlock>
             </StackPanel>
             <Label FontWeight="Bold">Options</Label>
         </StackPanel>
