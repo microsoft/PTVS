@@ -68,5 +68,10 @@ namespace Microsoft.PythonTools.Debugger {
         /// Indicates that the application is a windowed application rather than a console one.
         /// </summary>
         IsWindowsApplication = 0x200,
+
+        /// <summary>
+        /// Indicates that the VS side of the debugger supports rich exception information.
+        /// </summary>
+        RichExceptions = 0x400,
     }
 }
