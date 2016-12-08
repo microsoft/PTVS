@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -510,5 +511,36 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public string IndexName => View._provider.IndexName;
         public string DisplayName => Package.DisplayName;
         public string Description => Package.Description;
+    }
+
+    class UpgradeMessageConverter : IMultiValueConverter {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
+            if (values.Length != 2) {
+                return Strings.UpgradeMessage;
+            }
+
+            var name = (string)values[0];
+            var version = (PackageVersion)values[1];
+            return Strings.UpgradeMessage_Package.FormatUI(name, version);
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
+        }
+    }
+
+    [ValueConversion(typeof(PipPackageView), typeof(string))]
+    class UninstallMessageConverter : IValueConverter {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+            var p = value as PipPackageView;
+            if (p == null) {
+                return Strings.UninstallMessage;
+            }
+            return Strings.UninstallMessage_Package.FormatUI(p.Name);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
+        }
     }
 }

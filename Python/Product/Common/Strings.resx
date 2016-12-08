@@ -956,4 +956,18 @@ There are no restrictions on the version of Python you may be using when you dep
 
 Please refer to &lt;a href="https://aka.ms/pythononappservice"&gt;aka.ms/PythonOnAppService&lt;/a&gt; for information about configuring and publishing to Azure App Service.</value>
   </data>
+  <data name="UninstallMessage" xml:space="preserve">
+    <value>Remove this package</value>
+  </data>
+  <data name="UninstallMessage_Package" xml:space="preserve">
+    <value>Remove {0}</value>
+    <comment>{0} is a package name</comment>
+  </data>
+  <data name="UpgradeMessage" xml:space="preserve">
+    <value>Upgrade to the latest version of this package</value>
+  </data>
+  <data name="UpgradeMessage_Package" xml:space="preserve">
+    <value>Upgrade to {0} version {1}</value>
+    <comment>{0} is a package name, {1} is the latest available version number</comment>
+  </data>
 </root>

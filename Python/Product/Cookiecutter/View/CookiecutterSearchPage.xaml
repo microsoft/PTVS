@@ -96,10 +96,10 @@
                         Orientation="Horizontal">
                 <imaging:CrispImage Margin="20 0 0 0" Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.OpenFolder}"/>
                 <Button Style="{StaticResource NavigationButton}"
-                    Margin="4 0 0 0"
-                    Command="{x:Static vm:CookiecutterViewModel.OpenInExplorer}"
-                    CommandParameter="{Binding Path=OpenInExplorerFolderPath,Mode=OneWay}"
-                    HorizontalAlignment="Left">
+                        Margin="4 0 0 0"
+                        Command="{x:Static vm:CookiecutterViewModel.OpenInExplorer}"
+                        CommandParameter="{Binding Path=OpenInExplorerFolderPath,Mode=OneWay}"
+                        HorizontalAlignment="Left">
                     Open in Solution Explorer
                 </Button>
             </StackPanel>
@@ -120,6 +120,7 @@
                 <wpf:ConfigurationTextBoxWithHelp Margin="0 0 0 0"
                                                   Text="{Binding Path=SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                                   HelpText="Enter search terms or template location (git repository URL or path to local folder)"
+                                                  AutomationProperties.Name="Search terms"
                                                   Watermark="Enter search terms or template location"
                                                   BrowseButtonStyle="{StaticResource SearchButtonStyle}"
                                                   KeyDown="TextBox_KeyDown" />
