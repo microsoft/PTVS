@@ -151,7 +151,17 @@ namespace Microsoft.PythonTools.Profiling {
                         }
                     };
 
-                    VTuneCSVToHTML(outPath + "\\report.csv");
+                    try
+                    {
+                        VTuneCSVToHTML(outPath + "\\report.csv");
+                    }
+                    catch (Exception e)
+                    {
+                        throw new InvalidOperationException("Failed writing VTune report{0}{0}Error:{0}{1}".FormatUI(
+                        Environment.NewLine,
+                        string.Join(Environment.NewLine, e.Message)
+                        ));
+                    }
                 }
                 var procExited = ProcessExited;
                 if (procExited != null) {
