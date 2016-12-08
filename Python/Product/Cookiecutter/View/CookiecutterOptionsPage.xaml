@@ -184,29 +184,22 @@
             <Label FontWeight="Bold">Description</Label>
             <TextBlock Margin="4 0 4 4" Text="{Binding Path=SelectedDescription}"/>-->
             <Label FontWeight="Bold">Create To</Label>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
-
-                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0"
-                                                  Margin="4 0 4 0"
-                                                  Text="{Binding Path=OutputFolderPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                                                  Watermark="e.g. C:\Projects\Project1"
-                                                  BrowseButtonStyle="{StaticResource BrowseFolderButton}"
-                                                  AutomationProperties.Name="Output folder path">
-                    <wpf:ConfigurationTextBoxWithHelp.HelpText>
-                        Folder location where the files will be created.
-                        Files may be replaced if the folder is not empty.
-                    </wpf:ConfigurationTextBoxWithHelp.HelpText>
-                    <wpf:ConfigurationTextBoxWithHelp.Resources>
-                        <Style TargetType="{x:Type Button}">
-                            <Setter Property="Height" Value="12"/>
-                        </Style>
-                    </wpf:ConfigurationTextBoxWithHelp.Resources>
-                </wpf:ConfigurationTextBoxWithHelp>
-            </Grid>
+            <wpf:ConfigurationTextBoxWithHelp Margin="4 0 4 0"
+                                              Text="{Binding Path=OutputFolderPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                              IsReadOnly="{Binding Path=FixedOutputFolder}"
+                                              Watermark="e.g. C:\Projects\Project1"
+                                              BrowseButtonStyle="{StaticResource BrowseFolderButton}"
+                                              AutomationProperties.Name="Output folder path">
+                <wpf:ConfigurationTextBoxWithHelp.HelpText>
+                    Folder location where the files will be created.
+                    Files may be replaced if the folder is not empty.
+                </wpf:ConfigurationTextBoxWithHelp.HelpText>
+                <wpf:ConfigurationTextBoxWithHelp.Resources>
+                    <Style TargetType="{x:Type Button}">
+                        <Setter Property="Height" Value="12"/>
+                    </Style>
+                </wpf:ConfigurationTextBoxWithHelp.Resources>
+            </wpf:ConfigurationTextBoxWithHelp>
             <StackPanel Margin="4 4 4 8" Orientation="Horizontal" Visibility="{Binding FixedOutputFolder, Converter={StaticResource BoolToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusInformation}"/>
                 <TextBlock Margin="4 0 0 0" Text="Files will be added to your project."/>
