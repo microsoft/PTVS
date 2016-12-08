@@ -169,6 +169,37 @@ namespace CookiecutterTests {
             CollectionAssert.AreEqual(expected, actual);
         }
 
+        [TestMethod]
+        public async Task CompareFiles() {
+            Random rnd = new Random();
+            var original = new byte[32768 * 3 + 1024];
+            rnd.NextBytes(original);
+
+            var tempFolder = TestData.GetTempPath("FileComparison", true);
+            var originalPath = Path.Combine(tempFolder, "original.dat");
+            var identicalPath = Path.Combine(tempFolder, "identical.dat");
+            var largerPath = Path.Combine(tempFolder, "larger.dat");
+            var modifiedPath = Path.Combine(tempFolder, "modified.dat");
+
+            File.WriteAllBytes(originalPath, original);
+            File.WriteAllBytes(identicalPath, original);
+            File.WriteAllBytes(largerPath, original);
+            File.WriteAllBytes(modifiedPath, original);
+
+            using (var stream = new FileStream(largerPath, FileMode.Append, FileAccess.Write)) {
+                stream.WriteByte(42);
+            }
+
+            using (var stream = new FileStream(modifiedPath, FileMode.Open, FileAccess.Write)) {
+                stream.Seek(32768 + 10, SeekOrigin.Begin);
+                stream.WriteByte(42);
+            }
+
+            Assert.IsTrue(await CookiecutterClient.AreFilesSameAsync(originalPath, identicalPath));
+            Assert.IsFalse(await CookiecutterClient.AreFilesSameAsync(originalPath, largerPath));
+            Assert.IsFalse(await CookiecutterClient.AreFilesSameAsync(originalPath, modifiedPath));
+        }
+
         private async Task<Dictionary<string, string>> GenerateFromLocalTemplate(string userConfigFilePath) {
             var context = await _client.LoadContextAsync(LocalTemplatePath, userConfigFilePath);
 

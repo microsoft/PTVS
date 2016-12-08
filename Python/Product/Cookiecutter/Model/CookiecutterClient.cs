@@ -145,7 +145,7 @@ namespace Microsoft.CookiecutterTools.Model {
             Directory.CreateDirectory(tempFolder);
 
             var result = await RunRunScript(_redirector, _envInterpreterPath, localTemplateFolder, userConfigFilePath, tempFolder, contextFilePath);
-            return MoveToDesiredFolder(outputFolderPath, tempFolder);
+            return await MoveToDesiredFolderAsync(outputFolderPath, tempFolder);
         }
 
         public Task<string> GetDefaultOutputFolderAsync(string shortName) {
@@ -345,7 +345,7 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
-        private CreateFilesOperationResult MoveToDesiredFolder(string desiredFolder, string tempFolder) {
+        private async Task<CreateFilesOperationResult> MoveToDesiredFolderAsync(string desiredFolder, string tempFolder) {
             if (!Directory.Exists(desiredFolder)) {
                 Directory.CreateDirectory(desiredFolder);
             }
@@ -359,7 +359,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 throw new InvalidOperationException("Cookiecutter generated files must have a templated folder.");
             }
 
-            var res = MoveFilesAndFolders(generatedFolder, desiredFolder);
+            var res = await MoveFilesAndFoldersAsync(generatedFolder, desiredFolder);
 
             try {
                 Directory.Delete(tempFolder);
@@ -369,7 +369,7 @@ namespace Microsoft.CookiecutterTools.Model {
             return res;
         }
 
-        private CreateFilesOperationResult MoveFilesAndFolders(string generatedFolder, string targetFolderPath) {
+        private async Task<CreateFilesOperationResult> MoveFilesAndFoldersAsync(string generatedFolder, string targetFolderPath) {
             List<string> createdFolders = new List<string>();
             List<string> createdFiles = new List<string>();
             List<ReplacedFile> replacedFiles = new List<ReplacedFile>();
@@ -389,7 +389,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 string generatedFilePath = Path.Combine(generatedFolder, filePath);
 
                 if (File.Exists(targetFilePath)) {
-                    if (!AreFilesSame(generatedFilePath, targetFilePath)) {
+                    if (!await AreFilesSameAsync(generatedFilePath, targetFilePath)) {
                         // Need to backup the user's file before overwriting it
                         string backupFilePath = GetBackupFilePath(targetFilePath);
                         File.Move(targetFilePath, backupFilePath);
@@ -412,20 +412,33 @@ namespace Microsoft.CookiecutterTools.Model {
             );
         }
 
-        private bool AreFilesSame(string file1Path, string file2Path) {
-            if (new FileInfo(file1Path).Length != new FileInfo(file2Path).Length) {
+        internal static async Task<bool> AreFilesSameAsync(string file1Path, string file2Path) {
+            var length = new FileInfo(file1Path).Length;
+            if (length != new FileInfo(file2Path).Length) {
                 return false;
             }
 
-            // Maybe change this to be calculating async, or just comparing streams async
-            return HashFile(file1Path).SequenceEqual(HashFile(file2Path));
-        }
+            int bufferSize = 32768;
+            var buffer1 = new byte[bufferSize];
+            var buffer2 = new byte[bufferSize];
+            using (var stream1 = new FileStream(file1Path, FileMode.Open, FileAccess.Read))
+            using (var stream2 = new FileStream(file2Path, FileMode.Open, FileAccess.Read)) {
+                while (length > 0) {
+                    var actual1 = await stream1.ReadAsync(buffer1, 0, bufferSize);
+                    var actual2 = await stream2.ReadAsync(buffer2, 0, bufferSize);
+                    if (actual1 != actual2) {
+                        return false;
+                    }
 
-        private byte[] HashFile(string filePath) {
-            var sha = SHA512.Create();
-            using (var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read)) {
-                return sha.ComputeHash(stream);
+                    length -= actual1;
+
+                    if (!buffer1.SequenceEqual(buffer2)) {
+                        return false;
+                    }
+                }
             }
+
+            return true;
         }
     }
 }
