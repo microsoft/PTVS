@@ -22,6 +22,7 @@ using System.Globalization;
 using System.Runtime.InteropServices;
 using Microsoft.CookiecutterTools.Commands;
 using Microsoft.CookiecutterTools.Infrastructure;
+using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.Telemetry;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -142,9 +143,9 @@ namespace Microsoft.CookiecutterTools {
             return window;
         }
 
-        internal void NewCookiecutterSession(string targetFolder = null, string targetProjectUniqueName = null) {
+        internal void NewCookiecutterSession(ProjectLocation location = null) {
             var pane = ShowWindowPane(typeof(CookiecutterToolWindow), true) as CookiecutterToolWindow;
-            pane.NewSession(targetFolder, targetProjectUniqueName);
+            pane.NewSession(location);
         }
 
         internal void RegisterCommands(IEnumerable<Command> commands, Guid cmdSet) {

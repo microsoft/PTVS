@@ -389,6 +389,15 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Project with unique name &apos;{0}&apos; was not found in the current solution..
+        /// </summary>
+        internal static string ProjectNotFound {
+            get {
+                return ResourceManager.GetString("ProjectNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to  - &apos;{0}&apos; was saved as &apos;{1}&apos;..
         /// </summary>
         internal static string ReplacedFile {

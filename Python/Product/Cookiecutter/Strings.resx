@@ -256,6 +256,9 @@ Please delete the installed template and try again.</value>
   <data name="AddToProjectError" xml:space="preserve">
     <value>Files were successfully created, but there was an issue adding the files to your project.\n{0}</value>
   </data>
+  <data name="ProjectNotFound" xml:space="preserve">
+    <value>Project with unique name '{0}' was not found in the current solution.</value>
+  </data>
   <data name="TemplateCategoryInstalled" xml:space="preserve">
     <value>Installed</value>
   </data>

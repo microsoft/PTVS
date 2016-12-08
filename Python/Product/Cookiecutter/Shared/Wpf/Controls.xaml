@@ -1029,6 +1029,7 @@
                                  VerticalAlignment="Stretch"
                                  Style="{StaticResource {x:Type TextBox}}"
                                  Text="{Binding Text,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent},UpdateSourceTrigger=PropertyChanged}"
+                                 IsReadOnly="{Binding IsReadOnly,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent},UpdateSourceTrigger=PropertyChanged}"
                                  AutomationProperties.HelpText="{TemplateBinding HelpText}">
                             <TextBox.ToolTip>
                                 <ToolTip Placement="Bottom" Content="{TemplateBinding HelpText}">
@@ -1063,6 +1064,9 @@
                     <ControlTemplate.Triggers>
                         <Trigger SourceName="_TextBox" Property="Text" Value="">
                             <Setter TargetName="_Watermark" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                        <Trigger SourceName="_TextBox" Property="IsReadOnly" Value="True">
+                            <Setter TargetName="_Browse" Property="Visibility" Value="Collapsed" />
                         </Trigger>
                         <Trigger SourceName="_Browse" Property="Style" Value="{x:Null}">
                             <Setter TargetName="_Browse" Property="Visibility" Value="Collapsed" />

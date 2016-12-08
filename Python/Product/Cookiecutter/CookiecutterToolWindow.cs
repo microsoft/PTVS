@@ -18,8 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
@@ -130,6 +128,7 @@ namespace Microsoft.CookiecutterTools {
             ErrorHandler.ThrowOnFailure(shell.GetProperty((int)__VSSPROPID.VSSPROPID_InstallDirectory, out commonIdeFolderPath));
 
             var gitClient = GitClientProvider.Create(outputWindow, commonIdeFolderPath as string);
+            var projectSystemClient = new ProjectSystemClient(CookiecutterPackage.Instance.DTE);
 
             _cookiecutterPage = new CookiecutterContainerPage(
                 this,
@@ -138,7 +137,7 @@ namespace Microsoft.CookiecutterTools {
                 gitClient,
                 new Uri(feedUrl),
                 OpenGeneratedFolder,
-                AddToProject,
+                projectSystemClient,
                 UpdateCommandUI
             );
             _cookiecutterPage.ContextMenuRequested += OnContextMenuRequested;
@@ -208,92 +207,6 @@ namespace Microsoft.CookiecutterTools {
 
         private void UpdateCommandUI() {
             _uiShell.UpdateCommandUI(0);
-        }
-
-        private void AddToProject(string folderPath, string targetProjectUniqueName, CreateFilesOperationResult creationResult) {
-            var dte = CookiecutterPackage.Instance.DTE;
-            var items = (Array)dte.ToolWindows.SolutionExplorer.SelectedItems;
-            foreach (var proj in dte.ActiveSolutionProjects) {
-                var p = proj as EnvDTE.Project;
-                if (p != null && p.UniqueName == targetProjectUniqueName) {
-                    var parentItems = GetTargetProjectItems(p, folderPath);
-
-                    // Remember which folder items we're adding, because we can't query them
-                    // in F# project system
-                    var folderItems = new Dictionary<string, EnvDTE.ProjectItems>();
-                    try {
-                        foreach (var createdFolderPath in creationResult.FoldersCreated) {
-                            var absoluteFilePath = Path.Combine(folderPath, createdFolderPath);
-                            var folder = GetOrCreateFolderItem(parentItems, createdFolderPath);
-                            folderItems[createdFolderPath] = folder;
-                        }
-                    } catch (NotImplementedException) {
-                        // Some project types such as C++ don't support creating folders
-                    }
-
-                    foreach (var createdFilePath in creationResult.FilesCreated) {
-                        var absoluteFilePath = Path.Combine(folderPath, createdFilePath);
-                        EnvDTE.ProjectItems itemParent;
-                        try {
-                            itemParent = GetOrCreateFolderItem(parentItems, Path.GetDirectoryName(createdFilePath));
-                        } catch (NotImplementedException) {
-                            // Some project types such as C++ don't support creating folders
-                            // so we'll add everything flat
-                            itemParent = parentItems;
-                        } catch (ArgumentException) {
-                            // Some project types such as F# don't return folders as ProjectItem
-                            // so we can't find the folder we just created above. Attempting to
-                            // create it generates a ArgumentException saying the folder already exists.
-                            if (!folderItems.TryGetValue(Path.GetDirectoryName(createdFilePath), out itemParent)) {
-                                itemParent = parentItems;
-                            }
-                        }
-
-                        if (FindItemByName(itemParent, Path.GetFileName(createdFilePath)) == null) {
-                            itemParent.AddFromFile(absoluteFilePath);
-                        }
-                    }
-                }
-            }
-        }
-
-        private EnvDTE.ProjectItems GetOrCreateFolderItem(EnvDTE.ProjectItems parentItems, string folderPath) {
-            var relativeFolderParts = folderPath.Split(new char[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (string relativefolderPart in relativeFolderParts) {
-                var folderItem = FindItemByName(parentItems, relativefolderPart);
-                if (folderItem == null) {
-                    folderItem = parentItems.AddFolder(relativefolderPart);
-                }
-                parentItems = folderItem.ProjectItems;
-            }
-
-            return parentItems;
-        }
-
-        private EnvDTE.ProjectItems GetTargetProjectItems(EnvDTE.Project p, string folderPath) {
-            var projectFolderPath = AddFromCookiecutterCommand.GetProjectFolder(p);
-            var relativeParentFolder = PathUtils.GetRelativeDirectoryPath(projectFolderPath, folderPath);
-            var relativeParentParts = relativeParentFolder.Split(new char[] { '\\', '/' }, StringSplitOptions.RemoveEmptyEntries);
-            var parentItems = p.ProjectItems;
-            foreach (var relativeParentPart in relativeParentParts) {
-                var parentItem = FindItemByName(parentItems, relativeParentPart);
-                if (parentItem != null) {
-                    parentItems = parentItem.ProjectItems;
-                } else {
-                    return null;
-                }
-            }
-            return parentItems;
-        }
-
-        private EnvDTE.ProjectItem FindItemByName(EnvDTE.ProjectItems projectItems, string name) {
-            foreach (EnvDTE.ProjectItem item in projectItems) {
-                if (item.Name == name) {
-                    return item;
-                }
-            }
-
-            return null;
         }
 
         private void OpenGeneratedFolder(string folderPath) {
@@ -383,8 +296,8 @@ namespace Microsoft.CookiecutterTools {
             return _cookiecutterPage != null ? _cookiecutterPage.CanUpdateSelection() : false;
         }
 
-        internal void NewSession(string targetFolder, string targetProjectUniqueName) {
-            _cookiecutterPage?.NewSession(targetFolder, targetProjectUniqueName);
+        internal void NewSession(ProjectLocation location) {
+            _cookiecutterPage?.NewSession(location);
         }
 
         private void OnContextMenuRequested(object sender, PointEventArgs e) {

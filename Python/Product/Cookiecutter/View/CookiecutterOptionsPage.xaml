@@ -11,7 +11,7 @@
       xmlns:img="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
       xmlns:imagecatalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
       xmlns:sys="clr-namespace:System;assembly=mscorlib"
-      wpf:LambdaProperties.ImportedNamespaces="System.Windows Microsoft.CookiecutterTools Microsoft.CookiecutterTools.ViewModel"
+      wpf:LambdaProperties.ImportedNamespaces="System.Windows Microsoft.CookiecutterTools Microsoft.CookiecutterTools.ViewModel Microsoft.CookiecutterTools.Model"
       mc:Ignorable="d" 
       d:DataContext="{Binding Source={d:DesignData Source=CookiecutterControlDesignData.xaml}}"
       d:DesignHeight="600" d:DesignWidth="300"
@@ -47,6 +47,7 @@
                     <wpf:Lambda x:Key="BoolToNotVisible">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
                     <wpf:Lambda x:Key="EmptyStringToVisibleOrCollapsed">(string s) => !string.IsNullOrEmpty(s) ? Visibility.Collapsed: Visibility.Visible</wpf:Lambda>
                     <wpf:Lambda x:Key="EmptyStringToNotVisibleOrCollapsed">(string s) => string.IsNullOrEmpty(s) ? Visibility.Collapsed : Visibility.Visible</wpf:Lambda>
+                    <wpf:Lambda x:Key="TargetProjectLocationUniqueProjectNameNotEmpty">(ProjectLocation loc) => !string.IsNullOrEmpty(loc?.ProjectUniqueName)</wpf:Lambda>
                     <Style x:Key="BrowseOdbcButton" TargetType="{x:Type Button}" BasedOn="{StaticResource BrowseButton}">
                         <Setter Property="Command" Value="{x:Static view:SqlCommands.BrowseOdbc}" />
                     </Style>
@@ -155,28 +156,30 @@
             <Label FontWeight="Bold">Description</Label>
             <TextBlock Margin="4 0 4 4" Text="{Binding Path=SelectedDescription}"/>-->
             <Label FontWeight="Bold">Create To</Label>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*"/>
-                    <ColumnDefinition Width="Auto"/>
-                </Grid.ColumnDefinitions>
+            <wpf:ConfigurationTextBoxWithHelp Grid.Column="0"
+                                            Margin="4 0 4 0"
+                                            Text="{Binding Path=OutputFolderPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                                            IsReadOnly="{Binding Path=FixedOutputFolder}"
+                                            Watermark="e.g. C:\Projects\Project1"
+                                            BrowseButtonStyle="{StaticResource BrowseFolderButton}">
+                <wpf:ConfigurationTextBoxWithHelp.HelpText>
+                    Folder location where the files will be created.
+                Files may be replaced if the folder is not empty
+                but a backup of existing files will be created as
+                necessary.
+                </wpf:ConfigurationTextBoxWithHelp.HelpText>
+                <wpf:ConfigurationTextBoxWithHelp.Resources>
+                    <Style TargetType="{x:Type Button}">
+                        <Setter Property="Height" Value="12"/>
+                    </Style>
+                </wpf:ConfigurationTextBoxWithHelp.Resources>
+            </wpf:ConfigurationTextBoxWithHelp>
 
-                <wpf:ConfigurationTextBoxWithHelp Grid.Column="0"
-                                                  Margin="4 0 4 0"
-                                                  Text="{Binding Path=OutputFolderPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                                                  Watermark="e.g. C:\Projects\Project1"
-                                                  BrowseButtonStyle="{StaticResource BrowseFolderButton}">
-                    <wpf:ConfigurationTextBoxWithHelp.HelpText>
-                        Folder location where the files will be created.
-                        Files may be replaced if the folder is not empty.
-                    </wpf:ConfigurationTextBoxWithHelp.HelpText>
-                    <wpf:ConfigurationTextBoxWithHelp.Resources>
-                        <Style TargetType="{x:Type Button}">
-                            <Setter Property="Height" Value="12"/>
-                        </Style>
-                    </wpf:ConfigurationTextBoxWithHelp.Resources>
-                </wpf:ConfigurationTextBoxWithHelp>
-            </Grid>
+            <StackPanel Margin="4 4 4 8" Orientation="Horizontal" Visibility="{Binding FixedOutputFolder, Converter={StaticResource BoolToVisibleOrCollapsed}}">
+                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusInformation}"/>
+                <TextBlock Margin="4 0 0 0" Text="Files will be added to your project."/>
+            </StackPanel>
+
             <Label FontWeight="Bold">Options</Label>
         </StackPanel>
         <ScrollViewer Grid.Row="1" Margin="4">
@@ -191,7 +194,7 @@
                         <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
                             <Setter Property="Content" Value="Create"/>
                             <Style.Triggers>
-                                <DataTrigger Binding="{Binding Path=AddingToProject}" Value="True">
+                                <DataTrigger Binding="{Binding Path=TargetProjectLocation, Converter={StaticResource TargetProjectLocationUniqueProjectNameNotEmpty}}" Value="True">
                                     <Setter Property="Content" Value="Add to Project"/>
                                 </DataTrigger>
                             </Style.Triggers>

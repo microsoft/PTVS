@@ -39,9 +39,9 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private readonly IGitHubClient _githubClient;
         private readonly IGitClient _gitClient;
         private readonly ICookiecutterTelemetry _telemetry;
+        private readonly IProjectSystemClient _projectSystemClient;
         private readonly Redirector _outputWindow;
         private readonly Action<string> _openFolder;
-        private readonly Action<string, string, CreateFilesOperationResult> _addToProject;
 
         public static readonly ICommand LoadMore = new RoutedCommand();
         public static readonly ICommand OpenInBrowser = new RoutedCommand();
@@ -58,7 +58,8 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private ImageSource _selectedImage;
         private string _selectedLocation;
         private int _checkingUpdatePercentComplete;
-        private bool _addingToProject;
+        private bool _fixedOutputFolder;
+        private ProjectLocation _targetProjectLocation;
 
         private OperationStatus _installingStatus;
         private OperationStatus _cloningStatus;
@@ -95,8 +96,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public ObservableCollection<ContextItemViewModel> ContextItems { get; } = new ObservableCollection<ContextItemViewModel>();
 
         public string UserConfigFilePath { get; set; }
-        public bool FixedOutputFolder { get; set; }
-        public string TargetProjectUniqueName { get; set; }
 
         public string InstalledFolderPath { get; set; } = DefaultInstalledFolderPath;
 
@@ -108,7 +107,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public CookiecutterViewModel() {
         }
 
-        public CookiecutterViewModel(ICookiecutterClient cutter, IGitHubClient githubClient, IGitClient gitClient, ICookiecutterTelemetry telemetry, Redirector outputWindow, ILocalTemplateSource installedTemplateSource, ITemplateSource feedTemplateSource, ITemplateSource gitHubTemplateSource, Action<string> openFolder, Action<string, string, CreateFilesOperationResult> addToProject) {
+        public CookiecutterViewModel(ICookiecutterClient cutter, IGitHubClient githubClient, IGitClient gitClient, ICookiecutterTelemetry telemetry, Redirector outputWindow, ILocalTemplateSource installedTemplateSource, ITemplateSource feedTemplateSource, ITemplateSource gitHubTemplateSource, Action<string> openFolder, IProjectSystemClient projectSystemClient) {
             _cutterClient = cutter;
             _githubClient = githubClient;
             _gitClient = gitClient;
@@ -118,7 +117,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             _installedSource = installedTemplateSource;
             _githubSource = gitHubTemplateSource;
             _openFolder = openFolder;
-            _addToProject = addToProject;
+            _projectSystemClient = projectSystemClient;
 
             Installed = new CategorizedViewModel(Strings.TemplateCategoryInstalled);
             Recommended = new CategorizedViewModel(Strings.TemplateCategoryRecommended);
@@ -309,6 +308,31 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
+        public bool FixedOutputFolder {
+            get {
+                return _fixedOutputFolder;
+            }
+            set {
+                if (value != _fixedOutputFolder) {
+                    _fixedOutputFolder = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FixedOutputFolder)));
+                }
+            }
+        }
+
+        public ProjectLocation TargetProjectLocation {
+            get {
+                return _targetProjectLocation;
+            }
+
+            set {
+                if (value != _targetProjectLocation) {
+                    _targetProjectLocation = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TargetProjectLocation)));
+                }
+            }
+        }
+
         public TemplateViewModel SelectedTemplate {
             get {
                 return _selectedTemplate;
@@ -318,19 +342,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _selectedTemplate) {
                     _selectedTemplate = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedTemplate)));
-                }
-            }
-        }
-
-        public bool AddingToProject {
-            get {
-                return _addingToProject;
-            }
-
-            set {
-                if (value != _addingToProject) {
-                    _addingToProject = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AddingToProject)));
                 }
             }
         }
@@ -746,9 +757,13 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 OpenInExplorerFolderPath = OutputFolderPath;
                 CreatingStatus = OperationStatus.Succeeded;
 
-                if (!string.IsNullOrEmpty(TargetProjectUniqueName) && AddingToProject) {
+                if (TargetProjectLocation != null) {
                     try {
-                        _addToProject?.Invoke(OpenInExplorerFolderPath, TargetProjectUniqueName, operationResult);
+                        var location = new ProjectLocation() {
+                            FolderPath = OpenInExplorerFolderPath,
+                            ProjectUniqueName = TargetProjectLocation.ProjectUniqueName,
+                        };
+                        _projectSystemClient.AddToProject(location, operationResult);
                     } catch (Exception ex) when (!ex.IsCriticalException()) {
                         _outputWindow.WriteErrorLine(Strings.AddToProjectError.FormatUI(ex.Message));
                     }

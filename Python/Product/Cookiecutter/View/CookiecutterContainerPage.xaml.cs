@@ -52,7 +52,7 @@ namespace Microsoft.CookiecutterTools.View {
             InitializeComponent();
         }
 
-        public CookiecutterContainerPage(IServiceProvider provider, Redirector outputWindow, ICookiecutterTelemetry telemetry, IGitClient gitClient, Uri feedUrl, Action<string> openFolder, Action<string, string, CreateFilesOperationResult> addToProject, Action updateCommandUI) {
+        public CookiecutterContainerPage(IServiceProvider provider, Redirector outputWindow, ICookiecutterTelemetry telemetry, IGitClient gitClient, Uri feedUrl, Action<string> openFolder, IProjectSystemClient projectSystemClient, Action updateCommandUI) {
             _updateCommandUI = updateCommandUI;
 
             _checkForUpdatesTimer = new DispatcherTimer();
@@ -69,7 +69,7 @@ namespace Microsoft.CookiecutterTools.View {
                 new FeedTemplateSource(feedUrl),
                 new GitHubTemplateSource(gitHubClient),
                 openFolder,
-                addToProject
+                projectSystemClient
             );
 
             ViewModel.UserConfigFilePath = CookiecutterViewModel.GetUserConfigPath();
@@ -188,8 +188,7 @@ namespace Microsoft.CookiecutterTools.View {
             _updateCommandUI();
 
             ViewModel.FixedOutputFolder = false;
-            ViewModel.TargetProjectUniqueName = null;
-            ViewModel.AddingToProject = false;
+            ViewModel.TargetProjectLocation = null;
             ViewModel.SearchTerm = string.Empty;
             ViewModel.SearchAsync().DoNotWait();
         }
@@ -252,14 +251,13 @@ namespace Microsoft.CookiecutterTools.View {
             _searchPage.CheckForUpdates();
         }
 
-        internal void NewSession(string targetFolder, string targetProjectUniqueName) {
+        internal void NewSession(ProjectLocation location) {
             Home();
 
-            if (Directory.Exists(targetFolder)) {
-                ViewModel.OutputFolderPath = targetFolder;
+            if (location != null) {
+                ViewModel.OutputFolderPath = location.FolderPath;
                 ViewModel.FixedOutputFolder = true;
-                ViewModel.TargetProjectUniqueName = targetProjectUniqueName;
-                ViewModel.AddingToProject = !string.IsNullOrEmpty(targetProjectUniqueName);
+                ViewModel.TargetProjectLocation = location;
             }
         }
 
