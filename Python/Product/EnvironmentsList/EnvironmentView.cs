@@ -37,10 +37,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly RoutedCommand EnableIPythonInteractive = new RoutedCommand();
         public static readonly RoutedCommand DisableIPythonInteractive = new RoutedCommand();
 
-        public static readonly Lazy<EnvironmentView> OnlineHelpView =
-            new Lazy<EnvironmentView>(() => new EnvironmentView());
-        public static readonly Lazy<IEnumerable<EnvironmentView>> OnlineHelpViewOnce =
-            new Lazy<IEnumerable<EnvironmentView>>(() => new[] { OnlineHelpView.Value });
+        private const string AddNewEnvironmentViewId = "__AddNewEnvironmentView";
+        private const string OnlineHelpViewId = "__OnlineHelpView";
+
+        public static readonly IEnumerable<InterpreterConfiguration> ExtraItems = new[] {
+            new InterpreterConfiguration(OnlineHelpViewId, OnlineHelpViewId),
+            new InterpreterConfiguration(AddNewEnvironmentViewId, AddNewEnvironmentViewId)
+        };
+
+        public static readonly EnvironmentView OnlineHelpView = new EnvironmentView(OnlineHelpViewId);
 
         // Names of properties that will be requested from interpreter configurations
         internal const string CompanyKey = "Company";
@@ -56,11 +61,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private readonly IInterpreterRegistryService _registry;
         private readonly IPythonInterpreterFactoryWithDatabase _withDb;
 
-        internal bool _addNewEnvironmentView;
+        public IPythonInterpreterFactory Factory { get; }
+        public InterpreterConfiguration Configuration { get; }
 
-        public IPythonInterpreterFactory Factory { get; private set; }
-
-        private EnvironmentView() { }
+        private EnvironmentView(string id) {
+            Configuration = new InterpreterConfiguration(id, id);
+        }
 
         internal EnvironmentView(
             IInterpreterOptionsService service,
@@ -81,6 +87,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _service = service;
             _registry = registry;
             Factory = factory;
+            Configuration = Factory?.Configuration;
 
             _withDb = factory as IPythonInterpreterFactoryWithDatabase;
             if (_withDb != null) {
@@ -114,12 +121,17 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         public static EnvironmentView CreateAddNewEnvironmentView(IInterpreterOptionsService service) {
-            var ev = new EnvironmentView();
-            ev._addNewEnvironmentView = true;
+            var ev = new EnvironmentView(AddNewEnvironmentViewId);
             ev.Extensions = new ObservableCollection<object>();
             ev.Extensions.Add(new ConfigurationExtensionProvider(service, alwaysCreateNew: true));
             return ev;
         }
+
+        public static bool IsAddNewEnvironmentView(string id) => AddNewEnvironmentViewId.Equals(id);
+        public static bool IsOnlineHelpView(string id) => OnlineHelpViewId.Equals(id);
+
+        public static bool IsAddNewEnvironmentView(EnvironmentView view) => AddNewEnvironmentViewId.Equals(view?.Configuration?.Id);
+        public static bool IsOnlineHelpView(EnvironmentView view) => OnlineHelpViewId.Equals(view?.Configuration?.Id);
 
         public override string ToString() {
             return string.Format(
@@ -286,15 +298,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 return base.SelectTemplate(item, container);
             }
 
-            if (ev._addNewEnvironmentView && AddNewEnvironment != null) {
+            if (EnvironmentView.IsAddNewEnvironmentView(ev) && AddNewEnvironment != null) {
                 return AddNewEnvironment;
             }
 
-            if (EnvironmentView.OnlineHelpView.IsValueCreated) {
-                if (object.ReferenceEquals(item, EnvironmentView.OnlineHelpView.Value) &&
-                    OnlineHelp != null) {
-                    return OnlineHelp;
-                }
+            if (EnvironmentView.IsOnlineHelpView(ev) && OnlineHelp != null) {
+                return OnlineHelp;
             }
 
             if (Environment != null) {
