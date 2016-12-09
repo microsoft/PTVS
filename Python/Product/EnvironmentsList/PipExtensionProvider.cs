@@ -197,6 +197,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             OperationFinished?.Invoke(this, new OperationFinishedEventArgs(operation, success));
         }
 
+        public event EventHandler InstalledPackagesChanged {
+            add { _packageManager.InstalledPackagesChanged += value; }
+            remove { _packageManager.InstalledPackagesChanged -= value; }
+        }
+
         sealed class CallOnDispose : IDisposable {
             private readonly Action _action;
             public CallOnDispose(Action action) { _action = action; }
