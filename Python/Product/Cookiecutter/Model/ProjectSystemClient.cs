@@ -149,10 +149,12 @@ namespace Microsoft.CookiecutterTools.Model {
             foreach (EnvDTE.UIHierarchyItem selItem in items) {
                 var item = selItem.Object as EnvDTE.ProjectItem;
                 if (item != null && item.Properties != null) {
-                    yield return new ProjectLocation() {
-                        FolderPath = item.Properties.Item("FullPath").Value.ToString(),
-                        ProjectUniqueName = item.ContainingProject.UniqueName,
-                    };
+                    if (IsProjectSupported(item.ContainingProject)) {
+                        yield return new ProjectLocation() {
+                            FolderPath = item.Properties.Item("FullPath").Value.ToString(),
+                            ProjectUniqueName = item.ContainingProject.UniqueName,
+                        };
+                    }
                 }
 
                 var proj = selItem.Object as EnvDTE.Project;
