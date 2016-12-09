@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Interpreter {
@@ -34,6 +35,9 @@ namespace Microsoft.PythonTools.Interpreter {
         IPythonInterpreterFactory _defaultInterpreter;
         private readonly object _defaultInterpreterLock = new object();
         private EventHandler _defaultInterpreterChanged;
+
+        private int _requireDefaultInterpreterChangeEvent;
+        private int _suppressDefaultInterpreterChangeEvent;
 
         // The second is a static registry entry for the local machine and/or
         // the current user (HKCU takes precedence), intended for being set by
@@ -62,6 +66,8 @@ namespace Microsoft.PythonTools.Interpreter {
 
 
         private void InitializeDefaultInterpreterWatcher() {
+            Debug.Assert(!_defaultInterpreterWatched);
+
             _registryService.Value.InterpretersChanged += Provider_InterpreterFactoriesChanged;
 
             RegistryHive hive = RegistryHive.CurrentUser;
@@ -73,7 +79,7 @@ namespace Microsoft.PythonTools.Interpreter {
             ) == null) {
                 // DefaultInterpreterOptions subkey does not exist yet, so
                 // create it and then start the watcher.
-                SaveDefaultInterpreter(_defaultInterpreter?.Configuration?.Id);
+                SaveDefaultInterpreterId();
 
                 RegistryWatcher.Instance.Add(
                     hive, view, DefaultInterpreterOptionsCollection,
@@ -86,24 +92,12 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private void Provider_InterpreterFactoriesChanged(object sender, EventArgs e) {
             // reload the default interpreter ID and see if it changed...
-            string oldId = _defaultInterpreterId;
-            _defaultInterpreterId = null;
-            LoadDefaultInterpreterId();
-
-            if (oldId != _defaultInterpreterId) {
-                // it changed, invalidate the old interpreter ID.  If no one is watching then
-                // we'll just load it on demand next time someone requests it.
-                _defaultInterpreter = null;
-                if (_defaultInterpreterWatched) {
-                    // someone is watching it, so load it now and raise the changed event.
-                    LoadDefaultInterpreter();
-                }
-            }
+            SetDefaultInterpreter(LoadDefaultInterpreterId(), null);
         }
 
         private void DefaultInterpreterRegistry_Changed(object sender, RegistryChangedEventArgs e) {
             try {
-                LoadDefaultInterpreter();
+                SetDefaultInterpreter(LoadDefaultInterpreterId(), null);
             } catch (InvalidComObjectException) {
                 // Race between VS closing and accessing the settings store.
             } catch (Exception ex) {
@@ -122,112 +116,137 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void LoadDefaultInterpreterId() {
-            if (_defaultInterpreterId != null) {
-                return;
+        private string LoadDefaultInterpreterId() {
+            string id;
+            using (var interpreterOptions = Registry.CurrentUser.OpenSubKey(DefaultInterpreterOptionsCollection)) {
+                id = interpreterOptions?.GetValue(DefaultInterpreterSetting) as string;
             }
 
-            lock (_defaultInterpreterLock) {
-                if (_defaultInterpreterId != null) {
-                    return;
+            if (string.IsNullOrEmpty(id)) {
+                return null;
+            }
+
+            InterpreterConfiguration newDefault = null;
+            if (!string.IsNullOrEmpty(id)) {
+                newDefault = _registryService.Value.FindConfiguration(id);
+            }
+
+            if (newDefault == null) {
+                var defaultConfig = _registryService.Value.Configurations.LastOrDefault(c => c.CanBeAutoDefault());
+                id = defaultConfig?.Id;
+            }
+
+            return id;
+        }
+
+        private void SaveDefaultInterpreterId() {
+            var id = _defaultInterpreterId;
+
+            BeginSuppressDefaultInterpreterChangeEvent();
+            try {
+                using (var interpreterOptions = Registry.CurrentUser.CreateSubKey(DefaultInterpreterOptionsCollection, true)) {
+                    if (string.IsNullOrEmpty(id)) {
+                        interpreterOptions.SetValue(DefaultInterpreterSetting, "");
+                    } else {
+                        Debug.Assert(!InterpreterRegistryConstants.IsNoInterpretersFactory(id));
+
+                        interpreterOptions.SetValue(DefaultInterpreterSetting, id);
+                    }
                 }
+            } finally {
+                EndSuppressDefaultInterpreterChangeEvent();
+            }
+        }
 
-                string id = null;
-                using (var interpreterOptions = Registry.CurrentUser.OpenSubKey(DefaultInterpreterOptionsCollection)) {
-                    if (interpreterOptions != null) {
-                        id = interpreterOptions.GetValue(DefaultInterpreterSetting) as string ?? string.Empty;
+        private void SetDefaultInterpreter(string id, IPythonInterpreterFactory factory) {
+            id = id ?? factory?.Configuration?.Id ?? string.Empty;
+
+            BeginSuppressDefaultInterpreterChangeEvent();
+            try {
+                lock (_defaultInterpreterLock) {
+                    if (_defaultInterpreterId == id) {
+                        return;
+                    }
+                    if (string.IsNullOrEmpty(id) && _defaultInterpreterId == null) {
+                        return;
                     }
 
-                    var newDefault = _registryService.Value.FindInterpreter(id);
-
-                    if (newDefault == null) {
-                        var defaultConfig = _registryService.Value.Configurations.LastOrDefault(fact => fact.CanBeAutoDefault());
-                        id = defaultConfig?.Id;
+                    if (string.IsNullOrEmpty(id)) {
+                        _defaultInterpreter = null;
+                    } else {
+                        _defaultInterpreter = factory;
                     }
-
                     _defaultInterpreterId = id;
+                    SaveDefaultInterpreterId();
                 }
-            }
-        }
-
-        private void LoadDefaultInterpreter(bool suppressChangeEvent = false) {
-            if (_defaultInterpreter != null) {
-                return;
-            }
-
-            IPythonInterpreterFactory newDefault = null;
-            lock (_defaultInterpreterLock) {
-                if (_defaultInterpreter != null) {
-                    return;
-                }
-
-                LoadDefaultInterpreterId();
-                if (_defaultInterpreterId != null) {
-                    newDefault = _registryService.Value.FindInterpreter(_defaultInterpreterId);
-                }
-            }
-
-            if (newDefault != null) {
-                if (suppressChangeEvent) {
-                    _defaultInterpreter = newDefault;
-                } else {
-                    DefaultInterpreter = newDefault;
-                }
-            }
-        }
-
-        private void SaveDefaultInterpreter(string id) {
-            using (var interpreterOptions = Registry.CurrentUser.CreateSubKey(DefaultInterpreterOptionsCollection, true)) {
-                if (id == null) {
-                    interpreterOptions.SetValue(DefaultInterpreterSetting, "");
-                } else {
-                    Debug.Assert(!InterpreterRegistryConstants.IsNoInterpretersFactory(id));
-
-                    interpreterOptions.SetValue(DefaultInterpreterSetting, id);
-                }
+                OnDefaultInterpreterChanged();
+            } finally {
+                EndSuppressDefaultInterpreterChangeEvent();
             }
         }
 
         public string DefaultInterpreterId {
             get {
-                LoadDefaultInterpreterId();
+                if (_defaultInterpreterId == null) {
+                    _defaultInterpreterId = LoadDefaultInterpreterId();
+                }
                 return _defaultInterpreterId;
             }
             set {
-                if (_defaultInterpreterId != value) {
-                    _defaultInterpreterId = value;
-                    _defaultInterpreter = null; // cleared so we'll re-initialize if anyone cares about it.
-                    SaveDefaultInterpreter(value);
-
-                    _defaultInterpreterChanged?.Invoke(this, EventArgs.Empty);
-                }
+                SetDefaultInterpreter(value, null);
             }
         }
 
         public IPythonInterpreterFactory DefaultInterpreter {
             get {
-                LoadDefaultInterpreter(true);
+                IPythonInterpreterFactory factory = _defaultInterpreter;
+                if (factory != null) {
+                    // We've loaded and found the factory already
+                    return factory;
+                }
+                if (_defaultInterpreterId == string.Empty) {
+                    // We've loaded, and there's nothing there
+                    return _registryService.Value.NoInterpretersValue;
+                }
+                lock (_defaultInterpreterLock) {
+                    if (_defaultInterpreterId == null) {
+                        // We haven't loaded yet
+                        _defaultInterpreterId = LoadDefaultInterpreterId();
+                    }
+                    if (_defaultInterpreter == null && !string.IsNullOrEmpty(_defaultInterpreterId)) {
+                        // We've loaded but haven't found the factory yet
+                        _defaultInterpreter = _registryService.Value.FindInterpreter(_defaultInterpreterId);
+                    }
+                }
                 return _defaultInterpreter ?? _registryService.Value.NoInterpretersValue;
             }
             set {
                 var newDefault = value;
-                if (_defaultInterpreter == null && (newDefault == _registryService.Value.NoInterpretersValue || value == null)) {
-                    // we may have not loaded the default interpreter yet.  Do so 
-                    // now so we know if we need to raise the change event.
-                    LoadDefaultInterpreter();
-                }
-
                 if (newDefault == _registryService.Value.NoInterpretersValue) {
                     newDefault = null;
                 }
-                if (newDefault != _defaultInterpreter) {
-                    _defaultInterpreter = newDefault;
-                    _defaultInterpreterId = _defaultInterpreter?.Configuration?.Id;
-                    SaveDefaultInterpreter(_defaultInterpreter?.Configuration?.Id);
-
-                    _defaultInterpreterChanged?.Invoke(this, EventArgs.Empty);
-                }
+                SetDefaultInterpreter(null, newDefault);
             }
+        }
+
+        private void BeginSuppressDefaultInterpreterChangeEvent() {
+            Interlocked.Increment(ref _suppressDefaultInterpreterChangeEvent);
+        }
+
+        private void EndSuppressDefaultInterpreterChangeEvent() {
+            if (0 == Interlocked.Decrement(ref _suppressDefaultInterpreterChangeEvent) &&
+                0 != Interlocked.Exchange(ref _requireDefaultInterpreterChangeEvent, 0)) {
+                _defaultInterpreterChanged?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        private void OnDefaultInterpreterChanged() {
+            if (Volatile.Read(ref _suppressDefaultInterpreterChangeEvent) != 0) {
+                Volatile.Write(ref _requireDefaultInterpreterChangeEvent, 1);
+                return;
+            }
+
+            _defaultInterpreterChanged?.Invoke(this, EventArgs.Empty);
         }
 
         public event EventHandler DefaultInterpreterChanged {
@@ -280,7 +299,6 @@ namespace Microsoft.PythonTools.Interpreter {
             }
 
             return CPythonInterpreterFactoryConstants.GetInterpreterId(CustomCompany, name);
-
         }
 
         public void RemoveConfigurableInterpreter(string id) {
@@ -288,11 +306,13 @@ namespace Microsoft.PythonTools.Interpreter {
             if (CPythonInterpreterFactoryConstants.TryParseInterpreterId(id, out company, out tag) &&
                 company == CustomCompany) {
                 var collection = CustomInterpreterKey + "\\" + tag;
-                try {
-                    Registry.CurrentUser.DeleteSubKeyTree(collection);
+                using (_cpythonProvider.Value.SuppressDiscoverFactories()) {
+                    try {
+                        Registry.CurrentUser.DeleteSubKeyTree(collection);
 
-                    _cpythonProvider.Value.DiscoverInterpreterFactories();
-                } catch (ArgumentException) {
+                        _cpythonProvider.Value.DiscoverInterpreterFactories();
+                    } catch (ArgumentException) {
+                    }
                 }
             }
         }

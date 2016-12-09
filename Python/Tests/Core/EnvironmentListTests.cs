@@ -952,8 +952,7 @@ namespace PythonToolsUITests {
                 get {
                     return _proxy.Invoke(() =>
                         Window._environments
-                            .Where(ev => !ev._addNewEnvironmentView)
-                            .Except(EnvironmentView.OnlineHelpViewOnce.Value)
+                            .Where(ev => !EnvironmentView.IsAddNewEnvironmentView(ev) && !EnvironmentView.IsOnlineHelpView(ev))
                             .ToList()
                     );
                 }
@@ -961,7 +960,7 @@ namespace PythonToolsUITests {
 
             public EnvironmentView AddNewEnvironmentView {
                 get {
-                    return _proxy.Invoke(() => Window._environments.Single(ev => ev._addNewEnvironmentView));
+                    return _proxy.Invoke(() => Window._environments.Single(ev => EnvironmentView.IsAddNewEnvironmentView(ev)));
                 }
             }
 
