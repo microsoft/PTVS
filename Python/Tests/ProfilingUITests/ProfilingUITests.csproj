@@ -70,7 +70,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ProfilingTests.cs" />
-    <Compile Include="ProfilingToolTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
