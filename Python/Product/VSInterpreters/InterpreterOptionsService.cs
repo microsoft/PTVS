@@ -187,7 +187,9 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public string DefaultInterpreterId {
             get {
-                LoadDefaultInterpreterId();
+                if (_defaultInterpreterId == null) {
+                    _defaultInterpreterId = LoadDefaultInterpreterId();
+                }
                 return _defaultInterpreterId;
             }
             set {
@@ -209,7 +211,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 lock (_defaultInterpreterLock) {
                     if (_defaultInterpreterId == null) {
                         // We haven't loaded yet
-                        LoadDefaultInterpreterId();
+                        _defaultInterpreterId = LoadDefaultInterpreterId();
                     }
                     if (_defaultInterpreter == null && !string.IsNullOrEmpty(_defaultInterpreterId)) {
                         // We've loaded but haven't found the factory yet

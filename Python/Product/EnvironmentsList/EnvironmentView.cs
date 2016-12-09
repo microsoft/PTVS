@@ -83,11 +83,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             if (factory == null) {
                 throw new ArgumentNullException(nameof(factory));
             }
+            if (factory.Configuration == null) {
+                throw new ArgumentException("factory must include a configuration");
+            }
 
             _service = service;
             _registry = registry;
             Factory = factory;
-            Configuration = Factory?.Configuration;
+            Configuration = Factory.Configuration;
 
             _withDb = factory as IPythonInterpreterFactoryWithDatabase;
             if (_withDb != null) {
@@ -97,12 +100,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
             
 
-            if (_service.IsConfigurable(factory.Configuration.Id)) {
+            if (_service.IsConfigurable(Factory.Configuration.Id)) {
                 IsConfigurable = true;
             }
 
             Description = Factory.Configuration.Description;
-            IsDefault = (_service != null && _service.DefaultInterpreter == Factory);
+            IsDefault = (_service != null && _service.DefaultInterpreterId == Configuration.Id);
 
             PrefixPath = Factory.Configuration.PrefixPath;
             InterpreterPath = Factory.Configuration.InterpreterPath;
@@ -130,13 +133,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static bool IsAddNewEnvironmentView(string id) => AddNewEnvironmentViewId.Equals(id);
         public static bool IsOnlineHelpView(string id) => OnlineHelpViewId.Equals(id);
 
-        public static bool IsAddNewEnvironmentView(EnvironmentView view) => AddNewEnvironmentViewId.Equals(view?.Configuration?.Id);
-        public static bool IsOnlineHelpView(EnvironmentView view) => OnlineHelpViewId.Equals(view?.Configuration?.Id);
+        public static bool IsAddNewEnvironmentView(EnvironmentView view) => AddNewEnvironmentViewId.Equals(view?.Configuration.Id);
+        public static bool IsOnlineHelpView(EnvironmentView view) => OnlineHelpViewId.Equals(view?.Configuration.Id);
 
         public override string ToString() {
             return string.Format(
-                "{{{0}:{1}}}", GetType().FullName,
-                _withDb == null ? "(null)" : _withDb.Configuration.Description
+                "{{{0}:{1}}}",
+                GetType().FullName,
+                _withDb?.Configuration.Description ??"(null)"
             );
         }
 

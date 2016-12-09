@@ -534,17 +534,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         class InterpreterConfigurationComparer : IEqualityComparer<InterpreterConfiguration>, IComparer<InterpreterConfiguration> {
             public static readonly InterpreterConfigurationComparer Instance = new InterpreterConfigurationComparer();
 
-            public bool Equals(InterpreterConfiguration x, InterpreterConfiguration y) {
-                if (object.ReferenceEquals(x, y)) {
-                    return true;
-                }
-
-                return x?.Id == y?.Id;
-            }
-
-            public int GetHashCode(InterpreterConfiguration obj) {
-                return obj.Id.GetHashCode();
-            }
+            public bool Equals(InterpreterConfiguration x, InterpreterConfiguration y) => x == y;
+            public int GetHashCode(InterpreterConfiguration obj) => obj.GetHashCode();
 
             public int Compare(InterpreterConfiguration x, InterpreterConfiguration y) {
                 if (object.ReferenceEquals(x, y)) {
