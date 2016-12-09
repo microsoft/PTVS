@@ -18,24 +18,15 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.InterpreterList;
-using Microsoft.VisualStudio.PlatformUI;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project {
     sealed class AddInterpreterView : DependencyObject, INotifyPropertyChanged, IDisposable {
         private readonly PythonProjectNode _project;
 
-        
         public AddInterpreterView(
             PythonProjectNode project,
             IServiceProvider serviceProvider,
