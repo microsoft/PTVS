@@ -221,7 +221,11 @@
                         Orientation="Vertical"
                         Visibility="{Binding Path=InstallingStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
                 <Separator/>
-                <TextBlock Text="Installing cookiecutter..."/>
+                <TextBlock Text="Preparing cookiecutter for first time use...">
+                    <TextBlock.ToolTip>
+                        Downloading and installing the cookiecutter package from the Python Package Index. This may take a few minutes.
+                    </TextBlock.ToolTip>
+                </TextBlock>
                 <ProgressBar Margin="4" IsIndeterminate="True"/>
             </StackPanel>
 
