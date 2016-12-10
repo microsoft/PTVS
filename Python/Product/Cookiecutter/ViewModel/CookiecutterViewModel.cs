@@ -39,6 +39,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private readonly IGitHubClient _githubClient;
         private readonly IGitClient _gitClient;
         private readonly ICookiecutterTelemetry _telemetry;
+        private readonly IProjectSystemClient _projectSystemClient;
         private readonly Redirector _outputWindow;
         private readonly Action<string> _openFolder;
 
@@ -57,6 +58,8 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private ImageSource _selectedImage;
         private string _selectedLocation;
         private int _checkingUpdatePercentComplete;
+        private bool _fixedOutputFolder;
+        private ProjectLocation _targetProjectLocation;
 
         private OperationStatus _installingStatus;
         private OperationStatus _cloningStatus;
@@ -104,7 +107,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public CookiecutterViewModel() {
         }
 
-        public CookiecutterViewModel(ICookiecutterClient cutter, IGitHubClient githubClient, IGitClient gitClient, ICookiecutterTelemetry telemetry, Redirector outputWindow, ILocalTemplateSource installedTemplateSource, ITemplateSource feedTemplateSource, ITemplateSource gitHubTemplateSource, Action<string> openFolder) {
+        public CookiecutterViewModel(ICookiecutterClient cutter, IGitHubClient githubClient, IGitClient gitClient, ICookiecutterTelemetry telemetry, Redirector outputWindow, ILocalTemplateSource installedTemplateSource, ITemplateSource feedTemplateSource, ITemplateSource gitHubTemplateSource, Action<string> openFolder, IProjectSystemClient projectSystemClient) {
             _cutterClient = cutter;
             _githubClient = githubClient;
             _gitClient = gitClient;
@@ -114,6 +117,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             _installedSource = installedTemplateSource;
             _githubSource = gitHubTemplateSource;
             _openFolder = openFolder;
+            _projectSystemClient = projectSystemClient;
 
             Installed = new CategorizedViewModel(Strings.TemplateCategoryInstalled);
             Recommended = new CategorizedViewModel(Strings.TemplateCategoryRecommended);
@@ -300,6 +304,31 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _checkingUpdatePercentComplete) {
                     _checkingUpdatePercentComplete = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CheckingUpdatePercentComplete)));
+                }
+            }
+        }
+
+        public bool FixedOutputFolder {
+            get {
+                return _fixedOutputFolder;
+            }
+            set {
+                if (value != _fixedOutputFolder) {
+                    _fixedOutputFolder = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FixedOutputFolder)));
+                }
+            }
+        }
+
+        public ProjectLocation TargetProjectLocation {
+            get {
+                return _targetProjectLocation;
+            }
+
+            set {
+                if (value != _targetProjectLocation) {
+                    _targetProjectLocation = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TargetProjectLocation)));
                 }
             }
         }
@@ -703,7 +732,14 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 _outputWindow.WriteLine(String.Empty);
                 _outputWindow.WriteLine(Strings.RunningTemplateStarted.FormatUI(selection.DisplayName));
 
-                await _cutterClient.GenerateProjectAsync(_templateLocalFolderPath, UserConfigFilePath, contextFilePath, OutputFolderPath);
+                var operationResult = await _cutterClient.CreateFilesAsync(_templateLocalFolderPath, UserConfigFilePath, contextFilePath, OutputFolderPath);
+
+                if (operationResult.FilesReplaced.Length > 0) {
+                    _outputWindow.WriteLine(Strings.ReplacedFilesHeader);
+                    foreach (var replacedfile in operationResult.FilesReplaced) {
+                        _outputWindow.WriteLine(Strings.ReplacedFile.FormatUI(replacedfile.OriginalFilePath, replacedfile.BackupFilePath));
+                    }
+                }
 
                 try {
                     File.Delete(contextFilePath);
@@ -720,6 +756,22 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 _templateLocalFolderPath = null;
                 OpenInExplorerFolderPath = OutputFolderPath;
                 CreatingStatus = OperationStatus.Succeeded;
+
+                if (TargetProjectLocation != null) {
+                    try {
+                        var location = new ProjectLocation() {
+                            FolderPath = OpenInExplorerFolderPath,
+                            ProjectUniqueName = TargetProjectLocation.ProjectUniqueName,
+                        };
+                        _projectSystemClient.AddToProject(location, operationResult);
+
+                        ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.AddToProject, selection);
+                    } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        _outputWindow.WriteErrorLine(Strings.AddToProjectError.FormatUI(ex.Message));
+
+                        ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.AddToProject, selection, ex);
+                    }
+                }
 
                 Home();
             } catch (Exception ex) when (!ex.IsCriticalException()) {
@@ -864,6 +916,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         }
 
         private async Task SetDefaultOutputFolder(string localTemplatePath) {
+            if (FixedOutputFolder) {
+                return;
+            }
+
             OutputFolderPath = await _cutterClient.GetDefaultOutputFolderAsync(PathUtils.GetFileOrDirectoryName(_templateLocalFolderPath));
             Debug.Assert(!Directory.Exists(OutputFolderPath) && !File.Exists(PathUtils.TrimEndSeparator(OutputFolderPath)));
         }
@@ -962,10 +1018,11 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     return;
                 }
 
-                var repoUrl = selection.RemoteUrl?.ToLowerInvariant();
-                var repoFullName = selection.RepositoryFullName?.ToLowerInvariant();
-                var repoOwner = selection.RepositoryOwner?.ToLowerInvariant();
-                var repoName = selection.RepositoryName?.ToLowerInvariant();
+                var repoUrl = selection.RemoteUrl?.ToLowerInvariant() ?? string.Empty;
+                var repoFullName = selection.RepositoryFullName?.ToLowerInvariant() ?? string.Empty;
+                var repoOwner = selection.RepositoryOwner?.ToLowerInvariant() ?? string.Empty;
+                var repoName = selection.RepositoryName?.ToLowerInvariant() ?? string.Empty;
+                var projKind = TargetProjectLocation?.ProjectKind ?? string.Empty;
 
                 var obj = new {
                     Success = error == null,
@@ -973,6 +1030,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     RepoFullName = new TelemetryPiiProperty(repoFullName),
                     RepoOwner = new TelemetryPiiProperty(repoOwner),
                     RepoName = new TelemetryPiiProperty(repoName),
+                    ProjectKind = projKind,
                 };
                 ReportEvent(area, eventName, obj);
             } catch (Exception ex) {

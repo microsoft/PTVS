@@ -49,6 +49,7 @@ namespace Microsoft.CookiecutterTools.Telemetry {
             public const string Run = "Run";
             public const string Delete = "Delete";
             public const string Update = "Update";
+            public const string AddToProject = "AddToProject";
         }
 
         public static void Initialize(ITelemetryService service = null) {

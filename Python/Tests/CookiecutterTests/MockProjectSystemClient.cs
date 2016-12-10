@@ -14,16 +14,19 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using Microsoft.CookiecutterTools.Model;
 
-namespace Microsoft.CookiecutterTools.Model {
-    interface ICookiecutterClient {
-        bool CookiecutterInstalled { get; }
-        Task<bool> IsCookiecutterInstalled();
-        Task CreateCookiecutterEnv();
-        Task InstallPackage();
-        Task<ContextItem[]> LoadContextAsync(string localTemplateFolder, string userConfigFilePath);
-        Task<CreateFilesOperationResult> CreateFilesAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath);
-        Task<string> GetDefaultOutputFolderAsync(string shortName);
+namespace CookiecutterTests {
+    class MockProjectSystemClient : IProjectSystemClient {
+        public List<Tuple<ProjectLocation, CreateFilesOperationResult>> Added { get; } = new List<Tuple<ProjectLocation, CreateFilesOperationResult>>();
+        public void AddToProject(ProjectLocation location, CreateFilesOperationResult creationResult) {
+            Added.Add(Tuple.Create(location, creationResult));
+        }
+
+        public ProjectLocation GetSelectedFolderProjectLocation() {
+            throw new NotImplementedException();
+        }
     }
 }

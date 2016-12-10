@@ -26,7 +26,7 @@ namespace Microsoft.CookiecutterTools.Commands {
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            CookiecutterPackage.Instance.ShowWindowPane(typeof(CookiecutterToolWindow), true);
+            CookiecutterPackage.Instance.NewCookiecutterSession();
         }
 
         public string Description {

@@ -35,7 +35,7 @@ namespace CookiecutterTests {
             throw new NotImplementedException();
         }
 
-        public Task GenerateProjectAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
+        public Task<CreateFilesOperationResult> CreateFilesAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
             throw new NotImplementedException();
         }
 

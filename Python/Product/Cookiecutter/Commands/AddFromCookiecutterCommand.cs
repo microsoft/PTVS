@@ -16,17 +16,34 @@
 
 using System;
 using Microsoft.CookiecutterTools.Infrastructure;
+using Microsoft.CookiecutterTools.Model;
 
 namespace Microsoft.CookiecutterTools.Commands {
     /// <summary>
     /// Provides the command for opening the cookiecutter window.
     /// </summary>
     class AddFromCookiecutterCommand : Command {
-        public AddFromCookiecutterCommand() {
+        private readonly CookiecutterPackage _package;
+        private readonly ProjectSystemClient _projectSystem;
+
+        public AddFromCookiecutterCommand(CookiecutterPackage package) {
+            _package = package;
+            _projectSystem = new ProjectSystemClient(package.DTE);
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            CookiecutterPackage.Instance.ShowWindowPane(typeof(CookiecutterToolWindow), true);
+            var location = _projectSystem.GetSelectedFolderProjectLocation();
+            _package.NewCookiecutterSession(location);
+        }
+
+        public override EventHandler BeforeQueryStatus {
+            get {
+                return (sender, args) => {
+                    var oleMenuCmd = (Microsoft.VisualStudio.Shell.OleMenuCommand)sender;
+                    oleMenuCmd.Enabled = _projectSystem.GetSelectedFolderProjectLocation() != null;
+                    oleMenuCmd.Visible = oleMenuCmd.Enabled;
+                };
+            }
         }
 
         public string Description {
