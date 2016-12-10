@@ -17,38 +17,31 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
 using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Project {
-    sealed class AddInterpreterView : DependencyObject, INotifyPropertyChanged, IDisposable {
+    sealed class AddInterpreterView : DependencyObject, IDisposable {
         private readonly PythonProjectNode _project;
 
         public AddInterpreterView(
             PythonProjectNode project,
             IServiceProvider serviceProvider,
-            IEnumerable<IPythonInterpreterFactory> selected
+            IEnumerable<string> selectedIds
         ) {
             _project = project;
             Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(serviceProvider, project));
             
-            var map = new Dictionary<IPythonInterpreterFactory, InterpreterView>();
+            var map = new Dictionary<string, InterpreterView>();
             foreach (var view in Interpreters) {
-                map[view.Interpreter] = view;
+                map[view.Id] = view;
                 view.IsSelected = false;
             }
 
-            foreach (var interp in selected) {
+            foreach (var id in selectedIds) {
                 InterpreterView view;
-                if (map.TryGetValue(interp, out view)) {
+                if (map.TryGetValue(id, out view)) {
                     view.IsSelected = true;
-                } else {
-                    view = new InterpreterView(interp, interp.Configuration.Description, false);
-                    view.IsSelected = true;
-                    Interpreters.Add(view);
                 }
             }
 
@@ -66,30 +59,12 @@ namespace Microsoft.PythonTools.Project {
             }
             var def = _project.ActiveInterpreter;
             Interpreters.Merge(
-                _project.InterpreterFactories.Select(i => new InterpreterView(i, i.Configuration.Description, i == def)),
+                InterpreterView.GetInterpreters(_project.Site, _project),
                 InterpreterView.EqualityComparer,
                 InterpreterView.Comparer
             );
         }
 
-        public ObservableCollection<InterpreterView> Interpreters {
-            get { return (ObservableCollection<InterpreterView>)GetValue(InterpretersProperty); }
-            private set { SetValue(InterpretersPropertyKey, value); }
-        }
-
-        private static readonly DependencyPropertyKey InterpretersPropertyKey = DependencyProperty.RegisterReadOnly("Interpreters", typeof(ObservableCollection<InterpreterView>), typeof(AddInterpreterView), new PropertyMetadata());
-        public static readonly DependencyProperty InterpretersProperty = InterpretersPropertyKey.DependencyProperty;
-
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
-            base.OnPropertyChanged(e);
-
-            var evt = PropertyChanged;
-            if (evt != null) {
-                evt(this, new PropertyChangedEventArgs(e.Property.Name));
-            }
-        }
+        public ObservableCollection<InterpreterView> Interpreters { get; }
     }
 }

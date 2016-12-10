@@ -365,16 +365,24 @@ namespace Microsoft.PythonTools.Project {
         /// </param>
         public void RemoveInterpreterFactory(IPythonInterpreterFactory factory) {
             if (factory == null) {
-                throw new ArgumentNullException("factory");
+                throw new ArgumentNullException(nameof(factory));
+            }
+
+            RemoveInterpreterFactory(factory.Configuration?.Id);
+        }
+
+        internal void RemoveInterpreterFactory(string id) {
+            if (string.IsNullOrEmpty(id)) {
+                throw new ArgumentNullException(nameof(id));
             }
 
             lock (_validFactories) {
-                if (!_validFactories.Contains(factory.Configuration.Id)) {
+                if (!_validFactories.Contains(id)) {
                     return;
                 }
             }
 
-            var subid = MSBuildProjectInterpreterFactoryProvider.GetProjectRelativeId(BuildProject.FullPath, factory.Configuration.Id);
+            var subid = MSBuildProjectInterpreterFactoryProvider.GetProjectRelativeId(BuildProject.FullPath, id);
             bool projectChanged = false;
 
             if (!string.IsNullOrEmpty(subid)) {
@@ -391,8 +399,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             foreach (var item in BuildProject.GetItems(MSBuildConstants.InterpreterReferenceItem)) {
-                var id = item.EvaluatedInclude;
-                if (id == factory.Configuration.Id) {
+                if (id == item.EvaluatedInclude) {
                     try {
                         BuildProject.RemoveItem(item);
                         projectChanged = true;
@@ -408,7 +415,7 @@ namespace Microsoft.PythonTools.Project {
             }
 
             lock (_validFactories) {
-                if (!_validFactories.Remove(factory.Configuration.Id)) {
+                if (!_validFactories.Remove(id)) {
                     // Wasn't removed, so don't update anything
                     return;
                 }
@@ -432,6 +439,21 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal bool IsActiveInterpreterGlobalDefault => _active == null;
+
+        internal IEnumerable<string> InterpreterIds => _validFactories.ToArray();
+
+        internal IEnumerable<string> InvalidInterpreterIds {
+            get {
+                var compModel = Site.GetComponentModel();
+                var registry = compModel.GetService<IInterpreterRegistryService>();
+
+                foreach (var id in _validFactories) {
+                    if (registry.FindConfiguration(id) == null) {
+                        yield return id;
+                    }
+                }
+            }
+        }
 
         internal IEnumerable<InterpreterConfiguration> InterpreterConfigurations {
             get {
@@ -826,6 +848,12 @@ namespace Microsoft.PythonTools.Project {
                 var fact = ActiveInterpreter;
                 if (fact.IsRunnable() && !RemoveFirst(remaining, n => n._isGlobalDefault && n._factory == fact)) {
                     node.AddChild(new InterpretersNode(this, fact, true, false, true));
+                }
+            }
+
+            foreach (var id in InvalidInterpreterIds) {
+                if (!RemoveFirst(remaining, n => n._absentId == id)) {
+                    node.AddChild(InterpretersNode.CreateAbsentInterpreterNode(this, id));
                 }
             }
 
@@ -1547,9 +1575,6 @@ namespace Microsoft.PythonTools.Project {
                     case PythonConstants.InstallRequirementsTxt:
                         status = base.QueryStatusSelectionOnNodes(selectedNodes, cmdGroup, cmd, pCmdText) |
                             QueryStatusResult.SUPPORTED;
-                        if (File.Exists(PathUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt"))) {
-                            status |= QueryStatusResult.ENABLED;
-                        }
                         return status;
                     case PythonConstants.ActivateEnvironment:
                         status = base.QueryStatusSelectionOnNodes(selectedNodes, cmdGroup, cmd, pCmdText);
@@ -2209,8 +2234,8 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var toRemove = new HashSet<IPythonInterpreterFactory>(InterpreterFactories);
-            var toAdd = new HashSet<IPythonInterpreterFactory>(result);
+            var toRemove = new HashSet<string>(InterpreterIds);
+            var toAdd = new HashSet<string>(result);
             toRemove.ExceptWith(toAdd);
             toAdd.ExceptWith(toRemove);
 
@@ -2219,11 +2244,11 @@ namespace Microsoft.PythonTools.Project {
                 if (!QueryEditProjectFile(false)) {
                     throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
                 }
-                foreach (var factory in toAdd) {
-                    AddInterpreter(factory.Configuration.Id);
+                foreach (var id in toAdd) {
+                    AddInterpreter(id);
                 }
-                foreach (var factory in toRemove) {
-                    RemoveInterpreterFactory(factory);
+                foreach (var id in toRemove) {
+                    RemoveInterpreterFactory(id);
                 }
             }
         }

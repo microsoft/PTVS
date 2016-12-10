@@ -670,6 +670,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; will be removed from the project and all its contents will be deleted from disk..
+        /// </summary>
+        public static string EnvironmentDeleteConfirmation_NoPath {
+            get {
+                return ResourceManager.GetString("EnvironmentDeleteConfirmation_NoPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to We weren&apos;t able to delete all the files from {0}.
         ///
         ///Some files may need to be removed manually..
@@ -1280,6 +1289,15 @@ namespace Microsoft.PythonTools {
         public static string MissingEnvironmentUnknownVersion {
             get {
                 return ResourceManager.GetString("MissingEnvironmentUnknownVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  (missing).
+        /// </summary>
+        public static string MissingSuffix {
+            get {
+                return ResourceManager.GetString("MissingSuffix", resourceCulture);
             }
         }
         
