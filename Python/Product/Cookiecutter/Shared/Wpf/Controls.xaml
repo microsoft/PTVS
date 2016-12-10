@@ -1293,7 +1293,7 @@
                                  Style="{StaticResource {x:Type TextBox}}"
                                  AutomationProperties.Name="{TemplateBinding AutomationProperties.Name}"
                                  AutomationProperties.HelpText="{TemplateBinding HelpText}"
-                                 IsReadOnly="{Binding IsReadOnly,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent},UpdateSourceTrigger=PropertyChanged}"
+                                 IsReadOnly="{Binding IsReadOnly,Mode=OneWay,RelativeSource={RelativeSource TemplatedParent}}"
                                  Text="{Binding Text,Mode=TwoWay,RelativeSource={RelativeSource TemplatedParent},UpdateSourceTrigger=PropertyChanged}">
                             <TextBox.ToolTip>
                                 <ToolTip Placement="Bottom" Content="{TemplateBinding HelpText}">

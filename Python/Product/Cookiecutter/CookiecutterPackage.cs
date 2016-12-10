@@ -89,7 +89,7 @@ namespace Microsoft.CookiecutterTools {
             RegisterCommands(new Command[] {
                 new CookiecutterExplorerCommand(),
                 new CreateFromCookiecutterCommand(),
-                new AddFromCookiecutterCommand(),
+                new AddFromCookiecutterCommand(this),
             }, PackageGuids.guidCookiecutterCmdSet);
         }
 

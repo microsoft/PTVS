@@ -128,7 +128,7 @@ namespace Microsoft.CookiecutterTools {
             ErrorHandler.ThrowOnFailure(shell.GetProperty((int)__VSSPROPID.VSSPROPID_InstallDirectory, out commonIdeFolderPath));
 
             var gitClient = GitClientProvider.Create(outputWindow, commonIdeFolderPath as string);
-            var projectSystemClient = new ProjectSystemClient(CookiecutterPackage.Instance.DTE);
+            var projectSystemClient = new ProjectSystemClient((EnvDTE80.DTE2)GetService(typeof(EnvDTE.DTE)));
 
             _cookiecutterPage = new CookiecutterContainerPage(
                 this,

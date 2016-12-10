@@ -22,9 +22,9 @@ using Microsoft.CookiecutterTools.Infrastructure;
 
 namespace Microsoft.CookiecutterTools.Model {
     class ProjectSystemClient : IProjectSystemClient {
-        private EnvDTE80.DTE2 _dte;
+        private readonly EnvDTE80.DTE2 _dte;
 
-        private static HashSet<Guid> UnsupportedProjectKinds = new HashSet<Guid>() {
+        private static readonly HashSet<Guid> UnsupportedProjectKinds = new HashSet<Guid>() {
             new Guid("cc5fd16d-436d-48ad-a40c-5a424c6e3e79"), // Azure Cloud Service
         };
 
@@ -152,6 +152,7 @@ namespace Microsoft.CookiecutterTools.Model {
                     if (IsProjectSupported(item.ContainingProject)) {
                         yield return new ProjectLocation() {
                             FolderPath = item.Properties.Item("FullPath").Value.ToString(),
+                            ProjectKind = item.ContainingProject.Kind,
                             ProjectUniqueName = item.ContainingProject.UniqueName,
                         };
                     }
@@ -163,6 +164,7 @@ namespace Microsoft.CookiecutterTools.Model {
                     if (!string.IsNullOrEmpty(projFolder)) {
                         yield return new ProjectLocation() {
                             FolderPath = projFolder,
+                            ProjectKind = proj.Kind,
                             ProjectUniqueName = proj.UniqueName,
                         };
                     }

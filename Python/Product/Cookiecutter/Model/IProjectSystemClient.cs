@@ -40,6 +40,7 @@ namespace Microsoft.CookiecutterTools.Model {
 
     class ProjectLocation {
         public string ProjectUniqueName { get; set; }
+        public string ProjectKind { get; set; }
         public string FolderPath { get; set; }
     }
 }

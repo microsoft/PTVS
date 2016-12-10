@@ -276,7 +276,7 @@ namespace CookiecutterTests {
             var targetPath = ((CookiecutterClient)_cutterClient).DefaultBasePath;
             Directory.CreateDirectory(targetPath);
             try {
-                await AddFromTemplateAsync(targetPath, "Project1/Project1", TestLocalTemplatePath);
+                await AddFromTemplateAsync(targetPath, "Project1/Project1", "MockProjectKind", TestLocalTemplatePath);
 
                 var addedLocation = _projectSystemClient.Added[0].Item1;
                 Assert.AreEqual(targetPath, addedLocation.FolderPath);
@@ -300,6 +300,12 @@ namespace CookiecutterTests {
 
                 // Check the contents of the generated files
                 VerifyLocalTemplateReport();
+
+                var log = ((ITelemetryTestSupport)_telemetry.TelemetryService).SessionLog;
+
+                Assert.IsTrue(log.Contains("Test/Cookiecutter/Template/AddToProject"));
+                Assert.IsTrue(log.Contains("MockProjectKind"));
+
             } finally {
                 FileUtils.DeleteDirectory(targetPath);
             }
@@ -323,7 +329,7 @@ namespace CookiecutterTests {
                 File.WriteAllText(Path.Combine(targetPath, "report.txt"), oldReportContent);
                 File.WriteAllText(Path.Combine(targetPath, "media", "test.bmp"), oldMediaContent);
 
-                await AddFromTemplateAsync(targetPath, "Project1/Project1", TestLocalTemplatePath);
+                await AddFromTemplateAsync(targetPath, "Project1/Project1", "MockProjectKind", TestLocalTemplatePath);
 
                 var addedLocation = _projectSystemClient.Added[0].Item1;
                 Assert.AreEqual(targetPath, addedLocation.FolderPath);
@@ -363,9 +369,9 @@ namespace CookiecutterTests {
             }
         }
 
-        private async Task AddFromTemplateAsync(string targetPath, string projectUniqueName, string templateLocation) {
+        private async Task AddFromTemplateAsync(string targetPath, string projectUniqueName, string projectKind, string templateLocation) {
             _vm.OutputFolderPath = targetPath;
-            _vm.TargetProjectLocation = new ProjectLocation() { FolderPath = targetPath, ProjectUniqueName = projectUniqueName };
+            _vm.TargetProjectLocation = new ProjectLocation() { FolderPath = targetPath, ProjectUniqueName = projectUniqueName, ProjectKind = projectKind };
             _vm.FixedOutputFolder = true;
             _vm.SearchTerm = templateLocation;
             await _vm.SearchAsync();

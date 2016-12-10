@@ -15,9 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 
@@ -26,15 +23,17 @@ namespace Microsoft.CookiecutterTools.Commands {
     /// Provides the command for opening the cookiecutter window.
     /// </summary>
     class AddFromCookiecutterCommand : Command {
-        private ProjectSystemClient _projectSystem;
+        private readonly CookiecutterPackage _package;
+        private readonly ProjectSystemClient _projectSystem;
 
-        public AddFromCookiecutterCommand() {
-            _projectSystem = new ProjectSystemClient(CookiecutterPackage.Instance.DTE);
+        public AddFromCookiecutterCommand(CookiecutterPackage package) {
+            _package = package;
+            _projectSystem = new ProjectSystemClient(package.DTE);
         }
 
         public override void DoCommand(object sender, EventArgs args) {
             var location = _projectSystem.GetSelectedFolderProjectLocation();
-            CookiecutterPackage.Instance.NewCookiecutterSession(location);
+            _package.NewCookiecutterSession(location);
         }
 
         public override EventHandler BeforeQueryStatus {

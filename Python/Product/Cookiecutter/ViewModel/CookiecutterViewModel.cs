@@ -764,8 +764,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                             ProjectUniqueName = TargetProjectLocation.ProjectUniqueName,
                         };
                         _projectSystemClient.AddToProject(location, operationResult);
+
+                        ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.AddToProject, selection);
                     } catch (Exception ex) when (!ex.IsCriticalException()) {
                         _outputWindow.WriteErrorLine(Strings.AddToProjectError.FormatUI(ex.Message));
+
+                        ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.AddToProject, selection, ex);
                     }
                 }
 
@@ -1018,6 +1022,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 var repoFullName = selection.RepositoryFullName?.ToLowerInvariant() ?? string.Empty;
                 var repoOwner = selection.RepositoryOwner?.ToLowerInvariant() ?? string.Empty;
                 var repoName = selection.RepositoryName?.ToLowerInvariant() ?? string.Empty;
+                var projKind = TargetProjectLocation?.ProjectKind ?? string.Empty;
 
                 var obj = new {
                     Success = error == null,
@@ -1025,6 +1030,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     RepoFullName = new TelemetryPiiProperty(repoFullName),
                     RepoOwner = new TelemetryPiiProperty(repoOwner),
                     RepoName = new TelemetryPiiProperty(repoName),
+                    ProjectKind = projKind,
                 };
                 ReportEvent(area, eventName, obj);
             } catch (Exception ex) {
