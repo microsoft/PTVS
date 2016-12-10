@@ -199,6 +199,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _provider.OperationStarted += PipExtensionProvider_UpdateStarted;
             _provider.OperationFinished += PipExtensionProvider_UpdateComplete;
             _provider.IsPipInstalledChanged += PipExtensionProvider_IsPipInstalledChanged;
+            _provider.InstalledPackagesChanged += PipExtensionProvider_InstalledPackagesChanged;
+
             _installCommandView = new InstallPackageView(this);
 
             _matcher = new FuzzyStringMatcher(FuzzyMatchMode.FuzzyIgnoreCase);
@@ -245,6 +247,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _provider.OperationStarted -= PipExtensionProvider_UpdateStarted;
             _provider.OperationFinished -= PipExtensionProvider_UpdateComplete;
             _provider.IsPipInstalledChanged -= PipExtensionProvider_IsPipInstalledChanged;
+            _provider.InstalledPackagesChanged -= PipExtensionProvider_InstalledPackagesChanged;
             _installableViewRefreshTimer.Dispose();
         }
 
@@ -265,6 +268,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private async void PipExtensionProvider_UpdateComplete(object sender, EventArgs e) {
+            try {
+                await RefreshPackages();
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                ToolWindow.SendUnhandledException(_provider.WpfObject, ExceptionDispatchInfo.Capture(ex));
+            }
+        }
+
+        private async void PipExtensionProvider_InstalledPackagesChanged(object sender, EventArgs e) {
             try {
                 await RefreshPackages();
             } catch (Exception ex) when (!ex.IsCriticalException()) {
@@ -384,12 +395,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private async Task RefreshPackages() {
+            bool isPipInstalled = true;
             await Dispatcher.InvokeAsync(() => {
+                isPipInstalled = IsPipInstalled;
                 IsListRefreshing = true;
                 CommandManager.InvalidateRequerySuggested();
             });
             try {
-                if (IsPipInstalled) {
+                if (isPipInstalled) {
                     await Task.WhenAll(
                         RefreshInstalledPackages(),
                         RefreshInstallablePackages()
