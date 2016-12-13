@@ -86,6 +86,9 @@ namespace CookiecutterTests {
 
         [TestMethod]
         public async Task CheckForUpdates() {
+            _vm.OpenInExplorerFolderPath = @"c:\folder";
+            _vm.CreatingStatus = OperationStatus.Succeeded;
+
             PopulateInstalledSource();
 
             _installedTemplateSource.UpdatesAvailable.Add("https://github.com/owner1/template1", true);
@@ -95,6 +98,10 @@ namespace CookiecutterTests {
 
             await _vm.CheckForUpdatesAsync();
             Assert.AreEqual(OperationStatus.Succeeded, _vm.CheckingUpdateStatus);
+
+            // Checking for updates shouldn't be clearing the status of other operations, such as create
+            Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
+            Assert.AreEqual(@"c:\folder", _vm.OpenInExplorerFolderPath);
 
             var t1 = _vm.Installed.Templates.OfType<TemplateViewModel>().SingleOrDefault(t => t.RepositoryName == "template1");
             Assert.IsTrue(t1.IsUpdateAvailable);
