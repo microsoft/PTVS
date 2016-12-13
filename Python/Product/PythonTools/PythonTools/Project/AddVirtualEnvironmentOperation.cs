@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Project {
     sealed class AddVirtualEnvironmentOperation {
         private readonly PythonProjectNode _project;
         private readonly string _virtualEnvPath;
-        private readonly IPythonInterpreterFactory _baseInterpreter;
+        private readonly string _baseInterpreter;
         private readonly bool _create;
         private readonly bool _useVEnv;
         private readonly bool _installRequirements;
@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Project {
         public AddVirtualEnvironmentOperation(
             PythonProjectNode project,
             string virtualEnvPath,
-            IPythonInterpreterFactory baseInterpreter,
+            string baseInterpreterId,
             bool create,
             bool useVEnv,
             bool installRequirements,
@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Project {
         ) {
             _project = project;
             _virtualEnvPath = virtualEnvPath;
-            _baseInterpreter = baseInterpreter;
+            _baseInterpreter = baseInterpreterId;
             _create = create;
             _useVEnv = useVEnv;
             _installRequirements = installRequirements;
@@ -66,11 +66,13 @@ namespace Microsoft.PythonTools.Project {
 
             IPythonInterpreterFactory factory;
             try {
+                var baseInterp = service.FindInterpreter(_baseInterpreter);
+
                 factory = await _project.CreateOrAddVirtualEnvironment(
                     service,
                     _create,
                     _virtualEnvPath,
-                    _baseInterpreter,
+                    baseInterp,
                     _useVEnv
                 );
             } catch (Exception ex) when (!ex.IsCriticalException()) {
