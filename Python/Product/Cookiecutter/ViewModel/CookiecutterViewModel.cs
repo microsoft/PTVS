@@ -576,7 +576,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         }
 
         public async Task CheckForUpdatesAsync() {
-            ResetStatus();
+            CheckingUpdateStatus = OperationStatus.NotStarted;
 
             bool anyError = false;
             try {
