@@ -264,6 +264,10 @@ namespace Microsoft.PythonTools.Interpreter {
         public string AddConfigurableInterpreter(string name, InterpreterConfiguration config) {
             using (_cpythonProvider.Value.SuppressDiscoverFactories()) {
                 var collection = CustomInterpreterKey + "\\" + name;
+                using (var key = Registry.CurrentUser.CreateSubKey(CustomInterpreterKey, true)) {
+                    key.SetValue(DescriptionKey, Strings.CustomEnvironmentLabel);
+                }
+
                 using (var key = Registry.CurrentUser.CreateSubKey(collection, true)) {
                     if (config.Architecture != InterpreterArchitecture.Unknown) {
                         key.SetValue(ArchitectureKey, config.Architecture.ToPEP514());

@@ -1055,6 +1055,9 @@ Please refer to &lt;a href="https://aka.ms/pythononappservice"&gt;aka.ms/PythonO
   <data name="RemoteUnsupportedServer_Host" xml:space="preserve">
     <value>The remote server at {0} is not running a remote debugging server, or it is running an unsupported version.</value>
   </data>
+  <data name="CustomEnvironmentLabel" xml:space="preserve">
+    <value>Custom environment</value>
+  </data>
   <data name="EnvironmentDeleteConfirmation_NoPath" xml:space="preserve">
     <value>'{0}' will be removed from the project and all its contents will be deleted from disk.</value>
   </data>
