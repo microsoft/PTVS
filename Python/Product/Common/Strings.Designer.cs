@@ -469,6 +469,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Custom environment.
+        /// </summary>
+        public static string CustomEnvironmentLabel {
+            get {
+                return ResourceManager.GetString("CustomEnvironmentLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Getting attach information from web site..
         /// </summary>
         public static string DebugAttachGettingSiteInformation {
