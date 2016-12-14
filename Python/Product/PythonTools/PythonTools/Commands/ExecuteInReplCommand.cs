@@ -140,8 +140,8 @@ namespace Microsoft.PythonTools.Commands {
 
             var config = pyProj?.GetLaunchConfigurationOrThrow();
             if (config == null && textView != null) {
-                var pyService = _serviceProvider.GetPythonToolsService();
-                config = new LaunchConfiguration(pyService.DefaultInterpreterConfiguration) {
+                var interpreters = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
+                config = new LaunchConfiguration(interpreters.DefaultInterpreter.Configuration) {
                     ScriptName = textView.GetFilePath(),
                     WorkingDirectory = PathUtils.GetParent(textView.GetFilePath())
                 };

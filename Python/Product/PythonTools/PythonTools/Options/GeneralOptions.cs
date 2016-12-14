@@ -48,7 +48,6 @@ namespace Microsoft.PythonTools.Options {
 
         internal GeneralOptions(PythonToolsService service) {
             _pyService = service;
-            Load();
         }
 
         public void Load() {
