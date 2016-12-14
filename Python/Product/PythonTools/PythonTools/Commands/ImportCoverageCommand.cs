@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows;
 using Microsoft.PythonTools.CodeCoverage;
+using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
@@ -88,11 +89,9 @@ namespace Microsoft.PythonTools.Commands {
                 }
 
                 if (version == null) {
-                    version = _serviceProvider
-                                .GetPythonToolsService()
-                                .DefaultInterpreterConfiguration
-                                .Version
-                                .ToLanguageVersion();
+                    var interpreters = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
+                    version = interpreters?.DefaultInterpreter.Configuration.Version.ToLanguageVersion()
+                        ?? PythonLanguageVersion.None;
                 }
 
                 // Convert that into offsets within the actual code
