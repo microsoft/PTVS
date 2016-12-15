@@ -151,10 +151,10 @@ namespace Microsoft.PythonTools.TestAdapter {
 
         private static bool IsTestCaseClass(IPythonType cls) {
             if (cls == null ||
-                cls.DeclaringModule != null) {
+                cls.DeclaringModule == null) {
                 return false;
             }
-            var mod = cls.Name;
+            var mod = cls.DeclaringModule.Name;
             return (mod == "unittest" || mod.StartsWith("unittest.")) && cls.Name == "TestCase";
         }
         /// <summary>
@@ -180,7 +180,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private static IEnumerable<AnalysisValue> GetTestCaseClasses(ModuleAnalysis analysis) {
-            return analysis.GetAllAvailableMembersByIndex(0)
+            return analysis.GetAllAvailableMembersByIndex(0, GetMemberOptions.ExcludeBuiltins)
                 .SelectMany(m => analysis.GetValuesByIndex(m.Name, 0))
                 .Where(v => v.MemberType == PythonMemberType.Class)
                 .Where(v => v.Mro.SelectMany(v2 => v2).Any(IsTestCaseClass));
@@ -220,10 +220,18 @@ namespace Microsoft.PythonTools.TestAdapter {
             try {
                 module = AstPythonModule.FromFile(_analyzer.Interpreter, path, _analyzer.LanguageVersion);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                yield break;
+                return Enumerable.Empty<TestCaseInfo>();
             }
 
             var ctxt = _analyzer.Interpreter.CreateModuleContext();
+            return GetTestCasesFromAst(module, ctxt);
+        }
+
+        internal static IEnumerable<TestCaseInfo> GetTestCasesFromAst(IPythonModule module, IModuleContext ctxt) {
+            if (module == null) {
+                throw new ArgumentNullException(nameof(module));
+            }
+
             foreach (var classValue in GetTestCaseClasses(module, ctxt)) {
                 // Check the name of all functions on the class using the
                 // analyzer. This will return functions defined on this

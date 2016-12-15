@@ -20,9 +20,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -91,10 +93,16 @@ namespace TestAdapterTests {
             PrintTestCases(sink.Tests);
         }
 
+        private static IEnumerable<TestCaseInfo> GetTestCasesFromAst(string code, PythonAnalyzer analyzer) {
+            var codeStream = new MemoryStream(Encoding.UTF8.GetBytes(code));
+            var m = AstPythonModule.FromStream(analyzer.Interpreter, codeStream, "<string>", analyzer.LanguageVersion);
+            return TestAnalyzer.GetTestCasesFromAst(m, null);
+        }
+
         [TestMethod, Priority(1)]
         public void DecoratedTests() {
             using (var analyzer = MakeTestAnalyzer()) {
-                var entry = AddModule(analyzer, "Fob", @"import unittest
+                var code = @"import unittest
 
 def decorator(fn):
     def wrapped(*args, **kwargs):
@@ -105,12 +113,17 @@ class MyTest(unittest.TestCase):
     @decorator
     def testAbc(self):
         pass
-");
+";
+                var entry = AddModule(analyzer, "Fob", code);
 
                 entry.Analyze(CancellationToken.None, true);
                 analyzer.AnalyzeQueuedEntries(CancellationToken.None);
 
-                var test = TestAnalyzer.GetTestCases(entry).Single();
+                var test = TestAnalyzer.GetTestCasesFromAnalysis(entry).Single();
+                Assert.AreEqual("testAbc", test.MethodName);
+                Assert.AreEqual(10, test.StartLine);
+
+                test = GetTestCasesFromAst(code, analyzer).Single();
                 Assert.AreEqual("testAbc", test.MethodName);
                 Assert.AreEqual(10, test.StartLine);
             }
@@ -132,7 +145,7 @@ class TestBase(unittest.TestCase):
                     code: @"from .SubPkg import TestBase"
                 );
 
-                var entry3 = AddModule(analyzer, "__main__", @"from Pkg.SubPkg import TestBase as TB1
+                var code = @"from Pkg.SubPkg import TestBase as TB1
 from Pkg import TestBase as TB2
 from Pkg import *
 
@@ -147,34 +160,43 @@ class MyTest2(TB2):
 class MyTest3(TestBase):
     def test3(self):
         pass
-");
+";
+                var entry3 = AddModule(analyzer, "__main__", code);
 
                 entry1.Analyze(CancellationToken.None, true);
                 entry2.Analyze(CancellationToken.None, true);
                 entry3.Analyze(CancellationToken.None, true);
                 analyzer.AnalyzeQueuedEntries(CancellationToken.None);
 
-                var test = TestAnalyzer.GetTestCases(entry3).ToList();
+                var test = TestAnalyzer.GetTestCasesFromAnalysis(entry3).ToList();
                 AssertUtil.ContainsExactly(test.Select(t => t.MethodName), "test1", "test2", "test3");
+
+                // Cannot discover tests from subclasses with just the AST
+                test = GetTestCasesFromAst(code, analyzer).ToList();
+                AssertUtil.ContainsExactly(test.Select(t => t.MethodName));
             }
         }
 
         [TestMethod, Priority(1)]
         public void TestCaseRunTests() {
             using (var analyzer = MakeTestAnalyzer()) {
-                var entry = AddModule(analyzer, "__main__", @"import unittest
+                var code = @"import unittest
 
 class TestBase(unittest.TestCase):
     def runTests(self):
         pass # should not discover this as it isn't runTest or test*
     def runTest(self):
         pass
-");
+";
+                var entry = AddModule(analyzer, "__main__", code);
 
                 entry.Analyze(CancellationToken.None, true);
                 analyzer.AnalyzeQueuedEntries(CancellationToken.None);
 
-                var test = TestAnalyzer.GetTestCases(entry).ToList();
+                var test = TestAnalyzer.GetTestCasesFromAnalysis(entry).ToList();
+                AssertUtil.ContainsExactly(test.Select(t => t.ClassName), "TestBase");
+
+                test = GetTestCasesFromAst(code, analyzer).ToList();
                 AssertUtil.ContainsExactly(test.Select(t => t.ClassName), "TestBase");
             }
         }
@@ -185,19 +207,23 @@ class TestBase(unittest.TestCase):
         [TestMethod, Priority(1)]
         public void TestCaseRunTestsWithTest() {
             using (var analyzer = MakeTestAnalyzer()) {
-                var entry = AddModule(analyzer, "__main__", @"import unittest
+                var code = @"import unittest
 
 class TestBase(unittest.TestCase):
     def test_1(self):
         pass
     def runTest(self):
         pass
-");
+";
+                var entry = AddModule(analyzer, "__main__", code);
 
                 entry.Analyze(CancellationToken.None, true);
                 analyzer.AnalyzeQueuedEntries(CancellationToken.None);
 
-                var test = TestAnalyzer.GetTestCases(entry).ToList();
+                var test = TestAnalyzer.GetTestCasesFromAnalysis(entry).ToList();
+                AssertUtil.ContainsExactly(test.Select(t => t.MethodName), "test_1");
+
+                test = GetTestCasesFromAst(code, analyzer).ToList();
                 AssertUtil.ContainsExactly(test.Select(t => t.MethodName), "test_1");
             }
         }

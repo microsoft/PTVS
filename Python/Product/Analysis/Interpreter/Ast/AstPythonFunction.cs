@@ -25,7 +25,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonFunction : IPythonFunction, ILocatedMember {
         private readonly List<AstPythonFunctionOverload> _overloads;
 
-        public AstPythonFunction(PythonAst ast, IPythonModule declModule, IPythonType declType, FunctionDefinition def, string doc) {
+        public AstPythonFunction(PythonAst ast, IPythonModule declModule, IPythonType declType, FunctionDefinition def, LocationInfo loc, string doc) {
             DeclaringModule = declModule;
             DeclaringType = declType;
 
@@ -44,11 +44,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
                 new AstPythonFunctionOverload(Documentation, "", MakeParameters(ast, def), MakeReturns(def))
             };
 
-            var start = def.GetStart(ast);
-            var end = def.GetEnd(ast);
-            Locations = new[] {
-                new LocationInfo((declModule as IProjectEntry).FilePath, start.Line, start.Column, end.Line, end.Column)
-            };
+            Locations = new[] { loc };
         }
 
         internal void AddOverload(PythonAst ast, FunctionDefinition def) {

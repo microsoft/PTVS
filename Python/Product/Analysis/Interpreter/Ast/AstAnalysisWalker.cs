@@ -66,6 +66,26 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             base.PostWalk(node);
         }
 
+        internal LocationInfo GetLoc(ClassDefinition node) {
+            if (node == null || node.StartIndex >= node.EndIndex) {
+                return null;
+            }
+
+            var start = node.NameExpression?.GetStart(_ast) ?? node.GetStart(_ast);
+            var end = node.GetEnd(_ast);
+            return new LocationInfo(_filePath, start.Line, start.Column, end.Line, end.Column);
+        }
+
+        internal LocationInfo GetLoc(FunctionDefinition node) {
+            if (node == null || node.StartIndex >= node.EndIndex) {
+                return null;
+            }
+
+            var start = node.NameExpression?.GetStart(_ast) ?? node.GetStart(_ast);
+            var end = node.GetEnd(_ast);
+            return new LocationInfo(_filePath, start.Line, start.Column, end.Line, end.Column);
+        }
+
         internal LocationInfo GetLoc(Node node) {
             if (node == null || node.StartIndex >= node.EndIndex) {
                 return null;
@@ -246,7 +266,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             if (existing == null) {
                 var m = _scope.Peek();
                 if (m != null) {
-                    m[node.Name] = new AstPythonFunction(_ast, _module, CurrentClass, node, GetDoc(node.Body as SuiteStatement));
+                    m[node.Name] = new AstPythonFunction(_ast, _module, CurrentClass, node, GetLoc(node), GetDoc(node.Body as SuiteStatement));
                 }
             } else {
                 existing.AddOverload(_ast, node);
