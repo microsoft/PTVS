@@ -14,13 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonFunction : IPythonFunction {
+    class AstPythonFunction : IPythonFunction, ILocatedMember {
         private readonly List<AstPythonFunctionOverload> _overloads;
 
         public AstPythonFunction(PythonAst ast, IPythonModule declModule, IPythonType declType, FunctionDefinition def, string doc) {
@@ -40,6 +42,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
             _overloads = new List<AstPythonFunctionOverload> {
                 new AstPythonFunctionOverload(Documentation, "", MakeParameters(ast, def), MakeReturns(def))
+            };
+
+            var start = def.GetStart(ast);
+            var end = def.GetEnd(ast);
+            Locations = new[] {
+                new LocationInfo((declModule as IProjectEntry).FilePath, start.Line, start.Column, end.Line, end.Column)
             };
         }
 
@@ -69,5 +77,7 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public PythonMemberType MemberType => DeclaringType == null ? PythonMemberType.Function : PythonMemberType.Method;
 
         public IList<IPythonFunctionOverload> Overloads => _overloads.ToArray();
+
+        public IEnumerable<LocationInfo> Locations { get; }
     }
 }

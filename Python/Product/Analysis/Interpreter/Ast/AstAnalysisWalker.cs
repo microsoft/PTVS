@@ -21,6 +21,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
@@ -73,6 +74,28 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             var start = node.GetStart(_ast);
             var end = node.GetEnd(_ast);
             return new LocationInfo(_filePath, start.Line, start.Column, end.Line, end.Column);
+        }
+
+        private string GetNameFromExpressionWorker(Expression expr) {
+            var ne = expr as NameExpression;
+            if (ne != null) {
+                return ne.Name;
+            }
+
+            var me = expr as MemberExpression;
+            if (me != null) {
+                return "{0}.{1}".FormatInvariant(GetNameFromExpressionWorker(me.Target), me.Name);
+            }
+
+            throw new FormatException();
+        }
+
+        private string GetNameFromExpression(Expression expr) {
+            try {
+                return GetNameFromExpressionWorker(expr);
+            } catch (FormatException) {
+                return null;
+            }
         }
 
         private IMember GetValueFromExpression(Expression expr, Dictionary<string, IMember> scope) {
@@ -242,7 +265,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             var m = _scope.Peek();
             if (m != null) {
                 var n = new Dictionary<string, IMember>();
-                AstPythonType t = new AstPythonType(_ast, _module, node, GetDoc(node.Body as SuiteStatement), GetLoc(node));
+                var mro = node.Bases.Where(a => string.IsNullOrEmpty(a.Name))
+                    .Select(a => GetNameFromExpression(a.Expression))
+                    .Where(a => !string.IsNullOrEmpty(a))
+                    .Select(a => new AstPythonType(a));
+
+                var t = new AstPythonType(_ast, _module, node, GetDoc(node.Body as SuiteStatement), GetLoc(node), mro);
                 m[node.Name] = n["__class__"] = t;
                 _scope.Push(n);
 

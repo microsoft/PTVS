@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System.Collections.Generic;
+
 namespace Microsoft.PythonTools.TestAdapter {
     internal sealed class TestCaseInfo {
         private readonly string _filename;
@@ -42,6 +44,18 @@ namespace Microsoft.PythonTools.TestAdapter {
                 // Currently we don't support other test case kinds
                 return TestCaseKind.UnitTest;
             }
+        }
+
+        public Dictionary<string, object> AsDictionary() {
+            return new Dictionary<string, object>() {
+                { TestAnalyzer.Serialize.Filename, Filename },
+                { TestAnalyzer.Serialize.ClassName, ClassName },
+                { TestAnalyzer.Serialize.MethodName, MethodName },
+                { TestAnalyzer.Serialize.StartLine, StartLine},
+                { TestAnalyzer.Serialize.StartColumn, StartColumn},
+                { TestAnalyzer.Serialize.EndLine, EndLine },
+                { TestAnalyzer.Serialize.Kind, Kind.ToString() },
+            };
         }
     }
 
