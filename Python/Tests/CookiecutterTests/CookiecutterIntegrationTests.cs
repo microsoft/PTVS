@@ -110,7 +110,7 @@ namespace CookiecutterTests {
                 _installedTemplateSource,
                 _feedTemplateSource,
                 _gitHubTemplateSource,
-                OpenFolder,
+                ExecuteCommand,
                 _projectSystemClient
             );
 
@@ -118,8 +118,10 @@ namespace CookiecutterTests {
             ((CookiecutterClient)_cutterClient).DefaultBasePath = outputProjectFolder;
         }
 
-        private void OpenFolder(string folderPath) {
-            _openedFolder = folderPath;
+        private void ExecuteCommand(string name, string args) {
+            if (name == "File.OpenFolder") {
+                _openedFolder = args.Trim('"');
+            }
         }
 
         [TestMethod]
@@ -137,7 +139,7 @@ namespace CookiecutterTests {
             Assert.IsNotNull(continuationVM);
             Assert.IsFalse(string.IsNullOrEmpty(continuationVM.ContinuationToken));
 
-            await _vm.LoadMoreTemplates(continuationVM.ContinuationToken);
+            await _vm.LoadMoreTemplatesAsync(continuationVM.ContinuationToken);
             Assert.AreEqual(53, _vm.GitHub.Templates.Count);
             Assert.AreEqual(52, _vm.GitHub.Templates.OfType<TemplateViewModel>().Count());
             Assert.AreEqual(1, _vm.GitHub.Templates.OfType<ContinuationViewModel>().Count());
@@ -236,7 +238,7 @@ namespace CookiecutterTests {
             await _vm.SearchAsync();
 
             var template = _vm.Custom.Templates[0] as TemplateViewModel;
-            await _vm.SelectTemplate(template);
+            await _vm.SelectTemplateAsync(template);
 
             Assert.IsNull(_vm.SelectedImage);
             Assert.IsTrue(string.IsNullOrEmpty(_vm.SelectedDescription));
@@ -377,11 +379,13 @@ namespace CookiecutterTests {
             await _vm.SearchAsync();
 
             var template = _vm.Custom.Templates[0] as TemplateViewModel;
-            await _vm.SelectTemplate(template);
+            await _vm.SelectTemplateAsync(template);
             await _vm.LoadTemplateAsync();
 
             await _vm.CreateFilesAsync();
-            Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
+
+            // Succeeded message doesn't appear for add to project
+            Assert.AreEqual(OperationStatus.NotStarted, _vm.CreatingStatus);
 
             // Check that we're calling the project system to add the files we generated
             Assert.AreEqual(1, _projectSystemClient.Added.Count);
@@ -398,7 +402,7 @@ namespace CookiecutterTests {
             await _vm.SearchAsync();
 
             var template = _vm.Custom.Templates[0] as TemplateViewModel;
-            await _vm.SelectTemplate(template);
+            await _vm.SelectTemplateAsync(template);
 
             Assert.IsNotNull(_vm.SelectedImage);
             Assert.IsFalse(string.IsNullOrEmpty(_vm.SelectedDescription));
@@ -420,14 +424,14 @@ namespace CookiecutterTests {
                 await _vm.CreateFilesAsync();
 
                 Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
-                Assert.AreEqual(_vm.OutputFolderPath, _vm.OpenInExplorerFolderPath);
+                Assert.AreEqual(targetPath, _vm.OpenInExplorerFolderPath);
 
-                Assert.IsTrue(Directory.Exists(Path.Combine(_vm.OutputFolderPath, "static_files")));
-                Assert.IsTrue(Directory.Exists(Path.Combine(_vm.OutputFolderPath, "post-deployment")));
-                Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "web.config")));
-                Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "static_files", "web.config")));
-                Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "post-deployment", "install-requirements.ps1")));
-                Assert.IsFalse(File.Exists(Path.Combine(_vm.OutputFolderPath, "install-requirements.ps1")));
+                Assert.IsTrue(Directory.Exists(Path.Combine(targetPath, "static_files")));
+                Assert.IsTrue(Directory.Exists(Path.Combine(targetPath, "post-deployment")));
+                Assert.IsTrue(File.Exists(Path.Combine(targetPath, "web.config")));
+                Assert.IsTrue(File.Exists(Path.Combine(targetPath, "static_files", "web.config")));
+                Assert.IsTrue(File.Exists(Path.Combine(targetPath, "post-deployment", "install-requirements.ps1")));
+                Assert.IsFalse(File.Exists(Path.Combine(targetPath, "install-requirements.ps1")));
 
                 var log = ((ITelemetryTestSupport)_telemetry.TelemetryService).SessionLog;
 
@@ -446,7 +450,7 @@ namespace CookiecutterTests {
 
                 Assert.AreEqual(null, _openedFolder);
                 _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
-                Assert.AreEqual(_vm.OpenInExplorerFolderPath, _openedFolder);
+                Assert.AreEqual(targetPath, _openedFolder);
             } finally {
                 FileUtils.DeleteDirectory(targetPath);
             }
@@ -461,7 +465,7 @@ namespace CookiecutterTests {
                 await _vm.SearchAsync();
 
                 var template = _vm.Custom.Templates[0] as TemplateViewModel;
-                await _vm.SelectTemplate(template);
+                await _vm.SelectTemplateAsync(template);
                 await _vm.LoadTemplateAsync();
                 Assert.AreEqual(OperationStatus.Succeeded, _vm.CloningStatus);
             }

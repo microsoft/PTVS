@@ -180,6 +180,16 @@
         </Strings>
       </Button>
 
+      <Button guid="guidCookiecutterCmdSet" id="cmdidViewExternalWebBrowser" priority="0x0100" type="Button">
+        <CommandFlag>AllowParams</CommandFlag>
+        <CommandFlag>CommandWellOnly</CommandFlag>
+        <Strings>
+          <ButtonText>Open in External Browser</ButtonText>
+          <MenuText>&amp;Open in External Browser</MenuText>
+          <CanonicalName>.Cookiecutter.ExternalWebBrowser</CanonicalName>
+          <LocCanonicalName>.Cookiecutter.ExternalWebBrowser</LocCanonicalName>
+        </Strings>
+      </Button>
     </Buttons>
 
   </Commands>
@@ -274,6 +284,7 @@
       <IDSymbol name="cmdidAddFromCookiecutter" value ="0x1008"/>
       <IDSymbol name="cmdidUpdateTemplate" value ="0x1009"/>
       <IDSymbol name="cmdidCheckForUpdates" value ="0x100a"/>
+      <IDSymbol name="cmdidViewExternalWebBrowser" value ="0x1100"/>
 
       <!-- Context Menus -->
       <IDSymbol name="ContextMenu" value="101"/>

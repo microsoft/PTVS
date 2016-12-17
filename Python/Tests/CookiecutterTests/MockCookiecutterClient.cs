@@ -54,5 +54,9 @@ namespace CookiecutterTests {
         public Task<ContextItem[]> LoadContextAsync(string localTemplateFolder, string userConfigFilePath) {
             throw new NotImplementedException();
         }
+
+        public Task<RenderedContext> LoadRenderedContextAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
+            throw new NotImplementedException();
+        }
     }
 }

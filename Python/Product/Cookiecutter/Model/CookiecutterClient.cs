@@ -127,6 +127,126 @@ namespace Microsoft.CookiecutterTools.Model {
             return items.ToArray();
         }
 
+        public async Task<RenderedContext> LoadRenderedContextAsync(string localTemplateFolder, string userConfigFilePath, string contextPath, string outputFolderPath) {
+            if (localTemplateFolder == null) {
+                throw new ArgumentNullException(nameof(localTemplateFolder));
+            }
+
+            if (contextPath == null) {
+                throw new ArgumentNullException(nameof(contextPath));
+            }
+
+            if (outputFolderPath == null) {
+                throw new ArgumentNullException(nameof(outputFolderPath));
+            }
+
+            var renderedContext = new RenderedContext();
+
+            var result = await RunRenderContextScript(_redirector, _envInterpreterPath, localTemplateFolder, userConfigFilePath, outputFolderPath, contextPath);
+            var contextJson = string.Join(Environment.NewLine, result.StandardOutputLines);
+            var context = (JToken)JObject.Parse(contextJson).SelectToken("cookiecutter");
+            if (context != null) {
+                foreach (JProperty prop in context) {
+                    // Properties that start with underscore are for internal use,
+                    // and cookiecutter doesn't prompt for them.
+                    if (!prop.Name.StartsWith("_")) {
+                        if (prop.Value.Type == JTokenType.String ||
+                            prop.Value.Type == JTokenType.Integer ||
+                            prop.Value.Type == JTokenType.Float) {
+                            renderedContext.Items.Add(new ContextItem(prop.Name, Selectors.String, prop.Value.ToString()));
+                        } else if (prop.Value.Type == JTokenType.Array) {
+                            var elements = new List<string>();
+                            JArray ar = prop.Value as JArray;
+                            foreach (JToken element in ar) {
+                                elements.Add(element.ToString());
+                            }
+                            renderedContext.Items.Add(new ContextItem(prop.Name, Selectors.List, elements[0], elements.ToArray()));
+                        } else {
+                            throw new InvalidOperationException(string.Format("Unsupported json element type in context file for property '{0}'.", prop.Name));
+                        }
+                    } else if (prop.Name == "_visual_studio_post_cmds") {
+                        // List of commands to run after the folder is opened,
+                        // or the files are added to the project.
+                        // name and args are the values passed to DTE.ExecuteCommand
+                        // cookiecutter._output_folder_path can be used to files inside generated project
+                        //
+                        // Examples:
+                        // "_visual_studio_post_cmds": [
+                        // {
+                        //   "name": "Cookiecutter.ExternalWebBrowser",
+                        //   "args": "https://docs.microsoft.com"
+                        // },
+                        // {
+                        //   "name": "View.WebBrowser",
+                        //   "args": "https://docs.microsoft.com"
+                        // },
+                        // {
+                        //   "name": "View.WebBrowser",
+                        //   "args": "\"{{cookiecutter._output_folder_path}}\\readme.html\""
+                        // },
+                        // {
+                        //   "name": "File.OpenFile",
+                        //   "args": "\"{{cookiecutter._output_folder_path}}\\readme.txt\""
+                        // }
+                        // ]
+
+                        ReadCommands(renderedContext, prop);
+                    }
+                }
+            }
+
+            return renderedContext;
+        }
+
+        private void ReadCommands(RenderedContext renderedContext, JProperty prop) {
+            if (prop.Value.Type != JTokenType.Array) {
+                WrongJsonType("_visual_studio_post_cmds", JTokenType.Array, prop.Type);
+                return;
+            }
+
+            foreach (JToken element in (JArray)prop.Value) {
+                if (element.Type != JTokenType.Object) {
+                    WrongJsonType("_visual_studio_post_cmds element", JTokenType.Object, element.Type);
+                    continue;
+                }
+
+                var cmd = ReadCommand((JObject)element);
+                if (cmd != null) {
+                    renderedContext.Commands.Add(cmd);
+                }
+            }
+        }
+
+        private DteCommand ReadCommand(JObject itemObj) {
+            string name = null;
+            string args = null;
+
+            var nameToken = itemObj.SelectToken("name");
+            if (nameToken != null) {
+                if (nameToken.Type == JTokenType.String) {
+                    name = nameToken.Value<string>();
+                } else {
+                    WrongJsonType("name", JTokenType.String, nameToken.Type);
+                    return null;
+                }
+            } else {
+                MissingProperty("_visual_studio_post_cmds", "name");
+                return null;
+            }
+
+            var argsToken = itemObj.SelectToken("args");
+            if (argsToken != null) {
+                if (argsToken.Type == JTokenType.String) {
+                    args = argsToken.Value<string>();
+                } else {
+                    WrongJsonType("args", JTokenType.String, argsToken.Type);
+                    return null;
+                }
+            }
+
+            return new DteCommand(name, args);
+        }
+
         public async Task<CreateFilesOperationResult> CreateFilesAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
             if (localTemplateFolder == null) {
                 throw new ArgumentNullException(nameof(localTemplateFolder));
@@ -286,9 +406,18 @@ namespace Microsoft.CookiecutterTools.Model {
             _redirector.WriteErrorLine(string.Format("'{0}' is referenced from _visual_studio section in context file but was not found.", name));
         }
 
+        private void MissingProperty(string objectName, string propertyName) {
+            _redirector.WriteErrorLine(string.Format("'{0}' property is required on '{1}'.", propertyName, objectName));
+        }
+
         private static async Task<ProcessOutputResult> RunGenerateContextScript(Redirector redirector, string interpreterPath, string templateFolderPath, string userConfigFilePath) {
             var scriptPath = PythonToolsInstallPath.GetFile("cookiecutter_load.py");
             return await RunPythonScript(redirector, interpreterPath, scriptPath, string.Format("\"{0}\" \"{1}\"", templateFolderPath, userConfigFilePath));
+        }
+
+        private static async Task<ProcessOutputResult> RunRenderContextScript(Redirector redirector, string interpreterPath, string templateFolderPath, string userConfigFilePath, string outputFolderPath, string contextPath) {
+            var scriptPath = PythonToolsInstallPath.GetFile("cookiecutter_render.py");
+            return await RunPythonScript(redirector, interpreterPath, scriptPath, string.Format("\"{0}\" \"{1}\" \"{2}\" \"{3}\"", templateFolderPath, userConfigFilePath, PathUtils.TrimEndSeparator(outputFolderPath), contextPath));
         }
 
         private static async Task<ProcessOutputResult> RunCheckScript(string interpreterPath) {
@@ -361,7 +490,7 @@ namespace Microsoft.CookiecutterTools.Model {
             var res = await MoveFilesAndFoldersAsync(generatedFolder, desiredFolder);
 
             try {
-                Directory.Delete(tempFolder);
+                Directory.Delete(tempFolder, true);
             } catch (IOException) {
             }
 
