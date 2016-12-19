@@ -22,12 +22,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonModule : IPythonModule, IProjectEntry, ILocatedMember {
+    public sealed class AstPythonModule : IPythonModule, IProjectEntry, ILocatedMember {
         private readonly Dictionary<object, object> _properties;
         private readonly List<string> _childModules;
         private readonly Dictionary<string, IMember> _members;
@@ -50,6 +51,13 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             }
 
             return new AstPythonModule(interpreter, ast, fileName);
+        }
+
+        internal AstPythonModule() {
+            Name = string.Empty;
+            Documentation = string.Empty;
+            FilePath = string.Empty;
+            _properties = new Dictionary<object, object>();
         }
 
         internal AstPythonModule(IPythonInterpreter interpreter, PythonAst ast, string filePath) {
@@ -83,16 +91,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public bool IsAnalyzed => true;
         public void Analyze(CancellationToken cancel) { }
 
-        public IEnumerable<string> GetChildrenModules() => _childModules;
+        public IEnumerable<string> GetChildrenModules() => _childModules.MaybeEnumerate();
 
         public IMember GetMember(IModuleContext context, string name) {
-            IMember member;
-            _members.TryGetValue(name, out member);
+            IMember member = null;
+            if (_members != null) {
+                _members.TryGetValue(name, out member);
+            }
             return member;
         }
 
         public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
-            return _members.Keys.ToArray();
+            return _members?.Keys.ToArray() ?? Array.Empty<string>();
         }
 
         public void Imported(IModuleContext context) { }

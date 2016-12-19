@@ -54,16 +54,22 @@ namespace Microsoft.PythonTools.Logging {
                     _installedV3 = (int)dictArgument["3x"];
                     break;
                 case PythonLogEvent.PythonPackage:
-                    _seenPackages.Add(argument as PackageInfo);
+                    lock (_seenPackages) {
+                        _seenPackages.Add(argument as PackageInfo);
+                    }
                     break;
                 case PythonLogEvent.AnalysisCompleted:
-                    _analysisInfo.Add(argument as AnalysisInfo);
+                    lock (_analysisInfo) {
+                        _analysisInfo.Add(argument as AnalysisInfo);
+                    }
                     break;
                 case PythonLogEvent.AnalysisExitedAbnormally:
                 case PythonLogEvent.AnalysisOperationCancelled:
                 case PythonLogEvent.AnalysisOperationFailed:
                 case PythonLogEvent.AnalysisWarning:
-                    _analysisAbnormalities.Add("[{0}] {1}: {2}".FormatInvariant(DateTime.Now, logEvent, argument as string ?? ""));
+                    lock (_analysisAbnormalities) {
+                        _analysisAbnormalities.Add("[{0}] {1}: {2}".FormatInvariant(DateTime.Now, logEvent, argument as string ?? ""));
+                    }
                     break;
             }
         }
@@ -79,32 +85,38 @@ namespace Microsoft.PythonTools.Logging {
             res.AppendLine("Normal Launches: " + _normalLaunchCount);
             res.AppendLine();
 
-            if (_seenPackages.Any(p => p != null)) {
-                res.AppendLine("Seen Packages:");
-                foreach (var package in _seenPackages) {
-                    if (package != null) {
-                        res.AppendLine("    " + package.Name);
+            lock (_seenPackages) {
+                if (_seenPackages.Any(p => p != null)) {
+                    res.AppendLine("Seen Packages:");
+                    foreach (var package in _seenPackages) {
+                        if (package != null) {
+                            res.AppendLine("    " + package.Name);
+                        }
                     }
-                }
-                res.AppendLine();
-            }
-
-            if (_analysisInfo.Any(a => a != null)) {
-                res.AppendLine("Completion DB analyses:");
-                foreach (var analysis in _analysisInfo) {
-                    if (analysis != null) {
-                        res.AppendLine("    {0} - {1}s".FormatInvariant(analysis.InterpreterId, analysis.AnalysisSeconds));
-                    }
+                    res.AppendLine();
                 }
             }
 
-            if (_analysisAbnormalities.Any()) {
-                res.AppendFormat("Analysis abnormalities ({0}):", _analysisAbnormalities.Count);
-                res.AppendLine();
-                foreach (var abnormalExit in _analysisAbnormalities) {
-                    res.AppendLine(abnormalExit);
+            lock (_analysisInfo) {
+                if (_analysisInfo.Any(a => a != null)) {
+                    res.AppendLine("Completion DB analyses:");
+                    foreach (var analysis in _analysisInfo) {
+                        if (analysis != null) {
+                            res.AppendLine("    {0} - {1}s".FormatInvariant(analysis.InterpreterId, analysis.AnalysisSeconds));
+                        }
+                    }
                 }
-                res.AppendLine();
+            }
+
+            lock (_analysisAbnormalities) {
+                if (_analysisAbnormalities.Any()) {
+                    res.AppendFormat("Analysis abnormalities ({0}):", _analysisAbnormalities.Count);
+                    res.AppendLine();
+                    foreach (var abnormalExit in _analysisAbnormalities) {
+                        res.AppendLine(abnormalExit);
+                    }
+                    res.AppendLine();
+                }
             }
 
             return res.ToString();

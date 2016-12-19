@@ -14,22 +14,41 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonType : IPythonType, IMemberContainer, ILocatedMember {
         private readonly Dictionary<string, IMember> _members;
 
-        public AstPythonType(PythonAst ast, IPythonModule declModule, ClassDefinition def, string doc, LocationInfo loc) {
+        private static readonly IPythonModule NoDeclModule = new AstPythonModule();
+
+        public AstPythonType(string name) {
+            _members = new Dictionary<string, IMember>();
+            Name = name;
+            DeclaringModule = NoDeclModule;
+            Mro = Array.Empty<IPythonType>();
+            Locations = Array.Empty<LocationInfo>();
+        }
+
+        public AstPythonType(
+            PythonAst ast,
+            IPythonModule declModule,
+            ClassDefinition def,
+            string doc,
+            LocationInfo loc,
+            IEnumerable<IPythonType> mro
+        ) {
             _members = new Dictionary<string, IMember>();
 
             Name = def.Name;
             Documentation = doc;
             DeclaringModule = declModule;
-            Mro = new IPythonType[0];
+            Mro = mro.MaybeEnumerate().ToArray();
             Locations = new[] { loc };
         }
 
