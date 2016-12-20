@@ -56,7 +56,8 @@
                         <StackPanel Orientation="Vertical">
                             <TextBlock x:Name="Label_NotClickable"
                                        Margin="8 4 4 0"
-                                       Text="{Binding Label}"/>
+                                       Text="{Binding Label}"
+                                       Visibility="Collapsed"/>
                             <Button x:Name="Label_Clickable"
                                     Margin="8 4 4 0"
                                     Content="{Binding Label}"
@@ -71,7 +72,7 @@
                                                               AutomationProperties.Name="{Binding Label}"/>
                         </StackPanel>
                         <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding Url,Mode=OneTime}" Value="">
+                            <DataTrigger Binding="{Binding Url,Mode=OneWay}" Value="">
                                 <Setter TargetName="Label_Clickable" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="Label_NotClickable" Property="Visibility" Value="Visible" />
                             </DataTrigger>
@@ -81,7 +82,8 @@
                         <StackPanel Orientation="Vertical">
                             <TextBlock x:Name="Label_NotClickable"
                                        Margin="8 4 4 0"
-                                       Text="{Binding Label}"/>
+                                       Text="{Binding Label}"
+                                       Visibility="Collapsed"/>
                             <Button x:Name="Label_Clickable"
                                     Margin="8 4 4 0"
                                     Content="{Binding Label}"
@@ -97,7 +99,7 @@
                                                               AutomationProperties.Name="{Binding Label}"/>
                         </StackPanel>
                         <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding Url,Mode=OneTime}" Value="">
+                            <DataTrigger Binding="{Binding Url,Mode=OneWay}" Value="">
                                 <Setter TargetName="Label_Clickable" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="Label_NotClickable" Property="Visibility" Value="Visible" />
                             </DataTrigger>
@@ -107,7 +109,8 @@
                         <StackPanel Orientation="Vertical">
                             <TextBlock x:Name="Label_NotClickable"
                                        Margin="8 4 4 0"
-                                       Text="{Binding Label}"/>
+                                       Text="{Binding Label}"
+                                       Visibility="Collapsed"/>
                             <Button x:Name="Label_Clickable"
                                     Margin="8 4 4 0"
                                     Content="{Binding Label}"
@@ -122,7 +125,7 @@
                                                                AutomationProperties.Name="{Binding Label}"/>
                         </StackPanel>
                         <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding Url,Mode=OneTime}" Value="">
+                            <DataTrigger Binding="{Binding Url,Mode=OneWay}" Value="">
                                 <Setter TargetName="Label_Clickable" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="Label_NotClickable" Property="Visibility" Value="Visible" />
                             </DataTrigger>
@@ -138,7 +141,8 @@
                             </StackPanel.Resources>
                             <TextBlock x:Name="Label_NotClickable"
                                        Margin="8 4 4 0"
-                                       Text="{Binding Label}"/>
+                                       Text="{Binding Label}"
+                                       Visibility="Collapsed"/>
                             <Button x:Name="Label_Clickable"
                                     Margin="8 4 4 0"
                                     Content="{Binding Label}"
@@ -153,7 +157,7 @@
                                                                AutomationProperties.Name="{Binding Label}"/>
                         </StackPanel>
                         <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding Url,Mode=OneTime}" Value="">
+                            <DataTrigger Binding="{Binding Url,Mode=OneWay}" Value="">
                                 <Setter TargetName="Label_Clickable" Property="Visibility" Value="Collapsed" />
                                 <Setter TargetName="Label_NotClickable" Property="Visibility" Value="Visible" />
                             </DataTrigger>
