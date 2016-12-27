@@ -241,7 +241,16 @@ namespace Microsoft.PythonTools.Language {
             definitions = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
             values = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
 
+            if (variables == null) {
+                Debug.Fail("unexpected null variables");
+                return;
+            }
+
             foreach (var v in variables) {
+                if (v?.Location == null) {
+                    Debug.Fail("unexpected null variable or location");
+                    continue;
+                }
                 if (v.Location.FilePath == null) {
                     // ignore references in the REPL
                     continue;
