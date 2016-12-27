@@ -1137,20 +1137,32 @@ namespace Microsoft.PythonTools.Project {
                 uint fetched;
                 var curFactory = GetInterpreterFactory();
                 while (ErrorHandler.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
-                    var proj = hierarchy[0].GetProject();
-                    Debug.Assert(proj != null);
-                    if (proj != null) {
-                        var pyProj = proj.GetPythonProject();
-                        Debug.Assert(pyProj != null);
+                    string projPath;
+                    try {
+                        projPath = hierarchy[0].GetRootCanonicalName();
+                    } catch (COMException) {
+                        projPath = "<unknown name>";
+                    }
+                    try {
+                        var proj = hierarchy[0].GetProject();
+                        Debug.Assert(proj != null);
+                        if (proj != null) {
+                            var pyProj = proj.GetPythonProject();
+                            Debug.Assert(pyProj != null);
 
-                        if (pyProj != this &&
-                            pyProj._analyzer != null &&
-                            pyProj._analyzer.InterpreterFactory == curFactory) {
-                            // we have the same interpreter, we'll share analysis engines across projects.
-                            pyProj._analyzer.AddUser();
-                            HookErrorsAndWarnings(pyProj._analyzer);
-                            return pyProj._analyzer;
+                            if (pyProj != this &&
+                                pyProj._analyzer != null &&
+                                pyProj._analyzer.InterpreterFactory == curFactory) {
+                                // we have the same interpreter, we'll share analysis engines across projects.
+                                pyProj._analyzer.AddUser();
+                                HookErrorsAndWarnings(pyProj._analyzer);
+                                return pyProj._analyzer;
+                            }
                         }
+                    } catch (COMException) {
+                        Debug.Fail("Failed to get project for {0}".FormatInvariant(projPath));
+                        // Can continue searching though, since if the project isn't
+                        // valid then we can't very well share the analyzer with it.
                     }
                 }
             }
