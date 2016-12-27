@@ -17,7 +17,7 @@
 using System;
 
 namespace Microsoft.PythonTools.Interpreter {
-    public sealed class InterpreterConfiguration {
+    public sealed class InterpreterConfiguration : IEquatable<InterpreterConfiguration> {
         /// <summary>
         /// <para>Constructs a new interpreter configuration based on the
         /// provided values.</para>
@@ -100,8 +100,14 @@ namespace Microsoft.PythonTools.Interpreter {
         /// </remarks>
         public InterpreterUIMode UIMode { get; }
 
-        public override bool Equals(object obj) {
-            var other = obj as InterpreterConfiguration;
+        public static bool operator ==(InterpreterConfiguration x, InterpreterConfiguration y)
+            => x?.Equals(y) ?? object.ReferenceEquals(y, null);
+        public static bool operator !=(InterpreterConfiguration x, InterpreterConfiguration y)
+            => !(x?.Equals(y) ?? object.ReferenceEquals(y, null));
+
+        public override bool Equals(object obj) => Equals(obj as InterpreterConfiguration);
+
+        public bool Equals(InterpreterConfiguration other) {
             if (other == null) {
                 return false;
             }

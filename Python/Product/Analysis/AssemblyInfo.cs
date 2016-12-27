@@ -17,7 +17,7 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-[assembly: AssemblyTitle("Python Tools for Visual Studio analysis")]
+[assembly: AssemblyTitle("Visual Studio - Python code analysis")]
 [assembly: AssemblyDescription("Performs static analysis of Python code.")]
 
 // The analysis DLL doesn't version with Visual Studio.  This allows running it out of proc and having

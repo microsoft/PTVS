@@ -18,8 +18,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Python Tools for Visual Studio - Test Explorer Integration")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Visual Studio - Python Test Explorer integration")]
+[assembly: AssemblyDescription("Provides integration with the Visual Studio Test Explorer for Python projects.")]
 [assembly: AssemblyConfiguration("")]
 
 [assembly: ComVisible(false)]

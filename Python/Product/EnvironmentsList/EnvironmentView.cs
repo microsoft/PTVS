@@ -37,15 +37,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly RoutedCommand EnableIPythonInteractive = new RoutedCommand();
         public static readonly RoutedCommand DisableIPythonInteractive = new RoutedCommand();
 
-        public static readonly Lazy<EnvironmentView> AddNewEnvironmentView =
-            new Lazy<EnvironmentView>(() => new EnvironmentView());
-        public static readonly Lazy<IEnumerable<EnvironmentView>> AddNewEnvironmentViewOnce =
-            new Lazy<IEnumerable<EnvironmentView>>(() => new[] { AddNewEnvironmentView.Value });
+        private const string AddNewEnvironmentViewId = "__AddNewEnvironmentView";
+        private const string OnlineHelpViewId = "__OnlineHelpView";
 
-        public static readonly Lazy<EnvironmentView> OnlineHelpView =
-            new Lazy<EnvironmentView>(() => new EnvironmentView());
-        public static readonly Lazy<IEnumerable<EnvironmentView>> OnlineHelpViewOnce =
-            new Lazy<IEnumerable<EnvironmentView>>(() => new[] { OnlineHelpView.Value });
+        public static readonly IEnumerable<InterpreterConfiguration> ExtraItems = new[] {
+            new InterpreterConfiguration(OnlineHelpViewId, OnlineHelpViewId),
+            new InterpreterConfiguration(AddNewEnvironmentViewId, AddNewEnvironmentViewId)
+        };
+
+        public static readonly EnvironmentView OnlineHelpView = new EnvironmentView(OnlineHelpViewId);
 
         // Names of properties that will be requested from interpreter configurations
         internal const string CompanyKey = "Company";
@@ -61,9 +61,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private readonly IInterpreterRegistryService _registry;
         private readonly IPythonInterpreterFactoryWithDatabase _withDb;
 
-        public IPythonInterpreterFactory Factory { get; private set; }
+        public IPythonInterpreterFactory Factory { get; }
+        public InterpreterConfiguration Configuration { get; }
 
-        private EnvironmentView() { }
+        private EnvironmentView(string id) {
+            Configuration = new InterpreterConfiguration(id, id);
+        }
 
         internal EnvironmentView(
             IInterpreterOptionsService service,
@@ -80,10 +83,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             if (factory == null) {
                 throw new ArgumentNullException(nameof(factory));
             }
+            if (factory.Configuration == null) {
+                throw new ArgumentException("factory must include a configuration");
+            }
 
             _service = service;
             _registry = registry;
             Factory = factory;
+            Configuration = Factory.Configuration;
 
             _withDb = factory as IPythonInterpreterFactoryWithDatabase;
             if (_withDb != null) {
@@ -93,12 +100,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
             
 
-            if (_service.IsConfigurable(factory.Configuration.Id)) {
+            if (_service.IsConfigurable(Factory.Configuration.Id)) {
                 IsConfigurable = true;
             }
 
             Description = Factory.Configuration.Description;
-            IsDefault = (_service != null && _service.DefaultInterpreter == Factory);
+            IsDefault = (_service != null && _service.DefaultInterpreterId == Configuration.Id);
 
             PrefixPath = Factory.Configuration.PrefixPath;
             InterpreterPath = Factory.Configuration.InterpreterPath;
@@ -107,7 +114,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             Extensions = new ObservableCollection<object>();
             Extensions.Add(new EnvironmentPathsExtensionProvider());
             if (IsConfigurable) {
-                Extensions.Add(new ConfigurationExtensionProvider(_service));
+                Extensions.Add(new ConfigurationExtensionProvider(_service, alwaysCreateNew: false));
             }
 
             CanBeDefault = Factory.CanBeDefault();
@@ -116,10 +123,24 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             SupportUrl = _registry.GetProperty(Factory.Configuration.Id, SupportUrlKey) as string ?? "";
         }
 
+        public static EnvironmentView CreateAddNewEnvironmentView(IInterpreterOptionsService service) {
+            var ev = new EnvironmentView(AddNewEnvironmentViewId);
+            ev.Extensions = new ObservableCollection<object>();
+            ev.Extensions.Add(new ConfigurationExtensionProvider(service, alwaysCreateNew: true));
+            return ev;
+        }
+
+        public static bool IsAddNewEnvironmentView(string id) => AddNewEnvironmentViewId.Equals(id);
+        public static bool IsOnlineHelpView(string id) => OnlineHelpViewId.Equals(id);
+
+        public static bool IsAddNewEnvironmentView(EnvironmentView view) => AddNewEnvironmentViewId.Equals(view?.Configuration.Id);
+        public static bool IsOnlineHelpView(EnvironmentView view) => OnlineHelpViewId.Equals(view?.Configuration.Id);
+
         public override string ToString() {
             return string.Format(
-                "{{{0}:{1}}}", GetType().FullName,
-                _withDb == null ? "(null)" : _withDb.Configuration.Description
+                "{{{0}:{1}}}",
+                GetType().FullName,
+                _withDb?.Configuration.Description ??"(null)"
             );
         }
 
@@ -276,21 +297,23 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public DataTemplate OnlineHelp { get; set; }
 
         public override DataTemplate SelectTemplate(object item, DependencyObject container) {
-            if (EnvironmentView.AddNewEnvironmentView.IsValueCreated) {
-                if (object.ReferenceEquals(item, EnvironmentView.AddNewEnvironmentView.Value) &&
-                    AddNewEnvironment != null) {
-                    return AddNewEnvironment;
-                }
+            var ev = item as EnvironmentView;
+            if (ev == null) {
+                return base.SelectTemplate(item, container);
             }
-            if (EnvironmentView.OnlineHelpView.IsValueCreated) {
-                if (object.ReferenceEquals(item, EnvironmentView.OnlineHelpView.Value) &&
-                    OnlineHelp != null) {
-                    return OnlineHelp;
-                }
+
+            if (EnvironmentView.IsAddNewEnvironmentView(ev) && AddNewEnvironment != null) {
+                return AddNewEnvironment;
             }
-            if (item is EnvironmentView && Environment != null) {
+
+            if (EnvironmentView.IsOnlineHelpView(ev) && OnlineHelp != null) {
+                return OnlineHelp;
+            }
+
+            if (Environment != null) {
                 return Environment;
             }
+
             return base.SelectTemplate(item, container);
         }
     }

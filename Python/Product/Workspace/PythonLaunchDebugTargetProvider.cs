@@ -45,6 +45,8 @@ namespace Microsoft.PythonTools.Workspace {
         public const string NativeDebuggingKey = "nativeDebug";
         public const string WebBrowserUrlKey = "webBrowserUrl";
 
+        public const string DefaultInterpreterValue = "(default)";
+
         public const string JsonSchema = @"{
   ""definitions"": {
     ""python"": {
@@ -77,13 +79,30 @@ namespace Microsoft.PythonTools.Workspace {
             var registry = serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
 
             var settings = debugLaunchActionContext.LaunchConfiguration;
+            var scriptName = settings.GetValue(ScriptNameKey, string.Empty);
             var debug = !settings.GetValue("noDebug", false);
             var path = settings.GetValue(InterpreterKey, string.Empty);
             InterpreterConfiguration config = null;
 
-            if (!string.IsNullOrEmpty(path)) {
+            if (string.IsNullOrEmpty(scriptName)) {
+                throw new InvalidOperationException(Strings.DebugLaunchScriptNameMissing);
+            }
+
+            if (!string.IsNullOrEmpty(path) && !DefaultInterpreterValue.Equals(path, StringComparison.OrdinalIgnoreCase)) {
                 if (PathUtils.IsValidPath(path) && !Path.IsPathRooted(path)) {
-                    // TODO: Find location of launch.json
+                    // Cannot (currently?) get the workspace path easily from here, so we'll start from
+                    // the startup file and work our way up until we find it.
+                    var basePath = PathUtils.GetParent(scriptName);
+                    string candidate = null;
+                    
+                    while (Directory.Exists(basePath)) {
+                        candidate = PathUtils.GetAbsoluteFilePath(basePath, path);
+                        if (File.Exists(candidate)) {
+                            path = candidate;
+                            break;
+                        }
+                        basePath = PathUtils.GetParent(basePath);
+                    }
                 }
 
                 if (File.Exists(path)) {
@@ -107,7 +126,7 @@ namespace Microsoft.PythonTools.Workspace {
             var launchConfig = new LaunchConfiguration(config) {
                 InterpreterPath = config == null ? path : null,
                 InterpreterArguments = settings.GetValue(InterpreterArgumentsKey, string.Empty),
-                ScriptName = settings.GetValue(ScriptNameKey, string.Empty),
+                ScriptName = scriptName,
                 ScriptArguments = settings.GetValue(ScriptArgumentsKey, string.Empty),
                 WorkingDirectory = settings.GetValue(WorkingDirectoryKey, string.Empty),
                 // TODO: Support search paths

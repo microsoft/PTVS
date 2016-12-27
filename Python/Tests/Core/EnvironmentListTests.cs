@@ -106,6 +106,39 @@ namespace PythonToolsUITests {
 
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
+        public void InterpretersWithSameNames() {
+            var sp = new MockServiceProvider();
+            var mockService = new MockInterpreterOptionsService();
+
+            var fact1 = new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 1", new Version(2, 7)));
+            fact1.Properties[PythonRegistrySearch.CompanyPropertyKey] = "Company 1";
+            var fact2 = new MockPythonInterpreterFactory(MockInterpreterConfiguration("Test Factory 1", new Version(2, 7)));
+            fact2.Properties[PythonRegistrySearch.CompanyPropertyKey] = "Company 2";
+
+            // Deliberately add fact2 twice, as we should only show that once.
+            mockService.AddProvider(new MockPythonInterpreterFactoryProvider("Test Provider 1", fact1, fact2, fact2));
+
+            using (var wpf = new WpfProxy())
+            using (var list = new EnvironmentListProxy(wpf)) {
+                list.Service = mockService;
+                list.Interpreters = mockService;
+                var environments = list.Environments;
+
+                Assert.AreEqual(2, environments.Count);
+                AssertUtil.ArrayEquals(
+                    wpf.Invoke(() => environments.Select(ev => ev.Description).ToList()),
+                    new[] { "Test Factory 1", "Test Factory 1" }
+                );
+                AssertUtil.ContainsExactly(
+                    wpf.Invoke(() => environments.Select(ev => ev.Company).ToList()),
+                    "Company 1",
+                    "Company 2"
+                );
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public async Task InterpretersRaceCondition() {
             var container = CreateCompositionContainer();
             var service = container.GetExportedValue<IInterpreterOptionsService>();
@@ -504,10 +537,37 @@ namespace PythonToolsUITests {
             }
         }
 
+        private static async Task AddCustomEnvironment(EnvironmentListProxy list) {
+
+            var view = list.AddNewEnvironmentView;
+            var extView = view.Extensions.OfType<ConfigurationExtensionProvider>().First().WpfObject;
+
+            // Extension is not sited in the tool window, so we need
+            // to set the DataContext in order to get the Subcontext
+            extView.DataContext = view;
+            var confView = (ConfigurationEnvironmentView)((System.Windows.Controls.Grid)extView.FindName("Subcontext")).DataContext;
+
+            confView.Description = "Test Environment";
+            confView.PrefixPath = @"C:\Test";
+            confView.InterpreterPath = @"C:\Test\python.exe";
+            confView.WindowsInterpreterPath = @"C:\Test\pythonw.exe";
+            confView.VersionName = "3.5";
+            confView.ArchitectureName = "32-bit";
+
+            var origCount = list.Environments.Count;
+
+            ((RoutedCommand)ConfigurationExtension.Apply).Execute(confView, extView);
+
+            while (list.Environments.Count == origCount) {
+                await Task.Delay(10);
+            }
+        }
+
         [TestMethod, Priority(1)]
         public async Task AddUpdateRemoveConfigurableFactoryThroughUI() {
             using (var wpf = new WpfProxy())
             using (var list = new EnvironmentListProxy(wpf)) {
+                string newId = null;
                 var container = CreateCompositionContainer();
                 var service = container.GetExportedValue<IInterpreterOptionsService>();
                 var interpreters = container.GetExportedValue<IInterpreterRegistryService>();
@@ -517,22 +577,23 @@ namespace PythonToolsUITests {
                 var before = wpf.Invoke(() => new HashSet<string>(
                     list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Configuration.Id)));
 
-                await list.Execute(ApplicationCommands.New, null);
-                var afterAdd = wpf.Invoke(() => new HashSet<string>(list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Configuration.Id)));
-
-                var difference = new HashSet<string>(afterAdd);
-                difference.ExceptWith(before);
-
-                Console.WriteLine("Added {0}", AssertUtil.MakeText(difference));
-                Assert.AreEqual(1, difference.Count, "Did not add a new environment");
-                var newEnv = interpreters.Interpreters.Single(f => difference.Contains(f.Configuration.Id));
-
-                Assert.IsTrue(list.Service.IsConfigurable(newEnv.Configuration.Id), "Did not add a configurable environment");
-
                 try {
+                    wpf.Invoke(() => AddCustomEnvironment(list)).Wait(10000);
+
+                    var afterAdd = wpf.Invoke(() => new HashSet<string>(list.Environments.Where(ev => ev.Factory != null).Select(ev => ev.Factory.Configuration.Id)));
+                    var difference = new HashSet<string>(afterAdd);
+                    difference.ExceptWith(before);
+
+                    Console.WriteLine("Added {0}", AssertUtil.MakeText(difference));
+                    Assert.AreEqual(1, difference.Count, "Did not add a new environment");
+                    var newEnv = interpreters.Interpreters.Single(f => difference.Contains(f.Configuration.Id));
+                    newId = newEnv.Configuration.Id;
+
+                    Assert.IsTrue(list.Service.IsConfigurable(newEnv.Configuration.Id), "Did not add a configurable environment");
+
                     // To remove the environment, we need to trigger the Remove
                     // command on the ConfigurationExtensionProvider's control
-                    var view = wpf.Invoke(() => list.Environments.First(ev => ev.Factory == newEnv));
+                    var view = wpf.Invoke(() => list.Environments.First(ev => ev.Factory.Configuration.Id == newId));
                     var extView = wpf.Invoke(() => view.Extensions.OfType<ConfigurationExtensionProvider>().First().WpfObject);
                     var confView = wpf.Invoke(() => {
                         // Extension is not sited in the tool window, so we need
@@ -547,10 +608,12 @@ namespace PythonToolsUITests {
                     AssertUtil.ContainsExactly(afterRemove, before);
                 } finally {
                     // Just in case, we want to clean up the registration
-                    string company, tag;
-                    if (CPythonInterpreterFactoryConstants.TryParseInterpreterId(newEnv.Configuration.Id, out company, out tag) &&
-                        company == "VisualStudio") {
-                        Registry.CurrentUser.DeleteSubKeyTree("Software\\Python\\VisualStudio\\" + tag, false);
+                    if (newId != null) {
+                        string company, tag;
+                        if (CPythonInterpreterFactoryConstants.TryParseInterpreterId(newId, out company, out tag) &&
+                            company == "VisualStudio") {
+                            Registry.CurrentUser.DeleteSubKeyTree("Software\\Python\\VisualStudio\\" + tag, false);
+                        }
                     }
                 }
             }
@@ -889,10 +952,15 @@ namespace PythonToolsUITests {
                 get {
                     return _proxy.Invoke(() =>
                         Window._environments
-                            .Except(EnvironmentView.AddNewEnvironmentViewOnce.Value)
-                            .Except(EnvironmentView.OnlineHelpViewOnce.Value)
+                            .Where(ev => !EnvironmentView.IsAddNewEnvironmentView(ev) && !EnvironmentView.IsOnlineHelpView(ev))
                             .ToList()
                     );
+                }
+            }
+
+            public EnvironmentView AddNewEnvironmentView {
+                get {
+                    return _proxy.Invoke(() => Window._environments.Single(ev => EnvironmentView.IsAddNewEnvironmentView(ev)));
                 }
             }
 

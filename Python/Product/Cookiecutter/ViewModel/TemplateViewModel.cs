@@ -22,8 +22,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
     class TemplateViewModel : INotifyPropertyChanged {
         private string _displayName;
         private string _remoteUrl;
+        private string _ownerUrl;
         private string _clonedPath;
         private string _description;
+        private string _avatarUrl;
         private bool _isSearchTerm;
         private bool _isUpdateAvailable;
 
@@ -32,6 +34,8 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public TemplateViewModel() {
         }
 
+        public override string ToString() => DisplayName;
+
         public bool Selectable => true;
 
         public string GitHubHomeUrl => RemoteUrl;
@@ -39,6 +43,14 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public string GitHubIssuesUrl => RemoteUrl != null ? RemoteUrl + "/issues" : null;
 
         public string GitHubWikiUrl => RemoteUrl != null ? RemoteUrl + "/wiki" : null;
+
+        public bool HasDetails {
+            get {
+                return !string.IsNullOrEmpty(Description) &&
+                       !string.IsNullOrEmpty(AvatarUrl) &&
+                       !string.IsNullOrEmpty(OwnerUrl);
+            }
+        }
 
         /// <summary>
         /// Repository name.
@@ -139,6 +151,32 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _description) {
                     _description = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Description)));
+                }
+            }
+        }
+
+        public string AvatarUrl{
+            get {
+                return _avatarUrl;
+            }
+
+            set {
+                if (value != _avatarUrl) {
+                    _avatarUrl = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(AvatarUrl)));
+                }
+            }
+        }
+
+        public string OwnerUrl {
+            get {
+                return _ownerUrl;
+            }
+
+            set {
+                if (value != _ownerUrl) {
+                    _ownerUrl = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OwnerUrl)));
                 }
             }
         }

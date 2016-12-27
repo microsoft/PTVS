@@ -23,39 +23,9 @@ permissions and limitations under the License.
   <PropertyGroup>
     <RoleType Condition="'$(RoleType)' == ''">Worker</RoleType>
     <_IgnorePythonWebCommands>true</_IgnorePythonWebCommands>
-    <_IgnorePythonWebConfig>true</_IgnorePythonWebConfig>
-    <_RegenerateWebConfig>false</_RegenerateWebConfig>
-    <_RegenerateWebDebugConfig>false</_RegenerateWebDebugConfig>
   </PropertyGroup>
 
   <Import Project="Microsoft.PythonTools.Web.targets"/>
-
-  <!-- Worker role requires more settings in AzureSetup.cfg -->
-  <PropertyGroup>
-    <CreatePythonAzureSetupConfigDependsOn>
-      _AddWorkerRoleToAzureSetupConfig;
-      _GetDeployedPythonInterpreterPath;
-      $(CreatePythonAzureSetupConfigDependsOn)
-    </CreatePythonAzureSetupConfigDependsOn>
-  </PropertyGroup>
-
-  <Target Name="_AddWorkerRoleToAzureSetupConfig" Condition="$(RoleType) == 'Worker'">
-    <PropertyGroup>
-      <_CloudServiceAzureSetupConfig>
-        <![CDATA[
-$(_CloudServiceAzureSetupConfig)
-worker_command="$(StartupFile)" $(CommandLineArguments)
-worker_directory=$(WorkingDirectory)
-        ]]>
-      </_CloudServiceAzureSetupConfig>
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="_GetDeployedPythonInterpreterPath" DependsOnTargets="ResolveVirtualEnvSettings">
-    <PropertyGroup>
-      <DeployedPythonInterpreterPath Condition="$(VirtualEnvEnabled) and '$(DeployedPythonInterpreterPath)' == ''">$(DeployedVirtualEnvPath)$(PythonPrefixSubPath)Scripts\$([System.IO.Path]::GetFileName($(PythonInterpreterPath)))</DeployedPythonInterpreterPath>
-    </PropertyGroup>
-  </Target>
 
   <!-- TargetPath has to include our project directory -->
   <Target Name="GetTargetPath" Returns="$(MSBuildProjectDirectory)\" />

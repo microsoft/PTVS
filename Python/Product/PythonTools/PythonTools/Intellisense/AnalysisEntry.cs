@@ -80,7 +80,7 @@ namespace Microsoft.PythonTools.Intellisense {
         public Dictionary<object, object> Properties => _properties;
 
         public string GetLine(int line) {
-            return AnalysisCookie.GetLine(line);
+            return AnalysisCookie?.GetLine(line);
         }
 
         internal void OnParseComplete() {

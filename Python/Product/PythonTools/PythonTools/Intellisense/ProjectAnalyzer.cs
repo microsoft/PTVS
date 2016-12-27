@@ -413,11 +413,14 @@ namespace Microsoft.PythonTools.Intellisense {
                         _projectFilesById[childFile.fileId] = _projectFiles[childFile.filename] = entry;
                     }
                     break;
+                case AP.AnalyzerWarningEvent.Name:
+                    var warning = (AP.AnalyzerWarningEvent)e.Event;
+                    _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisWarning, warning.message);
+                    break;
                 case AP.UnhandledExceptionEvent.Name:
                     Debug.Fail("Unhandled exception from analyzer");
                     var exception = (AP.UnhandledExceptionEvent)e.Event;
-
-                    VisualStudio.Shell.ActivityLog.LogError(Strings.ProductTitle, exception.message);
+                    _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, exception.message);
                     break;
             }
         }

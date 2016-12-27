@@ -61,6 +61,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Additional information:.
+        /// </summary>
+        public static string AdditionalInformation {
+            get {
+                return ResourceManager.GetString("AdditionalInformation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Extension Modules (*.dll;*.pyd)|*.dll;*.pyd|All Files (*.*)|*.*.
         /// </summary>
         public static string AddReferenceExtensions {
@@ -162,6 +171,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot go to definition. The cursor is not on a recognized symbol..
+        /// </summary>
+        public static string CannotGoToDefn {
+            get {
+                return ResourceManager.GetString("CannotGoToDefn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot go to definition of &quot;{0}&quot;..
+        /// </summary>
+        public static string CannotGoToDefn_Name {
+            get {
+                return ResourceManager.GetString("CannotGoToDefn_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Class.
         /// </summary>
         public static string ClassClassificationType {
@@ -176,6 +203,195 @@ namespace Microsoft.PythonTools {
         public static string CommaClassificationType {
             get {
                 return ResourceManager.GetString("CommaClassificationType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot create thread in debuggee process.
+        /// </summary>
+        public static string ConnErrorMessages_CannotInjectThread {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_CannotInjectThread", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot open process for debugging.
+        /// </summary>
+        public static string ConnErrorMessages_CannotOpenProcess {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_CannotOpenProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python interpreter has not been initialized in this process.
+        /// </summary>
+        public static string ConnErrorMessages_InterpreterNotInitialized {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_InterpreterNotInitialized", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to load debugging script (incorrect version of script?).
+        /// </summary>
+        public static string ConnErrorMessages_LoadDebuggerBadDebugger {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_LoadDebuggerBadDebugger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to compile debugging script.
+        /// </summary>
+        public static string ConnErrorMessages_LoadDebuggerFailed {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_LoadDebuggerFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Out of memory.
+        /// </summary>
+        public static string ConnErrorMessages_OutOfMemory {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_OutOfMemory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot find PyDebugAttach.dll.
+        /// </summary>
+        public static string ConnErrorMessages_PyDebugAttachNotFound {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_PyDebugAttachNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python interpreter not found.
+        /// </summary>
+        public static string ConnErrorMessages_PythonNotFound {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_PythonNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remote debugging server rejected request to attach.
+        /// </summary>
+        public static string ConnErrorMessages_RemoteAttachRejected {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_RemoteAttachRejected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid remote debugging endpoint URI.
+        /// </summary>
+        public static string ConnErrorMessages_RemoteInvalidUri {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_RemoteInvalidUri", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Network error while connecting to remote debugging server.
+        /// </summary>
+        public static string ConnErrorMessages_RemoteNetworkError {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_RemoteNetworkError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Secret specified in the Qualifier string did not match the remote secret.
+        /// </summary>
+        public static string ConnErrorMessages_RemoteSecretMismatch {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_RemoteSecretMismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not establish a secure SSL connection to remote debugging server.
+        /// </summary>
+        public static string ConnErrorMessages_RemoteSslError {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_RemoteSslError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remote server is not a supported Python debugging server.
+        /// </summary>
+        public static string ConnErrorMessages_RemoteUnsupportedServer {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_RemoteUnsupportedServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This remote debugging transport is not supported by this version of Windows..
+        /// </summary>
+        public static string ConnErrorMessages_RemoteUnsupportedTransport {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_RemoteUnsupportedTransport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to gettrace not found in sys module.
+        /// </summary>
+        public static string ConnErrorMessages_SysGetTraceNotFound {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_SysGetTraceNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to sys module not found.
+        /// </summary>
+        public static string ConnErrorMessages_SysNotFound {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_SysNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to settrace not found in sys module.
+        /// </summary>
+        public static string ConnErrorMessages_SysSetTraceNotFound {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_SysSetTraceNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timeout while attaching.
+        /// </summary>
+        public static string ConnErrorMessages_TimeOut {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_TimeOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown error.
+        /// </summary>
+        public static string ConnErrorMessages_UnknownError {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_UnknownError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown Python version loaded in process.
+        /// </summary>
+        public static string ConnErrorMessages_UnknownVersion {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_UnknownVersion", resourceCulture);
             }
         }
         
@@ -253,6 +469,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Custom environment.
+        /// </summary>
+        public static string CustomEnvironmentLabel {
+            get {
+                return ResourceManager.GetString("CustomEnvironmentLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Getting attach information from web site..
         /// </summary>
         public static string DebugAttachGettingSiteInformation {
@@ -276,6 +501,15 @@ namespace Microsoft.PythonTools {
         public static string DebugLaunchInterpreterMissing_Path {
             get {
                 return ResourceManager.GetString("DebugLaunchInterpreterMissing_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The project cannot be launched because the startup file is not specified..
+        /// </summary>
+        public static string DebugLaunchScriptNameMissing {
+            get {
+                return ResourceManager.GetString("DebugLaunchScriptNameMissing", resourceCulture);
             }
         }
         
@@ -441,6 +675,15 @@ namespace Microsoft.PythonTools {
         public static string EnvironmentDeleteConfirmation {
             get {
                 return ResourceManager.GetString("EnvironmentDeleteConfirmation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; will be removed from the project and all its contents will be deleted from disk..
+        /// </summary>
+        public static string EnvironmentDeleteConfirmation_NoPath {
+            get {
+                return ResourceManager.GetString("EnvironmentDeleteConfirmation_NoPath", resourceCulture);
             }
         }
         
@@ -1059,6 +1302,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to  (missing).
+        /// </summary>
+        public static string MissingSuffix {
+            get {
+                return ResourceManager.GetString("MissingSuffix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Module.
         /// </summary>
         public static string ModuleClassificationType {
@@ -1285,11 +1537,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python Tools for Visual Studio.
+        ///   Looks up a localized string similar to Visual Studio - Python support.
         /// </summary>
         public static string ProductTitle {
             get {
                 return ResourceManager.GetString("ProductTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Publishing Python projects has recently changed..
+        /// </summary>
+        public static string PublishToAzure30 {
+            get {
+                return ResourceManager.GetString("PublishToAzure30", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to These changes will allow you to deploy more reliably and quickly, but first you may need to configure your project or deployment target.
+        ///
+        ///When you publish, we will no longer automatically generate a web.config file. You can add one using Add New Item and customize as necessary for your site.
+        ///
+        ///There are no restrictions on the version of Python you may be using when you deploy, however, we will no longer include virtual environments or the Python runtime when you deploy. Only libraries that are directly i [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string PublishToAzure30Message {
+            get {
+                return ResourceManager.GetString("PublishToAzure30Message", resourceCulture);
             }
         }
         
@@ -1389,6 +1663,42 @@ namespace Microsoft.PythonTools {
         public static string RememberMySelection {
             get {
                 return ResourceManager.GetString("RememberMySelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not connect to remote Python process at {0}. Make sure that web sockets are enabled for the corresponding web site in Azure portal..
+        /// </summary>
+        public static string RemoteAzureServiceUnavailable_Host {
+            get {
+                return ResourceManager.GetString("RemoteAzureServiceUnavailable_Host", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Secret did not match the server secret at {0}. Make sure that the secret is specified correctly in the Qualifier textbox, e.g. tcp://secret@localhost..
+        /// </summary>
+        public static string RemoteSecretMismatch_Host {
+            get {
+                return ResourceManager.GetString("RemoteSecretMismatch_Host", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not connect to remote Python process at {0}. Make sure that the process is running, and has called ptvsd.enable_attach()..
+        /// </summary>
+        public static string RemoteServiceUnavailable_Host {
+            get {
+                return ResourceManager.GetString("RemoteServiceUnavailable_Host", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The remote server at {0} is not running a remote debugging server, or it is running an unsupported version..
+        /// </summary>
+        public static string RemoteUnsupportedServer_Host {
+            get {
+                return ResourceManager.GetString("RemoteUnsupportedServer_Host", resourceCulture);
             }
         }
         
@@ -1513,6 +1823,15 @@ namespace Microsoft.PythonTools {
         public static string ReplOpeningError {
             get {
                 return ResourceManager.GetString("ReplOpeningError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The associated project &apos;{0}&apos; has changed its configuration. These changes will not be reflected until you reset this interactive window..
+        /// </summary>
+        public static string ReplProjectConfigurationChanged {
+            get {
+                return ResourceManager.GetString("ReplProjectConfigurationChanged", resourceCulture);
             }
         }
         
@@ -1955,11 +2274,11 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to attach debugger because the process has already exited..
+        ///   Looks up a localized string similar to Failed to execute tests because the process has already exited..
         /// </summary>
-        public static string Test_FailedToAttachExited {
+        public static string Test_FailedToStartExited {
             get {
-                return ResourceManager.GetString("Test_FailedToAttachExited", resourceCulture);
+                return ResourceManager.GetString("Test_FailedToStartExited", resourceCulture);
             }
         }
         
@@ -2072,6 +2391,24 @@ namespace Microsoft.PythonTools {
         public static string UninstallingPackageSuccess {
             get {
                 return ResourceManager.GetString("UninstallingPackageSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove this package.
+        /// </summary>
+        public static string UninstallMessage {
+            get {
+                return ResourceManager.GetString("UninstallMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove {0}.
+        /// </summary>
+        public static string UninstallMessage_Package {
+            get {
+                return ResourceManager.GetString("UninstallMessage_Package", resourceCulture);
             }
         }
         
@@ -2203,6 +2540,24 @@ namespace Microsoft.PythonTools {
         public static string UpgradedWebBrowserUrlProperty {
             get {
                 return ResourceManager.GetString("UpgradedWebBrowserUrlProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upgrade to the latest version of this package.
+        /// </summary>
+        public static string UpgradeMessage {
+            get {
+                return ResourceManager.GetString("UpgradeMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upgrade to {0} version {1}.
+        /// </summary>
+        public static string UpgradeMessage_Package {
+            get {
+                return ResourceManager.GetString("UpgradeMessage_Package", resourceCulture);
             }
         }
         

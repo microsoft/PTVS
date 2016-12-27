@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -57,7 +58,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         private void Home_Executed(object sender, ExecutedRoutedEventArgs e) {
-            ViewModel.Reset();
+            ViewModel.Home();
         }
 
         private void CreateFiles_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -71,14 +72,20 @@ namespace Microsoft.CookiecutterTools.View {
                 return;
             }
 
-            if (!ViewModel.IsOutputFolderEmpty()) {
-                var result = MessageBox.Show(Strings.OutputFolderNotEmpty, Strings.ProductTitle, MessageBoxButton.OKCancel, MessageBoxImage.Warning);
-                if (result == MessageBoxResult.Cancel) {
-                    return;
-                }
-            }
-
             ViewModel.CreateFilesAsync().DoNotWait();
+        }
+
+        private void OpenInBrowser_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            var url = (string)e.Parameter;
+            Uri uri;
+            e.CanExecute = Uri.TryCreate(url, UriKind.Absolute, out uri) &&
+                           (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+            e.Handled = true;
+        }
+
+        private void OpenInBrowser_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var url = (string)e.Parameter;
+            Process.Start(url)?.Dispose();
         }
     }
 

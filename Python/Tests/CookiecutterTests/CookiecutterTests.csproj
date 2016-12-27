@@ -52,6 +52,7 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Text.Data, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -78,8 +79,10 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="GitClientTests.cs" />
     <Compile Include="GitHubDiscoveryTests.cs" />
     <Compile Include="ITelemetryTestSupport.cs" />
+    <Compile Include="MockProjectSystemClient.cs" />
     <Compile Include="StringTelemetryRecorderTests.cs" />
     <Compile Include="TelemetryTestService.cs" />
     <Compile Include="TelemetryTestServiceTests.cs" />

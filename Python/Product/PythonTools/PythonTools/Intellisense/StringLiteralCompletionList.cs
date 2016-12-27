@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.PythonTools.Infrastructure;
@@ -184,10 +185,19 @@ namespace Microsoft.PythonTools.Intellisense {
         public override CompletionSet GetCompletions(IGlyphService glyphService) {
             var snapshot = TextBuffer.CurrentSnapshot;
             var span = snapshot.GetApplicableSpan(Span.GetStartPoint(snapshot));
-            var text = span.GetText(snapshot);
-
             var classifier = snapshot.TextBuffer.GetPythonClassifier();
+            if (span == null || classifier == null) {
+                // Not a valid Python text buffer, which should not happen
+                Debug.Fail("Getting completions for non-Python buffer");
+                return null;
+            }
+
+            var text = span.GetText(snapshot);
             var token = classifier.GetClassificationSpans(span.GetSpan(snapshot)).LastOrDefault();
+            if (token == null) {
+                // Not a valid line of tokens
+                return null;
+            }
             bool quoteBackslash = !token.Span.GetText().TakeWhile(c => !QuoteChars.Contains(c)).Any(c => c == 'r' || c == 'R');
 
             if (quoteBackslash) {

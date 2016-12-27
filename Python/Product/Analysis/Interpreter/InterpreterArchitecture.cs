@@ -15,9 +15,16 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
+using System.Reflection;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter {
-    public abstract class InterpreterArchitecture : IFormattable, IComparable<InterpreterArchitecture> {
+    public abstract class InterpreterArchitecture : 
+        IFormattable,
+        IComparable<InterpreterArchitecture>,
+        IEquatable<InterpreterArchitecture>
+    {
         protected abstract bool Equals(string value);
 
         public virtual string ToString(string format, IFormatProvider formatProvider, string defaultString) {
@@ -69,6 +76,20 @@ namespace Microsoft.PythonTools.Interpreter {
             return result;
         }
 
+        public static InterpreterArchitecture FromExe(string path) {
+            try {
+                switch (NativeMethods.GetBinaryType(path)) {
+                    case ProcessorArchitecture.X86:
+                        return x86;
+                    case ProcessorArchitecture.Amd64:
+                        return x64;
+                }
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(InterpreterArchitecture)));
+            }
+            return Unknown;
+        }
+
         public int CompareTo(InterpreterArchitecture other) {
             // We implement the full comparison here rather than delegating to
             // subclasses so that we have some way to handle extra
@@ -103,6 +124,14 @@ namespace Microsoft.PythonTools.Interpreter {
 
             return GetType().Name.CompareTo(other.GetType().Name);
         }
+
+        public static bool operator ==(InterpreterArchitecture x, InterpreterArchitecture y)
+            => x?.Equals(y) ?? object.ReferenceEquals(y, null);
+        public static bool operator !=(InterpreterArchitecture x, InterpreterArchitecture y)
+            => !(x?.Equals(y) ?? object.ReferenceEquals(y, null));
+        public override bool Equals(object obj) => Equals(obj as InterpreterArchitecture);
+        public bool Equals(InterpreterArchitecture other) => other != null && GetType().IsEquivalentTo(other.GetType());
+        public override int GetHashCode() => GetType().GetHashCode();
 
         private sealed class UnknownArchitecture : InterpreterArchitecture {
             public UnknownArchitecture() { }

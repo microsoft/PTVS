@@ -24,6 +24,7 @@
                    !(bindpath.bin)\Microsoft.PythonTools.Ipc.Json.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.ImportWizard.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.InteractiveWindow.dll;
+                   !(bindpath.bin)\Microsoft.PythonTools.WebRole.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.ProjectWizards.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.VSCommon.dll;
                    !(bindpath.bin)\Microsoft.PythonTools.VSInterpreters.dll;
@@ -54,7 +55,7 @@
                    visualstudio_py_util.py" />
 
     <!-- Resources -->
-    <File Include="Python Tools for VS License.rtf;
+    <File Include="License_en-US.rtf;
                    NoInterpreters.mht;
                    NoSurveyNewsFeed.mht" />
     <File Include="PythonFile.ico;
@@ -137,7 +138,7 @@
       <TemplateName>WorkerRoleProject</TemplateName>
     </WebProjectTemplate>
     <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\WebRoleEmpty\*">
-      <TemplateName>EmptyWebRole</TemplateName>
+      <TemplateName>WebRoleEmpty</TemplateName>
     </WebProjectTemplate>
     <WebProjectTemplate Include="$(BuildRoot)Python\Templates\Web\ProjectTemplates\Python\Web\WebRoleBottle\*">
       <TemplateName>WebRoleBottle</TemplateName>
@@ -198,12 +199,7 @@
                           Microsoft.PythonTools.Web.targets;
                           Microsoft.PythonTools.Worker.targets;
                           wfastcgi.py;
-                          web_config.xml;
-                          web_debug_config.xml;
-                          ptvs_virtualenv_proxy.py;
-                          !(bindpath.bin)\Microsoft.PythonTools.WebRole.dll;
-                          !(bindpath.bin)\Microsoft.PythonTools.AzureSetup.exe;
-                          Microsoft.PythonTools.AzureSetup.exe.config" />
+                          !(bindpath.bin)\Microsoft.PythonTools.WebRole.dll" />
     
     <!-- Mixed-mode Debugging -->
     <File Include="!(bindpath.bin)\Microsoft.PythonTools.Debugger.Helper.x86.dll;

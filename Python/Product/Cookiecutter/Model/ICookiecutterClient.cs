@@ -14,9 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Threading.Tasks;
-using Microsoft.CookiecutterTools.Infrastructure;
 
 namespace Microsoft.CookiecutterTools.Model {
     interface ICookiecutterClient {
@@ -25,6 +23,7 @@ namespace Microsoft.CookiecutterTools.Model {
         Task CreateCookiecutterEnv();
         Task InstallPackage();
         Task<ContextItem[]> LoadContextAsync(string localTemplateFolder, string userConfigFilePath);
-        Task GenerateProjectAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath);
+        Task<CreateFilesOperationResult> CreateFilesAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath);
+        Task<string> GetDefaultOutputFolderAsync(string shortName);
     }
 }

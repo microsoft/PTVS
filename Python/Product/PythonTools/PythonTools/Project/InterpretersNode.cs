@@ -21,9 +21,9 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Microsoft.Build.Evaluation;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
@@ -49,6 +49,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly string _captionSuffix;
         private bool _suppressPackageRefresh;
         private bool _checkedItems, _checkingItems, _disposed;
+        internal readonly string _absentId;
         internal readonly bool _isGlobalDefault;
 
         public static readonly object InstallPackageLockMoniker = new object();
@@ -77,6 +78,16 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
+        private InterpretersNode(PythonProjectNode project, string id) : base(project, MakeElement(project)) {
+            _absentId = id;
+            _canRemove = true;
+            _captionSuffix = Strings.MissingSuffix;
+        }
+
+        public static InterpretersNode CreateAbsentInterpreterNode(PythonProjectNode project, string id) {
+            return new InterpretersNode(project, id);
+        }
+
         public override int MenuCommandId {
             get { return PythonConstants.EnvironmentMenuId; }
         }
@@ -91,7 +102,7 @@ namespace Microsoft.PythonTools.Project {
 
         public override void Close() {
             if (!_disposed) {
-                if (_factory.PackageManager != null) {
+                if (_factory?.PackageManager != null) {
                     _factory.PackageManager.InstalledPackagesChanged -= InstalledPackagesChanged;
                 }
             }
@@ -105,7 +116,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private void RefreshPackages() {
-            RefreshPackagesAsync(_factory.PackageManager)
+            RefreshPackagesAsync(_factory?.PackageManager)
                 .HandleAllExceptions(ProjectMgr.Site, GetType())
                 .DoNotWait();
         }
@@ -129,6 +140,15 @@ namespace Microsoft.PythonTools.Project {
             await ProjectMgr.Site.GetUIThread().InvokeAsync(() => {
                 if (ProjectMgr == null || ProjectMgr.IsClosed) {
                     return;
+                }
+
+                try {
+                    var logger = ProjectMgr.Site.GetPythonToolsService().Logger;
+                    foreach (var p in packages) {
+                        logger.LogEvent(PythonLogEvent.PythonPackage, new PackageInfo { Name = p.Value.Name });
+                    }
+                } catch (Exception ex) {
+                    Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
                 }
 
                 bool anyChanges = false;
@@ -185,7 +205,7 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public void ResumeWatching() {
             _suppressPackageRefresh = false;
-            RefreshPackagesAsync(_factory as IPackageManager)
+            RefreshPackagesAsync(_factory?.PackageManager)
                 .HandleAllExceptions(ProjectMgr.Site, GetType())
                 .DoNotWait();
         }
@@ -235,7 +255,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
-            if (_interpreterService.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
+            if (_factory != null && _interpreterService.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
                 // Prevent the environment from being deleted while installing.
                 return false;
             }
@@ -263,7 +283,7 @@ namespace Microsoft.PythonTools.Project {
                 throw new NotSupportedException();
             }
 
-            if (_interpreterService.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
+            if (_factory != null && _interpreterService.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
                 // Prevent the environment from being deleted while installing.
                 // This situation should not occur through the UI, but might be
                 // invocable through DTE.
@@ -271,13 +291,11 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (showPrompt && !Utilities.IsInAutomationFunction(ProjectMgr.Site)) {
-                string message = (removeFromStorage ?
-                        Strings.EnvironmentDeleteConfirmation :
-                        Strings.EnvironmentRemoveConfirmation
-                ).FormatUI(
-                    Caption,
-                    _factory.Configuration.PrefixPath
-                );
+                string message = !removeFromStorage ?
+                    Strings.EnvironmentRemoveConfirmation.FormatUI(Caption) :
+                    _factory == null ?
+                        Strings.EnvironmentDeleteConfirmation_NoPath.FormatUI(Caption) :
+                        Strings.EnvironmentDeleteConfirmation.FormatUI(Caption, _factory.Configuration.PrefixPath);
                 int res = VsShellUtilities.ShowMessageBox(
                     ProjectMgr.Site,
                     string.Empty,
@@ -295,6 +313,17 @@ namespace Microsoft.PythonTools.Project {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
 
+            if (!string.IsNullOrEmpty(_absentId)) {
+                Debug.Assert(!removeFromStorage, "Cannot remove absent environment from storage");
+                ProjectMgr.RemoveInterpreterFactory(_absentId);
+                return true;
+            }
+
+            if (_factory == null) {
+                Debug.Fail("Attempted to remove null factory from project");
+                return true;
+            }
+
             ProjectMgr.RemoveInterpreter(_factory, !_isReference && removeFromStorage && _canDelete);
             return true;
         }
@@ -304,6 +333,20 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public override string Caption {
             get {
+                if (!string.IsNullOrEmpty(_absentId)) {
+                    string company, tag;
+                    if (CPythonInterpreterFactoryConstants.TryParseInterpreterId(_absentId, out company, out tag)) {
+                        if (company == PythonRegistrySearch.PythonCoreCompany) {
+                            company = "Python";
+                        }
+                        return "{0} {1}{2}".FormatUI(company, tag, _captionSuffix);
+                    }
+                    return _absentId + _captionSuffix;
+                }
+                if (_factory == null) {
+                    Debug.Fail("null factory in interpreter node");
+                    return "(null)";
+                }
                 return _factory.Configuration.Description + _captionSuffix;
             }
         }
@@ -331,7 +374,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override ImageMoniker GetIconMoniker(bool open) {
-            if (!_factory.Configuration.IsAvailable()) {
+            if (_factory == null || !_factory.Configuration.IsAvailable()) {
                 // TODO: Find a better icon
                 return KnownMonikers.DocumentWarning;
             } else if (ProjectMgr.ActiveInterpreter == _factory) {
@@ -370,7 +413,7 @@ namespace Microsoft.PythonTools.Project {
                 switch (cmd) {
                     case PythonConstants.ActivateEnvironment:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_factory.Configuration.IsAvailable() &&
+                        if (_factory != null && _factory.Configuration.IsAvailable() &&
                             ProjectMgr.ActiveInterpreter != _factory &&
                             Directory.Exists(_factory.Configuration.PrefixPath)
                         ) {
@@ -379,7 +422,7 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                     case PythonConstants.InstallPythonPackage:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_factory.Configuration.IsAvailable() &&
+                        if (_factory != null && _factory.Configuration.IsAvailable() &&
                             Directory.Exists(_factory.Configuration.PrefixPath)
                         ) {
                             result |= QueryStatusResult.ENABLED;
@@ -387,19 +430,20 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                     case PythonConstants.InstallRequirementsTxt:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (File.Exists(PathUtils.GetAbsoluteFilePath(ProjectMgr.ProjectHome, "requirements.txt"))) {
+                        if (_factory != null && _factory.IsRunnable() &&
+                            File.Exists(PathUtils.GetAbsoluteFilePath(ProjectMgr.ProjectHome, "requirements.txt"))) {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;
                     case PythonConstants.GenerateRequirementsTxt:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_factory.Configuration.IsAvailable()) {
+                        if (_factory != null && _factory.Configuration.IsAvailable()) {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;
                     case PythonConstants.OpenInteractiveForEnvironment:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_factory.Configuration.IsAvailable() &&
+                        if (_factory != null && _factory.Configuration.IsAvailable() &&
                             File.Exists(_factory.Configuration.InterpreterPath)
                         ) {
                             result |= QueryStatusResult.ENABLED;
@@ -412,7 +456,7 @@ namespace Microsoft.PythonTools.Project {
                 switch ((SharedCommands)cmd) {
                     case SharedCommands.OpenCommandPromptHere:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_factory.Configuration.IsAvailable() &&
+                        if (_factory != null && _factory.Configuration.IsAvailable() &&
                             Directory.Exists(_factory.Configuration.PrefixPath) &&
                             File.Exists(_factory.Configuration.InterpreterPath)) {
                             result |= QueryStatusResult.ENABLED;
@@ -420,7 +464,7 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                     case SharedCommands.CopyFullPath:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_factory.Configuration.IsAvailable() &&
+                        if (_factory != null && _factory.Configuration.IsAvailable() &&
                             Directory.Exists(_factory.Configuration.PrefixPath) &&
                             File.Exists(_factory.Configuration.InterpreterPath)) {
                             result |= QueryStatusResult.ENABLED;
@@ -434,8 +478,17 @@ namespace Microsoft.PythonTools.Project {
 
         public override string Url {
             get {
+                if (!string.IsNullOrEmpty(_absentId)) {
+                    return "UnknownInterpreter\\{0}".FormatInvariant(_absentId);
+                }
+
+                if (_factory == null) {
+                    Debug.Fail("null factory in interpreter node");
+                    return "UnknownInterpreter";
+                }
+
                 if (!PathUtils.IsValidPath(_factory.Configuration.PrefixPath)) {
-                    return string.Format("UnknownInterpreter\\{0}", _factory.Configuration.Id);
+                    return "UnknownInterpreter\\{0}".FormatInvariant(_factory.Configuration.Id);
                 }
 
                 return _factory.Configuration.PrefixPath;
@@ -462,6 +515,11 @@ namespace Microsoft.PythonTools.Project {
 
         public override object GetProperty(int propId) {
             if (propId == (int)__VSHPROPID.VSHPROPID_Expandable) {
+                if (_factory?.PackageManager == null) {
+                    // No package manager, so we are not expandable
+                    return false;
+                }
+
                 if (!_checkedItems) {
                     // We haven't checked if we have files on disk yet, report
                     // that we can expand until we do.

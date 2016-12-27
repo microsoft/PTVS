@@ -31,19 +31,19 @@ class AssemblyVersionInfo {
 
 #if DEV10
     public const string VSMajorVersion = "10";
-    const string VSVersionSuffix = "2010";
+    public const string VSVersionSuffix = "2010";
 #elif DEV11
     public const string VSMajorVersion = "11";
-    const string VSVersionSuffix = "2012";
+    public const string VSVersionSuffix = "2012";
 #elif DEV12
     public const string VSMajorVersion = "12";
-    const string VSVersionSuffix = "2013";
+    public const string VSVersionSuffix = "2013";
 #elif DEV14
     public const string VSMajorVersion = "14";
-    const string VSVersionSuffix = "2015";
+    public const string VSVersionSuffix = "2015";
 #elif DEV15
     public const string VSMajorVersion = "15";
-    const string VSVersionSuffix = "15";
+    public const string VSVersionSuffix = "2017";
 #else
 #error Unrecognized VS Version.
 #endif

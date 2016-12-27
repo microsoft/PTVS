@@ -18,7 +18,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows;
 
-[assembly: AssemblyTitle("Python Tools for Visual Studio Analysis Browser")]
+[assembly: AssemblyTitle("Python Analysis Browser")]
 [assembly: AssemblyDescription("Allows browsing a cached analysis database")]
 
 

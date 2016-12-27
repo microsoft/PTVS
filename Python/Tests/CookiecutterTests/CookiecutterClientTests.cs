@@ -18,9 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.CookiecutterTools;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.ViewModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -59,12 +57,12 @@ namespace CookiecutterTests {
             new ContextItem("email", Selectors.String, "default@email"),
             new ContextItem("github_username", Selectors.String, "defaultgitusername"),
             new ContextItem("project_name", Selectors.String, "Default Project Name") { Label="Project Name", Description="Description for the application."},
-            new ContextItem("project_slug", Selectors.String, "{{ cookiecutter.project_name.lower().replace(' ', '_') }}") { Label="Package Name", Description="Pythonic name for the application." },
+            new ContextItem("project_slug", Selectors.String, "{{ cookiecutter.project_name.lower().replace(' ', '_') }}") { Label="Package Name", Description="Pythonic name for the application.", Url="http://www.python.org" },
             new ContextItem("pypi_username", Selectors.String, "{{ cookiecutter.github_username }}"),
             new ContextItem("version", Selectors.String, "0.1.0"),
-            new ContextItem("db_connection", Selectors.OdbcConnection, "") { Label="ODBC Connection String" },
-            new ContextItem("use_azure", Selectors.YesNo, "y") { Description="Enable Azure support." },
-            new ContextItem("open_source_license", Selectors.List, "MIT license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }) { Label="Open Source License", Description="License under which you will distribute the generated files." },
+            new ContextItem("db_connection", Selectors.OdbcConnection, "") { Label="ODBC Connection String", Url="https://www.microsoft.com/en-us/sql-server/sql-server-2016" },
+            new ContextItem("use_azure", Selectors.YesNo, "y") { Description="Enable Azure support.", Url="http://azure.microsoft.com" },
+            new ContextItem("open_source_license", Selectors.List, "MIT license", new string[] { "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" }) { Label="Open Source License", Description="License under which you will distribute the generated files.", Url="https://opensource.org/licenses" },
             new ContextItem("port", Selectors.String, "5000") { Label="Port" },
             // Note that _copy_without_render item should not appear
         };
@@ -91,7 +89,7 @@ namespace CookiecutterTests {
 
         [TestInitialize]
         public void SetupTest() {
-            _client = CookiecutterClientProvider.Create(_redirector);
+            _client = CookiecutterClientProvider.Create(null, _redirector);
             Assert.IsNotNull(_client, "The system doesn't have any compatible Python interpreters.");
         }
 
@@ -171,6 +169,37 @@ namespace CookiecutterTests {
             CollectionAssert.AreEqual(expected, actual);
         }
 
+        [TestMethod]
+        public async Task CompareFiles() {
+            Random rnd = new Random();
+            var original = new byte[32768 * 3 + 1024];
+            rnd.NextBytes(original);
+
+            var tempFolder = TestData.GetTempPath("FileComparison", true);
+            var originalPath = Path.Combine(tempFolder, "original.dat");
+            var identicalPath = Path.Combine(tempFolder, "identical.dat");
+            var largerPath = Path.Combine(tempFolder, "larger.dat");
+            var modifiedPath = Path.Combine(tempFolder, "modified.dat");
+
+            File.WriteAllBytes(originalPath, original);
+            File.WriteAllBytes(identicalPath, original);
+            File.WriteAllBytes(largerPath, original);
+            File.WriteAllBytes(modifiedPath, original);
+
+            using (var stream = new FileStream(largerPath, FileMode.Append, FileAccess.Write)) {
+                stream.WriteByte(42);
+            }
+
+            using (var stream = new FileStream(modifiedPath, FileMode.Open, FileAccess.Write)) {
+                stream.Seek(32768 + 10, SeekOrigin.Begin);
+                stream.WriteByte(42);
+            }
+
+            Assert.IsTrue(await CookiecutterClient.AreFilesSameAsync(originalPath, identicalPath));
+            Assert.IsFalse(await CookiecutterClient.AreFilesSameAsync(originalPath, largerPath));
+            Assert.IsFalse(await CookiecutterClient.AreFilesSameAsync(originalPath, modifiedPath));
+        }
+
         private async Task<Dictionary<string, string>> GenerateFromLocalTemplate(string userConfigFilePath) {
             var context = await _client.LoadContextAsync(LocalTemplatePath, userConfigFilePath);
 
@@ -180,14 +209,14 @@ namespace CookiecutterTests {
 
             var vm = new CookiecutterViewModel();
             foreach (var item in context) {
-                vm.ContextItems.Add(new ContextItemViewModel(item.Name, item.Selector, item.Label, item.Description, item.DefaultValue, item.Values));
+                vm.ContextItems.Add(new ContextItemViewModel(item.Name, item.Selector, item.Label, item.Description, item.Url, item.DefaultValue, item.Values));
             }
 
             vm.SaveUserInput(contextFilePath);
 
             Directory.CreateDirectory(outputProjectFolder);
 
-            await _client.GenerateProjectAsync(LocalTemplatePath, userConfigFilePath, contextFilePath, outputProjectFolder);
+            await _client.CreateFilesAsync(LocalTemplatePath, userConfigFilePath, contextFilePath, outputProjectFolder);
 
             var reportFilePath = Path.Combine(outputProjectFolder, "report.txt");
             Assert.IsTrue(File.Exists(reportFilePath), "Failed to generate some project files.");

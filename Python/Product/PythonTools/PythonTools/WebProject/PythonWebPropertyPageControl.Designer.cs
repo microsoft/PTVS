@@ -38,6 +38,7 @@ namespace Microsoft.PythonTools.Project.Web {
             this._webGroup = new System.Windows.Forms.GroupBox();
             this._toolTip = new System.Windows.Forms.ToolTip(this.components);
             this._errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
+            this._deprecatedLabel = new System.Windows.Forms.Label();
             tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
@@ -64,7 +65,7 @@ namespace Microsoft.PythonTools.Project.Web {
             tableLayoutPanel2.RowCount = 1;
             tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
             tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 26F));
-            tableLayoutPanel2.Size = new System.Drawing.Size(394, 26);
+            tableLayoutPanel2.Size = new System.Drawing.Size(437, 26);
             tableLayoutPanel2.TabIndex = 0;
             // 
             // _wsgiHandlerLabel
@@ -86,7 +87,7 @@ namespace Microsoft.PythonTools.Project.Web {
             this._wsgiHandler.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._wsgiHandler.MinimumSize = new System.Drawing.Size(50, 4);
             this._wsgiHandler.Name = "_wsgiHandler";
-            this._wsgiHandler.Size = new System.Drawing.Size(291, 20);
+            this._wsgiHandler.Size = new System.Drawing.Size(334, 20);
             this._wsgiHandler.TabIndex = 3;
             this._wsgiHandler.TextChanged += new System.EventHandler(this.Setting_TextChanged);
             // 
@@ -96,17 +97,19 @@ namespace Microsoft.PythonTools.Project.Web {
             tableLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             tableLayoutPanel1.ColumnCount = 1;
             tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            tableLayoutPanel1.Controls.Add(this.groupBox1, 0, 1);
-            tableLayoutPanel1.Controls.Add(this._webGroup, 0, 0);
+            tableLayoutPanel1.Controls.Add(this._deprecatedLabel, 0, 0);
+            tableLayoutPanel1.Controls.Add(this.groupBox1, 0, 2);
+            tableLayoutPanel1.Controls.Add(this._webGroup, 0, 1);
             tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
-            tableLayoutPanel1.RowCount = 3;
+            tableLayoutPanel1.RowCount = 4;
+            tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
             tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            tableLayoutPanel1.Size = new System.Drawing.Size(418, 188);
+            tableLayoutPanel1.Size = new System.Drawing.Size(461, 213);
             tableLayoutPanel1.TabIndex = 0;
             // 
             // groupBox1
@@ -115,12 +118,12 @@ namespace Microsoft.PythonTools.Project.Web {
             this.groupBox1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.groupBox1.Controls.Add(tableLayoutPanel3);
             this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBox1.Location = new System.Drawing.Point(6, 79);
+            this.groupBox1.Location = new System.Drawing.Point(6, 104);
             this.groupBox1.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Padding = new System.Windows.Forms.Padding(6, 8, 6, 8);
-            this.groupBox1.Size = new System.Drawing.Size(406, 81);
-            this.groupBox1.TabIndex = 1;
+            this.groupBox1.Size = new System.Drawing.Size(449, 81);
+            this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Static Files";
             // 
@@ -142,7 +145,7 @@ namespace Microsoft.PythonTools.Project.Web {
             tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
             tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
             tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 26F));
-            tableLayoutPanel3.Size = new System.Drawing.Size(394, 52);
+            tableLayoutPanel3.Size = new System.Drawing.Size(437, 52);
             tableLayoutPanel3.TabIndex = 0;
             // 
             // _staticPatternLabel
@@ -165,7 +168,7 @@ namespace Microsoft.PythonTools.Project.Web {
             this._staticPattern.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._staticPattern.MinimumSize = new System.Drawing.Size(50, 4);
             this._staticPattern.Name = "_staticPattern";
-            this._staticPattern.Size = new System.Drawing.Size(302, 20);
+            this._staticPattern.Size = new System.Drawing.Size(345, 20);
             this._staticPattern.TabIndex = 1;
             this._staticPattern.TextChanged += new System.EventHandler(this.Setting_TextChanged);
             // 
@@ -188,7 +191,7 @@ namespace Microsoft.PythonTools.Project.Web {
             this._staticRewrite.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._staticRewrite.MinimumSize = new System.Drawing.Size(50, 4);
             this._staticRewrite.Name = "_staticRewrite";
-            this._staticRewrite.Size = new System.Drawing.Size(302, 20);
+            this._staticRewrite.Size = new System.Drawing.Size(345, 20);
             this._staticRewrite.TabIndex = 3;
             this._staticRewrite.TextChanged += new System.EventHandler(this.Setting_TextChanged);
             // 
@@ -198,12 +201,12 @@ namespace Microsoft.PythonTools.Project.Web {
             this._webGroup.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this._webGroup.Controls.Add(tableLayoutPanel2);
             this._webGroup.Dock = System.Windows.Forms.DockStyle.Fill;
-            this._webGroup.Location = new System.Drawing.Point(6, 8);
+            this._webGroup.Location = new System.Drawing.Point(6, 33);
             this._webGroup.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this._webGroup.Name = "_webGroup";
             this._webGroup.Padding = new System.Windows.Forms.Padding(6, 8, 6, 8);
-            this._webGroup.Size = new System.Drawing.Size(406, 55);
-            this._webGroup.TabIndex = 0;
+            this._webGroup.Size = new System.Drawing.Size(449, 55);
+            this._webGroup.TabIndex = 1;
             this._webGroup.TabStop = false;
             this._webGroup.Text = "Web";
             // 
@@ -211,6 +214,19 @@ namespace Microsoft.PythonTools.Project.Web {
             // 
             this._errorProvider.ContainerControl = this;
             this._errorProvider.Icon = ((System.Drawing.Icon)(resources.GetObject("_errorProvider.Icon")));
+            // 
+            // _deprecatedLabel
+            // 
+            this._deprecatedLabel.AutoSize = true;
+            this._errorProvider.SetError(this._deprecatedLabel, "Deprecated");
+            this._errorProvider.SetIconAlignment(this._deprecatedLabel, System.Windows.Forms.ErrorIconAlignment.MiddleLeft);
+            this._deprecatedLabel.Location = new System.Drawing.Point(24, 6);
+            this._deprecatedLabel.Margin = new System.Windows.Forms.Padding(24, 6, 3, 6);
+            this._deprecatedLabel.Name = "_deprecatedLabel";
+            this._deprecatedLabel.Size = new System.Drawing.Size(434, 13);
+            this._deprecatedLabel.TabIndex = 0;
+            this._deprecatedLabel.Text = "These options are no longer used. To configure them, add a web.config file to you" +
+    "r project.";
             // 
             // PythonWebPropertyPageControl
             // 
@@ -221,7 +237,7 @@ namespace Microsoft.PythonTools.Project.Web {
             this.Controls.Add(tableLayoutPanel1);
             this.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.Name = "PythonWebPropertyPageControl";
-            this.Size = new System.Drawing.Size(418, 188);
+            this.Size = new System.Drawing.Size(461, 213);
             tableLayoutPanel2.ResumeLayout(false);
             tableLayoutPanel2.PerformLayout();
             tableLayoutPanel1.ResumeLayout(false);
@@ -250,5 +266,6 @@ namespace Microsoft.PythonTools.Project.Web {
         private System.Windows.Forms.ErrorProvider _errorProvider;
         private System.Windows.Forms.Label _staticRewriteLabel;
         private System.Windows.Forms.TextBox _staticRewrite;
+        private System.Windows.Forms.Label _deprecatedLabel;
     }
 }

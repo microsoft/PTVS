@@ -25,8 +25,6 @@ namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
     [Guid(PythonConstants.InterpretersPropertiesGuid)]
     public class InterpretersNodeProperties : NodeProperties {
-        #region properties
-
         [Browsable(false)]
         [AutomationBrowsable(false)]
         protected IPythonInterpreterFactory Factory {
@@ -66,42 +64,21 @@ namespace Microsoft.PythonTools.Project {
         [SRDisplayName("EnvironmentIdDisplayName")]
         [SRDescription("EnvironmentIdDescription")]
         [AutomationBrowsable(true)]
-        public string Id {
-            get {
-                var fact = Factory;
-                return fact != null ? fact.Configuration.Id : "";
-            }
-        }
+        public string Id => Factory?.Configuration?.Id ?? "";
 #endif
 
         [SRCategory(SR.Misc)]
         [SRDisplayName("EnvironmentVersionDisplayName")]
         [SRDescription("EnvironmentVersionDescription")]
         [AutomationBrowsable(true)]
-        public string Version {
-            get {
-                var fact = Factory;
-                return fact != null ? fact.Configuration.Version.ToString() : "";
-            }
-        }
+        public string Version => Factory?.Configuration?.Version.ToString() ?? "";
 
-        #region properties - used for automation only
         [Browsable(false)]
         [AutomationBrowsable(true)]
-        public string FileName {
-            get {
-                return this.HierarchyNode.Url;
-            }
-        }
+        public string FileName => HierarchyNode.Url;
 
-        #endregion
-
-        #endregion
-
-        #region ctors
         internal InterpretersNodeProperties(HierarchyNode node)
             : base(node) { }
-        #endregion
 
         public override string GetClassName() {
             return "Environment Properties";

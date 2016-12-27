@@ -149,6 +149,9 @@
     <Compile Include="Commands\RunCommand.cs" />
     <Compile Include="Commands\CheckForUpdatesCommand.cs" />
     <Compile Include="Commands\UpdateCommand.cs" />
+    <Compile Include="Model\IProjectSystemClient.cs" />
+    <Compile Include="Model\ProjectSystemClient.cs" />
+    <Compile Include="Model\CreateFilesOperationResult.cs" />
     <Compile Include="Model\GitClientProvider.cs" />
     <Compile Include="Model\Selectors.cs" />
     <Compile Include="Model\ILocalTemplateSource.cs" />
@@ -306,8 +309,8 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <Content Include="..\PythonTools\Python Tools for VS License.rtf">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="License_en-US.rtf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>

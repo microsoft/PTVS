@@ -9,7 +9,7 @@
     xmlns:local="clr-namespace:Microsoft.PythonTools.Commands"
     xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
     mc:Ignorable="d"
-    Title="Python Tools for Visual Studio - Diagnostic Info"
+    Title="Visual Studio - Python Diagnostic Info"
     MinWidth="300" Width="600"
     MinHeight="250" Height="400"
     ResizeMode="CanResizeWithGrip"

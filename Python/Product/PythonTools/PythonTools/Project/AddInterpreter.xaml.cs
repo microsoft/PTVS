@@ -40,31 +40,25 @@ namespace Microsoft.PythonTools.Project {
         private readonly AddInterpreterView _view;
 
         private AddInterpreter(PythonProjectNode project, IInterpreterOptionsService service) {
-            _view = new AddInterpreterView(project, project.Site, project.InterpreterFactories);
-            _view.PropertyChanged += View_PropertyChanged;
+            _view = new AddInterpreterView(project, project.Site, project.InterpreterIds);
             DataContext = _view;
 
             InitializeComponent();
         }
 
         public void Dispose() {
-            _view.PropertyChanged -= View_PropertyChanged;
             _view.Dispose();
         }
 
-        public static IEnumerable<IPythonInterpreterFactory> ShowDialog(
+        public static IEnumerable<string> ShowDialog(
             PythonProjectNode project,
             IInterpreterOptionsService service) {
             using (var wnd = new AddInterpreter(project, service)) {
                 if (wnd.ShowModal() ?? false) {
-                    return wnd._view.Interpreters.Where(iv => iv.IsSelected).Select(iv => iv.Interpreter);
+                    return wnd._view.Interpreters.Where(iv => iv.IsSelected).Select(iv => iv.Id).ToArray();
                 }
             }
             return null;
-        }
-
-        private void View_PropertyChanged(object sender, PropertyChangedEventArgs e) {
-            CommandManager.InvalidateRequerySuggested();
         }
 
         private void Close_CanExecute(object sender, CanExecuteRoutedEventArgs e) {

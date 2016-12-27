@@ -137,6 +137,31 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 )
             );
 
+#if DEV15_OR_LATER
+            // If we are not in Visual Studio, we need to set MSBUILD_EXE_PATH
+            // to use any project support.
+            if (!"devenv".Equals(Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().Location), StringComparison.OrdinalIgnoreCase)) {
+                var vsPath = Environment.GetEnvironmentVariable("VisualStudio_" + AssemblyVersionInfo.VSVersion);
+                if (!Directory.Exists(vsPath)) {
+                    vsPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+                    if (string.IsNullOrEmpty(vsPath)) {
+                        vsPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                    }
+                    vsPath = Path.Combine(vsPath, "Microsoft Visual Studio", AssemblyVersionInfo.VSVersionSuffix);
+                }
+                if (Directory.Exists(vsPath)) {
+                    var msbuildPath = Path.Combine(vsPath, "MSBuild");
+                    var msbuildExe = FileUtils.EnumerateFiles(msbuildPath, "msbuild.exe").OrderByDescending(k => k).FirstOrDefault();
+                    if (File.Exists(msbuildExe)) {
+                        // Set the variable. If we haven't set it, most tests
+                        // should still work, but ones trying to load MSBuild's
+                        // assemblies will fail.
+                        Environment.SetEnvironmentVariable("MSBUILD_EXE_PATH", msbuildExe);
+                    }
+                }
+            }
+#endif
+
             _throwExceptionsOn = Thread.CurrentThread;
 
             using (var e = new AutoResetEvent(false)) {
@@ -432,7 +457,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
-        #region Composition Container Initialization
+#region Composition Container Initialization
 
         private CompositionContainer CreateCompositionContainer() {
             var container = new CompositionContainer(CachedInfo.Catalog);
@@ -461,8 +486,13 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
             try {
+                var _excludedAssemblies = new HashSet<string>(new[] {
+                    "VsLogger.dll",
+                    "Microsoft.VisualStudio.Workspace.dll",
+                }, StringComparer.OrdinalIgnoreCase);
+
                 foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
-                    if (file.EndsWith("VsLogger.dll", StringComparison.OrdinalIgnoreCase)) {
+                    if (_excludedAssemblies.Contains(Path.GetFileName(file))) {
                         continue;
                     }
 
@@ -517,7 +547,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             return asm;
         }
 
-        #endregion
+#endregion
 
         public ITreeNode WaitForItemRemoved(params string[] path) {
             ITreeNode item = null;

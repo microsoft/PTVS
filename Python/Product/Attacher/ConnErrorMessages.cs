@@ -45,32 +45,32 @@ namespace Microsoft.PythonTools.Debugger {
 
     static class ConnErrorExtensions {
         private static readonly Dictionary<ConnErrorMessages, string> errMessages = new Dictionary<ConnErrorMessages, string>() {
-            { ConnErrorMessages.CannotInjectThread, "Cannot create thread in debuggee process" },
-            { ConnErrorMessages.CannotOpenProcess, "Cannot open process for debugging" },
-            { ConnErrorMessages.InterpreterNotInitialized, "Python interpreter has not been initialized in this process" },
-            { ConnErrorMessages.LoadDebuggerBadDebugger, "Failed to load debugging script (incorrect version of script?)" },
-            { ConnErrorMessages.LoadDebuggerFailed, "Failed to compile debugging script" },
-            { ConnErrorMessages.OutOfMemory, "Out of memory" },
-            { ConnErrorMessages.PythonNotFound, "Python interpreter not found" },
-            { ConnErrorMessages.TimeOut, "Timeout while attaching" },
-            { ConnErrorMessages.UnknownVersion, "Unknown Python version loaded in process" },
-            { ConnErrorMessages.SysNotFound, "sys module not found" },
-            { ConnErrorMessages.SysSetTraceNotFound, "settrace not found in sys module" },
-            { ConnErrorMessages.SysGetTraceNotFound, "gettrace not found in sys module" },
-            { ConnErrorMessages.PyDebugAttachNotFound, "Cannot find PyDebugAttach.dll" },
-            { ConnErrorMessages.RemoteNetworkError, "Network error while connecting to remote debugging server" },
-            { ConnErrorMessages.RemoteSslError, "Could not establish a secure SSL connection to remote debugging server" },
-            { ConnErrorMessages.RemoteUnsupportedServer, "Remote server is not a supported Python Tools for Visual Studio debugging server" },
-            { ConnErrorMessages.RemoteSecretMismatch, "Secret specified in the Qualifier string did not match the remote secret" },
-            { ConnErrorMessages.RemoteAttachRejected, "Remote debugging server rejected request to attach" },
-            { ConnErrorMessages.RemoteInvalidUri, "Invalid remote debugging endpoint URI" },
-            { ConnErrorMessages.RemoteUnsupportedTransport, "This remote debugging transport is not supported by this version of Windows." },
+            { ConnErrorMessages.CannotInjectThread, Strings.ConnErrorMessages_CannotInjectThread },
+            { ConnErrorMessages.CannotOpenProcess, Strings.ConnErrorMessages_CannotOpenProcess },
+            { ConnErrorMessages.InterpreterNotInitialized, Strings.ConnErrorMessages_InterpreterNotInitialized },
+            { ConnErrorMessages.LoadDebuggerBadDebugger, Strings.ConnErrorMessages_LoadDebuggerBadDebugger },
+            { ConnErrorMessages.LoadDebuggerFailed, Strings.ConnErrorMessages_LoadDebuggerFailed },
+            { ConnErrorMessages.OutOfMemory, Strings.ConnErrorMessages_OutOfMemory },
+            { ConnErrorMessages.PythonNotFound, Strings.ConnErrorMessages_PythonNotFound },
+            { ConnErrorMessages.TimeOut, Strings.ConnErrorMessages_TimeOut },
+            { ConnErrorMessages.UnknownVersion, Strings.ConnErrorMessages_UnknownVersion },
+            { ConnErrorMessages.SysNotFound, Strings.ConnErrorMessages_SysNotFound },
+            { ConnErrorMessages.SysSetTraceNotFound, Strings.ConnErrorMessages_SysSetTraceNotFound },
+            { ConnErrorMessages.SysGetTraceNotFound, Strings.ConnErrorMessages_SysGetTraceNotFound },
+            { ConnErrorMessages.PyDebugAttachNotFound, Strings.ConnErrorMessages_PyDebugAttachNotFound },
+            { ConnErrorMessages.RemoteNetworkError, Strings.ConnErrorMessages_RemoteNetworkError },
+            { ConnErrorMessages.RemoteSslError, Strings.ConnErrorMessages_RemoteSslError },
+            { ConnErrorMessages.RemoteUnsupportedServer, Strings.ConnErrorMessages_RemoteUnsupportedServer },
+            { ConnErrorMessages.RemoteSecretMismatch, Strings.ConnErrorMessages_RemoteSecretMismatch },
+            { ConnErrorMessages.RemoteAttachRejected, Strings.ConnErrorMessages_RemoteAttachRejected },
+            { ConnErrorMessages.RemoteInvalidUri, Strings.ConnErrorMessages_RemoteInvalidUri },
+            { ConnErrorMessages.RemoteUnsupportedTransport, Strings.ConnErrorMessages_RemoteUnsupportedTransport },
         };
 
         internal static string GetErrorMessage(this ConnErrorMessages attachRes) {
             string msg;
             if (!errMessages.TryGetValue(attachRes, out msg)) {
-                msg = "Unknown error";
+                msg = Strings.ConnErrorMessages_UnknownError;
             }
             return msg;
         }

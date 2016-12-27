@@ -128,8 +128,18 @@ namespace Microsoft.CookiecutterTools {
             ErrorHandler.ThrowOnFailure(shell.GetProperty((int)__VSSPROPID.VSSPROPID_InstallDirectory, out commonIdeFolderPath));
 
             var gitClient = GitClientProvider.Create(outputWindow, commonIdeFolderPath as string);
+            var projectSystemClient = new ProjectSystemClient((EnvDTE80.DTE2)GetService(typeof(EnvDTE.DTE)));
 
-            _cookiecutterPage = new CookiecutterContainerPage(outputWindow, CookiecutterTelemetry.Current, gitClient, new Uri(feedUrl), OpenGeneratedFolder, UpdateCommandUI);
+            _cookiecutterPage = new CookiecutterContainerPage(
+                this,
+                outputWindow,
+                CookiecutterTelemetry.Current,
+                gitClient,
+                new Uri(feedUrl),
+                OpenGeneratedFolder,
+                projectSystemClient,
+                UpdateCommandUI
+            );
             _cookiecutterPage.ContextMenuRequested += OnContextMenuRequested;
             _cookiecutterPage.InitializeAsync(CookiecutterPackage.Instance.CheckForTemplateUpdate).HandleAllExceptions(this, GetType()).DoNotWait();
 
@@ -284,6 +294,10 @@ namespace Microsoft.CookiecutterTools {
 
         internal bool CanUpdateSelection() {
             return _cookiecutterPage != null ? _cookiecutterPage.CanUpdateSelection() : false;
+        }
+
+        internal void NewSession(ProjectLocation location) {
+            _cookiecutterPage?.NewSession(location);
         }
 
         private void OnContextMenuRequested(object sender, PointEventArgs e) {

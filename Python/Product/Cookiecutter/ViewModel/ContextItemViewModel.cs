@@ -24,6 +24,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private string _selector;
         private string _label;
         private string _description;
+        private string _url;
         private string _val;
         private string _default;
         private List<string> _items;
@@ -34,19 +35,27 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         /// Constructor for design view.
         /// </summary>
         public ContextItemViewModel() :
-            this(null, Selectors.String, null, null, null, null) {
+            this(null, Selectors.String, null, null, null, null, null) {
         }
 
-        public ContextItemViewModel(string name, string selector, string label, string description, string defaultValue, string[] items = null) {
+        public ContextItemViewModel(string name, string selector, string label, string description, string url, string defaultValue, string[] items = null) {
             _name = name;
             _selector = selector;
             _label = !string.IsNullOrEmpty(label) ? label : name;
             _description = !string.IsNullOrEmpty(description) ? description : defaultValue;
+            _url = url;
             _val = string.Empty;
             _default = defaultValue;
             _items = new List<string>();
-            if (items != null) {
+            if (items != null && items.Length > 0) {
                 _items.AddRange(items);
+            }
+
+            // These selectors don't have a way of showing the default value (watermark)
+            // when no value is set (and there's no way to unset the value once it is set).
+            // So we'll always start with the value set to default.
+            if (selector == Selectors.YesNo || selector == Selectors.List) {
+                _val = _default;
             }
         }
 
@@ -95,6 +104,19 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _description) {
                     _description = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Description)));
+                }
+            }
+        }
+
+        public string Url {
+            get {
+                return _url ?? string.Empty;
+            }
+
+            set {
+                if (value != _url) {
+                    _url = value ?? string.Empty;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Url)));
                 }
             }
         }

@@ -21,6 +21,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Security.Permissions;
 using System.Windows;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -182,10 +183,10 @@ namespace Microsoft.PythonTools.Profiling {
                     fs.Close();
                 }
             } catch (IOException e) {
-                MessageBox.Show("Failed to open file {0}\r\n\r\n" + e.Message, "Python Tools for Visual Studio");
+                MessageBox.Show("Failed to open file {0}\r\n\r\n{1}".FormatUI(pszMkDocument, e.Message), Strings.ProductTitle);
                 return VSConstants.E_FAIL;
             } catch (InvalidOperationException e) {
-                MessageBox.Show("Failed to read performance session {0}\r\n\r\n" + e.Message, "Python Tools for Visual Studio");
+                MessageBox.Show("Failed to read performance session {0}\r\n\r\n{1}".FormatUI(pszMkDocument, e.Message), Strings.ProductTitle);
                 return VSConstants.E_FAIL;
             }
 

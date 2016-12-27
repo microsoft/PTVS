@@ -25,6 +25,9 @@ using Microsoft.VisualStudio.Shell;
 
 namespace Microsoft.VisualStudioTools.Wpf {
     public static class Controls {
+        private static readonly Guid EnvCategory = new Guid("624ed9c3-bdfd-41fa-96c3-7c824ea32e3d");
+        private static readonly Guid TreeViewCategory = new Guid("92ecf08e-8b13-4cf4-99e9-ae2692382185");
+
         public static readonly object BackgroundKey = VsBrushes.WindowKey;
         public static readonly object BackgroundColorKey = VsColors.WindowKey;
         public static readonly object BackgroundAccentKey = VsBrushes.ButtonFaceKey;
@@ -34,8 +37,10 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly object HighlightTextKey = VsBrushes.HighlightTextKey;
         public static readonly object HotTrackKey = VsBrushes.CommandBarMouseOverBackgroundGradientKey;
 
-        public static readonly object TooltipBackgroundKey = VsBrushes.InfoBackgroundKey;
-        public static readonly object TooltipTextKey = VsBrushes.InfoTextKey;
+        public static readonly object TooltipBackgroundKey = new ThemeResourceKey(EnvCategory, "ToolTip", ThemeResourceKeyType.BackgroundBrush);
+        public static readonly object TooltipBackgroundColorKey = new ThemeResourceKey(EnvCategory, "ToolTip", ThemeResourceKeyType.BackgroundColor);
+        public static readonly object TooltipTextKey = new ThemeResourceKey(EnvCategory, "ToolTip", ThemeResourceKeyType.ForegroundBrush);
+        public static readonly object TooltipTextColorKey = new ThemeResourceKey(EnvCategory, "ToolTip", ThemeResourceKeyType.ForegroundColor);
 
         public static readonly object HyperlinkKey = VsBrushes.ControlLinkTextKey;
         public static readonly object HyperlinkHoverKey = VsBrushes.ControlLinkTextHoverKey;
@@ -55,6 +60,21 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly object ControlForegroundDisabledKey = VsBrushes.ComboBoxDisabledGlyphKey;
         public static readonly object ControlBorderDisabledKey = VsBrushes.ComboBoxDisabledBorderKey;
 
+        public static readonly object ControlBackgroundColorKey = VsColors.ComboBoxBackgroundKey;
+        public static readonly object ControlForegroundColorKey = VsColors.WindowTextKey;
+        public static readonly object ControlBorderColorKey = VsColors.ComboBoxBorderKey;
+        public static readonly object ControlBackgroundHoverColorKey = VsColors.ComboBoxMouseOverBackgroundMiddle1Key;
+        public static readonly object ControlBorderHoverColorKey = VsColors.ComboBoxMouseOverGlyphKey;
+        public static readonly object ControlBackgroundPressedColorKey = VsColors.ComboBoxMouseDownBackgroundKey;
+        public static readonly object ControlForegroundPressedColorKey = VsColors.ComboBoxGlyphKey;
+        public static readonly object ControlBorderPressedColorKey = VsColors.ComboBoxMouseDownBorderKey;
+        public static readonly object ControlBackgroundSelectedColorKey = VsColors.ComboBoxMouseDownBackgroundKey;
+        public static readonly object ControlForegroundSelectedColorKey = VsColors.ComboBoxGlyphKey;
+        public static readonly object ControlBorderSelectedColorKey = VsColors.ComboBoxMouseOverBorderKey;
+        public static readonly object ControlBackgroundDisabledColorKey = VsColors.ComboBoxDisabledBackgroundKey;
+        public static readonly object ControlForegroundDisabledColorKey = VsColors.ComboBoxDisabledGlyphKey;
+        public static readonly object ControlBorderDisabledColorKey = VsColors.ComboBoxDisabledBorderKey;
+
         public static readonly object ComboBoxPopupBackgroundKey = VsBrushes.ComboBoxPopupBackgroundGradientKey;
         public static readonly object ComboBoxPopupBorderKey = VsBrushes.ComboBoxPopupBorderKey;
         public static readonly object ComboBoxPopupForegroundKey = VsBrushes.WindowTextKey;
@@ -63,6 +83,10 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly object ButtonBackgroundPressedKey = VsBrushes.ComboBoxMouseOverBorderKey;
         public static readonly object ButtonBackgroundHoverKey = VsBrushes.CommandBarHoverOverSelectedKey;
         public static readonly object ButtonBorderHoverKey = VsBrushes.ComboBoxMouseOverGlyphKey;
+        public static readonly object ButtonForegroundPressedColorKey = VsColors.ToolWindowButtonDownActiveGlyphKey;
+        public static readonly object ButtonBackgroundPressedColorKey = VsColors.ComboBoxMouseOverBorderKey;
+        public static readonly object ButtonBackgroundHoverColorKey = VsColors.CommandBarHoverOverSelectedKey;
+        public static readonly object ButtonBorderHoverColorKey = VsColors.ComboBoxMouseOverGlyphKey;
 
         public static readonly object ScrollBarBackgroundKey = VsBrushes.ScrollBarBackgroundKey;
         public static readonly object ScrollBarThumbBackgroundKey = VsBrushes.ScrollBarThumbBackgroundKey;
@@ -76,6 +100,18 @@ namespace Microsoft.VisualStudioTools.Wpf {
         public static readonly object ScrollBarArrowBackgroundHoverKey = VsBrushes.ScrollBarArrowMouseOverBackgroundKey;
         public static readonly object ScrollBarArrowBackgroundPressedKey = VsBrushes.ScrollBarArrowPressedBackgroundKey;
         public static readonly object ScrollBarArrowBackgroundDisabledKey = VsBrushes.ScrollBarArrowDisabledBackgroundKey;
+
+        public static readonly object TreeViewBackgroundKey = new ThemeResourceKey(TreeViewCategory, "Background", ThemeResourceKeyType.BackgroundBrush);
+        public static readonly object TreeViewBackgroundColorKey = new ThemeResourceKey(TreeViewCategory, "Background", ThemeResourceKeyType.BackgroundColor);
+        public static readonly object TreeViewForegroundKey = new ThemeResourceKey(TreeViewCategory, "Background", ThemeResourceKeyType.ForegroundBrush);
+
+        public static readonly object TreeViewItemSelectedBackgroundKey = new ThemeResourceKey(TreeViewCategory, "SelectedItemActive", ThemeResourceKeyType.BackgroundBrush);
+        public static readonly object TreeViewItemSelectedBackgroundColorKey = new ThemeResourceKey(TreeViewCategory, "SelectedItemActive", ThemeResourceKeyType.BackgroundColor);
+        public static readonly object TreeViewItemSelectedForegroundKey = new ThemeResourceKey(TreeViewCategory, "SelectedItemActive", ThemeResourceKeyType.ForegroundBrush);
+        public static readonly object TreeViewItemInactiveSelectedBackgroundKey = new ThemeResourceKey(TreeViewCategory, "SelectedItemInactive", ThemeResourceKeyType.BackgroundBrush);
+        public static readonly object TreeViewItemInactiveSelectedBackgroundColorKey = new ThemeResourceKey(TreeViewCategory, "SelectedItemInactive", ThemeResourceKeyType.BackgroundColor);
+        public static readonly object TreeViewItemInactiveSelectedForegroundKey = new ThemeResourceKey(TreeViewCategory, "SelectedItemInactive", ThemeResourceKeyType.ForegroundBrush);
+
 
 #if DEV11_OR_LATER
         public static readonly object SearchGlyphBrushKey = SearchControlColors.SearchGlyphBrushKey;

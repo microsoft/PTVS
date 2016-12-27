@@ -850,6 +850,17 @@ namespace Microsoft.PythonTools.Intellisense {
             public Navigation[] children;
         }
 
+        internal class AnalyzerWarningEvent : Event {
+            public string message;
+            public const string Name = "analyzerWarning";
+
+            public AnalyzerWarningEvent(string message) {
+                this.message = message;
+            }
+
+            public override string name => Name;
+        }
+
         internal class UnhandledExceptionEvent : Event {
             public string message;
             public const string Name = "unhandledException";

@@ -18,7 +18,7 @@ correct.
 ============
 Example Data
 ============
-The example is from http://archive.ics.uci.edu/ml/datasets/Spambase
+The example is from http://mlr.cs.umass.edu/ml/datasets/Spambase
 It contains pre-processed metrics, such as the frequency of certain
 words and letters, from a collection of emails. A classification for
 each one indicating 'spam' or 'not spam' is in the final column.
@@ -30,7 +30,7 @@ detection systems.
 '''
 
 # Remember to update the script for the new data when you change this URL
-URL = "http://archive.ics.uci.edu/ml/machine-learning-databases/spambase/spambase.data"
+URL = "http://mlr.cs.umass.edu/ml/machine-learning-databases/spambase/spambase.data"
 
 # Uncomment this call when using matplotlib to generate images
 # rather than displaying interactive UI.

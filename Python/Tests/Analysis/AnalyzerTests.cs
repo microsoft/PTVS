@@ -449,6 +449,7 @@ namespace AnalysisTests {
         [TestCategory("10s")]
         public async Task GetVirtualEnvDatabasePaths() {
             var version = PythonPaths.Python27 ?? PythonPaths.Python27_x64;
+            version.AssertInstalled();
 
             var env = Path.Combine(TestData.GetTempPath(randomSubPath: true), "env");
 
@@ -490,6 +491,7 @@ namespace AnalysisTests {
         [TestCategory("10s")]
         public async Task GetVirtualEnvDatabasePathsWithSystemSitePackages() {
             var version = PythonPaths.Python27 ?? PythonPaths.Python27_x64;
+            version.AssertInstalled();
 
             var env = Path.Combine(TestData.GetTempPath(randomSubPath: true), "env");
 

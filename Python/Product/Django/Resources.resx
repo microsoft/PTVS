@@ -165,8 +165,8 @@
   <data name="OpenDjangoShellLabel" xml:space="preserve">
     <value>Open &amp;Django Shell</value>
   </data>
-  <data name="PythonToolsForVisualStudio" xml:space="preserve">
-    <value>Python Tools for Visual Studio</value>
+  <data name="ProductTitle" xml:space="preserve">
+    <value>Visual Studio - Python support</value>
   </data>
   <data name="SelectAnotherName" xml:space="preserve">
     <value>Select another &amp;name</value>

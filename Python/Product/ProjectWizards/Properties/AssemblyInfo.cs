@@ -17,7 +17,7 @@
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Python Tools for Visual Studio project wizards")]
+[assembly: AssemblyTitle("Visual Studio - Python project wizards")]
 [assembly: AssemblyDescription("Provides various wizards for use in project templates.")]
 
 // Do not modify this version number - it is a major breaking change.

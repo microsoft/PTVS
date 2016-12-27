@@ -225,7 +225,7 @@ namespace PythonToolsTests {
         </Variable>
       </Environment>
       <EntryPoint>
-        <ProgramEntryPoint commandLine=""bin\ps.cmd LaunchWorker.ps1"" setReadyOnProcessStart=""true"" />
+        <ProgramEntryPoint commandLine=""bin\ps.cmd LaunchWorker.ps1 worker.py"" setReadyOnProcessStart=""true"" />
       </EntryPoint>
     </Runtime>
   </WorkerRole>

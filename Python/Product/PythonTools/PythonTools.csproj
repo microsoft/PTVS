@@ -107,6 +107,7 @@
     </ProjectReference>
     <Reference Include="Microsoft.PythonTools.InteractiveWindow" />
     <Reference Include="Microsoft.PythonTools.VsInteractiveWindow" />
+    <Reference Include="Microsoft.VisualStudio.Telemetry" />
     <Reference Include="Microsoft.VisualStudio.Threading, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
@@ -265,6 +266,7 @@
     <Compile Include="PythonTools\Intellisense\AnalysisVariable.cs" />
     <Compile Include="PythonTools\Intellisense\BufferParser.cs" />
     <Compile Include="PythonTools\Intellisense\CodeCellAnalysis.cs" />
+    <Compile Include="PythonTools\Intellisense\ExpansionCompletionSource.cs" />
     <Compile Include="PythonTools\Intellisense\PreviewChangesService.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionResult.cs" />
     <Compile Include="PythonTools\Intellisense\ExtractMethodSuggestedActionSourceProvider.cs" />
@@ -314,7 +316,6 @@
     <Compile Include="PythonTools\Repl\SelectableReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\ZoomableInlineAdornment.cs" />
     <Compile Include="PythonTools\SurveyNewsService.cs" />
-    <Compile Include="PythonTools\Options\GlobalInterpreterOptions.cs" />
     <Compile Include="PythonTools\Options\GeneralOptions.cs" />
     <Compile Include="PythonTools\Options\DebuggerOptions.cs" />
     <Compile Include="PythonTools\Options\AdvancedEditorOptions.cs" />
@@ -328,9 +329,6 @@
     <Compile Include="PythonTools\Intellisense\TaskProvider.cs" />
     <Compile Include="PythonTools\Intellisense\UnresolvedImportSquiggleProvider.cs" />
     <Compile Include="PythonTools\Logging\InMemoryLogger.cs" />
-    <Compile Include="PythonTools\Logging\IPythonToolsLogger.cs" />
-    <Compile Include="PythonTools\Logging\PackageInstallDetails.cs" />
-    <Compile Include="PythonTools\Logging\PythonLogEvent.cs" />
     <Compile Include="PythonTools\Logging\PythonToolsLogger.cs" />
     <Compile Include="PythonTools\Intellisense\ExpansionClient.cs" />
     <Compile Include="PythonTools\Options\IPythonToolsOptionsService.cs" />
@@ -400,6 +398,7 @@
     <Compile Include="PythonTools\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="PythonTools\PeekableEnumerator.cs" />
     <Compile Include="PythonTools\Repl\InteractiveWindowEvents.cs" />
+    <Compile Include="PythonTools\Logging\VsTelemetryLogger.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebPropertyPageControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -548,7 +547,6 @@
     <Compile Include="PythonTools\Intellisense\MonitoredBufferResult.cs" />
     <Compile Include="PythonTools\ISnapshotTextReader.cs" />
     <Compile Include="PythonTools\PythonAutomation.cs" />
-    <Compile Include="PythonTools\Options\InterpreterOptions.cs" />
     <Compile Include="PythonTools\Options\IPythonOptions.cs" />
     <Compile Include="PythonTools\Options\NewInterpreter.cs">
       <SubType>Form</SubType>
@@ -839,7 +837,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Python Tools for VS License.rtf">
+    <Content Include="License_en-US.rtf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>

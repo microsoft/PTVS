@@ -17,7 +17,6 @@
         Microsoft.PythonTools.Analyzer.exe;
         Microsoft.PythonTools.Attacher.exe;
         Microsoft.PythonTools.AttacherX86.exe;
-        Microsoft.PythonTools.AzureSetup.exe;
         Microsoft.PythonTools.BuildTasks.dll;
         Microsoft.PythonTools.Common.dll;
         Microsoft.PythonTools.Debugger.dll;
@@ -46,7 +45,6 @@
         Microsoft.PythonTools.IronPython.dll;
         Microsoft.PythonTools.IronPython.Interpreter.dll;
         " Condition="$(IncludeIronPython)" />
-    <ManagedFiles Include="Microsoft.PythonTools.ML.dll" Condition="$(IncludeML)" />
     <ManagedFiles Include="
         Microsoft.PythonTools.Uwp.dll;
         Microsoft.PythonTools.Uwp.Interpreter.dll;

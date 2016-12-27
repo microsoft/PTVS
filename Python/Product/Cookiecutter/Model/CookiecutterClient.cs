@@ -21,14 +21,19 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools.Infrastructure;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.CookiecutterTools.Model {
     class CookiecutterClient : ICookiecutterClient {
+        private readonly IServiceProvider _provider;
         private readonly CookiecutterPythonInterpreter _interpreter;
         private readonly string _envFolderPath;
         private readonly string _envInterpreterPath;
         private readonly Redirector _redirector;
+
+        internal string DefaultBasePath { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
         public bool CookiecutterInstalled {
             get {
@@ -40,7 +45,8 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
-        public CookiecutterClient(CookiecutterPythonInterpreter interpreter, Redirector redirector) {
+        public CookiecutterClient(IServiceProvider provider, CookiecutterPythonInterpreter interpreter, Redirector redirector) {
+            _provider = provider;
             _interpreter = interpreter;
             var localAppDataFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             _envFolderPath = Path.Combine(localAppDataFolderPath, "Microsoft", "CookiecutterTools", "env");
@@ -121,7 +127,7 @@ namespace Microsoft.CookiecutterTools.Model {
             return items.ToArray();
         }
 
-        public async Task GenerateProjectAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
+        public async Task<CreateFilesOperationResult> CreateFilesAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
             if (localTemplateFolder == null) {
                 throw new ArgumentNullException(nameof(localTemplateFolder));
             }
@@ -138,7 +144,27 @@ namespace Microsoft.CookiecutterTools.Model {
             Directory.CreateDirectory(tempFolder);
 
             var result = await RunRunScript(_redirector, _envInterpreterPath, localTemplateFolder, userConfigFilePath, tempFolder, contextFilePath);
-            MoveToDesiredFolder(outputFolderPath, tempFolder);
+            return await MoveToDesiredFolderAsync(outputFolderPath, tempFolder);
+        }
+
+        public Task<string> GetDefaultOutputFolderAsync(string shortName) {
+            var shell = _provider?.GetService(typeof(SVsShell)) as IVsShell;
+            object o;
+            string vspp, baseName;
+            if (shell != null &&
+                ErrorHandler.Succeeded(shell.GetProperty((int)__VSSPROPID.VSSPROPID_VisualStudioProjDir, out o)) &&
+                PathUtils.IsValidPath((vspp = o as string))) {
+                baseName = vspp;
+            } else {
+                baseName = DefaultBasePath;
+            }
+
+            var candidate = PathUtils.GetAbsoluteDirectoryPath(baseName, shortName);
+            int counter = 1;
+            while (Directory.Exists(candidate) || File.Exists(PathUtils.TrimEndSeparator(candidate))) {
+                candidate = PathUtils.GetAbsoluteDirectoryPath(baseName, "{0}{1}".FormatInvariant(shortName, ++counter));
+            }
+            return Task.FromResult(candidate);
         }
 
         private void LoadVisualStudioSpecificContext(List<ContextItem> items, JProperty vsExtrasProp) {
@@ -155,6 +181,7 @@ namespace Microsoft.CookiecutterTools.Model {
             //   "var2" : {
             //     "label" : "Variable 2",
             //     "description" : "Description for variable 2",
+            //     "url" : "http://azure.microsoft.com",
             //     "selector" : "odbcConnection"
             //   }
             // }
@@ -173,6 +200,7 @@ namespace Microsoft.CookiecutterTools.Model {
                             var itemObj = (JObject)prop.Value;
                             ReadLabel(item, itemObj);
                             ReadDescription(item, itemObj);
+                            ReadUrl(item, itemObj);
                             ReadSelector(item, itemObj);
                         } else {
                             WrongJsonType(prop.Name, JTokenType.Object, prop.Value.Type);
@@ -212,6 +240,29 @@ namespace Microsoft.CookiecutterTools.Model {
             return descriptionToken;
         }
 
+        private JToken ReadUrl(ContextItem item, JObject itemObj) {
+            var urlToken = itemObj.SelectToken("url");
+            if (urlToken != null) {
+                if (urlToken.Type == JTokenType.String) {
+                    var val = urlToken.Value<string>();
+                    Uri uri;
+                    if (Uri.TryCreate(val, UriKind.Absolute, out uri)) {
+                        if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) {
+                            item.Url = val;
+                        } else {
+                            InvalidUrl(val);
+                        }
+                    } else {
+                        InvalidUrl(val);
+                    }
+                } else {
+                    WrongJsonType("url", JTokenType.String, urlToken.Type);
+                }
+            }
+
+            return urlToken;
+        }
+
         private void ReadSelector(ContextItem item, JObject itemObj) {
             var selectorToken = itemObj.SelectToken("selector");
             if (selectorToken != null) {
@@ -221,6 +272,10 @@ namespace Microsoft.CookiecutterTools.Model {
                     WrongJsonType("selector", JTokenType.String, selectorToken.Type);
                 }
             }
+        }
+
+        private void InvalidUrl(string url) {
+            _redirector.WriteErrorLine(string.Format("'{0}' from _visual_studio section in context file should be an absolute http or https url.", url));
         }
 
         private void WrongJsonType(string name, JTokenType expected, JTokenType actual) {
@@ -289,7 +344,7 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
-        private void MoveToDesiredFolder(string desiredFolder, string tempFolder) {
+        private async Task<CreateFilesOperationResult> MoveToDesiredFolderAsync(string desiredFolder, string tempFolder) {
             if (!Directory.Exists(desiredFolder)) {
                 Directory.CreateDirectory(desiredFolder);
             }
@@ -303,31 +358,86 @@ namespace Microsoft.CookiecutterTools.Model {
                 throw new InvalidOperationException("Cookiecutter generated files must have a templated folder.");
             }
 
-            MoveFilesAndFolders(generatedFolder, desiredFolder);
+            var res = await MoveFilesAndFoldersAsync(generatedFolder, desiredFolder);
 
             try {
                 Directory.Delete(tempFolder);
             } catch (IOException) {
             }
+
+            return res;
         }
 
-        private void CopyFiles(string sourceFolderPath, string targetFolderPath) {
+        private async Task<CreateFilesOperationResult> MoveFilesAndFoldersAsync(string generatedFolder, string targetFolderPath) {
+            List<string> createdFolders = new List<string>();
+            List<string> createdFiles = new List<string>();
+            List<ReplacedFile> replacedFiles = new List<ReplacedFile>();
+
             Directory.CreateDirectory(targetFolderPath);
 
-            foreach (var sourceFilePath in PathUtils.EnumerateFiles(sourceFolderPath, recurse: false, fullPaths: true)) {
-                var fileName = PathUtils.GetFileOrDirectoryName(sourceFilePath);
-                var targetFilePath = Path.Combine(targetFolderPath, fileName);
-                File.Copy(sourceFilePath, targetFilePath, true);
+            foreach (var folderPath in PathUtils.EnumerateDirectories(generatedFolder, recurse: true, fullPaths: false)) {
+                createdFolders.Add(folderPath);
+
+                Directory.CreateDirectory(Path.Combine(targetFolderPath, folderPath));
             }
+
+            foreach (var filePath in PathUtils.EnumerateFiles(generatedFolder, recurse: true, fullPaths: false)) {
+                createdFiles.Add(filePath);
+
+                string targetFilePath = Path.Combine(targetFolderPath, filePath);
+                string generatedFilePath = Path.Combine(generatedFolder, filePath);
+
+                if (File.Exists(targetFilePath)) {
+                    if (!await AreFilesSameAsync(generatedFilePath, targetFilePath)) {
+                        // Need to backup the user's file before overwriting it
+                        string backupFilePath = GetBackupFilePath(targetFilePath);
+                        File.Move(targetFilePath, backupFilePath);
+                        File.Move(generatedFilePath, targetFilePath);
+                        replacedFiles.Add(new ReplacedFile(filePath, PathUtils.GetRelativeFilePath(targetFolderPath, backupFilePath)));
+                    }
+                } else {
+                    File.Move(generatedFilePath, targetFilePath);
+                }
+            }
+
+            return new Model.CreateFilesOperationResult(createdFolders.ToArray(), createdFiles.ToArray(), replacedFiles.ToArray());
         }
 
-        private void MoveFilesAndFolders(string sourceFolderPath, string targetFolderPath) {
-            var subFolderRelativePaths = PathUtils.EnumerateDirectories(sourceFolderPath, recurse: true, fullPaths: false).Concat(new string[] { "." });
-            foreach (var subFolderRelativePath in subFolderRelativePaths) {
-                CopyFiles(Path.Combine(sourceFolderPath, subFolderRelativePath), Path.Combine(targetFolderPath, subFolderRelativePath));
+        private string GetBackupFilePath(string filePath) {
+            return PathUtils.GetAvailableFilename(
+                Path.GetDirectoryName(filePath),
+                Path.GetFileNameWithoutExtension(filePath) + ".bak",
+                Path.GetExtension(filePath)
+            );
+        }
+
+        internal static async Task<bool> AreFilesSameAsync(string file1Path, string file2Path) {
+            var length = new FileInfo(file1Path).Length;
+            if (length != new FileInfo(file2Path).Length) {
+                return false;
             }
 
-            Directory.Delete(sourceFolderPath, true);
+            int bufferSize = 32768;
+            var buffer1 = new byte[bufferSize];
+            var buffer2 = new byte[bufferSize];
+            using (var stream1 = new FileStream(file1Path, FileMode.Open, FileAccess.Read))
+            using (var stream2 = new FileStream(file2Path, FileMode.Open, FileAccess.Read)) {
+                while (length > 0) {
+                    var actual1 = await stream1.ReadAsync(buffer1, 0, bufferSize);
+                    var actual2 = await stream2.ReadAsync(buffer2, 0, bufferSize);
+                    if (actual1 != actual2) {
+                        return false;
+                    }
+
+                    length -= actual1;
+
+                    if (!buffer1.SequenceEqual(buffer2)) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
         }
     }
 }

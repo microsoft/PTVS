@@ -246,7 +246,7 @@ namespace Microsoft.PythonTools.Profiling {
             if (projectToProfile != null) {
                 ProfileProject(session, projectToProfile, openReport);
             } else {
-                MessageBox.Show("Project could not be found in current solution.", "Python Tools for Visual Studio");
+                MessageBox.Show("Project could not be found in current solution.", Strings.ProductTitle);
             }
         }
 
@@ -255,12 +255,12 @@ namespace Microsoft.PythonTools.Profiling {
 
             var config = project?.GetLaunchConfigurationOrThrow();
             if (config == null) {
-                MessageBox.Show("Could not find interpreter for project {0}".FormatUI(projectToProfile.Name), "Python Tools for Visual Studio");
+                MessageBox.Show("Could not find interpreter for project {0}".FormatUI(projectToProfile.Name), Strings.ProductTitle);
                 return;
             }
 
             if (string.IsNullOrEmpty(config.ScriptName)) {
-                MessageBox.Show("Project has no configured startup file, cannot start profiling.", "Python Tools for Visual Studio");
+                MessageBox.Show("Project has no configured startup file, cannot start profiling.", Strings.ProductTitle);
                 return;
             }
 

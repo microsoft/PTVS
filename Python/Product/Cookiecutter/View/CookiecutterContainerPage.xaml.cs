@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -30,6 +31,7 @@ using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.Telemetry;
 using Microsoft.CookiecutterTools.ViewModel;
+using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.CookiecutterTools.View {
     /// <summary>
@@ -50,7 +52,7 @@ namespace Microsoft.CookiecutterTools.View {
             InitializeComponent();
         }
 
-        public CookiecutterContainerPage(Redirector outputWindow, ICookiecutterTelemetry telemetry, IGitClient gitClient, Uri feedUrl, Action<string> openFolder, Action updateCommandUI) {
+        public CookiecutterContainerPage(IServiceProvider provider, Redirector outputWindow, ICookiecutterTelemetry telemetry, IGitClient gitClient, Uri feedUrl, Action<string> openFolder, IProjectSystemClient projectSystemClient, Action updateCommandUI) {
             _updateCommandUI = updateCommandUI;
 
             _checkForUpdatesTimer = new DispatcherTimer();
@@ -58,7 +60,7 @@ namespace Microsoft.CookiecutterTools.View {
 
             var gitHubClient = new GitHubClient();
             ViewModel = new CookiecutterViewModel(
-                CookiecutterClientProvider.Create(outputWindow),
+                CookiecutterClientProvider.Create(provider, outputWindow),
                 gitHubClient,
                 gitClient,
                 telemetry,
@@ -66,11 +68,12 @@ namespace Microsoft.CookiecutterTools.View {
                 new LocalTemplateSource(CookiecutterViewModel.DefaultInstalledFolderPath, gitClient),
                 new FeedTemplateSource(feedUrl),
                 new GitHubTemplateSource(gitHubClient),
-                openFolder
+                openFolder,
+                projectSystemClient
             );
 
             ViewModel.UserConfigFilePath = CookiecutterViewModel.GetUserConfigPath();
-            ViewModel.OutputFolderPath = string.Empty; // leaving this empty for now, force user to enter one
+            ViewModel.OutputFolderPath = string.Empty; // leaving this empty for now, initialize on context creation
             ViewModel.ContextLoaded += ViewModel_ContextLoaded;
             ViewModel.HomeClicked += ViewModel_HomeClicked;
 
@@ -134,8 +137,7 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         private void ViewModel_HomeClicked(object sender, EventArgs e) {
-            PageSequence.MoveCurrentToFirst();
-            _updateCommandUI();
+            Home();
         }
 
         private void ViewModel_ContextLoaded(object sender, EventArgs e) {
@@ -182,8 +184,13 @@ namespace Microsoft.CookiecutterTools.View {
         }
 
         internal void Home() {
-            ViewModel.Reset();
+            PageSequence.MoveCurrentToFirst();
             _updateCommandUI();
+
+            ViewModel.FixedOutputFolder = false;
+            ViewModel.TargetProjectLocation = null;
+            ViewModel.SearchTerm = string.Empty;
+            ViewModel.SearchAsync().DoNotWait();
         }
 
         internal bool CanDeleteSelection() {
@@ -242,6 +249,16 @@ namespace Microsoft.CookiecutterTools.View {
             _checkForUpdatesTimer.Stop();
 
             _searchPage.CheckForUpdates();
+        }
+
+        internal void NewSession(ProjectLocation location) {
+            Home();
+
+            if (location != null) {
+                ViewModel.OutputFolderPath = location.FolderPath;
+                ViewModel.FixedOutputFolder = true;
+                ViewModel.TargetProjectLocation = location;
+            }
         }
 
         private void UserControl_MouseRightButtonUp(object sender, MouseButtonEventArgs e) {

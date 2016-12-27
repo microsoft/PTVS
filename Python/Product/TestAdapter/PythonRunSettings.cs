@@ -25,9 +25,6 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
-#if INCLUDE_CODE_COVERAGE
-using Microsoft.VisualStudio.TestWindow.CodeCoverage;
-#endif
 using Microsoft.VisualStudio.TestWindow.Extensibility;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.TestAdapter;
@@ -47,8 +44,11 @@ namespace Microsoft.PythonTools.TestAdapter {
         private readonly IServiceProvider _serviceProvider;
         private readonly Dispatcher _dispatcher;
         internal static Uri PythonCodeCoverageUri = new Uri("datacollector://Microsoft/PythonCodeCoverage/1.0");
-        internal static string CodeCoverageUriString = @"datacollector://Microsoft/CodeCoverage/2.0";
+
+        private const string CodeCoverageImportName = "Microsoft.VisualStudio.TestWindow.CodeCoverage.ICodeCoverageSettingsService";
+        internal const string CodeCoverageUriString = @"datacollector://Microsoft/CodeCoverage/2.0";
         internal const int cmdidImportCoverage = 0x10f;
+
         [ImportingConstructor]
         public PythonRunSettings([Import(typeof(SVsServiceProvider))]IServiceProvider serviceProvider) {
             _compModel = (IComponentModel)serviceProvider.GetService(typeof(SComponentModel));
@@ -82,13 +82,23 @@ namespace Microsoft.PythonTools.TestAdapter {
             }
         }
 
-#if INCLUDE_CODE_COVERAGE
-        public ICodeCoverageSettingsService CodeCoverage {
+        private bool CodeCoverageEnabled {
             get {
-                return _compModel.GetService<ICodeCoverageSettingsService>();
+                try {
+                    dynamic service = _compModel.DefaultExportProvider.GetExport<object>(CodeCoverageImportName)?.Value;
+                    return (bool)(service?.Enabled ?? false);
+                } catch (Exception) {
+                    return false;
+                }
+            }
+            set {
+                try {
+                    dynamic service = _compModel.DefaultExportProvider.GetExport<object>(CodeCoverageImportName)?.Value;
+                    service.Enabled = value;
+                } catch (Exception) {
+                }
             }
         }
-#endif
 
         public string Name {
             get {
@@ -196,9 +206,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return inputRunSettingDocument;
             }
 
-#if INCLUDE_CODE_COVERAGE
-            var codeCov = CodeCoverage;
-            if (codeCov.Enabled) {
+            if (CodeCoverageEnabled) {
                 // Code coverage is currently enabled.  We don't want it adding it's data 
                 // collector if ICodeCoverageSettingsService IRunSettingsService runs 
                 // after ours.  So we tell it that it's been disabled to prevent that 
@@ -212,7 +220,7 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 if (allPython) {
                     // Disable normal code coverage...
-                    codeCov.Enabled = false;
+                    CodeCoverageEnabled = false;
 
                     XPathNodeIterator nodes = navigator.Select("/RunSettings/DataCollectionRunSettings/DataCollectors/DataCollector");
                     XPathNavigator codeCoverageNode = null;
@@ -234,7 +242,6 @@ namespace Microsoft.PythonTools.TestAdapter {
                     }
                 }
             }
-#endif
 
             return inputRunSettingDocument;
         }

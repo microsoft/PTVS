@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -44,6 +45,6 @@ namespace Microsoft.PythonTools.Intellisense {
         public PythonMemberType MemberType => _memberType;
         public string Name => _name;
 
-        internal AP.CompletionValue[] Values => _values;
+        internal AP.CompletionValue[] Values => _values ?? Array.Empty<AP.CompletionValue>();
     }
 }

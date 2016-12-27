@@ -49,7 +49,10 @@ namespace Microsoft.PythonTools.Interpreter {
         protected bool _isDisposed;
 
         private readonly static Regex IndexNameSanitizerRegex = new Regex(@"\W");
-        private static readonly Regex SimpleListRegex = new Regex(@"a href=['""](?<package>[^'""]+)");
+        private static readonly Regex SimpleListRegex = new Regex(@"\<a.*?\>(?<package>.+?)\<",
+            RegexOptions.ExplicitCapture | RegexOptions.IgnoreCase,
+            TimeSpan.FromSeconds(1.0)
+        );
 
         // When files return 404 from PyPI, we put them in here to avoid trying
         // to request them again.
@@ -57,9 +60,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
         // These constants are substituted where necessary, but are not stored
         // in instance variables so we can differentiate between set and unset.
-        private static readonly Uri DefaultIndex = new Uri("https://pypi.python.org/pypi/");
+        private const string DefaultIndexFwLink = "https://go.microsoft.com/fwlink/?linkid=834538";
+        private static Task<Uri> _DefaultIndexTask = Task.Run(() => Resolve(DefaultIndexFwLink));
         private const string DefaultIndexName = "PyPI";
-
+        
         protected PipPackageCache(
             Uri index,
             string indexName,
@@ -73,13 +77,13 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public static PipPackageCache GetCache(Uri index = null, string indexName = null) {
             PipPackageCache cache;
-            var key = (index ?? DefaultIndex).AbsoluteUri;
+            var key = index?.AbsoluteUri ?? string.Empty;
             lock (_knownCachesLock) {
                 if (!_knownCaches.TryGetValue(key, out cache)) {
                     _knownCaches[key] = cache = new PipPackageCache(
                         index,
                         indexName,
-                        GetCachePath(index ?? DefaultIndex, indexName ?? DefaultIndexName)
+                        GetCachePath(indexName ?? DefaultIndexName)
                     );
                 }
                 cache._userCount += 1;
@@ -108,14 +112,14 @@ namespace Microsoft.PythonTools.Interpreter {
                     if (--_userCount <= 0) {
                         Debug.Assert(_userCount == 0);
                         _cacheLock.Dispose();
-                        _knownCaches.Remove((_index ?? DefaultIndex).AbsoluteUri);
+                        _knownCaches.Remove(_index?.AbsoluteUri ?? string.Empty);
                     }
                 }
             }
         }
 
         public Uri Index {
-            get { return _index ?? DefaultIndex; }
+            get { return _index ?? _DefaultIndexTask.Result; }
         }
 
         public string IndexName {
@@ -184,7 +188,8 @@ namespace Microsoft.PythonTools.Interpreter {
             using (var client = new WebClient()) {
                 Stream data;
                 try {
-                    data = await client.OpenReadTaskAsync(new Uri(_index ?? DefaultIndex, entry.Name + "/json"));
+                    data = await client.OpenReadTaskAsync(new Uri(Index, entry.Name + "/json"))
+                        .ConfigureAwait(false);
                 } catch (WebException ex) {
                     if ((ex.Response as HttpWebResponse)?.StatusCode == HttpStatusCode.NotFound) {
                         lock (NotOnPyPI) {
@@ -307,9 +312,7 @@ namespace Microsoft.PythonTools.Interpreter {
             using (var client = new WebClient()) {
                 // ../simple is a list of <a href="package">package</a>
                 try {
-                    htmlList = await client.DownloadStringTaskAsync(
-                        new Uri(_index ?? DefaultIndex, "../simple")
-                    ).ConfigureAwait(false);
+                    htmlList = await client.DownloadStringTaskAsync(new Uri(Index, "../simple")).ConfigureAwait(false);
                 } catch (WebException) {
                     // No net access, so can't refresh
                     return;
@@ -448,7 +451,22 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private static string GetCachePath(Uri index, string indexName) {
+        private static Uri Resolve(string uri) {
+            var req = WebRequest.CreateHttp(uri);
+            req.Method = "HEAD";
+            req.AllowAutoRedirect = false;
+            try {
+                using (var resp = req.GetResponse()) {
+                    return new Uri(resp.Headers.Get("Location") ?? uri);
+                }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                Debug.Fail(ex.ToString());
+                // Nowhere else to report this error, so just swallow it
+            }
+            return new Uri(uri);
+        }
+
+        private static string GetCachePath(string indexName) {
             return Path.Combine(
                 BasePackageCachePath,
                 IndexNameSanitizerRegex.Replace(indexName, "_") + "_simple.cache"

@@ -14,12 +14,15 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Web.Script.Serialization;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Projects;
 
 namespace Microsoft.PythonTools.TestAdapter {
@@ -36,27 +39,14 @@ namespace Microsoft.PythonTools.TestAdapter {
             switch (commandId) {
                 case GetTestCasesCommand:
                     IProjectEntry projEntry;
+                    IEnumerable<TestCaseInfo> testCases;
                     if (_analyzer.TryGetProjectEntryByPath(body, out projEntry)) {
-                        var testCases = GetTestCases(projEntry);
-                        List<object> res = new List<object>();
-
-                        foreach (var test in testCases) {
-                            var item = new Dictionary<string, object>() {
-                                { Serialize.Filename, test.Filename },
-                                { Serialize.ClassName, test.ClassName },
-                                { Serialize.MethodName, test.MethodName },
-                                { Serialize.StartLine, test.StartLine},
-                                { Serialize.StartColumn, test.StartColumn},
-                                { Serialize.EndLine, test.EndLine },
-                                { Serialize.Kind, test.Kind.ToString() },
-                            };
-                            res.Add(item);
-                        }
-
-                        return serializer.Serialize(res.ToArray());
+                        testCases = GetTestCasesFromAnalysis(projEntry);
+                    } else {
+                        testCases = GetTestCasesFromAst(body);
                     }
 
-                    break;
+                    return serializer.Serialize(testCases.Select(tc => tc.AsDictionary()).ToArray());
             }
 
             return "";
@@ -105,7 +95,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             return 0;
         }
 
-        class Serialize {
+        public class Serialize {
             public const string Filename = "filename";
             public const string ClassName = "className";
             public const string MethodName = "methodName";
@@ -116,7 +106,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
 
-        public static IEnumerable<TestCaseInfo> GetTestCases(IProjectEntry projEntry) {
+        public static IEnumerable<TestCaseInfo> GetTestCasesFromAnalysis(IProjectEntry projEntry) {
             var entry = projEntry as IPythonProjectEntry;
             if (entry == null) {
                 yield break;
@@ -156,16 +146,17 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private static bool IsTestCaseClass(AnalysisValue cls) {
-            if (cls == null ||
-                cls.DeclaringModule != null ||
-                cls.PythonType == null ||
-                cls.PythonType.DeclaringModule == null) {
-                return false;
-            }
-            var mod = cls.PythonType.DeclaringModule.Name;
-            return (mod == "unittest" || mod.StartsWith("unittest.")) && cls.Name == "TestCase";
+            return IsTestCaseClass(cls?.PythonType);
         }
 
+        private static bool IsTestCaseClass(IPythonType cls) {
+            if (cls == null ||
+                cls.DeclaringModule == null) {
+                return false;
+            }
+            var mod = cls.DeclaringModule.Name;
+            return (mod == "unittest" || mod.StartsWith("unittest.")) && cls.Name == "TestCase";
+        }
         /// <summary>
         /// Get Test Case Members for a class.  If the class has 'test*' tests 
         /// return those.  If there aren't any 'test*' tests return (if one at 
@@ -189,10 +180,79 @@ namespace Microsoft.PythonTools.TestAdapter {
         }
 
         private static IEnumerable<AnalysisValue> GetTestCaseClasses(ModuleAnalysis analysis) {
-            return analysis.GetAllAvailableMembersByIndex(0)
+            return analysis.GetAllAvailableMembersByIndex(0, GetMemberOptions.ExcludeBuiltins)
                 .SelectMany(m => analysis.GetValuesByIndex(m.Name, 0))
                 .Where(v => v.MemberType == PythonMemberType.Class)
                 .Where(v => v.Mro.SelectMany(v2 => v2).Any(IsTestCaseClass));
+        }
+
+        private static IEnumerable<IPythonType> GetTestCaseClasses(IPythonModule module, IModuleContext context) {
+            foreach (var name in module.GetMemberNames(context)) {
+                var cls = module.GetMember(context, name) as IPythonType;
+                if (cls != null) {
+                    foreach (var baseCls in cls.Mro.MaybeEnumerate()) {
+                        if (baseCls.Name == "TestCase" ||
+                            baseCls.Name.StartsWith("unittest.") && baseCls.Name.EndsWith(".TestCase")) {
+                            yield return cls;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static IEnumerable<IPythonFunction> GetTestCaseMembers(IPythonType cls, IModuleContext context) {
+            var methodFunctions = cls.GetMemberNames(context).Select(n => cls.GetMember(context, n))
+                .OfType<IPythonFunction>()
+                .ToArray();
+
+            var tests = methodFunctions.Where(v => v.Name.StartsWith("test"));
+            var runTest = methodFunctions.Where(v => v.Name.Equals("runTest"));
+
+            if (tests.Any()) {
+                return tests;
+            } else {
+                return runTest;
+            }
+        }
+
+        public IEnumerable<TestCaseInfo> GetTestCasesFromAst(string path) {
+            IPythonModule module;
+            try {
+                module = AstPythonModule.FromFile(_analyzer.Interpreter, path, _analyzer.LanguageVersion);
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                return Enumerable.Empty<TestCaseInfo>();
+            }
+
+            var ctxt = _analyzer.Interpreter.CreateModuleContext();
+            return GetTestCasesFromAst(module, ctxt);
+        }
+
+        internal static IEnumerable<TestCaseInfo> GetTestCasesFromAst(IPythonModule module, IModuleContext ctxt) {
+            if (module == null) {
+                throw new ArgumentNullException(nameof(module));
+            }
+
+            foreach (var classValue in GetTestCaseClasses(module, ctxt)) {
+                // Check the name of all functions on the class using the
+                // analyzer. This will return functions defined on this
+                // class and base classes
+                foreach (var member in GetTestCaseMembers(classValue, ctxt)) {
+                    // Find the definition to get the real location of the
+                    // member. Otherwise decorators will confuse us.
+                    var location = (member as ILocatedMember)?.Locations?.FirstOrDefault(loc => loc != null);
+
+                    int endLine = location?.EndLine ?? location?.StartLine ?? 0;
+
+                    yield return new TestCaseInfo(
+                        (classValue as ILocatedMember)?.Locations.FirstOrDefault()?.FilePath,
+                        classValue.Name,
+                        member.Name,
+                        location?.StartLine ?? 0,
+                        location?.StartColumn ?? 1,
+                        endLine
+                    );
+                }
+            }
         }
     }
 }
