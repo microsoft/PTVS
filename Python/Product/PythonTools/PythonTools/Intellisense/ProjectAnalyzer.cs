@@ -1148,7 +1148,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
                 // Update the parser warnings/errors.
                 var factory = new TaskProviderItemFactory(translator);
-                if (!entry.IsTemporaryFile && _errorProvider != null) {
+                if (!entry.SuppressErrorList && _errorProvider != null) {
                     if (buffer.errors.Any() || buffer.warnings.Any()) {
                         var warningItems = buffer.warnings.Select(er => factory.FromErrorResult(
                             _serviceProvider,
@@ -1174,7 +1174,7 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                if (!entry.IsTemporaryFile && _commentTaskProvider != null) {
+                if (!entry.SuppressErrorList && _commentTaskProvider != null) {
                     if (buffer.tasks.Any()) {
                         var taskItems = buffer.tasks.Select(x => new TaskProviderItem(
                                _serviceProvider,
@@ -1198,12 +1198,14 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
 
-            bool changed = false;
-            lock (_hasParseErrorsLock) {
-                changed = hasErrors ? _hasParseErrors.Add(entry) : _hasParseErrors.Remove(entry);
-            }
-            if (changed) {
-                OnShouldWarnOnLaunchChanged(entry);
+            if (!entry.SuppressErrorList) {
+                bool changed = false;
+                lock (_hasParseErrorsLock) {
+                    changed = hasErrors ? _hasParseErrors.Add(entry) : _hasParseErrors.Remove(entry);
+                }
+                if (changed) {
+                    OnShouldWarnOnLaunchChanged(entry);
+                }
             }
 
             entry.OnParseComplete();
