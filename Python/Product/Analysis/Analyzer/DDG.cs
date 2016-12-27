@@ -239,10 +239,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 added = variable.AddTypes(_unit, userMod.GetModuleMember(node, _unit, impName, addRef, Scope, saveName));
             }
 
-            //if (addRef) {
-            //    variable.AddAssignment(node, _unit);
-            //} 
-            
             if (added) {
                 // anyone who read from the module will now need to get the new values
                 GlobalScope.ModuleDefinition.EnqueueDependents();
