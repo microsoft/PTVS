@@ -354,7 +354,7 @@ namespace Microsoft.PythonTools.Interpreter {
             try {
                 using (await _working.LockAsync(cancellationToken)) {
                     ui?.OnOperationStarted(this, operation);
-                    ui?.OnOutputTextReceived(this, Strings.InstallingPackageStarted.FormatUI(name));
+                    ui?.OnOutputTextReceived(this, Strings.UninstallingPackageStarted.FormatUI(name));
 
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
