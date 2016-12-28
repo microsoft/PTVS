@@ -20,22 +20,27 @@ using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace Microsoft.PythonTools.Django.Analysis {
-    class DjangoUrl : IComparable<DjangoUrl> {
-        public string FullUrlName;
+    class DjangoUrl {
+        public readonly string Name;
+        public string FullName {
+            get {
+                return Name;
+            }
+        }
         private readonly string _urlRegex;
         private static readonly Regex _regexGroupMatchingRegex = new Regex(@"\(.*?\)");
-        public IList<DjangoUrlParameter> _parameters = new List<DjangoUrlParameter>();
+        public IList<DjangoUrlParameter> Parameters = new List<DjangoUrlParameter>();
 
         public IEnumerable<DjangoUrlParameter> NamedParameters {
             get {
-                return _parameters.Where(p => p.IsNamed);
+                return Parameters.Where(p => p.IsNamed);
             }
         }
 
         public DjangoUrl() { }
 
         public DjangoUrl(string urlName, string urlRegex) {
-            FullUrlName = urlName;
+            Name = urlName;
             _urlRegex = urlRegex;
 
             ParseUrlRegex();
@@ -46,18 +51,10 @@ namespace Microsoft.PythonTools.Django.Analysis {
 
             foreach (Match m in matches) {
                 foreach (Group grp in m.Groups) {
-                    _parameters.Add(new DjangoUrlParameter(grp.Value));
+                    Parameters.Add(new DjangoUrlParameter(grp.Value));
                 }
             }
         }
-
-        #region IComparable implementation
-
-        public int CompareTo(DjangoUrl other) {
-            return FullUrlName.CompareTo(other.FullUrlName);
-        }
-
-        #endregion
     }
 
     class DjangoUrlParameter {
