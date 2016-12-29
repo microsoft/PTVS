@@ -204,7 +204,9 @@ namespace Microsoft.PythonTools.Interpreter {
                     // We've loaded and found the factory already
                     return factory;
                 }
-                if (_defaultInterpreterId == string.Empty) {
+                // FxCop won't let us compare to String.Empty, so we do
+                // two comparisons for "performance reasons"
+                if (_defaultInterpreterId != null && string.IsNullOrEmpty(_defaultInterpreterId)) {
                     // We've loaded, and there's nothing there
                     return _registryService.Value.NoInterpretersValue;
                 }
