@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -321,6 +322,14 @@ namespace Microsoft.PythonTools.Profiling {
                 _stopCommand.Enabled = false;
                 _startCommand.Enabled = true;
                 if (openReport && File.Exists(outPath)) {
+                    for (int retries = 10; retries > 0; --retries) {
+                        try {
+                            using (new FileStream(outPath, FileMode.Open, FileAccess.Read, FileShare.None)) { }
+                            break;
+                        } catch (IOException) {
+                            Thread.Sleep(100);
+                        }
+                    }
                     dte.ItemOperations.OpenFile(outPath);
                 }
             };
