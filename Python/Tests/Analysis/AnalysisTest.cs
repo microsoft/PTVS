@@ -2605,8 +2605,6 @@ def f(abc):
                 new VariableLocation(16, 14, VariableType.Reference),
 
                 new VariableLocation(18, 12, VariableType.Reference),
-                new VariableLocation(19, 21, VariableType.Definition),
-                new VariableLocation(20, 28, VariableType.Definition),
 
                 new VariableLocation(22, 8, VariableType.Reference),
                 new VariableLocation(23, 10, VariableType.Reference),
@@ -2791,11 +2789,8 @@ from baz import abc2 as abc";
                 new VariableLocation(1, 7, VariableType.Value),         // possible value
                                                                         //new VariableLocation(1, 7, VariableType.Value),
                                                                         // appears twice for two modules, but cannot test that
-                new VariableLocation(2, 20, VariableType.Definition),   // import
                 new VariableLocation(2, 20, VariableType.Reference),    // import
-                new VariableLocation(4, 1, VariableType.Reference),     // call
-                new VariableLocation(1, 25, VariableType.Definition),   // import in oar
-                new VariableLocation(2, 25, VariableType.Definition)    // import in baz
+                new VariableLocation(4, 1, VariableType.Reference)      // call
             );
         }
 
