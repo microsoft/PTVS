@@ -173,7 +173,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 try {
                     token = searchCts.Token;
                 } catch (ObjectDisposedException) {
-                    // highly unlikely race, but easy enouh to protect against
+                    // highly unlikely race, but easy enough to protect against
                     return;
                 }
 
@@ -188,6 +188,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
                 callback.Done();
                 if (searchCts != null) {
                     Interlocked.CompareExchange(ref _searchCts, null, searchCts);
+                    searchCts.Dispose();
                 }
             }
         }
