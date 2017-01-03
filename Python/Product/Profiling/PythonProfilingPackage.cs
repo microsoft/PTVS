@@ -325,6 +325,7 @@ namespace Microsoft.PythonTools.Profiling {
                     for (int retries = 10; retries > 0; --retries) {
                         try {
                             using (new FileStream(outPath, FileMode.Open, FileAccess.Read, FileShare.None)) { }
+                            break;
                         } catch (IOException) {
                             Thread.Sleep(100);
                         }
