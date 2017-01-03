@@ -185,7 +185,16 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 )) {
                     var exitCode = await output;
                     if (exitCode == 0) {
-                        view.VersionName = output.StandardOutputLines.FirstOrDefault() ?? view.VersionName;
+                        var vn = output.StandardOutputLines.FirstOrDefault() ?? view.VersionName;
+                        if (ConfigurationEnvironmentView.VersionNames.Contains(vn)) {
+                            view.VersionName = vn;
+                        } else if (vn.CompareTo(ConfigurationEnvironmentView.VersionNames.Last()) > 0) {
+                            view.VersionName = ConfigurationEnvironmentView.VersionNames.Last();
+                        } else if (vn.CompareTo(ConfigurationEnvironmentView.VersionNames.First()) < 0) {
+                            view.VersionName = ConfigurationEnvironmentView.VersionNames.First();
+                        } else {
+                            view.VersionName = "2.7";
+                        }
                     }
                 }
 
