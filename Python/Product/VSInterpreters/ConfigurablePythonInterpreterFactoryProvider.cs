@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
@@ -62,19 +63,34 @@ namespace Microsoft.PythonTools.Interpreter {
                 var pathEnvVar = store.GetString(collection, PathEnvVarKey, string.Empty);
                 var description = store.GetString(collection, DescriptionKey, string.Empty);
 
-                return InterpreterFactoryCreator.CreateInterpreterFactory(
-                    new InterpreterFactoryCreationOptions {
-                        LanguageVersionString = version,
-                        Id = id,
-                        Description = description,
-                        InterpreterPath = path,
-                        WindowInterpreterPath = winPath,
-                        LibraryPath = libPath,
-                        PathEnvironmentVariableName = pathEnvVar,
-                        ArchitectureString = arch,
-                        WatchLibraryForNewModules = true
+                var opts = new InterpreterFactoryCreationOptions {
+                    Id = id,
+                    Description = description,
+                    InterpreterPath = path,
+                    WindowInterpreterPath = winPath,
+                    LibraryPath = libPath,
+                    PathEnvironmentVariableName = pathEnvVar,
+                    ArchitectureString = arch,
+                    WatchLibraryForNewModules = true
+                };
+
+                // https://github.com/Microsoft/PTVS/issues/1994
+                // Loading an unsupported version from the registry would crash.
+                // Now we reset the version so that the environment still appears
+                // and can be modified.
+                Version ver;
+                try {
+                    if (Version.TryParse(version, out ver) && ver.ToLanguageVersion().ToVersion() == ver) {
+                        opts.LanguageVersion = ver;
                     }
-                );
+                } catch (InvalidOperationException) {
+                }
+
+                try {
+                    return InterpreterFactoryCreator.CreateInterpreterFactory(opts);
+                } catch (ArgumentException) {
+                    return null;
+                }
             }
             return null;
         }
