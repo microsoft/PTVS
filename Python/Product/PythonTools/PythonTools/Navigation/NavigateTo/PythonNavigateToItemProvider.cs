@@ -153,7 +153,7 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
         }
 
         public async void StartSearch(INavigateToCallback callback, string searchValue) {
-            CancellationTokenSource searchCts;
+            CancellationTokenSource searchCts = null;
 
             if (_library == null) {
                 callback.Done();
@@ -163,34 +163,49 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
             try {
                 searchCts = new CancellationTokenSource();
                 var oldCts = Interlocked.Exchange(ref _searchCts, searchCts);
-                if (oldCts != null) {
-                    oldCts.Cancel();
-                    oldCts.Dispose();
+                try {
+                    oldCts?.Cancel();
+                    oldCts?.Dispose();
+                } catch (ObjectDisposedException) {
+                }
+
+                CancellationToken token;
+                try {
+                    token = searchCts.Token;
+                } catch (ObjectDisposedException) {
+                    // highly unlikely race, but easy enough to protect against
+                    return;
                 }
 
                 await _library.VisitNodesAsync(
                     new LibraryNodeVisitor(this, callback, searchValue, _matchMode),
-                    searchCts.Token
+                    token
                 );
             } catch (OperationCanceledException) {
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 ex.ReportUnhandledException(_serviceProvider, GetType());
             } finally {
                 callback.Done();
+                if (searchCts != null) {
+                    Interlocked.CompareExchange(ref _searchCts, null, searchCts);
+                    searchCts.Dispose();
+                }
             }
         }
 
         public void StopSearch() {
-            var cts = Volatile.Read(ref _searchCts);
-            if (cts != null) {
-                cts.Cancel();
+            try {
+                Volatile.Read(ref _searchCts)?.Cancel();
+            } catch (ObjectDisposedException) {
             }
         }
 
         public void Dispose() {
             var cts = Interlocked.Exchange(ref _searchCts, null);
-            if (cts != null) {
-                cts.Dispose();
+            try {
+                cts?.Cancel();
+                cts?.Dispose();
+            } catch (ObjectDisposedException) {
             }
         }
     }
