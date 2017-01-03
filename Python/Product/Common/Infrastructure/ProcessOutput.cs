@@ -306,8 +306,6 @@ namespace Microsoft.PythonTools.Infrastructure {
             var psi = new ProcessStartInfo(PythonToolsInstallPath.GetFile("Microsoft.PythonTools.RunElevated.exe", typeof(ProcessOutput).Assembly));
             psi.CreateNoWindow = true;
             psi.WindowStyle = ProcessWindowStyle.Hidden;
-            psi.UseShellExecute = true;
-            psi.Verb = elevate ? "runas" : null;
 
             var utf8 = new UTF8Encoding(false);
             // Send args and env as base64 to avoid newline issues
@@ -505,6 +503,9 @@ namespace Microsoft.PythonTools.Infrastructure {
 
             try {
                 _process.Start();
+            } catch (Win32Exception ex) {
+                _redirector.WriteErrorLine(ex.Message);
+                _process = null;
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 foreach (var line in SplitLines(ex.ToString())) {
                     _redirector.WriteErrorLine(line);
