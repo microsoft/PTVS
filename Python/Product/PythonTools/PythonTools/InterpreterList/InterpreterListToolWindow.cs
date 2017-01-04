@@ -284,16 +284,18 @@ namespace Microsoft.PythonTools.InterpreterList {
                 factory.Configuration.WindowsInterpreterPath;
             psi.WorkingDirectory = factory.Configuration.PrefixPath;
 
-            var provider = _service.KnownProviders.OfType<LoadedProjectInterpreterFactoryProvider>().FirstOrDefault();
-            var vsProject = provider == null ?
-                null :
-                provider.GetProject(factory);
-            var project = vsProject == null ? null : vsProject.GetPythonProject();
-            if (project != null) {
-                psi.EnvironmentVariables[factory.Configuration.PathEnvironmentVariable] = 
-                    string.Join(";", project.GetSearchPaths());
-            } else {
-                psi.EnvironmentVariables[factory.Configuration.PathEnvironmentVariable] = string.Empty;
+            var pathVar = factory.Configuration.PathEnvironmentVariable;
+            if (!string.IsNullOrEmpty(pathVar)) {
+                var provider = _service.KnownProviders.OfType<LoadedProjectInterpreterFactoryProvider>().FirstOrDefault();
+                var vsProject = provider == null ?
+                    null :
+                    provider.GetProject(factory);
+                var project = vsProject == null ? null : vsProject.GetPythonProject();
+                if (project != null) {
+                    psi.EnvironmentVariables[pathVar] = string.Join(";", project.GetSearchPaths());
+                } else {
+                    psi.EnvironmentVariables[pathVar] = string.Empty;
+                }
             }
 
             Process.Start(psi);
