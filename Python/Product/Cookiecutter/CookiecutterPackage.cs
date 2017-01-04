@@ -233,7 +233,7 @@ namespace Microsoft.CookiecutterTools {
             if (File.Exists(uri)) {
                 var ext = Path.GetExtension(uri);
                 if (string.Compare(ext, ".htm", StringComparison.CurrentCultureIgnoreCase) == 0 ||
-                    string.Compare(ext, ".htm", StringComparison.CurrentCultureIgnoreCase) == 0) {
+                    string.Compare(ext, ".html", StringComparison.CurrentCultureIgnoreCase) == 0) {
                     Process.Start(uri)?.Dispose();
                 }
             } else {
