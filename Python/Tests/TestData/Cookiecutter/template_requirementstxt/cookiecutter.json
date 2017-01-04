@@ -4,7 +4,7 @@
   "_visual_studio_post_cmds": [
     {
       "name": "Python.ProcessRequirementsTxt",
-      "args": "\"{{cookiecutter._output_folder_path}}\\reqs.txt\""
+      "args": "\"{{cookiecutter._output_folder_path}}\\requirements.txt\""
     }
   ]
 }
