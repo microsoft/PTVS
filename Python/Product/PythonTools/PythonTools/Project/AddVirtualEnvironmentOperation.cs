@@ -29,6 +29,7 @@ namespace Microsoft.PythonTools.Project {
         private readonly bool _create;
         private readonly bool _useVEnv;
         private readonly bool _installRequirements;
+        private readonly string _requirementsPath;
         private readonly Redirector _output;
         
         public AddVirtualEnvironmentOperation(
@@ -38,6 +39,7 @@ namespace Microsoft.PythonTools.Project {
             bool create,
             bool useVEnv,
             bool installRequirements,
+            string requirementsPath,
             Redirector output = null
         ) {
             _project = project;
@@ -46,6 +48,7 @@ namespace Microsoft.PythonTools.Project {
             _create = create;
             _useVEnv = useVEnv;
             _installRequirements = installRequirements;
+            _requirementsPath = requirementsPath;
             _output = output;
         }
 
@@ -84,7 +87,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var txt = PathUtils.GetAbsoluteFilePath(_project.ProjectHome, "requirements.txt");
+            var txt = _requirementsPath;
             if (!_installRequirements || !File.Exists(txt)) {
                 return;
             }

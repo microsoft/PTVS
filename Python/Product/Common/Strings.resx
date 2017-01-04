@@ -624,6 +624,9 @@ We recommend installing the latest version of Microsoft Azure Tools for Visual S
     <value>&amp;Continue
 Some manual steps will be required to configure your project.</value>
   </data>
+  <data name="CurrentInterpreterDescription" xml:space="preserve">
+    <value>your current environment</value>
+  </data>
   <data name="DefaultInterpreterDescription" xml:space="preserve">
     <value>your default environment</value>
     <comment>Used with InstallRequirementsIntoGlobalEnv if no description can be obtained from the project.</comment>
@@ -646,6 +649,10 @@ You will need to restart Visual Studio after installation.</value>
   </data>
   <data name="InstallRequirementsHidePackages" xml:space="preserve">
     <value>Hide required &amp;packages</value>
+  </data>
+  <data name="InstallRequirementsIntoCurrentEnv" xml:space="preserve">
+    <value>&amp;Install into {0}</value>
+    <comment>{0} is the localized (and/or user-provided) title of the destination environment</comment>
   </data>
   <data name="InstallRequirementsIntoGlobalEnv" xml:space="preserve">
     <value>&amp;Install into {0}</value>
