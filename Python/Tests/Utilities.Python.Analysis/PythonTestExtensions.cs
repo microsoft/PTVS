@@ -22,6 +22,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using System.Threading.Tasks;
+using System;
 
 namespace TestUtilities.Python {
     public static class PythonTestExtensions {
