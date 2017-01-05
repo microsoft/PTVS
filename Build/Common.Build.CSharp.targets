@@ -24,6 +24,7 @@
     <PropertyGroup>
       <AssemblySearchPaths>
         $(BuildRoot)Python\References\Dev$(VSTarget);
+        $(BuildRoot)Python\References\Common;
         $(AssemblySearchPaths);
         $(DevEnvDir);
         $(DevEnvDir)CommonExtensions\Microsoft\Editor;
