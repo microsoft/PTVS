@@ -105,7 +105,7 @@ namespace PythonToolsMockTests {
             using (var vs = sln.ToMockVs())
             using (var analyzerChanged = new AutoResetEvent(false)) {
                 var project = vs.GetProject("HelloWorld").GetPythonProject();
-                project.ProjectAnalyzerChanged += (s, e) => analyzerChanged.Set();
+                project.ProjectAnalyzerChanged += (s, e) => analyzerChanged.SetIfNotDisposed();
 
                 var uiThread = (UIThreadBase)project.GetService(typeof(UIThreadBase));
                 var interpreters = ((IComponentModel)project.GetService(typeof(SComponentModel)))
