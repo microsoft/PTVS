@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.ProjectWizards {
                 object inObj = (object)txt, outObj = null;
                 project.DTE.Commands.Raise(
                     GuidList.guidPythonToolsCmdSet.ToString("B"),
-                    (int)PkgCmdIDList.cmdidProcessRequirementsTxt,
+                    (int)PkgCmdIDList.cmdidInstallProjectRequirements,
                     ref inObj,
                     ref outObj
                 );
