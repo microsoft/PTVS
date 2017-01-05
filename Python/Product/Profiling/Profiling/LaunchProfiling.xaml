@@ -17,6 +17,20 @@
     ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/SharedProject/Wpf/Controls.xaml" />
+
+<!--
+	<Style TargetType="CheckBox">
+	   <Style.Triggers>
+	      <DataTrigger Binding="{Binding IsVTuneAvailable}" Value="True">
+	        <Setter Property="IsEnabled" Value="True" />
+	      </DataTrigger>
+      	      <DataTrigger Binding="{Binding IsVTuneAvailable}" Value="False">
+      	        <Setter Property="IsEnabled" Value ="False" />
+	      </DataTrigger>
+	   </Style.Triggers>
+	</Style>
+	-->
+
     </Window.Resources>
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="12">
         <Grid.RowDefinitions>

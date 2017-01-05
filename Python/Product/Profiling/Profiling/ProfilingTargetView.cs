@@ -30,7 +30,7 @@ namespace Microsoft.PythonTools.Profiling {
         private ReadOnlyCollection<ProjectTargetView> _availableProjects;
         
         private ProjectTargetView _project;
-        private bool _isProjectSelected, _isStandaloneSelected, _useVTune;
+        private bool _isProjectSelected, _isStandaloneSelected, _isVTuneAvailable, _useVTune;
         private StandaloneTargetView _standalone;
         private readonly string _startText;
 
@@ -55,6 +55,7 @@ namespace Microsoft.PythonTools.Profiling {
                 availableProjects.Add(new ProjectTargetView((IVsHierarchy)project));
             }
             _availableProjects = new ReadOnlyCollection<ProjectTargetView>(availableProjects);
+	    _isVTuneAvailable = true;
 
             _project = null;
             _standalone = new StandaloneTargetView(serviceProvider);
@@ -152,6 +153,15 @@ namespace Microsoft.PythonTools.Profiling {
                 }
             }
         }
+
+        /// <summary>
+        /// True if a project is the currently selected target; otherwise, false.
+        /// </summary>
+        public bool IsVTuneAvailable {
+            get {
+                return _isVTuneAvailable;
+            }
+	}
 
         /// <summary>
         /// True if a project is the currently selected target; otherwise, false.
