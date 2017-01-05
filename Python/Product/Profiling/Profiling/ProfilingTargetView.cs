@@ -288,7 +288,7 @@ namespace Microsoft.PythonTools.Profiling {
 
 	private static bool CheckForVTune() {
 	    // FIXME: Check the registry instead, as VTune might've been installed elsewhere
-	    return File.Exists("C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017");
+	    return Directory.Exists("C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017");
 	}
     }
 }
