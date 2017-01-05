@@ -83,12 +83,12 @@ namespace Microsoft.CookiecutterTools.Model {
             await WaitForOutput(_envInterpreterPath, output);
         }
 
-        public async Task<ContextItem[]> LoadContextAsync(string localTemplateFolder, string userConfigFilePath) {
+        public async Task<TemplateContext> LoadUnrenderedContextAsync(string localTemplateFolder, string userConfigFilePath) {
             if (localTemplateFolder == null) {
                 throw new ArgumentNullException(nameof(localTemplateFolder));
             }
 
-            var items = new List<ContextItem>();
+            var unrenderedContext = new TemplateContext();
 
             var result = await RunGenerateContextScript(_redirector, _envInterpreterPath, localTemplateFolder, userConfigFilePath);
             var contextJson = string.Join(Environment.NewLine, result.StandardOutputLines);
@@ -103,31 +103,33 @@ namespace Microsoft.CookiecutterTools.Model {
                         if (prop.Value.Type == JTokenType.String ||
                             prop.Value.Type == JTokenType.Integer ||
                             prop.Value.Type == JTokenType.Float) {
-                            items.Add(new ContextItem(prop.Name, Selectors.String, prop.Value.ToString()));
+                            unrenderedContext.Items.Add(new ContextItem(prop.Name, Selectors.String, prop.Value.ToString()));
                         } else if (prop.Value.Type == JTokenType.Array) {
                             var elements = new List<string>();
                             JArray ar = prop.Value as JArray;
                             foreach (JToken element in ar) {
                                 elements.Add(element.ToString());
                             }
-                            items.Add(new ContextItem(prop.Name, Selectors.List, elements[0], elements.ToArray()));
+                            unrenderedContext.Items.Add(new ContextItem(prop.Name, Selectors.List, elements[0], elements.ToArray()));
                         } else {
                             throw new InvalidOperationException(string.Format("Unsupported json element type in context file for property '{0}'.", prop.Name));
                         }
                     } else if (prop.Name == "_visual_studio") {
                         vsExtrasProp = prop;
+                    } else if (prop.Name == "_visual_studio_post_cmds") {
+                        ReadCommands(unrenderedContext, prop);
                     }
                 }
 
                 if (vsExtrasProp != null) {
-                    LoadVisualStudioSpecificContext(items, vsExtrasProp);
+                    LoadVisualStudioSpecificContext(unrenderedContext.Items, vsExtrasProp);
                 }
             }
 
-            return items.ToArray();
+            return unrenderedContext;
         }
 
-        public async Task<RenderedContext> LoadRenderedContextAsync(string localTemplateFolder, string userConfigFilePath, string contextPath, string outputFolderPath) {
+        public async Task<TemplateContext> LoadRenderedContextAsync(string localTemplateFolder, string userConfigFilePath, string contextPath, string outputFolderPath) {
             if (localTemplateFolder == null) {
                 throw new ArgumentNullException(nameof(localTemplateFolder));
             }
@@ -140,7 +142,7 @@ namespace Microsoft.CookiecutterTools.Model {
                 throw new ArgumentNullException(nameof(outputFolderPath));
             }
 
-            var renderedContext = new RenderedContext();
+            var renderedContext = new TemplateContext();
 
             var result = await RunRenderContextScript(_redirector, _envInterpreterPath, localTemplateFolder, userConfigFilePath, outputFolderPath, contextPath);
             var contextJson = string.Join(Environment.NewLine, result.StandardOutputLines);
@@ -198,7 +200,7 @@ namespace Microsoft.CookiecutterTools.Model {
             return renderedContext;
         }
 
-        private void ReadCommands(RenderedContext renderedContext, JProperty prop) {
+        private void ReadCommands(TemplateContext renderedContext, JProperty prop) {
             if (prop.Value.Type != JTokenType.Array) {
                 WrongJsonType("_visual_studio_post_cmds", JTokenType.Array, prop.Type);
                 return;

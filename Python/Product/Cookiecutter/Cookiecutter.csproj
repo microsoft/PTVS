@@ -153,7 +153,7 @@
     <Compile Include="Model\GitClientProvider.cs" />
     <Compile Include="Model\Selectors.cs" />
     <Compile Include="Model\ILocalTemplateSource.cs" />
-    <Compile Include="Model\RenderedContext.cs" />
+    <Compile Include="Model\TemplateContext.cs" />
     <Compile Include="Model\DteCommand.cs" />
     <Compile Include="View\LoadingPage.xaml.cs">
       <DependentUpon>LoadingPage.xaml</DependentUpon>

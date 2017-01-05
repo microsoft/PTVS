@@ -60,6 +60,8 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private bool _fixedOutputFolder;
         private ProjectLocation _targetProjectLocation;
         private DteCommand[] _postCommands;
+        private bool _hasPostCommands;
+        private bool _shouldExecutePostCommands;
 
         private OperationStatus _installingStatus;
         private OperationStatus _cloningStatus;
@@ -316,6 +318,32 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 if (value != _fixedOutputFolder) {
                     _fixedOutputFolder = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FixedOutputFolder)));
+                }
+            }
+        }
+
+        public bool HasPostCommands {
+            get {
+                return _hasPostCommands;
+            }
+
+            set {
+                if (value != _hasPostCommands) {
+                    _hasPostCommands = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasPostCommands)));
+                }
+            }
+        }
+
+        public bool ShouldExecutePostCommands {
+            get {
+                return _shouldExecutePostCommands;
+            }
+
+            set {
+                if (value != _shouldExecutePostCommands) {
+                    _shouldExecutePostCommands = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShouldExecutePostCommands)));
                 }
             }
         }
@@ -827,7 +855,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         }
 
         private void RunPostCommands() {
-            if (_postCommands == null) {
+            if (_postCommands == null || !ShouldExecutePostCommands) {
                 return;
             }
 
@@ -838,7 +866,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
         public void OpenFolderInExplorer(string path) {
             try {
-                //_openFolder(path);
                 RunOpenInSolutionExplorerCommands(path);
                 RunPostCommands();
 
@@ -969,12 +996,15 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 _outputWindow.ShowAndActivate();
                 _outputWindow.WriteLine(Strings.LoadingTemplateStarted.FormatUI(selection.DisplayName));
 
-                var result = await _cutterClient.LoadContextAsync(selection.ClonedPath, UserConfigFilePath);
+                var unrenderedContext = await _cutterClient.LoadUnrenderedContextAsync(selection.ClonedPath, UserConfigFilePath);
 
                 ContextItems.Clear();
-                foreach (var item in result.Where(it => !it.Name.StartsWith("_", StringComparison.InvariantCulture))) {
+                foreach (var item in unrenderedContext.Items.Where(it => !it.Name.StartsWith("_", StringComparison.InvariantCulture))) {
                     ContextItems.Add(new ContextItemViewModel(item.Name, item.Selector, item.Label, item.Description, item.Url, item.DefaultValue, item.Values));
                 }
+
+                HasPostCommands = unrenderedContext.Commands.Count > 0;
+                ShouldExecutePostCommands = HasPostCommands;
 
                 LoadingStatus = OperationStatus.Succeeded;
 
