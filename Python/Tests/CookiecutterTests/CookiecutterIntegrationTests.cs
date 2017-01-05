@@ -44,6 +44,7 @@ namespace CookiecutterTests {
 
         private static string NonExistingLocalTemplatePath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "notemplate");
         private static string TestLocalTemplatePath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "template");
+        private static string TestLocalTemplateOpenTxtPath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "template_opentxt");
         private static string TestInstalledTemplateFolderPath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "installed");
         private static string TestUserConfigFilePath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "userconfig.yaml");
         private static string TestFeedPath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "feed.txt");
@@ -59,6 +60,7 @@ namespace CookiecutterTests {
         private ITemplateSource _feedTemplateSource;
         private MockProjectSystemClient _projectSystemClient;
         private string _openedFolder;
+        private string _openedFile;
 
         private string DefaultBasePath => ((CookiecutterClient)_cutterClient)?.DefaultBasePath;
 
@@ -121,6 +123,8 @@ namespace CookiecutterTests {
         private void ExecuteCommand(string name, string args) {
             if (name == "File.OpenFolder") {
                 _openedFolder = args.Trim('"');
+            } else if (name == "File.OpenFile") {
+                _openedFile = args.Trim('"');
             }
         }
 
@@ -234,21 +238,7 @@ namespace CookiecutterTests {
         public async Task CreateFromLocalTemplate() {
             await EnsureCookiecutterInstalledAsync();
 
-            _vm.SearchTerm = TestLocalTemplatePath;
-            await _vm.SearchAsync();
-
-            var template = _vm.Custom.Templates[0] as TemplateViewModel;
-            await _vm.SelectTemplateAsync(template);
-
-            Assert.IsNull(_vm.SelectedImage);
-            Assert.IsTrue(string.IsNullOrEmpty(_vm.SelectedDescription));
-
-            await _vm.LoadTemplateAsync();
-
-            // Local template doesn't need to be cloned
-            Assert.AreEqual(OperationStatus.NotStarted, _vm.CloningStatus);
-
-            PrintContextItems(_vm.ContextItems);
+            await LoadLocalTemplate(TestLocalTemplatePath);
             CollectionAssert.AreEqual(LocalTemplateWithUserConfigContextItems, _vm.ContextItems, new ContextItemViewModelComparer());
 
             _vm.ContextItems.Single(item => item.Name == "full_name").Val = "Integration Test User";
@@ -269,6 +259,46 @@ namespace CookiecutterTests {
             } finally {
                 FileUtils.DeleteDirectory(targetPath);
             }
+        }
+
+        [TestMethod]
+        public async Task CreateFromLocalTemplateWithCommand() {
+            await EnsureCookiecutterInstalledAsync();
+
+            await LoadLocalTemplate(TestLocalTemplateOpenTxtPath);
+            Assert.AreEqual(true, _vm.HasPostCommands);
+            Assert.AreEqual(true, _vm.ShouldExecutePostCommands);
+
+            var targetPath = _vm.OutputFolderPath;
+            try {
+                await _vm.CreateFilesAsync();
+                _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
+            } finally {
+                FileUtils.DeleteDirectory(targetPath);
+            }
+
+            Assert.AreEqual(Path.Combine(targetPath, "readme.txt"), _openedFile);
+        }
+
+        [TestMethod]
+        public async Task CreateFromLocalTemplateWithCommandSkipped() {
+            await EnsureCookiecutterInstalledAsync();
+
+            await LoadLocalTemplate(TestLocalTemplateOpenTxtPath);
+            Assert.AreEqual(true, _vm.HasPostCommands);
+            Assert.AreEqual(true, _vm.ShouldExecutePostCommands);
+
+            _vm.ShouldExecutePostCommands = false;
+
+            var targetPath = _vm.OutputFolderPath;
+            try {
+                await _vm.CreateFilesAsync();
+                _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
+            } finally {
+                FileUtils.DeleteDirectory(targetPath);
+            }
+
+            Assert.AreEqual(null, _openedFile);
         }
 
         [TestMethod]
@@ -476,6 +506,24 @@ namespace CookiecutterTests {
             // After cloning the same template multiple times, make sure it only appears once in the installed section
             var installed = _vm.Installed.Templates.OfType<TemplateViewModel>().Where(t => t.DisplayName == OnlineTemplateRepoName).ToArray();
             Assert.AreEqual(1, installed.Length);
+        }
+
+        private async Task LoadLocalTemplate(string templatePath) {
+            _vm.SearchTerm = templatePath;
+            await _vm.SearchAsync();
+
+            var template = _vm.Custom.Templates[0] as TemplateViewModel;
+            await _vm.SelectTemplateAsync(template);
+
+            Assert.IsNull(_vm.SelectedImage);
+            Assert.IsTrue(string.IsNullOrEmpty(_vm.SelectedDescription));
+
+            await _vm.LoadTemplateAsync();
+
+            // Local template doesn't need to be cloned
+            Assert.AreEqual(OperationStatus.NotStarted, _vm.CloningStatus);
+
+            PrintContextItems(_vm.ContextItems);
         }
 
         private void VerifyLocalTemplateReport(string fullNameOverride = null, string licenseOverride = null) {
