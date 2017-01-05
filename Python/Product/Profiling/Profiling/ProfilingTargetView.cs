@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -55,7 +56,7 @@ namespace Microsoft.PythonTools.Profiling {
                 availableProjects.Add(new ProjectTargetView((IVsHierarchy)project));
             }
             _availableProjects = new ReadOnlyCollection<ProjectTargetView>(availableProjects);
-	    _isVTuneAvailable = true;
+	    _isVTuneAvailable = CheckForVTune();
 
             _project = null;
             _standalone = new StandaloneTargetView(serviceProvider);
@@ -284,6 +285,11 @@ namespace Microsoft.PythonTools.Profiling {
         /// Raised when the value of a property changes.
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
+
+	private static bool CheckForVTune() {
+	    // FIXME: Check the registry instead, as VTune might've been installed elsewhere
+	    return File.Exists("C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017");
+	}
     }
 }
  

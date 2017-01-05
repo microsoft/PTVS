@@ -17,20 +17,6 @@
     ResizeMode="CanResizeWithGrip">
     <Window.Resources>
         <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools;component/SharedProject/Wpf/Controls.xaml" />
-
-<!--
-	<Style TargetType="CheckBox">
-	   <Style.Triggers>
-	      <DataTrigger Binding="{Binding IsVTuneAvailable}" Value="True">
-	        <Setter Property="IsEnabled" Value="True" />
-	      </DataTrigger>
-      	      <DataTrigger Binding="{Binding IsVTuneAvailable}" Value="False">
-      	        <Setter Property="IsEnabled" Value ="False" />
-	      </DataTrigger>
-	   </Style.Triggers>
-	</Style>
-	-->
-
     </Window.Resources>
     <Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="12">
         <Grid.RowDefinitions>
@@ -149,7 +135,9 @@
             <CheckBox Grid.Row="1" Margin="12 12 12 4"
              Content="_VTune Mixed Mode Profiling"
              AutomationProperties.AutomationId="VTuneProfile"
-             IsChecked="{Binding UseVTune}" />
+             IsChecked="{Binding UseVTune}"
+	     IsEnabled="{Binding IsVTuneAvailable}"
+	     />
         </Grid>
         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Bottom">
             <Button IsDefault="True" Click="OkClick" IsEnabled="{Binding IsValid}"
