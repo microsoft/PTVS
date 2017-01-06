@@ -318,7 +318,7 @@ namespace Microsoft.CookiecutterTools.Model {
             // "C:\My Folder\"
             // C:\MyFolder\MyFile.txt /e:"Source Code (text) Editor"
             //
-            // Examples of invalid arguments:
+            // Examples of invalid results:
             // C:\My Folder
             // C:\MyFolder\MyFile.txt "/e:Source Code (text) Editor"
             // C:\MyFolder\MyFile.txt /e: "Source Code (text) Editor"
