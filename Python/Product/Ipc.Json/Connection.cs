@@ -109,18 +109,21 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// Send a fire and forget event to the other side.
         /// </summary>
         /// <param name="eventValue">The event value to be sent.</param>
-        public Task SendEventAsync(Event eventValue) {
+        public async Task SendEventAsync(Event eventValue) {
             int seq = Interlocked.Increment(ref _seq);
             Debug.WriteLine("Sending event {0}", seq);
-            return SendMessage(
-                new EventMessage() {
-                    @event = eventValue.name,
-                    body = eventValue,
-                    seq = seq,
-                    type = PacketType.Event
-                },
-                CancellationToken.None
-            );
+            try {
+                await SendMessage(
+                    new EventMessage() {
+                        @event = eventValue.name,
+                        body = eventValue,
+                        seq = seq,
+                        type = PacketType.Event
+                    },
+                    CancellationToken.None
+                );
+            } catch (ObjectDisposedException) {
+            }
         }
 
         /// <summary>
