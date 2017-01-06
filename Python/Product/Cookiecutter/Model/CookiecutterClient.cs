@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.VisualStudio;
@@ -170,6 +171,14 @@ namespace Microsoft.CookiecutterTools.Model {
                         // List of commands to run after the folder is opened,
                         // or the files are added to the project.
                         // name and args are the values passed to DTE.ExecuteCommand
+                        // args type:
+                        //   - it should be of type array if the command is passed multiple arguments
+                        //   - it can be of type string for the common single argument scenario,
+                        //     this is equivalent to an array of a single element
+                        // args value passed to DTE.ExecuteCommand will
+                        // be concatenation of all values in the array, each one quoted as necessary
+                        // (for example when a value contains a space char)
+                        //
                         // cookiecutter._output_folder_path can be used to files inside generated project
                         //
                         // Examples:
@@ -184,13 +193,24 @@ namespace Microsoft.CookiecutterTools.Model {
                         // },
                         // {
                         //   "name": "View.WebBrowser",
-                        //   "args": "\"{{cookiecutter._output_folder_path}}\\readme.html\""
+                        //   "args": "{{cookiecutter._output_folder_path}}\\readme.html"
                         // },
                         // {
                         //   "name": "File.OpenFile",
-                        //   "args": "\"{{cookiecutter._output_folder_path}}\\readme.txt\""
+                        //   "args": [ "{{cookiecutter._output_folder_path}}\\readme.txt" ]
                         // }
                         // ]
+                        //
+                        // Special accommodations for switch arguments:
+                        // If the switch takes a value, the switch/value pair should be split in 2 array elements
+                        // so the value can be properly quoted independently of the switch, whose name isn't quoted
+                        // since space is not allowed in the name. The switch name should end with a colon.
+                        //
+                        // {
+                        //   "name": "File.OpenFile",
+                        //   "args": ["c:\\my folder\\my file.txt", "/e:", "Source Code (text) Editor"]
+                        // }
+                        //
 
                         ReadCommands(renderedContext, prop);
                     }
@@ -239,9 +259,13 @@ namespace Microsoft.CookiecutterTools.Model {
             var argsToken = itemObj.SelectToken("args");
             if (argsToken != null) {
                 if (argsToken.Type == JTokenType.String) {
-                    args = argsToken.Value<string>();
+                    var argValues = new[] { argsToken.Value<string>() };
+                    args = BuildArguments(argValues);
+                } else if (argsToken.Type == JTokenType.Array) {
+                    var argValues = ((JArray)argsToken).Values().Where(t => t.Type == JTokenType.String).Select(t => t.Value<string>());
+                    args = BuildArguments(argValues);
                 } else {
-                    WrongJsonType("args", JTokenType.String, argsToken.Type);
+                    WrongJsonType("args", JTokenType.Array, argsToken.Type);
                     return null;
                 }
             }
@@ -287,6 +311,36 @@ namespace Microsoft.CookiecutterTools.Model {
                 candidate = PathUtils.GetAbsoluteDirectoryPath(baseName, "{0}{1}".FormatInvariant(shortName, ++counter));
             }
             return Task.FromResult(candidate);
+        }
+
+        private static string BuildArguments(IEnumerable<string> values) {
+            // Examples of valid results:
+            // "C:\My Folder\"
+            // C:\MyFolder\MyFile.txt /e:"Source Code (text) Editor"
+            //
+            // Examples of invalid results:
+            // C:\My Folder
+            // C:\MyFolder\MyFile.txt "/e:Source Code (text) Editor"
+            // C:\MyFolder\MyFile.txt /e: "Source Code (text) Editor"
+            // C:\MyFolder\MyFile.txt /e:Source Code (text) Editor
+            StringBuilder args = new StringBuilder();
+            bool insertSpace = false;
+            foreach (var val in values) {
+                if (insertSpace) {
+                    args.Append(" ");
+                }
+
+                if (val.EndsWith(":")) {
+                    args.Append(val);
+                    // no space after a switch that takes a value
+                    insertSpace = false;
+                } else {
+                    args.Append(ProcessOutput.QuoteSingleArgument(val));
+                    insertSpace = true;
+                }
+            }
+
+            return args.ToString();
         }
 
         private void LoadVisualStudioSpecificContext(List<ContextItem> items, JProperty vsExtrasProp) {

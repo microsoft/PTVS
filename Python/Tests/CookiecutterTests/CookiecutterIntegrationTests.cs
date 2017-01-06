@@ -45,6 +45,7 @@ namespace CookiecutterTests {
         private static string NonExistingLocalTemplatePath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "notemplate");
         private static string TestLocalTemplatePath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "template");
         private static string TestLocalTemplateOpenTxtPath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "template_opentxt");
+        private static string TestLocalTemplateOpenTxtWithEditorPath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "template_opentxtwitheditor");
         private static string TestInstalledTemplateFolderPath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "installed");
         private static string TestUserConfigFilePath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "userconfig.yaml");
         private static string TestFeedPath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "feed.txt");
@@ -60,7 +61,7 @@ namespace CookiecutterTests {
         private ITemplateSource _feedTemplateSource;
         private MockProjectSystemClient _projectSystemClient;
         private string _openedFolder;
-        private string _openedFile;
+        private string _openedFileArgs;
 
         private string DefaultBasePath => ((CookiecutterClient)_cutterClient)?.DefaultBasePath;
 
@@ -124,7 +125,7 @@ namespace CookiecutterTests {
             if (name == "File.OpenFolder") {
                 _openedFolder = args.Trim('"');
             } else if (name == "File.OpenFile") {
-                _openedFile = args.Trim('"');
+                _openedFileArgs = args;
             }
         }
 
@@ -277,7 +278,28 @@ namespace CookiecutterTests {
                 FileUtils.DeleteDirectory(targetPath);
             }
 
-            Assert.AreEqual(Path.Combine(targetPath, "readme.txt"), _openedFile);
+            var expectedArgs = string.Format("\"{0}\"", Path.Combine(targetPath, "read me.txt"));
+            Assert.AreEqual(expectedArgs, _openedFileArgs);
+        }
+
+        [TestMethod]
+        public async Task CreateFromLocalTemplateWithCommandSwitchValue() {
+            await EnsureCookiecutterInstalledAsync();
+
+            await LoadLocalTemplate(TestLocalTemplateOpenTxtWithEditorPath);
+            Assert.AreEqual(true, _vm.HasPostCommands);
+            Assert.AreEqual(true, _vm.ShouldExecutePostCommands);
+
+            var targetPath = _vm.OutputFolderPath;
+            try {
+                await _vm.CreateFilesAsync();
+                _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
+            } finally {
+                FileUtils.DeleteDirectory(targetPath);
+            }
+
+            var expectedArgs = string.Format("\"{0}\" /e:\"Source Code (text) Editor\"", Path.Combine(targetPath, "read me.txt"));
+            Assert.AreEqual(expectedArgs, _openedFileArgs);
         }
 
         [TestMethod]
@@ -298,7 +320,7 @@ namespace CookiecutterTests {
                 FileUtils.DeleteDirectory(targetPath);
             }
 
-            Assert.AreEqual(null, _openedFile);
+            Assert.AreEqual(null, _openedFileArgs);
         }
 
         [TestMethod]
