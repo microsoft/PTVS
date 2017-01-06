@@ -99,7 +99,11 @@ namespace Microsoft.CookiecutterTools.View {
             _searchPage.SelectedTemplateChanged += SearchPage_SelectedTemplateChanged;
         }
 
-        public async Task InitializeAsync(bool checkForUpdates) {
+        public async Task InitializeAsync(bool checkForUpdates, ProjectLocation location) {
+            if (location != null) {
+                SetProjectLocation(location);
+            }
+
             await ViewModel.SearchAsync();
 
             if (checkForUpdates) {
@@ -255,10 +259,14 @@ namespace Microsoft.CookiecutterTools.View {
             Home();
 
             if (location != null) {
-                ViewModel.OutputFolderPath = location.FolderPath;
-                ViewModel.FixedOutputFolder = true;
-                ViewModel.TargetProjectLocation = location;
+                SetProjectLocation(location);
             }
+        }
+
+        private void SetProjectLocation(ProjectLocation location) {
+            ViewModel.OutputFolderPath = location.FolderPath;
+            ViewModel.FixedOutputFolder = true;
+            ViewModel.TargetProjectLocation = location;
         }
 
         private void UserControl_MouseRightButtonUp(object sender, MouseButtonEventArgs e) {

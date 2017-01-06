@@ -45,6 +45,7 @@ namespace Microsoft.CookiecutterTools {
         private IVsInfoBarUIElement _infoBar;
         private IVsInfoBar _infoBarModel;
         private uint _infoBarAdviseCookie;
+        private ProjectLocation _pendingNewSessionProjectLocation;
 
         private readonly object _commandsLock = new object();
         private readonly Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
@@ -141,7 +142,11 @@ namespace Microsoft.CookiecutterTools {
                 UpdateCommandUI
             );
             _cookiecutterPage.ContextMenuRequested += OnContextMenuRequested;
-            _cookiecutterPage.InitializeAsync(CookiecutterPackage.Instance.CheckForTemplateUpdate).HandleAllExceptions(this, GetType()).DoNotWait();
+
+            var projectLocation = _pendingNewSessionProjectLocation;
+            _pendingNewSessionProjectLocation = null;
+
+            _cookiecutterPage.InitializeAsync(CookiecutterPackage.Instance.CheckForTemplateUpdate, projectLocation).HandleAllExceptions(this, GetType()).DoNotWait();
 
             ((Frame)Content).Content = _cookiecutterPage;
         }
@@ -297,7 +302,17 @@ namespace Microsoft.CookiecutterTools {
         }
 
         internal void NewSession(ProjectLocation location) {
-            _cookiecutterPage?.NewSession(location);
+            if (_cookiecutterPage != null) {
+                _cookiecutterPage.NewSession(location);
+            } else {
+                // This method may be called immediately after showing the tool
+                // window for the first time, which triggers a delayed initialization
+                // of the cookiecutter page on idle, causing the page to be temporarily null.
+                // Store the desired location so that when the page is initialized,
+                // it sets the project location. Doing it in one step in init ensures only
+                // one automatic search is triggered.
+                _pendingNewSessionProjectLocation = location;
+            }
         }
 
         private void OnContextMenuRequested(object sender, PointEventArgs e) {
