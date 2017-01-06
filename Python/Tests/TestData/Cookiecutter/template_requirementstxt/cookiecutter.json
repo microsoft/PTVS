@@ -4,7 +4,7 @@
   "_visual_studio_post_cmds": [
     {
       "name": "Python.InstallProjectRequirements",
-      "args": "\"{{cookiecutter._output_folder_path}}\\requirements.txt\""
+      "args": "{{cookiecutter._output_folder_path}}\\requirements.txt"
     }
   ]
 }

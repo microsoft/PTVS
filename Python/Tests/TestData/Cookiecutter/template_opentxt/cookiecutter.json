@@ -4,7 +4,7 @@
   "_visual_studio_post_cmds": [
     {
       "name": "File.OpenFile",
-      "args": "\"{{cookiecutter._output_folder_path}}\\readme.txt\""
+      "args": "{{cookiecutter._output_folder_path}}\\read me.txt"
     }
   ]
 }

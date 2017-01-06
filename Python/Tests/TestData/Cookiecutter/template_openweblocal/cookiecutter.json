@@ -4,7 +4,7 @@
   "_visual_studio_post_cmds": [
     {
       "name": "View.WebBrowser",
-      "args": "\"{{cookiecutter._output_folder_path}}\\readme.html\""
+      "args": "{{cookiecutter._output_folder_path}}\\readme.html"
     }
   ]
 }
