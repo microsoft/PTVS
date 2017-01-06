@@ -52,7 +52,7 @@ namespace Microsoft.CookiecutterTools.View {
             InitializeComponent();
         }
 
-        public CookiecutterContainerPage(IServiceProvider provider, Redirector outputWindow, ICookiecutterTelemetry telemetry, IGitClient gitClient, Uri feedUrl, Action<string> openFolder, IProjectSystemClient projectSystemClient, Action updateCommandUI) {
+        public CookiecutterContainerPage(IServiceProvider provider, Redirector outputWindow, ICookiecutterTelemetry telemetry, IGitClient gitClient, Uri feedUrl, Action<string, string> executeCommand, IProjectSystemClient projectSystemClient, Action updateCommandUI) {
             _updateCommandUI = updateCommandUI;
 
             _checkForUpdatesTimer = new DispatcherTimer();
@@ -68,7 +68,7 @@ namespace Microsoft.CookiecutterTools.View {
                 new LocalTemplateSource(CookiecutterViewModel.DefaultInstalledFolderPath, gitClient),
                 new FeedTemplateSource(feedUrl),
                 new GitHubTemplateSource(gitHubClient),
-                openFolder,
+                executeCommand,
                 projectSystemClient
             );
 

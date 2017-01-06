@@ -137,7 +137,7 @@ namespace Microsoft.CookiecutterTools {
                 CookiecutterTelemetry.Current,
                 gitClient,
                 new Uri(feedUrl),
-                OpenGeneratedFolder,
+                ExecuteCommand,
                 projectSystemClient,
                 UpdateCommandUI
             );
@@ -214,21 +214,19 @@ namespace Microsoft.CookiecutterTools {
             _uiShell.UpdateCommandUI(0);
         }
 
-        private void OpenGeneratedFolder(string folderPath) {
-#if DEV15_OR_LATER
-            OpenInSolutionExplorer(folderPath);
-#else
-            OpenInWindowsExplorer(folderPath);
+        private void ExecuteCommand(string name, string args) {
+            try {
+                _dte.ExecuteCommand(name, args ?? string.Empty);
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+#if !DEV15_OR_LATER
+                if (name == "File.OpenFolder") {
+                    OpenInWindowsExplorer(args.Trim('"'));
+                    return;
+                }
 #endif
-        }
-
-        internal static Guid openFolderCommandGroupGuid = new Guid("CFB400F1-5C60-4F3C-856E-180D28DEF0B7");
-        internal const int OpenFolderCommandId = 260;
-        internal const string vsWindowKindSolutionExplorer = "{3AE79031-E1BC-11D0-8F78-00A0C9110057}";
-
-        private void OpenInSolutionExplorer(string folderPath) {
-            _uiShell.PostExecCommand(ref openFolderCommandGroupGuid, OpenFolderCommandId, 0, folderPath);
-            _dte.Windows.Item(vsWindowKindSolutionExplorer)?.Activate();
+                var outputWindow = OutputWindowRedirector.GetGeneral(this);
+                outputWindow.WriteErrorLine(ex.Message);
+            }
         }
 
         private void OpenInWindowsExplorer(string folderPath) {

@@ -406,6 +406,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to your current environment.
+        /// </summary>
+        public static string CurrentInterpreterDescription {
+            get {
+                return ResourceManager.GetString("CurrentInterpreterDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; command requires some packages that are not installed in your Python environment. Those packages need to be installed first before the command can be run..
         /// </summary>
         public static string CustomCommandPrerequisitesContent {
@@ -1190,6 +1199,15 @@ namespace Microsoft.PythonTools {
         public static string InstallRequirementsHidePackages {
             get {
                 return ResourceManager.GetString("InstallRequirementsHidePackages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Install into {0}.
+        /// </summary>
+        public static string InstallRequirementsIntoCurrentEnv {
+            get {
+                return ResourceManager.GetString("InstallRequirementsIntoCurrentEnv", resourceCulture);
             }
         }
         

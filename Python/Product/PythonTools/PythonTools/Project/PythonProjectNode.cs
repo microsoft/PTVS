@@ -1643,7 +1643,7 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                     case PythonConstants.AddExistingVirtualEnv:
                     case PythonConstants.AddVirtualEnv:
-                        ShowAddVirtualEnvironmentWithErrorHandling((int)cmdId == PythonConstants.AddExistingVirtualEnv);
+                        ShowAddVirtualEnvironmentWithErrorHandling((int)cmdId == PythonConstants.AddExistingVirtualEnv, Path.Combine(ProjectHome, "requirements.txt"));
                         return VSConstants.S_OK;
                     case PythonConstants.ViewAllEnvironments:
                         Site.ShowInterpreterList();
@@ -1654,6 +1654,9 @@ namespace Microsoft.PythonTools.Project {
                         return AddSearchPathZip();
                     case PythonConstants.AddPythonPathToSearchPathCommandId:
                         return AddPythonPathToSearchPath();
+                    case PythonConstants.ProcessRequirementsTxt:
+                        ProcessRequirementsTxt(vaIn, vaOut, cmdExecOpt);
+                        return VSConstants.S_OK;
                     default:
                         handled = false;
                         break;
@@ -1661,6 +1664,92 @@ namespace Microsoft.PythonTools.Project {
             }
 
             return base.ExecCommandIndependentOfSelection(cmdGroup, cmdId, cmdExecOpt, vaIn, vaOut, commandOrigin, out handled);
+        }
+
+        private string GetStringArgument(IntPtr variantIn) {
+            if (variantIn == IntPtr.Zero) {
+                return null;
+            }
+
+            var obj = Marshal.GetObjectForNativeVariant(variantIn);
+            return obj as string;
+        }
+
+        private void ProcessRequirementsTxt(IntPtr variantIn, IntPtr variantOut, uint commandExecOpt) {
+            var requirementsPath = GetStringArgument(variantIn) ?? "";
+            requirementsPath = requirementsPath.Trim('"');
+            if (!File.Exists(requirementsPath)) {
+                return;
+            }
+
+            var td = new TaskDialog(Site) {
+                Title = string.Format("{0} - {1}", GetProjectName(), Strings.ProductTitle),
+                MainInstruction = Strings.InstallRequirementsHeading,
+                Content = Strings.InstallRequirementsMessage,
+                EnableHyperlinks = true,
+                AllowCancellation = true,
+            };
+
+            var factory = GetInterpreterFactory();
+            var isGlobalEnv = string.IsNullOrEmpty(InterpreterRegistry.GetProperty(factory.Configuration.Id, "ProjectMoniker") as string);
+
+            // Install into a new virtual environment
+            TaskDialogButton venv = null;
+            if (isGlobalEnv) {
+                venv = new TaskDialogButton(
+                    Strings.InstallRequirementsIntoVirtualEnv,
+                    Strings.InstallRequirementsIntoVirtualEnvTip
+                );
+                td.Buttons.Add(venv);
+            }
+
+            // Install into the currently active environment
+            TaskDialogButton install = null;
+            if (factory.PackageManager != null) {
+                var description = factory.Configuration.Description ?? Strings.CurrentInterpreterDescription;
+                install = new TaskDialogButton(
+                    string.Format(Strings.InstallRequirementsIntoCurrentEnv, description),
+                    isGlobalEnv ? Strings.InstallRequirementsIntoGlobalEnvTip : Strings.InstallRequirementsIntoVirtualEnvTip
+                );
+                td.Buttons.Add(install);
+            }
+
+            if (install == null && venv == null) {
+                return;
+            }
+
+            // Do nothing
+            var goAway = new TaskDialogButton(Strings.InstallRequirementsNowhere);
+            td.Buttons.Add(goAway);
+
+            try {
+                td.ExpandedInformation = File.ReadAllText(requirementsPath);
+                td.CollapsedControlText = Strings.InstallRequirementsShowPackages;
+                td.ExpandedControlText = Strings.InstallRequirementsHidePackages;
+            } catch (IOException) {
+            } catch (NotSupportedException) {
+            } catch (UnauthorizedAccessException) {
+            }
+
+            var btn = td.ShowModal();
+
+            try {
+                if (btn == venv) {
+                    ShowAddVirtualEnvironmentWithErrorHandling(false, requirementsPath);
+                } else if (btn == install) {
+                    InstallRequirements(null, requirementsPath, factory);
+                }
+            } catch (Exception ex) {
+                if (ex.IsCriticalException()) {
+                    throw;
+                }
+                TaskDialog.ForException(
+                    Site,
+                    ex,
+                    Strings.InstallRequirementsFailed,
+                    Strings.IssueTrackerUrl
+                ).ShowModal();
+            }
         }
 
         private void GetSelectedInterpreterOrDefault(
@@ -1737,6 +1826,8 @@ namespace Microsoft.PythonTools.Project {
                         return "e,env,environment: p,package: a,admin";
                     case PythonConstants.GenerateRequirementsTxt:
                         return "e,env,environment:";
+                    case PythonConstants.ProcessRequirementsTxt:
+                        return "path";
                 }
             }
             return base.QueryCommandArguments(cmdGroup, cmdId, commandOrigin);
@@ -1974,9 +2065,16 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private int ExecInstallRequirementsTxt(Dictionary<string, string> args, IList<HierarchyNode> selectedNodes) {
+            var txt = PathUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt");
+
             InterpretersNode selectedInterpreter;
             IPythonInterpreterFactory selectedInterpreterFactory;
             GetSelectedInterpreterOrDefault(selectedNodes, args, out selectedInterpreter, out selectedInterpreterFactory);
+
+            return InstallRequirements(args, txt, selectedInterpreterFactory);
+        }
+
+        private int InstallRequirements(Dictionary<string, string> args, string requirementsPath, IPythonInterpreterFactory selectedInterpreterFactory) {
             if (selectedInterpreterFactory == null || selectedInterpreterFactory.PackageManager == null) {
                 if (Utilities.IsInAutomationFunction(Site)) {
                     return VSConstants.E_INVALIDARG;
@@ -1985,12 +2083,11 @@ namespace Microsoft.PythonTools.Project {
                 return VSConstants.S_OK;
             }
 
-            var txt = PathUtils.GetAbsoluteFilePath(ProjectHome, "requirements.txt");
-            var name = "-r " + ProcessOutput.QuoteSingleArgument(txt);
+            var name = "-r " + ProcessOutput.QuoteSingleArgument(requirementsPath);
             if (args != null && !args.ContainsKey("y")) {
                 if (!ShouldInstallRequirementsTxt(
                     selectedInterpreterFactory.Configuration.Description,
-                    txt,
+                    requirementsPath,
                     Site.GetPythonToolsService().GeneralOptions.ElevatePip
                 )) {
                     return VSConstants.S_OK;
@@ -2007,7 +2104,6 @@ namespace Microsoft.PythonTools.Project {
 
             return VSConstants.S_OK;
         }
-
 
         private bool ShouldInstallRequirementsTxt(
             string targetLabel,
@@ -2265,13 +2361,13 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        private async void ShowAddVirtualEnvironmentWithErrorHandling(bool browseForExisting) {
+        private async void ShowAddVirtualEnvironmentWithErrorHandling(bool browseForExisting, string requirementsPath) {
             var service = Site.GetComponentModel().GetService<IInterpreterRegistryService>();
             var statusBar = (IVsStatusbar)GetService(typeof(SVsStatusbar));
             object index = (short)0;
             statusBar.Animation(1, ref index);
             try {
-                await AddVirtualEnvironment.ShowDialog(this, service, browseForExisting);
+                await AddVirtualEnvironment.ShowDialog(this, service, requirementsPath, browseForExisting);
             } catch (Exception ex) {
                 if (ex.IsCriticalException()) {
                     throw;

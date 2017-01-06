@@ -19,8 +19,8 @@ using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Runtime.InteropServices;
-using Microsoft.CookiecutterTools.Commands;
 using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 using Microsoft.CookiecutterTools.Telemetry;
@@ -52,11 +52,13 @@ namespace Microsoft.CookiecutterTools {
     [ProvideOptionPage(typeof(CookiecutterOptionPage), "Cookiecutter", "General", 113, 114, true)]
     [ProvideProfileAttribute(typeof(CookiecutterOptionPage), "Cookiecutter", "General", 113, 114, isToolsOptionPage: true, DescriptionResourceID = 115)]
     [Guid(PackageGuids.guidCookiecutterPkgString)]
-    public sealed class CookiecutterPackage : Package {
+    public sealed class CookiecutterPackage : Package, IOleCommandTarget {
         internal static CookiecutterPackage Instance;
 
         private static readonly object _commandsLock = new object();
         private static readonly Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
+
+        private ProjectSystemClient _projectSystem;
 
         /// <summary>
         /// Default constructor of the package.
@@ -84,13 +86,9 @@ namespace Microsoft.CookiecutterTools {
 
             UIThread.EnsureService(this);
 
-            CookiecutterTelemetry.Initialize();
+            _projectSystem = new ProjectSystemClient(DTE);
 
-            RegisterCommands(new Command[] {
-                new CookiecutterExplorerCommand(),
-                new CreateFromCookiecutterCommand(),
-                new AddFromCookiecutterCommand(this),
-            }, PackageGuids.guidCookiecutterCmdSet);
+            CookiecutterTelemetry.Initialize();
         }
 
         protected override void Dispose(bool disposing) {
@@ -100,6 +98,81 @@ namespace Microsoft.CookiecutterTools {
         }
 
         #endregion
+
+        #region IOleCommandTarget
+
+        int IOleCommandTarget.Exec(ref Guid commandGroup, uint commandId, uint commandExecOpt, IntPtr variantIn, IntPtr variantOut) {
+            if (commandGroup != PackageGuids.guidCookiecutterCmdSet) {
+                return VSConstants.E_FAIL;
+            }
+
+            // Commands that support parameters cannot be implemented via IMenuCommandService
+            var hr = VSConstants.S_OK;
+            switch (commandId) {
+                case PackageIds.cmdidViewExternalWebBrowser:
+                    hr = ViewExternalBrowser(variantIn, variantOut, commandExecOpt);
+                    break;
+                case PackageIds.cmdidCookiecutterExplorer:
+                    ShowWindowPane(typeof(CookiecutterToolWindow), true);
+                    break;
+                case PackageIds.cmdidCreateFromCookiecutter:
+                    NewCookiecutterSession();
+                    break;
+                case PackageIds.cmdidAddFromCookiecutter:
+                    NewCookiecutterSession(_projectSystem.GetSelectedFolderProjectLocation());
+                    break;
+                default:
+                    Debug.Assert(false);
+                    break;
+            }
+
+            return hr;
+        }
+
+        int IOleCommandTarget.QueryStatus(ref Guid commandGroup, uint commandsCount, OLECMD[] commands, IntPtr pCmdText) {
+            if (commandGroup == PackageGuids.guidCookiecutterCmdSet && commandsCount == 1) {
+                switch (commands[0].cmdID) {
+                    case PackageIds.cmdidAddFromCookiecutter:
+                        var location = _projectSystem.GetSelectedFolderProjectLocation() != null ?
+                            (uint)(OLECMDF.OLECMDF_ENABLED | OLECMDF.OLECMDF_SUPPORTED) :
+                            0;
+                        break;
+                    default:
+                        commands[0].cmdf = 0;
+                        break;
+                }
+                return VSConstants.S_OK;
+            }
+            return VSConstants.E_FAIL;
+        }
+
+        #endregion 
+
+        private string GetStringArgument(IntPtr variantIn) {
+            if (variantIn == IntPtr.Zero) {
+                return null;
+            }
+
+            var obj = Marshal.GetObjectForNativeVariant(variantIn);
+            return obj as string;
+        }
+
+        /// <summary>
+        /// Used to determine if the shell is querying for the parameter list of our command.
+        /// </summary>
+        private static bool IsQueryParameterList(IntPtr variantIn, IntPtr variantOut, uint nCmdexecopt) {
+            ushort lo = (ushort)(nCmdexecopt & (uint)0xffff);
+            ushort hi = (ushort)(nCmdexecopt >> 16);
+            if (lo == (ushort)OLECMDEXECOPT.OLECMDEXECOPT_SHOWHELP) {
+                if (hi == VsMenus.VSCmdOptQueryParameterList) {
+                    if (variantOut != IntPtr.Zero) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
 
         public static T GetGlobalService<S, T>() where T : class {
             object service = Package.GetGlobalService(typeof(S));
@@ -148,22 +221,31 @@ namespace Microsoft.CookiecutterTools {
             pane.NewSession(location);
         }
 
-        internal void RegisterCommands(IEnumerable<Command> commands, Guid cmdSet) {
-            OleMenuCommandService mcs = GetService(typeof(IMenuCommandService)) as OleMenuCommandService;
-            if (null != mcs) {
-                lock (_commandsLock) {
-                    foreach (var command in commands) {
-                        var beforeQueryStatus = command.BeforeQueryStatus;
-                        CommandID toolwndCommandID = new CommandID(cmdSet, command.CommandId);
-                        OleMenuCommand menuToolWin = new OleMenuCommand(command.DoCommand, toolwndCommandID);
-                        if (beforeQueryStatus != null) {
-                            menuToolWin.BeforeQueryStatus += beforeQueryStatus;
-                        }
-                        mcs.AddCommand(menuToolWin);
-                        _commands[command] = menuToolWin;
+        private int ViewExternalBrowser(IntPtr variantIn, IntPtr variantOut, uint commandExecOpt) {
+            if (IsQueryParameterList(variantIn, variantOut, commandExecOpt)) {
+                Marshal.GetNativeVariantForObject("url", variantOut);
+                return VSConstants.S_OK;
+            }
+
+            var name = GetStringArgument(variantIn) ?? "";
+            var uri = name.Trim('"');
+
+            if (File.Exists(uri)) {
+                var ext = Path.GetExtension(uri);
+                if (string.Compare(ext, ".htm", StringComparison.CurrentCultureIgnoreCase) == 0 ||
+                    string.Compare(ext, ".html", StringComparison.CurrentCultureIgnoreCase) == 0) {
+                    Process.Start(uri)?.Dispose();
+                }
+            } else {
+                Uri u;
+                if (Uri.TryCreate(uri, UriKind.Absolute, out u)) {
+                    if (u.Scheme == Uri.UriSchemeHttp || u.Scheme == Uri.UriSchemeHttps) {
+                        Process.Start(uri)?.Dispose();
                     }
                 }
             }
+
+            return VSConstants.S_OK;
         }
 
         internal string RecommendedFeed {

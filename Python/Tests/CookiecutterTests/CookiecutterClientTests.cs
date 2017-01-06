@@ -104,27 +104,27 @@ namespace CookiecutterTests {
         public async Task LoadContextNoUserConfig() {
             await EnsureCookiecutterInstalledAsync();
 
-            var actual = await _client.LoadContextAsync(LocalTemplatePath, NoUserConfigFilePath);
+            var context = await _client.LoadUnrenderedContextAsync(LocalTemplatePath, NoUserConfigFilePath);
 
-            CollectionAssert.AreEqual(LocalTemplateNoUserConfigContextItems, actual, new ContextItemComparer());
+            CollectionAssert.AreEqual(LocalTemplateNoUserConfigContextItems, context.Items, new ContextItemComparer());
         }
 
         [TestMethod]
         public async Task LoadContextWithUserConfig() {
             await EnsureCookiecutterInstalledAsync();
 
-            var actual = await _client.LoadContextAsync(LocalTemplatePath, UserConfigFilePath);
+            var context = await _client.LoadUnrenderedContextAsync(LocalTemplatePath, UserConfigFilePath);
 
-            CollectionAssert.AreEqual(LocalTemplateWithUserConfigContextItems, actual, new ContextItemComparer());
+            CollectionAssert.AreEqual(LocalTemplateWithUserConfigContextItems, context.Items, new ContextItemComparer());
         }
 
         [TestMethod]
         public async Task LoadContextForVSNoUserConfig() {
             await EnsureCookiecutterInstalledAsync();
 
-            var actual = await _client.LoadContextAsync(LocalTemplateForVSPath, NoUserConfigFilePath);
+            var context = await _client.LoadUnrenderedContextAsync(LocalTemplateForVSPath, NoUserConfigFilePath);
 
-            CollectionAssert.AreEqual(LocalTemplateForVSNoUserConfigContextItems, actual, new ContextItemComparer());
+            CollectionAssert.AreEqual(LocalTemplateForVSNoUserConfigContextItems, context.Items, new ContextItemComparer());
         }
 
         [TestMethod]
@@ -201,14 +201,14 @@ namespace CookiecutterTests {
         }
 
         private async Task<Dictionary<string, string>> GenerateFromLocalTemplate(string userConfigFilePath) {
-            var context = await _client.LoadContextAsync(LocalTemplatePath, userConfigFilePath);
+            var context = await _client.LoadUnrenderedContextAsync(LocalTemplatePath, userConfigFilePath);
 
             var output = TestData.GetTempPath("Cookiecutter", true);
             var outputProjectFolder = Path.Combine(output, "project");
             var contextFilePath = Path.Combine(output, "context.json");
 
             var vm = new CookiecutterViewModel();
-            foreach (var item in context) {
+            foreach (var item in context.Items) {
                 vm.ContextItems.Add(new ContextItemViewModel(item.Name, item.Selector, item.Label, item.Description, item.Url, item.DefaultValue, item.Values));
             }
 

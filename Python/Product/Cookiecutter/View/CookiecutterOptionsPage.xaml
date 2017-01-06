@@ -216,6 +216,11 @@
                 </TextBlock>
             </StackPanel>
             <Label FontWeight="Bold">Options</Label>
+            <CheckBox Margin="8 4 4 4"
+                      IsChecked="{Binding ShouldExecutePostCommands}"
+                      Visibility="{Binding HasPostCommands, Converter={StaticResource BoolToVisibleOrCollapsed}}">
+                Run additional tasks on completion
+            </CheckBox>
         </StackPanel>
         <ScrollViewer Grid.Row="1" Margin="4">
             <ItemsControl ItemsSource="{Binding Path=ContextItems}"
