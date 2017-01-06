@@ -116,6 +116,17 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
+                var expansions = _serviceProvider.GetPythonToolsService().GetExpansionCompletions(100);
+                if (expansions != null) {
+                    // Expansions should come first, so that they replace our keyword
+                    // completions with the more detailed snippets.
+                    if (members != null) {
+                        members = expansions.Union(members, CompletionComparer.MemberEquality);
+                    } else {
+                        members = expansions;
+                    }
+                }
+
                 if (pyReplEval != null) {
                     replMembers = pyReplEval.GetMemberNames(string.Empty);
                 }
@@ -135,17 +146,6 @@ namespace Microsoft.PythonTools.Intellisense {
                 if (pyReplEval != null && _analyzer.ShouldEvaluateForCompletion(text)) {
                     Debug.Assert(pyReplEval.Analyzer == _analyzer);
                     replMembers = pyReplEval.GetMemberNames(text);
-                }
-            }
-
-            var expansions = _serviceProvider.GetPythonToolsService().GetExpansionCompletions(100);
-            if (expansions != null) {
-                // Expansions should come first, so that they replace our keyword
-                // completions with the more detailed snippets.
-                if (members != null) {
-                    members = expansions.Union(members, CompletionComparer.MemberEquality);
-                } else {
-                    members = expansions;
                 }
             }
 
