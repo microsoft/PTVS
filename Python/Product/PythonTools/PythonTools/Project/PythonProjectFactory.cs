@@ -77,8 +77,8 @@ namespace Microsoft.PythonTools.Project {
 
         // These GUIDs were used for well-known interpreter IDs
         private static readonly Dictionary<Guid, string> InterpreterIdMap = new Dictionary<Guid, string> {
-            { new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}"), "Global|PythonCore|{0}|x86" },
-            { new Guid("{9A7A9026-48C1-4688-9D5D-E5699D47D074}"), "Global|PythonCore|{0}|x64" },
+            { new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}"), "Global|PythonCore|{0}-32" },
+            { new Guid("{9A7A9026-48C1-4688-9D5D-E5699D47D074}"), "Global|PythonCore|{0}" },
             { new Guid("{80659AB7-4D53-4E0C-8588-A766116CBD46}"), "IronPython|{0}-32" },
             { new Guid("{FCC291AA-427C-498C-A4D7-4502D6449B8C}"), "IronPython|{0}-64" },
             { new Guid("{86767848-40B4-4007-8BCC-A3835EDF0E69}"), "PythonUwpIoT|{0}|$(MSBuildProjectFullPath)" },
@@ -381,11 +381,6 @@ namespace Microsoft.PythonTools.Project {
             if (InterpreterIdMap.TryGetValue(id, out fmt)) {
                 if (string.IsNullOrEmpty(versionStr) || !Version.TryParse(versionStr, out version)) {
                     return null;
-                }
-
-                // CPython 3.5 32-bit needs a special fix to the version string
-                if (id == new Guid("{2AF0F10D-7135-4994-9156-5D01C9C11B7E}") && version == new Version(3, 5)) {
-                    return fmt.FormatInvariant("3.5-32");
                 }
 
                 return fmt.FormatInvariant(version.ToString());

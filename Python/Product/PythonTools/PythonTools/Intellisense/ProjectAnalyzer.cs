@@ -1869,7 +1869,7 @@ namespace Microsoft.PythonTools.Intellisense {
             ).ConfigureAwait(false);
         }
 
-        private void CommentTaskTokensChanged(object sender, EventArgs e) {
+        private async void CommentTaskTokensChanged(object sender, EventArgs e) {
             if (_commentTaskProvider == null) {
                 return;
             }
@@ -1878,11 +1878,11 @@ namespace Microsoft.PythonTools.Intellisense {
             foreach (var keyValue in _commentTaskProvider.Tokens) {
                 priorities[keyValue.Key] = GetPriority(keyValue.Value);
             }
-            SendEventAsync(
+            await SendEventAsync(
                 new AP.SetCommentTaskTokens() {
                     tokens = priorities
                 }
-            ).Wait();
+            );
         }
 
         internal async Task<NavigationInfo> GetNavigationsAsync(ITextView view) {

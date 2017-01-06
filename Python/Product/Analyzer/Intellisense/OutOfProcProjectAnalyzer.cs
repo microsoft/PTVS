@@ -188,9 +188,15 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void ReportUnhandledException(Exception ex) {
-            _connection.SendEventAsync(
-                new AP.UnhandledExceptionEvent(ex)
-            ).Wait();
+            try {
+                _connection.SendEventAsync(
+                    new AP.UnhandledExceptionEvent(ex)
+                ).Wait();
+            } catch (Exception) {
+                // We're in pretty bad state, but nothing useful we can do about
+                // it.
+                Debug.Fail("Unhandled exception reporting unhandled exception");
+            }
         }
 
         private async Task<Response> Initialize(AP.InitializeRequest request) {
