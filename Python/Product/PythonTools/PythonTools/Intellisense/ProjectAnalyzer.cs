@@ -182,11 +182,11 @@ namespace Microsoft.PythonTools.Intellisense {
                         _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, "Initialization: " + result.error);
                         _conn = null;
                     } else {
-                        SendEventAsync(
+                        SendEvent(
                             new AP.OptionsChangedEvent() {
                                 indentation_inconsistency_severity = _pyService.GeneralOptions.IndentationInconsistencySeverity
                             }
-                        ).Wait();
+                        );
                     }
                 }
             );
@@ -197,11 +197,11 @@ namespace Microsoft.PythonTools.Intellisense {
         #region ProjectAnalyzer overrides
 
         public override void RegisterExtension(string path) {
-            SendEventAsync(
+            SendEvent(
                 new AP.ExtensionAddedEvent() {
                     path = path
                 }
-            ).Wait();
+            );
         }
 
         /// <summary>
@@ -479,7 +479,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private void OnModulesChanged(object sender, EventArgs e) {
-            SendEventAsync(new AP.ModulesChangedEvent()).Wait();
+            SendEvent(new AP.ModulesChangedEvent());
         }
 
         /// <summary>
@@ -1537,6 +1537,16 @@ namespace Microsoft.PythonTools.Intellisense {
             Debug.WriteLine(String.Format("{1} Done sending event {0}", eventValue.name, DateTime.Now));
         }
 
+        internal async void SendEvent(Event eventValue) {
+            try {
+                await SendEventAsync(eventValue);
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                // Nothing we can do now except crash. We'll log it instead
+                _pyService.Logger.LogEvent(Logging.PythonLogEvent.AnalysisOperationFailed, ex.ToString());
+                Debug.Fail("Unexpected error sending event");
+            }
+        }
+
         internal async Task<IEnumerable<CompletionResult>> GetAllAvailableMembersAsync(AnalysisEntry entry, SourceLocation location, GetMemberOptions options) {
             var members = await SendRequestAsync(new AP.TopLevelCompletionsRequest() {
                 fileId = entry.FileId,
@@ -1869,7 +1879,7 @@ namespace Microsoft.PythonTools.Intellisense {
             ).ConfigureAwait(false);
         }
 
-        private async void CommentTaskTokensChanged(object sender, EventArgs e) {
+        private void CommentTaskTokensChanged(object sender, EventArgs e) {
             if (_commentTaskProvider == null) {
                 return;
             }
@@ -1878,7 +1888,7 @@ namespace Microsoft.PythonTools.Intellisense {
             foreach (var keyValue in _commentTaskProvider.Tokens) {
                 priorities[keyValue.Key] = GetPriority(keyValue.Value);
             }
-            await SendEventAsync(
+            SendEvent(
                 new AP.SetCommentTaskTokens() {
                     tokens = priorities
                 }
