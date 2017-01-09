@@ -711,22 +711,8 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private static bool IsDirectory(string path) {
-            if (!Directory.Exists(path)) {
-                return false;
-            }
-
-            // These are the most likely directories to be created, and we know
-            // that we do not care about the contents, so ignore it.
-            if ("__pycache__".Equals(PathUtils.GetFileOrDirectoryName(path), StringComparison.OrdinalIgnoreCase)) {
-                return false;
-            }
-
-            return true;
-        }
-
         private void OnRenamed(object sender, RenamedEventArgs e) {
-            if (IsDirectory(e.FullPath) ||
+            if (Directory.Exists(e.FullPath) ||
                 ModulePath.IsPythonFile(e.FullPath, false, true, false) ||
                 ModulePath.IsPythonFile(e.OldFullPath, false, true, false)) {
                 try {
@@ -737,7 +723,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e) {
-            if (IsDirectory(e.FullPath) ||
+            if (Directory.Exists(e.FullPath) ||
                 ModulePath.IsPythonFile(e.FullPath, false, true, false)) {
                 try {
                     _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
