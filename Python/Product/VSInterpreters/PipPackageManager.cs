@@ -705,19 +705,44 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public void NotifyPackagesChanged() {
-            _refreshIsCurrentTrigger.Change(100, Timeout.Infinite);
+            try {
+                _refreshIsCurrentTrigger.Change(100, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
+            }
+        }
+
+        private static bool IsDirectory(string path) {
+            if (!Directory.Exists(path)) {
+                return false;
+            }
+
+            // These are the most likely directories to be created, and we know
+            // that we do not care about the contents, so ignore it.
+            if ("__pycache__".Equals(PathUtils.GetFileOrDirectoryName(path), StringComparison.OrdinalIgnoreCase)) {
+                return false;
+            }
+
+            return true;
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e) {
-            if (ModulePath.IsPythonFile(e.FullPath, false, true, false) ||
+            if (IsDirectory(e.FullPath) ||
+                ModulePath.IsPythonFile(e.FullPath, false, true, false) ||
                 ModulePath.IsPythonFile(e.OldFullPath, false, true, false)) {
-                _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+                try {
+                    _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+                } catch (ObjectDisposedException) {
+                }
             }
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e) {
-            if (ModulePath.IsPythonFile(e.FullPath, false, true, false)) {
-                _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+            if (IsDirectory(e.FullPath) ||
+                ModulePath.IsPythonFile(e.FullPath, false, true, false)) {
+                try {
+                    _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+                } catch (ObjectDisposedException) {
+                }
             }
         }
     }
