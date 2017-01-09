@@ -97,13 +97,13 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
         /// <summary>
         /// Returns an indexed member of a Properties collection. 
         /// </summary>
-        /// <param name="index">The index at which to return a mamber.</param>
+        /// <param name="index">The index at which to return a member.</param>
         /// <returns>A Property object.</returns>
         public virtual EnvDTE.Property Item(object index) {
             if (index is string) {
                 string indexAsString = (string)index;
                 if (this.properties.ContainsKey(indexAsString)) {
-                    return (EnvDTE.Property)this.properties[indexAsString];
+                    return this.properties[indexAsString];
                 }
             } else if (index is int) {
                 int realIndex = (int)index - 1;
