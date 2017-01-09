@@ -58,27 +58,29 @@ namespace AnalysisTests {
         [TestMethod, Priority(1)]
         public void IsPythonFile() {
             foreach (var test in new[] {
-                new { SourceFile = @"spam\abc.py", ExpectedStrict = true, ExpectedNoStrict = true },
-                new { SourceFile = @"spam\abc.pyc", ExpectedStrict = true, ExpectedNoStrict = true },
-                new { SourceFile = @"spam\abc.pyo", ExpectedStrict = true, ExpectedNoStrict = true },
-                new { SourceFile = @"spam\abc.pyd", ExpectedStrict = true, ExpectedNoStrict = true },
-                new { SourceFile = @"spam\abc.cp35-win_amd64.pyd", ExpectedStrict = true, ExpectedNoStrict = true },
-                new { SourceFile = @"spam\abc_d.pyd", ExpectedStrict = true, ExpectedNoStrict = true },
-                new { SourceFile = @"spam\abc_d.cp35-win_amd64.pyd", ExpectedStrict = true, ExpectedNoStrict = true },
-                new { SourceFile = @"spam\abc-123.py", ExpectedStrict = false, ExpectedNoStrict = true },
-                new { SourceFile = @"spam\abc-123.pyc", ExpectedStrict = false, ExpectedNoStrict = true },
-                new { SourceFile = @"spam\abc-123.pyo", ExpectedStrict = false, ExpectedNoStrict = true },
-                new { SourceFile = @"spam\abc-123.pyd", ExpectedStrict = false, ExpectedNoStrict = true },
-                new { SourceFile = @"spam\abc.123.py", ExpectedStrict = false, ExpectedNoStrict = true },
-                new { SourceFile = @"spam\abc.123.pyc", ExpectedStrict = false, ExpectedNoStrict = true },
-                new { SourceFile = @"spam\abc.123.pyo", ExpectedStrict = false, ExpectedNoStrict = true },
-                new { SourceFile = @"spam\abc.123.pyd", ExpectedStrict = true, ExpectedNoStrict = true },
+                new { SourceFile = @"spam\abc.py", ExpectedStrict = true, ExpectedNoStrict = true, ExpectedWithoutCompiled = true, ExpectedWithoutCache = true },
+                new { SourceFile = @"spam\abc.pyc", ExpectedStrict = true, ExpectedNoStrict = true, ExpectedWithoutCompiled = true, ExpectedWithoutCache = false },
+                new { SourceFile = @"spam\abc.pyo", ExpectedStrict = true, ExpectedNoStrict = true, ExpectedWithoutCompiled = true, ExpectedWithoutCache = false },
+                new { SourceFile = @"spam\abc.pyd", ExpectedStrict = true, ExpectedNoStrict = true, ExpectedWithoutCompiled = false, ExpectedWithoutCache = true },
+                new { SourceFile = @"spam\abc.cp35-win_amd64.pyd", ExpectedStrict = true, ExpectedNoStrict = true, ExpectedWithoutCompiled = false, ExpectedWithoutCache = true },
+                new { SourceFile = @"spam\abc_d.pyd", ExpectedStrict = true, ExpectedNoStrict = true, ExpectedWithoutCompiled = false, ExpectedWithoutCache = true },
+                new { SourceFile = @"spam\abc_d.cp35-win_amd64.pyd", ExpectedStrict = true, ExpectedNoStrict = true, ExpectedWithoutCompiled = false, ExpectedWithoutCache = true },
+                new { SourceFile = @"spam\abc-123.py", ExpectedStrict = false, ExpectedNoStrict = true, ExpectedWithoutCompiled = true, ExpectedWithoutCache = true },
+                new { SourceFile = @"spam\abc-123.pyc", ExpectedStrict = false, ExpectedNoStrict = true, ExpectedWithoutCompiled = true, ExpectedWithoutCache = false },
+                new { SourceFile = @"spam\abc-123.pyo", ExpectedStrict = false, ExpectedNoStrict = true, ExpectedWithoutCompiled = true, ExpectedWithoutCache = false },
+                new { SourceFile = @"spam\abc-123.pyd", ExpectedStrict = false, ExpectedNoStrict = true, ExpectedWithoutCompiled = false, ExpectedWithoutCache = true },
+                new { SourceFile = @"spam\abc.123.py", ExpectedStrict = false, ExpectedNoStrict = true, ExpectedWithoutCompiled = true, ExpectedWithoutCache = true },
+                new { SourceFile = @"spam\abc.123.pyc", ExpectedStrict = false, ExpectedNoStrict = true, ExpectedWithoutCompiled = true, ExpectedWithoutCache = false },
+                new { SourceFile = @"spam\abc.123.pyo", ExpectedStrict = false, ExpectedNoStrict = true, ExpectedWithoutCompiled = true, ExpectedWithoutCache = false },
+                new { SourceFile = @"spam\abc.123.pyd", ExpectedStrict = true, ExpectedNoStrict = true, ExpectedWithoutCompiled = false, ExpectedWithoutCache = true },
             }) {
-                Assert.AreEqual(test.ExpectedStrict, ModulePath.IsPythonFile(test.SourceFile, true, true), test.SourceFile);
-                Assert.AreEqual(test.ExpectedNoStrict, ModulePath.IsPythonFile(test.SourceFile, false, true), test.SourceFile);
+                Assert.AreEqual(test.ExpectedStrict, ModulePath.IsPythonFile(test.SourceFile, true, true, true), test.SourceFile);
+                Assert.AreEqual(test.ExpectedNoStrict, ModulePath.IsPythonFile(test.SourceFile, false, true, true), test.SourceFile);
+                Assert.AreEqual(test.ExpectedWithoutCompiled, ModulePath.IsPythonFile(test.SourceFile, false, false, true), test.SourceFile);
+                Assert.AreEqual(test.ExpectedWithoutCache, ModulePath.IsPythonFile(test.SourceFile, false, true, false), test.SourceFile);
                 var withForwards = test.SourceFile.Replace('\\', '/');
-                Assert.AreEqual(test.ExpectedStrict, ModulePath.IsPythonFile(withForwards, true, true), withForwards);
-                Assert.AreEqual(test.ExpectedNoStrict, ModulePath.IsPythonFile(withForwards, false, true), withForwards);
+                Assert.AreEqual(test.ExpectedStrict, ModulePath.IsPythonFile(withForwards, true, true, true), withForwards);
+                Assert.AreEqual(test.ExpectedNoStrict, ModulePath.IsPythonFile(withForwards, false, true, true), withForwards);
             }
         }
 
