@@ -675,9 +675,14 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void RefreshIsCurrentTimer_Elapsed(object state) {
+        private async void RefreshIsCurrentTimer_Elapsed(object state) {
             if (_isDisposed) {
                 return;
+            }
+
+            try {
+                _refreshIsCurrentTrigger.Change(Timeout.Infinite, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
             }
 
             InstalledFilesChanged?.Invoke(this, EventArgs.Empty);
@@ -687,13 +692,16 @@ namespace Microsoft.PythonTools.Interpreter {
             var oldCts = Interlocked.Exchange(ref _currentRefresh, cts);
             try {
                 oldCts?.Cancel();
+                oldCts?.Dispose();
             } catch (ObjectDisposedException) {
             }
-            oldCts?.Dispose();
 
-            CacheInstalledPackagesAsync(false, false, cancellationToken)
-                .SilenceException<OperationCanceledException>()
-                .DoNotWait();
+            try {
+                await CacheInstalledPackagesAsync(false, false, cancellationToken);
+            } catch (OperationCanceledException) {
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+            }
         }
 
         public void NotifyPackagesChanged() {
@@ -701,11 +709,16 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e) {
-            _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+            if (ModulePath.IsPythonFile(e.FullPath, false, true, false) ||
+                ModulePath.IsPythonFile(e.OldFullPath, false, true, false)) {
+                _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+            }
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e) {
-            _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+            if (ModulePath.IsPythonFile(e.FullPath, false, true, false)) {
+                _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+            }
         }
     }
 }
