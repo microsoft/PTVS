@@ -1025,11 +1025,6 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        /*
-        public PythonAnalyzer GetProjectAnalyzer() {
-            return GetAnalyzer().Project;
-        }
-        */
         VsProjectAnalyzer IPythonProject.GetProjectAnalyzer() {
             return GetAnalyzer();
         }
@@ -1072,6 +1067,8 @@ namespace Microsoft.PythonTools.Project {
                     _analyzer.ClearAllTasks();
 
                     if (_analyzer.RemoveUser()) {
+                        _analyzer.AbnormalAnalysisExit -= AnalysisProcessExited;
+                        _analyzer.AnalyzerNeedsRestart -= OnActiveInterpreterChanged;
                         _analyzer.Dispose();
                     }
                     _analyzer = null;
@@ -1159,7 +1156,7 @@ namespace Microsoft.PythonTools.Project {
                                 return pyProj._analyzer;
                             }
                         }
-                    } catch (COMException) {
+                    } catch (Exception) {
                         Debug.Fail("Failed to get project for {0}".FormatInvariant(projPath));
                         // Can continue searching though, since if the project isn't
                         // valid then we can't very well share the analyzer with it.
@@ -1177,6 +1174,7 @@ namespace Microsoft.PythonTools.Project {
                 BuildProject
             );
             res.AbnormalAnalysisExit += AnalysisProcessExited;
+            res.AnalyzerNeedsRestart += OnActiveInterpreterChanged;
 
             HookErrorsAndWarnings(res);
             UpdateAnalyzerSearchPaths(res);

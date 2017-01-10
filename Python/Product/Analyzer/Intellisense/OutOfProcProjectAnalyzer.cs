@@ -32,6 +32,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Projects;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
@@ -82,6 +83,9 @@ namespace Microsoft.PythonTools.Intellisense {
             _projectFiles = new ProjectEntryMap();
             _connection = new Connection(writer, reader, RequestHandler, AP.RegisteredTypes);
             _connection.EventReceived += ConectionReceivedEvent;
+
+            GlobalInterpreterOptions.SuppressFileSystemWatchers = true;
+            GlobalInterpreterOptions.SuppressPackageManagers = true;
 
             _catalog = new AggregateCatalog();
             _container = new CompositionContainer(_catalog);
@@ -1339,10 +1343,12 @@ namespace Microsoft.PythonTools.Intellisense {
             var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
             IEnumerable<IOverloadResult> sigs;
             if (pyEntry.Analysis != null) {
-                sigs = pyEntry.Analysis.GetSignaturesByIndex(
-                    request.text,
-                    request.location
-                );
+                using (new DebugTimer("GetSignaturesByIndex")) {
+                    sigs = pyEntry.Analysis.GetSignaturesByIndex(
+                        request.text,
+                        request.location
+                    );
+                }
             } else {
                 sigs = Enumerable.Empty<IOverloadResult>();
             }
@@ -1350,7 +1356,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AP.SignaturesResponse() {
                 sigs = ToSignatures(sigs)
             };
-
         }
 
         private Response GetTopLevelCompletions(Request request) {
@@ -1701,7 +1706,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 throw new InvalidOperationException("Unknown project entry");
             }
 
-            return GetNormalCompletions(file, request);
+            using (new DebugTimer("GetCompletions")) {
+                return GetNormalCompletions(file, request);
+            }
         }
 
         internal Task ProcessMessages() {
@@ -1714,8 +1721,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private void AnalysisQueue_Complete(object sender, EventArgs e) {
-            _connection?.SendEventAsync(new AP.AnalysisCompleteEvent());
+        private async void AnalysisQueue_Complete(object sender, EventArgs e) {
+            if (_connection == null) {
+                return;
+            }
+            await _connection.SendEventAsync(new AP.AnalysisCompleteEvent()).ConfigureAwait(false);
         }
 
         private async void OnModulesChanged(object sender, EventArgs args) {

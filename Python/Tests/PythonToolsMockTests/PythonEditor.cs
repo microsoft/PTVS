@@ -138,7 +138,7 @@ namespace PythonToolsMockTests {
                     var oldVersion = buffer.CurrentSnapshot;
                     buffer.GetPythonAnalysisClassifier().ClassificationChanged += (s, e) => {
                         var entry = View.TextView.GetAnalysisEntry(buffer, VS.ServiceProvider);
-                        if (entry.BufferParser.GetAnalysisVersion(buffer).VersionNumber > oldVersion.Version.VersionNumber) {
+                        if (entry.TryGetBufferParser()?.GetAnalysisVersion(buffer).VersionNumber > oldVersion.Version.VersionNumber) {
                             mre.SetIfNotDisposed();
                         }
                     };
@@ -149,7 +149,7 @@ namespace PythonToolsMockTests {
                     }
 
                     var analysis = View.TextView.GetAnalysisEntry(buffer, VS.ServiceProvider);
-                    analysis.BufferParser.Requeue();    // force the reparse to happen quickly...
+                    analysis.TryGetBufferParser().Requeue();    // force the reparse to happen quickly...
 
                     if (!mre.Wait(10000)) {
                         throw new TimeoutException("Failed to see buffer start analyzing");
