@@ -116,14 +116,16 @@ namespace Microsoft.PythonTools.Intellisense {
                     }
                 }
 
-                var expansions = _serviceProvider.GetPythonToolsService().GetExpansionCompletions(100);
-                if (expansions != null) {
-                    // Expansions should come first, so that they replace our keyword
-                    // completions with the more detailed snippets.
-                    if (members != null) {
-                        members = expansions.Union(members, CompletionComparer.MemberEquality);
-                    } else {
-                        members = expansions;
+                if (pyReplEval == null) {
+                    var expansions = _serviceProvider.GetPythonToolsService().GetExpansionCompletions(100);
+                    if (expansions != null) {
+                        // Expansions should come first, so that they replace our keyword
+                        // completions with the more detailed snippets.
+                        if (members != null) {
+                            members = expansions.Union(members, CompletionComparer.MemberEquality);
+                        } else {
+                            members = expansions;
+                        }
                     }
                 }
 
