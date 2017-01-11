@@ -1117,7 +1117,7 @@ async def g():
                 ManualResetEvent mre = new ManualResetEvent(false);
                 view.View.TextView.TextBuffer.RegisterForNewAnalysis(entry => {
                     if (afterEditVersion != null &&
-                    entry.BufferParser.GetAnalysisVersion(snapshot.TextBuffer).VersionNumber >= afterEditVersion.VersionNumber) {
+                    entry.TryGetBufferParser().GetAnalysisVersion(snapshot.TextBuffer).VersionNumber >= afterEditVersion.VersionNumber) {
                         mre.Set();
                     }
                 });

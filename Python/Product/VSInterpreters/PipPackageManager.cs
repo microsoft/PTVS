@@ -723,7 +723,7 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e) {
-            if (Directory.Exists(e.FullPath) ||
+            if ((Directory.Exists(e.FullPath) && !"__pycache__".Equals(PathUtils.GetFileOrDirectoryName(e.FullPath))) ||
                 ModulePath.IsPythonFile(e.FullPath, false, true, false)) {
                 try {
                     _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);

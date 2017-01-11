@@ -117,6 +117,7 @@ namespace Microsoft.PythonTools.Project {
 
         private void RefreshPackages() {
             RefreshPackagesAsync(_factory?.PackageManager)
+                .SilenceException<OperationCanceledException>()
                 .HandleAllExceptions(ProjectMgr.Site, GetType())
                 .DoNotWait();
         }
@@ -206,6 +207,7 @@ namespace Microsoft.PythonTools.Project {
         public void ResumeWatching() {
             _suppressPackageRefresh = false;
             RefreshPackagesAsync(_factory?.PackageManager)
+                .SilenceException<OperationCanceledException>()
                 .HandleAllExceptions(ProjectMgr.Site, GetType())
                 .DoNotWait();
         }
