@@ -708,19 +708,9 @@ namespace Microsoft.PythonTools.Project {
                 _searchPaths.LoadPathsFromString(ProjectHome, GetProjectProperty(PythonConstants.SearchPathSetting, false));
             }
 
-            Site.GetUIThread().InvokeTask(async () => {
-                await Task.Delay(10);
-                for (int retries = 10; retries > 0; --retries) {
-                    try {
-                        await ReanalyzeProject();
-                        return;
-                    } catch (Exception ex) {
-                        // Cannot allow UI here or we will re-enter with async tasks
-                        ex.ReportUnhandledException(Site, GetType(), allowUI: false);
-                    }
-                    await Task.Delay(50);
-                }
-            });
+            ReanalyzeProject()
+                .HandleAllExceptions(Site, GetType(), allowUI: false)
+                .DoNotWait();
 
             try {
                 Site.GetPythonToolsService().SurveyNews.CheckSurveyNews(false);
