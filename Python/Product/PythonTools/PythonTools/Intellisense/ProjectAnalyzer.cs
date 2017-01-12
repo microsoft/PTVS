@@ -1628,7 +1628,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal async Task<IEnumerable<CompletionResult>> GetModuleMembersAsync(AnalysisEntry entry, string[] package, bool includeMembers) {
-            var members = await SendRequestAsync(new AP.GetModuleMembers() {
+            var members = await SendRequestAsync(new AP.GetModuleMembersRequest() {
                 fileId = entry.FileId,
                 package = package,
                 includeMembers = includeMembers

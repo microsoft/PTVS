@@ -152,8 +152,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.AddBulkFileRequest.Command: response = AnalyzeFile((AP.AddBulkFileRequest)request); break;
                 case AP.TopLevelCompletionsRequest.Command: response = GetTopLevelCompletions(request); break;
                 case AP.CompletionsRequest.Command: response = GetCompletions(request); break;
+                case AP.GetAllMembersRequest.Command: response = GetAllMembers(request); break;
                 case AP.GetModulesRequest.Command: response = GetModules(request); break;
-                case AP.GetModuleMembers.Command: response = GeModuleMembers(request); break;
+                case AP.GetModuleMembersRequest.Command: response = GeModuleMembers(request); break;
                 case AP.SignaturesRequest.Command: response = GetSignatures((AP.SignaturesRequest)request); break;
                 case AP.QuickInfoRequest.Command: response = GetQuickInfo((AP.QuickInfoRequest)request); break;
                 case AP.AnalyzeExpressionRequest.Command: response = AnalyzeExpression((AP.AnalyzeExpressionRequest)request); break;
@@ -1379,7 +1380,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GeModuleMembers(Request request) {
-            var getModuleMembers = (AP.GetModuleMembers)request;
+            var getModuleMembers = (AP.GetModuleMembersRequest)request;
 
             return new AP.CompletionsResponse() {
                 completions = ToCompletions(
@@ -1422,6 +1423,28 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return new AP.CompletionsResponse() {
                 completions = ToCompletions(members.ToArray(), completions.options)
+            };
+        }
+
+        private Response GetAllMembers(Request request) {
+            var req = (AP.GetAllMembersRequest)request;
+
+            var members = Enumerable.Empty<MemberResult>();
+            var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly | req.options;
+
+            foreach (var entry in _projectFiles) {
+                var analysis = (entry.Value as IPythonProjectEntry)?.Analysis;
+                if (analysis != null) {
+                    members = members.Concat(analysis.GetAllAvailableMembers(SourceLocation.None, opts));
+                }
+            }
+
+            if (!string.IsNullOrEmpty(req.prefix)) {
+                members = members.Where(mr => mr.Name.StartsWith(req.prefix));
+            }
+
+            return new AP.CompletionsResponse() {
+                completions = ToCompletions(members.ToArray(), opts)
             };
         }
 
