@@ -63,6 +63,7 @@
 
     <Style TargetType="{x:Type ScrollViewer}">
         <Setter Property="Foreground" Value="{DynamicResource {x:Static wpf:Controls.ForegroundKey}}"/>
+        <Setter Property="OverridesDefaultStyle" Value="True" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="{x:Type ScrollViewer}">
@@ -76,7 +77,12 @@
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
 
-                        <ScrollContentPresenter Grid.Column="0" />
+                        <ScrollContentPresenter Name="PART_ScrollContentPresenter"
+                                                Grid.Row="0" Grid.Column="0"
+                                                Margin="{TemplateBinding Padding}"
+                                                Content="{TemplateBinding Content}"
+                                                ContentTemplate="{TemplateBinding ContentTemplate}"
+                                                CanContentScroll="{TemplateBinding CanContentScroll}"/>
 
                         <ScrollBar Name="PART_VerticalScrollBar"
                                    Orientation="Vertical"
