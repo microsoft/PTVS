@@ -21,53 +21,70 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Windows;
 using System.Windows.Media.Imaging;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.NavigateTo.Interfaces;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
+using AnalysisReference = Microsoft.PythonTools.Intellisense.AnalysisProtocol.AnalysisReference;
+using Completion = Microsoft.PythonTools.Intellisense.AnalysisProtocol.Completion;
 
 namespace Microsoft.PythonTools.Navigation.NavigateTo {
     internal class PythonNavigateToItemDisplay : INavigateToItemDisplay {
         private static readonly Dictionary<StandardGlyphGroup, Icon> _iconCache = new Dictionary<StandardGlyphGroup, Icon>();
+        private readonly IServiceProvider _site;
         private readonly NavigateToItem _item;
-        private readonly LibraryNode _node;
+        private readonly Completion _completion;
         private readonly Icon _icon;
         private readonly ReadOnlyCollection<DescriptionItem> _descrItems;
+        private readonly AnalysisReference _location;
 
         public PythonNavigateToItemDisplay(NavigateToItem item) {
             _item = item;
             var tag = (PythonNavigateToItemProvider.ItemTag)item.Tag;
-            _node = tag.Node;
-            _icon = GetIcon(tag.GlyphService, _node.GlyphType);
+            _site = tag.Site;
+            _completion = tag.Completion;
+            _icon = GetIcon(tag.GlyphService, _completion.memberType.ToGlyphGroup());
 
-            var descrItems = new List<DescriptionItem>();
-
-            IVsHierarchy hier;
-            uint itemId;
-            uint itemsCount;
-            _node.SourceItems(out hier, out itemId, out itemsCount);
-            if (hier != null) {
-                descrItems.Add(new DescriptionItem(
-                    Array.AsReadOnly(new[] { new DescriptionRun("Project:", bold: true) }),
-                    Array.AsReadOnly(new[] { new DescriptionRun(hier.GetProject().FullName) })));
-
-                string fileName;
-                hier.GetCanonicalName(itemId, out fileName);
-                if (fileName != null) {
-                    descrItems.Add(new DescriptionItem(
-                        Array.AsReadOnly(new[] { new DescriptionRun("File:", bold: true) }),
-                        Array.AsReadOnly(new[] { new DescriptionRun(fileName) })));
-
-                    var commonNode = _node as CommonLibraryNode;
-                    if (commonNode != null && commonNode.CanGoToSource) {
-                        descrItems.Add(new DescriptionItem(
-                            Array.AsReadOnly(new[] { new DescriptionRun("Line:", bold: true) }),
-                            Array.AsReadOnly(new[] { new DescriptionRun((commonNode.SourceSpan.iStartLine + 1).ToString()) })));
+            foreach (var v in _completion.detailedValues.MaybeEnumerate()) {
+                foreach (var loc in v.locations.MaybeEnumerate()) {
+                    if (loc.kind == "definition") {
+                        _location = loc;
+                        break;
                     }
                 }
             }
 
+            AdditionalInformation = "";
+            Description = "";
+
+            var descrItems = new List<DescriptionItem>();
+
+            if (!string.IsNullOrEmpty(tag.ProjectName)) {
+                descrItems.Add(new DescriptionItem(
+                    Array.AsReadOnly(new[] { new DescriptionRun("Project:", bold: true) }),
+                    Array.AsReadOnly(new[] { new DescriptionRun(tag.ProjectName) })
+                ));
+                AdditionalInformation = "Project: " + tag.ProjectName;
+            }
+
+            if (!string.IsNullOrEmpty(_location?.file)) {
+                descrItems.Add(new DescriptionItem(
+                    Array.AsReadOnly(new[] { new DescriptionRun("File:", bold: true) }),
+                    Array.AsReadOnly(new[] { new DescriptionRun(_location.file) })
+                ));
+                if (string.IsNullOrEmpty(AdditionalInformation)) {
+                    AdditionalInformation = "File: " + _location.file;
+                }
+                if (_location.line > 0) {
+                    descrItems.Add(new DescriptionItem(
+                        Array.AsReadOnly(new[] { new DescriptionRun("Line:", bold: true) }),
+                        Array.AsReadOnly(new[] { new DescriptionRun(_location.line.ToString()) })
+                    ));
+                }
+            }
             _descrItems = descrItems.AsReadOnly();
         }
 
@@ -75,13 +92,9 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
             get { return _item.Name; }
         }
 
-        public string AdditionalInformation {
-            get { return ""; }
-        }
+        public string AdditionalInformation { get; }
 
-        public string Description {
-            get { return ""; }
-        }
+        public string Description { get; }
 
         public ReadOnlyCollection<DescriptionItem> DescriptionItems {
             get { return _descrItems; }
@@ -94,7 +107,11 @@ namespace Microsoft.PythonTools.Navigation.NavigateTo {
         }
 
         public void NavigateTo() {
-            _node.GotoSource(VSOBJGOTOSRCTYPE.GS_DEFINITION);
+            if (_location == null) {
+                return;
+            }
+
+            PythonToolsPackage.NavigateTo(_site, _location.file, Guid.Empty, _location.line - 1, _location.column - 1);
         }
 
         private static Icon GetIcon(IGlyphService glyphService, StandardGlyphGroup glyphGroup) {
