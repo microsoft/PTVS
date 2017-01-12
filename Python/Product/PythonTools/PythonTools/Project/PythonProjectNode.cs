@@ -1113,47 +1113,6 @@ namespace Microsoft.PythonTools.Project {
         }
 
         private VsProjectAnalyzer CreateAnalyzer() {
-            // check to see if we should share our analyzer with another project in the same solution.  This enables
-            // refactoring, find all refs, and intellisense across projects.
-            var vsSolution = (IVsSolution)GetService(typeof(SVsSolution));
-            if (vsSolution != null) {
-                var guid = new Guid(PythonConstants.ProjectFactoryGuid);
-                IEnumHierarchies hierarchies;
-                ErrorHandler.ThrowOnFailure((vsSolution.GetProjectEnum((uint)(__VSENUMPROJFLAGS.EPF_MATCHTYPE | __VSENUMPROJFLAGS.EPF_LOADEDINSOLUTION), ref guid, out hierarchies)));
-                IVsHierarchy[] hierarchy = new IVsHierarchy[1];
-                uint fetched;
-                var curFactory = GetInterpreterFactory();
-                while (ErrorHandler.Succeeded(hierarchies.Next(1, hierarchy, out fetched)) && fetched == 1) {
-                    string projPath;
-                    try {
-                        projPath = hierarchy[0].GetRootCanonicalName();
-                    } catch (COMException) {
-                        projPath = "<unknown name>";
-                    }
-                    try {
-                        var proj = hierarchy[0].GetProject();
-                        Debug.Assert(proj != null);
-                        if (proj != null) {
-                            var pyProj = proj.GetPythonProject();
-                            Debug.Assert(pyProj != null);
-
-                            if (pyProj != this &&
-                                pyProj._analyzer != null &&
-                                pyProj._analyzer.InterpreterFactory == curFactory) {
-                                // we have the same interpreter, we'll share analysis engines across projects.
-                                pyProj._analyzer.AddUser();
-                                HookErrorsAndWarnings(pyProj._analyzer);
-                                return pyProj._analyzer;
-                            }
-                        }
-                    } catch (Exception) {
-                        Debug.Fail("Failed to get project for {0}".FormatInvariant(projPath));
-                        // Can continue searching though, since if the project isn't
-                        // valid then we can't very well share the analyzer with it.
-                    }
-                }
-            }
-
             var model = Site.GetComponentModel();
             var interpreterService = model.GetService<IInterpreterRegistryService>();
             var factory = GetInterpreterFactory();
