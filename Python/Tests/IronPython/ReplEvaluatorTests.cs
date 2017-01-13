@@ -17,6 +17,7 @@
 using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Microsoft.IronPythonTools.Interpreter;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Intellisense;
@@ -158,20 +159,18 @@ namespace IronPythonTests {
         }
 
         [TestMethod, Priority(1)]
-        public void NoTraceFunction() {
+        public async Task NoTraceFunction() {
             // http://pytools.codeplex.com/workitem/662
             using (var replEval = Evaluator) {
                 var replWindow = new MockReplWindow(replEval);
-                replEval._Initialize(replWindow).Wait();
-                var execute = replEval.ExecuteText("import sys");
-                execute.Wait();
-                Assert.IsTrue(execute.Result.IsSuccessful);
+                await replEval._Initialize(replWindow);
+                var execute = await replEval.ExecuteText("import sys");
+                Assert.IsTrue(execute.IsSuccessful);
                 replWindow.ClearScreen();
 
-                execute = replEval.ExecuteText("sys.gettrace()");
-                execute.Wait();
+                await replEval.ExecuteText("print '[%s]' % sys.gettrace()");
                 AssertUtil.AreEqual(
-                    new Regex(@"\<bound method Thread.trace_func of \<Thread.+\>\>"),
+                    new Regex(@"\[\<bound method Thread.trace_func of \<Thread.+\>\>\]"),
                     replWindow.Output
                 );
                 replWindow.ClearScreen();

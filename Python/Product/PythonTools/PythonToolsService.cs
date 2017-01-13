@@ -546,22 +546,27 @@ namespace Microsoft.PythonTools {
             var baseEnv = Environment.GetEnvironmentVariables();
             // Clear search paths from the global environment. The launch
             // configuration should include the existing value
-            baseEnv[config.Interpreter.PathEnvironmentVariable] = string.Empty;
+
+            var pathVar = config.Interpreter.PathEnvironmentVariable;
+            if (string.IsNullOrEmpty(pathVar)) {
+                pathVar = "PYTHONPATH";
+            }
+            baseEnv[pathVar] = string.Empty;
             var env = PathUtils.MergeEnvironments(
                 baseEnv.AsEnumerable<string, string>(),
                 config.GetEnvironmentVariables(),
-                "Path", config.Interpreter.PathEnvironmentVariable
+                "Path", pathVar
             );
             if (config.SearchPaths != null && config.SearchPaths.Any()) {
                 env = PathUtils.MergeEnvironments(
                     env,
                     new[] {
                         new KeyValuePair<string, string>(
-                            config.Interpreter.PathEnvironmentVariable,
+                            pathVar,
                             PathUtils.JoinPathList(config.SearchPaths)
                         )
                     },
-                    config.Interpreter.PathEnvironmentVariable
+                    pathVar
                 );
             }
             return env;

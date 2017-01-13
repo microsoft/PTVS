@@ -617,6 +617,8 @@ namespace Microsoft.PythonTools.Repl {
                     if (_completion != null) {
                         _completion.SetResult(ExecutionResult.Failure);
                         _completion = null;
+                    } else {
+                        Debug.Fail("No completion task");
                     }
                 }
             }
@@ -627,6 +629,8 @@ namespace Microsoft.PythonTools.Repl {
                     if (_completion != null) {
                         _completion.SetResult(ExecutionResult.Success);
                         _completion = null;
+                    } else {
+                        Debug.Fail("No completion task");
                     }
                 }
             }
@@ -669,7 +673,6 @@ namespace Microsoft.PythonTools.Repl {
                         }
                     }
                 }
-
                 var tcs = new TaskCompletionSource<ExecutionResult>();
                 lock (_completionLock) {
                     _completion = tcs;
