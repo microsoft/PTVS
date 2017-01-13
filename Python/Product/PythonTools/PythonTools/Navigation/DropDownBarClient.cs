@@ -221,10 +221,11 @@ namespace Microsoft.PythonTools.Navigation {
             lock (_navigationsLock) {
                 var cur = _navigations;
                 for (int i = 0; i < path.Length && cur != null; i++) {
-                    if (i < 0 || i >= cur.Children.Length) {
+                    int p = path[i];
+                    if (p < 0 || p >= cur.Children.Length) {
                         return null;
                     }
-                    cur = cur.Children[i];
+                    cur = cur.Children[p];
                 }
                 return cur;
             }

@@ -222,9 +222,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 }
             }
             _isAnalyzing = false;
+
+            if (_cancel.IsCancellationRequested) {
+                AnalysisAborted?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public event EventHandler AnalysisComplete;
+
+        public event EventHandler AnalysisAborted;
 
         sealed class GroupAnalysis : IAnalyzable {
             private readonly IGroupableAnalysisProject _project;

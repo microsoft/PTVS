@@ -53,14 +53,16 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         internal void AddMembers(IEnumerable<KeyValuePair<string, IMember>> members, bool overwrite) {
-            foreach (var kv in members) {
-                if (!overwrite) {
-                    IMember existing;
-                    if (_members.TryGetValue(kv.Key, out existing)) {
-                        continue;
+            lock (_members) {
+                foreach (var kv in members) {
+                    if (!overwrite) {
+                        IMember existing;
+                        if (_members.TryGetValue(kv.Key, out existing)) {
+                            continue;
+                        }
                     }
+                    _members[kv.Key] = kv.Value;
                 }
-                _members[kv.Key] = kv.Value;
             }
         }
 
@@ -76,14 +78,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public IMember GetMember(IModuleContext context, string name) {
             IMember member;
-            _members.TryGetValue(name, out member);
+            lock (_members) {
+                _members.TryGetValue(name, out member);
+            }
             return member;
         }
 
         public IPythonFunction GetConstructors() => GetMember(null, "__init__") as IPythonFunction;
 
         public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
-            return _members.Keys.ToArray();
+            lock (_members) {
+                return _members.Keys.ToArray();
+            }
         }
     }
 }
