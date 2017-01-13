@@ -27,6 +27,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.MockVsTests;
 using TestUtilities;
+using TestUtilities.Python;
 using TestUtilities.SharedProject;
 
 namespace PythonToolsMockTests {
@@ -37,6 +38,7 @@ namespace PythonToolsMockTests {
         [ClassInitialize]
         public static void Initialize(TestContext context) {
             AssertListener.Initialize();
+            PythonTestData.Deploy(includeTestData: false);
         }
 
         [TestMethod, Priority(1)]
@@ -112,8 +114,8 @@ namespace PythonToolsMockTests {
                     .GetService<IInterpreterRegistryService>()
                     .Interpreters;
                 
-                var v27 = interpreters.Where(x => x.Configuration.Id == "Global|PythonCore|2.7|x86").First();
-                var v34 = interpreters.Where(x => x.Configuration.Id == "Global|PythonCore|3.4|x86").First();
+                var v27 = interpreters.Where(x => x.Configuration.Id == "Global|PythonCore|2.7-32").First();
+                var v34 = interpreters.Where(x => x.Configuration.Id == "Global|PythonCore|3.4-32").First();
                 var interpOptions = (UIThreadBase)project.GetService(typeof(IComponentModel));
 
                 uiThread.Invoke(() => {

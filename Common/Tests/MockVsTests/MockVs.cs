@@ -486,9 +486,12 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
             try {
-                var _excludedAssemblies = new HashSet<string>(new[] {
-                    "VsLogger.dll",
+                var _excludedAssemblies = new HashSet<string>(new string[] {
+#if DEV14
+                    "Microsoft.PythonTools.Workspace.dll",
                     "Microsoft.VisualStudio.Workspace.dll",
+                    "Microsoft.VisualStudio.Workspace.Extensions.VS.dll",
+#endif
                 }, StringComparer.OrdinalIgnoreCase);
 
                 foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {

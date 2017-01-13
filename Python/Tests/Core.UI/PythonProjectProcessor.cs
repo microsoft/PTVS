@@ -14,7 +14,10 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.ComponentModel.Composition;
+using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using TestUtilities.SharedProject;
 using MSBuild = Microsoft.Build.Evaluation;
 
@@ -26,6 +29,8 @@ namespace PythonToolsUITests {
             project.SetProperty("ProjectHome", ".");
             project.SetProperty("WorkingDirectory", ".");
 
+            var installPath = PathUtils.GetParent(PythonToolsInstallPath.GetFile("Microsoft.PythonTools.dll", typeof(PythonToolsPackage).Assembly));
+            project.SetProperty("_PythonToolsPath", installPath);
             project.Xml.AddImport(Microsoft.PythonTools.Project.PythonProjectFactory.PtvsTargets);
         }
 
