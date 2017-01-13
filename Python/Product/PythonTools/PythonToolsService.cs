@@ -104,6 +104,8 @@ namespace Microsoft.PythonTools {
         private void OnIdleInitialization(object sender, ComponentManagerEventArgs e) {
             Site.AssertShellIsInitialized();
 
+            _idleManager.OnIdle -= OnIdleInitialization;
+
             _expansionCompletions = new ExpansionCompletionSource(Site);
             InitializeLogging();
         }
