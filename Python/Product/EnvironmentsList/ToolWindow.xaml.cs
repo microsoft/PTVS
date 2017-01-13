@@ -50,7 +50,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private AnalyzerStatusListener _listener;
         private readonly object _listenerLock = new object();
         private int _listenerTimeToLive;
-        const int _listenerDefaultTimeToLive = 120;
+        const int _listenerDefaultTimeToLive = 1200;
 
         // lock(_environments) when accessing _currentlyRefreshing
         private readonly Dictionary<IPythonInterpreterFactory, AnalysisProgress> _currentlyRefreshing;

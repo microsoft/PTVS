@@ -921,6 +921,12 @@ namespace Microsoft.PythonTools.Analysis {
             if (value == null) {
                 return Types[BuiltinTypeId.NoneType];
             }
+
+            var astConst = value as IPythonConstant;
+            if (astConst != null) {
+                return Types[astConst.Type?.TypeId ?? BuiltinTypeId.Object] ?? Types[BuiltinTypeId.Object];
+            }
+
             switch (Type.GetTypeCode(value.GetType())) {
                 case TypeCode.Boolean: return Types[BuiltinTypeId.Bool];
                 case TypeCode.Double: return Types[BuiltinTypeId.Float];
@@ -939,7 +945,8 @@ namespace Microsoft.PythonTools.Analysis {
                     break;
             }
 
-            throw new InvalidOperationException();
+            Debug.Fail("unsupported constant type <{0}> value '{1}'".FormatInvariant(value.GetType().FullName, value));
+            return Types[BuiltinTypeId.Object];
         }
 
         internal BuiltinClassInfo MakeGenericType(IAdvancedPythonType clrType, params IPythonType[] clrIndexType) {
