@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Commands {
                         // We have an existing window, but it needs to be reset.
                         // Let's create a new one
                         window = provider.Create(projectId);
-                        project.AddActionOnClose(window, InteractiveWindowProvider.Close);
+                        project.AddActionOnClose(window, w => InteractiveWindowProvider.CloseIfEvaluatorMatches(w, projectId));
                     }
 
                     return window;
@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Commands {
             // No window found, so let's create one
             if (!string.IsNullOrEmpty(projectId)) {
                 window = provider.Create(projectId);
-                project.AddActionOnClose(window, InteractiveWindowProvider.Close);
+                project.AddActionOnClose(window, w => InteractiveWindowProvider.CloseIfEvaluatorMatches(w, projectId));
             } else if (!string.IsNullOrEmpty(configId)) {
                 window = provider.Create(configId);
             } else {
