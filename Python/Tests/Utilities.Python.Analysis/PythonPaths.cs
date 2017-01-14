@@ -75,7 +75,8 @@ namespace TestUtilities {
                                             res,
                                             Path.Combine(res, exeName),
                                             arch: x64 ? InterpreterArchitecture.x64 : InterpreterArchitecture.x86,
-                                            version: new Version(2, 7)
+                                            version: new Version(2, 7),
+                                            pathVar: "IRONPYTHONPATH"
                                         ),
                                         ironPython: true
                                     );
@@ -92,7 +93,8 @@ namespace TestUtilities {
                 "C:\\Program Files (x86)\\IronPython 2.7\\",
                 "C:\\Program Files (x86)\\IronPython 2.7\\" + exeName, 
                 arch: InterpreterArchitecture.x86,
-                version: new Version(2, 7)
+                version: new Version(2, 7),
+                pathVar: "IRONPYTHONPATH"
             ), ironPython: true);
             if (File.Exists(ver.InterpreterPath)) {
                 return ver;

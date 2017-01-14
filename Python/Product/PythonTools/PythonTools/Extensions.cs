@@ -897,7 +897,10 @@ namespace Microsoft.PythonTools {
 
         internal static async Task RefreshVariableViews(this IServiceProvider serviceProvider) {
             serviceProvider.GetUIThread().MustBeCalledFromUIThread();
-            EnvDTE.Debugger debugger = serviceProvider.GetDTE().Debugger;
+            EnvDTE.Debugger debugger = serviceProvider.GetDTE()?.Debugger;
+            if (debugger == null) {
+                return;
+            }
             AD7Engine engine = AD7Engine.GetEngineForProcess(debugger.CurrentProcess);
             if (engine != null) {
                 await engine.RefreshThreadFrames(debugger.CurrentThread.ID);
