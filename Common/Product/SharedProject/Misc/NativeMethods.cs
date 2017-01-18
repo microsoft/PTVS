@@ -851,6 +851,7 @@ namespace Microsoft.VisualStudioTools.Project {
         public const int CONNECT_PROMPT = 0x10;
         public const int RESOURCETYPE_DISK = 1;
 
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         public struct _NETRESOURCE {
             public uint dwScope;
             public uint dwType;
@@ -1102,6 +1103,7 @@ namespace Microsoft.VisualStudioTools.Project {
             );
     }
 
+    [StructLayout(LayoutKind.Sequential)]
     struct User32RECT {
         public int left;
         public int top;
