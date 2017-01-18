@@ -56,7 +56,7 @@ namespace Microsoft.PythonTools.Profiling {
                 availableProjects.Add(new ProjectTargetView((IVsHierarchy)project));
             }
             _availableProjects = new ReadOnlyCollection<ProjectTargetView>(availableProjects);
-	    _isVTuneAvailable = CheckForVTune();
+	        _isVTuneAvailable = CheckForVTune();
 
             _project = null;
             _standalone = new StandaloneTargetView(serviceProvider);
@@ -286,10 +286,14 @@ namespace Microsoft.PythonTools.Profiling {
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
-	private static bool CheckForVTune() {
-	    // FIXME: Check the registry instead, as VTune might've been installed elsewhere
-	    return Directory.Exists("C:\\Program Files (x86)\\IntelSWTools\\VTune Amplifier XE 2017");
-	}
+	    private static bool CheckForVTune() {
+	        // NOTE: Right now this is the 'sanctioned' way to check for VTune 2017 install dir,
+	        //       the name of the envvar will almost surely change for VTune 2018, and probably
+	        //       as soon as VTune 2017 update 3
+	        var vtunePath = Environment.GetEnvironmentVariable("VTUNE_AMPLIFIER_XE_2017_DIR");
+	        if (vtunePath == null) return false;
+	        return Directory.Exists(vtunePath);
+	    }
     }
 }
  
