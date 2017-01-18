@@ -29,6 +29,8 @@ using Microsoft.PythonTools;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Profiling;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
@@ -52,6 +54,17 @@ namespace ProfilingUITests {
 
         [TestInitialize]
         public void TestInitialize() {
+            IVsShell shell = (IVsShell)VSTestContext.ServiceProvider.GetService(typeof(IVsShell));
+            Guid perfGuid = new Guid("{F4A63B2A-49AB-4b2d-AA59-A10F01026C89}");
+            int installed;
+            ErrorHandler.ThrowOnFailure(
+                shell.IsPackageInstalled(ref perfGuid, out installed)
+            );
+            if (installed == 0) {
+                Assert.Fail("Profiling is not installed");
+                return;
+            }
+
             PythonToolsService pyService;
             try {
                 pyService = VSTestContext.ServiceProvider.GetPythonToolsService_NotThreadSafe();
@@ -109,7 +122,7 @@ namespace ProfilingUITests {
                     foreach (var interpreter in service.Interpreters) {
                         options.DefaultInterpreter = interpreter;
                         using (var dialog = app.LaunchPythonProfiling()) {
-                            Assert.AreEqual(interpreter.Configuration.FullDescription, dialog.SelectedInterpreter);
+                            Assert.AreEqual(interpreter.Configuration.Description, dialog.SelectedInterpreter);
                         }
                         app.WaitForDialogDismissed();
                     }
@@ -1368,8 +1381,8 @@ namespace ProfilingUITests {
             IPythonProfiling profiling;
             using (var app = OpenProfileTestProject(out project, out profiling, null)) {
                 var session = LaunchProcess(app, profiling, interp.InterpreterPath,
-                    Path.Combine(interp.LibPath, "test\\pystone.py"),
-                    Path.Combine(interp.LibPath, "test"),
+                    Path.Combine(interp.PrefixPath, "Lib", "test", "pystone.py"),
+                    Path.Combine(interp.PrefixPath, "Lib", "test"),
                     "",
                     false
                 );
@@ -1558,6 +1571,25 @@ namespace ProfilingUITests {
             );
         }
 
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void BuiltinsProfilePython36() {
+            BuiltinsProfile(
+                PythonPaths.Python36,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
+        }
+
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void BuiltinsProfilePython36x64() {
+            BuiltinsProfile(
+                PythonPaths.Python36_x64,
+                new[] { "BuiltinsProfile.f", "str.startswith", "isinstance", "marshal.dumps", "array.array.tostring" },
+                new[] { "compile", "exec", "execfile", "_io.TextIOWrapper.read" }
+            );
+        }
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void Python64Bit() {

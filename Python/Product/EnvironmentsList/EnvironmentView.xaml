@@ -20,29 +20,46 @@
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
                         <RowDefinition Height="auto" />
                     </Grid.RowDefinitions>
 
                     <Grid Grid.Row="0" Grid.Column="0"
                           VerticalAlignment="Center"
                           HorizontalAlignment="Stretch"
-                          Margin="1"
+                          Margin="3 3 3 0"
                           DataContext="{Binding Description,Mode=OneWay}">
                         <TextBlock x:Name="Name_IsDefault"
                                    Text="{Binding}"
                                    TextTrimming="CharacterEllipsis"
                                    FontWeight="Bold"
+                                   Margin="0"
                                    Visibility="Hidden" />
                         <TextBlock x:Name="Name_IsNotDefault"
                                    Text="{Binding}"
                                    TextTrimming="CharacterEllipsis"
+                                   Margin="0"
                                    Visibility="Visible" />
                     </Grid>
 
+                    <Grid x:Name="Company"
+                          Grid.Row="1" Grid.Column="0"
+                          VerticalAlignment="Center"
+                          HorizontalAlignment="Stretch"
+                          Margin="5 0 3 3"
+                          DataContext="{Binding Company,Mode=OneWay}">
+                        <TextBlock Text="{Binding}"
+                                   TextTrimming="CharacterEllipsis"
+                                   Margin="0"
+                                   FontSize="10"
+                                   Opacity="0.9" />
+                    </Grid>
+
                     <ProgressBar x:Name="RefreshDBProgress"
-                                 Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3"
+                                 Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="3"
                                  HorizontalAlignment="Stretch"
-                                 Height="3"
+                                 Height="5"
+                                 Margin="2"
                                  BorderBrush="Transparent"
                                  BorderThickness="0"
                                  Focusable="False"
@@ -55,13 +72,15 @@
                     </ProgressBar>
 
                     <Button x:Name="Icon_NeedRefresh"
-                            Grid.Column="1"
+                            Grid.Row="0" Grid.Column="1" Grid.RowSpan="2"
                             IsHitTestVisible="True"
                             VerticalAlignment="Stretch"
                             Cursor="Hand"
                             Margin="1"
                             Command="{x:Static l:DBExtension.StartRefreshDB}"
                             CommandParameter="{Binding}"
+                            AutomationProperties.Name="Refresh completion DB"
+                            AutomationProperties.HelpText="Completion DB is not up to date. Click to start refreshing"
                             Visibility="Hidden">
                         <Control Style="{StaticResource RefreshImage}" />
                         <Button.ToolTip>
@@ -70,12 +89,13 @@
                     </Button>
 
                     <Button x:Name="InteractiveWindowButton"
-                            Grid.Column="2"
+                            Grid.Row="0" Grid.Column="2" Grid.RowSpan="2"
                             Style="{StaticResource {x:Type Button}}"
                             Cursor="Hand"
                             Margin="1"
                             Command="{x:Static l:EnvironmentView.OpenInteractiveWindow}"
-                            CommandParameter="{Binding}">
+                            CommandParameter="{Binding}"
+                            AutomationProperties.Name="Open Interactive Window">
                         <Control Style="{StaticResource InteractiveWindowImage}" />
                         <Button.ToolTip>
                             Open Interactive Window
@@ -91,6 +111,9 @@
                     <DataTrigger Binding="{Binding IsCurrent}" Value="False">
                         <Setter TargetName="Icon_NeedRefresh" Property="Visibility" Value="Visible" />
                     </DataTrigger>
+                    <DataTrigger Binding="{Binding Company,Mode=OneWay}" Value="">
+                        <Setter TargetName="Company" Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
                     <DataTrigger Binding="{Binding IsCheckingDatabase}" Value="True">
                         <Setter TargetName="Icon_NeedRefresh" Property="Visibility" Value="Hidden" />
                     </DataTrigger>
@@ -105,35 +128,28 @@
             </DataTemplate>
 
             <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="AddNewEnvironmentListItem">
-                <Button Style="{StaticResource NavigationButtonInList}"
-                        Margin="6"
-                        Name="Button"
-                        Command="ApplicationCommands.New">
-                    <Grid Background="Transparent">
-                        <Grid.Resources>
-                            <Geometry x:Key="AddGeometry">
-                                F1M9.765625,18.1081237792969L11.078125,18.1081237792969 11.078125,24.5456237792969 17.5,24.5456237792969 17.5,25.8581237792969 11.078125,25.8581237792969 11.078125,32.2956237792969 9.765625,32.2956237792969 9.765625,25.8581237792969 3.328125,25.8581237792969 3.328125,24.5456237792969 9.765625,24.5456237792969 9.765625,18.1081237792969z
-                            </Geometry>
-                        </Grid.Resources>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="auto" />
-                            <ColumnDefinition />
-                        </Grid.ColumnDefinitions>
-                        <Path Width="12" Height="12"
-                              Margin="4"
-                              Stretch="Uniform"
-                              RenderOptions.EdgeMode="Aliased"
-                              Data="{StaticResource AddGeometry}"
-                              Fill="{Binding Foreground,ElementName=Button}">
-                        </Path>
-                        <Label Grid.Column="1"
-                               VerticalAlignment="Center"
-                               Foreground="{Binding Foreground,ElementName=Button}">
-                            Custom...
-                        </Label>
-                    </Grid>
-                    
-                </Button>
+                <Grid Background="Transparent" Margin="6">
+                    <Grid.Resources>
+                        <Geometry x:Key="AddGeometry">
+                            F1M9.765625,18.1081237792969L11.078125,18.1081237792969 11.078125,24.5456237792969 17.5,24.5456237792969 17.5,25.8581237792969 11.078125,25.8581237792969 11.078125,32.2956237792969 9.765625,32.2956237792969 9.765625,25.8581237792969 3.328125,25.8581237792969 3.328125,24.5456237792969 9.765625,24.5456237792969 9.765625,18.1081237792969z
+                        </Geometry>
+                    </Grid.Resources>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="auto" />
+                        <ColumnDefinition />
+                    </Grid.ColumnDefinitions>
+                    <Path Width="12" Height="12"
+                          Margin="4"
+                          Stretch="Uniform"
+                          RenderOptions.EdgeMode="Aliased"
+                          Data="{StaticResource AddGeometry}"
+                          Fill="{Binding Foreground,ElementName=CustomLabel}">
+                    </Path>
+                    <Label Grid.Column="1" VerticalAlignment="Center" Name="CustomLabel"
+                           AutomationProperties.Name="Add new environment">
+                        Custom...
+                    </Label>
+                </Grid>
             </DataTemplate>
 
             <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="OnlineHelpListItem">

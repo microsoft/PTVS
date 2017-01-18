@@ -289,6 +289,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public string path;
             public string addingFromDir;
+            public bool isTemporaryFile, suppressErrorLists;
 
             public override string command => Command;
         }
@@ -297,18 +298,23 @@ namespace Microsoft.PythonTools.Intellisense {
             public int fileId;
         }
 
-        public sealed class AddDirectoryRequest : Request<Response> {
-            public const string Command = "addDir";
+        public class AddBulkFileRequest : Request<AddBulkFileResponse> {
+            public const string Command = "addBulkFile";
 
-            public string dir;
+            public string[] path;
+            public string addingFromDir;
+
             public override string command => Command;
         }
 
-        public sealed class RemoveDirectoryRequest : Request<Response> {
-            public const string Command = "removeDir";
+        public class AddBulkFileResponse : Response {
+            public int[] fileId;
+        }
 
-            public string dir;
+        public sealed class SetSearchPathRequest : Request<Response> {
+            public const string Command = "setSearchPath";
 
+            public string[] dir;
             public override string command => Command;
         }
 
@@ -570,26 +576,17 @@ namespace Microsoft.PythonTools.Intellisense {
             public int fileId;
         }
 
-        public sealed class AddZipArchiveRequest : Request<Response> {
-            public const string Command = "addZipArchive";
-            public string archive;
-
-            public override string command => Command;
-        }
-
         public sealed class ChildFileAnalyzed : Event {
             public const string Name = "childFileAnalyzed";
 
-            /// <summary>
-            /// The directory or zip file which was asked to be analyzed
-            /// </summary>
-            public string parent;
             /// <summary>
             /// The filename which got added
             /// </summary>
             public string filename;
 
             public int fileId;
+
+            public bool isTemporaryFile, suppressErrorList;
 
             public override string name => Name;
         }
@@ -612,12 +609,21 @@ namespace Microsoft.PythonTools.Intellisense {
             public override string command => Command;
         }
 
-        public class GetModuleMembers : Request<CompletionsResponse> {
+        public class GetModuleMembersRequest : Request<CompletionsResponse> {
             public const string Command = "getModuleMembers";
 
             public int fileId;
             public string[] package;
             public bool includeMembers;
+
+            public override string command => Command;
+        }
+
+        public class GetAllMembersRequest : Request<CompletionsResponse> {
+            public const string Command = "getAllMembers";
+
+            public string prefix;
+            public GetMemberOptions options;
 
             public override string command => Command;
         }
@@ -853,6 +859,17 @@ namespace Microsoft.PythonTools.Intellisense {
             public Navigation[] children;
         }
 
+        internal class AnalyzerWarningEvent : Event {
+            public string message;
+            public const string Name = "analyzerWarning";
+
+            public AnalyzerWarningEvent(string message) {
+                this.message = message;
+            }
+
+            public override string name => Name;
+        }
+
         internal class UnhandledExceptionEvent : Event {
             public string message;
             public const string Name = "unhandledException";
@@ -860,6 +877,11 @@ namespace Microsoft.PythonTools.Intellisense {
             public UnhandledExceptionEvent(Exception ex) {
                 message = ex.ToString();
             }
+
+            public UnhandledExceptionEvent(string message) {
+                this.message = message;
+            }
+
             public override string name => Name;
         }
 

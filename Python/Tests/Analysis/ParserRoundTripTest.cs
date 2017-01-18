@@ -1084,6 +1084,19 @@ def f(): pass");
             // try/except
             TestOneString(PythonLanguageVersion.V27, "try: pass\r\nexcept: pass\r\nelse: pass\r\nexcept Exception: pass");
             TestOneString(PythonLanguageVersion.V27, "try  :   pass\r\finally    :     pass");
+
+            // Variable annotations
+            TestOneString(PythonLanguageVersion.V36, "a:b, c");
+            TestOneString(PythonLanguageVersion.V36, "a:b, c = 1");
+            TestOneString(PythonLanguageVersion.V36, "a : b, c");
+            TestOneString(PythonLanguageVersion.V36, "a : b, c = 1");
+
+            TestOneString(PythonLanguageVersion.V36, "a,b:c");
+            TestOneString(PythonLanguageVersion.V36, "a,b:c = 1");
+            TestOneString(PythonLanguageVersion.V36, "a , b : c");
+            TestOneString(PythonLanguageVersion.V36, "a , b : c = 1");
+
+            TestOneString(PythonLanguageVersion.V36, "p: 1=optimized | 2=newlocals | 4=*arg | 8=**arg");
         }
 
         [TestMethod, Priority(1)]
@@ -1250,7 +1263,12 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V27, "for  (((i), (j)))   in    x.items()     :      print(i, j)");
             TestOneString(PythonLanguageVersion.V27, "for  [i, j]   in    x.items()     :      print(i, j)");
             TestOneString(PythonLanguageVersion.V27, "for  [[i], [j]]   in    x.items()     :      print(i, j)");
-            
+
+            TestOneString(PythonLanguageVersion.V35, "async def f():\r\n    async for i in xrange(10): pass");
+            TestOneString(PythonLanguageVersion.V35, "async def f():\r\n    async  for i in xrange(10):\r\n        pass\r\n        pass");
+            TestOneString(PythonLanguageVersion.V35, "async def f():\r\n    async  for  i in xrange(10):\r\n\r\n        pass\r\n        pass");
+            TestOneString(PythonLanguageVersion.V35, "async def f():\r\n    async for  i  in xrange(10):\r\n        break\r\nelse:\r\n        pass");
+
             // While Statement
             TestOneString(PythonLanguageVersion.V27, "while True: break");
             TestOneString(PythonLanguageVersion.V27, "while True: break\r\nelse: pass");
@@ -1302,7 +1320,12 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V27, "with  abc   as    oar     :  \r\n    pass");
             TestOneString(PythonLanguageVersion.V27, "with  fob   ,    oar     :  \r\n    pass");
             TestOneString(PythonLanguageVersion.V27, "with  fob   as    f     ,       oar       as       b        :  \r\n    pass");
-            
+
+            TestOneString(PythonLanguageVersion.V35, "async def f():\r\n    async with abc: pass");
+            TestOneString(PythonLanguageVersion.V35, "async def f():\r\n    async  with  abc   :\r\n        pass");
+            TestOneString(PythonLanguageVersion.V35, "async def f():\r\n    async   with  fob   ,    oar     :\r\n          pass");
+            TestOneString(PythonLanguageVersion.V35, "async def f():\r\n    async  with  fob   ,    oar     :  \r\n        pass");
+
             // Try Statement
             TestOneString(PythonLanguageVersion.V27, "try: pass\r\nexcept: pass");
             TestOneString(PythonLanguageVersion.V27, "try: pass\r\nexcept Exception: pass");
@@ -1489,6 +1512,16 @@ def f(): pass");
             TestOneString(PythonLanguageVersion.V27, "def  f(   a    ,     )      :       pass");
 
             TestOneString(PythonLanguageVersion.V27, "class C:\r\n    @property\r\n    def fob(self): return 42");
+
+            TestOneString(PythonLanguageVersion.V35, "async def f(): pass");
+            TestOneString(PythonLanguageVersion.V35, "@fob\r\n\r\nasync def f(): pass");
+            TestOneString(PythonLanguageVersion.V35, "@fob(2)\r\nasync \\\r\ndef f(): pass");
+
+            // Variable annotations
+            TestOneString(PythonLanguageVersion.V36, "a:b");
+            TestOneString(PythonLanguageVersion.V36, "a:b = 1");
+            TestOneString(PythonLanguageVersion.V36, "a : b");
+            TestOneString(PythonLanguageVersion.V36, "a : b = 1");
 
         }
 

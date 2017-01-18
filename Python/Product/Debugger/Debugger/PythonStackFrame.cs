@@ -188,6 +188,10 @@ namespace Microsoft.PythonTools.Debugger {
             return _thread.Process.SetLineNumber(this, lineNo);
         }
 
+        public string GetQualifiedFunctionName() {
+            return GetQualifiedFunctionName(_thread.Process, FileName, LineNo, FunctionName);
+        }
+
         /// <summary>
         /// Computes the fully qualified function name, including name of the enclosing class for methods,
         /// and, recursively, names of any outer functions.
@@ -204,24 +208,24 @@ namespace Microsoft.PythonTools.Debugger {
         /// </code>
         /// And with the current statement being <c>pass</c>, the qualified name is "D.e in c in A.b".
         /// </example>
-        public string GetQualifiedFunctionName() {
-            var ast = _thread.Process.GetAst(FileName);
+        public static string GetQualifiedFunctionName(PythonProcess process, string filename, int lineNo, string functionName) {
+            var ast = process.GetAst(filename);
             if (ast == null) {
-                return FunctionName;
+                return functionName;
             }
 
-            var walker = new QualifiedFunctionNameWalker(ast, LineNo, FunctionName);
+            var walker = new QualifiedFunctionNameWalker(ast, lineNo, functionName);
             try {
                 ast.Walk(walker);
             } catch (InvalidDataException) {
                 // Walker ran into a mismatch between expected function name and AST, so we cannot
                 // rely on AST to construct an accurate qualified name. Just return what we have.
-                return FunctionName;
+                return functionName;
             }
 
             string qualName = walker.Name;
             if (string.IsNullOrEmpty(qualName)) {
-                return FunctionName;
+                return functionName;
             }
 
             return qualName;

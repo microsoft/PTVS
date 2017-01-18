@@ -175,17 +175,15 @@ namespace Microsoft.PythonTools.Intellisense {
                 ((AutoResetEvent)threadStarted).Set();
             }
 
+            AnalysisStarted?.Invoke(this, EventArgs.Empty);
+            _isAnalyzing = true;
+
             while (!_cancel.IsCancellationRequested) {
                 IAnalyzable workItem;
 
                 AnalysisPriority pri;
                 lock (_queueLock) {
                     workItem = GetNextItem(out pri);
-                    _isAnalyzing = true;
-                }
-                var evt = AnalysisStarted;
-                if (evt != null) {
-                    evt(this, EventArgs.Empty);
                 }
 
                 if (workItem != null) {
@@ -208,19 +206,31 @@ namespace Microsoft.PythonTools.Intellisense {
                         _analyzer.ReportUnhandledException(ex);
                         _cancel.Cancel();
                     }
-                } else {
+                } else if (!_workEvent.WaitOne(50)) {
+                    // Short wait for activity before raising the event.
                     _isAnalyzing = false;
-                    AnalysisComplete?.Invoke(this, EventArgs.Empty);
-                    WaitHandle.SignalAndWait(
-                        _analyzer.QueueActivityEvent,
-                        _workEvent
-                    );
+                    var evt1 = AnalysisComplete;
+                    if (evt1 != null) {
+                        ThreadPool.QueueUserWorkItem(_ => evt1(this, EventArgs.Empty));
+                    }
+                    WaitHandle.SignalAndWait(_analyzer.QueueActivityEvent, _workEvent);
+                    var evt2 = AnalysisStarted;
+                    if (evt2 != null) {
+                        ThreadPool.QueueUserWorkItem(_ => evt2(this, EventArgs.Empty));
+                    }
+                    _isAnalyzing = true;
                 }
             }
             _isAnalyzing = false;
+
+            if (_cancel.IsCancellationRequested) {
+                AnalysisAborted?.Invoke(this, EventArgs.Empty);
+            }
         }
 
         public event EventHandler AnalysisComplete;
+
+        public event EventHandler AnalysisAborted;
 
         sealed class GroupAnalysis : IAnalyzable {
             private readonly IGroupableAnalysisProject _project;

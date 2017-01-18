@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools {
     public static class PythonConstants {
@@ -29,8 +28,6 @@ namespace Microsoft.PythonTools {
         /// </summary>
         internal const string WindowsFileExtension = ".pyw";
         internal const string ProjectImageList = "Microsoft.PythonImageList.png";
-
-        internal const string IssueTrackerUrl = "http://go.microsoft.com/fwlink/?LinkId=402428";
 
         internal const string LibraryManagerGuid = "888888e5-b976-4366-9e98-e7bc01f1842c";
         internal const string LibraryManagerServiceGuid = "88888859-2f95-416e-9e2b-cac4678e5af7";
@@ -69,6 +66,7 @@ namespace Microsoft.PythonTools {
         internal const int InstallPythonPackage = 0x400A;
         internal const int InstallRequirementsTxt = 0x4033;
         internal const int GenerateRequirementsTxt = 0x4034;
+        internal const int ProcessRequirementsTxt = 0x4036;
         internal const int OpenInteractiveForEnvironment = 0x4031;
         internal const int ViewAllEnvironments = 0x400B;
 
@@ -124,6 +122,12 @@ namespace Microsoft.PythonTools {
         public const string WebBrowserUrlSetting = "WebBrowserUrl";
 
         /// <summary>
+        /// When True, prevents web projects from copying Cloud Service files
+        /// into their bin directory.
+        /// </summary>
+        public const string SuppressCollectPythonCloudServiceFiles = "SuppressCollectPythonCloudServiceFiles";
+
+        /// <summary>
         /// Specifies local address for the web server to listen on.
         /// </summary>
         public const string WebServerHostSetting = "WebServerHost";
@@ -148,5 +152,6 @@ namespace Microsoft.PythonTools {
         public const string DontShowUpgradeDialogAgainCollection = "PythonTools\\Dialogs";
 
         internal const string PythonToolsProcessIdEnvironmentVariable = "_PTVS_PID";
+        internal const string TestExecutorUriString = "executor://PythonTestExecutor/v1";
     }
 }

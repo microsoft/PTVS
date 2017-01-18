@@ -39,6 +39,10 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// </summary>
         public int Maximum;
         /// <summary>
+        /// The number of seconds since starting
+        /// </summary>
+        public int Seconds;
+        /// <summary>
         /// A message describing the current status, up to 100 characters long.
         /// </summary>
         public string Message;
@@ -85,8 +89,8 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         /// The value that <paramref name="progress"/> is approaching. This is
         /// permitted to vary during analysis.
         /// </param>
-        public void UpdateStatus(int progress, int maximum, string message = null) {
-            base.UpdateStatusImplementation(progress, maximum, message);
+        public void UpdateStatus(int progress, int maximum, int seconds, string message = null) {
+            base.UpdateStatusImplementation(progress, maximum, seconds, message);
         }
     }
 
@@ -182,6 +186,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             public int OwnerProcessId;
             public int ItemsInQueue;
             public int MaximumItems;
+            public int Seconds;
             public fixed char _Message[MAX_MESSAGE_LENGTH + 1];
 
             public string Identifier {
@@ -323,7 +328,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             }
         }
 
-        protected void UpdateStatusImplementation(int progress, int maximum, string message) {
+        protected void UpdateStatusImplementation(int progress, int maximum, int seconds, string message) {
             ThrowObjectDisposedException();
             if (_identifier == null) {
                 throw new InvalidOperationException("Cannot update status without providing an identifier");
@@ -332,6 +337,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             var update = new AnalysisProgress {
                 Progress = progress,
                 Maximum = maximum,
+                Seconds = seconds,
                 Message = message
             };
 
@@ -443,6 +449,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                         using (var accessor = sharedData.CreateViewAccessor(dataOffset, SIZE)) {
                             me.ItemsInQueue = request.Update.Progress;
                             me.MaximumItems = request.Update.Maximum;
+                            me.Seconds = request.Update.Seconds;
                             me.Message = request.Update.Message;
                             accessor.Write(0, ref me);
                         }
@@ -484,6 +491,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             response[me.Identifier] = new AnalysisProgress {
                                 Progress = me.ItemsInQueue,
                                 Maximum = me.MaximumItems,
+                                Seconds = me.Seconds,
                                 Message = me.Message
                             };
                         } catch (InvalidOperationException) {
@@ -508,6 +516,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                             response[me.Identifier] = new AnalysisProgress {
                                 Progress = me.ItemsInQueue,
                                 Maximum = me.MaximumItems,
+                                Seconds = me.Seconds,
                                 Message = me.Message
                             };
                         } catch (InvalidOperationException) {
@@ -531,6 +540,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 OwnerProcessId = Process.GetCurrentProcess().Id,
                 ItemsInQueue = int.MaxValue,
                 MaximumItems = 0,
+                Seconds = 0,
                 Message = null
             };
             Data empty = new Data {

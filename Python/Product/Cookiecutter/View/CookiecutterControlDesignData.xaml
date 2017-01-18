@@ -1,0 +1,67 @@
+﻿<!-- Fake data for use with xaml designer -->
+<vm:CookiecutterViewModel xmlns:vm="clr-namespace:Microsoft.CookiecutterTools.ViewModel"
+                          xmlns:System="clr-namespace:System;assembly=mscorlib"
+                          HasPostCommands="True"
+                          ShouldExecutePostCommands="True">
+    <vm:CookiecutterViewModel.SelectedTemplate>
+        <vm:TemplateViewModel
+            DisplayName="python-azure-web-app-cookiecutter"
+            ClonedPath="~\.cookiecutters\python-azure-web-app-cookiecutter"
+            Description="Cookiecutter template for a Python site on Azure Web Apps"
+            RemoteUrl="https://github.com/brettcannon/python-azure-web-app-cookiecutter"/>
+    </vm:CookiecutterViewModel.SelectedTemplate>
+    <vm:CookiecutterViewModel.SelectedDescription>The description for the selected template that is loaded using the github api.</vm:CookiecutterViewModel.SelectedDescription>
+    <vm:CookiecutterViewModel.SearchResults>
+        <vm:CategorizedViewModel DisplayName="Recommended">
+            <vm:CategorizedViewModel.Templates>
+                <vm:TemplateViewModel
+            DisplayName="python-azure-web-app-cookiecutter"
+            RemoteUrl="https://github.com/brettcannon/python-azure-web-app-cookiecutter"/>
+                <vm:TemplateViewModel
+            DisplayName="azure-batch-cookiecutter"
+            RemoteUrl="https://github.com/Azure/azure-batch-cookiecutter"
+            IsUpdateAvailable="True"/>
+                <vm:TemplateViewModel
+            DisplayName="azure-hdinsight-eventhubs-cookiecutter"
+            RemoteUrl="https://github.com/Azure/azure-hdinsight-eventhubs-cookiecutter"/>
+                <vm:TemplateViewModel
+            DisplayName="azure-documentdb-cookiecutter"
+            RemoteUrl="https://github.com/Azure/azure-documentdb-cookiecutter"/>
+                <vm:TemplateViewModel
+            DisplayName="cookiecutter-django"
+            RemoteUrl="https://github.com/pydanny/cookiecutter-django"/>
+                <vm:ContinuationViewModel>
+                    <vm:ContinuationViewModel.ContinuationToken>token1</vm:ContinuationViewModel.ContinuationToken>
+                </vm:ContinuationViewModel>
+            </vm:CategorizedViewModel.Templates>
+        </vm:CategorizedViewModel>
+        <vm:CategorizedViewModel DisplayName="Installed">
+            <vm:CategorizedViewModel.Templates>
+                <vm:TemplateViewModel
+            DisplayName="python-azure-web-app-cookiecutter"
+            ClonedPath="~\.cookiecutters\python-azure-web-app-cookiecutter"
+            RemoteUrl="https://github.com/brettcannon/python-azure-web-app-cookiecutter"/>
+                <vm:TemplateViewModel
+            DisplayName="cookiecutter-django"
+            ClonedPath="~\.cookiecutters\cookiecutter-django"
+            RemoteUrl="https://github.com/pydanny/cookiecutter-django"/>
+            </vm:CategorizedViewModel.Templates>
+        </vm:CategorizedViewModel>
+    </vm:CookiecutterViewModel.SearchResults>
+    <vm:CookiecutterViewModel.ContextItems>
+        <vm:ContextItemViewModel Name="author_name" Val="" Default="John Doe"/>
+        <vm:ContextItemViewModel Name="email" Val="" Default="johndoe@email.com"/>
+        <vm:ContextItemViewModel Name="github_username" Val="" Default="johndoe"/>
+        <vm:ContextItemViewModel Name="project_name" Val="pythonapplication1" Default="appname"/>
+        <vm:ContextItemViewModel Name="use_azure" Val="" Default="y"/>
+        <vm:ContextItemViewModel Name="license" Val="" Default="">
+            <vm:ContextItemViewModel.Items>
+                <System:String>MIT</System:String>
+                <System:String>BSD</System:String>
+                <System:String>Apache 2</System:String>
+                <System:String>GPL v2</System:String>
+                <System:String>GPL v3</System:String>
+            </vm:ContextItemViewModel.Items>
+        </vm:ContextItemViewModel>
+    </vm:CookiecutterViewModel.ContextItems>
+</vm:CookiecutterViewModel>

@@ -204,6 +204,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _isUpToDate = true;
         }
 
+        public override string ToString() => Name;
+
         public static IEnumerable<DBPackageView> FromModuleList(
             IList<string> modules,
             IList<string> stdLibModules,
@@ -219,19 +221,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             HashSet<string> knownModules = null;
             bool areKnownModulesUpToDate = false;
             if (!factory.IsCurrent) {
-                var factory2 = factory as IPythonInterpreterFactoryWithDatabase2;
-                if (factory2 == null) {
-                    knownModules = new HashSet<string>(Regex.Matches(
-                        factory.GetIsCurrentReason(CultureInfo.InvariantCulture),
-                        @"\b[\w\d\.]+\b"
-                    ).Cast<Match>().Select(m => m.Value),
-                        StringComparer.Ordinal
-                    );
-                    areKnownModulesUpToDate = false;
-                } else {
-                    knownModules = new HashSet<string>(factory2.GetUpToDateModules(), StringComparer.Ordinal);
-                    areKnownModulesUpToDate = true;
-                }
+                knownModules = new HashSet<string>(factory.GetUpToDateModules(), StringComparer.Ordinal);
+                areKnownModulesUpToDate = true;
             }
             for (int i = 0; i < modules.Count; ) {
                 if (stdLib.Contains(modules[i])) {
@@ -354,26 +345,20 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
             if (_modules == null || refresh) {
                 var stdLibPaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                stdLibPaths.Add(_factory.Configuration.LibraryPath);
                 stdLibPaths.Add(Path.Combine(_factory.Configuration.PrefixPath, "DLLs"));
                 stdLibPaths.Add(Path.GetDirectoryName(_factory.Configuration.InterpreterPath));
 
                 var results = await Task.Run(() => {
-                    List<PythonLibraryPath> paths;
-                    if (_factory.AssumeSimpleLibraryLayout) {
-                        paths = PythonTypeDatabase.GetDefaultDatabaseSearchPaths(_factory.Configuration.LibraryPath);
-                    } else {
-                        paths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(_factory.DatabasePath);
-                        if (paths == null) {
-                            paths = PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(
-                                _factory.Configuration.InterpreterPath
-                            ).WaitAndUnwrapExceptions();
-                            try {
-                                PythonTypeDatabase.WriteDatabaseSearchPaths(_factory.DatabasePath, paths);
-                            } catch (Exception ex) {
-                                if (ex.IsCriticalException()) {
-                                    throw;
-                                }
+                    var paths = PythonTypeDatabase.GetCachedDatabaseSearchPaths(_factory.DatabasePath);
+                    if (paths == null) {
+                        paths = PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(
+                            _factory.Configuration.InterpreterPath
+                        ).WaitAndUnwrapExceptions();
+                        try {
+                            PythonTypeDatabase.WriteDatabaseSearchPaths(_factory.DatabasePath, paths);
+                        } catch (Exception ex) {
+                            if (ex.IsCriticalException()) {
+                                throw;
                             }
                         }
                     }

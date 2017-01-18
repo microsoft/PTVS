@@ -16,6 +16,7 @@
 
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -24,27 +25,30 @@ namespace Microsoft.PythonTools.Project {
     sealed class AddVirtualEnvironmentOperation {
         private readonly PythonProjectNode _project;
         private readonly string _virtualEnvPath;
-        private readonly IPythonInterpreterFactory _baseInterpreter;
+        private readonly string _baseInterpreter;
         private readonly bool _create;
         private readonly bool _useVEnv;
         private readonly bool _installRequirements;
+        private readonly string _requirementsPath;
         private readonly Redirector _output;
         
         public AddVirtualEnvironmentOperation(
             PythonProjectNode project,
             string virtualEnvPath,
-            IPythonInterpreterFactory baseInterpreter,
+            string baseInterpreterId,
             bool create,
             bool useVEnv,
             bool installRequirements,
+            string requirementsPath,
             Redirector output = null
         ) {
             _project = project;
             _virtualEnvPath = virtualEnvPath;
-            _baseInterpreter = baseInterpreter;
+            _baseInterpreter = baseInterpreterId;
             _create = create;
             _useVEnv = useVEnv;
             _installRequirements = installRequirements;
+            _requirementsPath = requirementsPath;
             _output = output;
         }
 
@@ -65,11 +69,13 @@ namespace Microsoft.PythonTools.Project {
 
             IPythonInterpreterFactory factory;
             try {
+                var baseInterp = service.FindInterpreter(_baseInterpreter);
+
                 factory = await _project.CreateOrAddVirtualEnvironment(
                     service,
                     _create,
                     _virtualEnvPath,
-                    _baseInterpreter,
+                    baseInterp,
                     _useVEnv
                 );
             } catch (Exception ex) when (!ex.IsCriticalException()) {
@@ -81,24 +87,28 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var txt = PathUtils.GetAbsoluteFilePath(_project.ProjectHome, "requirements.txt");
+            var txt = _requirementsPath;
             if (!_installRequirements || !File.Exists(txt)) {
                 return;
             }
 
+            if (factory.PackageManager == null) {
+                WriteError(
+                    Strings.PackageManagementNotSupported_Package.FormatUI(PathUtils.GetFileOrDirectoryName(txt))
+                );
+                return;
+            }
+
             WriteOutput(Strings.RequirementsTxtInstalling.FormatUI(txt));
-            if (await Pip.Install(
-                _project.Site,
-                factory,
-                "-r " + ProcessOutput.QuoteSingleArgument(txt),
-                false,  // never elevate for a virtual environment
-                _output
+            if (await factory.PackageManager.InstallAsync(
+                PackageSpec.FromArguments("-r " + ProcessOutput.QuoteSingleArgument(txt)),
+                new VsPackageManagerUI(_project.Site),
+                CancellationToken.None
             )) {
                 WriteOutput(Strings.PackageInstallSucceeded.FormatUI(Path.GetFileName(txt)));
             } else {
                 WriteOutput(Strings.PackageInstallFailed.FormatUI(Path.GetFileName(txt)));
             }
         }
-
     }
 }

@@ -26,25 +26,27 @@ namespace Microsoft.PythonTools.Analysis.Values {
         private readonly PythonMemberType _memberType;
         private string _doc;
 
-        internal ConstantInfo(BuiltinClassInfo klass, object value)
+        public static ConstantInfo Create(PythonAnalyzer state, object value) {
+            var constant = value as IPythonConstant;
+            var constantType = constant?.Type;
+            var av = state.GetAnalysisValueFromObjectsThrowOnNull(constantType ?? state.GetTypeFromObject(value));
+
+            var ci = av as ConstantInfo;
+            if (ci != null) {
+                return ci;
+            }
+            var bci = av as BuiltinClassInfo;
+            if (bci != null) {
+                return new ConstantInfo(bci, value, constant?.MemberType ?? PythonMemberType.Constant);
+            }
+            return null;
+        }
+
+        internal ConstantInfo(BuiltinClassInfo klass, object value, PythonMemberType memberType)
             : base(klass) {
             _value = value;
-            _memberType = PythonMemberType.Constant;
+            _memberType = memberType;
             _builtinInfo = klass.Instance;
-        }
-
-        public ConstantInfo(object value, PythonAnalyzer projectState)
-            : base((BuiltinClassInfo)projectState.GetAnalysisValueFromObjectsThrowOnNull(projectState.GetTypeFromObject(value))) {
-            _value = value;
-            _memberType = PythonMemberType.Constant;
-            _builtinInfo = ((BuiltinClassInfo)projectState.GetAnalysisValueFromObjects(_type)).Instance;
-        }
-
-        public ConstantInfo(IPythonConstant value, PythonAnalyzer projectState)
-            : base((BuiltinClassInfo)projectState.GetAnalysisValueFromObjects(value.Type)) {
-            _value = value;
-            _memberType = value.MemberType;
-            _builtinInfo = ((BuiltinClassInfo)projectState.GetAnalysisValueFromObjects(value.Type)).Instance;
         }
 
         public override IAnalysisSet BinaryOperation(Node node, AnalysisUnit unit, PythonOperator operation, IAnalysisSet rhs) {

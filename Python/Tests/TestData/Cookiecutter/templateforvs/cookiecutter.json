@@ -1,0 +1,52 @@
+{
+  "full_name": "Default Full Name",
+  "email": "default@email",
+  "github_username": "defaultgitusername",
+  "project_name": "Default Project Name",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_') }}",
+  "pypi_username": "{{ cookiecutter.github_username }}",
+  "version": "0.1.0",
+  "db_connection": "",
+  "use_azure": "y",
+  "open_source_license": [ "MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source" ],
+  "port": 5000,
+  "_copy_without_render": [
+    "media/*"
+  ],
+  "_visual_studio": {
+    "full_name": {
+      "label": "Author",
+      "description": "Full name of author."
+    },
+    "project_name": {
+      "label": "Project Name",
+      "description": "Description for the application.",
+      "url":  "c:\\foo.txt"
+    },
+    "project_slug": {
+      "label": "Package Name",
+      "description": "Pythonic name for the application.",
+      "url": "http://www.python.org"
+    },
+    "db_connection": {
+      "label": "ODBC Connection String",
+      "selector": "odbcConnection",
+      "url": "https://www.microsoft.com/en-us/sql-server/sql-server-2016"
+    },
+    "use_azure": {
+      "description": "Enable Azure support.",
+      "selector": "yesno",
+      "url": "http://azure.microsoft.com"
+    },
+    "open_source_license": {
+      "label": "Open Source License",
+      "description": "License under which you will distribute the generated files.",
+      "url": "https://opensource.org/licenses"
+    },
+    "port": {
+      "label": "Port",
+      "selector": "string",
+      "url": "/bad/url"
+    }
+  }
+}

@@ -270,8 +270,10 @@ namespace Microsoft.PythonTools.Infrastructure {
             return new ProcessOutput(process, redirector);
         }
 
+        private static readonly Random FreePortRandom = new Random();
+
         private static int GetFreePort() {
-            return Enumerable.Range(new Random().Next(49152, 65536), 60000).Except(
+            return Enumerable.Range(FreePortRandom.Next(49152, 65536), 60000).Except(
                 from connection in IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpConnections()
                 select connection.LocalEndPoint.Port
             ).First();
@@ -304,12 +306,6 @@ namespace Microsoft.PythonTools.Infrastructure {
             var psi = new ProcessStartInfo(PythonToolsInstallPath.GetFile("Microsoft.PythonTools.RunElevated.exe", typeof(ProcessOutput).Assembly));
             psi.CreateNoWindow = true;
             psi.WindowStyle = ProcessWindowStyle.Hidden;
-            psi.UseShellExecute = true;
-            psi.Verb = elevate ? "runas" : null;
-
-            int port = GetFreePort();
-            var listener = new TcpListener(IPAddress.Loopback, port);
-            psi.Arguments = port.ToString();
 
             var utf8 = new UTF8Encoding(false);
             // Send args and env as base64 to avoid newline issues
@@ -330,10 +326,61 @@ namespace Microsoft.PythonTools.Infrastructure {
                 string.Join("|", env.Select(kv => kv.Key + "=" + Convert.ToBase64String(utf8.GetBytes(kv.Value)))) :
                 "";
 
-            listener.Start();
-            listener.AcceptTcpClientAsync().ContinueWith(t => {
+            TcpListener listener = null;
+            Task<TcpClient> clientTask = null;
+
+            for (int retries = 10; retries >= 0; --retries) {
+                int port = GetFreePort();
+                listener = new TcpListener(IPAddress.Loopback, port);
+                psi.Arguments = port.ToString();
+                try {
+                    listener.Start();
+                } catch (SocketException) {
+                    if (retries == 0) {
+                        throw;
+                    }
+                    continue;
+                }
+                try {
+                    clientTask = listener.AcceptTcpClientAsync();
+                } catch (SocketException) {
+                    listener.Stop();
+                    if (retries == 0) {
+                        throw;
+                    }
+                    clientTask = null;
+                }
+            }
+
+            if (clientTask == null) {
+                throw new InvalidOperationException(Strings.UnableToElevate);
+            }
+
+            var process = new Process();
+
+            clientTask.ContinueWith(t => {
                 listener.Stop();
-                var client = t.Result;
+                TcpClient client;
+                try {
+                    client = t.Result;
+                } catch (AggregateException ae) {
+                    try {
+                        process.Kill();
+                    } catch (InvalidOperationException) {
+                    } catch (Win32Exception) {
+                    }
+
+                    if (redirector != null) {
+                        foreach (var ex in ae.InnerExceptions.DefaultIfEmpty(ae)) {
+                            using (var reader = new StringReader(ex.ToString())) {
+                                for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
+                                    redirector.WriteErrorLine(line);
+                                }
+                            }
+                        }
+                    }
+                    return;
+                }
                 using (var writer = new StreamWriter(client.GetStream(), utf8, 4096, true)) {
                     writer.WriteLine(filename);
                     writer.WriteLine(args);
@@ -363,7 +410,6 @@ namespace Microsoft.PythonTools.Infrastructure {
                 }
             });
 
-            var process = new Process();
             process.StartInfo = psi;
 
             return new ProcessOutput(process, redirector);
@@ -457,6 +503,9 @@ namespace Microsoft.PythonTools.Infrastructure {
 
             try {
                 _process.Start();
+            } catch (Win32Exception ex) {
+                _redirector.WriteErrorLine(ex.Message);
+                _process = null;
             } catch (Exception ex) when (!ex.IsCriticalException()) {
                 foreach (var line in SplitLines(ex.ToString())) {
                     _redirector.WriteErrorLine(line);

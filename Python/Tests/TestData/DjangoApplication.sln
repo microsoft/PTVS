@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "DjangoApplication", "DjangoApplication\DjangoApplication.pyproj", "{B79498EC-F181-49C5-B2AF-97F48B05D35E}"
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "DjangoApplication", "DjangoApplication\DjangoApplication.pyproj", "{21b50402-371a-49e6-afdc-41242f0d097f}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,8 +9,8 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{B79498EC-F181-49C5-B2AF-97F48B05D35E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B79498EC-F181-49C5-B2AF-97F48B05D35E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21b50402-371a-49e6-afdc-41242f0d097f}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21b50402-371a-49e6-afdc-41242f0d097f}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

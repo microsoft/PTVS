@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -27,13 +26,13 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Analysis.Values;
 using Microsoft.PythonTools.Ipc.Json;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Projects;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
@@ -50,15 +49,8 @@ namespace Microsoft.PythonTools.Intellisense {
     /// analysis.
     /// </summary>
     sealed class OutOfProcProjectAnalyzer : IDisposable {
-        // For entries that were loaded from a .zip file, IProjectEntry.Properties[_zipFileName] contains the full path to that archive.
-        private static readonly object _zipFileName = new { Name = "ZipFileName" };
-
-        // For entries that were loaded from a .zip file, IProjectEntry.Properties[_pathInZipFile] contains the path of the item inside the archive.
-        private static readonly object _pathInZipFile = new { Name = "PathInZipFile" };
-
         private readonly AnalysisQueue _analysisQueue;
         private IPythonInterpreterFactory _interpreterFactory;
-        //private readonly Dictionary<BufferParser, IProjectEntry> _openFiles = new Dictionary<BufferParser, IProjectEntry>();
         private readonly ProjectEntryMap _projectFiles;
         private PythonAnalyzer _pyAnalyzer;
         private readonly AutoResetEvent _queueActivityEvent = new AutoResetEvent(false);
@@ -80,11 +72,11 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly Dictionary<string, IAnalysisExtension> _extensionsByName = new Dictionary<string, IAnalysisExtension>();
 
         private readonly Connection _connection;
-        internal Task ReloadTask;
 
         internal OutOfProcProjectAnalyzer(Stream writer, Stream reader) {
             _analysisQueue = new AnalysisQueue(this);
             _analysisQueue.AnalysisComplete += AnalysisQueue_Complete;
+            _analysisQueue.AnalysisAborted += AnalysisQueue_Aborted;
             _options = new AP.OptionsChangedEvent() {
                 indentation_inconsistency_severity = Severity.Ignore
             };
@@ -93,10 +85,18 @@ namespace Microsoft.PythonTools.Intellisense {
             _connection = new Connection(writer, reader, RequestHandler, AP.RegisteredTypes);
             _connection.EventReceived += ConectionReceivedEvent;
 
+            GlobalInterpreterOptions.SuppressFileSystemWatchers = true;
+            GlobalInterpreterOptions.SuppressPackageManagers = true;
+
             _catalog = new AggregateCatalog();
             _container = new CompositionContainer(_catalog);
             _container.ExportsChanged += ContainerExportsChanged;
         }
+
+        private void AnalysisQueue_Aborted(object sender, EventArgs e) {
+            _connection.Dispose();
+        }
+
 
         private void ContainerExportsChanged(object sender, ExportsChangeEventArgs e) {
             // figure out the new extensions...
@@ -119,9 +119,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 _registeredExtensions.UnionWith(newExtensions);
             }
 
-            // inform them of the analyzer...
-            foreach (var extension in newExtensions) {
-                extension.Register(_pyAnalyzer);
+            if (_pyAnalyzer != null) {
+                // inform them of the analyzer...
+                foreach (var extension in newExtensions) {
+                    extension.Register(_pyAnalyzer);
+                }
             }
         }
 
@@ -153,10 +155,12 @@ namespace Microsoft.PythonTools.Intellisense {
             switch (command) {
                 case AP.UnloadFileRequest.Command: response = UnloadFile((AP.UnloadFileRequest)request); break;
                 case AP.AddFileRequest.Command: response = AnalyzeFile((AP.AddFileRequest)request); break;
+                case AP.AddBulkFileRequest.Command: response = AnalyzeFile((AP.AddBulkFileRequest)request); break;
                 case AP.TopLevelCompletionsRequest.Command: response = GetTopLevelCompletions(request); break;
                 case AP.CompletionsRequest.Command: response = GetCompletions(request); break;
+                case AP.GetAllMembersRequest.Command: response = GetAllMembers(request); break;
                 case AP.GetModulesRequest.Command: response = GetModules(request); break;
-                case AP.GetModuleMembers.Command: response = GeModuleMembers(request); break;
+                case AP.GetModuleMembersRequest.Command: response = GeModuleMembers(request); break;
                 case AP.SignaturesRequest.Command: response = GetSignatures((AP.SignaturesRequest)request); break;
                 case AP.QuickInfoRequest.Command: response = GetQuickInfo((AP.QuickInfoRequest)request); break;
                 case AP.AnalyzeExpressionRequest.Command: response = AnalyzeExpression((AP.AnalyzeExpressionRequest)request); break;
@@ -180,12 +184,11 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.FindMethodsRequest.Command: response = FindMethods((AP.FindMethodsRequest)request); break;
                 case AP.AddReferenceRequest.Command: response = AddReference((AP.AddReferenceRequest)request); break;
                 case AP.RemoveReferenceRequest.Command: response = RemoveReference((AP.RemoveReferenceRequest)request); break;
-                case AP.AddZipArchiveRequest.Command: response = AddZipArchive((AP.AddZipArchiveRequest)request); break;
-                case AP.AddDirectoryRequest.Command: response = AddDirectory((AP.AddDirectoryRequest)request); break;
+                case AP.SetSearchPathRequest.Command: response = SetSearchPath((AP.SetSearchPathRequest)request); break;
                 case AP.ModuleImportsRequest.Command: response = GetModuleImports((AP.ModuleImportsRequest)request); break;
                 case AP.ValueDescriptionRequest.Command: response = GetValueDescriptions((AP.ValueDescriptionRequest)request); break;
                 case AP.ExtensionRequest.Command: response = ExtensionRequest((AP.ExtensionRequest)request); break;
-                case AP.InitializeRequest.Command: response = Initialize((AP.InitializeRequest)request); break;
+                case AP.InitializeRequest.Command: response = await Initialize((AP.InitializeRequest)request); break;
                 case AP.ExpressionForDataTipRequest.Command: response = ExpressionForDataTip((AP.ExpressionForDataTipRequest)request); break;
                 case AP.ExitRequest.Command: throw new OperationCanceledException();
                 default:
@@ -196,12 +199,26 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void ReportUnhandledException(Exception ex) {
-            _connection.SendEventAsync(
-                new AP.UnhandledExceptionEvent(ex)
-            ).Wait();
+            SendUnhandledException(ex);
+            // Allow some time for the other threads to write the event before
+            // we (probably) come crashing down.
+            Thread.Sleep(100);
         }
 
-        private Response Initialize(AP.InitializeRequest request) {
+        private async void SendUnhandledException(Exception ex) {
+            try {
+                Debug.Fail(ex.ToString());
+                await _connection.SendEventAsync(
+                    new AP.UnhandledExceptionEvent(ex)
+                ).ConfigureAwait(false);
+            } catch (Exception) {
+                // We're in pretty bad state, but nothing useful we can do about
+                // it.
+                Debug.Fail("Unhandled exception reporting unhandled exception");
+            }
+        }
+
+        private async Task<Response> Initialize(AP.InitializeRequest request) {
             List<AssemblyCatalog> catalogs = new List<AssemblyCatalog>();
 
             HashSet<string> assemblies = new HashSet<string>(request.mefExtensions);
@@ -251,14 +268,14 @@ namespace Microsoft.PythonTools.Intellisense {
             var registry = _container.GetExportedValue<IInterpreterRegistryService>();
             IPythonInterpreterFactory factory = null;
             Version analysisVersion;
-            if (request.interpreterId.StartsWith("AnalysisOnly;")) {
-                int versionStart = request.interpreterId.IndexOf(';') + 1;
-                int versionEnd = request.interpreterId.IndexOf(';', versionStart);
+            if (request.interpreterId.StartsWith("AnalysisOnly|")) {
+                int versionStart = request.interpreterId.IndexOf('|') + 1;
+                int versionEnd = request.interpreterId.IndexOf('|', versionStart);
 
                 if (Version.TryParse(request.interpreterId.Substring(versionStart, versionEnd - versionStart), out analysisVersion)) {
                     string[] dbDirs;
                     if (versionEnd + 1 != request.interpreterId.Length) {
-                        dbDirs = request.interpreterId.Substring(versionEnd + 1).Split(';');
+                        dbDirs = request.interpreterId.Substring(versionEnd + 1).Split('|');
                     } else {
                         dbDirs = null;
                     }
@@ -269,26 +286,27 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             if (factory == null) {
-                error = String.Format("No active interpreter found for interpreter ID: {0}", request.interpreterId);
-                return new AP.InitializeResponse() {
-                    failedLoads = failures.ToArray(),
-                    error = error
-                };
+                if (_connection != null) {
+                    await _connection.SendEventAsync(
+                        new AP.AnalyzerWarningEvent(string.Format("No active interpreter found for interpreter ID: {0}", request.interpreterId))
+                    );
+                }
+                var db = PythonTypeDatabase.CreateDefaultTypeDatabase();
+                factory = InterpreterFactoryCreator.CreateAnalysisInterpreterFactory(db.LanguageVersion, db);
             }
 
             _interpreterFactory = factory;
             _allConfigs = registry.Configurations.ToArray();
 
-            var interpreter = factory.CreateInterpreter();
-            if (interpreter != null) {
-                try {
+            try {
+                var interpreter = factory.CreateInterpreter();
+                if (interpreter != null) {
                     _pyAnalyzer = PythonAnalyzer.Create(factory, interpreter);
-                    ReloadTask = _pyAnalyzer.ReloadModulesAsync()/*.HandleAllExceptions(_serviceProvider, GetType())*/;
-                    ReloadTask.ContinueWith(_ => ReloadTask = null);
+                    await _pyAnalyzer.ReloadModulesAsync();
                     interpreter.ModuleNamesChanged += OnModulesChanged;
-                } catch (InvalidOperationException ex) {
-                    error = ex.ToString();
                 }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                error = ex.ToString();
             }
 
             return new AP.InitializeResponse() {
@@ -332,7 +350,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GetModuleImports(AP.ModuleImportsRequest request) {
-            var res = Project.GetEntriesThatImportModule(
+            var res = Analyzer.GetEntriesThatImportModule(
                 request.moduleName,
                 request.includeUnresolved
             );
@@ -346,34 +364,8 @@ namespace Microsoft.PythonTools.Intellisense {
             };
         }
 
-        private Response AddDirectory(AP.AddDirectoryRequest request) {
-            AnalyzeDirectory(
-                request.dir,
-                entry => {
-                    _connection.SendEventAsync(
-                        new AP.ChildFileAnalyzed() {
-                            parent = request.dir,
-                            filename = entry.FilePath
-                        }
-                    ).Wait();
-                }
-            );
-
-            return new Response();
-        }
-
-        private Response AddZipArchive(AP.AddZipArchiveRequest request) {
-            AnalyzeZipArchive(
-                request.archive,
-                entry => {
-                    _connection.SendEventAsync(
-                        new AP.ChildFileAnalyzed() {
-                            parent = request.archive,
-                            filename = entry.FilePath
-                        }
-                    ).Wait();
-                }
-            );
+        private Response SetSearchPath(AP.SetSearchPathRequest request) {
+            Analyzer.SetSearchPaths(request.dir);
 
             return new Response();
         }
@@ -421,7 +413,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 int version;
                 string code;
                 var ast = analysis.GetVerbatimAstAndCode(
-                    Project.LanguageVersion,
+                    Analyzer.LanguageVersion,
                     request.bufferId,
                     out version,
                     out code
@@ -458,7 +450,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 int version;
                 string code;
                 var ast = analysis.GetVerbatimAstAndCode(
-                    Project.LanguageVersion,
+                    Analyzer.LanguageVersion,
                     request.bufferId,
                     out version,
                     out code
@@ -772,7 +764,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         private Response AvailableImports(AP.AvailableImportsRequest request) {
             return new AP.AvailableImportsResponse() {
-                imports = _pyAnalyzer.FindNameInAllModules(request.name)
+                imports = Analyzer.FindNameInAllModules(request.name)
                     .Select(
                         x => new AP.ImportInfo() {
                             importName = x.ImportName,
@@ -946,7 +938,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 var walker = new ImportStatementWalker(
                     bufferVersion.Ast,
                     entry,
-                    _pyAnalyzer
+                    Analyzer
                 );
 
                 bufferVersion.Ast.Walk(walker);
@@ -1366,10 +1358,12 @@ namespace Microsoft.PythonTools.Intellisense {
             var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
             IEnumerable<IOverloadResult> sigs;
             if (pyEntry.Analysis != null) {
-                sigs = pyEntry.Analysis.GetSignaturesByIndex(
-                    request.text,
-                    request.location
-                );
+                using (new DebugTimer("GetSignaturesByIndex")) {
+                    sigs = pyEntry.Analysis.GetSignaturesByIndex(
+                        request.text,
+                        request.location
+                    );
+                }
             } else {
                 sigs = Enumerable.Empty<IOverloadResult>();
             }
@@ -1377,7 +1371,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AP.SignaturesResponse() {
                 sigs = ToSignatures(sigs)
             };
-
         }
 
         private Response GetTopLevelCompletions(Request request) {
@@ -1401,11 +1394,11 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GeModuleMembers(Request request) {
-            var getModuleMembers = (AP.GetModuleMembers)request;
+            var getModuleMembers = (AP.GetModuleMembersRequest)request;
 
             return new AP.CompletionsResponse() {
                 completions = ToCompletions(
-                    _pyAnalyzer.GetModuleMembers(
+                    Analyzer.GetModuleMembers(
                         _projectFiles[getModuleMembers.fileId].AnalysisContext,
                         getModuleMembers.package,
                         getModuleMembers.includeMembers
@@ -1420,7 +1413,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return new AP.CompletionsResponse() {
                 completions = ToCompletions(
-                    _pyAnalyzer.GetModules(getModules.topLevelOnly),
+                    Analyzer.GetModules(getModules.topLevelOnly),
                     GetMemberOptions.None
                 )
             };
@@ -1444,6 +1437,30 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return new AP.CompletionsResponse() {
                 completions = ToCompletions(members.ToArray(), completions.options)
+            };
+        }
+
+        private Response GetAllMembers(Request request) {
+            var req = (AP.GetAllMembersRequest)request;
+
+            var members = Enumerable.Empty<MemberResult>();
+            var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly | req.options;
+
+            foreach (var entry in _projectFiles) {
+                var analysis = (entry.Value as IPythonProjectEntry)?.Analysis;
+                if (analysis != null) {
+                    members = members.Concat(analysis.GetAllAvailableMembers(SourceLocation.None, opts)
+                        .Where(mr => mr.Values.Any(v => v.DeclaringModule == entry.Value)));
+                }
+            }
+
+            if (!string.IsNullOrEmpty(req.prefix)) {
+                members = members.Where(mr => mr.Name.StartsWith(req.prefix));
+            }
+            members = members.GroupBy(mr => mr.Name).Select(g => g.First());
+
+            return new AP.CompletionsResponse() {
+                completions = ToCompletions(members.ToArray(), opts)
             };
         }
 
@@ -1505,7 +1522,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response AnalyzeFile(AP.AddFileRequest request) {
-            var entry = AnalyzeFile(request.path, request.addingFromDir);
+            var entry = AnalyzeFile(request.path, request.addingFromDir, request.isTemporaryFile, request.suppressErrorLists);
 
             if (entry != null) {
                 return new AP.AddFileResponse() {
@@ -1516,6 +1533,22 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AP.AddFileResponse() {
                 fileId = -1
             };
+        }
+
+        private Response AnalyzeFile(AP.AddBulkFileRequest request) {
+            var response = new AP.AddBulkFileResponse {
+                fileId = Enumerable.Repeat(-1, request.path.Length).ToArray()
+            };
+
+            for(int i = 0; i < request.path.Length; ++i) {
+                var entry = AnalyzeFile(request.path[i], request.addingFromDir, false, false);
+
+                if (entry != null) {
+                    response.fileId[i] = ProjectEntryMap.GetId(entry);
+                }
+            }
+
+            return response;
         }
 
         private Response UnloadFile(AP.UnloadFileRequest command) {
@@ -1530,7 +1563,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
         abstract class CodeInfo {
             public readonly int Version;
-            public object Code; // Stream or TextReader
 
             public CodeInfo(int version) {
                 Version = version;
@@ -1713,7 +1745,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 throw new InvalidOperationException("Unknown project entry");
             }
 
-            return GetNormalCompletions(file, request);
+            using (new DebugTimer("GetCompletions")) {
+                return GetNormalCompletions(file, request);
+            }
         }
 
         internal Task ProcessMessages() {
@@ -1726,33 +1760,16 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private void AnalysisQueue_Complete(object sender, EventArgs e) {
-            _connection?.SendEventAsync(new AP.AnalysisCompleteEvent());
-        }
-
-        internal static string GetZipFileName(IProjectEntry entry) {
-            object result;
-            entry.Properties.TryGetValue(_zipFileName, out result);
-            return (string)result;
-        }
-
-        private static void SetZipFileName(IProjectEntry entry, string value) {
-            entry.Properties[_zipFileName] = value;
-        }
-
-        internal static string GetPathInZipFile(IProjectEntry entry) {
-            object result;
-            entry.Properties.TryGetValue(_pathInZipFile, out result);
-            return (string)result;
-        }
-
-        private static void SetPathInZipFile(IProjectEntry entry, string value) {
-            entry.Properties[_pathInZipFile] = value;
+        private async void AnalysisQueue_Complete(object sender, EventArgs e) {
+            if (_connection == null) {
+                return;
+            }
+            await _connection.SendEventAsync(new AP.AnalysisCompleteEvent()).ConfigureAwait(false);
         }
 
         private async void OnModulesChanged(object sender, EventArgs args) {
-            Debug.Assert(_pyAnalyzer != null, "Should not have null _pyAnalyzer here");
             if (_pyAnalyzer == null) {
+                Debug.Fail("Should not have null _pyAnalyzer here");
                 return;
             }
 
@@ -1774,72 +1791,98 @@ namespace Microsoft.PythonTools.Intellisense {
             return true;
         }
 
-        internal IProjectEntry AnalyzeFile(string path, string addingFromDirectory = null) {
+        private IProjectEntry AnalyzeNewFile(string path, string addingFromDirectory) {
+            if (_pyAnalyzer == null) {
+                Debug.Fail("AnalyzeNewFile should only be called when _pyAnalyzer exists");
+                return null;
+            }
+
+            IProjectEntry item = null;
+
+            if (Path.GetExtension(path).Equals(".xaml", StringComparison.OrdinalIgnoreCase)) {
+                item = _pyAnalyzer.AddXamlFile(path, null);
+
+            } else if (ModulePath.IsPythonSourceFile(path)) {
+                // assume it's a Python file...
+                string modName;
+                try {
+                    modName = ModulePath.FromFullPath(path, addingFromDirectory).ModuleName;
+                } catch (ArgumentException) {
+                    // File is not a valid module, but we can still add an
+                    // entry for it.
+                    modName = null;
+                }
+
+                IPythonProjectEntry[] reanalyzeEntries = null;
+                if (!string.IsNullOrEmpty(modName)) {
+                    reanalyzeEntries = _pyAnalyzer.GetEntriesThatImportModule(modName, true).ToArray();
+                }
+
+                var pyEntry = _pyAnalyzer.AddModule(modName, path, null);
+                pyEntry.OnNewAnalysis += OnNewAnalysis;
+
+                pyEntry.BeginParsingTree();
+
+                if (reanalyzeEntries != null) {
+                    foreach (var entryRef in reanalyzeEntries) {
+                        _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
+                    }
+                }
+
+                item = pyEntry;
+            }
+
+            return item;
+        }
+
+        internal IProjectEntry AnalyzeFile(string path, string addingFromDirectory, bool isTemporaryFile, bool suppressErrorList) {
             if (_pyAnalyzer == null) {
                 // We aren't able to analyze code, so don't create an entry.
                 return null;
             }
 
             IProjectEntry item;
+            IPythonProjectEntry module;
             if (!_projectFiles.TryGetValue(path, out item)) {
-                if (path.EndsWith(".xaml", StringComparison.OrdinalIgnoreCase)) {
-                    item = _pyAnalyzer.AddXamlFile(path, null);
-                } else {
-                    // assume it's a Python file...
-                    string modName;
-                    try {
-                        modName = ModulePath.FromFullPath(path, addingFromDirectory).ModuleName;
-                    } catch (ArgumentException) {
-                        // File is not a valid module, but we can still add an
-                        // entry for it.
-                        modName = null;
-                    }
+                item = AnalyzeNewFile(path, addingFromDirectory);
+                if (item == null) {
+                    return null;
+                }
+                _projectFiles.Add(path, item);
 
-                    IPythonProjectEntry[] reanalyzeEntries = null;
-                    if (!string.IsNullOrEmpty(modName)) {
-                        reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
-                    }
+                if ((module = item as IPythonProjectEntry) != null) {
+                    // Send a notification for this file before starting analysis
+                    // An AnalyzeFile event will send the same details in its
+                    // response.
+                    _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
+                        fileId = ProjectEntryMap.GetId(module),
+                        filename = module.FilePath,
+                        isTemporaryFile = isTemporaryFile,
+                        suppressErrorList = suppressErrorList
+                    }).WaitAndUnwrapExceptions();
+                }
+                EnqueueFile(item, path);
+                return item;
+            }
 
-                    var pyEntry = _pyAnalyzer.AddModule(
-                        modName,
-                        path,
-                        null
-                    );
-                    pyEntry.OnNewAnalysis += OnNewAnalysis;
-
-                    pyEntry.BeginParsingTree();
-
-                    if (reanalyzeEntries != null) {
-                        foreach (var entryRef in reanalyzeEntries) {
-                            _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
-                        }
-                    }
-
-                    item = pyEntry;
+            // If the module exists, we may be adding an alias to it.
+            module = item as IPythonProjectEntry;
+            if (addingFromDirectory != null && module != null && ModulePath.IsPythonSourceFile(path)) {
+                string modName = null;
+                try {
+                    modName = ModulePath.FromFullPath(path, addingFromDirectory).ModuleName;
+                } catch (ArgumentException) {
+                    // Module does not have a valid name, so we can't make
+                    // an alias for it.
+                    return null;
                 }
 
-                if (item != null) {
-                    _projectFiles.Add(path, item);
-                    EnqueueFile(item, path);
-                }
-            } else if (addingFromDirectory != null) {
-                var module = item as IPythonProjectEntry;
-                if (module != null && ModulePath.IsPythonSourceFile(path)) {
-                    string modName = null;
-                    try {
-                        modName = ModulePath.FromFullPath(path, addingFromDirectory).ModuleName;
-                    } catch (ArgumentException) {
-                        // Module does not have a valid name, so we can't make
-                        // an alias for it.
-                    }
+                if (modName != null && module.ModuleName != modName) {
+                    _pyAnalyzer.AddModuleAlias(module.ModuleName, modName);
 
-                    if (modName != null && module.ModuleName != modName) {
-                        _pyAnalyzer.AddModuleAlias(module.ModuleName, modName);
-
-                        var reanalyzeEntries = Project.GetEntriesThatImportModule(modName, true).ToArray();
-                        foreach (var entryRef in reanalyzeEntries) {
-                            _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
-                        }
+                    var reanalyzeEntries = _pyAnalyzer.GetEntriesThatImportModule(modName, true).ToArray();
+                    foreach (var entryRef in reanalyzeEntries) {
+                        _analysisQueue.Enqueue(entryRef, AnalysisPriority.Low);
                     }
                 }
             }
@@ -1939,10 +1982,31 @@ namespace Microsoft.PythonTools.Intellisense {
 
         internal IPythonInterpreter Interpreter {
             get {
-                return _pyAnalyzer != null ? _pyAnalyzer.Interpreter : null;
+                return _pyAnalyzer?.Interpreter;
             }
         }
 
+        // Returns the current analyzer or throws InvalidOperationException.
+        // This should be used in request handlers that should fail when
+        // analysis is impossible. Callers that explicitly check for null before
+        // use should use _pyAnalyzer directly.
+        private PythonAnalyzer Analyzer {
+            get {
+                if (_pyAnalyzer == null) {
+                    throw new InvalidOperationException("Unable to analyze code");
+                }
+
+                return _pyAnalyzer;
+            }
+        }
+
+        /// <summary>
+        /// Returns the current analyzer or null if unable to analyze code.
+        /// </summary>
+        /// <remarks>
+        /// This is for public consumption only and should not be used within
+        /// <see cref="OutOfProcProjectAnalyzer"/>.
+        /// </remarks>
         public PythonAnalyzer Project {
             get {
                 return _pyAnalyzer;
@@ -2161,278 +2225,21 @@ namespace Microsoft.PythonTools.Intellisense {
             return false;
         }
 
-        /// <summary>
-        /// Analyzes a complete directory including all of the contained files and packages.
-        /// </summary>
-        /// <param name="dir">Directory to analyze.</param>
-        /// <param name="onFileAnalyzed">If specified, this callback is invoked for every <see cref="IProjectEntry"/>
-        /// that is analyzed while analyzing this directory.</param>
-        /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
-        public void AnalyzeDirectory(string dir, Action<IProjectEntry> onFileAnalyzed = null) {
-            _analysisQueue.Enqueue(new AddDirectoryAnalysis(dir, onFileAnalyzed, this), AnalysisPriority.High);
-        }
-
-        class AddDirectoryAnalysis : IAnalyzable {
-            private readonly string _dir;
-            private readonly Action<IProjectEntry> _onFileAnalyzed;
-            private readonly OutOfProcProjectAnalyzer _analyzer;
-
-            public AddDirectoryAnalysis(string dir, Action<IProjectEntry> onFileAnalyzed, OutOfProcProjectAnalyzer analyzer) {
-                _dir = dir;
-                _onFileAnalyzed = onFileAnalyzed;
-                _analyzer = analyzer;
-            }
-
-            #region IAnalyzable Members
-
-            public void Analyze(CancellationToken cancel) {
-                if (cancel.IsCancellationRequested) {
-                    return;
-                }
-
-                AnalyzeDirectoryWorker(_dir, true, _onFileAnalyzed, cancel);
-            }
-
-            #endregion
-
-            private void AnalyzeDirectoryWorker(string dir, bool addDir, Action<IProjectEntry> onFileAnalyzed, CancellationToken cancel) {
-                if (_analyzer._pyAnalyzer == null) {
-                    // We aren't able to analyze code.
-                    return;
-                }
-
-                if (string.IsNullOrEmpty(dir)) {
-                    Debug.Assert(false, "Unexpected empty dir");
-                    return;
-                }
-
-                if (addDir) {
-                    _analyzer._pyAnalyzer.AddAnalysisDirectory(dir);
-                }
-
-                try {
-                    var filenames = Directory.GetFiles(dir, "*.py").Concat(Directory.GetFiles(dir, "*.pyw"));
-                    foreach (string filename in filenames) {
-                        if (cancel.IsCancellationRequested) {
-                            break;
-                        }
-                        IProjectEntry entry = _analyzer.AnalyzeFile(filename, _dir);
-                        if (onFileAnalyzed != null) {
-                            onFileAnalyzed(entry);
-                        }
-                    }
-                } catch (IOException) {
-                    // We want to handle DirectoryNotFound, DriveNotFound, PathTooLong
-                } catch (UnauthorizedAccessException) {
-                }
-
-                try {
-                    foreach (string innerDir in Directory.GetDirectories(dir)) {
-                        if (cancel.IsCancellationRequested) {
-                            break;
-                        }
-                        if (File.Exists(PathUtils.GetAbsoluteFilePath(innerDir, "__init__.py"))) {
-                            AnalyzeDirectoryWorker(innerDir, false, onFileAnalyzed, cancel);
-                        }
-                    }
-                } catch (IOException) {
-                    // We want to handle DirectoryNotFound, DriveNotFound, PathTooLong
-                } catch (UnauthorizedAccessException) {
-                }
-            }
-        }
-
-        /// <summary>
-        /// Analyzes a .zip file including all of the contained files and packages.
-        /// </summary>
-        /// <param name="dir">.zip file to analyze.</param>
-        /// <param name="onFileAnalyzed">If specified, this callback is invoked for every <see cref="IProjectEntry"/>
-        /// that is analyzed while analyzing this directory.</param>
-        /// <remarks>The callback may be invoked on a thread different from the one that this function was originally invoked on.</remarks>
-        public void AnalyzeZipArchive(string zipFileName, Action<IProjectEntry> onFileAnalyzed = null) {
-            _analysisQueue.Enqueue(new AddZipArchiveAnalysis(zipFileName, onFileAnalyzed, this), AnalysisPriority.High);
-        }
-
-        private class AddZipArchiveAnalysis : IAnalyzable {
-            private readonly string _zipFileName;
-            private readonly Action<IProjectEntry> _onFileAnalyzed;
-            private readonly OutOfProcProjectAnalyzer _analyzer;
-
-            public AddZipArchiveAnalysis(string zipFileName, Action<IProjectEntry> onFileAnalyzed, OutOfProcProjectAnalyzer analyzer) {
-                _zipFileName = zipFileName;
-                _onFileAnalyzed = onFileAnalyzed;
-                _analyzer = analyzer;
-            }
-
-            #region IAnalyzable Members
-
-            public void Analyze(CancellationToken cancel) {
-                if (cancel.IsCancellationRequested) {
-                    return;
-                }
-
-                _analyzer.AnalyzeZipArchiveWorker(_zipFileName, _onFileAnalyzed, cancel);
-            }
-
-            #endregion
-        }
-
-
-        private void AnalyzeZipArchiveWorker(string zipFileName, Action<IProjectEntry> onFileAnalyzed, CancellationToken cancel) {
-            if (_pyAnalyzer == null) {
-                // We aren't able to analyze code.
-                return;
-            }
-
-            _pyAnalyzer.AddAnalysisDirectory(zipFileName);
-
-            ZipArchive archive = null;
-            Queue<ZipArchiveEntry> entryQueue = null;
-            try {
-                archive = ZipFile.Open(zipFileName, ZipArchiveMode.Read);
-
-                // We only want to scan files in directories that are packages - i.e. contain __init__.py. So enumerate
-                // entries in the archive, and build a list of such directories, so that later on we can compare file
-                // paths against that to see if we should scan them.
-                var packageDirs = new HashSet<string>(
-                    from entry in archive.Entries
-                    where entry.Name == "__init__.py"
-                    select Path.GetDirectoryName(entry.FullName));
-                packageDirs.Add(""); // we always want to scan files on the top level of the archive
-
-                entryQueue = new Queue<ZipArchiveEntry>(
-                    from entry in archive.Entries
-                    let ext = Path.GetExtension(entry.Name)
-                    where ext == ".py" || ext == ".pyw"
-                    let path = Path.GetDirectoryName(entry.FullName)
-                    where packageDirs.Contains(path)
-                    select entry);
-            } catch (InvalidDataException ex) {
-                Debug.Fail(ex.Message);
-                return;
-            } catch (IOException ex) {
-                Debug.Fail(ex.Message);
-                return;
-            } catch (UnauthorizedAccessException ex) {
-                Debug.Fail(ex.Message);
-                return;
-            } finally {
-                if (archive != null && entryQueue == null) {
-                    archive.Dispose();
-                }
-            }
-
-            // ZipArchive is not thread safe, and so we cannot analyze entries in parallel. Instead, use completion
-            // callbacks to queue the next one for analysis only after the preceding one is fully analyzed.
-            Action analyzeNextEntry = null;
-            analyzeNextEntry = () => {
-                try {
-                    if (entryQueue.Count == 0 || cancel.IsCancellationRequested) {
-                        archive.Dispose();
-                        return;
-                    }
-
-                    ZipArchiveEntry zipEntry = entryQueue.Dequeue();
-                    IProjectEntry projEntry = AnalyzeZipArchiveEntry(zipFileName, zipEntry, analyzeNextEntry);
-                    if (onFileAnalyzed != null && projEntry != null) {
-                        onFileAnalyzed(projEntry);
-                    }
-                } catch (InvalidDataException ex) {
-                    Debug.Fail(ex.Message);
-                } catch (IOException ex) {
-                    Debug.Fail(ex.Message);
-                } catch (UnauthorizedAccessException ex) {
-                    Debug.Fail(ex.Message);
-                }
-            };
-            analyzeNextEntry();
-        }
-
-        private IProjectEntry AnalyzeZipArchiveEntry(string zipFileName, ZipArchiveEntry entry, Action onComplete) {
-            if (_pyAnalyzer == null) {
-                // We aren't able to analyze code, so don't create an entry.
-                return null;
-            }
-            try {
-                string pathInZip = entry.FullName.Replace('/', '\\');
-                string path;
-                try {
-                    path = PathUtils.GetAbsoluteFilePath(zipFileName, pathInZip);
-                } catch (ArgumentException) {
-                    return null;
-                }
-
-                IProjectEntry item;
-                if (_projectFiles.TryGetValue(path, out item)) {
-                    return item;
-                }
-
-                if (ModulePath.IsPythonSourceFile(path)) {
-                    // Use the entry path relative to the root of the archive to determine module name - this boundary
-                    // should never be crossed, even if the parent directory of the zip is itself a package.
-                    string modName;
-                    try {
-                        modName = ModulePath.FromFullPath(
-                            pathInZip,
-                            isPackage: dir => entry.Archive.GetEntry(
-                                (PathUtils.EnsureEndSeparator(dir) + "__init__.py").Replace('\\', '/')
-                            ) != null).ModuleName;
-                    } catch (ArgumentException) {
-                        return null;
-                    }
-                    item = _pyAnalyzer.AddModule(modName, path, null);
-                }
-                if (item == null) {
-                    return null;
-                }
-
-                SetZipFileName(item, zipFileName);
-                SetPathInZipFile(item, pathInZip);
-                _projectFiles.Add(path, item);
-                IPythonProjectEntry pyEntry = item as IPythonProjectEntry;
-                if (pyEntry != null) {
-                    pyEntry.BeginParsingTree();
-                }
-
-                EnqueueZipArchiveEntry(item, zipFileName, entry, onComplete);
-                onComplete = null;
-                return item;
-            } finally {
-                if (onComplete != null) {
-                    onComplete();
-                }
-            }
-        }
-
-        internal void StopAnalyzingDirectory(string directory) {
-            if (_pyAnalyzer == null) {
-                // We aren't able to analyze code.
-                return;
-            }
-
-            _pyAnalyzer.RemoveAnalysisDirectory(directory);
-        }
-
         internal void Cancel() {
             _analysisQueue.Stop();
         }
 
         internal void UnloadFile(IProjectEntry entry) {
-            if (_pyAnalyzer == null) {
-                // We aren't able to analyze code.
-                return;
-            }
-
             if (entry != null) {
                 // If we remove a Python module, reanalyze any other modules
                 // that referenced it.
                 IPythonProjectEntry[] reanalyzeEntries = null;
                 var pyEntry = entry as IPythonProjectEntry;
                 if (pyEntry != null && !string.IsNullOrEmpty(pyEntry.ModuleName)) {
-                    reanalyzeEntries = _pyAnalyzer.GetEntriesThatImportModule(pyEntry.ModuleName, false).ToArray();
+                    reanalyzeEntries = Analyzer.GetEntriesThatImportModule(pyEntry.ModuleName, false).ToArray();
                 }
 
-                _pyAnalyzer.RemoveModule(entry);
+                Analyzer.RemoveModule(entry);
                 _projectFiles.Remove(entry);
 
                 if (reanalyzeEntries != null) {
@@ -2481,36 +2288,6 @@ namespace Microsoft.PythonTools.Intellisense {
             });
         }
 
-        public void EnqueueZipArchiveEntry(IProjectEntry projEntry, string zipFileName, ZipArchiveEntry entry, Action onComplete) {
-            var pathInArchive = entry.FullName.Replace('/', '\\');
-            var fileName = Path.Combine(zipFileName, pathInArchive);
-            EnqueWorker(() => {
-                try {
-                    using (var stream = entry.Open()) {
-                        ParseFile(
-                            projEntry,
-                            new Dictionary<int, CodeInfo> {
-                                { 0, new StreamCodeInfo(0, stream) }
-                            }
-                        );
-                        return;
-                    }
-                } catch (IOException ex) {
-                    Debug.Fail(ex.Message);
-                } catch (InvalidDataException ex) {
-                    Debug.Fail(ex.Message);
-                } finally {
-                    onComplete();
-                }
-
-                IPythonProjectEntry pyEntry = projEntry as IPythonProjectEntry;
-                if (pyEntry != null) {
-                    // failed to parse, keep the UpdateTree calls balanced
-                    pyEntry.UpdateTree(null, null);
-                }
-            });
-        }
-
         private void EnqueWorker(Action parser) {
             Interlocked.Increment(ref _analysisPending);
 
@@ -2550,6 +2327,9 @@ namespace Microsoft.PythonTools.Intellisense {
             }
 
             _queueActivityEvent.Dispose();
+            _connection.Dispose();
+            _container.Dispose();
+            _catalog.Dispose();
         }
 
         #endregion

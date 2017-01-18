@@ -25,6 +25,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Logging;
@@ -83,32 +84,16 @@ namespace Microsoft.PythonTools.Commands {
         }
 
         public override void DoCommand(object sender, EventArgs args) {
-            var dlg = new DiagnosticsForm(_serviceProvider, "Gathering data...");
-
-            ThreadPool.QueueUserWorkItem(x => {
-                string data;
-                try {
-                    data = GetData(dlg);
-                } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    data = ex.ToUnhandledExceptionMessage(GetType());
-                }
-                try {
-                    dlg.BeginInvoke((Action)(() => {
-                        dlg.Ready(data);
-                    }));
-                } catch (InvalidOperationException) {
-                    // Window has been closed already
-                }
-            });
-            dlg.ShowDialog();
+            var ui = _serviceProvider.GetUIThread();
+            var cts = new CancellationTokenSource();
+            bool skipAnalysisLog = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
+            var dlg = new DiagnosticsWindow(_serviceProvider, Task.Run(() => GetData(ui, skipAnalysisLog, cts.Token), cts.Token));
+            dlg.ShowModal();
+            cts.Cancel();
         }
 
-        private string GetData(System.Windows.Forms.Control ui) {
+        private string GetData(UIThreadBase ui, bool skipAnalysisLog, CancellationToken cancel) {
             StringBuilder res = new StringBuilder();
-
-            if (PythonToolsPackage.IsIpyToolsInstalled()) {
-                res.AppendLine("WARNING: IpyTools is installed on this machine.  Having both IpyTools and Python Tools for Visual Studio installed will break Python editing.");
-            }
 
             string pythonPathIsMasked = "";
             EnvDTE.DTE dte = null;
@@ -131,6 +116,8 @@ namespace Microsoft.PythonTools.Commands {
             var projects = dte.Solution.Projects;
 
             foreach (EnvDTE.Project project in projects) {
+                cancel.ThrowIfCancellationRequested();
+
                 string name;
                 try {
                     // Some projects will throw rather than give us a unique
@@ -174,14 +161,13 @@ namespace Microsoft.PythonTools.Commands {
 
                         foreach (var factory in pyProj.InterpreterFactories) {
                             res.AppendLine();
-                            res.AppendLine("        Interpreter: " + factory.Configuration.FullDescription);
+                            res.AppendLine("        Interpreter: " + factory.Configuration.Description);
                             res.AppendLine("            Id: " + factory.Configuration.Id);
                             res.AppendLine("            Version: " + factory.Configuration.Version);
                             res.AppendLine("            Arch: " + factory.Configuration.Architecture);
                             res.AppendLine("            Prefix Path: " + factory.Configuration.PrefixPath ?? "(null)");
                             res.AppendLine("            Path: " + factory.Configuration.InterpreterPath ?? "(null)");
                             res.AppendLine("            Windows Path: " + factory.Configuration.WindowsInterpreterPath ?? "(null)");
-                            res.AppendLine("            Lib Path: " + factory.Configuration.LibraryPath ?? "(null)");
                             res.AppendLine(string.Format("            Path Env: {0}={1}{2}",
                                 factory.Configuration.PathEnvironmentVariable ?? "(null)",
                                 Environment.GetEnvironmentVariable(factory.Configuration.PathEnvironmentVariable ?? ""),
@@ -198,16 +184,17 @@ namespace Microsoft.PythonTools.Commands {
 
             res.AppendLine("Environments: ");
             foreach (var provider in knownProviders.MaybeEnumerate()) {
+                cancel.ThrowIfCancellationRequested();
+
                 res.AppendLine("    " + provider.GetType().FullName);
                 foreach (var config in provider.GetInterpreterConfigurations()) {
                     res.AppendLine("        Id: " + config.Id);
-                    res.AppendLine("        Factory: " + config.FullDescription);
+                    res.AppendLine("        Factory: " + config.Description);
                     res.AppendLine("        Version: " + config.Version);
                     res.AppendLine("        Arch: " + config.Architecture);
                     res.AppendLine("        Prefix Path: " + config.PrefixPath ?? "(null)");
                     res.AppendLine("        Path: " + config.InterpreterPath ?? "(null)");
                     res.AppendLine("        Windows Path: " + config.WindowsInterpreterPath ?? "(null)");
-                    res.AppendLine("        Lib Path: " + config.LibraryPath ?? "(null)");
                     res.AppendLine("        Path Env: " + config.PathEnvironmentVariable ?? "(null)");
                     res.AppendLine();
                 }
@@ -215,6 +202,8 @@ namespace Microsoft.PythonTools.Commands {
 
             res.AppendLine("Launchers:");
             foreach (var launcher in launchProviders.MaybeEnumerate()) {
+                cancel.ThrowIfCancellationRequested();
+
                 res.AppendLine("    Launcher: " + launcher.GetType().FullName);
                 res.AppendLine("        " + launcher.Description);
                 res.AppendLine("        " + launcher.Name);
@@ -231,34 +220,38 @@ namespace Microsoft.PythonTools.Commands {
                 res.AppendLine();
             }
 
-            try {
-                res.AppendLine("System events:");
+            if (!skipAnalysisLog) {
+                try {
+                    res.AppendLine("System events:");
 
-                var application = new EventLog("Application");
-                var lastWeek = DateTime.Now.Subtract(TimeSpan.FromDays(7));
-                foreach (var entry in application.Entries.Cast<EventLogEntry>()
-                    .Where(e => e.InstanceId == 1026L)  // .NET Runtime
-                    .Where(e => e.TimeGenerated >= lastWeek)
-                    .Where(e => InterestingApplicationLogEntries.IsMatch(e.Message))
-                    .OrderByDescending(e => e.TimeGenerated)
-                ) {
-                    res.AppendLine(string.Format("Time: {0:s}", entry.TimeGenerated));
-                    using (var reader = new StringReader(entry.Message.TrimEnd())) {
-                        for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
-                            res.AppendLine(line);
+                    var application = new EventLog("Application");
+                    var lastWeek = DateTime.Now.Subtract(TimeSpan.FromDays(7));
+                    foreach (var entry in application.Entries.Cast<EventLogEntry>()
+                        .Where(e => e.InstanceId == 1026L)  // .NET Runtime
+                        .Where(e => e.TimeGenerated >= lastWeek)
+                        .Where(e => InterestingApplicationLogEntries.IsMatch(e.Message))
+                        .OrderByDescending(e => e.TimeGenerated)
+                    ) {
+                        res.AppendLine(string.Format("Time: {0:s}", entry.TimeGenerated));
+                        using (var reader = new StringReader(entry.Message.TrimEnd())) {
+                            for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
+                                res.AppendLine(line);
+                            }
                         }
+                        res.AppendLine();
                     }
+
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    res.AppendLine("  Failed to access event log.");
+                    res.AppendLine(ex.ToString());
                     res.AppendLine();
                 }
-
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
-                res.AppendLine("  Failed to access event log.");
-                res.AppendLine(ex.ToString());
-                res.AppendLine();
             }
 
             res.AppendLine("Loaded assemblies:");
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies().OrderBy(assem => assem.FullName)) {
+                cancel.ThrowIfCancellationRequested();
+
                 AssemblyFileVersionAttribute assemFileVersion;
                 var error = "(null)";
                 try {
@@ -290,17 +283,22 @@ namespace Microsoft.PythonTools.Commands {
             }
             res.AppendLine();
 
-            res.AppendLine("Environment Analysis Logs: ");
-            foreach (var provider in knownProviders) {
-                foreach (var factory in provider.GetInterpreterFactories().OfType<IPythonInterpreterFactoryWithDatabase>()) {
-                    res.AppendLine(factory.Configuration.FullDescription);
-                    string analysisLog = factory.GetAnalysisLogContent(CultureInfo.InvariantCulture);
-                    if (!string.IsNullOrEmpty(analysisLog)) {
-                        res.AppendLine(analysisLog);
+            if (!skipAnalysisLog) {
+                res.AppendLine("Environment Analysis Logs: ");
+                foreach (var provider in knownProviders) {
+                    foreach (var factory in provider.GetInterpreterFactories().OfType<IPythonInterpreterFactoryWithDatabase>()) {
+                        cancel.ThrowIfCancellationRequested();
+
+                        res.AppendLine(factory.Configuration.Description);
+                        string analysisLog = factory.GetAnalysisLogContent(CultureInfo.InvariantCulture);
+                        if (!string.IsNullOrEmpty(analysisLog)) {
+                            res.AppendLine(analysisLog);
+                        }
+                        res.AppendLine();
                     }
-                    res.AppendLine();
                 }
             }
+
             return res.ToString();
         }
 

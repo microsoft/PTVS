@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -246,7 +247,7 @@ namespace Microsoft.PythonTools.Profiling {
             if (projectToProfile != null) {
                 ProfileProject(session, projectToProfile, openReport);
             } else {
-                MessageBox.Show("Project could not be found in current solution.", "Python Tools for Visual Studio");
+                MessageBox.Show("Project could not be found in current solution.", Strings.ProductTitle);
             }
         }
 
@@ -255,12 +256,12 @@ namespace Microsoft.PythonTools.Profiling {
 
             var config = project?.GetLaunchConfigurationOrThrow();
             if (config == null) {
-                MessageBox.Show("Could not find interpreter for project {0}".FormatUI(projectToProfile.Name), "Python Tools for Visual Studio");
+                MessageBox.Show("Could not find interpreter for project {0}".FormatUI(projectToProfile.Name), Strings.ProductTitle);
                 return;
             }
 
             if (string.IsNullOrEmpty(config.ScriptName)) {
-                MessageBox.Show("Project has no configured startup file, cannot start profiling.", "Python Tools for Visual Studio");
+                MessageBox.Show("Project has no configured startup file, cannot start profiling.", Strings.ProductTitle);
                 return;
             }
 
@@ -321,6 +322,14 @@ namespace Microsoft.PythonTools.Profiling {
                 _stopCommand.Enabled = false;
                 _startCommand.Enabled = true;
                 if (openReport && File.Exists(outPath)) {
+                    for (int retries = 10; retries > 0; --retries) {
+                        try {
+                            using (new FileStream(outPath, FileMode.Open, FileAccess.Read, FileShare.None)) { }
+                            break;
+                        } catch (IOException) {
+                            Thread.Sleep(100);
+                        }
+                    }
                     dte.ItemOperations.OpenFile(outPath);
                 }
             };

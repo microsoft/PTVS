@@ -1,0 +1,15 @@
+{
+  "full_name": "Default Full Name",
+  "email": "default@email",
+  "github_username": "defaultgitusername",
+  "project_name": "Default Project Name",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_') }}",
+  "pypi_username": "{{ cookiecutter.github_username }}",
+  "version": "0.1.0",
+  "use_azure": "y",
+  "open_source_license": ["MIT license", "BSD license", "ISC license", "Apache Software License 2.0", "GNU General Public License v3", "Not open source"],
+  "port": 5000,
+  "_copy_without_render": [
+    "media/*"
+  ]
+}

@@ -22,6 +22,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using TestUtilities;
@@ -422,6 +423,186 @@ namespace AnalysisTests {
                     Assert.AreEqual(4, analyzer._analyzeFileGroups.Count);
                 }
             }
+        }
+
+        [TestMethod, Priority(1)]
+        public async Task GetDatabasePaths() {
+            foreach (var version in PythonPaths.Versions) {
+                var paths = await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(version.InterpreterPath);
+                AssertUtil.ContainsAtLeast(
+                    paths.Where(p => p.IsStandardLibrary).Select(p => p.Path),
+                    new[] {
+                        PathUtils.TrimEndSeparator(version.PrefixPath.ToLowerInvariant()),
+                        Path.Combine(version.PrefixPath, "Lib").ToLowerInvariant()
+                    }
+                );
+                AssertUtil.ContainsAtLeast(
+                    paths.Where(p => !p.IsStandardLibrary).Select(p => p.Path),
+                    new[] {
+                        Path.Combine(version.PrefixPath, "Lib", "site-packages").ToLowerInvariant()
+                    }
+                );
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
+        public async Task GetVirtualEnvDatabasePaths() {
+            var version = PythonPaths.Python27 ?? PythonPaths.Python27_x64;
+            version.AssertInstalled();
+
+            var env = Path.Combine(TestData.GetTempPath(randomSubPath: true), "env");
+
+            using (var p = ProcessOutput.RunHiddenAndCapture(version.InterpreterPath, "-m", "virtualenv", env)) {
+                if ((await p) != 0) {
+                    Assert.Fail("Could not create virtualenv{0}{1}{0}{2}",
+                        Environment.NewLine,
+                        string.Join(Environment.NewLine, p.StandardOutputLines),
+                        string.Join(Environment.NewLine, p.StandardErrorLines)
+                    );
+                    return;
+                }
+            }
+
+            var interpreter = Path.Combine(env, "Scripts", "python.exe");
+            var paths = await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(interpreter);
+            AssertUtil.ContainsAtLeast(
+                paths.Where(p => p.IsStandardLibrary).Select(p => p.Path),
+                new[] {
+                    Path.Combine(env, "Scripts").ToLowerInvariant(),
+                    PathUtils.TrimEndSeparator(env.ToLowerInvariant()),
+                    PathUtils.TrimEndSeparator(version.PrefixPath.ToLowerInvariant()),
+                    Path.Combine(version.PrefixPath, "Lib").ToLowerInvariant()
+                }
+            );
+            AssertUtil.ContainsAtLeast(
+                paths.Where(p => !p.IsStandardLibrary).Select(p => p.Path),
+                new[] {
+                    Path.Combine(env, "Lib", "site-packages").ToLowerInvariant()
+                }
+            );
+            AssertUtil.DoesntContain(
+                paths.Select(p => p.Path),
+                Path.Combine(version.PrefixPath, "Lib", "site-packages").ToLowerInvariant()
+            );
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
+        public async Task GetVirtualEnvDatabasePathsWithSystemSitePackages() {
+            var version = PythonPaths.Python27 ?? PythonPaths.Python27_x64;
+            version.AssertInstalled();
+
+            var env = Path.Combine(TestData.GetTempPath(randomSubPath: true), "env");
+
+            using (var p = ProcessOutput.RunHiddenAndCapture(version.InterpreterPath, "-m", "virtualenv", "--system-site-packages", env)) {
+                if ((await p) != 0) {
+                    Assert.Fail("Could not create virtualenv{0}{1}{0}{2}",
+                        Environment.NewLine,
+                        string.Join(Environment.NewLine, p.StandardOutputLines),
+                        string.Join(Environment.NewLine, p.StandardErrorLines)
+                    );
+                    return;
+                }
+            }
+
+            var interpreter = Path.Combine(env, "Scripts", "python.exe");
+            var paths = await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(interpreter);
+            AssertUtil.ContainsAtLeast(
+                paths.Where(p => p.IsStandardLibrary).Select(p => p.Path),
+                new[] {
+                    Path.Combine(env, "Scripts").ToLowerInvariant(),
+                    PathUtils.TrimEndSeparator(env.ToLowerInvariant()),
+                    PathUtils.TrimEndSeparator(version.PrefixPath.ToLowerInvariant()),
+                    Path.Combine(version.PrefixPath, "Lib").ToLowerInvariant()
+                }
+            );
+            AssertUtil.ContainsAtLeast(
+                paths.Where(p => !p.IsStandardLibrary).Select(p => p.Path),
+                new[] {
+                    Path.Combine(env, "Lib", "site-packages").ToLowerInvariant(),
+                    Path.Combine(version.PrefixPath, "Lib", "site-packages").ToLowerInvariant()
+                }
+            );
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
+        public async Task GetVEnvDatabasePaths() {
+            var version = PythonPaths.Python35 ?? PythonPaths.Python35_x64;
+
+            var env = Path.Combine(TestData.GetTempPath(randomSubPath: true), "env");
+
+            using (var p = ProcessOutput.RunHiddenAndCapture(version.InterpreterPath, "-m", "venv", env)) {
+                if ((await p) != 0) {
+                    Assert.Fail("Could not create venv{0}{1}{0}{2}",
+                        Environment.NewLine,
+                        string.Join(Environment.NewLine, p.StandardOutputLines),
+                        string.Join(Environment.NewLine, p.StandardErrorLines)
+                    );
+                    return;
+                }
+            }
+
+            var interpreter = Path.Combine(env, "Scripts", "python.exe");
+            var paths = await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(interpreter);
+            AssertUtil.ContainsAtLeast(
+                paths.Where(p => p.IsStandardLibrary).Select(p => p.Path),
+                new[] {
+                    Path.Combine(env, "Scripts").ToLowerInvariant(),
+                    PathUtils.TrimEndSeparator(env.ToLowerInvariant()),
+                    PathUtils.TrimEndSeparator(version.PrefixPath.ToLowerInvariant()),
+                    Path.Combine(version.PrefixPath, "Lib").ToLowerInvariant()
+                }
+            );
+            AssertUtil.ContainsAtLeast(
+                paths.Where(p => !p.IsStandardLibrary).Select(p => p.Path),
+                new[] {
+                    Path.Combine(env, "Lib", "site-packages").ToLowerInvariant()
+                }
+            );
+            AssertUtil.DoesntContain(
+                paths.Select(p => p.Path),
+                Path.Combine(version.PrefixPath, "Lib", "site-packages").ToLowerInvariant()
+            );
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
+        public async Task GetVEnvDatabasePathsWithSystemSitePackage() {
+            var version = PythonPaths.Python35 ?? PythonPaths.Python35_x64;
+
+            var env = Path.Combine(TestData.GetTempPath(randomSubPath: true), "env");
+
+            using (var p = ProcessOutput.RunHiddenAndCapture(version.InterpreterPath, "-m", "venv", "--system-site-packages", env)) {
+                if ((await p) != 0) {
+                    Assert.Fail("Could not create venv{0}{1}{0}{2}",
+                        Environment.NewLine,
+                        string.Join(Environment.NewLine, p.StandardOutputLines),
+                        string.Join(Environment.NewLine, p.StandardErrorLines)
+                    );
+                    return;
+                }
+            }
+
+            var interpreter = Path.Combine(env, "Scripts", "python.exe");
+            var paths = await PythonTypeDatabase.GetUncachedDatabaseSearchPathsAsync(interpreter);
+            AssertUtil.ContainsAtLeast(
+                paths.Where(p => p.IsStandardLibrary).Select(p => p.Path),
+                new[] {
+                    Path.Combine(env, "Scripts").ToLowerInvariant(),
+                    PathUtils.TrimEndSeparator(env.ToLowerInvariant()),
+                    PathUtils.TrimEndSeparator(version.PrefixPath.ToLowerInvariant()),
+                    Path.Combine(version.PrefixPath, "Lib").ToLowerInvariant()
+                }
+            );
+            AssertUtil.ContainsAtLeast(
+                paths.Where(p => !p.IsStandardLibrary).Select(p => p.Path),
+                new[] {
+                    Path.Combine(env, "Lib", "site-packages").ToLowerInvariant(),
+                    Path.Combine(version.PrefixPath, "Lib", "site-packages").ToLowerInvariant()
+                }
+            );
         }
 
         /// <summary>

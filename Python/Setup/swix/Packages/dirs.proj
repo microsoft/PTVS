@@ -16,15 +16,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectFile Include="Microsoft.CookiecutterTools.Vsix.swixproj"/>
     <ProjectFile Include="Microsoft.PythonTools.Core.Vsix.swixproj"/>
     <ProjectFile Include="Microsoft.PythonTools.Core.Templates.Vsix.swixproj"/>
     <ProjectFile Include="Microsoft.PythonTools.Django.Vsix.swixproj" Condition="'$(IncludeDjango)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.Django.Templates.Vsix.swixproj" Condition="'$(IncludeDjango)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.IronPython.Vsix.swixproj" Condition="'$(IncludeIronPython)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.IronPython.Templates.Vsix.swixproj" Condition="'$(IncludeIronPython)' == 'True'"/>
-    <ProjectFile Include="Microsoft.PythonTools.ML.Vsix.swixproj"/>
+    <ProjectFile Include="Microsoft.PythonTools.NativeDevelopment.Templates.Vsix.swixproj"/>
     <ProjectFile Include="Microsoft.PythonTools.Profiling.Vsix.swixproj"/>
-    <ProjectFile Include="Microsoft.PythonTools.Samples.Vsix.swixproj"/>
     <ProjectFile Include="Microsoft.PythonTools.Uwp.Vsix.swixproj" Condition="'$(IncludeUwp)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.Uwp.Templates.Vsix.swixproj" Condition="'$(IncludeUwp)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.Web.Templates.Vsix.swixproj"/>

@@ -16,19 +16,15 @@
 
 using System;
 using System.ComponentModel;
-using System.IO;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     [ComVisible(true)]
     [Guid(PythonConstants.InterpretersPropertiesGuid)]
     public class InterpretersNodeProperties : NodeProperties {
-        #region properties
-
         [Browsable(false)]
         [AutomationBrowsable(false)]
         protected IPythonInterpreterFactory Factory {
@@ -45,7 +41,7 @@ namespace Microsoft.PythonTools.Project {
 
         [SRCategory(SR.Misc)]
         [SRDisplayName(SR.FolderName)]
-        [SRDescriptionAttribute(SR.FolderNameDescription)]
+        [SRDescription(SR.FolderNameDescription)]
         [AutomationBrowsable(false)]
         public string FolderName {
             get {
@@ -53,9 +49,9 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        [SRCategoryAttribute(SR.Misc)]
+        [SRCategory(SR.Misc)]
         [SRDisplayName(SR.FullPath)]
-        [SRDescriptionAttribute(SR.FullPathDescription)]
+        [SRDescription(SR.FullPathDescription)]
         [AutomationBrowsable(true)]
         public string FullPath {
             get {
@@ -68,65 +64,25 @@ namespace Microsoft.PythonTools.Project {
         [SRDisplayName("EnvironmentIdDisplayName")]
         [SRDescription("EnvironmentIdDescription")]
         [AutomationBrowsable(true)]
-        public string Id {
-            get {
-                var fact = Factory;
-                return fact != null ? fact.Configuration.Id : "";
-            }
-        }
+        public string Id => Factory?.Configuration?.Id ?? "";
 #endif
 
         [SRCategory(SR.Misc)]
         [SRDisplayName("EnvironmentVersionDisplayName")]
         [SRDescription("EnvironmentVersionDescription")]
         [AutomationBrowsable(true)]
-        public string Version {
-            get {
-                var fact = Factory;
-                return fact != null ? fact.Configuration.Version.ToString() : "";
-            }
-        }
+        public string Version => Factory?.Configuration?.Version.ToString() ?? "";
 
-        #region properties - used for automation only
         [Browsable(false)]
         [AutomationBrowsable(true)]
-        public string FileName {
-            get {
-                return this.HierarchyNode.Url;
-            }
-        }
+        public string FileName => HierarchyNode.Url;
 
-        #endregion
-
-        #endregion
-
-        #region ctors
         internal InterpretersNodeProperties(HierarchyNode node)
             : base(node) { }
-        #endregion
 
         public override string GetClassName() {
             return "Environment Properties";
         }
-    }
 
-    [ComVisible(true)]
-    [Guid(PythonConstants.InterpretersWithBaseInterpreterPropertiesGuid)]
-    public class InterpretersNodeWithBaseInterpreterProperties : InterpretersNodeProperties {
-        [SRCategory(SR.Misc)]
-        [SRDisplayName("BaseInterpreterDisplayName")]
-        [SRDescription("BaseInterpreterDescription")]
-        [AutomationBrowsable(true)]
-        public string BaseInterpreter {
-            get {
-                var fact = Factory as DerivedInterpreterFactory;
-                return fact != null ? 
-                    fact.BaseInterpreter.Configuration.FullDescription :
-                    SR.GetString(SR.UnknownInParentheses);
-            }
-        }
-
-        internal InterpretersNodeWithBaseInterpreterProperties(HierarchyNode node)
-            : base(node) { }
     }
 }

@@ -77,14 +77,24 @@ namespace Microsoft.PythonTools.DkmDebugger {
         // Layout of this struct must always remain in sync with DebuggerHelper/trace.cpp.
         [StructLayout(LayoutKind.Sequential, Pack = 8)]
         private struct PyFrameObject_FieldOffsets {
-            public readonly long f_code, f_globals, f_locals, f_lineno;
+            public readonly long f_back, f_code, f_globals, f_locals, f_lineno;
 
             public PyFrameObject_FieldOffsets(DkmProcess process) {
-                var fields = StructProxy.GetStructFields<PyFrameObject, PyFrameObject.Fields>(process);
-                f_code = fields.f_code.Offset;
-                f_globals = fields.f_globals.Offset;
-                f_locals = fields.f_locals.Offset;
-                f_lineno = fields.f_lineno.Offset;
+                if (process.GetPythonRuntimeInfo().LanguageVersion <= PythonLanguageVersion.V35) {
+                    var fields = StructProxy.GetStructFields<PyFrameObject, PyFrameObject.Fields_27_35>(process);
+                    f_back = -1;
+                    f_code = fields.f_code.Offset;
+                    f_globals = fields.f_globals.Offset;
+                    f_locals = fields.f_locals.Offset;
+                    f_lineno = fields.f_lineno.Offset;
+                } else {
+                    var fields = StructProxy.GetStructFields<PyFrameObject, PyFrameObject.Fields_36>(process);
+                    f_back = fields.f_back.Offset;
+                    f_code = fields.f_code.Offset;
+                    f_globals = fields.f_globals.Offset;
+                    f_locals = fields.f_locals.Offset;
+                    f_lineno = fields.f_lineno.Offset;
+                }
             }
         }
 
@@ -205,6 +215,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
         private readonly PythonRuntimeInfo _pyrtInfo;
         private readonly PythonDllBreakpointHandlers _handlers;
         private readonly DkmNativeInstructionAddress _traceFunc;
+        private readonly DkmNativeInstructionAddress _evalFrameFunc;
+        private readonly PointerProxy _defaultEvalFrameFunc;
         private readonly UInt32Proxy _pyTracingPossible;
         private readonly ByteProxy _isTracing;
 
@@ -248,6 +260,8 @@ namespace Microsoft.PythonTools.DkmDebugger {
             _pyrtInfo = process.GetPythonRuntimeInfo();
 
             _traceFunc = _pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("TraceFunc");
+            _evalFrameFunc = _pyrtInfo.DLLs.DebuggerHelper.GetExportedFunctionAddress("EvalFrameFunc");
+            _defaultEvalFrameFunc = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<PointerProxy>("DefaultEvalFrameFunc");
             _isTracing = _pyrtInfo.DLLs.DebuggerHelper.GetExportedStaticVariable<ByteProxy>("isTracing");
             _pyTracingPossible = _pyrtInfo.DLLs.Python.GetStaticVariable<UInt32Proxy>("_Py_TracingPossible");
 
@@ -269,6 +283,9 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 }
 
                 foreach (var interp in PyInterpreterState.GetInterpreterStates(process)) {
+                    if (_pyrtInfo.LanguageVersion >= PythonLanguageVersion.V36) {
+                        RegisterJITTracing(interp);
+                    }
                     foreach (var tstate in interp.GetThreadStates()) {
                         RegisterTracing(tstate);
                     }
@@ -276,6 +293,7 @@ namespace Microsoft.PythonTools.DkmDebugger {
 
                 _handlers = new PythonDllBreakpointHandlers(this);
                 LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "new_threadstate", _handlers.new_threadstate, enable: true);
+                LocalComponent.CreateRuntimeDllFunctionExitBreakpoints(_pyrtInfo.DLLs.Python, "PyInterpreterState_New", _handlers.PyInterpreterState_New, enable: true);
 
                 foreach (var methodInfo in _handlers.GetType().GetMethods()) {
                     var stepInAttr = (StepInGateAttribute)Attribute.GetCustomAttribute(methodInfo, typeof(StepInGateAttribute));
@@ -313,6 +331,16 @@ namespace Microsoft.PythonTools.DkmDebugger {
             tstate.c_tracefunc.Write(_traceFunc.GetPointer());
             _pyTracingPossible.Write(_pyTracingPossible.Read() + 1);
             _isTracing.Write(1);
+        }
+
+        public unsafe void RegisterJITTracing(PyInterpreterState istate) {
+            Debug.Assert(_pyrtInfo.LanguageVersion >= PythonLanguageVersion.V36);
+
+            var current = istate.eval_frame.Read();
+            if (current != _evalFrameFunc.GetPointer()) {
+                _defaultEvalFrameFunc.Write(current);
+                istate.eval_frame.Write(_evalFrameFunc.GetPointer());
+            }
         }
 
         public void OnBeginStepIn(DkmThread thread) {
@@ -468,12 +496,26 @@ namespace Microsoft.PythonTools.DkmDebugger {
                 var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
 
                 // Addressing this local by name does not work for release builds, so read the return value directly from the register instead.
-                var tstate = new PyThreadState(thread.Process, cppEval.EvaluateReturnValueUInt64());
+                var tstate = PyThreadState.TryCreate(process, cppEval.EvaluateReturnValueUInt64());
                 if (tstate == null) {
                     return;
                 }
 
                 _owner.RegisterTracing(tstate);
+            }
+
+            public void PyInterpreterState_New(DkmThread thread, ulong frameBase, ulong vframe, ulong returnAddress) {
+                var process = thread.Process;
+                var cppEval = new CppExpressionEvaluator(thread, frameBase, vframe);
+
+                var istate = PyInterpreterState.TryCreate(process, cppEval.EvaluateReturnValueUInt64());
+                if (istate == null) {
+                    return;
+                }
+
+                if (process.GetPythonRuntimeInfo().LanguageVersion >= PythonLanguageVersion.V36) {
+                    _owner.RegisterJITTracing(istate);
+                }
             }
 
             // This step-in gate is not marked [StepInGate] because it doesn't live in pythonXX.dll, and so we register it manually.

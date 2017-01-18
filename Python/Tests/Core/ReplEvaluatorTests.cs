@@ -22,6 +22,7 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -96,6 +97,12 @@ namespace PythonToolsTests {
                 Assert.IsTrue(evaluator.CanExecuteCode("try:\r\n    print 'hello'\r\nfinally:\r\n    print 'goodbye'\r\n    \r\n"));
                 Assert.IsFalse(evaluator.CanExecuteCode("x = \\"));
                 Assert.IsTrue(evaluator.CanExecuteCode("x = \\\r\n42\r\n\r\n"));
+
+                Assert.IsTrue(evaluator.CanExecuteCode(""));
+                Assert.IsFalse(evaluator.CanExecuteCode(" "));
+                Assert.IsFalse(evaluator.CanExecuteCode("# Comment"));
+                Assert.IsTrue(evaluator.CanExecuteCode("\r\n"));
+                Assert.IsFalse(evaluator.CanExecuteCode("\r\n#Comment"));
             }
         }
 
@@ -177,6 +184,13 @@ g()",
     f()
     g()",
                     Expected = new[] { "def f():\r\n    pass\r\n", "f()", "f()", "def g():\r\n    pass\r\n", "f()", "g()" }
+                },
+                new {
+                    Code = @"# Comment
+
+f()
+f()",
+                    Expected = new[] { "# Comment\r\n\r\nf()\r\n", "f()" }
                 }
             };
 
@@ -212,16 +226,18 @@ g()",
             }
 
             public IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories() {
-                yield return InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
-                    Id = "Test Interpreter",
-                    LanguageVersion = new Version(2, 6),
-                    Description = "Python",
-                    InterpreterPath = _pythonExe,
-                    WindowInterpreterPath = _pythonWinExe,
-                    LibraryPath = _pythonLib,
-                    PathEnvironmentVariableName = "PYTHONPATH",
-                    Architecture = ProcessorArchitecture.X86,
-                    WatchLibraryForNewModules = false
+                yield return InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterConfiguration(
+                    "Test Interpreter",
+                    "Python 2.6 32-bit",
+                    PathUtils.GetParent(_pythonExe),
+                    _pythonExe,
+                    _pythonWinExe,
+                    "PYTHONPATH",
+                    InterpreterArchitecture.x86,
+                    new Version(2, 6),
+                    InterpreterUIMode.CannotBeDefault
+                ), new InterpreterFactoryCreationOptions {
+                    WatchFileSystem = false
                 });
             }
 

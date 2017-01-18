@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Automation;
@@ -80,20 +81,29 @@ namespace TestUtilities.UI {
                 try {
                     if (_onDispose != null) {
                         foreach (var action in _onDispose) {
-                            action();
+                            try {
+                                action();
+                            } catch (Exception ex) {
+                                Debug.WriteLine("Exception calling action while disposing VisualStudioApp: {0}", ex);
+                            }
                         }
                     }
 
                     if (_dte != null && _dte.Debugger.CurrentMode != dbgDebugMode.dbgDesignMode) {
-                        _dte.Debugger.TerminateAll();
-                        _dte.Debugger.Stop();
+                        try {
+                            _dte.Debugger.TerminateAll();
+                            _dte.Debugger.Stop();
+                        } catch (COMException ex) {
+                            Debug.WriteLine("Exception disposing VisualStudioApp: {0}", ex);
+                        }
                     }
                     DismissAllDialogs();
                     for (int i = 0; i < 100 && !_skipCloseAll; i++) {
                         try {
                             _dte.Solution.Close(false);
                             break;
-                        } catch {
+                        } catch (Exception ex) {
+                            Debug.WriteLine(ex.ToString());
                             _dte.Documents.CloseAll(EnvDTE.vsSaveChanges.vsSaveChangesNo);
                             System.Threading.Thread.Sleep(200);
                         }
@@ -269,6 +279,12 @@ namespace TestUtilities.UI {
 
             string windowName = Path.GetFileName(filename);
             var elem = GetDocumentTab(windowName);
+            for (int retries = 5; retries > 0 && elem == null; retries -= 1) {
+                System.Threading.Thread.Sleep(500);
+                elem = GetDocumentTab(windowName);
+            }
+
+            Assert.IsNotNull(elem, "Unable to find window '{0}'", windowName);
 
             elem = elem.FindFirst(TreeScope.Descendants,
                 new PropertyCondition(
@@ -804,6 +820,18 @@ namespace TestUtilities.UI {
             bool setStartupItem = true,
             Func<AutomationDialog, bool> onDialog = null
         ) {
+            var solution = GetService<IVsSolution>(typeof(SVsSolution));
+            var solution4 = solution as IVsSolution4;
+            Assert.IsNotNull(solution, "Failed to obtain SVsSolution service");
+            Assert.IsNotNull(solution4, "Failed to obtain IVsSolution4 interface");
+
+            // Close any open solution
+            string slnDir, slnFile, slnOpts;
+            if (ErrorHandler.Succeeded(solution.GetSolutionInfo(out slnDir, out slnFile, out slnOpts))) {
+                Console.WriteLine("Closing {0}", slnFile);
+                solution.CloseSolutionElement(0, null, 0);
+            }
+
             string fullPath = TestData.GetPath(projName);
             Assert.IsTrue(File.Exists(fullPath), "Cannot find " + fullPath);
             Console.WriteLine("Opening {0}", fullPath);
@@ -822,11 +850,6 @@ namespace TestUtilities.UI {
                 }
             }
             
-            var solution = GetService<IVsSolution>(typeof(SVsSolution));
-            var solution4 = solution as IVsSolution4;
-            Assert.IsNotNull(solution, "Failed to obtain SVsSolution service");
-            Assert.IsNotNull(solution4, "Failed to obtain IVsSolution4 interface");
-
             var t = Task.Run(() => {
                 ErrorHandler.ThrowOnFailure(solution.OpenSolutionFile((uint)0, fullPath));
                 // Force all projects to load before running any tests.

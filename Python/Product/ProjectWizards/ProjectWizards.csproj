@@ -53,7 +53,12 @@
     <Reference Include="Microsoft.VisualStudio.Shell.$(VSTarget)">
       <Aliases>global</Aliases>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop, Version=7.1.40304.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.Shell.Interop.12.0, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.TemplateWizardInterface, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />
@@ -79,9 +84,7 @@
     <Compile Include="..\PythonTools\PythonConstants.cs">
       <Link>PythonConstants.cs</Link>
     </Compile>
-    <Compile Include="..\VSInterpreters\SettingsManagerCreator.cs">
-      <Link>SettingsManagerCreator.cs</Link>
-    </Compile>
+    <Compile Include="AzureDebugWebConfigWizard.cs" />
     <Compile Include="CloudServiceWizard.cs" />
     <Compile Include="InstallRequirementsWizard.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

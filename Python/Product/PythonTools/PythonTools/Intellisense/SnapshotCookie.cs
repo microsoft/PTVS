@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.VisualStudio.Text;
 
@@ -34,7 +35,11 @@ namespace Microsoft.PythonTools.Intellisense {
         #region IAnalysisCookie Members
 
         public string GetLine(int lineNo) {
-            return _snapshot.GetLineFromLineNumber(lineNo - 1).GetText();
+            try {
+                return _snapshot.GetLineFromLineNumber(lineNo - 1).GetText();
+            } catch (ArgumentOutOfRangeException) {
+                return string.Empty;
+            }
         }
 
         #endregion

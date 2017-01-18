@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Linq;
 using System.Text;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Logging {
     /// <summary>
@@ -28,43 +29,47 @@ namespace Microsoft.PythonTools.Logging {
     [Export(typeof(IPythonToolsLogger))]
     [Export(typeof(InMemoryLogger))]
     class InMemoryLogger : IPythonToolsLogger {
-        private int _installedInterpreters;
-        private int _configuredInterpreters;
+        private int _installedInterpreters, _installedV2, _installedV3;
         private int _debugLaunchCount, _normalLaunchCount;
-        private List<PackageInstallDetails> _packageInstalls = new List<PackageInstallDetails>();
-        private List<string> _analysisAbnormalities = new List<string>();        
+        private List<PackageInfo> _seenPackages = new List<PackageInfo>();
+        private List<AnalysisInfo> _analysisInfo = new List<AnalysisInfo>();
+        private List<string> _analysisAbnormalities = new List<string>();
 
         #region IPythonToolsLogger Members
 
         public void LogEvent(PythonLogEvent logEvent, object argument) {
+            var dictArgument = argument as IDictionary<string, object>;
+
             switch (logEvent) {
                 case PythonLogEvent.Launch:
-                    if ((int)argument != 0) {
+                    if (((LaunchInfo)argument).IsDebug) {
                         _debugLaunchCount++;
                     } else {
                         _normalLaunchCount++;
                     }
                     break;
                 case PythonLogEvent.InstalledInterpreters:
-                    _installedInterpreters = (int)argument;
+                    _installedInterpreters = (int)dictArgument["Total"];
+                    _installedV2 = (int)dictArgument["2x"];
+                    _installedV3 = (int)dictArgument["3x"];
                     break;
-                case PythonLogEvent.ConfiguredInterpreters:
-                    _configuredInterpreters = (int)argument;
+                case PythonLogEvent.PythonPackage:
+                    lock (_seenPackages) {
+                        _seenPackages.Add(argument as PackageInfo);
+                    }
                     break;
-                case PythonLogEvent.PackageInstalled:
-                    var packageInstallDetails = argument as PackageInstallDetails;
-                    if (packageInstallDetails != null) {
-                        _packageInstalls.Add(packageInstallDetails);
+                case PythonLogEvent.AnalysisCompleted:
+                    lock (_analysisInfo) {
+                        _analysisInfo.Add(argument as AnalysisInfo);
                     }
                     break;
                 case PythonLogEvent.AnalysisExitedAbnormally:
-                    _analysisAbnormalities.Add(DateTime.Now + " Abnormal exit: " + argument);
-                    break;
                 case PythonLogEvent.AnalysisOperationCancelled:
-                    _analysisAbnormalities.Add(DateTime.Now + " Operation Cancelled");
-                    break;
                 case PythonLogEvent.AnalysisOperationFailed:
-                    _analysisAbnormalities.Add(DateTime.Now + " Operation Failed " + argument);
+                case PythonLogEvent.AnalysisWarning:
+                    lock (_analysisAbnormalities) {
+                        _analysisAbnormalities.Add("[{0}] {1}: {2}".FormatInvariant(DateTime.Now, logEvent, argument as string ?? ""));
+                    }
                     break;
             }
         }
@@ -74,30 +79,43 @@ namespace Microsoft.PythonTools.Logging {
         public override string ToString() {
             StringBuilder res = new StringBuilder();
             res.AppendLine("Installed Interpreters: " + _installedInterpreters);
-            res.AppendLine("Configured Interpreters: " + _configuredInterpreters);
+            res.AppendLine("    v2.x: " + _installedV2);
+            res.AppendLine("    v3.x: " + _installedV3);
             res.AppendLine("Debug Launches: " + _debugLaunchCount);
             res.AppendLine("Normal Launches: " + _normalLaunchCount);
-
             res.AppendLine();
-            if (_packageInstalls.Count > 0) {
-                res.AppendLine("Installed Packages:");
-                res.AppendLine(PackageInstallDetails.Header());
-                res.AppendLine("  Successful Installations");
-                foreach (PackageInstallDetails pd in _packageInstalls.Where(p => p.InstallResult == 0)) {
-                    res.AppendLine("    " + pd.ToString());
-                }
-                res.AppendLine();
-                res.AppendLine("  Failed Installations");
-                foreach (PackageInstallDetails pd in _packageInstalls.Where(p => p.InstallResult != 0)) {
-                    res.AppendLine("    " + pd.ToString());
+
+            lock (_seenPackages) {
+                if (_seenPackages.Any(p => p != null)) {
+                    res.AppendLine("Seen Packages:");
+                    foreach (var package in _seenPackages) {
+                        if (package != null) {
+                            res.AppendLine("    " + package.Name);
+                        }
+                    }
+                    res.AppendLine();
                 }
             }
 
-            if (_analysisAbnormalities.Count > 0) {
-                res.AppendFormat("Analysis abnormalities ({0}):", _analysisAbnormalities.Count);
-                res.AppendLine();
-                foreach (var abnormalExit in _analysisAbnormalities) {
-                    res.AppendLine(abnormalExit);
+            lock (_analysisInfo) {
+                if (_analysisInfo.Any(a => a != null)) {
+                    res.AppendLine("Completion DB analyses:");
+                    foreach (var analysis in _analysisInfo) {
+                        if (analysis != null) {
+                            res.AppendLine("    {0} - {1}s".FormatInvariant(analysis.InterpreterId, analysis.AnalysisSeconds));
+                        }
+                    }
+                }
+            }
+
+            lock (_analysisAbnormalities) {
+                if (_analysisAbnormalities.Any()) {
+                    res.AppendFormat("Analysis abnormalities ({0}):", _analysisAbnormalities.Count);
+                    res.AppendLine();
+                    foreach (var abnormalExit in _analysisAbnormalities) {
+                        res.AppendLine(abnormalExit);
+                    }
+                    res.AppendLine();
                 }
             }
 

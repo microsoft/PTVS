@@ -207,6 +207,26 @@
 
                     <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="EnvironmentLinks">
                         <StackPanel Orientation="Vertical">
+                            <Button Name="ConfigureEnvironment"
+                                    Command="{x:Static l:EnvironmentPathsExtension.ConfigureEnvironment}"
+                                    CommandParameter="{Binding Mode=OneWay}"
+                                    Style="{StaticResource NavigationButton}"
+                                    Margin="6"
+                                    HorizontalAlignment="Left">
+                                <Grid Background="Transparent">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <ContentControl Grid.Column="0"
+                                                    Margin="3 0"
+                                                    Style="{StaticResource SettingsImage}" />
+                                    <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
+                                        Configure or remove environment
+                                    </TextBlock>
+                                </Grid>
+                            </Button>
+                            
                             <Button Command="{x:Static l:EnvironmentPathsExtension.OpenInFileExplorer}"
                                     CommandParameter="{Binding PrefixPath,Mode=OneWay}"
                                     ToolTip="{Binding PrefixPath,Mode=OneWay}"
@@ -306,16 +326,16 @@
                                 </Button.ContextMenu>
                             </Button>
                         </StackPanel>
+
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsConfigurable,Mode=OneWay}" Value="False">
+                                <Setter TargetName="ConfigureEnvironment" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
                     </DataTemplate>
 
-                    <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="VendorInformation">
+                    <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="SupportInformation">
                         <StackPanel Orientation="Vertical">
-                            <Label x:Name="Vendor">
-                                <TextBlock>
-                                    <Run>By</Run>
-                                    <Run Text="{Binding Vendor,Mode=OneWay}" />
-                                </TextBlock>
-                            </Label> 
                             <Button x:Name="SupportUrl"
                                     Command="{x:Static l:EnvironmentPathsExtension.OpenInBrowser}"
                                     CommandParameter="{Binding SupportUrl,Mode=OneWay}"
@@ -323,16 +343,23 @@
                                     Style="{StaticResource NavigationButton}"
                                     Margin="6 1"
                                     HorizontalAlignment="Left">
-                                Online support
+                                <Grid Background="Transparent">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <ContentControl Grid.Column="0"
+                                                    Margin="3 0"
+                                                    Style="{StaticResource HelpImage}" />
+                                    <Label Grid.Column="1" Style="{StaticResource FileNameLabel}"
+                                           Foreground="{Binding Foreground,RelativeSource={RelativeSource AncestorType=Button}}">
+                                        Visit the distributor's website
+                                    </Label>
+                                </Grid>
                             </Button>
-                            <Rectangle Height="1" Margin="6 1"
-                                       Stroke="{Binding Foreground,RelativeSource={RelativeSource AncestorType=UserControl}}" />
                         </StackPanel>
 
                         <DataTemplate.Triggers>
-                            <DataTrigger Binding="{Binding Vendor,Mode=OneWay}" Value="">
-                                <Setter TargetName="Vendor" Property="Visibility" Value="Collapsed" />
-                            </DataTrigger>
                             <DataTrigger Binding="{Binding SupportUrl,Mode=OneWay}" Value="">
                                 <Setter TargetName="SupportUrl" Property="Visibility" Value="Collapsed" />
                             </DataTrigger>
@@ -351,8 +378,8 @@
                     <Setter Property="Focusable" Value="False"/>
                 </Style>
             </StackPanel.Resources>
-            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource VendorInformation}" Margin="0 3" />
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource EnvironmentIsDefault}" Margin="0 3" />
+            <ContentControl Content="{Binding}" ContentTemplate="{StaticResource SupportInformation}" Margin="0 3" />
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource InteractiveLinks}" Margin="0 3" />
             <ContentControl Content="{Binding}" ContentTemplate="{StaticResource EnvironmentLinks}" Margin="0 3" />
         </StackPanel>

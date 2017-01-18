@@ -92,27 +92,9 @@ namespace Microsoft.PythonTools.Repl {
 #if DEBUG
             if (!debugMode) {
 #endif
-
                 var env = processInfo.Environment;
-                foreach (var kv in Configuration.Environment.MaybeEnumerate()) {
-                    var key = kv.Key.Trim('+');
-                    if (kv.Key.EndsWith("+")) {
-                        string other;
-                        if (env.TryGetValue(key, out other)) {
-                            env[key] = kv.Value + ";" + other;
-                        } else {
-                            env[key] = kv.Value;
-                        }
-                    } else if (kv.Key.StartsWith("+")) {
-                        string other;
-                        if (env.TryGetValue(key, out other)) {
-                            env[key] = other + ";" + kv.Value;
-                        } else {
-                            env[key] = kv.Value;
-                        }
-                    } else {
-                        env[key] = kv.Value;
-                    }
+                foreach (var kv in _serviceProvider.GetPythonToolsService().GetFullEnvironment(Configuration)) {
+                    env[kv.Key] = kv.Value;
                 }
 #if DEBUG
             }
@@ -635,6 +617,8 @@ namespace Microsoft.PythonTools.Repl {
                     if (_completion != null) {
                         _completion.SetResult(ExecutionResult.Failure);
                         _completion = null;
+                    } else {
+                        Debug.Fail("No completion task");
                     }
                 }
             }
@@ -645,6 +629,8 @@ namespace Microsoft.PythonTools.Repl {
                     if (_completion != null) {
                         _completion.SetResult(ExecutionResult.Success);
                         _completion = null;
+                    } else {
+                        Debug.Fail("No completion task");
                     }
                 }
             }
@@ -687,7 +673,6 @@ namespace Microsoft.PythonTools.Repl {
                         }
                     }
                 }
-
                 var tcs = new TaskCompletionSource<ExecutionResult>();
                 lock (_completionLock) {
                     _completion = tcs;

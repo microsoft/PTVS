@@ -58,7 +58,23 @@
   <ItemGroup>
     <Compile Include="AggregateProjectEntry.cs" />
     <Compile Include="AnalysisDictionary.cs" />
+    <Compile Include="Interpreter\Ast\AstAnalysisWalker.cs" />
     <Compile Include="IHasRichDescription.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonType.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonConstant.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonFunction.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonFunctionOverload.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonModule.cs" />
+    <Compile Include="Interpreter\Ast\AstPythonParameterInfo.cs" />
+    <Compile Include="Interpreter\GlobalInterpreterOptions.cs" />
+    <Compile Include="Interpreter\InterpreterArchitecture.cs" />
+    <Compile Include="Interpreter\IPackageManager.cs" />
+    <Compile Include="Interpreter\IPackageManagerUI.cs" />
+    <Compile Include="Interpreter\NoInterpretersFactory.cs" />
+    <Compile Include="Interpreter\NoPackageManager.cs" />
+    <Compile Include="Interpreter\PackageSpec.cs" />
+    <Compile Include="Interpreter\PackageVersion.cs" />
+    <Compile Include="Parsing\Ast\ExpressionWithAnnotation.cs" />
     <Compile Include="Projects\AnalysisExtensionNameAttribute.cs" />
     <Compile Include="AnalysisExtensions.cs" />
     <Compile Include="AnalysisHashSet.cs" />
@@ -366,6 +382,13 @@
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
       <Name>Microsoft.PythonTools.Common</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="get_search_paths.py">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+      <VSIXSubPath>.</VSIXSubPath>
+    </Content>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

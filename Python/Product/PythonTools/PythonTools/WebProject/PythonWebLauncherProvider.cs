@@ -27,7 +27,6 @@ using Microsoft.VisualStudioTools.Project;
 namespace Microsoft.PythonTools.Project.Web {
     [Export(typeof(IPythonLauncherProvider))]
     class PythonWebLauncherProvider : IPythonLauncherProvider2 {
-        private readonly PythonToolsService _pyService;
         private readonly IServiceProvider _serviceProvider;
 
         private static readonly Regex SubstitutionPattern = new Regex(@"\{([\w_]+)\}");
@@ -35,7 +34,6 @@ namespace Microsoft.PythonTools.Project.Web {
         [ImportingConstructor]
         public PythonWebLauncherProvider([Import(typeof(SVsServiceProvider))] IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
-            _pyService = serviceProvider.GetPythonToolsService();
         }
 
         public IPythonLauncherOptions GetLauncherOptions(IPythonProject properties) {

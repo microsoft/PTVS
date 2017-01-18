@@ -322,10 +322,11 @@ namespace FactoryProviderTypeLoadException {
             }
 
             try {
-                InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterFactoryCreationOptions {
-                    Id = Guid.NewGuid().ToString(),
-                    LanguageVersionString = "1.0"
-                });
+                InterpreterFactoryCreator.CreateInterpreterFactory(new InterpreterConfiguration(
+                    Guid.NewGuid().ToString(),
+                    "Test Interpreter",
+                    version: new Version(1, 0)
+                ));
                 Assert.Fail("Expected ArgumentException");
             } catch (ArgumentException ex) {
                 // Expect version number in message

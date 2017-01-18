@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.Collections.Generic;
+using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio.Debugger;
 
 namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
@@ -23,6 +24,8 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
             public StructField<PointerProxy<PyInterpreterState>> next;
             public StructField<PointerProxy<PyThreadState>> tstate_head;
             public StructField<PointerProxy<PyDictObject>> modules;
+            [FieldProxy(MinVersion = PythonLanguageVersion.V36)]
+            public StructField<PointerProxy> eval_frame;
         }
 
         private readonly Fields _fields;
@@ -30,6 +33,14 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
         public PyInterpreterState(DkmProcess process, ulong address)
             : base(process, address) {
             InitializeStruct(this, out _fields);
+        }
+
+        public static PyInterpreterState TryCreate(DkmProcess process, ulong address) {
+            if (address == 0) {
+                return null;
+            }
+
+            return new PyInterpreterState(process, address);
         }
 
         public PointerProxy<PyInterpreterState> next {
@@ -42,6 +53,10 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies.Structs {
 
         public PointerProxy<PyDictObject> modules {
             get { return GetFieldProxy(_fields.modules); }
+        }
+
+        public PointerProxy eval_frame {
+            get { return GetFieldProxy(_fields.eval_frame); }
         }
 
         private class InterpHeadHolder : DkmDataItem {

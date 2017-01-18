@@ -1,3 +1,13 @@
+#  Copyright (c) Microsoft Corporation.
+#
+#  This source code is subject to terms and conditions of the Apache License, Version 2.0. A
+#  copy of the license can be found in the License.html file at the root of this distribution. If
+#  you cannot locate the Apache License, Version 2.0, please send an email to
+#  vspython@microsoft.com. By using this source code in any fashion, you are agreeing to be bound
+#  by the terms of the Apache License, Version 2.0.
+# 
+#  You must not remove this notice, or any other, from this software.
+
 <#
 .Synopsis
     Configures a Microsoft Azure Cloud Service to run Python roles
@@ -5,32 +15,22 @@
 .Description
     This script is deployed with your Python role and is used to install and
     configure dependencies before your role start. You may freely modify it
-    to customize how your role is configured, though most customizations can be
-    made through your Python project.
+    to customize how your role is configured.
 
-    To specify the version of Python to install, you can add WebPI references to
-    your project. If the active environment for your project is Python 2.7, a
-    reference will be added automatically. If you host your own WebPI feed,
-    simply specify the URL when adding the reference to include products from
-    that feed.
-
-    (If WebPI is not available on the remote machine, it will be downloaded and
-    installed automatically. To avoid charges associated with downloads, you can
-    deploy your own copy of the US English WebPI installer alongside this file.
-    Note that WebPI has different installers for 32-bit and 64-bit systems. You
-    will need to include the correct one or both with your deployment.)
+    By default, Python will be downloaded and installed from nuget.org. Modify
+    the $defaultpython and $defaultpythonversion variables to change the version
+    installed. Alternatively, add a startup task to install your choice of
+    Python from any installer and add a PYTHON environment variable pointing at
+    the executable to run.
 
     To install packages using pip, include a requirements.txt file in the root
-    directory of your project.
-    
-    (If pip is not already available, it will be downloaded and installed
-    automatically. To avoid charges associated with downloads, you can deploy
-    your own copy of the 'pip_downloader.py' script downloaded from
-    https://go.microsoft.com/fwlink/?LinkID=393490 and the sources for pip and
-    setuptools named 'pip.tar.gz' and 'setuptools.tar.gz' alongside this file.)
-
-    As an alternative to WebPI and pip, you can deploy installers and add custom
-    startup tasks to your ServiceDefinition.csdef file.
+    directory of your project. If pip is not already available, it will be
+    downloaded and installed automatically. To avoid security risks and
+    bandwidth charges associated with downloads, you can deploy your own copy of
+    the 'pip_downloader.py' script downloaded from
+    https://go.microsoft.com/fwlink/?LinkID=393490 and the source packages for
+    pip and setuptools named 'pip.tar.gz' and 'setuptools.tar.gz' in your 'bin'
+    directory.
 
 
     For worker roles, ensure the following startup task specification is
@@ -42,6 +42,7 @@
           <Variable name="EMULATED">
             <RoleInstanceValue xpath="/RoleEnvironment/Deployment/@emulated"/>
           </Variable>
+          <Variable name="PYTHON" value="<optional path to python.exe installed by a prior Task>" />
         </Environment>
       </Task>
     </Startup>
@@ -56,12 +57,29 @@
           <Variable name="EMULATED">
             <RoleInstanceValue xpath="/RoleEnvironment/Deployment/@emulated"/>
           </Variable>
+          <Variable name="PYTHON" value="<optional path to python.exe installed by a prior Task>" />
         </Environment>
       </Task>
     </Startup>
+
+    For web roles, you will also require a suitable web.config in your site's
+    root directory. An example is included in the bin folder containing this
+    file or in your project directory.
 #>
 
+(Get-Host).UI.WriteLine("")
+(Get-Host).UI.WriteLine("=====================================")
+(Get-Host).UI.WriteLine("Script started at $(Get-Date -format s)")
+(Get-Host).UI.WriteErrorLine("")
+(Get-Host).UI.WriteErrorLine("=====================================")
+(Get-Host).UI.WriteErrorLine("Script started at $(Get-Date -format s)")
+
 [xml]$rolemodel = Get-Content $env:RoleRoot\RoleModel.xml
+
+$defaultpython = "python"       # or pythonx86, python2, python2x86
+$defaultpythonversion = ""      # see nuget.org for current available versions
+
+$interpreter_path = $env:PYTHON
 
 $ns = @{ sd="http://schemas.microsoft.com/ServiceHosting/2008/10/ServiceDefinition" };
 $is_worker = (Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Properties/sd:Property[@name='RoleType'][@value='Worker']").Count -eq 1
@@ -69,11 +87,12 @@ $is_web = -not $is_worker
 $is_debug = (Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Properties/sd:Property[@name='Configuration'][@value='Debug']").Count -eq 1
 $is_emulated = $env:EMULATED -eq "true"
 
+$bindir = split-path $MyInvocation.MyCommand.Path
+
 if ($is_web) {
-    cd "${env:RoleRoot}\"
-    $env:RootDir = (gi $((Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Sites/sd:Site")[0].Node.physicalDirectory)).FullName
+    $env:RootDir = join-path $env:RoleRoot (Select-Xml -Xml $rolemodel -Namespace $ns -XPath "/sd:RoleModel/sd:Sites/sd:Site")[0].Node.physicalDirectory
 } else {
-    $env:RootDir = (gi "$($MyInvocation.MyCommand.Path)\..\..").FullName
+    $env:RootDir = split-path $bindir
 }
 cd $env:RootDir
 
@@ -94,147 +113,115 @@ if ($is_web -and -not $is_emulated) {
     }
 }
 
-$config = Get-Content "$(Get-Location)\bin\AzureSetup.cfg" -EA:Stop
+function install-python-from-nuget {
+    param([string]$package=$defaultpython, [string]$version=$defaultpythonversion)
 
-function read_value($name, $default) {
-    $value = (@($default) + @($config | %{ [regex]::Match($_, $name + '=(.+)') } | ?{ $_.Success } | %{ $_.Groups[1].Value }))[-1]
-    return [Environment]::ExpandEnvironmentVariables($value)
-}
-
-if (-not $is_emulated) {
-    if ([Environment]::Is64BitOperatingSystem) {
-        $webpisetup = "https://go.microsoft.com/fwlink/?linkid=226239"
-        $webpicmdname = "webpicmd-x64.exe"
-        $webpimsiname = "WebPlatformInstaller_amd64_en-US.msi"
+    if (-not $version) {
+        $expected = "$bindir\$package\tools\python.exe"
     } else {
-        $webpisetup = "https://go.microsoft.com/fwlink/?linkid=226238"
-        $webpicmdname = "webpicmd.exe"
-        $webpimsiname = "WebPlatformInstaller_x86_en-US.msi"
+        $expected = "$bindir\$package.$version\tools\python.exe"
+    }
+    if (Test-Path $expected) {
+        return (gi $expected);
     }
 
-    $webpicmd = (gcm $webpicmdname -EA SilentlyContinue).Path
-    if (-not $webpicmd) {
-        $webpicmd = (gi "${env:ProgramFiles}\Microsoft\Web Platform Installer\$webpicmdname" -EA SilentlyContinue).FullName
-        if (-not $webpicmd) {
-            $msi = gi "$(Get-Location)\$webpimsiname" -EA SilentlyContinue
-            if (-not $msi) {
-                $msi = gi "$(Get-Location)\bin\$webpimsiname" -EA SilentlyContinue
-            }
-            if (-not $msi) {
-                $req = Invoke-WebRequest $webpisetup -UseBasicParsing -EA Stop
-                [System.IO.File]::WriteAllBytes("$(Get-Location)\bin\$webpimsiname", $req.Content)
-                $msi = gi "$(Get-Location)\bin\$webpimsiname" -EA Stop
-            }
-            Start-Process -wait (gcm msiexec).Path -ArgumentList /quiet, /i, $msi, ADDLOCAL=ALL
-            $webpicmd = (gi "${env:ProgramFiles}\Microsoft\Web Platform Installer\$webpicmdname" -EA Stop).FullName
-        }
+    # Find nuget.exe in the bin folder first
+    $nuget = gcm "$bindir\nuget.exe" -EA SilentlyContinue;
+    if (-not $nuget) {
+        # Fall back on looking throughout the system
+        $nuget = gcm nuget.exe -EA SilentlyContinue;
     }
-
-    $webpi_products = @(
-        $config |
-            %{ [regex]::Match($_, 'webpi_install=(.+);(.+)') } |
-            ?{ $_.Success } |
-            %{ @{ feed=$_.Groups[1].Value; product=$_.Groups[2].Value } }
-    )
-    
-    try {
-        try {
-            $key = [Microsoft.Win32.Registry]::Users.OpenSubKey(".DEFAULT\Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders", $true)
-            $oldvalue = $key.GetValue("Local AppData", "", [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
-            $key.SetValue("Local AppData", "$env:SystemDrive\LocalAppData_$([Guid]::NewGuid().ToString('N'))", [Microsoft.Win32.RegistryValueKind]::String)
-        } catch {
-            $oldvalue = ''
-        }
-
-        $grouped = @($webpi_products | group {$_.feed})
-        foreach ($item in $grouped) {
-            Start-Process -wait $webpicmd -ArgumentList /Install, /Log:"$(Get-Location)\webpi.log", /AcceptEula, /Feeds:$($item.Name), /Products:$([string]::Join(',', $item.Group.product))
-        }
-    } finally {
-        if ($oldvalue) {
-            $key.SetValue("Local AppData", $oldvalue, [Microsoft.Win32.RegistryValueKind]::ExpandString)
-        }
+    if (-not $nuget) {
+        # Finally, download it into the bin directory
+        Invoke-WebRequest https://aka.ms/nugetclidl -OutFile "$bindir\nuget.exe";
+        $nuget = gcm "$bindir\nuget.exe" -EA SilentlyContinue;
+    }
+    if (-not $version) {
+        & $nuget install -OutputDirectory $bindir -ExcludeVersion "$package" | Out-Null;
+    } else {
+        & $nuget install -OutputDirectory $bindir -Version "$version" "$package" | Out-Null;
+    }
+    if ($?) {
+        return (gi $expected);
     }
 }
 
-$interpreter_path = read_value 'interpreter_path'
-$interpreter_path_emulated = read_value 'interpreter_path_emulated'
-
-if ($is_emulated -and $interpreter_path_emulated -and (Test-Path $interpreter_path_emulated)) {
-    $interpreter_path = $interpreter_path_emulated
+if (-not $interpreter_path) {
+    $interpreter_path = install-python-from-nuget;
 }
 
-if (-not $interpreter_path -or -not (Test-Path $interpreter_path)) {
-    $interpreter_version = read_value 'interpreter_version' '2.7'
-    foreach ($key in @('HKLM:\Software\Wow6432Node', 'HKLM:\Software', 'HKCU:\Software')) {
-        $regkey = gp "$key\Python\PythonCore\$interpreter_version\InstallPath" -EA SilentlyContinue
-        if ($regkey) {
-            $interpreter_path = "$($regkey.'(default)')\python.exe"
-            if (Test-Path $interpreter_path) {
-                break
-            }
-        }
-    }
+if (-not $interpreter_path) {
+    throw "Cannot find a Python installation.";
+} elseif (-not (Test-Path $interpreter_path)) {
+    throw "Cannot find Python installation at $interpreter_path.";
 }
-Set-Alias py (gi $interpreter_path -EA Stop)
 
+function py {
+    Start-Process -Wait -NoNewWindow $interpreter_path -ArgumentList $args -WorkingDirectory $env:RootDir
+}
 
 if (Test-Path requirements.txt) {
     py -m pip -V
     if (-not $?) {
-        $pip_downloader = gi "$(Get-Location)\pip_downloader.py" -EA SilentlyContinue
-        if (-not $pip_downloader) {
-            $pip_downloader = gi "$(Get-Location)\bin\pip_downloader.py" -EA SilentlyContinue
+        if (-not (Test-Path "$bindir\pip_downloader.py")) {
+            Invoke-WebRequest "https://go.microsoft.com/fwlink/?LinkID=393490" -OutFile "$bindir\pip_downloader.py"
         }
-        if (-not $pip_downloader) {
-            $req = Invoke-WebRequest "https://go.microsoft.com/fwlink/?LinkID=393490" -UseBasicParsing
-            [System.IO.File]::WriteAllBytes("$(Get-Location)\bin\pip_downloader.py", $req.Content)
-            $pip_downloader = gi "$(Get-Location)\bin\pip_downloader.py" -EA Stop
-        }
-        py $pip_downloader
+        py "$bindir\pip_downloader.py"
     }
     py -m pip install -r requirements.txt
 }
 
 if ($is_web) {
-    $appcmdargs = ''
+    $appcmd = $null
+    $appcmdargs = @()
     if ($env:appcmd) {
-        Set-Alias appcmd (gi ($env:appcmd -replace '^("(.+?)"|(\S+)).*$', '$2$3'))
-        $appcmdargs = $env:appcmd -replace '^(".+?"|\S+)\s*(.*)$', '$2'
+        function get-args { $args }
+        $appcmd = (iex "get-args $env:appcmd") | select -first 1
+        $appcmdargs = (iex "get-args $env:appcmd") | select -skip 1
     } else {
-        try {
-            gcm appcmd -EA Stop
-        } catch {
-            Set-Alias appcmd (gi "$env:SystemRoot\System32\inetsrv\appcmd.exe" -EA Stop)
+        $appcmd = (gcm appcmd -EA 0).Path
+        if (-not $appcmd) {
+            $appcmd = "$env:SystemRoot\System32\inetsrv\appcmd.exe"
         }
     }
 
-    # The first -replace parameter needs backslashes escaped, while the second
-    # does not. So we are really replacing 1 backslash with 2.
-    $interp = $interpreter_path -replace '\\', '\\'
-    $wfastcgi = (gi "$(Get-Location)\bin\wfastcgi.py" -EA Stop).FullName -replace '\\', '\\'
-
-    if ($is_debug) {
-        $max_requests = 1
-    } else {
-        $max_requests = 1000
+    $quoted_interpreter_path = $interpreter_path
+    if ($quoted_interpreter_path -contains ' ') {
+        $quoted_interpreter_path = "`"$quoted_interpreter_path`""
+    }
+    $quoted_wfastcgi_path = "$bindir\wfastcgi.py"
+    if ($quoted_wfastcgi_path -contains ' ') {
+        $quoted_wfastcgi_path = "`"$quoted_wfastcgi_path`""
     }
 
-    iex "appcmd $appcmdargs set config /section:system.webServer/fastCGI ""/+[fullPath='$interp',arguments='\""""$wfastcgi\""""',instanceMaxRequests='$max_requests',signalBeforeTerminateSeconds='30']"""
+    $appcmdargs += @(
+        "set",
+        "config",
+        "/section:system.webServer/fastCGI",
+        "/+[fullPath='$quoted_interpreter_path',arguments='$quoted_wfastcgi_path',signalBeforeTerminateSeconds='30']"
+    )
 
-    if ($is_emulated) {
+    "Configuring FastCGI with `"$appcmd`" $appcmdargs"
+    Start-Process -Wait -NoNewWindow $appcmd -ArgumentList $appcmdargs
+    $fastcgihandler = "$quoted_interpreter_path|$quoted_wfastcgi_path"
+
+    if ($is_emulated -and (Test-Path web.emulator.config)) {
+        $webconfig = gi web.emulator.config -EA Stop
+    } elseif (-not $is_emulated -and (Test-Path web.cloud.config)) {
+        $webconfig = gi web.cloud.config -EA Stop
+    } else {
         $webconfig = gi web.config -EA Stop
-    } else {
-        $webconfig = gi web.cloud.config -EA SilentlyContinue
-        if (-not $webconfig) {
-            $webconfig = gi web.config -EA Stop
-        }
     }
 
-    copy -force $webconfig "$webconfig.bak"
-    Get-Content "$webconfig.bak" | `
-        %{ $_ -replace '%wfastcgipath%', "&quot;$wfastcgi&quot;" } | `
-        %{ $_ -replace '%interpreterpath%', $interp } | `
-        %{ $_ -replace '%rootdir%', $env:RootDir } | `
-        Out-File -Encoding UTF8 "web.config" -Force
+    "Updating $($webconfig.FullName) to reference $fastcgihandler"
+    if (Test-Path web.config) {
+        copy -force web.config "web.config.bak"
+    }
+    $xml = [xml](gc "$webconfig")
+    foreach ($e in $xml.configuration.'system.webServer'.handlers.add) {
+        if ($e.name -ieq 'PythonHandler') {
+            $e.scriptProcessor = $fastcgihandler
+        }
+    }
+    $xml.Save("$(get-location)\web.config")
 }

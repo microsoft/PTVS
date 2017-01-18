@@ -27,16 +27,68 @@ namespace AnalysisTests {
             AssertListener.Initialize();
         }
 
-        public virtual PythonVersion Version {
-            get {
-                return PythonPaths.Python25;
-            }
+        [TestMethod, Priority(2)]
+        [TestCategory("10s"), TestCategory("60s")]
+        public void TestMutateStdLibV25() {
+            TestMutateStdLib(PythonPaths.Python25_x64 ?? PythonPaths.Python25);
         }
 
         [TestMethod, Priority(2)]
         [TestCategory("10s"), TestCategory("60s")]
-        public void TestMutateStdLib() {
-            Version.AssertInstalled();
+        public void TestMutateStdLibV26() {
+            TestMutateStdLib(PythonPaths.Python26_x64 ?? PythonPaths.Python26);
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("10s"), TestCategory("60s")]
+        public void TestMutateStdLibV27() {
+            TestMutateStdLib(PythonPaths.Python27_x64 ?? PythonPaths.Python27);
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("10s"), TestCategory("60s")]
+        public void TestMutateStdLibV30() {
+            TestMutateStdLib(PythonPaths.Python30_x64 ?? PythonPaths.Python30);
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("10s"), TestCategory("60s")]
+        public void TestMutateStdLibV31() {
+            TestMutateStdLib(PythonPaths.Python31_x64 ?? PythonPaths.Python31);
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("10s"), TestCategory("60s")]
+        public void TestMutateStdLibV32() {
+            TestMutateStdLib(PythonPaths.Python32_x64 ?? PythonPaths.Python32);
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("10s"), TestCategory("60s")]
+        public void TestMutateStdLibV33() {
+            TestMutateStdLib(PythonPaths.Python33_x64 ?? PythonPaths.Python33);
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("10s"), TestCategory("60s")]
+        public void TestMutateStdLibV34() {
+            TestMutateStdLib(PythonPaths.Python34_x64 ?? PythonPaths.Python34);
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("10s"), TestCategory("60s")]
+        public void TestMutateStdLibV35() {
+            TestMutateStdLib(PythonPaths.Python35_x64 ?? PythonPaths.Python35);
+        }
+
+        [TestMethod, Priority(2)]
+        [TestCategory("10s"), TestCategory("60s")]
+        public void TestMutateStdLibV36() {
+            TestMutateStdLib(PythonPaths.Python36_x64 ?? PythonPaths.Python36);
+        }
+
+        private void TestMutateStdLib(PythonVersion version) {
+            version.AssertInstalled();
 
             for (int i = 0; i < 100; i++) {
                 int seed = (int)DateTime.Now.Ticks;
@@ -44,11 +96,11 @@ namespace AnalysisTests {
                 Console.WriteLine("Seed == " + seed);
 
 
-                Console.WriteLine("Testing version {0} {1}", Version.Version, Version.LibPath);
+                Console.WriteLine("Testing version {0} {1}", version.Version, Path.Combine(version.PrefixPath, "Lib"));
                 int ran = 0, succeeded = 0;
                 string[] files;
                 try {
-                    files = Directory.GetFiles(Version.LibPath);
+                    files = Directory.GetFiles(Path.Combine(version.PrefixPath, "Lib"));
                 } catch (DirectoryNotFoundException) {
                     continue;
                 }
@@ -57,7 +109,7 @@ namespace AnalysisTests {
                     try {
                         if (file.EndsWith(".py")) {
                             ran++;
-                            TestOneFileMutated(file, Version.Version, random);
+                            TestOneFileMutated(file, version.Version, random);
                             succeeded++;
                         }
                     } catch (Exception e) {
@@ -82,62 +134,6 @@ namespace AnalysisTests {
             originalText = originalText.Substring(realStart, length);
 
             ParserRoundTripTest.TestOneString(version, originalText);
-        }
-    }
-
-    [TestClass]
-    public class Mutate26 : MutateStdLibTest {
-        public override PythonVersion Version {
-            get { return PythonPaths.Python26; }
-        }
-    }
-
-    [TestClass]
-    public class Mutate27 : MutateStdLibTest {
-        public override PythonVersion Version {
-            get { return PythonPaths.Python27; }
-        }
-    }
-
-    [TestClass]
-    public class Mutate30 : MutateStdLibTest {
-        public override PythonVersion Version {
-            get { return PythonPaths.Python30; }
-        }
-    }
-
-    [TestClass]
-    public class Mutate31 : MutateStdLibTest {
-        public override PythonVersion Version {
-            get { return PythonPaths.Python31; }
-        }
-    }
-
-    [TestClass]
-    public class Mutate32 : MutateStdLibTest {
-        public override PythonVersion Version {
-            get { return PythonPaths.Python32; }
-        }
-    }
-
-    [TestClass]
-    public class Mutate33 : MutateStdLibTest {
-        public override PythonVersion Version {
-            get { return PythonPaths.Python33; }
-        }
-    }
-
-    [TestClass]
-    public class Mutate34 : MutateStdLibTest {
-        public override PythonVersion Version {
-            get { return PythonPaths.Python34; }
-        }
-    }
-
-    [TestClass]
-    public class Mutate35 : MutateStdLibTest {
-        public override PythonVersion Version {
-            get { return PythonPaths.Python35; }
         }
     }
 }

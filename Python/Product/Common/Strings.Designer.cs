@@ -61,6 +61,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Additional information:.
+        /// </summary>
+        public static string AdditionalInformation {
+            get {
+                return ResourceManager.GetString("AdditionalInformation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Extension Modules (*.dll;*.pyd)|*.dll;*.pyd|All Files (*.*)|*.*.
         /// </summary>
         public static string AddReferenceExtensions {
@@ -88,7 +97,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to These tools are a free download for your version of Visual Studio that allow you to write, deploy and debug applications for Microsoft Azure in a range of programming languages..
+        ///   Looks up a localized string similar to These tools are an installable workload for your version of Visual Studio that allow you to write, deploy and debug applications for Microsoft Azure in a range of programming languages..
         /// </summary>
         public static string AzureToolsInstallInstructions {
             get {
@@ -162,6 +171,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot go to definition. The cursor is not on a recognized symbol..
+        /// </summary>
+        public static string CannotGoToDefn {
+            get {
+                return ResourceManager.GetString("CannotGoToDefn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot go to definition of &quot;{0}&quot;..
+        /// </summary>
+        public static string CannotGoToDefn_Name {
+            get {
+                return ResourceManager.GetString("CannotGoToDefn_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Class.
         /// </summary>
         public static string ClassClassificationType {
@@ -180,12 +207,210 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot create thread in debuggee process.
+        /// </summary>
+        public static string ConnErrorMessages_CannotInjectThread {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_CannotInjectThread", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot open process for debugging.
+        /// </summary>
+        public static string ConnErrorMessages_CannotOpenProcess {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_CannotOpenProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python interpreter has not been initialized in this process.
+        /// </summary>
+        public static string ConnErrorMessages_InterpreterNotInitialized {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_InterpreterNotInitialized", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to load debugging script (incorrect version of script?).
+        /// </summary>
+        public static string ConnErrorMessages_LoadDebuggerBadDebugger {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_LoadDebuggerBadDebugger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to compile debugging script.
+        /// </summary>
+        public static string ConnErrorMessages_LoadDebuggerFailed {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_LoadDebuggerFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Out of memory.
+        /// </summary>
+        public static string ConnErrorMessages_OutOfMemory {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_OutOfMemory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot find PyDebugAttach.dll.
+        /// </summary>
+        public static string ConnErrorMessages_PyDebugAttachNotFound {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_PyDebugAttachNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python interpreter not found.
+        /// </summary>
+        public static string ConnErrorMessages_PythonNotFound {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_PythonNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remote debugging server rejected request to attach.
+        /// </summary>
+        public static string ConnErrorMessages_RemoteAttachRejected {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_RemoteAttachRejected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid remote debugging endpoint URI.
+        /// </summary>
+        public static string ConnErrorMessages_RemoteInvalidUri {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_RemoteInvalidUri", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Network error while connecting to remote debugging server.
+        /// </summary>
+        public static string ConnErrorMessages_RemoteNetworkError {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_RemoteNetworkError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Secret specified in the Qualifier string did not match the remote secret.
+        /// </summary>
+        public static string ConnErrorMessages_RemoteSecretMismatch {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_RemoteSecretMismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not establish a secure SSL connection to remote debugging server.
+        /// </summary>
+        public static string ConnErrorMessages_RemoteSslError {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_RemoteSslError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remote server is not a supported Python debugging server.
+        /// </summary>
+        public static string ConnErrorMessages_RemoteUnsupportedServer {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_RemoteUnsupportedServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This remote debugging transport is not supported by this version of Windows..
+        /// </summary>
+        public static string ConnErrorMessages_RemoteUnsupportedTransport {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_RemoteUnsupportedTransport", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to gettrace not found in sys module.
+        /// </summary>
+        public static string ConnErrorMessages_SysGetTraceNotFound {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_SysGetTraceNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to sys module not found.
+        /// </summary>
+        public static string ConnErrorMessages_SysNotFound {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_SysNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to settrace not found in sys module.
+        /// </summary>
+        public static string ConnErrorMessages_SysSetTraceNotFound {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_SysSetTraceNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Timeout while attaching.
+        /// </summary>
+        public static string ConnErrorMessages_TimeOut {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_TimeOut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown error.
+        /// </summary>
+        public static string ConnErrorMessages_UnknownError {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_UnknownError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown Python version loaded in process.
+        /// </summary>
+        public static string ConnErrorMessages_UnknownVersion {
+            get {
+                return ResourceManager.GetString("ConnErrorMessages_UnknownVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Continue
         ///Some manual steps will be required to configure your project..
         /// </summary>
         public static string ContinueWithoutAzureToolsUpgrade {
             get {
                 return ResourceManager.GetString("ContinueWithoutAzureToolsUpgrade", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to your current environment.
+        /// </summary>
+        public static string CurrentInterpreterDescription {
+            get {
+                return ResourceManager.GetString("CurrentInterpreterDescription", resourceCulture);
             }
         }
         
@@ -253,6 +478,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Custom environment.
+        /// </summary>
+        public static string CustomEnvironmentLabel {
+            get {
+                return ResourceManager.GetString("CustomEnvironmentLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Getting attach information from web site..
         /// </summary>
         public static string DebugAttachGettingSiteInformation {
@@ -276,6 +510,15 @@ namespace Microsoft.PythonTools {
         public static string DebugLaunchInterpreterMissing_Path {
             get {
                 return ResourceManager.GetString("DebugLaunchInterpreterMissing_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The project cannot be launched because the startup file is not specified..
+        /// </summary>
+        public static string DebugLaunchScriptNameMissing {
+            get {
+                return ResourceManager.GetString("DebugLaunchScriptNameMissing", resourceCulture);
             }
         }
         
@@ -380,7 +623,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Package installation may fail if you do not have sufficient permissions.
+        ///   Looks up a localized string similar to This operation may fail if you do not have sufficient permissions.
         /// </summary>
         public static string ElevateForInstallPackage_DoNotElevate_Note {
             get {
@@ -407,7 +650,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &amp;Always elevate when installing packages.
+        ///   Looks up a localized string similar to &amp;Always elevate when installing or removing packages.
         /// </summary>
         public static string ElevateForInstallPackage_ElevateAlways {
             get {
@@ -425,7 +668,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Administrator privileges may be required to install or update this package..
+        ///   Looks up a localized string similar to Administrator privileges may be required to install, update or remove packages for this environment..
         /// </summary>
         public static string ElevateForInstallPackage_MainInstruction {
             get {
@@ -441,6 +684,15 @@ namespace Microsoft.PythonTools {
         public static string EnvironmentDeleteConfirmation {
             get {
                 return ResourceManager.GetString("EnvironmentDeleteConfirmation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; will be removed from the project and all its contents will be deleted from disk..
+        /// </summary>
+        public static string EnvironmentDeleteConfirmation_NoPath {
+            get {
+                return ResourceManager.GetString("EnvironmentDeleteConfirmation_NoPath", resourceCulture);
             }
         }
         
@@ -600,9 +852,7 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An error occurred opening this interactive window:
-        ///
-        ///{0}.
+        ///   Looks up a localized string similar to An error occurred opening this interactive window..
         /// </summary>
         public static string ErrorOpeningInteractiveWindow {
             get {
@@ -629,6 +879,38 @@ namespace Microsoft.PythonTools {
         public static string ErrorStartingInteractiveProcess {
             get {
                 return ResourceManager.GetString("ErrorStartingInteractiveProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Failed to run &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string ExecutingCommandFailed {
+            get {
+                return ResourceManager.GetString("ExecutingCommandFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Running &apos;{0}&apos; -----
+        ///.
+        /// </summary>
+        public static string ExecutingCommandStarted {
+            get {
+                return ResourceManager.GetString("ExecutingCommandStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully ran &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string ExecutingCommandSucceeded {
+            get {
+                return ResourceManager.GetString("ExecutingCommandSucceeded", resourceCulture);
             }
         }
         
@@ -799,6 +1081,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Installation failed.
+        /// </summary>
+        public static string InstallationFailed {
+            get {
+                return ResourceManager.GetString("InstallationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to To install your Python package, we will install setuptools and the pip package manager.
         ///
         ///Continue?.
@@ -806,6 +1097,70 @@ namespace Microsoft.PythonTools {
         public static string InstallEasyInstall {
             get {
                 return ResourceManager.GetString("InstallEasyInstall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Failed to install &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string InstallingPackageFailed {
+            get {
+                return ResourceManager.GetString("InstallingPackageFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Installing &apos;{0}&apos; -----
+        ///.
+        /// </summary>
+        public static string InstallingPackageStarted {
+            get {
+                return ResourceManager.GetString("InstallingPackageStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully installed &apos;{0}&apos; -----
+        ///
+        ///.
+        /// </summary>
+        public static string InstallingPackageSuccess {
+            get {
+                return ResourceManager.GetString("InstallingPackageSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Failed to install pip -----
+        ///
+        ///.
+        /// </summary>
+        public static string InstallingPipFailed {
+            get {
+                return ResourceManager.GetString("InstallingPipFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Installing pip -----
+        ///.
+        /// </summary>
+        public static string InstallingPipStarted {
+            get {
+                return ResourceManager.GetString("InstallingPipStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully installed pip -----
+        ///
+        ///.
+        /// </summary>
+        public static string InstallingPipSuccess {
+            get {
+                return ResourceManager.GetString("InstallingPipSuccess", resourceCulture);
             }
         }
         
@@ -844,6 +1199,15 @@ namespace Microsoft.PythonTools {
         public static string InstallRequirementsHidePackages {
             get {
                 return ResourceManager.GetString("InstallRequirementsHidePackages", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &amp;Install into {0}.
+        /// </summary>
+        public static string InstallRequirementsIntoCurrentEnv {
+            get {
+                return ResourceManager.GetString("InstallRequirementsIntoCurrentEnv", resourceCulture);
             }
         }
         
@@ -911,6 +1275,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Search path &apos;{0}&apos; is not a valid directory or file..
+        /// </summary>
+        public static string InvalidSearchPath {
+            get {
+                return ResourceManager.GetString("InvalidSearchPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to https://go.microsoft.com/fwlink/?LinkId=402428.
+        /// </summary>
+        public static string IssueTrackerUrl {
+            get {
+                return ResourceManager.GetString("IssueTrackerUrl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Operation cannot be started because the environment is not configured..
+        /// </summary>
+        public static string MisconfiguredEnvironment {
+            get {
+                return ResourceManager.GetString("MisconfiguredEnvironment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The environment &quot;{0}&quot; appears to be incorrectly configured or missing. You may need to install Python {1} or re-create a virtual environment..
         /// </summary>
         public static string MissingEnvironment {
@@ -925,6 +1316,15 @@ namespace Microsoft.PythonTools {
         public static string MissingEnvironmentUnknownVersion {
             get {
                 return ResourceManager.GetString("MissingEnvironmentUnknownVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  (missing).
+        /// </summary>
+        public static string MissingSuffix {
+            get {
+                return ResourceManager.GetString("MissingSuffix", resourceCulture);
             }
         }
         
@@ -952,6 +1352,15 @@ namespace Microsoft.PythonTools {
         public static string NoInterpretersAvailable {
             get {
                 return ResourceManager.GetString("NoInterpretersAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No interpreters.
+        /// </summary>
+        public static string NoInterpretersDescription {
+            get {
+                return ResourceManager.GetString("NoInterpretersDescription", resourceCulture);
             }
         }
         
@@ -1046,6 +1455,25 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The selected environment does not support package management..
+        /// </summary>
+        public static string PackageManagementNotSupported {
+            get {
+                return ResourceManager.GetString("PackageManagementNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to install {0} because the selected environment does not support package management.
+        ///.
+        /// </summary>
+        public static string PackageManagementNotSupported_Package {
+            get {
+                return ResourceManager.GetString("PackageManagementNotSupported_Package", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; failed to uninstall..
         /// </summary>
         public static string PackageUninstallFailed {
@@ -1127,11 +1555,42 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Python Tools for Visual Studio.
+        ///   Looks up a localized string similar to Visual Studio - Python support.
         /// </summary>
         public static string ProductTitle {
             get {
                 return ResourceManager.GetString("ProductTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Publishing Python projects has recently changed..
+        /// </summary>
+        public static string PublishToAzure30 {
+            get {
+                return ResourceManager.GetString("PublishToAzure30", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to These changes will allow you to deploy more reliably and quickly, but first you may need to configure your project or deployment target.
+        ///
+        ///When you publish, we will no longer automatically generate a web.config file. You can add one using Add New Item and customize as necessary for your site.
+        ///
+        ///There are no restrictions on the version of Python you may be using when you deploy, however, we will no longer include virtual environments or the Python runtime when you deploy. Only libraries that are directly i [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string PublishToAzure30Message {
+            get {
+                return ResourceManager.GetString("PublishToAzure30Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Direct references to .pyd files have been deprecated. We recommend replacing the reference with a Search Path..
+        /// </summary>
+        public static string PydReferenceDeprecated {
+            get {
+                return ResourceManager.GetString("PydReferenceDeprecated", resourceCulture);
             }
         }
         
@@ -1190,6 +1649,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to [Deprecated].
+        /// </summary>
+        public static string RefDeprecatedMessage {
+            get {
+                return ResourceManager.GetString("RefDeprecatedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Explanation of this reference type&apos;s deprecation..
+        /// </summary>
+        public static string RefDeprecatedMessageDescription {
+            get {
+                return ResourceManager.GetString("RefDeprecatedMessageDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to References.
         /// </summary>
         public static string ReferencesNodeName {
@@ -1204,6 +1681,42 @@ namespace Microsoft.PythonTools {
         public static string RememberMySelection {
             get {
                 return ResourceManager.GetString("RememberMySelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not connect to remote Python process at {0}. Make sure that web sockets are enabled for the corresponding web site in Azure portal..
+        /// </summary>
+        public static string RemoteAzureServiceUnavailable_Host {
+            get {
+                return ResourceManager.GetString("RemoteAzureServiceUnavailable_Host", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Secret did not match the server secret at {0}. Make sure that the secret is specified correctly in the Qualifier textbox, e.g. tcp://secret@localhost..
+        /// </summary>
+        public static string RemoteSecretMismatch_Host {
+            get {
+                return ResourceManager.GetString("RemoteSecretMismatch_Host", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not connect to remote Python process at {0}. Make sure that the process is running, and has called ptvsd.enable_attach()..
+        /// </summary>
+        public static string RemoteServiceUnavailable_Host {
+            get {
+                return ResourceManager.GetString("RemoteServiceUnavailable_Host", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The remote server at {0} is not running a remote debugging server, or it is running an unsupported version..
+        /// </summary>
+        public static string RemoteUnsupportedServer_Host {
+            get {
+                return ResourceManager.GetString("RemoteUnsupportedServer_Host", resourceCulture);
             }
         }
         
@@ -1328,6 +1841,15 @@ namespace Microsoft.PythonTools {
         public static string ReplOpeningError {
             get {
                 return ResourceManager.GetString("ReplOpeningError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The associated project &apos;{0}&apos; has changed its configuration. These changes will not be reflected until you reset this interactive window..
+        /// </summary>
+        public static string ReplProjectConfigurationChanged {
+            get {
+                return ResourceManager.GetString("ReplProjectConfigurationChanged", resourceCulture);
             }
         }
         
@@ -1761,11 +2283,83 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error occurred connecting to debuggee..
+        /// </summary>
+        public static string Test_ErrorConnecting {
+            get {
+                return ResourceManager.GetString("Test_ErrorConnecting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to execute tests because the process has already exited..
+        /// </summary>
+        public static string Test_FailedToStartExited {
+            get {
+                return ResourceManager.GetString("Test_FailedToStartExited", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Interpreter path does not exist: {0}.
+        /// </summary>
+        public static string Test_InterpreterDoesNotExist {
+            get {
+                return ResourceManager.GetString("Test_InterpreterDoesNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Code coverage file not produced...  have you installed coverage.py? http://go.microsoft.com/fwlink/?LinkId=808238.
+        /// </summary>
+        public static string Test_NoCoverageProduced {
+            get {
+                return ResourceManager.GetString("Test_NoCoverageProduced", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to receive test finish notification.  One or more test results may be missing..
+        /// </summary>
+        public static string Test_NoTestFinishedNotification {
+            get {
+                return ResourceManager.GetString("Test_NoTestFinishedNotification", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to determine interpreter to use for {0}.
+        /// </summary>
+        public static string Test_UnableToDetermineInterpreter {
+            get {
+                return ResourceManager.GetString("Test_UnableToDetermineInterpreter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected test result: {0}.{1}.
+        /// </summary>
+        public static string Test_UnexpectedResult {
+            get {
+                return ResourceManager.GetString("Test_UnexpectedResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to get launch configuration for project stored in {0}, tests cannot be discovered..
         /// </summary>
         public static string TestDiscoveryFailedMissingLaunchConfiguration {
             get {
                 return ResourceManager.GetString("TestDiscoveryFailedMissingLaunchConfiguration", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Visual Studio was unable to launch the elevated process..
+        /// </summary>
+        public static string UnableToElevate {
+            get {
+                return ResourceManager.GetString("UnableToElevate", resourceCulture);
             }
         }
         
@@ -1785,6 +2379,54 @@ namespace Microsoft.PythonTools {
         public static string UnhandledException {
             get {
                 return ResourceManager.GetString("UnhandledException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Error while uninstalling &apos;{0}&apos; -----
+        ///&apos;{0}&apos; may not have been uninstalled completely.
+        ///.
+        /// </summary>
+        public static string UninstallingPackageFailed {
+            get {
+                return ResourceManager.GetString("UninstallingPackageFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Uninstalling &apos;{0}&apos; -----.
+        /// </summary>
+        public static string UninstallingPackageStarted {
+            get {
+                return ResourceManager.GetString("UninstallingPackageStarted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to ----- Successfully uninstalled &apos;{0}&apos; -----
+        ///.
+        /// </summary>
+        public static string UninstallingPackageSuccess {
+            get {
+                return ResourceManager.GetString("UninstallingPackageSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove this package.
+        /// </summary>
+        public static string UninstallMessage {
+            get {
+                return ResourceManager.GetString("UninstallMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove {0}.
+        /// </summary>
+        public static string UninstallMessage_Package {
+            get {
+                return ResourceManager.GetString("UninstallMessage_Package", resourceCulture);
             }
         }
         
@@ -1920,6 +2562,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Upgrade to the latest version of this package.
+        /// </summary>
+        public static string UpgradeMessage {
+            get {
+                return ResourceManager.GetString("UpgradeMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Upgrade to {0} version {1}.
+        /// </summary>
+        public static string UpgradeMessage_Package {
+            get {
+                return ResourceManager.GetString("UpgradeMessage_Package", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to create or add the virtual environment. See the Output window for details..
         /// </summary>
         public static string VirtualEnvAddFailed {
@@ -1979,6 +2639,15 @@ namespace Microsoft.PythonTools {
         public static string WarningUnknownType {
             get {
                 return ResourceManager.GetString("WarningUnknownType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to WebPI references have been deprecated. We recommend replacing the reference with a custom installation script..
+        /// </summary>
+        public static string WebPIReferenceDeprecated {
+            get {
+                return ResourceManager.GetString("WebPIReferenceDeprecated", resourceCulture);
             }
         }
         

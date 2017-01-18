@@ -21,16 +21,16 @@ using System.IO;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using System.Windows.Input;
-using Microsoft.PythonTools.Debugger;
+using System.Windows.Threading;
 using Microsoft.PythonTools.EnvironmentsList;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Project;
 using Microsoft.PythonTools.Repl;
+using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
-using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 
@@ -61,6 +61,11 @@ namespace Microsoft.PythonTools.InterpreterList {
             
             var list = new ToolWindow();
             list.Site = _site;
+            try {
+                list.TelemetryLogger = _site.GetPythonToolsService().Logger;
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+            }
             list.ViewCreated += List_ViewCreated;
 
             list.CommandBindings.Add(new CommandBinding(
@@ -151,7 +156,7 @@ namespace Microsoft.PythonTools.InterpreterList {
                     Directory.CreateDirectory(path);
                     File.WriteAllText(PathUtils.GetAbsoluteFilePath(path, "readme.txt"), Strings.ReplScriptPathReadmeContents);
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    TaskDialog.ForException(_site, ex, issueTrackerUrl: PythonConstants.IssueTrackerUrl).ShowModal();
+                    TaskDialog.ForException(_site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
                     return false;
                 }
             }
@@ -189,7 +194,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             try {
                 File.WriteAllText(path, Strings.ReplScriptPathIPythonModeTxtContents);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                TaskDialog.ForException(_site, ex, issueTrackerUrl: PythonConstants.IssueTrackerUrl).ShowModal();
+                TaskDialog.ForException(_site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
                 return;
             }
 
@@ -213,7 +218,7 @@ namespace Microsoft.PythonTools.InterpreterList {
                 try {
                     File.Delete(path);
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
-                    TaskDialog.ForException(_site, ex, issueTrackerUrl: PythonConstants.IssueTrackerUrl).ShowModal();
+                    TaskDialog.ForException(_site, ex, issueTrackerUrl: Strings.IssueTrackerUrl).ShowModal();
                     return;
                 }
             }
@@ -221,16 +226,20 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void List_ViewCreated(object sender, EnvironmentViewEventArgs e) {
             var view = e.View;
-            var pep = new PipExtensionProvider(view.Factory);
-            pep.QueryShouldElevate += PipExtensionProvider_QueryShouldElevate;
-            pep.OperationStarted += PipExtensionProvider_OperationStarted;
-            pep.OutputTextReceived += PipExtensionProvider_OutputTextReceived;
-            pep.ErrorTextReceived += PipExtensionProvider_ErrorTextReceived;
-            pep.OperationFinished += PipExtensionProvider_OperationFinished;
 
-            view.Extensions.Add(pep);
+            try {
+                var pep = new PipExtensionProvider(view.Factory);
+                pep.QueryShouldElevate += PipExtensionProvider_QueryShouldElevate;
+                pep.OperationStarted += PipExtensionProvider_OperationStarted;
+                pep.OutputTextReceived += PipExtensionProvider_OutputTextReceived;
+                pep.ErrorTextReceived += PipExtensionProvider_ErrorTextReceived;
+                pep.OperationFinished += PipExtensionProvider_OperationFinished;
+                view.Extensions.Add(pep);
+            } catch (NotSupportedException) {
+            }
+
             var _withDb = view.Factory as PythonInterpreterFactoryWithDatabase;
-            if (_withDb != null) {
+            if (_withDb != null && !string.IsNullOrEmpty(_withDb.DatabasePath)) {
                 view.Extensions.Add(new DBExtensionProvider(_withDb));
             }
 
@@ -273,54 +282,14 @@ namespace Microsoft.PythonTools.InterpreterList {
         }
 
         private void PipExtensionProvider_QueryShouldElevate(object sender, QueryShouldElevateEventArgs e) {
-            if (_pyService.GeneralOptions.ElevatePip) {
-                e.Elevate = true;
-                return;
-            }
-
             try {
-                // Create a test file and delete it immediately to ensure we can do it.
-                // If this fails, prompt the user to see whether they want to elevate.
-                var testFile = PathUtils.GetAvailableFilename(e.TargetDirectory, "access-test", ".txt");
-                using (new FileStream(testFile, FileMode.CreateNew, FileAccess.Write, FileShare.Delete, 4096, FileOptions.DeleteOnClose)) { }
-                e.Elevate = false;
-                return;
-            } catch (IOException) {
-            } catch (UnauthorizedAccessException) {
-            }
-
-            var td = new TaskDialog(_site) {
-                Title = Strings.ProductTitle,
-                MainInstruction = Strings.ElevateForInstallPackage_MainInstruction,
-                AllowCancellation = true,
-            };
-            var elevate = new TaskDialogButton(Strings.ElevateForInstallPackage_Elevate, Strings.ElevateForInstallPackage_Elevate_Note) {
-                ElevationRequired = true
-            };
-            var noElevate = new TaskDialogButton(Strings.ElevateForInstallPackage_DoNotElevate, Strings.ElevateForInstallPackage_DoNotElevate_Note);
-            var elevateAlways = new TaskDialogButton(Strings.ElevateForInstallPackage_ElevateAlways, Strings.ElevateForInstallPackage_ElevateAlways_Note) {
-                ElevationRequired = true
-            };
-            td.Buttons.Add(elevate);
-            td.Buttons.Add(noElevate);
-            td.Buttons.Add(elevateAlways);
-            td.Buttons.Add(TaskDialogButton.Cancel);
-            var sel = td.ShowModal();
-            if (sel == TaskDialogButton.Cancel) {
+                e.Elevate = VsPackageManagerUI.ShouldElevate(_site, e.Factory.Configuration, "pip");
+            } catch (OperationCanceledException) {
                 e.Cancel = true;
-            } else if (sel == noElevate) {
-                e.Elevate = false;
-            } else if (sel == elevateAlways) {
-                _pyService.GeneralOptions.ElevatePip = true;
-                _pyService.GeneralOptions.Save();
-                e.Elevate = true;
-            } else {
-                e.Elevate = true;
             }
         }
 
-        private void PipExtensionProvider_OperationStarted(object sender, EnvironmentsList.OutputEventArgs e) {
-            _outputWindow.WriteLine(e.Data);
+        private void PipExtensionProvider_OperationStarted(object sender, OutputEventArgs e) {
             if (_statusBar != null) {
                 _statusBar.SetText(e.Data);
             }
@@ -329,19 +298,15 @@ namespace Microsoft.PythonTools.InterpreterList {
             }
         }
 
-        private void PipExtensionProvider_OutputTextReceived(object sender, EnvironmentsList.OutputEventArgs e) {
-            _outputWindow.WriteLine(e.Data);
+        private void PipExtensionProvider_OutputTextReceived(object sender, OutputEventArgs e) {
+            _outputWindow.WriteLine(e.Data.TrimEndNewline());
         }
 
-        private void PipExtensionProvider_ErrorTextReceived(object sender, EnvironmentsList.OutputEventArgs e) {
-            _outputWindow.WriteErrorLine(e.Data);
+        private void PipExtensionProvider_ErrorTextReceived(object sender, OutputEventArgs e) {
+            _outputWindow.WriteErrorLine(e.Data.TrimEndNewline());
         }
 
-        private void PipExtensionProvider_OperationFinished(object sender, EnvironmentsList.OutputEventArgs e) {
-            _outputWindow.WriteLine(e.Data);
-            if (_statusBar != null) {
-                _statusBar.SetText(e.Data);
-            }
+        private void PipExtensionProvider_OperationFinished(object sender, OperationFinishedEventArgs e) {
             if (_pyService.GeneralOptions.ShowOutputWindowForPackageInstallation) {
                 _outputWindow.ShowAndActivate();
             }
@@ -354,13 +319,8 @@ namespace Microsoft.PythonTools.InterpreterList {
         private void UnhandledException_Executed(object sender, ExecutedRoutedEventArgs e) {
             var ex = (ExceptionDispatchInfo)e.Parameter;
             Debug.Assert(ex != null, "Unhandled exception with no exception object");
-            if (ex.SourceException is PipException) {
-                // Don't report Pip exceptions. The output messages have
-                // already been handled.
-                return;
-            }
 
-            var td = TaskDialog.ForException(_site, ex.SourceException, String.Empty, PythonConstants.IssueTrackerUrl);
+            var td = TaskDialog.ForException(_site, ex.SourceException, string.Empty, Strings.IssueTrackerUrl);
             td.Title = Strings.ProductTitle;
             td.ShowModal();
         }
@@ -392,7 +352,7 @@ namespace Microsoft.PythonTools.InterpreterList {
             try {
                 window = service.OpenOrCreate(replId);
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                MessageBox.Show(Strings.ErrorOpeningInteractiveWindow.FormatUI(ex), Strings.ProductTitle);
+                TaskDialog.ForException(_site, ex, Strings.ErrorOpeningInteractiveWindow, Strings.IssueTrackerUrl).ShowModal();
                 return;
             }
 
@@ -425,7 +385,7 @@ namespace Microsoft.PythonTools.InterpreterList {
 
             config.LaunchOptions[PythonConstants.NeverPauseOnExit] = "true";
 
-            Process.Start(DebugLaunchHelper.CreateProcessStartInfo(_site, config)).Dispose();
+            Process.Start(Debugger.DebugLaunchHelper.CreateProcessStartInfo(_site, config)).Dispose();
         }
 
         private void OnlineHelp_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
@@ -502,6 +462,61 @@ namespace Microsoft.PythonTools.InterpreterList {
 
         private void OpenInBrowser_Executed(object sender, ExecutedRoutedEventArgs e) {
             PythonToolsPackage.OpenVsWebBrowser(_site, (string)e.Parameter);
+        }
+
+        internal static void OpenAt(IServiceProvider site, IPythonInterpreterFactory interpreter, Type extension = null) {
+            var wnd = (site?.GetService(typeof(IPythonToolsToolWindowService)) as IPythonToolsToolWindowService)
+                ?.GetWindowPane(typeof(InterpreterListToolWindow), true) as InterpreterListToolWindow;
+            var envs = wnd?.Content as ToolWindow;
+            if (envs == null) {
+                Debug.Fail("Failed to get environment list window");
+                return;
+            }
+
+            ErrorHandler.ThrowOnFailure((wnd.Frame as IVsWindowFrame)?.Show() ?? 0);
+
+            if (extension == null) {
+                SelectEnv(envs, interpreter, 3);
+            } else {
+                SelectEnvAndExt(envs, interpreter, extension, 3);
+            }
+        }
+
+        private static void SelectEnv(ToolWindow envs, IPythonInterpreterFactory interpreter, int retries) {
+            if (retries <= 0) {
+                Debug.Fail("Failed to select environment after multiple retries");
+                return;
+            }
+            var select = envs.IsLoaded ? envs.Environments.OfType<EnvironmentView>().FirstOrDefault(e => e.Factory == interpreter) : null;
+            if (select == null) {
+                envs.Dispatcher.InvokeAsync(() => SelectEnv(envs, interpreter, retries - 1), DispatcherPriority.Background);
+                return;
+            }
+
+            envs.Environments.MoveCurrentTo(select);
+        }
+
+        private static void SelectEnvAndExt(ToolWindow envs, IPythonInterpreterFactory interpreter, Type extension, int retries) {
+            if (retries <= 0) {
+                Debug.Fail("Failed to select environment/extension after multiple retries");
+                return;
+            }
+            var select = envs.IsLoaded ? envs.Environments.OfType<EnvironmentView>().FirstOrDefault(e => e.Factory == interpreter) : null;
+            if (select == null) {
+                envs.Dispatcher.InvokeAsync(() => SelectEnvAndExt(envs, interpreter, extension, retries - 1), DispatcherPriority.Background);
+                return;
+            }
+
+            var ext = select?.Extensions.FirstOrDefault(e => e != null && extension.IsEquivalentTo(e.GetType()));
+
+            envs.Environments.MoveCurrentTo(select);
+            if (ext != null) {
+                var exts = envs.Extensions;
+                if (exts != null && exts.Contains(ext)) {
+                    exts.MoveCurrentTo(ext);
+                    ((ext as IEnvironmentViewExtension)?.WpfObject as ICanFocus)?.Focus();
+                }
+            }
         }
     }
 }

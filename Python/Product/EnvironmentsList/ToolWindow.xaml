@@ -21,24 +21,20 @@
         <CommandBinding Command="{x:Static l:DBExtension.StartRefreshDB}"
                         CanExecute="StartRefreshDB_CanExecute"
                         Executed="StartRefreshDB_Executed" />
-        <CommandBinding Command="ApplicationCommands.New"
-                        CanExecute="AddCustomEnvironment_CanExecute"
-                        Executed="AddCustomEnvironment_Executed" />
+        <CommandBinding Command="{x:Static l:ConfigurationEnvironmentView.Added}"
+                        CanExecute="ConfigurableViewAdded_CanExecute"
+                        Executed="ConfigurableViewAdded_Executed" />
+        <CommandBinding Command="{x:Static l:EnvironmentPathsExtension.ConfigureEnvironment}"
+                        CanExecute="ConfigureEnvironment_CanExecute"
+                        Executed="ConfigureEnvironment_Executed" />
     </UserControl.CommandBindings>
-    
+
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="pack://application:,,,/Microsoft.PythonTools.EnvironmentsList;component/EnvironmentView.xaml" />
-                
+
                 <ResourceDictionary>
-                    <CollectionViewSource x:Key="SortedExtensions"
-                                          Source="{Binding Environments.CurrentItem.Extensions}">
-                        <CollectionViewSource.SortDescriptions>
-                            <scm:SortDescription Direction="Ascending" PropertyName="SortPriority" />
-                            <scm:SortDescription Direction="Ascending" PropertyName="LocalizedDisplayName" />
-                        </CollectionViewSource.SortDescriptions>
-                    </CollectionViewSource>
                 </ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
@@ -98,8 +94,8 @@
                 </Setter>
             </Style>
         </Grid.Resources>
-        
-        <Grid x:Name="HorizontalLayout">
+
+        <Grid x:Name="HorizontalLayout" Visibility="Collapsed">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition x:Name="EnvironmentsColumn" Width="auto" />
                 <ColumnDefinition x:Name="ExtensionsColumn" Width="auto" />
@@ -133,7 +129,7 @@
                      Margin="3 0"
                      VerticalAlignment="Stretch"
                      BorderThickness="0"
-                     ItemsSource="{Binding Source={StaticResource SortedExtensions}}"
+                     ItemsSource="{Binding Extensions}"
                      ItemTemplate="{StaticResource ExtensionListItem}" />
 
             <ContentControl Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"
@@ -155,10 +151,10 @@
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                
+
                 <ContentControl Grid.Row="0"
                                 Style="{StaticResource HelpContentStyle}"
-                                Content="{Binding CurrentItem.HelpContent,Source={StaticResource SortedExtensions}}"
+                                Content="{Binding Extensions.CurrentItem.HelpContent}"
                                 IsEnabled="{Binding IsChecked,ElementName=HelpVisibility_Horizontal}"/>
 
                 <ContentControl x:Name="ContentView_Horizontal"
@@ -166,7 +162,6 @@
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
                                 Focusable="False"
-                                Content="{Binding CurrentItem.WpfObject,Source={StaticResource SortedExtensions}}"
                                 DataContext="{Binding Environments.CurrentItem}" />
             </Grid>
         </Grid>
@@ -201,7 +196,7 @@
                       Margin="3"
                       HorizontalAlignment="Stretch"
                       IsEditable="False"
-                      ItemsSource="{Binding Source={StaticResource SortedExtensions}}"
+                      ItemsSource="{Binding Extensions}"
                       ItemTemplate="{StaticResource ExtensionComboItem}"/>
 
             <CheckBox x:Name="HelpVisibility_Vertical"
@@ -215,10 +210,10 @@
                     <RowDefinition Height="auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
-                
+
                 <ContentControl Grid.Row="0"
                             Style="{StaticResource HelpContentStyle}"
-                            Content="{Binding CurrentItem.HelpContent,Source={StaticResource SortedExtensions}}"
+                            Content="{Binding Extensions.CurrentItem.HelpContent}"
                             IsEnabled="{Binding IsChecked,ElementName=HelpVisibility_Vertical}"/>
 
                 <ContentControl x:Name="ContentView_Vertical"
@@ -226,8 +221,7 @@
                                 HorizontalAlignment="Stretch"
                                 VerticalAlignment="Stretch"
                                 Focusable="False"
-                                Content="{Binding CurrentItem.WpfObject,Source={StaticResource SortedExtensions}}"
-                                DataContext="{Binding Environments.CurrentItem}" />
+                                DataContext="{Binding Environments.CurrentItem}"/>
             </Grid>
         </Grid>
     </Grid>

@@ -4,13 +4,14 @@
 
   <PropertyGroup>
     <BaseInstall>InstallDir:\Common7\IDE\Extensions\Microsoft\Python\Core</BaseInstall>
-    <SourcePath>$(LayoutOutputPath)Microsoft.PythonTools</SourcePath>
+    <SourcePath>$(LayoutOutputPath)Microsoft.PythonTools.Core</SourcePath>
 
-    <ExtraOptions>-x "\.targets$" -x "\.AzureSetup\.exe(\.config)?$" -x "\.WebRole\.dll$" -x "ptvs_virtualenv_proxy\.py$" -x "web_(debug_)?config\.xml$" -x "wfastcgi\.py$"</ExtraOptions>
+    <ExtraOptions>-x "\.targets$" -x "wfastcgi\.py$" -x "Microsoft\.PythonTools\.Core\.dll$"</ExtraOptions>
   </PropertyGroup>
 
   <ItemGroup>
     <Package Include="file_associations.swr" />
+    <Package Include="debug_symbols.swr" Condition="$(Configuration) == 'Release'" />
     <Package Include="targets.swr" />
   </ItemGroup>
 

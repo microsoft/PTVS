@@ -356,16 +356,15 @@ namespace Microsoft.PythonTools.Uwp.Interpreter {
 
                     return SetPythonUwpInterpreterFactory(new InterpreterConfiguration(
                         interpreterId,
-                        InterpreterFactoryProviderId,
+                        string.Format("{0} ({1})", InterpreterFactoryProviderId, descriptionSuffix),
                         prefixPath.FullName,
                         targetsFile.FullName,
+                        "",
                         null,
-                        libPath.FullName,
-                        null,
-                        ProcessorArchitecture.None,
+                        InterpreterArchitecture.Unknown,
                         ver,
-                        InterpreterUIMode.CannotBeDefault | InterpreterUIMode.SupportsDatabase,
-                        descriptionSuffix));
+                        InterpreterUIMode.CannotBeDefault | InterpreterUIMode.SupportsDatabase
+                    ));
                 }
             }
 

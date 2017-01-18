@@ -126,6 +126,8 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             _serviceProvider.AddService(typeof(EnvDTE.IVsExtensibility), _extensibility);
             _serviceProvider.AddService(typeof(EnvDTE.DTE), _dte);
 
+            Shell.SetProperty((int)__VSSPROPID4.VSSPROPID_ShellInitialized, true);
+
             UIShell.AddToolWindow(new Guid(ToolWindowGuids80.SolutionExplorer), new MockToolWindow(_uiHierarchy));
 
             ErrorHandler.ThrowOnFailure(
@@ -134,6 +136,31 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                     out _monSelCookie
                 )
             );
+
+#if DEV15_OR_LATER
+            // If we are not in Visual Studio, we need to set MSBUILD_EXE_PATH
+            // to use any project support.
+            if (!"devenv".Equals(Path.GetFileNameWithoutExtension(Assembly.GetExecutingAssembly().Location), StringComparison.OrdinalIgnoreCase)) {
+                var vsPath = Environment.GetEnvironmentVariable("VisualStudio_" + AssemblyVersionInfo.VSVersion);
+                if (!Directory.Exists(vsPath)) {
+                    vsPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+                    if (string.IsNullOrEmpty(vsPath)) {
+                        vsPath = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                    }
+                    vsPath = Path.Combine(vsPath, "Microsoft Visual Studio", AssemblyVersionInfo.VSVersionSuffix);
+                }
+                if (Directory.Exists(vsPath)) {
+                    var msbuildPath = Path.Combine(vsPath, "MSBuild");
+                    var msbuildExe = FileUtils.EnumerateFiles(msbuildPath, "msbuild.exe").OrderByDescending(k => k).FirstOrDefault();
+                    if (File.Exists(msbuildExe)) {
+                        // Set the variable. If we haven't set it, most tests
+                        // should still work, but ones trying to load MSBuild's
+                        // assemblies will fail.
+                        Environment.SetEnvironmentVariable("MSBUILD_EXE_PATH", msbuildExe);
+                    }
+                }
+            }
+#endif
 
             _throwExceptionsOn = Thread.CurrentThread;
 
@@ -169,6 +196,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             ThrowPendingException();
             _monSel.UnadviseSelectionEvents(_monSelCookie);
             AssertListener.ThrowUnhandled();
+            _serviceProvider.Dispose();
             Container.Dispose();
         }
 
@@ -216,13 +244,15 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
         private void UIThreadWorker(object evt) {
             try {
-                SynchronizationContext.SetSynchronizationContext(new MockSyncContext(this));
-                foreach (var package in Container.GetExportedValues<IMockPackage>()) {
-                    _loadedPackages.Add(package);
-                    package.Initialize();
+                try {
+                    SynchronizationContext.SetSynchronizationContext(new MockSyncContext(this));
+                    foreach (var package in Container.GetExportedValues<IMockPackage>()) {
+                        _loadedPackages.Add(package);
+                        package.Initialize();
+                    }
+                } finally {
+                    ((AutoResetEvent)evt).Set();
                 }
-
-                ((AutoResetEvent)evt).Set();
                 RunMessageLoop();
             } catch (Exception ex) {
                 Trace.TraceError("Captured exception on mock UI thread: {0}", ex);
@@ -256,7 +286,11 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
-        private void ThrowPendingException(bool checkThread = true) {
+        public bool HasPendingException => _edi != null;
+
+        public void ThrowPendingException() => ThrowPendingException(false);
+
+        private void ThrowPendingException(bool checkThread) {
             if (!checkThread || _throwExceptionsOn == Thread.CurrentThread) {
                 var edi = Interlocked.Exchange(ref _edi, null);
                 if (edi != null) {
@@ -366,6 +400,9 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
                 var id = info.Attribute.LanguageServiceSid;
                 var serviceProvider = Container.GetExportedValue<MockVsServiceProvider>();
                 var langInfo = (IVsLanguageInfo)serviceProvider.GetService(id);
+                if (langInfo == null) {
+                    throw new NotImplementedException("Unable to get IVsLanguageInfo for " + info.Attribute.LanguageName);
+                }
                 IVsCodeWindowManager mgr;
                 var codeWindow = new MockCodeWindow(serviceProvider, view);
                 view.Properties[typeof(MockCodeWindow)] = codeWindow;
@@ -420,7 +457,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             }
         }
 
-        #region Composition Container Initialization
+#region Composition Container Initialization
 
         private CompositionContainer CreateCompositionContainer() {
             var container = new CompositionContainer(CachedInfo.Catalog);
@@ -449,8 +486,16 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
 
             AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
             try {
+                var _excludedAssemblies = new HashSet<string>(new string[] {
+#if DEV14
+                    "Microsoft.PythonTools.Workspace.dll",
+                    "Microsoft.VisualStudio.Workspace.dll",
+                    "Microsoft.VisualStudio.Workspace.Extensions.VS.dll",
+#endif
+                }, StringComparer.OrdinalIgnoreCase);
+
                 foreach (var file in Directory.GetFiles(runningLoc, "*.dll")) {
-                    if (file.EndsWith("VsLogger.dll", StringComparison.OrdinalIgnoreCase)) {
+                    if (_excludedAssemblies.Contains(Path.GetFileName(file))) {
                         continue;
                     }
 
@@ -505,7 +550,7 @@ namespace Microsoft.VisualStudioTools.MockVsTests {
             return asm;
         }
 
-        #endregion
+#endregion
 
         public ITreeNode WaitForItemRemoved(params string[] path) {
             ITreeNode item = null;

@@ -66,6 +66,7 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.9.0, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+    <Reference Include="Microsoft.VisualStudio.Telemetry" />
     <Reference Include="Microsoft.VisualStudio.Text.Data, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.Logic, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.UI, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -80,14 +81,17 @@
   <ItemGroup />
   <ItemGroup>
     <Compile Include="Infrastructure\IProjectInterpreterDbChanged.cs" />
+    <Compile Include="Logging\IPythonToolsLogger.cs" />
     <Compile Include="Infrastructure\IXamlDesignerSupport.cs" />
     <Compile Include="Infrastructure\OutputWindowRedirector.cs" />
+    <Compile Include="Logging\PythonLogEvent.cs" />
     <Compile Include="Infrastructure\SettingsManagerCreator.cs" />
     <Compile Include="Infrastructure\TaskDialog.cs" />
     <Compile Include="Infrastructure\TextExtensions.cs" />
     <Compile Include="Infrastructure\VisualStudioApp.cs" />
     <Compile Include="Infrastructure\VSTaskExtensions.cs" />
     <Compile Include="Infrastructure\UIThreadBase.cs" />
+    <Compile Include="Logging\PythonToolsLoggerData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

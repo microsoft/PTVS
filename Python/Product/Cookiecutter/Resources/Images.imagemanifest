@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ImageManifest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+               xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+               xmlns="http://schemas.microsoft.com/VisualStudio/ImageManifestSchema/2014">
+  <Symbols>
+    <!-- The value of AssemblyName will be replaced at build with the full name -->
+    <String Name="AssemblyName" Value="Microsoft.CookiecutterTools"/>
+    <String Name="Resources" Value="/$(AssemblyName);Component/Resources"/>
+    <Guid Name="CookiecutterImagesGuid" Value="{50EDF200-5C99-4968-ABC0-CF1A2C490F00}"/>
+    <ID Name="Cancel" Value="1"/>
+    <ID Name="Cookiecutter" Value="2"/>
+    <ID Name="CookiecutterTemplate" Value="3"/>
+    <ID Name="CookiecutterTemplateOK" Value="4"/>
+    <ID Name="CookiecutterTemplateUpdate" Value="5"/>
+    <ID Name="CookiecutterTemplateWarning" Value="6"/>
+    <ID Name="Download" Value="7"/>
+    <ID Name="NewCookiecutter" Value="8"/>
+  </Symbols>
+  <Images>
+    <Image Guid="$(CookiecutterImagesGuid)" ID="$(Cancel)">
+      <Source Uri="$(Resources)/Cancel_16x.xaml" />
+    </Image>
+    <Image Guid="$(CookiecutterImagesGuid)" ID="$(Cookiecutter)">
+      <Source Uri="$(Resources)/Cookiecutter_16x.xaml" />
+    </Image>
+    <Image Guid="$(CookiecutterImagesGuid)" ID="$(CookiecutterTemplate)">
+      <Source Uri="$(Resources)/CookiecutterTemplate_16x.xaml" />
+    </Image>
+    <Image Guid="$(CookiecutterImagesGuid)" ID="$(CookiecutterTemplateOK)">
+      <Source Uri="$(Resources)/CookiecutterTemplateOK_16x.xaml" />
+    </Image>
+    <Image Guid="$(CookiecutterImagesGuid)" ID="$(CookiecutterTemplateUpdate)">
+      <Source Uri="$(Resources)/CookiecutterTemplateUpdate_16x.xaml" />
+    </Image>
+    <Image Guid="$(CookiecutterImagesGuid)" ID="$(CookiecutterTemplateWarning)">
+      <Source Uri="$(Resources)/CookiecutterTemplateWarning_16x.xaml" />
+    </Image>
+    <Image Guid="$(CookiecutterImagesGuid)" ID="$(Download)">
+      <Source Uri="$(Resources)/Download_16x.xaml" />
+    </Image>
+    <Image Guid="$(CookiecutterImagesGuid)" ID="$(NewCookiecutter)">
+      <Source Uri="$(Resources)/NewCookiecutter_16x.xaml" />
+    </Image>
+  </Images>
+</ImageManifest>

@@ -14,7 +14,9 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Diagnostics;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -41,10 +43,15 @@ namespace Microsoft.PythonTools.Intellisense {
             // the last event the out of proc analyzer will send us.  Once we've received
             // that event all future information should come from at least that version.  This
             // prevents us from holding onto every version in the world.
-            Debug.Assert(fromVersion >= lastAnalysisVersion.VersionNumber);
 
-            while (lastAnalysisVersion.Next != null && lastAnalysisVersion.VersionNumber != fromVersion) {
-                lastAnalysisVersion = lastAnalysisVersion.Next;
+            if (fromVersion >= lastAnalysisVersion.VersionNumber) {
+                while (lastAnalysisVersion.Next != null && lastAnalysisVersion.VersionNumber != fromVersion) {
+                    lastAnalysisVersion = lastAnalysisVersion.Next;
+                }
+            } else {
+                // Warn the developer, but we should be able to continue with
+                // the ITextVersion that was provided.
+                Debug.Fail("fromVersion {0} was less than lastAnalysisVersion {1}".FormatInvariant(fromVersion, lastAnalysisVersion.VersionNumber));
             }
 
             _fromVersion = lastAnalysisVersion;
@@ -62,15 +69,27 @@ namespace Microsoft.PythonTools.Intellisense {
         /// to the current snapshot in use in VS.
         /// </summary>
         public SnapshotSpan TranslateForward(Span from) {
-            return new SnapshotSpan(
-                _buffer.CurrentSnapshot,
-                Tracking.TrackSpanForwardInTime(
+            if (from.End > _fromVersion.Length) {
+                Debug.Fail("from span '{0}' was longer than the text snapshot".FormatInvariant(from));
+                from = Span.FromBounds(from.Start, _fromVersion.Length);
+            }
+
+            Span span = from;
+            var snapshot = _buffer.CurrentSnapshot;
+            try {
+                span = Tracking.TrackSpanForwardInTime(
                     SpanTrackingMode.EdgeInclusive,
-                    new Span(from.Start, from.Length),
+                    from,
                     _fromVersion,
-                    _buffer.CurrentSnapshot.Version
-                )
-            );
+                    snapshot.Version
+                );
+            } catch (ArgumentOutOfRangeException ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                if (span.End > snapshot.Length) {
+                    span = Span.FromBounds(span.Start, snapshot.Length);
+                }
+            }
+            return new SnapshotSpan(snapshot, span);
         }
 
         /// <summary>
@@ -78,15 +97,7 @@ namespace Microsoft.PythonTools.Intellisense {
         /// analysis to the current snapshot in use in VS.
         /// </summary>
         public SnapshotPoint TranslateForward(int position) {
-            return new SnapshotPoint(
-                _buffer.CurrentSnapshot,
-                Tracking.TrackPositionForwardInTime(
-                    PointTrackingMode.Positive,
-                    position,
-                    _fromVersion,
-                    _buffer.CurrentSnapshot.Version
-                )
-            );
+            return TranslateForward(new Span(position, 0)).Start;
         }
 
         /// <summary>

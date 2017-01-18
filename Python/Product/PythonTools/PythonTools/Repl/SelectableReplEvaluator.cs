@@ -101,7 +101,7 @@ namespace Microsoft.PythonTools.Repl {
                 _serviceProvider.GetPythonToolsService().SaveString("Id", _settingsCategory, _evaluatorId);
                 return;
             }
-            if (pyEval.Configuration == null) {
+            if (pyEval.Configuration?.Interpreter == null) {
                 // Invalid configuration - don't serialize it
                 ClearPersistedEvaluator();
                 return;
@@ -164,6 +164,7 @@ namespace Microsoft.PythonTools.Repl {
             if (oldEval != null) {
                 DetachWindow(oldEval);
                 DetachMultipleScopeHandling(oldEval);
+                oldEval.Dispose();
             }
 
             _evaluator = eval;

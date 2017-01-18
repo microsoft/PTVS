@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="InfoBarMessage" xml:space="preserve">
+    <value>Cookiecutter makes it easy to generate code from a template.</value>
+  </data>
+  <data name="InfoBarMessageLink" xml:space="preserve">
+    <value>Learn more.</value>
+  </data>
+  <data name="ProductTitle" xml:space="preserve">
+    <value>Cookiecutter</value>
+  </data>
+  <data name="ToolWindowCaption" xml:space="preserve">
+    <value>Cookiecutter</value>
+  </data>
+  <data name="UnhandledException" xml:space="preserve">
+    <value>Unhandled exception in {3} ({1}:{2})
+{0}</value>
+  </data>
+  <data name="SeeActivityLog" xml:space="preserve">
+    <value>An unexpected error occurred.
+
+You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file '{0}', or by checking the Event Log.</value>
+  </data>
+  <data name="InvalidOutputFolder" xml:space="preserve">
+    <value>Please enter a valid output folder in the 'Create To' field.</value>
+  </data>
+  <data name="FeedLoadError" xml:space="preserve">
+    <value>Could not retrieve results from feed</value>
+  </data>
+  <data name="GitHubSearchError" xml:space="preserve">
+    <value>Could not retrieve results from GitHub</value>
+  </data>
+  <data name="InstallGitInfoBarLink" xml:space="preserve">
+    <value>Install Git</value>
+  </data>
+  <data name="InstallPythonInfoBarLink" xml:space="preserve">
+    <value>Install Python 3</value>
+  </data>
+  <data name="MissingDependenciesInfoBarMessage" xml:space="preserve">
+    <value>Some external dependencies are missing. Click the links to install them.</value>
+  </data>
+  <data name="DeleteConfirmation" xml:space="preserve">
+    <value>Are you sure you want to delete the template from this folder?
+
+{0}</value>
+  </data>
+  <data name="CloneCollisionMessage" xml:space="preserve">
+    <value>A different template with the name '{0}' already exists in '{1}'.
+
+Please delete the installed template and try again.</value>
+  </data>
+  <data name="InstallingCookiecutterStarted" xml:space="preserve">
+    <value>----- Installing cookiecutter -----</value>
+  </data>
+  <data name="InstallingCookiecutterSuccess" xml:space="preserve">
+    <value>----- Successfully installed cookiecutter -----</value>
+  </data>
+  <data name="InstallingCookiecutterFailed" xml:space="preserve">
+    <value>----- Failed to install cookiecutter -----</value>
+  </data>
+  <data name="CloningTemplateStarted" xml:space="preserve">
+    <value>----- Cloning template '{0}' -----</value>
+  </data>
+  <data name="CloningTemplateSuccess" xml:space="preserve">
+    <value>----- Successfully cloned template '{0}' to '{1}' -----</value>
+  </data>
+  <data name="CloningTemplateFailed" xml:space="preserve">
+    <value>----- Failed to clone template '{0}' -----</value>
+  </data>
+  <data name="LoadingTemplateStarted" xml:space="preserve">
+    <value>----- Loading template '{0}' -----</value>
+  </data>
+  <data name="LoadingTemplateSuccess" xml:space="preserve">
+    <value>----- Successfully loaded template '{0}' -----</value>
+  </data>
+  <data name="LoadingTemplateFailed" xml:space="preserve">
+    <value>----- Failed to load template '{0}' -----</value>
+  </data>
+  <data name="RunningTemplateStarted" xml:space="preserve">
+    <value>----- Creating files using template '{0}' -----</value>
+  </data>
+  <data name="RunningTemplateSuccess" xml:space="preserve">
+    <value>----- Successfully created files using template '{0}' into '{1}' -----</value>
+  </data>
+  <data name="RunningTemplateFailed" xml:space="preserve">
+    <value>----- Failed to create files using template '{0}' -----</value>
+  </data>
+  <data name="ReplacedFilesHeader" xml:space="preserve">
+    <value>The following files were replaced, and a backup of the original file was created:</value>
+  </data>
+  <data name="ReplacedFile" xml:space="preserve">
+    <value> - '{0}' was saved as '{1}'.</value>
+  </data>
+  <data name="DeletingTemplateStarted" xml:space="preserve">
+    <value>----- Deleting template '{0}' -----</value>
+  </data>
+  <data name="DeletingTemplateSuccess" xml:space="preserve">
+    <value>----- Successfully deleted template '{0}' -----</value>
+  </data>
+  <data name="DeletingTemplateFailed" xml:space="preserve">
+    <value>----- Failed to delete template '{0}' -----</value>
+  </data>
+  <data name="CheckingForAllUpdatesStarted" xml:space="preserve">
+    <value>----- Checking for template updates -----</value>
+  </data>
+  <data name="CheckingForAllUpdatesSuccess" xml:space="preserve">
+    <value>----- Successfully checked for template updates -----</value>
+  </data>
+  <data name="CheckingForAllUpdatesFailed" xml:space="preserve">
+    <value>----- Failed to check for template updates -----</value>
+  </data>
+  <data name="CheckingForAllUpdatesCanceled" xml:space="preserve">
+    <value>----- Check for template updates canceled -----</value>
+  </data>
+  <data name="CheckingTemplateUpdateStarted" xml:space="preserve">
+    <value>----- Checking for update to template '{0}' from '{1}' -----</value>
+  </data>
+  <data name="CheckingTemplateUpdateFound" xml:space="preserve">
+    <value>An update is available.</value>
+  </data>
+  <data name="CheckingTemplateUpdateNotFound" xml:space="preserve">
+    <value>Template is already up-to-date.</value>
+  </data>
+  <data name="CheckingTemplateUpdateError" xml:space="preserve">
+    <value>Error checking for an update.</value>
+  </data>
+  <data name="CheckingTemplateUpdateInconclusive" xml:space="preserve">
+    <value>Could not determine if an update is available.</value>
+  </data>
+  <data name="UpdatingTemplateStarted" xml:space="preserve">
+    <value>----- Updating template '{0}' -----</value>
+  </data>
+  <data name="UpdatingTemplateSuccess" xml:space="preserve">
+    <value>----- Successfully updated template '{0}' -----</value>
+  </data>
+  <data name="UpdatingTemplateFailed" xml:space="preserve">
+    <value>----- Failed to update template '{0}' -----</value>
+  </data>
+  <data name="AddToProjectError" xml:space="preserve">
+    <value>Files were successfully created, but there was an issue adding the files to your project.\n{0}</value>
+  </data>
+  <data name="ProjectNotFound" xml:space="preserve">
+    <value>Project with unique name '{0}' was not found in the current solution.</value>
+  </data>
+  <data name="TemplateCategoryInstalled" xml:space="preserve">
+    <value>Installed</value>
+  </data>
+  <data name="TemplateCategoryRecommended" xml:space="preserve">
+    <value>Recommended</value>
+  </data>
+  <data name="TemplateCategoryGitHub" xml:space="preserve">
+    <value>GitHub</value>
+  </data>
+  <data name="TemplateCategoryCustom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="OpenInSolutionExplorerQuestion" xml:space="preserve">
+    <value>Would you like to open the generated folder in Solution Explorer?</value>
+  </data>
+  <data name="ProcessExitCodeMessage" xml:space="preserve">
+    <value>{0} returned an exit code of {1}.</value>
+  </data>
+  <data name="ConnectionStringFormatIncorrect" xml:space="preserve">
+    <value>The connection string appears to be in incorrect format. Would you like to re-create it?</value>
+  </data>
+</root>

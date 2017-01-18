@@ -21,7 +21,6 @@
       <Properties></Properties>
     </ProjectFile>
     <ProjectFile Include="Microsoft.PythonTools.vsmanproj"/>
-    <ProjectFile Include="Microsoft.PythonTools_Sideload.vsmanproj"/>
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Project {
         public string InterpreterDescription {
             get {
                 var interpreter = ((PythonProjectNode)this.Node).ActiveInterpreter;
-                return interpreter.IsRunnable() ? interpreter.Configuration.FullDescription : null;
+                return interpreter.IsRunnable() ? interpreter.Configuration.Description : null;
             }
         }
 
@@ -136,6 +136,17 @@ namespace Microsoft.PythonTools.Project {
                         return 0x40105;
                 }
             }
+        }
+
+        [Browsable(false)]
+        public override VSLangProj.prjOutputType OutputType {
+            get {
+                // This is probably not entirely true, but it helps us deal with
+                // extensions like Azure Tools that try to figure out whether we
+                // support WebForms.
+                return VSLangProj.prjOutputType.prjOutputTypeExe;
+            }
+            set { }
         }
     }
 }

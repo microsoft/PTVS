@@ -13,7 +13,7 @@
     <Name>EnvironmentReferences1</Name>
     <RootNamespace>EnvironmentReferences1</RootNamespace>
     <OutputPath>.</OutputPath>
-    <InterpreterId>Global|PythonCore|2.7|x86</InterpreterId>
+    <InterpreterId>Global|PythonCore|2.7-32</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -26,7 +26,7 @@
   <ItemGroup>
     <Interpreter Include="env\">
       <Id>env</Id>
-      <BaseInterpreter>Global|PythonCore|2.7|x86</BaseInterpreter>
+      <BaseInterpreter>Global|PythonCore|2.7-32</BaseInterpreter>
       <Version>2.7</Version>
       <Description>env (Python 2.7)</Description>
       <InterpreterPath>Scripts\python.exe</InterpreterPath>
@@ -36,7 +36,7 @@
     </Interpreter>
     <Interpreter Include="env2\">
       <Id>env2</Id>
-      <BaseInterpreter>Global|PythonCore|2.7|x86</BaseInterpreter>
+      <BaseInterpreter>Global|PythonCore|2.7-32</BaseInterpreter>
       <Version>3.3</Version>
       <Description>env2 (Python 3.3)</Description>
       <InterpreterPath>Scripts2\python.exe</InterpreterPath>
@@ -44,7 +44,7 @@
       <LibraryPath>Lib2\</LibraryPath>
       <PathEnvironmentVariable>PYTHONPATH2</PathEnvironmentVariable>
     </Interpreter>
-    <InterpreterReference Include="Global|PythonCore|2.7|x86" />
+    <InterpreterReference Include="Global|PythonCore|2.7-32" />
   </ItemGroup>
   
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
@@ -54,24 +54,16 @@
       <Output TaskParameter="PrefixPath" PropertyName="PrefixPath" />
       <Output TaskParameter="InterpreterPath" PropertyName="InterpreterPath" />
       <Output TaskParameter="WindowsInterpreterPath" PropertyName="WindowsInterpreterPath" />
-      <Output TaskParameter="LibraryPath" PropertyName="LibraryPath" />
       <Output TaskParameter="Architecture" PropertyName="Architecture" />
       <Output TaskParameter="PathEnvironmentVariable" PropertyName="PathEnvironmentVariable" />
       <Output TaskParameter="Description" PropertyName="Description" />
     </ResolveEnvironment>
 
-    <PropertyGroup>
-      <ActualPrefix>$(SystemDrive)\Python27_x86\</ActualPrefix>
-      <ActualPrefix Condition="!Exists($(ActualPrefix))">$(SystemDrive)\Python27_32\</ActualPrefix>
-      <ActualPrefix Condition="!Exists($(ActualPrefix))">$(SystemDrive)\Python27\</ActualPrefix>
-    </PropertyGroup>
-
-    <Error Condition="'$(ActualPrefix)' != '$(PrefixPath)'" Text="Incorrect PrefixPath: $(PrefixPath)" />
-    <Error Condition="'$(ActualPrefix)python.exe' != '$(InterpreterPath)'" Text="Incorrect InterpreterPath: $(InterpreterPath)" />
-    <Error Condition="'$(ActualPrefix)pythonw.exe' != '$(WindowsInterpreterPath)'" Text="Incorrect WindowsInterpreterPath: $(WindowsInterpreterPath)" />
-    <Error Condition="'$(ActualPrefix)Lib\' != '$(LibraryPath)'" Text="Incorrect LibraryPath: $(LibraryPath)" />
+    <Error Condition="!Exists('$(PrefixPath)python.exe')" Text="Incorrect PrefixPath: $(PrefixPath)" />
+    <Error Condition="'$(PrefixPath)python.exe' != '$(InterpreterPath)'" Text="Incorrect InterpreterPath: $(InterpreterPath)" />
+    <Error Condition="'$(PrefixPath)pythonw.exe' != '$(WindowsInterpreterPath)'" Text="Incorrect WindowsInterpreterPath: $(WindowsInterpreterPath)" />
     <Error Condition="'X86' != '$(Architecture)'" Text="Incorrect Architecture: $(Architecture)" />
     <Error Condition="'PYTHONPATH' != '$(PathEnvironmentVariable)'" Text="Incorrect PathEnvironmentVariable: $(PathEnvironmentVariable)" />
-    <Error Condition="'Python 2.7' != '$(Description)'" Text="Incorrect Description: $(Description)" />
+    <Error Condition="'Python 2.7 (32-bit)' != '$(Description)'" Text="Incorrect Description: $(Description)" />
   </Target>
 </Project>

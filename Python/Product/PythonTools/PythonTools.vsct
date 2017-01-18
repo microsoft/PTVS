@@ -200,7 +200,10 @@ permissions and limitations under the License.
       <!--
           Tools\Python Tools menu
       -->
-      <Group guid="guidPythonToolsCmdSet" id="ToolsGroup" priority="0x0100">
+      <Group guid="guidPythonToolsCmdSet" id="WebGroup" priority="0x0080">
+        <Parent guid="guidPythonToolsCmdSet" id="ToolsMenu"/>
+      </Group>
+        <Group guid="guidPythonToolsCmdSet" id="ToolsGroup" priority="0x0100">
         <Parent guid="guidPythonToolsCmdSet" id="ToolsMenu"/>
       </Group>
       <Group guid="guidPythonToolsCmdSet" id="PythonDebugMenuGroup" priority="0x0200">
@@ -498,6 +501,43 @@ permissions and limitations under the License.
         </Strings>
       </Button>
 
+      <!--===========================================================================================================-->
+      <!--============================================= Web URL commands ============================================-->
+      <!--===========================================================================================================-->
+
+      <Button guid="guidPythonToolsCmdSet" id="cmdidWebPythonAtMicrosoft" priority="0x0100" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="WebGroup"/>
+        <Icon guid="ImageCatalogGuid" id="WebDestination"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>&amp;Python products and information</ButtonText>
+          <ToolTipText>Opens a web site to help you discover Python-related products and information from Microsoft.</ToolTipText>
+          <LocCanonicalName>.Python.OpenPythonProductsSite</LocCanonicalName>
+        </Strings>
+      </Button>
+      
+      <Button guid="guidPythonToolsCmdSet" id="cmdidWebPTVSSupport" priority="0x0200" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="WebGroup"/>
+        <Icon guid="ImageCatalogGuid" id="Bug"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>&amp;Issues and suggestions</ButtonText>
+          <ToolTipText>Opens a web site where you can report issues and suggestions for Python support in Visual Studio.</ToolTipText>
+          <LocCanonicalName>.Python.OpenPTVSSupportSite</LocCanonicalName>
+        </Strings>
+      </Button>
+      
+      <Button guid="guidPythonToolsCmdSet" id="cmdidWebDGProducts" priority="0x1000" type="Button">
+        <Parent guid="guidPythonToolsCmdSet" id="WebGroup"/>
+        <Icon guid="ImageCatalogGuid" id="WebDestination"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Microsoft &amp;Data products</ButtonText>
+          <ToolTipText>Opens a web site to help you discover data-related products from Microsoft.</ToolTipText>
+          <LocCanonicalName>.Python.OpenDataProductsSite</LocCanonicalName>
+        </Strings>
+      </Button>
+      
       <!--================================================================================================================-->
       <!--=============================================== Project Commands ===============================================-->
       <!--================================================================================================================-->
@@ -584,8 +624,17 @@ permissions and limitations under the License.
         </Strings>
       </Button>
 
+      <Button guid="guidPythonToolsCmdSet" id="cmdidInstallProjectRequirements" priority="0x0610" type="Button">
+        <CommandFlag>AllowParams</CommandFlag>
+        <CommandFlag>CommandWellOnly</CommandFlag>
+        <Strings>
+          <ButtonText>Ins&amp;tall Project Requirements</ButtonText>
+          <ToolTipText>Install Project Requirements</ToolTipText>
+          <LocCanonicalName>.Python.InstallProjectRequirements</LocCanonicalName>
+        </Strings>
+      </Button>
 
-
+      
       <Button guid="guidPythonToolsCmdSet" id="cmdidFirstCustomCmdId" priority="0x400" type="Button">
         <Parent guid="guidPythonToolsCmdSet" id="CustomProjectCommandsGroup" />
         <CommandFlag>DynamicItemStart</CommandFlag>
@@ -870,7 +919,12 @@ permissions and limitations under the License.
       <IDSymbol name="cmdidGenerateRequirementsTxt" value="0x4034" />
 
       <IDSymbol name="cmdidOpenInteractiveScopeInEditor" value="0x4035"/>
+      <IDSymbol name="cmdidInstallProjectRequirements" value="0x4036" />
 
+      <IDSymbol name="cmdidWebPythonAtMicrosoft" value="0x4040"/>
+      <IDSymbol name="cmdidWebPTVSSupport" value="0x4041"/>
+      <IDSymbol name="cmdidWebDGProducts" value="0x4042"/>
+      
       <!-- Groups -->
       <IDSymbol name="EditorContextGroup" value="0x1010" />
       <IDSymbol name="EditMenuGroup" value="0x1011" />
@@ -889,6 +943,7 @@ permissions and limitations under the License.
       <IDSymbol name="EnvironmentsViewCommandsGroup" value="0x105D" />
       <IDSymbol name="EnvironmentCommandsGroup" value="0x105E" />
       <IDSymbol name="SearchPathCommandsGroup" value="0x1060" />
+      <IDSymbol name="WebGroup" value="0x1061" />
 
       <!-- Menus -->
       <IDSymbol name="ToolsMenu" value="0x2001" />

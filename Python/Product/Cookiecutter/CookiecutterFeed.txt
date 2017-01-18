@@ -1,0 +1,1 @@
+﻿https://github.com/brettcannon/python-azure-web-app-cookiecutter

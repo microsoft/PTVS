@@ -39,20 +39,18 @@
     <ProjectFile Include="VsPyProf\VsPyProfX86.vcxproj"/>
     <ProjectFile Include="Profiling\Profiling.csproj"/>
 
-    <ProjectFile Include="AzureSetup\AzureSetup.csproj"/>
     <ProjectFile Include="WebRole\WebRole.csproj"/>
     <ProjectFile Include="Django\Django.csproj" Condition="'$(IncludeDjango)' == 'True'"/>
+    <ProjectFile Include="Cookiecutter\Cookiecutter.csproj"/>
 
     <ProjectFile Include="AnalysisBrowser\AnalysisBrowser.csproj" Condition="$(VSTarget) != '15.0'" />
     <ProjectFile Include="AnalysisMemoryTester\AnalysisMemoryTester.csproj" Condition="$(VSTarget) != '15.0'" />
     <ProjectFile Include="EnvironmentsListHost\EnvironmentsListHost.csproj" Condition="$(VSTarget) != '15.0'" />
 
-    <ProjectFile Include="ML\ML.csproj" Condition="'$(IncludeML)' == 'True'"/>
-    
     <ProjectFile Include="Uwp\Uwp.csproj" Condition="'$(IncludeUwp)' == 'True'"/>
     
+    <ProjectFile Include="Core\Core.csproj" />
     <ProjectFile Include="..\Templates\Templates.csproj" />
-    <ProjectFile Include="..\Templates\Samples.csproj" />
   </ItemGroup>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />

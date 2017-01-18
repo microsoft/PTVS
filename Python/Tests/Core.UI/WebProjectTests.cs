@@ -39,6 +39,7 @@ using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudioTools;
+using pythontools::Microsoft.VisualStudio.Azure;
 using TestUtilities;
 using TestUtilities.Python;
 using TestUtilities.UI;
@@ -415,8 +416,7 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void WebProjectInstallOnNew() {
             using (var app = new PythonVisualStudioApp()) {
-                Pip.Uninstall(app.ServiceProvider, app.OptionsService.DefaultInterpreter, "bottle", false)
-                    .WaitAndUnwrapExceptions();
+                app.OptionsService.DefaultInterpreter.PipUninstall("bottle");
 
                 var t = Task.Run(() => app.CreateProject(
                     PythonVisualStudioApp.TemplateLanguageName,
@@ -443,8 +443,7 @@ namespace PythonToolsUITests {
                 }
                 AssertUtil.ContainsExactly(project.GetPythonProject().ActiveInterpreter.FindModules("bottle"), "bottle");
 
-                Pip.Uninstall(app.ServiceProvider, app.OptionsService.DefaultInterpreter, "bottle", false)
-                    .WaitAndUnwrapExceptions();
+                app.OptionsService.DefaultInterpreter.PipUninstall("bottle");
             }
         }
 
@@ -485,9 +484,16 @@ namespace PythonToolsUITests {
                 var sln = app.GetService<IVsSolution>(typeof(SVsSolution));
                 ErrorHandler.ThrowOnFailure(sln.GetProjectOfUniqueName(ccproj.FullName, out hier));
 
-                app.ServiceProvider.GetUIThread().InvokeAsync(() =>
-                    PythonProjectNode.UpdateServiceDefinition(hier, roleType, roleType + "Role1", app.ServiceProvider)
-                ).GetAwaiter().GetResult();
+                var pyproj = app.Dte.Solution.Projects.Cast<Project>().FirstOrDefault(p => p.Name == roleType + "Role1");
+                Assert.IsNotNull(pyproj);
+                app.ServiceProvider.GetUIThread().InvokeAsync(() => {
+                    Assert.IsNotNull(pyproj.GetPythonProject());
+                    ((IAzureRoleProject)pyproj.GetPythonProject()).AddedAsRole(hier, roleType);
+                }).GetAwaiter().GetResult();
+
+                // AddedAsRole runs in the background, so wait a second for it to
+                // do its thing.
+                Thread.Sleep(1000);
 
                 var doc = new XmlDocument();
                 for (int retries = 5; retries > 0; --retries) {
@@ -520,7 +526,7 @@ namespace PythonToolsUITests {
                         ns
                     ));
                     Assert.IsNotNull(nav.SelectSingleNode(
-                        "/sd:ServiceDefinition/sd:WorkerRole[@name='WorkerRole1']/sd:Runtime/sd:EntryPoint/sd:ProgramEntryPoint[@commandLine='bin\\ps.cmd LaunchWorker.ps1']",
+                        "/sd:ServiceDefinition/sd:WorkerRole[@name='WorkerRole1']/sd:Runtime/sd:EntryPoint/sd:ProgramEntryPoint[@commandLine='bin\\ps.cmd LaunchWorker.ps1 worker.py']",
                         ns
                     ));
                 }
@@ -599,6 +605,7 @@ namespace PythonToolsUITests {
                 EndToEndLog("Aborted analysis");
 
                 app.ServiceProvider.GetUIThread().Invoke(() => {
+                    pyProj.SetProjectProperty("WebBrowserUrl", "");
                     pyProj.SetProjectProperty("WebBrowserPort", "23457");
                 });
                 EndToEndLog("Set WebBrowserPort to 23457");
@@ -606,6 +613,7 @@ namespace PythonToolsUITests {
                 EndToEndLog("Verified without debugging");
 
                 app.ServiceProvider.GetUIThread().Invoke(() => {
+                    pyProj.SetProjectProperty("WebBrowserUrl", "");
                     pyProj.SetProjectProperty("WebBrowserPort", "23456");
                 });
                 EndToEndLog("Set WebBrowserPort to 23456");
@@ -678,6 +686,7 @@ namespace PythonToolsUITests {
                     app.ServiceProvider.GetUIThread().Invoke(() => {
                         EndToEndLog("Building");
                         app.Dte.Solution.SolutionBuild.Build(true);
+                        EndToEndLog("Build output: {0}", app.GetOutputWindowText("Build"));
                         EndToEndLog("Updating settings");
                         prevNormal = app.GetService<PythonToolsService>().DebuggerOptions.WaitOnNormalExit;
                         prevAbnormal = app.GetService<PythonToolsService>().DebuggerOptions.WaitOnAbnormalExit;
@@ -736,7 +745,7 @@ namespace PythonToolsUITests {
                     service,
                     true,
                     Path.Combine(pyProj.ProjectHome, "env"),
-                    service.FindInterpreter("Global|PythonCore|" + pythonVersion + "|x86"),
+                    service.FindInterpreter("Global|PythonCore|" + pythonVersion + "-32"),
                     Version.Parse(pythonVersion) >= new Version(3, 3)
                 );
             });
@@ -771,10 +780,7 @@ namespace PythonToolsUITests {
         }
 
         internal static void InstallWebFramework(VisualStudioApp app, string moduleName, string packageName, IPythonInterpreterFactory factory) {
-            var redirector = new TraceRedirector("pip install " + packageName);
-            var task = app.ServiceProvider.GetUIThread().InvokeTask(() =>
-                Pip.Install(app.ServiceProvider, factory, packageName, false, redirector)
-            );
+            var task = app.ServiceProvider.GetUIThread().InvokeTask(() => factory.PipInstallAsync(packageName));
             try {
                 Assert.IsTrue(task.Wait(TimeSpan.FromMinutes(3.0)), "Timed out waiting for install " + packageName);
             } catch (AggregateException ex) {

@@ -37,18 +37,18 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly RoutedCommand EnableIPythonInteractive = new RoutedCommand();
         public static readonly RoutedCommand DisableIPythonInteractive = new RoutedCommand();
 
-        public static readonly Lazy<EnvironmentView> AddNewEnvironmentView =
-            new Lazy<EnvironmentView>(() => new EnvironmentView());
-        public static readonly Lazy<IEnumerable<EnvironmentView>> AddNewEnvironmentViewOnce =
-            new Lazy<IEnumerable<EnvironmentView>>(() => new[] { AddNewEnvironmentView.Value });
+        private const string AddNewEnvironmentViewId = "__AddNewEnvironmentView";
+        private const string OnlineHelpViewId = "__OnlineHelpView";
 
-        public static readonly Lazy<EnvironmentView> OnlineHelpView =
-            new Lazy<EnvironmentView>(() => new EnvironmentView());
-        public static readonly Lazy<IEnumerable<EnvironmentView>> OnlineHelpViewOnce =
-            new Lazy<IEnumerable<EnvironmentView>>(() => new[] { OnlineHelpView.Value });
+        public static readonly IEnumerable<InterpreterConfiguration> ExtraItems = new[] {
+            new InterpreterConfiguration(OnlineHelpViewId, OnlineHelpViewId),
+            new InterpreterConfiguration(AddNewEnvironmentViewId, AddNewEnvironmentViewId)
+        };
+
+        public static readonly EnvironmentView OnlineHelpView = new EnvironmentView(OnlineHelpViewId);
 
         // Names of properties that will be requested from interpreter configurations
-        internal const string VendorKey = "Vendor";
+        internal const string CompanyKey = "Company";
         internal const string SupportUrlKey = "SupportUrl";
 
         /// <summary>
@@ -57,19 +57,16 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         /// </summary>
         private static readonly string[] _likelyInterpreterPaths = new[] { "Scripts" };
 
-        /// <summary>
-        /// Used with <see cref="CommonUtils.FindFile"/> to more efficiently
-        /// find interpreter libraries.
-        /// </summary>
-        private static readonly string[] _likelyLibraryPaths = new[] { "Lib" };
-
         private readonly IInterpreterOptionsService _service;
         private readonly IInterpreterRegistryService _registry;
         private readonly IPythonInterpreterFactoryWithDatabase _withDb;
 
-        public IPythonInterpreterFactory Factory { get; private set; }
+        public IPythonInterpreterFactory Factory { get; }
+        public InterpreterConfiguration Configuration { get; }
 
-        private EnvironmentView() { }
+        private EnvironmentView(string id) {
+            Configuration = new InterpreterConfiguration(id, id);
+        }
 
         internal EnvironmentView(
             IInterpreterOptionsService service,
@@ -86,10 +83,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             if (factory == null) {
                 throw new ArgumentNullException(nameof(factory));
             }
+            if (factory.Configuration == null) {
+                throw new ArgumentException("factory must include a configuration");
+            }
 
             _service = service;
             _registry = registry;
             Factory = factory;
+            Configuration = Factory.Configuration;
 
             _withDb = factory as IPythonInterpreterFactoryWithDatabase;
             if (_withDb != null) {
@@ -99,34 +100,47 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
             
 
-            if (_service.IsConfigurable(factory.Configuration.Id)) {
+            if (_service.IsConfigurable(Factory.Configuration.Id)) {
                 IsConfigurable = true;
             }
 
-            Description = Factory.Configuration.FullDescription;
-            IsDefault = (_service != null && _service.DefaultInterpreter == Factory);
+            Description = Factory.Configuration.Description;
+            IsDefault = (_service != null && _service.DefaultInterpreterId == Configuration.Id);
 
             PrefixPath = Factory.Configuration.PrefixPath;
             InterpreterPath = Factory.Configuration.InterpreterPath;
             WindowsInterpreterPath = Factory.Configuration.WindowsInterpreterPath;
-            LibraryPath = Factory.Configuration.LibraryPath;
 
             Extensions = new ObservableCollection<object>();
             Extensions.Add(new EnvironmentPathsExtensionProvider());
             if (IsConfigurable) {
-                Extensions.Add(new ConfigurationExtensionProvider(_service));
+                Extensions.Add(new ConfigurationExtensionProvider(_service, alwaysCreateNew: false));
             }
 
             CanBeDefault = Factory.CanBeDefault();
 
-            Vendor = _registry.GetProperty(Factory.Configuration.Id, "Vendor") as string;
-            SupportUrl = _registry.GetProperty(Factory.Configuration.Id, "SupportUrl") as string;
+            Company = _registry.GetProperty(Factory.Configuration.Id, CompanyKey) as string ?? "";
+            SupportUrl = _registry.GetProperty(Factory.Configuration.Id, SupportUrlKey) as string ?? "";
         }
+
+        public static EnvironmentView CreateAddNewEnvironmentView(IInterpreterOptionsService service) {
+            var ev = new EnvironmentView(AddNewEnvironmentViewId);
+            ev.Extensions = new ObservableCollection<object>();
+            ev.Extensions.Add(new ConfigurationExtensionProvider(service, alwaysCreateNew: true));
+            return ev;
+        }
+
+        public static bool IsAddNewEnvironmentView(string id) => AddNewEnvironmentViewId.Equals(id);
+        public static bool IsOnlineHelpView(string id) => OnlineHelpViewId.Equals(id);
+
+        public static bool IsAddNewEnvironmentView(EnvironmentView view) => AddNewEnvironmentViewId.Equals(view?.Configuration.Id);
+        public static bool IsOnlineHelpView(EnvironmentView view) => OnlineHelpViewId.Equals(view?.Configuration.Id);
 
         public override string ToString() {
             return string.Format(
-                "{{{0}:{1}}}", GetType().FullName,
-                _withDb == null ? "(null)" : _withDb.Configuration.FullDescription
+                "{{{0}:{1}}}",
+                GetType().FullName,
+                _withDb?.Configuration.Description ??"(null)"
             );
         }
 
@@ -219,14 +233,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private static readonly DependencyPropertyKey PrefixPathPropertyKey = DependencyProperty.RegisterReadOnly("PrefixPath", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
         private static readonly DependencyPropertyKey InterpreterPathPropertyKey = DependencyProperty.RegisterReadOnly("InterpreterPath", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
         private static readonly DependencyPropertyKey WindowsInterpreterPathPropertyKey = DependencyProperty.RegisterReadOnly("WindowsInterpreterPath", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
-        private static readonly DependencyPropertyKey LibraryPathPropertyKey = DependencyProperty.RegisterReadOnly("LibraryPath", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
         private static readonly DependencyPropertyKey PathEnvironmentVariablePropertyKey = DependencyProperty.RegisterReadOnly("PathEnvironmentVariable", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
 
         public static readonly DependencyProperty DescriptionProperty = DescriptionPropertyKey.DependencyProperty;
         public static readonly DependencyProperty PrefixPathProperty = PrefixPathPropertyKey.DependencyProperty;
         public static readonly DependencyProperty InterpreterPathProperty = InterpreterPathPropertyKey.DependencyProperty;
         public static readonly DependencyProperty WindowsInterpreterPathProperty = WindowsInterpreterPathPropertyKey.DependencyProperty;
-        public static readonly DependencyProperty LibraryPathProperty = LibraryPathPropertyKey.DependencyProperty;
         public static readonly DependencyProperty PathEnvironmentVariableProperty = PathEnvironmentVariablePropertyKey.DependencyProperty;
 
         public string Description {
@@ -249,11 +261,6 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             set { if (Factory != null) { SetValue(WindowsInterpreterPathPropertyKey, value); } }
         }
 
-        public string LibraryPath {
-            get { return Factory == null ? string.Empty : (string)GetValue(LibraryPathProperty); }
-            set { if (Factory != null) { SetValue(LibraryPathPropertyKey, value); } }
-        }
-
         public string PathEnvironmentVariable {
             get { return Factory == null ? string.Empty : (string)GetValue(PathEnvironmentVariableProperty); }
             set { if (Factory != null) { SetValue(PathEnvironmentVariablePropertyKey, value); } }
@@ -263,15 +270,15 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
         #region Extra Information Dependency Properties
 
-        private static readonly DependencyPropertyKey VendorPropertyKey = DependencyProperty.RegisterReadOnly("Vendor", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
+        private static readonly DependencyPropertyKey CompanyPropertyKey = DependencyProperty.RegisterReadOnly("Company", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
         private static readonly DependencyPropertyKey SupportUrlPropertyKey = DependencyProperty.RegisterReadOnly("SupportUrl", typeof(string), typeof(EnvironmentView), new PropertyMetadata());
 
-        public static readonly DependencyProperty VendorProperty = VendorPropertyKey.DependencyProperty;
+        public static readonly DependencyProperty CompanyProperty = CompanyPropertyKey.DependencyProperty;
         public static readonly DependencyProperty SupportUrlProperty = SupportUrlPropertyKey.DependencyProperty;
 
-        public string Vendor {
-            get { return Factory == null ? string.Empty : (string)GetValue(VendorProperty); }
-            set { if (Factory != null) { SetValue(VendorPropertyKey, value); } }
+        public string Company {
+            get { return Factory == null ? string.Empty : (string)GetValue(CompanyProperty); }
+            set { if (Factory != null) { SetValue(CompanyPropertyKey, value); } }
         }
 
         public string SupportUrl {
@@ -290,21 +297,23 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public DataTemplate OnlineHelp { get; set; }
 
         public override DataTemplate SelectTemplate(object item, DependencyObject container) {
-            if (EnvironmentView.AddNewEnvironmentView.IsValueCreated) {
-                if (object.ReferenceEquals(item, EnvironmentView.AddNewEnvironmentView.Value) &&
-                    AddNewEnvironment != null) {
-                    return AddNewEnvironment;
-                }
+            var ev = item as EnvironmentView;
+            if (ev == null) {
+                return base.SelectTemplate(item, container);
             }
-            if (EnvironmentView.OnlineHelpView.IsValueCreated) {
-                if (object.ReferenceEquals(item, EnvironmentView.OnlineHelpView.Value) &&
-                    OnlineHelp != null) {
-                    return OnlineHelp;
-                }
+
+            if (EnvironmentView.IsAddNewEnvironmentView(ev) && AddNewEnvironment != null) {
+                return AddNewEnvironment;
             }
-            if (item is EnvironmentView && Environment != null) {
+
+            if (EnvironmentView.IsOnlineHelpView(ev) && OnlineHelp != null) {
+                return OnlineHelp;
+            }
+
+            if (Environment != null) {
                 return Environment;
             }
+
             return base.SelectTemplate(item, container);
         }
     }

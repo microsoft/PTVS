@@ -30,6 +30,7 @@ using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.Win32;
 
 namespace Microsoft.PythonTools.Profiling {
+    using Infrastructure;
     using IServiceProvider = System.IServiceProvider;
 
     /// <summary>
@@ -309,7 +310,7 @@ namespace Microsoft.PythonTools.Profiling {
             var item = GetReport(itemid);
 
             if (!File.Exists(item.Filename)) {
-                MessageBox.Show(String.Format("Performance report no longer exits: {0}", item.Filename), "Python Tools for Visual Studio");
+                MessageBox.Show("Performance report no longer exits: {0}".FormatUI(item.Filename), Strings.ProductTitle);
             } else {
                 var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
                 dte.ItemOperations.OpenFile(item.Filename);

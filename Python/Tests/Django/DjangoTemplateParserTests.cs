@@ -18,13 +18,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Analysis;
-using Microsoft.PythonTools.Django.Project;
-using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Microsoft.VisualStudio.Text;
+using Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks;
+using Microsoft.PythonTools.Django.TemplateParsing;
 
 namespace DjangoTests {
     [TestClass]
@@ -341,6 +340,39 @@ namespace DjangoTests {
                         }
                     }
                 },
+                new {
+                    Got = ("url "),
+                    Expected = (DjangoBlock)new DjangoUrlBlock(new BlockParseInfo("url", " ", 0), Array.Empty<BlockClassification>()),
+                    Context = TestCompletionContext.Simple,
+                    Completions = new[] {
+                        new {
+                            Position = 4,
+                            Expected = new[] { "'fob:oar-url'", "'cut:lower-url'" }
+                        }
+                    }
+                },
+                new {
+                    Got = ("url 'fob:oar-url' "),
+                    Expected = (DjangoBlock)new DjangoUrlBlock(new BlockParseInfo("url", " 'fob:oar-url' ", 0), new[] { new BlockClassification(new Span(4, 13), Classification.Identifier) }, "fob:oar-url"),
+                    Context = TestCompletionContext.Simple,
+                    Completions = new[] {
+                        new {
+                            Position = 18,
+                            Expected = new[] { "as", "fob", "oar", "param1=", "param2=" }
+                        }
+                    }
+                },
+                new {
+                    Got = ("url 'fob:oar-url' param2=fob "),
+                    Expected = (DjangoBlock)new DjangoUrlBlock(new BlockParseInfo("url", " 'fob:oar-url' param2=fob ", 0), new[] { new BlockClassification(new Span(4, 13), Classification.Identifier), new BlockClassification(new Span(18, 10), Classification.Identifier) }, "fob:oar-url", new[] { "param2" }),
+                    Context = TestCompletionContext.Simple,
+                    Completions = new[] {
+                        new {
+                            Position = 29,
+                            Expected = new[] { "as", "fob", "oar", "param1=" }
+                        }
+                    }
+                }
             };
 
             foreach (var testCase in testCases) {
@@ -375,7 +407,8 @@ namespace DjangoTests {
                 { typeof(DjangoMultiVariableArgumentBlock), ValidateMultiArgumentBlock},
                 { typeof(DjangoSpacelessBlock), ValidateSpacelessBlock},
                 { typeof(DjangoTemplateTagBlock), ValidateTemplateTagBlock },
-                { typeof(DjangoWidthRatioBlock), ValidateWidthRatioBlock }
+                { typeof(DjangoWidthRatioBlock), ValidateWidthRatioBlock },
+                { typeof(DjangoUrlBlock), ValidateUrlBlock }
             };
         }
 
@@ -470,6 +503,19 @@ namespace DjangoTests {
             Assert.AreEqual(aeExpected.ParseInfo.Start, aeGot.ParseInfo.Start);
             Assert.AreEqual(aeExpected.ParseInfo.Command, aeGot.ParseInfo.Command);
             Assert.AreEqual(aeExpected.ParseInfo.Args, aeGot.ParseInfo.Args);
+        }
+
+        private static void ValidateUrlBlock(DjangoBlock expected, DjangoBlock got) {
+            var urlExpected = (DjangoUrlBlock)expected;
+            var urlGot = (DjangoUrlBlock)got;
+
+            Assert.AreEqual(urlExpected.ParseInfo.Start, urlGot.ParseInfo.Start);
+            Assert.AreEqual(urlExpected.ParseInfo.Command, urlGot.ParseInfo.Command);
+            Assert.AreEqual(urlExpected.ParseInfo.Args, urlGot.ParseInfo.Args);
+            Assert.AreEqual(urlExpected.Args.Length, urlGot.Args.Length);
+            for (int i = 0; i < urlExpected.Args.Length; i++) {
+                Assert.AreEqual(urlExpected.Args[i], urlGot.Args[i]);
+            }
         }
 
         private void ValidateBlock(DjangoBlock expected, DjangoBlock got) {
@@ -750,6 +796,15 @@ namespace DjangoTests {
         public string[] Variables {
             get {
                 return _variables;
+            }
+        }
+
+        public DjangoUrl[] Urls {
+            get {
+                return new[] {
+                    new DjangoUrl("fob:oar-url", "^fob/(?P<param1>[0-9]+)/(?P<param2>[0-9]+)/([0-9]+)$"),
+                    new DjangoUrl("cut:lower-url", "^cut/$")
+                };
             }
         }
 

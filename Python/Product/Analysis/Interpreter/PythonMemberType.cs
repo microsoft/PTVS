@@ -91,6 +91,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <summary>
         /// The member represents a keyword
         /// </summary>
-        Keyword
+        Keyword,
+
+        /// <summary>
+        /// The member represents a code snippet
+        /// </summary>
+        CodeSnippet
     }
 }

@@ -55,6 +55,11 @@ namespace Microsoft.PythonTools {
         public const uint cmdidGenerateRequirementsTxt = 0x4034;
 
         public const uint cmdidOpenInteractiveScopeInEditor = 0x4035;
+        public const uint cmdidInstallProjectRequirements = 0x4036;
+
+        public const uint cmdidWebPythonAtMicrosoft = 0x4040;
+        public const uint cmdidWebPTVSSupport = 0x4041;
+        public const uint cmdidWebDGProducts = 0x4042;
 
         public const uint comboIdReplScopes = 0x5000;
         public const uint comboIdReplScopesGetList = 0x5001;

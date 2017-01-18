@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="utf-8"?>
+<CommandTable xmlns="http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <!--  This is the file that defines the actual layout and type of the commands.
+        It is divided in different sections (e.g. command definition, command
+        placement, ...), with each defining a specific set of properties.
+        See the comment before each section for more details about how to
+        use it. -->
+
+  <!--  The VSCT compiler (the tool that translates this file into the binary 
+        format that VisualStudio will consume) has the ability to run a preprocessor 
+        on the vsct file; this preprocessor is (usually) the C++ preprocessor, so 
+        it is possible to define includes and macros with the same syntax used 
+        in C++ files. Using this ability of the compiler here, we include some files 
+        defining some of the constants that we will use inside the file. -->
+
+  <!--This is the file that defines the IDs for all the commands exposed by VisualStudio. -->
+  <Extern href="stdidcmd.h"/>
+
+  <!--This header contains the command ids for the menus provided by the shell. -->
+  <Extern href="vsshlids.h"/>
+
+
+  <!--Defines VK_INSERT -->
+  <Extern href="virtkeys.h"/>
+
+  <Include href="KnownImageIds.vsct"/>
+
+
+  <!--The Commands section is where we the commands, menus and menu groups are defined.
+      This section uses a Guid to identify the package that provides the command defined inside it. -->
+  <Commands package="guidCookiecutterPkg">
+    <!-- Inside this section we have different sub-sections: one for the menus, another  
+    for the menu groups, one for the buttons (the actual commands), one for the combos 
+    and the last one for the bitmaps used. Each element is identified by a command id that  
+    is a unique pair of guid and numeric identifier; the guid part of the identifier is usually  
+    called "command set" and is used to group different command inside a logically related  
+    group; your package should define its own command set in order to avoid collisions  
+    with command ids defined by other packages. -->
+
+    <Menus>
+      <Menu guid="guidCookiecutterCmdSet" id="WindowToolBarId" type="ToolWindowToolbar" priority="0x100">
+        <Parent guid="guidCookiecutterCmdSet" id="0" />
+        <CommandFlag>DefaultDocked</CommandFlag>
+        <CommandFlag>NoToolbarClose</CommandFlag>
+        <CommandFlag>AlwaysCreate</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <Strings>
+          <ButtonText>Cookiecutter</ButtonText>
+          <CommandName>Cookiecutter</CommandName>
+        </Strings>
+      </Menu>
+      <Menu guid="guidCookiecutterCmdSet" id="ContextMenu" type="Context">
+        <CommandFlag>DontCache</CommandFlag>
+        <CommandFlag>TextChanges</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>Cookiecutter Context</ButtonText>
+        </Strings>
+      </Menu>
+    </Menus>
+
+    <Groups>
+      <Group guid="guidCookiecutterCmdSet" id="ToolbarNavGroup" priority="0x0100">
+        <Parent guid="guidCookiecutterCmdSet" id="WindowToolBarId"/>
+      </Group>
+      <Group guid="guidCookiecutterCmdSet" id="ToolbarLinksGroup" priority="0x0200">
+        <Parent guid="guidCookiecutterCmdSet" id="WindowToolBarId"/>
+      </Group>
+      <Group guid="guidCookiecutterCmdSet" id="ContextNavGroup" priority="0x0100">
+        <Parent guid="guidCookiecutterCmdSet" id="ContextMenu"/>
+      </Group>
+      <Group guid="guidCookiecutterCmdSet" id="ContextLinksGroup" priority="0x0200">
+        <Parent guid="guidCookiecutterCmdSet" id="ContextMenu"/>
+      </Group>
+    </Groups>
+
+    <Buttons>
+      <Button guid="guidCookiecutterCmdSet" id="cmdidCookiecutterExplorer" priority="0x0900" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_VIEW_ORG_WINDOWS"/>
+        <Icon guid="guidCookiecutterImages" id="Cookiecutter"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>&amp;Cookiecutter Explorer</ButtonText>
+          <ToolTipText>Opens the Cookiecutter Explorer window.</ToolTipText>
+          <LocCanonicalName>.CookiecutterExplorer</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <Button guid="guidCookiecutterCmdSet" id="cmdidCreateFromCookiecutter" priority="0x0200" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_FILE_NEW_CASCADE"/>
+        <Icon guid="guidCookiecutterImages" id="NewCookiecutter"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>From &amp;Cookiecutter...</ButtonText>
+          <ToolTipText>Creates files using a Cookiecutter template.</ToolTipText>
+          <LocCanonicalName>.CreateFromCookiecutter</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <Button guid="guidCookiecutterCmdSet" id="cmdidAddFromCookiecutter" priority="0x0600" type="Button">
+        <Parent guid="guidSHLMainMenu" id="IDG_VS_CTXT_PROJECT_ADD_ITEMS"/>
+        <Icon guid="guidCookiecutterImages" id="NewCookiecutter"/>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <CommandFlag>DynamicVisibility</CommandFlag>
+        <Strings>
+          <ButtonText>From &amp;Cookiecutter...</ButtonText>
+          <ToolTipText>Adds files using a Cookiecutter template.</ToolTipText>
+          <LocCanonicalName>.AddFromCookiecutter</LocCanonicalName>
+        </Strings>
+      </Button>
+
+      <Button guid="guidCookiecutterCmdSet" id="cmdidHome" priority="0x0100" type="Button">
+        <Icon guid="ImageCatalogGuid" id="Home"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Home</ButtonText>
+          <MenuText>&amp;Home</MenuText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidCookiecutterCmdSet" id="cmdidRun" priority="0x0200" type="Button">
+        <Icon guid="ImageCatalogGuid" id="Run"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Run</ButtonText>
+          <MenuText>&amp;Run</MenuText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidCookiecutterCmdSet" id="cmdidCheckForUpdates" priority="0x0300" type="Button">
+        <Icon guid="ImageCatalogGuid" id="RunUpdate"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Check for Updates</ButtonText>
+          <MenuText>&amp;Check for Updates</MenuText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidCookiecutterCmdSet" id="cmdidUpdateTemplate" priority="0x0400" type="Button">
+        <Icon guid="guidCookiecutterImages" id="Download"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>Update</ButtonText>
+          <MenuText>&amp;Update</MenuText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidCookiecutterCmdSet" id="cmdidLinkGitHubHome" priority="0x0100" type="Button">
+        <Icon guid="ImageCatalogGuid" id="BrowserLink"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>GitHub Home</ButtonText>
+          <MenuText>&amp;GitHub Home</MenuText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidCookiecutterCmdSet" id="cmdidLinkGitHubIssues" priority="0x0200" type="Button">
+        <Icon guid="ImageCatalogGuid" id="GoToWorkItem"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>GitHub Issues</ButtonText>
+          <MenuText>&amp;GitHub Issues</MenuText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidCookiecutterCmdSet" id="cmdidLinkGitHubWiki" priority="0x0300" type="Button">
+        <Icon guid="ImageCatalogGuid" id="DocumentSource"/>
+        <CommandFlag>DefaultDisabled</CommandFlag>
+        <CommandFlag>IconIsMoniker</CommandFlag>
+        <Strings>
+          <ButtonText>GitHub Wiki</ButtonText>
+          <MenuText>&amp;GitHub Wiki</MenuText>
+        </Strings>
+      </Button>
+
+      <Button guid="guidCookiecutterCmdSet" id="cmdidViewExternalWebBrowser" priority="0x0100" type="Button">
+        <CommandFlag>AllowParams</CommandFlag>
+        <CommandFlag>CommandWellOnly</CommandFlag>
+        <Strings>
+          <ButtonText>Open in External Browser</ButtonText>
+          <MenuText>&amp;Open in External Browser</MenuText>
+          <CanonicalName>.Cookiecutter.ExternalWebBrowser</CanonicalName>
+          <LocCanonicalName>.Cookiecutter.ExternalWebBrowser</LocCanonicalName>
+        </Strings>
+      </Button>
+    </Buttons>
+
+  </Commands>
+
+  <CommandPlacements>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidCookiecutterExplorer" priority="0x100">
+      <Parent guid="guidPythonToolsCmdSet" id="WindowCommandsGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidHome" priority="0x100">
+      <Parent guid="guidCookiecutterCmdSet" id="ToolbarNavGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidRun" priority="0x200">
+      <Parent guid="guidCookiecutterCmdSet" id="ToolbarNavGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidVSStd97" id="cmdidDelete" priority="0x300">
+      <Parent guid="guidCookiecutterCmdSet" id="ToolbarNavGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidCheckForUpdates" priority="0x400">
+      <Parent guid="guidCookiecutterCmdSet" id="ToolbarNavGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidUpdateTemplate" priority="0x500">
+      <Parent guid="guidCookiecutterCmdSet" id="ToolbarNavGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidLinkGitHubHome" priority="0x100">
+        <Parent guid="guidCookiecutterCmdSet" id="ToolbarLinksGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidLinkGitHubIssues" priority="0x200">
+        <Parent guid="guidCookiecutterCmdSet" id="ToolbarLinksGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidLinkGitHubWiki" priority="0x300">
+        <Parent guid="guidCookiecutterCmdSet" id="ToolbarLinksGroup"/>
+    </CommandPlacement>
+
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidHome" priority="0x100">
+      <Parent guid="guidCookiecutterCmdSet" id="ContextNavGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidRun" priority="0x200">
+      <Parent guid="guidCookiecutterCmdSet" id="ContextNavGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidVSStd97" id="cmdidDelete" priority="0x300">
+      <Parent guid="guidCookiecutterCmdSet" id="ContextNavGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidCheckForUpdates" priority="0x400">
+      <Parent guid="guidCookiecutterCmdSet" id="ContextNavGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidUpdateTemplate" priority="0x500">
+      <Parent guid="guidCookiecutterCmdSet" id="ContextNavGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidLinkGitHubHome" priority="0x100">
+      <Parent guid="guidCookiecutterCmdSet" id="ContextLinksGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidLinkGitHubIssues" priority="0x200">
+      <Parent guid="guidCookiecutterCmdSet" id="ContextLinksGroup"/>
+    </CommandPlacement>
+    <CommandPlacement guid="guidCookiecutterCmdSet" id="cmdidLinkGitHubWiki" priority="0x300">
+      <Parent guid="guidCookiecutterCmdSet" id="ContextLinksGroup"/>
+    </CommandPlacement>
+  </CommandPlacements>
+  <!--  Within this section you can specify the set of commands defined somewhere else that your  
+        packages uses; for instance if your package uses the standard ‘Copy’ command, you don’t  
+        need to define it, because it is defined by the shell, but you have to use this section  
+        of the VSCT file to notify the shell that your package uses it using this section. -->
+  <!--  Note that with combo boxes we have effectively two commands in one. Below 
+        we have two pairs of commands; 1st pair commandIDFontName and commandIDFontNameHandler, 
+        2nd pair commandIDFontSize and commandIDFontSizeHandler. Note that: 
+        
+        - commandIDFontName and commandIDFontSize handle the displaying and setting of the font 
+          name and font size respectively 
+        - commandIDFontNameHandler and commandIDFontSizeHandler fill the drop down menus 
+          with the available font names and font sizes respectively 
+     -->
+
+  <!--Inside this section, we have the ability to place menu groups inside some other menu or 
+      menu / commands inside other groups. 
+      For instance, it is possible to place one of VisualStudio's menus or commands inside one of our  
+      groups or one of our groups inside a menu defined somewhere else. -->
+
+
+  <Symbols>
+    <!-- This is the package guid. -->
+    <GuidSymbol name="guidCookiecutterPkg" value="{8261E28A-54EC-44D2-ADED-8F9366B9196B}" />
+    <!-- This is the guid used to group the menu commands together -->
+    <GuidSymbol name="guidCookiecutterCmdSet" value="{6C1555D3-B9B7-4D39-B657-1A35A0F3C461}">
+      <!-- Commands -->
+      <IDSymbol name="cmdidCookiecutterExplorer" value ="0x1001"/>
+      <IDSymbol name="cmdidHome" value="0x1002" />
+      <IDSymbol name="cmdidRun" value="0x1003" />
+      <IDSymbol name="cmdidLinkGitHubHome" value="0x1004" />
+      <IDSymbol name="cmdidLinkGitHubIssues" value="0x1005" />
+      <IDSymbol name="cmdidLinkGitHubWiki" value="0x1006" />
+      <IDSymbol name="cmdidCreateFromCookiecutter" value ="0x1007"/>
+      <IDSymbol name="cmdidAddFromCookiecutter" value ="0x1008"/>
+      <IDSymbol name="cmdidUpdateTemplate" value ="0x1009"/>
+      <IDSymbol name="cmdidCheckForUpdates" value ="0x100a"/>
+      <IDSymbol name="cmdidViewExternalWebBrowser" value ="0x1100"/>
+
+      <!-- Context Menus -->
+      <IDSymbol name="ContextMenu" value="101"/>
+
+      <!-- Menus -->
+      <IDSymbol name="WindowToolBarId" value="0x2000" />
+
+      <!-- Groups -->
+      <IDSymbol name="ToolbarNavGroup" value="0x3000" />
+      <IDSymbol name="ToolbarLinksGroup" value="0x3001" />
+      <IDSymbol name="ContextNavGroup" value="0x3002" />
+      <IDSymbol name="ContextLinksGroup" value="0x3003" />
+    </GuidSymbol>
+    <GuidSymbol name="guidPythonToolsCmdSet" value="{bdfa79d2-2cd2-474a-a82a-ce8694116825}">
+      <IDSymbol name="WindowCommandsGroup" value="0x1014" />
+    </GuidSymbol>
+    <GuidSymbol name="guidCookiecutterImages" value="{50EDF200-5C99-4968-ABC0-CF1A2C490F00}">
+      <IDSymbol name="Cancel" value="1"/>
+      <IDSymbol name="Cookiecutter" value="2"/>
+      <IDSymbol name="CookiecutterTemplate" value="3"/>
+      <IDSymbol name="CookiecutterTemplateOK" value="4"/>
+      <IDSymbol name="CookiecutterTemplateUpdate" value="5"/>
+      <IDSymbol name="CookiecutterTemplateWarning" value="6"/>
+      <IDSymbol name="Download" value="7"/>
+      <IDSymbol name="NewCookiecutter" value="8"/>
+    </GuidSymbol>
+  </Symbols>
+
+</CommandTable>

@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
@@ -34,17 +35,18 @@ namespace Microsoft.PythonTools.Project {
         /// Installs virtualenv. If pip is not installed, the returned task will
         /// succeed but error text will be passed to the redirector.
         /// </summary>
-        public static Task<bool> Install(IServiceProvider provider, IPythonInterpreterFactory factory, Redirector output = null) {
-            bool elevate = provider.GetPythonToolsService().GeneralOptions.ElevatePip;
+        public static Task<bool> Install(IServiceProvider provider, IPythonInterpreterFactory factory) {
+            var ui = new VsPackageManagerUI(provider);
             if (factory.Configuration.Version < new Version(2, 5)) {
-                if (output != null) {
-                    output.WriteErrorLine("Python versions earlier than 2.5 are not supported by PTVS.");
-                }
+                ui.OnErrorTextReceived(null, "Python versions earlier than 2.5 are not supported by PTVS.\n");
+                throw new OperationCanceledException();
+            } else if (factory.PackageManager == null) {
+                ui.OnErrorTextReceived(null, Strings.PackageManagementNotSupported_Package.FormatUI("virtualenv"));
                 throw new OperationCanceledException();
             } else if (factory.Configuration.Version == new Version(2, 5)) {
-                return Pip.Install(provider, factory, "https://go.microsoft.com/fwlink/?LinkID=317970", elevate, output);
+                return factory.PackageManager.InstallAsync(PackageSpec.FromArguments("https://go.microsoft.com/fwlink/?LinkID=317970"), ui, CancellationToken.None);
             } else {
-                return Pip.Install(provider, factory, "https://go.microsoft.com/fwlink/?LinkID=317969", elevate, output);
+                return factory.PackageManager.InstallAsync(PackageSpec.FromArguments("https://go.microsoft.com/fwlink/?LinkID=317969"), ui, CancellationToken.None);
             }
         }
 
@@ -108,9 +110,9 @@ namespace Microsoft.PythonTools.Project {
         /// the task will succeed but error text will be passed to the
         /// redirector.
         /// </summary>
-        public static Task CreateWithVEnv(IServiceProvider provider, IPythonInterpreterFactory factory, string path, Redirector output = null) {
+        public static Task CreateWithVEnv(IServiceProvider provider, IPythonInterpreterFactory factory, string path) {
             factory.ThrowIfNotRunnable();
-            return ContinueCreate(provider, factory, path, true, output);
+            return ContinueCreate(provider, factory, path, true, OutputWindowRedirector.GetGeneral(provider));
         }
 
         /// <summary>
@@ -120,26 +122,33 @@ namespace Microsoft.PythonTools.Project {
         public static async Task CreateAndInstallDependencies(
             IServiceProvider provider,
             IPythonInterpreterFactory factory,
-            string path,
-            Redirector output = null
+            string path
         ) {
             factory.ThrowIfNotRunnable("factory");
 
-            var modules = await factory.FindModulesAsync("pip", "virtualenv", "venv");
-            bool hasPip = modules.Contains("pip");
-            bool hasVirtualEnv = modules.Contains("virtualenv") || modules.Contains("venv");
-
-            if (!hasVirtualEnv) {
-                if (!hasPip) {
-                    bool elevate = provider.GetPythonToolsService().GeneralOptions.ElevatePip;
-                    await Pip.InstallPip(provider, factory, elevate, output);
-                }
-                if (!await Install(provider, factory, output)) {
+            var cancel = CancellationToken.None;
+            var ui = new VsPackageManagerUI(provider);
+            var pm = factory.PackageManager;
+            if (pm == null) {
+                throw new InvalidOperationException(Strings.PackageManagementNotSupported);
+            }
+            if (!pm.IsReady) {
+                await pm.PrepareAsync(ui, cancel);
+                if (!pm.IsReady) {
                     throw new InvalidOperationException(Strings.VirtualEnvCreationFailed.FormatUI(path));
                 }
             }
 
-            await ContinueCreate(provider, factory, path, false, output);
+            var modules = await factory.FindModulesAsync("virtualenv", "venv");
+            bool hasVirtualEnv = modules.Contains("virtualenv") || modules.Contains("venv");
+
+            if (!hasVirtualEnv) {
+                if (!await Install(provider, factory)) {
+                    throw new InvalidOperationException(Strings.VirtualEnvCreationFailed.FormatUI(path));
+                }
+            }
+
+            await ContinueCreate(provider, factory, path, false, PackageManagerUIRedirector.Get(pm, ui));
         }
 
         public static InterpreterConfiguration FindInterpreterConfiguration(
@@ -149,10 +158,10 @@ namespace Microsoft.PythonTools.Project {
             IPythonInterpreterFactory baseInterpreter = null
         ) {
 
-            var libPath = DerivedInterpreterFactory.FindLibPath(prefixPath);
+            var libPath = FindLibPath(prefixPath);
 
             if (baseInterpreter == null) {
-                baseInterpreter = DerivedInterpreterFactory.FindBaseInterpreterFromVirtualEnv(
+                baseInterpreter = FindBaseInterpreterFromVirtualEnv(
                     prefixPath,
                     libPath,
                     service
@@ -174,29 +183,90 @@ namespace Microsoft.PythonTools.Project {
 
             return new InterpreterConfiguration(
                 id ?? baseInterpreter.Configuration.Id,
-                description,
+                baseInterpreter == null ? description : string.Format("{0} ({1})", description, baseInterpreter.Configuration.Description),
                 prefixPath,
                 interpExe,
                 winterpExe,
-                libPath,
                 pathVar,
                 baseInterpreter.Configuration.Architecture,
                 baseInterpreter.Configuration.Version,
-                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase,
-                baseInterpreter != null ? string.Format("({0})", baseInterpreter.Configuration.FullDescription) : ""
+                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured | InterpreterUIMode.SupportsDatabase
             );
         }
+        public static IPythonInterpreterFactory FindBaseInterpreterFromVirtualEnv(
+            string prefixPath,
+            string libPath,
+            IInterpreterRegistryService service
+        ) {
+            string basePath = PathUtils.TrimEndSeparator(GetOrigPrefixPath(prefixPath, libPath));
 
-        // This helper function is not yet needed, but may be useful at some point.
+            if (Directory.Exists(basePath)) {
+                return service.Interpreters.FirstOrDefault(interp =>
+                    PathUtils.IsSamePath(PathUtils.TrimEndSeparator(interp.Configuration.PrefixPath), basePath)
+                );
+            }
+            return null;
+        }
 
-        //public static string FindLibPathFromInterpreter(string interpreterPath) {
-        //    using (var output = ProcessOutput.RunHiddenAndCapture(interpreterPath, "-c", "import site; print(site.__file__)")) {
-        //        output.Wait();
-        //        return output.StandardOutputLines
-        //            .Where(PathUtils.IsValidPath)
-        //            .Select(line => Path.GetDirectoryName(line))
-        //            .LastOrDefault(dir => Directory.Exists(dir));
-        //    }
-        //}
+        public static string GetOrigPrefixPath(string prefixPath, string libPath = null) {
+            string basePath = null;
+
+            if (!Directory.Exists(prefixPath)) {
+                return null;
+            }
+
+            var cfgFile = Path.Combine(prefixPath, "pyvenv.cfg");
+            if (File.Exists(cfgFile)) {
+                try {
+                    var lines = File.ReadAllLines(cfgFile);
+                    basePath = lines
+                        .Select(line => Regex.Match(line, @"^home\s*=\s*(?<path>.+)$", RegexOptions.IgnoreCase))
+                        .Where(m => m != null && m.Success)
+                        .Select(m => m.Groups["path"])
+                        .Where(g => g != null && g.Success)
+                        .Select(g => g.Value)
+                        .FirstOrDefault(PathUtils.IsValidPath);
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                } catch (System.Security.SecurityException) {
+                }
+            }
+
+            if (string.IsNullOrEmpty(libPath)) {
+                libPath = FindLibPath(prefixPath);
+            }
+
+            if (!Directory.Exists(libPath)) {
+                return null;
+            }
+
+            var prefixFile = Path.Combine(libPath, "orig-prefix.txt");
+            if (basePath == null && File.Exists(prefixFile)) {
+                try {
+                    var lines = File.ReadAllLines(prefixFile);
+                    basePath = lines.FirstOrDefault(PathUtils.IsValidPath);
+                } catch (IOException) {
+                } catch (UnauthorizedAccessException) {
+                } catch (System.Security.SecurityException) {
+                }
+            }
+            return basePath;
+        }
+
+        public static string FindLibPath(string prefixPath) {
+            // Find site.py to find the library
+            var libPath = PathUtils.FindFile(prefixPath, "site.py", firstCheck: new[] { "Lib" });
+            if (!File.Exists(libPath)) {
+                // Python 3.3 venv does not add site.py, but always puts the
+                // library in prefixPath\Lib
+                libPath = Path.Combine(prefixPath, "Lib");
+                if (!Directory.Exists(libPath)) {
+                    return null;
+                }
+            } else {
+                libPath = Path.GetDirectoryName(libPath);
+            }
+            return libPath;
+        }
     }
 }

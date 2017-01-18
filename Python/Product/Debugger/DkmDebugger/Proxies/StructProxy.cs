@@ -25,9 +25,14 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies {
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     internal class StructProxyAttribute : Attribute {
         public string StructName { get; set; }
-
         public PythonLanguageVersion MinVersion { get; set; }
+        public PythonLanguageVersion MaxVersion { get; set; }
+    }
 
+    [AttributeUsage(AttributeTargets.Field, AllowMultiple = true)]
+    internal class FieldProxyAttribute : Attribute {
+        public string FieldName { get; set; }
+        public PythonLanguageVersion MinVersion { get; set; }
         public PythonLanguageVersion MaxVersion { get; set; }
     }
 
@@ -134,6 +139,11 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies {
             return new { _process, _address }.GetHashCode();
         }
 
+        protected TProxy GetFieldProxy<TProxy>(StructField<TProxy>? field, bool polymorphic = true)
+            where TProxy : IDataProxy {
+            return field.HasValue ? GetFieldProxy(field.Value) : default(TProxy);
+        }
+
         protected TProxy GetFieldProxy<TProxy>(StructField<TProxy> field, bool polymorphic = true)
             where TProxy : IDataProxy {
             return DataProxy.Create<TProxy>(Process, Address.OffsetBy(field.Offset), polymorphic);
@@ -170,6 +180,18 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies {
             return metadata;
         }
 
+        private static string GetFieldName(System.Reflection.FieldInfo fieldInfo, PythonLanguageVersion pyVersion) {
+            string name = fieldInfo.Name;
+            foreach (var attr in Attribute.GetCustomAttributes(fieldInfo, typeof(FieldProxyAttribute)).OfType<FieldProxyAttribute>()) {
+                name = null;
+                if ((attr.MinVersion.IsNone() || pyVersion >= attr.MinVersion) &&
+                    (attr.MaxVersion.IsNone() || pyVersion <= attr.MaxVersion)) {
+                    return string.IsNullOrEmpty(attr.FieldName) ? fieldInfo.Name : attr.FieldName;
+                }
+            }
+            return name;
+        }
+
         private static TFields GetStructFields<TFields>(StructMetadata metadata)
             where TFields : class, new() {
 
@@ -177,12 +199,20 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies {
                 return (TFields)metadata.Fields;
             }
 
+            var pyVersion = metadata.Process.GetPythonRuntimeInfo().LanguageVersion;
+
             var fields = new TFields();
             foreach (var fieldInfo in typeof(TFields).GetFields()) {
                 var fieldType = fieldInfo.FieldType;
                 if (fieldType.GetInterfaces().Contains(typeof(IStructField))) {
                     Debug.Assert(!fieldInfo.IsInitOnly);
-                    long offset = metadata.Symbol.GetFieldOffset(fieldInfo.Name);
+
+                    var name = GetFieldName(fieldInfo, pyVersion);
+                    if (string.IsNullOrEmpty(name)) {
+                        continue;
+                    }
+
+                    long offset = metadata.Symbol.GetFieldOffset(name);
                     var field = (IStructField)Activator.CreateInstance(fieldType);
                     field.Process = metadata.Process;
                     field.Offset = offset;

@@ -51,6 +51,7 @@
   <ItemGroup>
     <Compile Include="DjangoAnalyzer.cs" />
     <Compile Include="DjangoAnalyzer.TagsAndFilters.cs" />
+    <Compile Include="DjangoUrl.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TagInfo.cs" />
     <Compile Include="TemplateVariables.cs" />

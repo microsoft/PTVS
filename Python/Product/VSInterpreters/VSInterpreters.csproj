@@ -59,23 +59,35 @@
     <Reference Include="Microsoft.Build.Tasks.$(MicrosoftBuildAssemblyVersionSuffix), Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.Build.Utilities.$(MicrosoftBuildAssemblyVersionSuffix), Version=$(MicrosoftBuildAssemblyVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Web.ApplicationServices" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="BuiltInPackageManagers.cs" />
     <Compile Include="CPythonInterpreterFactoryConstants.cs" />
     <Compile Include="CPythonInterpreterFactoryProvider.cs" />
-    <Compile Include="DerivedInterpreterFactory.cs" />
     <Compile Include="IInterpreterOptionsService.cs" />
     <Compile Include="InterpreterOptionsService.cs" />
     <Compile Include="MSBuildConstants.cs" />
     <Compile Include="MSBuildProjectInterpreterFactoryProvider.cs" />
     <Compile Include="NotFoundInterpreterFactory.cs" />
+    <Compile Include="PackageManagerUIRedirector.cs" />
+    <Compile Include="PipPackageCache.cs" />
+    <Compile Include="PipPackageManager.cs" />
+    <Compile Include="PythonInterpreterInformation.cs" />
+    <Compile Include="PythonRegistrySearch.cs" />
     <Compile Include="RegistryWatcher.cs" />
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />

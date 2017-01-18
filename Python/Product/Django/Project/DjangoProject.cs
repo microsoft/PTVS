@@ -21,10 +21,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
@@ -51,6 +51,9 @@ namespace Microsoft.PythonTools.Django.Project {
         private OleMenuCommandService _menuService;
         private readonly List<OleMenuCommand> _commands = new List<OleMenuCommand>();
         private bool _disposed;
+
+        private static readonly Guid PublishCmdGuid = new Guid("{1496a755-94de-11d0-8c3f-00c04fc2aae2}");
+        private static readonly int PublishCmdid = 2006;
 
 #if HAVE_ICONS
         private static ImageList _images;
@@ -151,7 +154,7 @@ namespace Microsoft.PythonTools.Django.Project {
             }
         }
 
-        private static void RegisterExtension(PythonTools.Intellisense.VsProjectAnalyzer newAnalyzer) {
+        private static void RegisterExtension(VsProjectAnalyzer newAnalyzer) {
             newAnalyzer.RegisterExtension(typeof(DjangoAnalyzer).Assembly.CodeBase);
         }
 
@@ -421,7 +424,7 @@ namespace Microsoft.PythonTools.Django.Project {
                 }
 
                 var td = new TaskDialog(new ServiceProvider(GetSite())) {
-                    Title = Resources.PythonToolsForVisualStudio,
+                    Title = Resources.ProductTitle,
                     MainInstruction = string.Format(Resources.DjangoAppAlreadyExistsTitle, name),
                     Content = string.Format(Resources.DjangoAppAlreadyExistsInstruction, name),
                     AllowCancellation = true
@@ -740,9 +743,34 @@ namespace Microsoft.PythonTools.Django.Project {
                         return res;
                     }
                 }
+            } else if (pguidCmdGroup == PublishCmdGuid) {
+                if (nCmdID == PublishCmdid) {
+                    // Approximately duplicated from PythonWebProject
+                    var opts = (IPythonToolsOptionsService)serviceProvider.GetService(typeof(IPythonToolsOptionsService));
+                    if (string.IsNullOrEmpty(opts.LoadString(SuppressDialog.PublishToAzure30Setting, SuppressDialog.Category))) {
+                        var td = new TaskDialog(serviceProvider) {
+                            Title = Strings.ProductTitle,
+                            MainInstruction = Strings.PublishToAzure30,
+                            Content = Strings.PublishToAzure30Message,
+                            VerificationText = Strings.DontShowAgain,
+                            SelectedVerified = false,
+                            AllowCancellation = true,
+                            EnableHyperlinks = true
+                        };
+                        td.Buttons.Add(TaskDialogButton.OK);
+                        td.Buttons.Add(TaskDialogButton.Cancel);
+                        if (td.ShowModal() == TaskDialogButton.Cancel) {
+                            return VSConstants.S_OK;
+                        }
+
+                        if (td.SelectedVerified) {
+                            opts.SaveString(SuppressDialog.PublishToAzure30Setting, SuppressDialog.Category, "true");
+                        }
+                    }
+                }
             }
 
-            return ((IOleCommandTarget)_menuService).Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+            return _innerOleCommandTarget.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         }
 
         private bool AddWebRoleSupportFiles() {
@@ -829,7 +857,7 @@ namespace Microsoft.PythonTools.Django.Project {
                 }
             }
 
-            return ((IOleCommandTarget)_menuService).QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
+            return _innerOleCommandTarget.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
         }
 
         #region IVsProjectFlavorCfgProvider Members

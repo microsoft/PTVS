@@ -18,11 +18,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Repl;
-using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text;
@@ -88,7 +87,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             var interactiveWindow = _snapshot.TextBuffer.GetInteractiveWindow();
             var pyReplEval = interactiveWindow?.Evaluator as IPythonInteractiveIntellisense;
-
+            
             var analysis = GetAnalysisEntry();
 
             string text;
@@ -114,6 +113,19 @@ namespace Microsoft.PythonTools.Intellisense {
                         }
                         members = (analysis.Analyzer.GetAllAvailableMembersAsync(analysis, location, _options.MemberOptions).WaitOrDefault(1000) ?? new CompletionResult[0])
                             .Union(parameters, CompletionComparer.MemberEquality);
+                    }
+                }
+
+                if (pyReplEval == null) {
+                    var expansions = _serviceProvider.GetPythonToolsService().GetExpansionCompletions(100);
+                    if (expansions != null) {
+                        // Expansions should come first, so that they replace our keyword
+                        // completions with the more detailed snippets.
+                        if (members != null) {
+                            members = expansions.Union(members, CompletionComparer.MemberEquality);
+                        } else {
+                            members = expansions;
+                        }
                     }
                 }
 
@@ -185,5 +197,6 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return result;
         }
+
     }
 }

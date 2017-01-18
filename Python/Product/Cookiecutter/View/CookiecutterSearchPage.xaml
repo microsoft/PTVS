@@ -1,0 +1,378 @@
+﻿<Page x:Class="Microsoft.CookiecutterTools.View.CookiecutterSearchPage"
+      x:ClassModifier="internal"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+      xmlns:vm="clr-namespace:Microsoft.CookiecutterTools.ViewModel"
+      xmlns:rc="clr-namespace:Microsoft.CookiecutterTools.Resources"
+      xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
+      xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
+      xmlns:img="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
+      xmlns:imagecatalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
+      wpf:LambdaProperties.ImportedNamespaces="System.Windows Microsoft.CookiecutterTools Microsoft.CookiecutterTools.ViewModel"
+      mc:Ignorable="d" 
+      d:DataContext="{Binding Source={d:DesignData Source=CookiecutterControlDesignData.xaml}}"
+      d:DesignHeight="550" d:DesignWidth="300"
+      Background="{DynamicResource {x:Static wpf:Controls.BackgroundKey}}"
+      img:ImageThemingUtilities.ImageBackgroundColor="{DynamicResource {x:Static wpf:Controls.BackgroundColorKey}}"
+      Title="Search">
+    <Page.CommandBindings>
+        <CommandBinding Command="{x:Static vm:CookiecutterViewModel.LoadMore}"
+                    CanExecute="LoadMore_CanExecute"
+                    Executed="LoadMore_Executed" />
+        <CommandBinding Command="{x:Static vm:CookiecutterViewModel.RunSelection}"
+                    CanExecute="RunSelection_CanExecute"
+                    Executed="RunSelection_Executed" />
+        <CommandBinding Command="{x:Static vm:CookiecutterViewModel.Search}"
+                    CanExecute="Search_CanExecute"
+                    Executed="Search_Executed" />
+        <CommandBinding Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
+                    CanExecute="OpenInBrowser_CanExecute"
+                    Executed="OpenInBrowser_Executed" />
+        <CommandBinding Command="{x:Static vm:CookiecutterViewModel.OpenInExplorer}"
+                    CanExecute="OpenInExplorer_CanExecute"
+                    Executed="OpenInExplorer_Executed" />
+    </Page.CommandBindings>
+    <Page.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="CookiecutterDictionary.xaml" />
+                <ResourceDictionary>
+                    <DataTemplate x:Key="Installed">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Path=DisplayName}"/>
+                        </Grid>
+                    </DataTemplate>
+                    <DataTemplate x:Key="Source">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding Path=DisplayName}"/>
+                        </Grid>
+                    </DataTemplate>
+                    <wpf:Lambda x:Key="OperationStatusInProgressToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.InProgress ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+                    <wpf:Lambda x:Key="OperationStatusFailedToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.Failed ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+                    <wpf:Lambda x:Key="OperationStatusSucceededToVisibleOrCollapsed">(OperationStatus s) => s == OperationStatus.Succeeded ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+                    <wpf:Lambda x:Key="BoolToVisibleOrCollapsed">(bool b) => b ? Visibility.Visible : Visibility.Collapsed</wpf:Lambda>
+                    <wpf:Lambda x:Key="BoolToVisible">(bool b) => b ? Visibility.Visible : Visibility.Hidden</wpf:Lambda>
+                    <wpf:Lambda x:Key="BoolToNotVisible">(bool b) => b ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
+                    <wpf:Lambda x:Key="NullToNotVisible">(object o) => o == null ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
+                    <wpf:Lambda x:Key="NullNotVisible">(object o) => o != null ? Visibility.Hidden : Visibility.Visible</wpf:Lambda>
+                    <wpf:Lambda x:Key="EmptyStringToVisibleOrCollapsed">(string s) => !string.IsNullOrEmpty(s) ? Visibility.Collapsed: Visibility.Visible</wpf:Lambda>
+                    <wpf:Lambda x:Key="EmptyStringToNotVisibleOrCollapsed">(string s) => string.IsNullOrEmpty(s) ? Visibility.Collapsed : Visibility.Visible</wpf:Lambda>
+                </ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Page.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- Created successfully -->
+            <RowDefinition Height="Auto"/>
+            <!-- Search -->
+            <RowDefinition Height="Auto"/>
+            <!-- Results -->
+            <RowDefinition Height="*"/>
+            <!-- Next + Status -->
+            <RowDefinition Height="Auto"/>
+            <!-- Description -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Created successfully -->
+        <StackPanel Grid.Row="0" Orientation="Vertical" Visibility="{Binding Path=CreatingStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal">
+                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"/>
+                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Files created successfully."/>
+            </StackPanel>
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal">
+                <imaging:CrispImage Margin="20 0 0 0" Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.OpenFolder}"/>
+                <Button Style="{StaticResource NavigationButton}"
+                        Margin="4 0 0 0"
+                        Command="{x:Static vm:CookiecutterViewModel.OpenInExplorer}"
+                        CommandParameter="{Binding Path=OpenInExplorerFolderPath,Mode=OneWay}"
+                        HorizontalAlignment="Left">
+                    Open in Solution Explorer
+                </Button>
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Search -->
+        <StackPanel Grid.Row="1" Orientation="Vertical">
+            <Grid>
+                <Grid.Resources>
+                    <Style x:Key="SearchButtonStyle" TargetType="{x:Type Button}" BasedOn="{StaticResource {x:Type Button}}">
+                        <Setter Property="Command" Value="{x:Static vm:CookiecutterViewModel.Search}" />
+                        <Setter Property="Content" Value="Search" />
+                        <Setter Property="Padding" Value="6 4" />
+                        <Setter Property="Margin" Value="3 0 0 0" />
+                    </Style>
+                </Grid.Resources>
+                
+                <wpf:ConfigurationTextBoxWithHelp Margin="0 0 0 0"
+                                                  Text="{Binding Path=SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                                  HelpText="Enter search terms or template location (git repository URL or path to local folder)"
+                                                  AutomationProperties.Name="Search terms"
+                                                  Watermark="Enter search terms or template location"
+                                                  BrowseButtonStyle="{StaticResource SearchButtonStyle}"
+                                                  KeyDown="TextBox_KeyDown" />
+            </Grid>
+        </StackPanel>
+
+        <!-- Results -->
+        <TreeView Grid.Row="2"
+                  Margin="4 4 0 8"
+                  ItemsSource="{Binding Path=SearchResults}"
+                  SelectedItemChanged="TreeView_SelectedItemChanged">
+            <TreeView.Resources>
+                <HierarchicalDataTemplate DataType="{x:Type vm:CategorizedViewModel}" ItemsSource="{Binding Path=Templates}">
+                    <TextBlock Margin="0 4 0 4"
+                               FontWeight="Bold"
+                               Text="{Binding Path=DisplayName}"/>
+                </HierarchicalDataTemplate>
+                <DataTemplate DataType="{x:Type vm:TemplateViewModel}">
+                    <StackPanel Orientation="Horizontal" x:Name="Item">
+                        <imaging:CrispImage x:Name="Image" Width="16" Height="16"
+                                            Margin="0 0 0 2"
+                                            Moniker="{x:Static rc:ImageMonikers.CookiecutterTemplate}" />
+                        <TextBlock Margin="3 3"
+                                   Text="{Binding Path=DisplayName}" />
+                    </StackPanel>
+                    <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding Path=IsUpdateAvailable}" Value="True">
+                            <Setter TargetName="Item" Property="ToolTip" Value="An update is available." />
+                            <Setter TargetName="Image" Property="Moniker" Value="{x:Static rc:ImageMonikers.CookiecutterTemplateUpdate}" />
+                        </DataTrigger>
+                    </DataTemplate.Triggers>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:ErrorViewModel}">
+                    <StackPanel Orientation="Horizontal">
+                        <imaging:CrispImage Width="16" Height="16"
+                                            Margin="0 0 0 2"
+                                            Moniker="{x:Static rc:ImageMonikers.CookiecutterTemplateWarning}">
+                        </imaging:CrispImage>
+                        <TextBlock Margin="3 3"
+                                   Text="{Binding Path=ErrorDescription}">
+                            <TextBlock.ToolTip>
+                                <TextBlock TextWrapping="Wrap" Text="{Binding Path=ErrorDetails}"/>
+                            </TextBlock.ToolTip>
+                        </TextBlock>
+                    </StackPanel>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:LoadingViewModel}">
+                    <StackPanel Orientation="Horizontal">
+                        <imaging:CrispImage Width="16" Height="16"
+                                            Margin="0 0 0 2"
+                                            Moniker="{x:Static imagecatalog:KnownMonikers.Refresh}">
+                        </imaging:CrispImage>
+                        <TextBlock Margin="3 3"
+                                   Text="Loading...">
+                            <TextBlock.ToolTip>
+                                <TextBlock TextWrapping="Wrap" Text="Enumerating templates. This may take a few seconds."/>
+                            </TextBlock.ToolTip>
+                        </TextBlock>
+                    </StackPanel>
+                </DataTemplate>
+                <DataTemplate DataType="{x:Type vm:ContinuationViewModel}">
+                    <StackPanel Orientation="Horizontal">
+                        <imaging:CrispImage Width="16" Height="16"
+                                            Margin="0 0 0 2"
+                                            Moniker="{x:Static imagecatalog:KnownMonikers.Download}">
+                        </imaging:CrispImage>
+
+                        <Button Style="{StaticResource NavigationButton}"
+                                Margin="3 3"
+                                Command="{x:Static vm:CookiecutterViewModel.LoadMore}"
+                                CommandParameter="{Binding Path=ContinuationToken,Mode=OneWay}"
+                                HorizontalAlignment="Left">
+                            <TextBlock>
+                                Load more...
+                            </TextBlock>
+                        </Button>
+                    </StackPanel>
+                </DataTemplate>
+            </TreeView.Resources>
+            <TreeView.ItemContainerStyle>
+                <Style TargetType="{x:Type TreeViewItem}" BasedOn="{StaticResource {x:Type TreeViewItem}}">
+                    <Setter Property="IsExpanded" Value="True" />
+                    <Setter Property="Focusable" Value="{Binding Selectable}"/>
+                    <EventSetter Event="MouseDoubleClick" Handler="OnItemMouseDoubleClick" />
+                    <EventSetter Event="TreeViewItem.PreviewMouseRightButtonDown" Handler="OnItemPreviewMouseRightButtonDown"/>
+                </Style>
+            </TreeView.ItemContainerStyle>
+        </TreeView>
+
+        <!-- Next + Status -->
+        <StackPanel Grid.Row="3" Orientation="Vertical">
+            <Button Margin="4"
+                Command="{x:Static vm:CookiecutterViewModel.RunSelection}"
+                MinWidth="100"
+                HorizontalAlignment="Left">_Next</Button>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Vertical"
+                        Visibility="{Binding Path=InstallingStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
+                <Separator/>
+                <TextBlock Text="Preparing cookiecutter for first time use...">
+                    <TextBlock.ToolTip>
+                        Downloading and installing the cookiecutter package from the Python Package Index. This may take a few minutes.
+                    </TextBlock.ToolTip>
+                </TextBlock>
+                <ProgressBar Margin="4" IsIndeterminate="True"/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal"
+                        Visibility="{Binding Path=InstallingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
+                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
+                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Error installing cookiecutter. See output window for details."/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Vertical"
+                        Visibility="{Binding Path=CloningStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
+                <Separator/>
+                <TextBlock Text="Cloning repository..."/>
+                <ProgressBar Margin="4" IsIndeterminate="True"/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal"
+                        Visibility="{Binding Path=CloningStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
+                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
+                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Error cloning repository. See output window for details."/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Vertical"
+                        Visibility="{Binding Path=LoadingStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
+                <Separator/>
+                <TextBlock Text="Loading template..."/>
+                <ProgressBar Margin="4" IsIndeterminate="True"/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal"
+                        Visibility="{Binding Path=LoadingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
+                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
+                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Error loading template. See output window for details."/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Vertical"
+                        Visibility="{Binding Path=CheckingUpdateStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
+                <Separator/>
+                <TextBlock Text="Checking for updates..."/>
+                <ProgressBar Margin="4" Value="{Binding Path=CheckingUpdatePercentComplete,Mode=OneWay}" Maximum="100"/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal"
+                        Visibility="{Binding Path=CheckingUpdateStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
+                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"/>
+                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Check for updates completed."/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal"
+                        Visibility="{Binding Path=CheckingUpdateStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
+                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
+                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Error checking for updates. See output window for details."/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Vertical"
+                        Visibility="{Binding Path=UpdatingStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
+                <Separator/>
+                <TextBlock Text="Updating template..."/>
+                <ProgressBar Margin="4" IsIndeterminate="True"/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal"
+                        Visibility="{Binding Path=UpdatingStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
+                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"/>
+                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Template updated."/>
+            </StackPanel>
+
+            <StackPanel Margin="4 4 4 8"
+                        Orientation="Horizontal"
+                        Visibility="{Binding Path=UpdatingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
+                <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
+                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Error updating template. See output window for details."/>
+            </StackPanel>
+
+            <Separator Margin="4"/>
+        </StackPanel>
+
+        <!-- Description -->
+        <Grid Grid.Row="4" Height="100">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Image Grid.Column="0"
+                   Source="{Binding SelectedImage}"
+                   Width="96"
+                   Height="96"
+                   Stretch="Uniform"
+                   RenderOptions.BitmapScalingMode="HighQuality"
+                   Cursor="Hand"
+                   MouseLeftButtonDown="Image_MouseLeftButtonDown">
+                <Image.ToolTip>
+                    <TextBlock>
+                        <Run>Visit</Run>
+                        <Run Text="{Binding SelectedTemplate.RepositoryOwner,FallbackValue='the creator',Mode=OneWay}" />
+                        <Run>on github</Run>
+                    </TextBlock>
+                </Image.ToolTip>
+            </Image>
+            <Grid Grid.Column="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <ScrollViewer Grid.Row="0"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Visibility="{Binding Path=SelectedTemplate, Converter={StaticResource NullToNotVisible}}">
+                    <Grid>
+                        <TextBlock Margin="8"
+                            Visibility="{Binding SelectedDescription, Converter={StaticResource EmptyStringToNotVisibleOrCollapsed}}"
+                            TextWrapping="Wrap"
+                            Text="{Binding Path=SelectedDescription}"/>
+                        <TextBlock Margin="8"
+                            Visibility="{Binding SelectedDescription, Converter={StaticResource EmptyStringToVisibleOrCollapsed}}"
+                            TextWrapping="Wrap"
+                            Text="No description available."/>
+                    </Grid>
+                </ScrollViewer>
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Visibility="{Binding Path=SelectedTemplate, Converter={StaticResource NullToNotVisible}}">
+                    <Button Margin="8"
+                            Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
+                            CommandParameter="{Binding SelectedTemplate.GitHubHomeUrl,Mode=OneWay}"
+                            ToolTip="{Binding SelectedTemplate.GitHubHomeUrl,Mode=OneWay}"
+                            Style="{StaticResource NavigationButton}">GitHub</Button>
+                    <Button Margin="8"
+                            Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
+                            CommandParameter="{Binding SelectedTemplate.GitHubIssuesUrl,Mode=OneWay}"
+                            ToolTip="{Binding SelectedTemplate.GitHubIssuesUrl,Mode=OneWay}"
+                            Style="{StaticResource NavigationButton}">Issues</Button>
+                    <Button Margin="8"
+                            Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
+                            CommandParameter="{Binding SelectedTemplate.GitHubWikiUrl,Mode=OneWay}"
+                            ToolTip="{Binding SelectedTemplate.GitHubWikiUrl,Mode=OneWay}"
+                            Style="{StaticResource NavigationButton}">Wiki</Button>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Grid>
+</Page>

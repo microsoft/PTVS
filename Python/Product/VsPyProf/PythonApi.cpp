@@ -88,7 +88,7 @@ VsPyProf* VsPyProf::Create(HMODULE pythonModule) {
                 }
 
                 if ((major == 2 && (minor >= 4 && minor <= 7)) ||
-                    (major == 3 && (minor >= 0 && minor <= 5))) {
+                    (major == 3 && (minor >= 0 && minor <= 6))) {
                         return new VsPyProf(pythonModule,
                             major,
                             minor,
@@ -134,6 +134,8 @@ bool VsPyProf::GetUserToken(PyFrameObject* frameObj, DWORD_PTR& func, DWORD_PTR&
             filename = ((PyCodeObject30_32*)codeObj)->co_filename;
         } else if (PyCodeObject33_35::IsFor(MajorVersion, MinorVersion)) {
             filename = ((PyCodeObject33_35*)codeObj)->co_filename;
+        } else if (PyCodeObject36::IsFor(MajorVersion, MinorVersion)) {
+            filename = ((PyCodeObject36*)codeObj)->co_filename;
         }
         module = (DWORD_PTR)filename;
 
@@ -210,6 +212,9 @@ bool VsPyProf::GetUserToken(PyFrameObject* frameObj, DWORD_PTR& func, DWORD_PTR&
             } else if (PyCodeObject33_35::IsFor(MajorVersion, MinorVersion)) {
                 RegisterName(func, ((PyCodeObject33_35*)codeObj)->co_name, &moduleName);
                 lineno = ((PyCodeObject33_35*)codeObj)->co_firstlineno;
+            } else if (PyCodeObject36::IsFor(MajorVersion, MinorVersion)) {
+                RegisterName(func, ((PyCodeObject36*)codeObj)->co_name, &moduleName);
+                lineno = ((PyCodeObject36*)codeObj)->co_firstlineno;
             }
 
             // give the profiler the line number of this function
@@ -231,8 +236,8 @@ wstring VsPyProf::GetClassNameFromFrame(PyFrameObject* frameObj, PyObject *codeO
         }
     } else {
         // try and get self from the fast locals if we don't have a dictionary
-        int argCount;
-        PyTupleObject* argNames;
+        int argCount = 0;
+        PyTupleObject* argNames = NULL;
         if (PyCodeObject25_27::IsFor(MajorVersion, MinorVersion)) {
             argCount = ((PyCodeObject25_27*)codeObj)->co_argcount;
             argNames = (PyTupleObject*)((PyCodeObject25_27*)codeObj)->co_varnames;
@@ -242,9 +247,12 @@ wstring VsPyProf::GetClassNameFromFrame(PyFrameObject* frameObj, PyObject *codeO
         } else if (PyCodeObject33_35::IsFor(MajorVersion, MinorVersion)) {
             argCount = ((PyCodeObject33_35*)codeObj)->co_argcount;
             argNames = (PyTupleObject*)((PyCodeObject33_35*)codeObj)->co_varnames;
+        } else if (PyCodeObject36::IsFor(MajorVersion, MinorVersion)) {
+            argCount = ((PyCodeObject36*)codeObj)->co_argcount;
+            argNames = (PyTupleObject*)((PyCodeObject36*)codeObj)->co_varnames;
         }
 
-        if (argCount != 0 && argNames->ob_type == PyTuple_Type) {
+        if (argCount != 0 && argNames && argNames->ob_type == PyTuple_Type) {
             string argName;
             GetNameAscii(argNames->ob_item[0], argName);
 
@@ -252,8 +260,8 @@ wstring VsPyProf::GetClassNameFromFrame(PyFrameObject* frameObj, PyObject *codeO
                 PyObject* self = nullptr;
                 if (PyFrameObject25_33::IsFor(MajorVersion, MinorVersion)) {
                     self = ((PyFrameObject25_33*)frameObj)->f_localsplus[0];
-                } else if (PyFrameObject34_35::IsFor(MajorVersion, MinorVersion)) {
-                    self = ((PyFrameObject34_35*)frameObj)->f_localsplus[0];
+                } else if (PyFrameObject34_36::IsFor(MajorVersion, MinorVersion)) {
+                    self = ((PyFrameObject34_36*)frameObj)->f_localsplus[0];
                 }
                 return GetClassNameFromSelf(self, codeObj);
             }
@@ -281,6 +289,8 @@ wstring VsPyProf::GetClassNameFromSelf(PyObject* self, PyObject *codeObj) {
             nameObj = ((PyCodeObject30_32*)codeObj)->co_name;
         } else if (PyCodeObject33_35::IsFor(MajorVersion, MinorVersion)) {
             nameObj = ((PyCodeObject33_35*)codeObj)->co_name;
+        } else if (PyCodeObject36::IsFor(MajorVersion, MinorVersion)) {
+            nameObj = ((PyCodeObject36*)codeObj)->co_name;
         }
         GetNameAscii(nameObj, codeName);
 

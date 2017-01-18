@@ -33,6 +33,8 @@ namespace TestUtilities.Python {
             _moduleNames = new HashSet<string>(StringComparer.Ordinal);
         }
 
+        public void Dispose() { }
+
         public void AddModule(string name, IPythonModule module) {
             _modules[name] = module;
             ModuleNamesChanged?.Invoke(this, EventArgs.Empty);

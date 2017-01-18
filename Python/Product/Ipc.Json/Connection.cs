@@ -33,7 +33,7 @@ namespace Microsoft.PythonTools.Ipc.Json {
         private readonly Func<RequestArgs, Func<Response, Task>, Task> _requestHandler;
         private readonly Stream _writer, _reader;
         private int _seq;
-        private static char[] _headerSeperator = new[] { ':' };
+        private static char[] _headerSeparator = new[] { ':' };
 
         /// <summary>
         /// Creates a new connection object for doing client/server communication.  
@@ -109,18 +109,21 @@ namespace Microsoft.PythonTools.Ipc.Json {
         /// Send a fire and forget event to the other side.
         /// </summary>
         /// <param name="eventValue">The event value to be sent.</param>
-        public Task SendEventAsync(Event eventValue) {
+        public async Task SendEventAsync(Event eventValue) {
             int seq = Interlocked.Increment(ref _seq);
             Debug.WriteLine("Sending event {0}", seq);
-            return SendMessage(
-                new EventMessage() {
-                    @event = eventValue.name,
-                    body = eventValue,
-                    seq = seq,
-                    type = PacketType.Event
-                },
-                CancellationToken.None
-            );
+            try {
+                await SendMessage(
+                    new EventMessage() {
+                        @event = eventValue.name,
+                        body = eventValue,
+                        seq = seq,
+                        type = PacketType.Event
+                    },
+                    CancellationToken.None
+                );
+            } catch (ObjectDisposedException) {
+            }
         }
 
         /// <summary>
@@ -286,9 +289,13 @@ namespace Microsoft.PythonTools.Ipc.Json {
                     // end of headers for this request...
                     break;
                 }
-                var split = line.Split(_headerSeperator, 2);
+                var split = line.Split(_headerSeparator, 2);
                 if (split.Length != 2) {
-                    await WriteError("Malformed header, expected 'name: value'").ConfigureAwait(false);
+                    // Probably getting an error message, so read all available
+                    // text and write an error.
+                    var error = line + reader.ReadToEnd();
+                    await WriteError("Malformed header, expected 'name: value'" + Environment.NewLine + error).ConfigureAwait(false);
+                    return null;
                 }
                 headers[split[0]] = split[1];
             }
@@ -302,10 +309,12 @@ namespace Microsoft.PythonTools.Ipc.Json {
 
             if (!headers.TryGetValue(Headers.ContentLength, out contentLengthStr)) {
                 await WriteError("Content-Length not specified on request").ConfigureAwait(false);
+                return null;
             }
 
             if (!Int32.TryParse(contentLengthStr, out contentLength) || contentLength < 0) {
                 await WriteError("Invalid Content-Length: " + contentLengthStr).ConfigureAwait(false);
+                return null;
             }
 
             char[] buffer = new char[contentLength];
@@ -344,7 +353,13 @@ namespace Microsoft.PythonTools.Ipc.Json {
         private async Task SendMessage(ProtocolMessage packet, CancellationToken cancel) {
             var str = JsonConvert.SerializeObject(packet);
             var bytes = Encoding.UTF8.GetBytes(str);
-            await _writeLock.WaitAsync(cancel).ConfigureAwait(false);
+            try {
+                await _writeLock.WaitAsync(cancel).ConfigureAwait(false);
+            } catch (ArgumentNullException) {
+                throw new ObjectDisposedException(nameof(_writeLock));
+            } catch (ObjectDisposedException) {
+                throw new ObjectDisposedException(nameof(_writeLock));
+            }
             try {
                 var contentLengthStr = "Content-Length: " + bytes.Length + "\n\n";
                 var contentLength = Encoding.UTF8.GetBytes(contentLengthStr);

@@ -17,201 +17,110 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.PythonTools.EnvironmentsList.Properties;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudioTools;
+using Microsoft.PythonTools.Interpreter;
 
 namespace Microsoft.PythonTools.EnvironmentsList {
     internal sealed class PipPackageView : INotifyPropertyChanged {
-        private readonly PipPackageCache _provider;
-        private readonly string _name;
-        private readonly Pep440Version _version;
-        private Pep440Version? _upgradeVersion;
-        private string _description;
+        private readonly IPackageManager _provider;
+        private readonly PackageSpec _package;
+        private readonly bool _isInstalled;
+        private PackageVersion? _upgradeVersion;
 
-        private static readonly Regex PipListOutputRegex = new Regex(
-            @"^\s*(?<name>[^\s=:]+)\s+\((?<version>[^:]+)\)(\:(?<description>.*))?\s*$",
-            RegexOptions.None,
-            TimeSpan.FromSeconds(1.0)
-        );
-        private static readonly Regex PipFreezeOutputRegex = new Regex(
-            @"^\s*(?<name>[^\s=:]+)==(?<version>[^:]+)?(\:(?<description>.*))?\s*$",
-            RegexOptions.None,
-            TimeSpan.FromSeconds(1.0)
-        );
-        private static readonly Regex NameAndDescriptionRegex = new Regex(
-            @"^\s*(?<name>[^\s=:]+)\:(?<description>.*)\s*$",
-            RegexOptions.None,
-            TimeSpan.FromSeconds(1.0)
-        );
-
-        internal PipPackageView(PipPackageCache provider, string name, string version, string description) {
+        internal PipPackageView(IPackageManager provider, PackageSpec package, bool isInstalled) {
             _provider = provider;
-            _name = name ?? "";
-            if (!string.IsNullOrEmpty(version)) {
-                Pep440Version.TryParse(version, out _version);
-            }
-            _description = description ?? "";
+            _package = package;
+            _isInstalled = isInstalled;
         }
 
-        internal PipPackageView(PipPackageCache provider, string packageSpec, bool versionIsInstalled = true) {
-            _provider = provider;
-            Match m;
+        public override string ToString() => DisplayName;
+
+        private async void TriggerUpdate() {
+            if (_upgradeVersion.HasValue && !string.IsNullOrEmpty(_package.Description)) {
+                return;
+            }
+            if (_provider == null) {
+                return;
+            }
+
             try {
-                m = PipListOutputRegex.Match(packageSpec);
-            } catch (RegexMatchTimeoutException) {
-                Debug.Fail("Regex timeout");
-                m = null;
-            }
-            if (m == null || !m.Success) {
-                try {
-                    m = PipFreezeOutputRegex.Match(packageSpec);
-                } catch (RegexMatchTimeoutException) {
-                    Debug.Fail("Regex timeout");
-                    m = null;
-                }
-                if (m == null || !m.Success) {
-                    try {
-                        m = NameAndDescriptionRegex.Match(packageSpec);
-                    } catch (RegexMatchTimeoutException) {
-                        Debug.Fail("Regex timeout");
-                        m = null;
+                var oldDescription = _package.Description;
+                var p = await _provider.GetInstallablePackageAsync(_package, CancellationToken.None);
+                if (p.IsValid) {
+                    if (!p.ExactVersion.IsEmpty && (!_upgradeVersion.HasValue || !_upgradeVersion.Value.Equals(p.ExactVersion))) {
+                        _upgradeVersion = p.ExactVersion;
+                        OnPropertyChanged("UpgradeVersion");
+                    }
+                    if (p.Description != _package.Description) {
+                        _package.Description = p.Description;
+                        OnPropertyChanged("Description");
+                    } else if (string.IsNullOrEmpty(p.Description)) {
+                        _package.Description = string.Empty;
+                        OnPropertyChanged("Description");
                     }
                 }
-            }
-
-            Pep440Version version;
-            if (m.Success) {
-                _name = m.Groups["name"].Value;
-                Pep440Version.TryParse(m.Groups["version"].Value, out version);
-            } else {
-                _name = packageSpec;
-                version = Pep440Version.Empty;
-            }
-
-            var description = m.Groups["description"].Value;
-            if (!string.IsNullOrEmpty(description)) {
-                _description = Uri.UnescapeDataString(description);
-            }
-
-            if (versionIsInstalled) {
-                _version = version;
-                _upgradeVersion = null;
-            } else {
-                _version = Pep440Version.Empty;
-                _upgradeVersion = version;
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                Debug.Fail("Unhandled exception: " + ex.ToString());
+                // Nowhere else to report the exception, so just swallow it to
+                // avoid bringing down the whole process.
             }
         }
 
-        private async void SetUpgradeVersionAsync() {
-            if (!_upgradeVersion.HasValue) {
-                try {
-                    await _provider.UpdatePackageInfoAsync(this, CancellationToken.None);
-                } catch (Exception ex) {
-                    if (ex.IsCriticalException()) {
-                        throw;
-                    }
-                    Debug.Fail("Unhandled exception: " + ex.ToString());
-                    // Nowhere else to report the exception, so just swallow it to
-                    // avoid bringing down the whole process.
-                }
-            }
-        }
-
+        public PackageSpec Package => _package;
 
         public string PackageSpec {
             get {
-                return GetPackageSpec(false, false);
-            }
-        }
-
-        public string GetPackageSpec(bool includeDescription, bool useUpgradeVersion) {
-            var descr = string.Empty;
-            if (includeDescription && !string.IsNullOrEmpty(_description)) {
-                descr = ":" + Uri.EscapeDataString(_description);
-            }
-
-            var ver = useUpgradeVersion ? _upgradeVersion.GetValueOrDefault() : _version;
-            if (ver.IsEmpty) {
-                return _name + descr;
-            } else {
-                return string.Format("{0}=={1}{2}", _name, ver, descr);
-            }
-        }
-
-        public string Name {
-            get { return _name; }
-        }
-
-        public Pep440Version Version {
-            get { return _version; }
-        }
-
-        public string DisplayName {
-            get {
-                if (_version.IsEmpty) {
-                    return _name;
-                } else {
-                    return string.Format("{0} ({1})", _name, _version);
+                if (_package.IsValid) {
+                    if (_package.ExactVersion.IsEmpty) {
+                        return _package.Name;
+                    }
+                    return "{0}=={1}".FormatInvariant(_package.Name, _package.ExactVersion);
                 }
+                return "(unknown)";
             }
         }
 
-        private async void TriggerDescriptionUpdate() {
-            try {
-                await _provider.UpdatePackageInfoAsync(this, CancellationToken.None);
-            } catch (Exception ex) {
-                if (ex.IsCriticalException()) {
-                    throw;
-                }
-                Description = string.Empty;
-            }
-        }
+        public string Name => _package.Name;
+
+        public PackageVersion Version => _package.ExactVersion;
+
+        public string DisplayName => Version.IsEmpty ? Name : "{0} ({1})".FormatInvariant(Name, Version);
 
         public string Description {
             get {
-                if (_description == null) {
-                    _description = Resources.LoadingDescription;
-                    TriggerDescriptionUpdate();
+                if (_package.Description == null) {
+                    TriggerUpdate();
+                    return Resources.LoadingDescription;
+                } else if (string.IsNullOrEmpty(_package.Description)) {
+                    return Resources.NoDescription;
                 }
-                return _description;
-            }
-            set {
-                if (_description != value) {
-                    _description = value;
-                    OnPropertyChanged();
-                }
+                return _package.Description;
             }
         }
 
-        public Pep440Version UpgradeVersion {
+        public PackageVersion UpgradeVersion {
             get {
+                if (!_isInstalled) {
+                    // Package is not installed, so the latest version is always
+                    // shown.
+                    return PackageVersion.Empty;
+                }
+
                 if (!_upgradeVersion.HasValue) {
                     // Kick off the Get, but return empty. We will raise an
                     // event when the get completes.
-                    SetUpgradeVersionAsync();
+                    TriggerUpdate();
                 }
                 return _upgradeVersion.GetValueOrDefault();
-            }
-            set {
-                if (!_upgradeVersion.HasValue || !_upgradeVersion.GetValueOrDefault().Equals(value)) {
-                    _upgradeVersion = value;
-                    OnPropertyChanged();
-                }
             }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
-        private void OnPropertyChanged([CallerMemberName] string propertyName = null) {
-            var evt = PropertyChanged;
-            if (evt != null) {
-                evt(this, new PropertyChangedEventArgs(propertyName));
-            }
+        private void OnPropertyChanged(string propertyName) {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
-
 }

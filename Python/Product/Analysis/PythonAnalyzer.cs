@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Analysis {
         internal readonly IModuleContext _defaultContext;
         private readonly PythonLanguageVersion _langVersion;
         internal readonly AnalysisUnit _evalUnit;   // a unit used for evaluating when we don't otherwise have a unit available
-        private readonly HashSet<string> _analysisDirs = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly List<string> _searchPaths = new List<string>();
         private readonly Dictionary<string, List<SpecializationInfo>> _specializationInfo = new Dictionary<string, List<SpecializationInfo>>();  // delayed specialization information, for modules not yet loaded...
         private AnalysisLimits _limits;
         private static object _nullKey = new object();
@@ -113,12 +113,6 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public static PythonAnalyzer Create(IPythonInterpreterFactory factory, IPythonInterpreter interpreter = null) {
             return new PythonAnalyzer(factory, interpreter, null);
-        }
-
-        [Obsolete("Use CreateAsync instead")]
-        public PythonAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreter interpreter = null)
-            : this(factory, interpreter, null) {
-            ReloadModulesAsync().WaitAndUnwrapExceptions();
         }
 
         internal PythonAnalyzer(IPythonInterpreterFactory factory, IPythonInterpreter pythonInterpreter, string builtinName) {
@@ -215,7 +209,10 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             ClassInfos = (IKnownClasses)Types;
-            _noneInst = (ConstantInfo)GetCached(_nullKey, () => new ConstantInfo(ClassInfos[BuiltinTypeId.NoneType], (object)null));
+            _noneInst = (ConstantInfo)GetCached(
+                _nullKey,
+                () => new ConstantInfo(ClassInfos[BuiltinTypeId.NoneType], null, PythonMemberType.Constant)
+            );
 
             DoNotUnionInMro = AnalysisSet.Create(new AnalysisValue[] {
                 ClassInfos[BuiltinTypeId.Object],
@@ -707,8 +704,8 @@ namespace Microsoft.PythonTools.Analysis {
         /// </summary>
         public IEnumerable<string> AnalysisDirectories {
             get {
-                lock (_analysisDirs) {
-                    return _analysisDirs.ToArray();
+                lock (_searchPaths) {
+                    return _searchPaths.ToArray();
                 }
             }
         }
@@ -906,12 +903,12 @@ namespace Microsoft.PythonTools.Analysis {
 
         internal IAnalysisSet GetConstant(IPythonConstant value) {
             object key = value ?? _nullKey;
-            return GetCached(key, () => new ConstantInfo(value, this)) ?? _noneInst;
+            return GetCached(key, () => ConstantInfo.Create(this, value) ?? _noneInst) ?? _noneInst;
         }
 
         internal IAnalysisSet GetConstant(object value) {
             object key = value ?? _nullKey;
-            return GetCached(key, () => new ConstantInfo(value, this)) ?? _noneInst;
+            return GetCached(key, () => ConstantInfo.Create(this, value) ?? _noneInst) ?? _noneInst;
         }
 
         private static void Update<K, V>(IDictionary<K, V> dict, IDictionary<K, V> newValues) {
@@ -924,6 +921,12 @@ namespace Microsoft.PythonTools.Analysis {
             if (value == null) {
                 return Types[BuiltinTypeId.NoneType];
             }
+
+            var astConst = value as IPythonConstant;
+            if (astConst != null) {
+                return Types[astConst.Type?.TypeId ?? BuiltinTypeId.Object] ?? Types[BuiltinTypeId.Object];
+            }
+
             switch (Type.GetTypeCode(value.GetType())) {
                 case TypeCode.Boolean: return Types[BuiltinTypeId.Bool];
                 case TypeCode.Double: return Types[BuiltinTypeId.Float];
@@ -942,7 +945,8 @@ namespace Microsoft.PythonTools.Analysis {
                     break;
             }
 
-            throw new InvalidOperationException();
+            Debug.Fail("unsupported constant type <{0}> value '{1}'".FormatInvariant(value.GetType().FullName, value));
+            return Types[BuiltinTypeId.Object];
         }
 
         internal BuiltinClassInfo MakeGenericType(IAdvancedPythonType clrType, params IPythonType[] clrIndexType) {
@@ -983,38 +987,22 @@ namespace Microsoft.PythonTools.Analysis {
             _reportQueueInterval = interval;
         }
 
-        /// <summary>
-        /// Adds a directory to the list of directories being analyzed.
-        /// 
-        /// This method is thread safe.
-        /// </summary>
-        public void AddAnalysisDirectory(string dir) {
-            var dirsChanged = AnalysisDirectoriesChanged;
-            bool added;
-            lock (_analysisDirs) {
-                added = _analysisDirs.Add(dir);
-            }
-            if (added && dirsChanged != null) {
-                dirsChanged(this, EventArgs.Empty);
+        public IReadOnlyList<string> GetSearchPaths() {
+            lock (_searchPaths) {
+                return _searchPaths.ToArray();
             }
         }
 
         /// <summary>
-        /// Removes a directory from the list of directories being analyzed.
-        /// 
-        /// This method is thread safe.
-        /// 
-        /// New in 1.1.
+        /// Sets the search paths for this analyzer, invoking callbacks for any
+        /// path added or removed.
         /// </summary>
-        public void RemoveAnalysisDirectory(string dir) {
-            var dirsChanged = AnalysisDirectoriesChanged;
-            bool removed;
-            lock (_analysisDirs) {
-                removed = _analysisDirs.Remove(dir);
+        public void SetSearchPaths(IEnumerable<string> paths) {
+            lock (_searchPaths) {
+                _searchPaths.Clear();
+                _searchPaths.AddRange(paths);
             }
-            if (removed && dirsChanged != null) {
-                dirsChanged(this, EventArgs.Empty);
-            }
+            SearchPathsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         /// <summary>
@@ -1024,7 +1012,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// 
         /// New in 1.1.
         /// </summary>
-        public event EventHandler AnalysisDirectoriesChanged;
+        public event EventHandler SearchPathsChanged;
 
         #region IDisposable Members
 

@@ -78,22 +78,28 @@ namespace TestAdapterTests {
 
         // {0} is the test results directory
         // {1} is one or more formatted _runSettingProject lines
+        // {2} is 'true' or 'false' depending on whether the tests should be run
+        // {3} is 'true' or 'false' depending on whether the console should be shown
         private const string _runSettings = @"<?xml version=""1.0""?><RunSettings><DataCollectionRunSettings><DataCollectors /></DataCollectionRunSettings><RunConfiguration><ResultsDirectory>{0}</ResultsDirectory><TargetPlatform>X86</TargetPlatform><TargetFrameworkVersion>Framework45</TargetFrameworkVersion></RunConfiguration><Python><TestCases>
 {1}
-</TestCases></Python></RunSettings>";
+</TestCases>
+<DryRun value=""{2}"" /><ShowConsole value=""{3}"" /></Python></RunSettings>";
 
         // {0} is the project home directory, ending with a backslash
         // {1} is the project filename, including extension
         // {2} is the interpreter path
         // {3} is one or more formatted _runSettingTest lines
         // {4} is one or more formatten _runSettingEnvironment lines
-        private const string _runSettingProject = @"<Project path=""{0}{1}"" home=""{0}"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""{0}"" interpreter=""{2}"" pathEnv=""PYTHONPATH""><Environment>{4}</Environment><SearchPaths><Search value=""{0}"" /></SearchPaths>
+        private const string _runSettingProject = @"<Project path=""{0}{1}"" home=""{0}"" nativeDebugging="""" djangoSettingsModule="""" workingDir=""{0}"" interpreter=""{2}"" pathEnv=""PYTHONPATH""><Environment>{4}</Environment><SearchPaths>{5}</SearchPaths>
 {3}
 </Project>";
 
         // {0} is the variable name
         // {1} is the variable value
         private const string _runSettingEnvironment = @"<Variable name=""{0}"" value=""{1}"" />";
+
+        // {0} is the search path
+        private const string _runSettingSearch = @"<Search value=""{0}"" />";
 
         // {0} is the full path to the file
         // {1} is the class name
@@ -116,14 +122,38 @@ namespace TestAdapterTests {
             doc.Load(projectFile);
             var ns = new XmlNamespaceManager(doc.NameTable);
             ns.AddNamespace("m", "http://schemas.microsoft.com/developer/msbuild/2003");
-            var env = doc.SelectSingleNode("/m:Project/m:PropertyGroup/m:Environment", ns)?.FirstChild.Value;
+            var env = doc.SelectSingleNode("/m:Project/m:PropertyGroup/m:Environment", ns)?.FirstChild?.Value;
             if (env == null) {
                 return Enumerable.Empty<string>();
             }
             return PathUtils.ParseEnvironment(env).Select(kv => string.Format(_runSettingEnvironment, kv.Key, kv.Value));
         }
 
-        private static MockRunContext CreateRunContext(IEnumerable<TestInfo> expected, string interpreter = null, string testResults = null) {
+        private static IEnumerable<string> GetSearchPaths(string projectFile) {
+            var doc = new XmlDocument();
+            doc.Load(projectFile);
+            var ns = new XmlNamespaceManager(doc.NameTable);
+            ns.AddNamespace("m", "http://schemas.microsoft.com/developer/msbuild/2003");
+            var searchPaths = doc.SelectSingleNode("/m:Project/m:PropertyGroup/m:SearchPath", ns)?.FirstChild?.Value;
+
+            var projectDir = PathUtils.GetParent(projectFile);
+            var elements = new List<string> { _runSettingSearch.FormatInvariant(projectDir) };
+            if (searchPaths == null) {
+                return elements;
+            }
+            elements.AddRange(searchPaths.Split(';').Select(p =>
+                _runSettingSearch.FormatInvariant(PathUtils.GetAbsoluteDirectoryPath(projectDir, p))
+            ));
+            return elements;
+        }
+
+        private static MockRunContext CreateRunContext(
+            IEnumerable<TestInfo> expected,
+            string interpreter = null,
+            string testResults = null,
+            bool dryRun = false,
+            bool showConsole = false
+        ) {
             var projects = new List<string>();
 
             foreach (var proj in expected.GroupBy(e => e.ProjectFilePath)) {
@@ -142,13 +172,20 @@ namespace TestAdapterTests {
                         e.SourceCodeLineNumber,
                         8
                     ))),
-                    string.Join(Environment.NewLine, GetEnvironmentVariables(proj.Key))
+                    string.Join(Environment.NewLine, GetEnvironmentVariables(proj.Key)),
+                    string.Join(Environment.NewLine, GetSearchPaths(proj.Key))
                 ));
+            }
+
+            foreach (var p in projects) {
+                Console.WriteLine(p);
             }
 
             return new MockRunContext(new MockRunSettings(string.Format(_runSettings,
                 testResults ?? TestData.GetTempPath(),
-                string.Join(Environment.NewLine, projects)
+                string.Join(Environment.NewLine, projects),
+                dryRun ? "true" : "false",
+                showConsole ? "true" : "false"
             )));
         }
 
@@ -237,6 +274,8 @@ namespace TestAdapterTests {
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
         public void TestMultiprocessing() {
+            PythonPaths.Python27_x64.AssertInstalled();
+
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
             var expectedTests = TestInfo.TestAdapterMultiprocessingTests;
@@ -256,7 +295,83 @@ namespace TestAdapterTests {
 
         [TestMethod, Priority(1)]
         [TestCategory("10s")]
+        public void TestInheritance() {
+            // TODO: Figure out the proper fix to make this test pass.
+            // There's a confusion between source file path and class file path.
+            // Note that the equivalent manual test in IDE works fine.
+            PythonPaths.Python27_x64.AssertInstalled();
+            PythonPaths.Python33_x64.AssertInstalled();
+
+            var executor = new TestExecutor();
+            var recorder = new MockTestExecutionRecorder();
+            var expectedTests = TestInfo.TestAdapterBInheritanceTests;
+            var runContext = CreateRunContext(expectedTests);
+            var testCases = expectedTests.Select(tr => tr.TestCase);
+
+            executor.RunTests(testCases, runContext, recorder);
+            PrintTestResults(recorder);
+
+            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
+            foreach (var expectedResult in expectedTests) {
+                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
+                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
+                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
+        public void TestLoadError27() {
+            PythonPaths.Python27_x64.AssertInstalled();
+
+            TestLoadError("LoadErrorTest27");
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
+        public void TestLoadError34() {
+            PythonPaths.Python34_x64.AssertInstalled();
+
+            TestLoadError("LoadErrorTest34");
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
+        public void TestLoadError35() {
+            // Handling of import error when loading a test changed in Python 3.5
+            // so it's important to test 3.4 and 3.5
+            PythonPaths.Python35_x64.AssertInstalled();
+
+            TestLoadError("LoadErrorTest35");
+        }
+
+        private static void TestLoadError(string projectName) {
+            // A load error is when unittest module fails to load the test (prior to running it)
+            // For example, if the file where the test is defined has an unhandled ImportError.
+            // We check that this only causes the tests that can't be loaded to fail,
+            // all other tests in the test run which can be loaded successfully will be run.
+            var executor = new TestExecutor();
+            var recorder = new MockTestExecutionRecorder();
+            var expectedTests = TestInfo.GetTestAdapterLoadErrorTests(projectName);
+            var runContext = CreateRunContext(expectedTests);
+            var testCases = expectedTests.Select(tr => tr.TestCase);
+
+            executor.RunTests(testCases, runContext, recorder);
+            PrintTestResults(recorder);
+
+            var resultNames = recorder.Results.Select(tr => tr.TestCase.FullyQualifiedName).ToSet();
+            foreach (var expectedResult in expectedTests) {
+                AssertUtil.ContainsAtLeast(resultNames, expectedResult.TestCase.FullyQualifiedName);
+                var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
+                Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
+            }
+        }
+
+        [TestMethod, Priority(1)]
+        [TestCategory("10s")]
         public void TestEnvironment() {
+            PythonPaths.Python27_x64.AssertInstalled();
+
             var executor = new TestExecutor();
             var recorder = new MockTestExecutionRecorder();
             var expectedTests = new[] { TestInfo.EnvironmentTestSuccess };
@@ -294,6 +409,44 @@ namespace TestAdapterTests {
                 var actualResult = recorder.Results.SingleOrDefault(tr => tr.TestCase.FullyQualifiedName == expectedResult.TestCase.FullyQualifiedName);
                 Assert.AreEqual(expectedResult.Outcome, actualResult.Outcome, expectedResult.TestCase.FullyQualifiedName + " had incorrect result");
             }
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestPassOnCommandLine() {
+            PythonPaths.Python27.AssertInstalled();
+
+            var executor = new TestExecutor();
+            var recorder = new MockTestExecutionRecorder();
+            var expectedTests = TestInfo.TestAdapterATests;
+            var runContext = CreateRunContext(expectedTests, dryRun: true);
+            var testCases = expectedTests.Select(tr => tr.TestCase);
+
+            executor.RunTests(testCases, runContext, recorder);
+            PrintTestResults(recorder);
+
+            AssertUtil.ArrayEquals(
+                expectedTests.Select(t => t.TestCase.FullyQualifiedName).ToList(),
+                recorder.Results.Select(t => t.TestCase.FullyQualifiedName).ToList()
+            );
+        }
+
+        [TestMethod, Priority(0)]
+        public void TestPassInTestList() {
+            PythonPaths.Python27.AssertInstalled();
+
+            var executor = new TestExecutor();
+            var recorder = new MockTestExecutionRecorder();
+            var expectedTests = Enumerable.Repeat(TestInfo.TestAdapterATests, 10).SelectMany();
+            var runContext = CreateRunContext(expectedTests, dryRun: true);
+            var testCases = expectedTests.Select(tr => tr.TestCase);
+
+            executor.RunTests(testCases, runContext, recorder);
+            PrintTestResults(recorder);
+
+            AssertUtil.ArrayEquals(
+                expectedTests.Select(t => t.TestCase.FullyQualifiedName).ToList(),
+                recorder.Results.Select(t => t.TestCase.FullyQualifiedName).ToList()
+            );
         }
 
         private static void PrintTestResults(MockTestExecutionRecorder recorder) {

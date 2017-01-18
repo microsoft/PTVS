@@ -34,10 +34,9 @@
     <AssemblyName>Microsoft.PythonTools</AssemblyName>
     <ProjectGuid>{FA7BE5F5-E04F-4613-B7AC-70CE10D1BB68}</ProjectGuid>
     <UseVSSDK>true</UseVSSDK>
-    <CreateVsixContainer>true</CreateVsixContainer>
-    <StartAction>Program</StartAction>
-    <StartProgram>$(DevEnvDir)devenv.exe</StartProgram>
-    <StartArguments>/rootSuffix Exp /Log</StartArguments>
+    <CreateVsixContainer>false</CreateVsixContainer>
+    <CopyVsixManifestToOutput>false</CopyVsixManifestToOutput>
+    <DeployExtension>false</DeployExtension>
     <DefineConstants>$(DefineConstants);$(SignedSym);SHAREDPROJECT_OLESERVICEPROVIDER</DefineConstants>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
@@ -106,13 +105,9 @@
       <Name>Microsoft.PythonTools.VSCommon</Name>
       <IncludeInVSIX>True</IncludeInVSIX>
     </ProjectReference>
-    <ProjectReference2 Include="..\ImportWizard\ImportWizard.csproj" />
-    <ProjectReference2 Include="..\ProjectWizards\ProjectWizards.csproj" />
-    <ProjectReference2 Include="..\TestAdapter\TestAdapter.csproj" />
-    <ProjectReference2 Include="..\TestAdapter.Analysis\TestAdapter.Analysis.csproj" />
-    <ProjectReference2 Include="..\XamlDesignerSupport\XamlDesignerSupport.csproj" />
     <Reference Include="Microsoft.PythonTools.InteractiveWindow" />
     <Reference Include="Microsoft.PythonTools.VsInteractiveWindow" />
+    <Reference Include="Microsoft.VisualStudio.Telemetry" />
     <Reference Include="Microsoft.VisualStudio.Threading, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
   </ItemGroup>
   <ItemGroup>
@@ -161,7 +156,6 @@
     </Reference>
     <Reference Include="Microsoft.VisualStudio.Shell.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Shell.Design, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop" />
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.12.0, Version=12.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>False</EmbedInteropTypes>
@@ -178,7 +172,6 @@
     <Reference Include="Microsoft.VisualStudio.Text.UI, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Text.UI.Wpf, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop" />
-    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0" />
     <Reference Include="Microsoft.VisualStudio.TextManager.Interop.8.0, Version=8.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
@@ -188,7 +181,7 @@
     <Reference Include="Microsoft.VisualStudio.WizardFramework, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>$(DevEnvDir)\Microsoft.VisualStudio.WizardFramework.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=6.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+    <Reference Include="Newtonsoft.Json">
       <HintPath>$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll</HintPath>
       <Private>True</Private>
       <IncludeInVSIX>True</IncludeInVSIX>
@@ -236,7 +229,6 @@
     <Reference Include="Microsoft.VisualStudio.Shell.Interop.14.0.DesignTime, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </Reference>
-    <Reference Include="Microsoft.VisualStudio.Shell.Immutable.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Utilities, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="Microsoft.VisualStudio.Settings.$(VSTarget), Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=x86">
       <Private>false</Private>
@@ -248,6 +240,12 @@
         <Reference Include="Microsoft.VisualStudio.Shell.Framework, Version=$(VSTarget).0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
       </ItemGroup>
     </When>
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="Microsoft.VisualStudio.Shell.Immutable.10.0, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+        <Reference Include="Microsoft.VisualStudio.Shell.Immutable.11.0, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" Condition="'$(VSTarget)' != '10.0'" />
+      </ItemGroup>
+    </Otherwise>
   </Choose>
   <ItemGroup>
     <Compile Include="PythonTools\CodeCoverage\CoverageExporter.cs" />
@@ -257,13 +255,18 @@
     <Compile Include="PythonTools\CodeCoverage\CoverageMapper.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoveragePyConverter.cs" />
     <Compile Include="PythonTools\CodeCoverage\CoverageScope.cs" />
+    <Compile Include="PythonTools\Commands\DiagnosticsWindow.xaml.cs">
+      <DependentUpon>DiagnosticsWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="PythonTools\Commands\ImportCoverageCommand.cs" />
+    <Compile Include="PythonTools\Commands\OpenWebUrlCommand.cs" />
     <Compile Include="PythonTools\Debugger\DebugLaunchHelper.cs" />
     <Compile Include="PythonTools\Intellisense\AbnormalAnalysisExitEventArgs.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisLocation.cs" />
     <Compile Include="PythonTools\Intellisense\AnalysisVariable.cs" />
     <Compile Include="PythonTools\Intellisense\BufferParser.cs" />
     <Compile Include="PythonTools\Intellisense\CodeCellAnalysis.cs" />
+    <Compile Include="PythonTools\Intellisense\ExpansionCompletionSource.cs" />
     <Compile Include="PythonTools\Intellisense\PreviewChangesService.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionResult.cs" />
     <Compile Include="PythonTools\Intellisense\ExtractMethodSuggestedActionSourceProvider.cs" />
@@ -277,6 +280,9 @@
     <Compile Include="PythonTools\Intellisense\VersionedResponse.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContext.cs" />
     <Compile Include="PythonTools\Editor\BraceCompletion\BraceCompletionContextProvider.cs" />
+    <Compile Include="PythonTools\Project\DeprecatedReferenceNode.cs" />
+    <Compile Include="PythonTools\SearchPathManager.cs" />
+    <Compile Include="PythonTools\Project\VsPackageManagerUI.cs" />
     <Compile Include="PythonTools\ProvideBraceCompletionAttribute.cs" />
     <Compile Include="PythonTools\Options\PythonInteractiveOptionsControl.cs">
       <SubType>UserControl</SubType>
@@ -310,7 +316,6 @@
     <Compile Include="PythonTools\Repl\SelectableReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\ZoomableInlineAdornment.cs" />
     <Compile Include="PythonTools\SurveyNewsService.cs" />
-    <Compile Include="PythonTools\Options\GlobalInterpreterOptions.cs" />
     <Compile Include="PythonTools\Options\GeneralOptions.cs" />
     <Compile Include="PythonTools\Options\DebuggerOptions.cs" />
     <Compile Include="PythonTools\Options\AdvancedEditorOptions.cs" />
@@ -324,9 +329,6 @@
     <Compile Include="PythonTools\Intellisense\TaskProvider.cs" />
     <Compile Include="PythonTools\Intellisense\UnresolvedImportSquiggleProvider.cs" />
     <Compile Include="PythonTools\Logging\InMemoryLogger.cs" />
-    <Compile Include="PythonTools\Logging\IPythonToolsLogger.cs" />
-    <Compile Include="PythonTools\Logging\PackageInstallDetails.cs" />
-    <Compile Include="PythonTools\Logging\PythonLogEvent.cs" />
     <Compile Include="PythonTools\Logging\PythonToolsLogger.cs" />
     <Compile Include="PythonTools\Intellisense\ExpansionClient.cs" />
     <Compile Include="PythonTools\Options\IPythonToolsOptionsService.cs" />
@@ -372,7 +374,6 @@
     </Compile>
     <Compile Include="PythonTools\Project\AddInterpreterView.cs" />
     <Compile Include="PythonTools\Project\CustomCommand.cs" />
-    <Compile Include="PythonTools\Project\EasyInstall.cs" />
     <Compile Include="PythonTools\Project\IAsyncCommand.cs" />
     <Compile Include="PythonTools\Project\ImportWizard\ProjectCustomizations.cs" />
     <Compile Include="PythonTools\Project\ImportWizard\SaveProjectPage.xaml.cs">
@@ -390,7 +391,6 @@
     </Compile>
     <Compile Include="PythonTools\Commands\ImportWizardCommand.cs" />
     <Compile Include="PythonTools\Project\LoadedProjectInterpreterFactoryProvider.cs" />
-    <Compile Include="PythonTools\Project\Pip.cs" />
     <Compile Include="PythonTools\Project\PythonProjectImageName.cs" />
     <Compile Include="PythonTools\Project\VirtualEnv.cs" />
     <Compile Include="PythonTools\PythonAnalysisClassifier.cs" />
@@ -398,6 +398,7 @@
     <Compile Include="PythonTools\PythonInterpreterFactoryExtensions.cs" />
     <Compile Include="PythonTools\PeekableEnumerator.cs" />
     <Compile Include="PythonTools\Repl\InteractiveWindowEvents.cs" />
+    <Compile Include="PythonTools\Logging\VsTelemetryLogger.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebPropertyPageControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -415,10 +416,6 @@
     <Compile Include="PythonTools\WebProject\PythonWebProject.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebProjectConfig.cs" />
     <Compile Include="PythonTools\WebProject\PythonWebProjectFactory.cs" />
-    <Compile Include="PythonTools\Project\InstallPythonPackage.xaml.cs">
-      <DependentUpon>InstallPythonPackage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="PythonTools\Project\InstallPythonPackageView.cs" />
     <Compile Include="PythonTools\Project\PythonInterpreterView.cs" />
     <Compile Include="PythonTools\Project\InterpretersContainerNode.cs" />
     <Compile Include="PythonTools\Project\InterpretersContainerNodeProperties.cs" />
@@ -429,12 +426,6 @@
     <Compile Include="PythonTools\Commands\OpenDebugReplCommand.cs" />
     <Compile Include="PythonTools\Commands\RemoveImportsCommand.cs" />
     <Compile Include="PythonTools\Commands\DiagnosticsCommand.cs" />
-    <Compile Include="PythonTools\Commands\DiagnosticsForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="PythonTools\Commands\DiagnosticsForm.Designer.cs">
-      <DependentUpon>DiagnosticsForm.cs</DependentUpon>
-    </Compile>
     <Compile Include="PythonTools\Commands\ExecuteInReplCommand.cs" />
     <Compile Include="PythonTools\Commands\FillParagraphCommand.cs" />
     <Compile Include="PythonTools\Commands\OpenReplCommand.cs" />
@@ -487,9 +478,7 @@
     </Compile>
     <Compile Include="PythonTools\Options\PythonInteractiveOptions.cs" />
     <Compile Include="PythonTools\Project\PythonAssemblyReferenceNode.cs" />
-    <Compile Include="PythonTools\Project\Automation\OAWebPiReference.cs" />
-    <Compile Include="PythonTools\Project\Automation\OAPythonExtensionReference.cs" />
-    <Compile Include="PythonTools\Project\PythonExtensionReferenceNode.cs" />
+    <Compile Include="PythonTools\Project\Automation\OADeprecatedReference.cs" />
     <Compile Include="PythonTools\Project\PythonEncodingDetector.cs" />
     <Compile Include="PythonTools\Project\PythonProjectReferenceNode.cs" />
     <Compile Include="PythonTools\Project\PythonReferenceContainerNode.cs" />
@@ -558,7 +547,6 @@
     <Compile Include="PythonTools\Intellisense\MonitoredBufferResult.cs" />
     <Compile Include="PythonTools\ISnapshotTextReader.cs" />
     <Compile Include="PythonTools\PythonAutomation.cs" />
-    <Compile Include="PythonTools\Options\InterpreterOptions.cs" />
     <Compile Include="PythonTools\Options\IPythonOptions.cs" />
     <Compile Include="PythonTools\Options\NewInterpreter.cs">
       <SubType>Form</SubType>
@@ -566,7 +554,6 @@
     <Compile Include="PythonTools\Options\NewInterpreter.Designer.cs">
       <DependentUpon>NewInterpreter.cs</DependentUpon>
     </Compile>
-    <Compile Include="PythonTools\Project\WebPiReferenceNode.cs" />
     <Compile Include="PythonTools\Project\BaseSearchPathNode.cs" />
     <Compile Include="PythonTools\Project\CommonSearchPathContainerNodeProperties.cs" />
     <Compile Include="PythonTools\Project\CommonSearchPathContainerNode.cs" />
@@ -706,25 +693,6 @@
     <None Include="Theme\Microsoft.PythonTools.theme.v15.0.pkgdef" />
     <None Include="Theme\dark.vstheme" />
     <None Include="Theme\make_theme_pkgdef.py" />
-    <Content Include="$(PackagesPath)\Newtonsoft.Json\lib\net45\Newtonsoft.Json.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="$(BuildRoot)\Python\References\Dev$(VSTarget)\Microsoft.PythonTools.InteractiveWindow.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="$(BuildRoot)\Python\References\Dev$(VSTarget)\Microsoft.PythonTools.VsInteractiveWindow.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <VSIXSubPath>.</VSIXSubPath>
-    </Content>
-    <Content Include="Microsoft.PythonTools.VsInteractiveWindow.pkgdef">
-      <IncludeInVSIX>true</IncludeInVSIX>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="NoInterpreters.mht">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
@@ -869,7 +837,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Python Tools for VS License.rtf">
+    <Content Include="License_en-US.rtf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
@@ -891,9 +859,6 @@
       <ResourceName>1000</ResourceName>
       <SubType>Designer</SubType>
     </VSCTCompile>
-    <None Include="source.extension.vsixmanifest">
-      <SubType>Designer</SubType>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="visualstudio_py_launcher.py">
@@ -904,9 +869,6 @@
     <Resource Include="..\Icons\Dev$(VSTarget)\PythonProjectBig.ico" />
     <EmbeddedResource Include="Legacy\ObsoleteResources.resx">
       <ManifestResourceName>Microsoft.VisualStudioTools.SharedProject</ManifestResourceName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="PythonTools\Commands\DiagnosticsForm.resx">
-      <DependentUpon>DiagnosticsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="PythonTools\Options\NewInterpreter.resx">
       <DependentUpon>NewInterpreter.cs</DependentUpon>
@@ -966,6 +928,10 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="PythonTools\Commands\DiagnosticsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="PythonTools\Intellisense\CompletionControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -1006,10 +972,6 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="PythonTools\Project\ImportWizard\ImportWizardDictionary.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="PythonTools\Project\InstallPythonPackage.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -1064,4 +1026,5 @@
   <Target Name="_DeleteAfterCreatePkgDef" AfterTargets="GeneratePkgDef">
     <Delete Files="@(_CopiedForCreatePkgdef)" />
   </Target>-->
+  <!--<Target Name="DetokenizeVsixManifestFile" />-->
 </Project>

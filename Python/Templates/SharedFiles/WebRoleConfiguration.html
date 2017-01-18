@@ -27,40 +27,28 @@ permissions and limitations under the License.
     <h1 class="top">Configuring Deployment</h1>
 
     <p>
-        While the included PowerShell scripts may be edited freely, it is
-        possible to set most configuration options through your Python project.
+        Some PowerShell scripts have been added to your project to configure and
+        launch your worker. These may be edited freely to customize your
+        deployment.
     </p>
 
     <p>
-        To specify the version of Python your web should run with, make it
-        the active environment for your project. (Ensure that you have a WebPI
-        reference or startup task to install this version on the instance - see
-        the documentation in <code>ConfigureCloudService.ps1</code> for more
-        details.)
-    </p>
-
-    <p>
-        If your version of Python cannot be detected using the CPython registry
-        keys after it has been installed, you can add the
-        <code>DeployedPythonInterpreterPath</code> property to your Python
-        project by editing the .pyproj file. This path will take precedence over
-        the active environment.
+        To change the version of Python your web role should run with, set the
+        <code>PYTHON</code> property in the <code>ServiceDefinition.csdef</code>
+        file in your cloud project. See <code>ConfigureCloudService.ps1</code>
+        for more details.
     </p>
 
     <p>
         To install packages using pip, update the <code>requirements.txt</code>
-        file in the root directory of your project.
+        file in the root directory of your project. The PowerShell script will
+        install packages listed in it on deployment.
     </p>
 
     <p>
         To set <code>PYTHONPATH</code> (or equivalent) before running the
-        web, add the necessary Search Paths to your project.
-    </p>
-
-    <p>
-        To specify your main handler script, make it the startup file in your
-        project. Alternatively, you can set the full importable name of your
-        WSGI app in Project Properties\Web\WSGI Handler.
+        web service, add the environment variable to your
+        <code>web.config</code> file.
     </p>
 
     <h1>Troubleshooting Deployment</h1>
@@ -76,17 +64,18 @@ permissions and limitations under the License.
             </ul>
         </li>
         <li>Your Cloud project references those files from the service definition.</li>
-        <li><p>Your Python project includes either:</p>
-        <ul>
-            <li>a <code>requirements.txt</code> file listing all dependencies, OR</li>
-            <li>a virtual environment containing all dependencies.</li>
-        </ul>
-        </li>
+        <li>Your Python project includes a <code>requirements.txt</code> file listing all dependencies.</li>
         <li>
             <p>Enable Remote Desktop on your Cloud Service and investigate the log files.</p>
             <p>Logs for ConfigureCloudService.ps1 are stored in the following path on the machine instance:</p>
             <ul>
                 <li><code>C:\Resources\Directory\%RoleId%.DiagnosticStore\LogFiles</code></li>
+            </ul>
+            <p/>
+            <p>Logs for your web service can be specified in your <code>web.config</code> file:</p>
+            <ul>
+                <li>The <code>WSGI_LOG</code> app setting controls logs for FastCGI-based sites</li>
+                <li>The <code>stdoutLogFile</code> attribute controls logs for HTTP Platform-based sites</li>
             </ul>
         </li>
         <li>

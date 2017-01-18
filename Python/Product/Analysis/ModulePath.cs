@@ -275,17 +275,24 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns a sequence of ModulePaths for all modules importable from
         /// the specified library.
         /// </summary>
+        /// <remarks>
+        /// Where possible, callers should use the methods from
+        /// <see cref="PythonTypeDatabase"/> instead, as those are more accurate
+        /// in the presence of non-standard Python installations. This function
+        /// makes many assumptions about the install layout and may miss some
+        /// modules.
+        /// </remarks>
         public static IEnumerable<ModulePath> GetModulesInLib(
-            string interpreterPath,
-            string libraryPath,
+            string prefixPath,
+            string libraryPath = null,
             string sitePath = null,
             bool requireInitPyFiles = true
         ) {
-            if (File.Exists(interpreterPath)) {
-                interpreterPath = Path.GetDirectoryName(interpreterPath);
+            if (File.Exists(prefixPath)) {
+                prefixPath = Path.GetDirectoryName(prefixPath);
             }
             if (!Directory.Exists(libraryPath)) {
-                return Enumerable.Empty<ModulePath>();
+                libraryPath = Path.Combine(prefixPath, "Lib");
             }
             if (string.IsNullOrEmpty(sitePath)) {
                 sitePath = Path.Combine(libraryPath, "site-packages");
@@ -313,11 +320,11 @@ namespace Microsoft.PythonTools.Analysis {
             // Get modules in interpreter directory
             IEnumerable<ModulePath> modulesInExePath;
 
-            if (Directory.Exists(interpreterPath)) {
-                modulesInDllsPath = GetModulesInPath(Path.Combine(interpreterPath, "DLLs"), true, false);
-                modulesInExePath = GetModulesInPath(interpreterPath, true, false);
-                excludedPthDirs.Add(interpreterPath);
-                excludedPthDirs.Add(Path.Combine(interpreterPath, "DLLs"));
+            if (Directory.Exists(prefixPath)) {
+                modulesInDllsPath = GetModulesInPath(Path.Combine(prefixPath, "DLLs"), true, false);
+                modulesInExePath = GetModulesInPath(prefixPath, true, false);
+                excludedPthDirs.Add(prefixPath);
+                excludedPthDirs.Add(Path.Combine(prefixPath, "DLLs"));
             } else {
                 modulesInDllsPath = Enumerable.Empty<ModulePath>();
                 modulesInExePath = Enumerable.Empty<ModulePath>();
@@ -343,12 +350,12 @@ namespace Microsoft.PythonTools.Analysis {
         /// Returns a sequence of ModulePaths for all modules importable by the
         /// provided factory.
         /// </summary>
-        public static IEnumerable<ModulePath> GetModulesInLib(IPythonInterpreterFactory factory) {
+        public static IEnumerable<ModulePath> GetModulesInLib(InterpreterConfiguration config) {
             return GetModulesInLib(
-                factory.Configuration.InterpreterPath,
-                factory.Configuration.LibraryPath,
+                config.PrefixPath,
+                null,   // default library path
                 null,   // default site-packages path
-                PythonVersionRequiresInitPyFiles(factory.Configuration.Version)
+                PythonVersionRequiresInitPyFiles(config.Version)
             );
         }
 
@@ -359,7 +366,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// not raise exceptions.
         /// </summary>
         public static bool IsPythonFile(string path) {
-            return IsPythonFile(path, true, true);
+            return IsPythonFile(path, true, true, true);
         }
 
         /// <summary>
@@ -374,7 +381,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// ensure the module can be imported.
         /// </remarks>
         public static bool IsPythonSourceFile(string path) {
-            return IsPythonFile(path, false, false);
+            return IsPythonFile(path, false, false, false);
         }
         
         /// <summary>
@@ -389,9 +396,12 @@ namespace Microsoft.PythonTools.Analysis {
         /// names.
         /// </param>
         /// <param name="allowCompiled">
-        /// True if pyd, pyc and pyo files should be allowed.
+        /// True if pyd files should be allowed.
         /// </param>
-        public static bool IsPythonFile(string path, bool strict, bool allowCompiled) {
+        /// <param name="allowCache">
+        /// True if pyc and pyo files should be allowed.
+        /// </param>
+        public static bool IsPythonFile(string path, bool strict, bool allowCompiled, bool allowCache) {
             if (string.IsNullOrEmpty(path)) {
                 return false;
             }
@@ -417,8 +427,8 @@ namespace Microsoft.PythonTools.Analysis {
                 var ext = name.Substring(name.LastIndexOf('.') + 1);
                 return "py".Equals(ext, StringComparison.OrdinalIgnoreCase) ||
                     "pyw".Equals(ext, StringComparison.OrdinalIgnoreCase) ||
-                    (allowCompiled && (
-                        "pyd".Equals(ext, StringComparison.OrdinalIgnoreCase) ||
+                    (allowCompiled && "pyd".Equals(ext, StringComparison.OrdinalIgnoreCase)) ||
+                    (allowCache && (
                         "pyc".Equals(ext, StringComparison.OrdinalIgnoreCase) ||
                         "pyo".Equals(ext, StringComparison.OrdinalIgnoreCase)
                     ));
@@ -536,6 +546,87 @@ namespace Microsoft.PythonTools.Analysis {
             }
 
             return new ModulePath(fullName, path, remainder);
+        }
+
+        /// <summary>
+        /// Returns a new ModulePath value determined from the provided search
+        /// path and module name, if the module exists. This function may access
+        /// the filesystem to determine the package name unless
+        /// <paramref name="isPackage"/> and <param name="getModule"/> are
+        /// provided.
+        /// </summary>
+        /// <param name="basePath">
+        /// The path referring to a directory to start searching in.
+        /// </param>
+        /// <param name="moduleName">
+        /// The full name of the module. If the name resolves to a package,
+        /// "__init__" is automatically appended to the resulting name.
+        /// </param>
+        /// <param name="isPackage">
+        /// A predicate that determines whether the specified substring of
+        /// <paramref name="path"/> represents a package. If omitted, the
+        /// default behavior is to check for a file named "__init__.py" in the
+        /// directory passed to the predicate.
+        /// </param>
+        /// <param name="getModule">
+        /// A function that returns valid module paths given a directory and a
+        /// module name. The module name does not include any extension.
+        /// For example, given "C:\Spam" and "eggs", this function may return
+        /// one of "C:\Spam\eggs.py", "C:\Spam\eggs\__init__.py",
+        /// "C:\Spam\eggs_d.cp35-win32.pyd" or some other full path. Returns
+        /// null if there is no module importable by that name.
+        /// </param>
+        /// <exception cref="ArgumentException">
+        /// moduleName is not a valid Python module.
+        /// </exception>
+        public static ModulePath FromBasePathAndName(
+            string basePath,
+            string moduleName,
+            Func<string, bool> isPackage = null,
+            Func<string, string, string> getModule = null
+        ) {
+            var bits = moduleName.Split('.');
+            var lastBit = bits.Last();
+
+            if (isPackage == null) {
+                isPackage = f => Directory.Exists(f) && File.Exists(PathUtils.GetAbsoluteFilePath(f, "__init__.py"));
+            }
+            if (getModule == null) {
+                getModule = (dir, mod) => {
+                    var pack = PathUtils.GetAbsoluteFilePath(PathUtils.GetAbsoluteFilePath(dir, mod), "__init__.py");
+                    if (File.Exists(pack)) {
+                        return pack;
+                    }
+                    var mods = PathUtils.EnumerateFiles(dir, mod + "*", recurse: false).ToArray();
+                    return mods.FirstOrDefault(p => PythonBinaryRegex.IsMatch(PathUtils.GetFileOrDirectoryName(p))) ??
+                        mods.FirstOrDefault(p => PythonFileRegex.IsMatch(PathUtils.GetFileOrDirectoryName(p)));
+                };
+            }
+
+            var path = basePath;
+
+            foreach (var bit in bits.Take(bits.Length - 1)) {
+                if (!PythonPackageRegex.IsMatch(bit)) {
+                    throw new ArgumentException("Not a valid Python package: " + bit);
+                }
+                if (string.IsNullOrEmpty(path)) {
+                    path = bit;
+                } else {
+                    path = PathUtils.GetAbsoluteFilePath(path, bit);
+                }
+                if (!isPackage(path)) {
+                    throw new ArgumentException("Python package not found: " + path);
+                }
+            }
+
+            if (!PythonPackageRegex.IsMatch(lastBit)) {
+                throw new ArgumentException("Not a valid Python module: " + moduleName);
+            }
+            path = getModule(path, lastBit);
+            if (string.IsNullOrEmpty(path)) {
+                throw new ArgumentException("Python module not found: " + moduleName);
+            }
+            return new ModulePath(moduleName, path, basePath);
         }
 
         internal static IEnumerable<string> GetParents(string name, bool includeFullName = true) {

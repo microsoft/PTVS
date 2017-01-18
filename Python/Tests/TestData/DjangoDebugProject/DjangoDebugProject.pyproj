@@ -17,7 +17,7 @@
     <RootNamespace>DjangoDebugProject</RootNamespace>
     <UseIISExpress>false</UseIISExpress>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>Global|PythonCore|2.7|x86</InterpreterId>
+    <InterpreterId>Global|PythonCore|2.7-32</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -37,13 +37,6 @@
     <Compile Include="TestApp\views.py" />
     <Compile Include="TestApp\__init__.py" />
     <Compile Include="manage.py" />
-  </ItemGroup>
-  <ItemGroup>
-    <WebPiReference Include="https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml%3fDjango">
-      <Feed>https://www.microsoft.com/web/webpi/3.0/toolsproductlist.xml</Feed>
-      <ProductId>Django</ProductId>
-      <FriendlyName>Django 1.4</FriendlyName>
-    </WebPiReference>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DjangoDebugProject\" />

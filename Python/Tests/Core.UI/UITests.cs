@@ -101,7 +101,7 @@ namespace PythonToolsUITests {
                 var window = app.SolutionExplorerTreeView;
 
                 // find Program.py, send copy & paste, verify copy of file is there
-                var programPy = window.WaitForItem("Solution 'AbsolutePath' (1 project)", "AbsolutePath", "Program.py");
+                var programPy = window.WaitForChildOfProject(project, "Program.py");
                 Assert.IsNotNull(programPy);
             }
         }
@@ -881,103 +881,6 @@ namespace PythonToolsUITests {
                 }
 
                 Assert.IsNotNull(app.OpenSolutionExplorer().WaitForChildOfProject(project, "Program2.py"));
-            }
-        }
-
-        [TestMethod, Priority(1)]
-        [HostType("VSTestHost"), TestCategory("Installed")]
-        public void ExtensionReference() {
-            using (var app = new PythonVisualStudioApp()) {
-                var project = app.OpenProject(@"TestData\ExtensionReference.sln");
-
-                app.OpenSolutionExplorer();
-                var solutionTree = app.SolutionExplorerTreeView;
-
-                var dbPath = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "Python Tools",
-                    "ReferencesDB",
-#if DEBUG
-                    "Debug",
-#endif
-                    AssemblyVersionInfo.VSVersion
-                );
-                var existingFiles = Directory.GetFiles(dbPath, "spam*");
-
-                // open the solution, add a reference to our spam.pyd Python extension module
-                var folderNode = solutionTree.FindItem(
-                    "Solution 'ExtensionReference' (1 project)",
-                    "ExtensionReference",
-                    Strings.ReferencesNodeName
-                );
-                folderNode.Select();
-                var dialog = new AddReferenceDialog(AutomationElement.FromHandle(app.OpenDialogWithDteExecuteCommand("Project.AddReference")));
-                dialog.ActivateBrowseTab();
-
-                dialog.BrowseFilename = TestData.GetPath(@"TestData\spam.pyd");
-                dialog.ClickOK();
-
-                app.WaitForDialogDismissed();
-
-                // make sure the reference got added
-                var spamItem = solutionTree.WaitForItem(
-                    "Solution 'ExtensionReference' (1 project)",
-                    "ExtensionReference",
-                    Strings.ReferencesNodeName,
-                    "spam.pyd"
-                );
-                Assert.IsNotNull(spamItem);
-
-                // wait for scraping to complete
-                for (int retries = 10;
-                    Directory.GetFiles(dbPath, "spam*").Length == existingFiles.Length && retries > 0;
-                    --retries) {
-                    System.Threading.Thread.Sleep(1000);
-                }
-
-                Assert.AreNotEqual(existingFiles.Length, Directory.GetFiles(dbPath, "spam*").Length, "File was not scraped");
-
-                // now open a file and make sure we get completions against the spam module
-                var item = project.ProjectItems.Item("Program.py");
-                var window = item.Open();
-                window.Activate();
-
-                var doc = app.GetDocument(item.Document.FullName);
-
-                doc.MoveCaret(doc.TextView.TextBuffer.CurrentSnapshot.GetLineFromLineNumber(1).Start);
-
-                Keyboard.Type("spam.");
-
-                using (var sh = doc.WaitForSession<ICompletionSession>()) {
-                    var completion = sh.Session.CompletionSets.First().Completions.Select(x => x.InsertionText).FirstOrDefault(x => x == "system");
-                    Assert.IsNotNull(completion);
-                }
-
-                // now clear the text we just typed
-                for (int i = 0; i < 5; i++) {
-                    Keyboard.Type(Key.Back);
-                }
-
-                // remove the extension
-                app.Dte.Solution.Projects.Item(1).ProjectItems.Item("References").ProjectItems.Item(@"spam.pyd").Remove();
-
-                // make sure it got removed
-                solutionTree.WaitForItemRemoved(
-                    "Solution 'ExtensionReference' (1 project)",
-                    "ExtensionReference",
-                    Strings.ReferencesNodeName,
-                    "spam.pyd"
-                );
-
-                window.Activate();
-
-                // and make sure we no longer offer completions on the spam module.
-                Keyboard.Type("spam.");
-
-                using (var sh = doc.WaitForSession<ICompletionSession>()) {
-                    var completion = sh.Session.CompletionSets.First().Completions.Select(x => x.DisplayText).Single();
-                    Assert.AreEqual(Strings.NoCompletionsCompletion, completion);
-                }
             }
         }
 

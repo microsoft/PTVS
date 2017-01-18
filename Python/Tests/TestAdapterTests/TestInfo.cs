@@ -14,6 +14,7 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+extern alias pt;
 extern alias ta;
 using System;
 using System.IO;
@@ -21,6 +22,7 @@ using Microsoft.PythonTools.TestAdapter;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using ta::Microsoft.VisualStudioTools;
 using TestUtilities;
+using PythonConstants = pt::Microsoft.PythonTools.PythonConstants;
 
 namespace TestAdapterTests {
     class TestInfo {
@@ -61,8 +63,8 @@ namespace TestAdapterTests {
 
         public TestCase TestCase {
             get {
-                var expectedFullyQualifiedName = TestDiscoverer.MakeFullyQualifiedTestName(RelativeClassFilePath, ClassName, MethodName);
-                var tc = new TestCase(expectedFullyQualifiedName, new Uri(TestExecutor.ExecutorUriString), this.ProjectFilePath);
+                var expectedFullyQualifiedName = TestReader.MakeFullyQualifiedTestName(RelativeClassFilePath, ClassName, MethodName);
+                var tc = new TestCase(expectedFullyQualifiedName, new Uri(PythonConstants.TestExecutorUriString), this.ProjectFilePath);
                 tc.CodeFilePath = SourceCodeFilePath;
                 tc.LineNumber = SourceCodeLineNumber;
                 return tc;
@@ -103,17 +105,24 @@ namespace TestAdapterTests {
         public static TestInfo[] TestAdapterBTests {
             get {
                 return new TestInfo[] {
+                    RenamedImportSuccess,
+                    RenamedImportFailure,
+                    TimeoutSuccess,
+                    TestInPackageSuccess,
+                    TestInPackageFailure
+                };
+            }
+        }
+
+        public static TestInfo[] TestAdapterBInheritanceTests {
+            get {
+                return new TestInfo[] {
                     BaseSuccess,
                     BaseFailure,
                     DerivedBaseSuccess,
                     DerivedBaseFailure,
                     DerivedSuccess,
                     DerivedFailure,
-                    RenamedImportSuccess,
-                    RenamedImportFailure,
-                    TimeoutSuccess,
-                    TestInPackageSuccess,
-                    TestInPackageFailure
                 };
             }
         }
@@ -126,6 +135,13 @@ namespace TestAdapterTests {
             get {
                 return new[] { MultiprocessingSuccess };
             }
+        }
+
+        private static TestInfo GetLoadErrorImportError(string projectName) => TestInfo.FromRelativePaths("ImportErrorTests", "test_import_error", $"TestData\\TestAdapterTests\\{projectName}.pyproj", @"TestData\TestAdapterTests\LoadErrorTestImportError.py", 5, TestOutcome.Failed);
+        private static TestInfo GetLoadErrorNoError(string projectName) => TestInfo.FromRelativePaths("NoErrorTests", "test_no_error", $"TestData\\TestAdapterTests\\{projectName}.pyproj", @"TestData\TestAdapterTests\LoadErrorTestNoError.py", 4, TestOutcome.Passed);
+
+        public static TestInfo[] GetTestAdapterLoadErrorTests(string projectName) {
+            return new[] { GetLoadErrorImportError(projectName), GetLoadErrorNoError(projectName) };
         }
 
         public static string TestAdapterEnvironmentProject = TestData.GetPath(@"TestData\TestAdapterTests\EnvironmentTest.pyproj");

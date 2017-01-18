@@ -14,10 +14,12 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using EnvDTE;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Xml.Linq;
+using EnvDTE;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace TestUtilities {
@@ -85,6 +87,19 @@ namespace TestUtilities {
         public static XElement Descendant(this XElement node, string localName) {
             return node.Descendants(node.Document.Root.Name.Namespace.GetName(localName)).Single();
         }
-    }
 
+        public static void SetIfNotDisposed(this EventWaitHandle eventHandle) {
+            try {
+                eventHandle.Set();
+            } catch (ObjectDisposedException) {
+            }
+        }
+
+        public static void SetIfNotDisposed(this ManualResetEventSlim eventHandle) {
+            try {
+                eventHandle.Set();
+            } catch (ObjectDisposedException) {
+            }
+        }
+    }
 }

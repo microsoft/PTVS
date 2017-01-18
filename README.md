@@ -4,7 +4,11 @@ PTVS is a free, open source plugin that turns Visual Studio into a Python IDE.
 
 [![Join the chat at https://gitter.im/Microsoft/PTVS](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Microsoft/PTVS?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-[PTVS 2.2](https://github.com/Microsoft/PTVS/releases/v2.2) is now available for download from our Releases section, or find it in the Visual Studio 2015 installer under Custom, Programming Languages. ([PTVS 2.1](https://pytools.codeplex.com/releases/view/109707) is still available from CodePlex for users on Visual Studio 2012 and 2010.)
+[PTVS](https://github.com/Microsoft/PTVS/releases) is now available for download from our Releases section, or find it in the Visual Studio 2015 installer under Custom, Programming Languages. 
+
+[PTVS 2.2](https://github.com/Microsoft/PTVS/releases/v2.2) is the last release for Visual Studio 2013 users.
+
+[PTVS 2.1](https://pytools.codeplex.com/releases/view/109707) is still available from CodePlex for users on Visual Studio 2012 and 2010.
 
 Visit our page on [VisualStudio.com](https://www.visualstudio.com/en-us/features/python-vs) for an overview, and check out our [Getting Started](http://aka.ms/PTVSTutorial) series on YouTube.
 

@@ -49,7 +49,7 @@
     <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Label="Configuration" Condition=" '$(VisualStudioVersion)'=='15.0'  Or '$(TargetVisualStudioVersion)'=='VS150' ">
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -59,10 +59,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <IncludePath Condition="Exists('$(VsInstallRoot)\Team Tools\Performance Tools\PerfSDK')">$(VsInstallRoot)\Team Tools\Performance Tools\PerfSDK;$(IncludePath)</IncludePath>
-    <IncludePath Condition="Exists('$(VSInstallDir)\Team Tools\Performance Tools\PerfSDK')">$(VSInstallDir)\Team Tools\Performance Tools\PerfSDK;$(IncludePath)</IncludePath>
-    <LibraryPath Condition="Exists('$(VsInstallRoot)\Team Tools\Performance Tools\PerfSDK')">$(VsInstallRoot)\Team Tools\Performance Tools\PerfSDK;$(LibraryPath)</LibraryPath>
-    <LibraryPath Condition="Exists('$(VSInstallDir)\Team Tools\Performance Tools\PerfSDK')">$(VSInstallDir)\Team Tools\Performance Tools\PerfSDK;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(MSBuildThisFileDirectory)\PerfSDKX86;$(IncludePath)</IncludePath>
+    <LibraryPath>$(MSBuildThisFileDirectory)\PerfSDKX86;$(LibraryPath)</LibraryPath>
     <IntDir>$(IntDir)$(Platform)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>

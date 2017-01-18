@@ -302,6 +302,9 @@ namespace Microsoft.PythonTools.Analysis.Values {
         }
 
         internal override int UnionHashCode(int strength) {
+            if (strength >= MergeStrength.ToObject) {
+                return ProjectState.ClassInfos[BuiltinTypeId.Object].GetHashCode();
+            }
             return ClassInfo.UnionHashCode(strength);
         }
 

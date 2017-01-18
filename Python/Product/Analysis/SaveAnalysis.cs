@@ -28,12 +28,19 @@ using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Analysis {
     class SaveAnalysis {
-        private List<string> _errors = new List<string>();
-        private Dictionary<AnalysisValue, string> _classNames = new Dictionary<AnalysisValue, string>();
-        private List<AnalysisValue> _path = new List<AnalysisValue>();
-        private Dictionary<string, Dictionary<string, object>> _typeNames = new Dictionary<string, Dictionary<string, object>>();
-        private Dictionary<string, string> _MemoizedStrings = new Dictionary<string, string>();
-        private Dictionary<string, object[]> _moduleNames = new Dictionary<string, object[]>();
+        // This stack contains all module, class and member names while saving
+        // analysis. It should only be popped on successful generation (that is,
+        // do not use a 'finally' block) so the top-level error reporting will
+        // include the full C# call stack as well as the name of the member when
+        // the error occurred.
+        private readonly Stack<string> _errorStack = new Stack<string>();
+        private readonly List<string> _errors = new List<string>();
+
+        private readonly Dictionary<AnalysisValue, string> _classNames = new Dictionary<AnalysisValue, string>();
+        private readonly List<AnalysisValue> _path = new List<AnalysisValue>();
+        private readonly Dictionary<string, Dictionary<string, object>> _typeNames = new Dictionary<string, Dictionary<string, object>>();
+        private readonly Dictionary<string, string> _MemoizedStrings = new Dictionary<string, string>();
+        private readonly Dictionary<string, object[]> _moduleNames = new Dictionary<string, object[]>();
         private static readonly List<object> _EmptyMro = new List<object>();
         private PythonAnalyzer _curAnalyzer;
         private ModuleInfo _curModule;
@@ -46,14 +53,22 @@ namespace Microsoft.PythonTools.Analysis {
                 ModuleInfo moduleInfo;
                 if ((moduleInfo = modKeyValue.Value.Module as ModuleInfo) != null) {
                     _curModule = moduleInfo;
-                    var info = SerializeModule(moduleInfo);
-                    WriteModule(outDir, name, info, moduleInfo.Scope.AllVariables.Keys());
+                    _errorStack.Clear();
+                    _errorStack.Push(modKeyValue.Key);
+                    try {
+                        var info = SerializeModule(moduleInfo);
+                        WriteModule(outDir, name, info, moduleInfo.Scope.AllVariables.Keys());
+                    } catch (Exception ex) {
+                        AddError(ex.ToString());
+                    }
                 }
             }
+        }
 
-            foreach (var error in _errors) {
-                Console.WriteLine(error);
-            }
+        public IEnumerable<string> Errors => _errors;
+
+        private void AddError(string message) {
+            _errors.Add("{0}: {1}".FormatInvariant(string.Join(".", _errorStack.Reverse()), message));
         }
 
         private void WriteModule(string outDir, string name, Dictionary<string, object> info, IEnumerable<string> globals) {
@@ -138,7 +153,9 @@ namespace Microsoft.PythonTools.Analysis {
                     // Never got a value, so leave it out.
                     continue;
                 }
+                _errorStack.Push(keyValue.Key);
                 res[keyValue.Key] = GenerateMember(keyValue.Value, moduleInfo);
+                _errorStack.Pop();
             }
             foreach (var child in children.OfType<string>()) {
                 object modRef = null;
@@ -319,7 +336,7 @@ namespace Microsoft.PythonTools.Analysis {
                 var type = types.First();
                 var res = GetMemberValueInternal(type, declModule, isRef);
                 if (res == null) {
-                    _errors.Add(String.Format("Cannot save single member: {0}", types.First()));
+                    AddError(String.Format("Cannot save single member: {0} ({1})", type, type.GetType()));
                 }
                 return res;
             } else if (types.Count == 0) {
@@ -508,7 +525,8 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private Dictionary<string, object> GenerateClass(ClassInfo ci, ModuleInfo declModule) {
-            return new Dictionary<string, object>() {
+            _errorStack.Push(ci.Name);
+            var res = new Dictionary<string, object>() {
                 { "mro", GetClassMro(ci) },
                 { "bases", GetClassBases(ci) },
                 { "members", GetClassMembers(ci, declModule) },
@@ -516,6 +534,8 @@ namespace Microsoft.PythonTools.Analysis {
                 { "builtin", false },
                 { "location", GenerateLocation(ci.Locations) }
             };
+            _errorStack.Pop();
+            return res;
         }
 
         private object GetTypeRef(string moduleName, string className) {
@@ -523,6 +543,11 @@ namespace Microsoft.PythonTools.Analysis {
         }
 
         private object GetTypeName(string moduleName, string className) {
+            if (moduleName == null || className == null) {
+                AddError("GetTypeName({0}, {1})".FormatInvariant(moduleName ?? "(null)", className ?? "(null)"));
+                return null;
+            }
+            
             // memoize types names for a more efficient on disk representation.
             object typeName;
             Dictionary<string, object> typeNames;
@@ -588,7 +613,7 @@ namespace Microsoft.PythonTools.Analysis {
                 return GenerateTypeName(name.First(), isRef);
             }
 
-            return name.Select(ns => GenerateTypeName(ns, isRef)).Distinct().ToList<object>();
+            return name.Select(ns => GenerateTypeName(ns, isRef)).Where(n => n != null).Distinct().ToList<object>();
         }
 
         private object GenerateTypeName(AnalysisValue baseClass, bool isRef) {
@@ -622,6 +647,10 @@ namespace Microsoft.PythonTools.Analysis {
 
         private object GenerateTypeName(IPythonType type) {
             if (type != null) {
+                if (string.IsNullOrEmpty(type.Name)) {
+                    AddError("{0} has no name".FormatInvariant(type.TypeId));
+                    return null;
+                }
                 return GetTypeName(type.DeclaringModule.Name, type.Name);
             }
             return null;

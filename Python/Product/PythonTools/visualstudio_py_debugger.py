@@ -110,7 +110,21 @@ def thread_creator(func, args, kwargs = {}, *extra_args):
 
     return _start_new_thread(new_thread_wrapper, (func, args, kwargs))
 
-_start_new_thread = thread.start_new_thread
+_thread_start_new_thread = thread.start_new_thread
+def _start_new_thread(func, args, kwargs = {}):
+    t_lock = thread.allocate_lock()
+    t_lock.acquire()
+    
+    tid = []
+    def thread_starter(a, kw):
+        tid.append(thread.get_ident())
+        t_lock.release()
+        return func(*a, **kw)
+    
+    _thread_start_new_thread(thread_starter, (args, kwargs))
+    with t_lock:
+        return tid[0]
+
 THREADS = {}
 THREADS_LOCK = thread.allocate_lock()
 MODULES = []
@@ -118,6 +132,8 @@ MODULES = []
 BREAK_ON_SYSTEMEXIT_ZERO = False
 DEBUG_STDLIB = False
 DJANGO_DEBUG = False
+
+RICH_EXCEPTIONS = False
 
 # Py3k compat - alias unicode to str
 try:
@@ -335,6 +351,7 @@ NEWT = to_bytes('NEWT')
 EXTT = to_bytes('EXTT')
 EXIT = to_bytes('EXIT')
 EXCP = to_bytes('EXCP')
+EXC2 = to_bytes('EXC2')
 MODL = to_bytes('MODL')
 STPD = to_bytes('STPD')
 BRKS = to_bytes('BRKS')
@@ -371,12 +388,14 @@ def is_file_in_zip(filename):
         return False
     elif parent in KNOWN_ZIPS:
         return True
-    elif path.isdir(parent):
+    elif path.isfile(parent):
+        KNOWN_ZIPS.add(parent) 
+        return True     
+    elif path.isdir(parent):    
         KNOWN_DIRECTORIES.add(parent)
         return False
     else:
-        KNOWN_ZIPS.add(parent)
-        return True
+        return is_file_in_zip(parent)
 
 def lookup_builtin(name, frame):
     try:
@@ -564,7 +583,7 @@ def should_debug_code(code):
 
     return True
 
-attach_lock = thread.allocate()
+attach_lock = thread.allocate_lock()
 attach_sent_break = False
 
 local_path_to_vs_path = {}
@@ -1459,7 +1478,13 @@ class Thread(object):
                 # collect globals used locally, skipping undefined found in builtins
                 f_globals = cur_frame.f_globals
                 if f_globals: # ensure globals to work with (IPy may have None for cur_frame.f_globals for frames within stdlib)
-                    self.collect_variables(vars, f_globals, cur_frame.f_code.co_names, treated, skip_unknown = True)
+                    self.collect_variables(
+                        vars,
+                        f_globals,
+                        getattr(cur_frame.f_code, 'co_names', ()),
+                        treated,
+                        skip_unknown = True
+                    )
             
             frame_info = None
 
@@ -1605,10 +1630,11 @@ class DebuggerLoop(object):
 
     instance = None
 
-    def __init__(self, conn):
+    def __init__(self, conn, rich_exceptions=False):
         DebuggerLoop.instance = self
         self.conn = conn
         self.repl_backend = None
+        self.rich_exceptions = rich_exceptions
         self.command_table = {
             to_bytes('stpi') : self.command_step_into,
             to_bytes('stpo') : self.command_step_out,
@@ -2014,7 +2040,6 @@ def report_thread_exit(old_thread):
 
 def report_exception(frame, exc_info, tid, break_type):
     exc_type = exc_info[0]
-    exc_name = get_exception_name(exc_type)
     exc_value = exc_info[1]
     tb_value = exc_info[2]
     
@@ -2023,14 +2048,45 @@ def report_exception(frame, exc_info, tid, break_type):
         # so we can get the correct msg.
         exc_value = exc_type(*exc_value)
     
-    excp_text = str(exc_value)
+    data = {
+        'typename': get_exception_name(exc_type),
+        'message': str(exc_value),
+    }
+    if break_type == 1:
+        data['breaktype'] = 'unhandled'
+    if tb_value:
+        try:
+            data['trace'] = '\n'.join(','.join(repr(v) for v in line) for line in traceback.extract_tb(tb_value))
+        except:
+            pass
+    if not DJANGO_DEBUG or get_django_frame_source(frame) is None:
+        data['excvalue'] = '__exception_info'
+        i = 0
+        while data['excvalue'] in frame.f_locals:
+            i += 1
+            data['excvalue'] = '__exception_info_%d' % i
+        frame.f_locals[data['excvalue']] = {
+            'exception': exc_value,
+            'exception_type': exc_type,
+            'message': data['message'],
+        }
 
     with _SendLockCtx:
-        write_bytes(conn, EXCP)
-        write_string(conn, exc_name)
-        write_int(conn, tid)
-        write_int(conn, break_type)
-        write_string(conn, excp_text)
+        if RICH_EXCEPTIONS:
+            write_bytes(conn, EXC2)
+            write_int(conn, tid)
+            write_int(conn, len(data))
+            for key, value in data.items():
+                write_string(conn, key)
+                write_string(conn, str(value))
+        else:
+            # Old message is fixed format. If RichExceptions is not passed in
+            # debug options, we'll send this format.
+            write_bytes(conn, EXCP)
+            write_string(conn, str(data['typename']))
+            write_int(conn, tid)
+            write_int(conn, 1 if 'breaktype' in data else 0)
+            write_string(conn, str(data['message']))
 
 def new_module(frame):
     mod = Module(get_code_filename(frame.f_code))
@@ -2203,6 +2259,7 @@ def attach_process(port_num, debug_id, debug_options, report = False, block = Fa
 
 def attach_process_from_socket(sock, debug_options, report = False, block = False):
     global conn, attach_sent_break, DETACHED, DEBUG_STDLIB, BREAK_ON_SYSTEMEXIT_ZERO, DJANGO_DEBUG
+    global RICH_EXCEPTIONS
 
     BREAK_ON_SYSTEMEXIT_ZERO = 'BreakOnSystemExitZero' in debug_options
     DJANGO_DEBUG = 'DjangoDebugging' in debug_options
@@ -2216,6 +2273,8 @@ def attach_process_from_socket(sock, debug_options, report = False, block = Fals
 
     wait_on_normal_exit = 'WaitOnNormalExit' in debug_options
     wait_on_abnormal_exit = 'WaitOnAbnormalExit' in debug_options
+
+    RICH_EXCEPTIONS = 'RichExceptions' in debug_options
 
     def _excepthook(exc_type, exc_value, exc_tb):
         # Display the exception and wait on exit

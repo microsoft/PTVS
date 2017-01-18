@@ -1,0 +1,10 @@
+full_name:{{ cookiecutter.full_name }}
+email:{{ cookiecutter.email }}
+github_username:{{ cookiecutter.github_username }}
+project_name:{{ cookiecutter.project_name }}
+project_slug:{{ cookiecutter.project_slug }}
+pypi_username:{{ cookiecutter.pypi_username }}
+version:{{ cookiecutter.version }}
+use_azure:{{ cookiecutter.use_azure }}
+open_source_license:{{ cookiecutter.open_source_license }}
+port:{{ cookiecutter.port }}

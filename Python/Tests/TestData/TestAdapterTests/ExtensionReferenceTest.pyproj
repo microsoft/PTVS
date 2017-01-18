@@ -6,13 +6,13 @@
     <ProjectGuid>33318ce5-64c0-445e-87c0-ad3656ca912e</ProjectGuid>
     <ProjectHome>.</ProjectHome>
     <StartupFile>ExtensionReferenceTest.py</StartupFile>
-    <SearchPath></SearchPath>
+    <SearchPath>..</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <Name>ExtensionReferenceTest</Name>
     <RootNamespace>ExtensionReferenceTest</RootNamespace>
     <IsWindowsApplication>False</IsWindowsApplication>
-    <InterpreterId>Global|PythonCore|2.7|x86</InterpreterId>
+    <InterpreterId>Global|PythonCore|2.7-32</InterpreterId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -26,13 +26,7 @@
     <Compile Include="ExtensionReferenceTest.py" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="..\spam.pyd">
-      <Name>spam.pyd</Name>
-      <PythonExtension>..\spam.pyd</PythonExtension>
-    </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <InterpreterReference Include="Global|PythonCore|2.7|x86" />
+    <InterpreterReference Include="Global|PythonCore|2.7-32" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

@@ -24,6 +24,7 @@
     <PropertyGroup>
       <AssemblySearchPaths>
         $(BuildRoot)Python\References\Dev$(VSTarget);
+        $(BuildRoot)Python\References\Common;
         $(AssemblySearchPaths);
         $(DevEnvDir);
         $(DevEnvDir)CommonExtensions\Microsoft\Editor;
@@ -121,9 +122,34 @@
     </ExtractLambdasFromXaml>
   </Target>
 
+  <Target Name="_CompileImageManifest" Condition="@(ImageManifest) != ''">
+    <Copy SourceFiles="%(ImageManifest.FullPath)" DestinationFiles="$(IntermediateOutputPath)%(Filename)%(Extension)" OverwriteReadOnlyFiles="true" />
+
+    <PropertyGroup>
+      <_NS>
+        <Namespace Prefix="im" Uri="http://schemas.microsoft.com/VisualStudio/ImageManifestSchema/2014" />
+      </_NS>
+      <_FullAssemblyName>$(AssemblyName)%3bv$(StableVersion)%3bb03f5f7f11d50a3a</_FullAssemblyName>
+    </PropertyGroup>
+    
+    <XmlPoke XmlInputPath="$(IntermediateOutputPath)%(ImageManifest.Filename)%(Extension)"
+             Namespaces="$(_NS)"
+             Query="/im:ImageManifest/im:Symbols/im:String[@Name='AssemblyName']/@Value"
+             Value="$(_FullAssemblyName)" />
+
+    <ItemGroup>
+      <Content Include="$(IntermediateOutputPath)%(ImageManifest.Filename)%(ImageManifest.Extension)">
+        <IncludeInVSIX>true</IncludeInVSIX>
+        <VSIXSubPath>.</VSIXSubPath>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </Content>
+    </ItemGroup>
+  </Target>
+
   <PropertyGroup>
     <CoreCompileDependsOn>
       ExtractLambdasFromXaml;
+      _CompileImageManifest;
       $(CoreCompileDependsOn)
     </CoreCompileDependsOn>
   </PropertyGroup>

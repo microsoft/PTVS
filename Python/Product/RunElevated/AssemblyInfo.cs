@@ -15,7 +15,6 @@
 // permissions and limitations under the License.
 
 using System.Reflection;
-using System.Runtime.CompilerServices;
 
-[assembly: AssemblyTitle("Python Tools for Visual Studio task launcher")]
+[assembly: AssemblyTitle("Visual Studio - Python task launcher")]
 [assembly: AssemblyDescription("Helper tool for running tasks as an Administrator")]

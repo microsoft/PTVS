@@ -152,12 +152,19 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
             InterpreterScope oldScope;
             if (ne != null &&
                 (oldScope = _eval.Scope).OuterScope != null &&
-                node.Left.OfType<NameExpression>().Any(n => n.Name == ne.Name)) {
+                (node.Left.OfType<NameExpression>().Any(n => n.Name == ne.Name) ||
+                node.Left.OfType<ExpressionWithAnnotation>().Select(e => e.Expression).OfType<NameExpression>().Any(n => n.Name == ne.Name))) {
                 try {
                     _eval.Scope = _eval.Scope.OuterScope;
                     valueType = valueType.Union(_eval.Evaluate(node.Right));
                 } finally {
                     _eval.Scope = oldScope;
+                }
+            }
+
+            foreach (var left in node.Left.OfType<ExpressionWithAnnotation>()) {
+                if (left.Annotation != null) {
+                    _eval.Evaluate(left.Annotation);
                 }
             }
 
@@ -232,10 +239,6 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 added = variable.AddTypes(_unit, userMod.GetModuleMember(node, _unit, impName, addRef, Scope, saveName));
             }
 
-            if (addRef) {
-                variable.AddAssignment(node, _unit);
-            } 
-            
             if (added) {
                 // anyone who read from the module will now need to get the new values
                 GlobalScope.ModuleDefinition.EnqueueDependents();
@@ -297,11 +300,7 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
                 foreach (var part in ModulePath.GetParents(name, includeFullName: false)) {
                     ModuleReference parentRef;
                     if (ProjectState.Modules.TryImport(part, out parentRef)) {
-                        var bi = parentRef.Module as BuiltinModule;
-                        if (bi == null) {
-                            break;
-                        }
-                        bi.Imported(_unit);
+                        parentRef.Module?.Imported(_unit);
                     }
                 }
                 

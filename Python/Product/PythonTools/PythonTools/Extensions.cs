@@ -85,6 +85,7 @@ namespace Microsoft.PythonTools {
                 case PythonMemberType.EnumInstance: group = StandardGlyphGroup.GlyphGroupEnumMember; break;
                 case PythonMemberType.Event: group = StandardGlyphGroup.GlyphGroupEvent; break;
                 case PythonMemberType.Keyword: group = StandardGlyphGroup.GlyphKeyword; break;
+                case PythonMemberType.CodeSnippet: group = StandardGlyphGroup.GlyphCSharpExpansion; break;
                 case PythonMemberType.Function:
                 case PythonMemberType.Method:
                 default:
@@ -650,9 +651,10 @@ namespace Microsoft.PythonTools {
 #if DEBUG
             // https://github.com/Microsoft/PTVS/issues/1205
             // Help see when this function is being incorrectly called from off
-            // the UI thread. There's a chance that GetUIThread() will fail in
+            // the UI thread. There's a chance that GetService() will fail in
             // this case too, but mostly it will succeed (and then assert).
-            serviceProvider.GetUIThread().MustBeCalledFromUIThread();
+            var uiThread = serviceProvider.GetService(typeof(UIThreadBase)) as UIThreadBase;
+            uiThread?.MustBeCalledFromUIThread();
 #endif
             return serviceProvider.GetPythonToolsService_NotThreadSafe();
         }
@@ -895,7 +897,10 @@ namespace Microsoft.PythonTools {
 
         internal static async Task RefreshVariableViews(this IServiceProvider serviceProvider) {
             serviceProvider.GetUIThread().MustBeCalledFromUIThread();
-            EnvDTE.Debugger debugger = serviceProvider.GetDTE().Debugger;
+            EnvDTE.Debugger debugger = serviceProvider.GetDTE()?.Debugger;
+            if (debugger == null) {
+                return;
+            }
             AD7Engine engine = AD7Engine.GetEngineForProcess(debugger.CurrentProcess);
             if (engine != null) {
                 await engine.RefreshThreadFrames(debugger.CurrentThread.ID);

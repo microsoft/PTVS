@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.DkmDebugger.Proxies {
                 FactoryFunc nonPolymorphicFactory;
                 var ctor = typeof(TProxy).GetConstructor(new[] { typeof(DkmProcess), typeof(ulong) });
                 if (ctor != null) {
-                var processParam = Expression.Parameter(typeof(DkmProcess));
+                    var processParam = Expression.Parameter(typeof(DkmProcess));
                     var addressParam = Expression.Parameter(typeof(ulong));
                     var polymorphicParam = Expression.Parameter(typeof(bool));
                     nonPolymorphicFactory = Expression.Lambda<FactoryFunc>(

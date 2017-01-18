@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PydReference", "DeprecatedReferences\PydReference.pyproj", "{6E0EBAC5-3B31-4E1B-BA59-E36624B5C7BD}"
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "PydReference", "DeprecatedReferences\WebPIReference.pyproj", "{E0D232E9-DF48-487B-ADD4-C0674A0AD950}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6E0EBAC5-3B31-4E1B-BA59-E36624B5C7BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E0EBAC5-3B31-4E1B-BA59-E36624B5C7BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E0EBAC5-3B31-4E1B-BA59-E36624B5C7BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E0EBAC5-3B31-4E1B-BA59-E36624B5C7BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0D232E9-DF48-487B-ADD4-C0674A0AD950}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0D232E9-DF48-487B-ADD4-C0674A0AD950}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0D232E9-DF48-487B-ADD4-C0674A0AD950}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0D232E9-DF48-487B-ADD4-C0674A0AD950}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

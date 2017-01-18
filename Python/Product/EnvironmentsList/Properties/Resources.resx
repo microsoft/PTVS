@@ -177,35 +177,23 @@
     <value>Operation cannot be started because the environment is not configured.</value>
     <comment>Used as exception text</comment>
   </data>
+  <data name="NoDescription" xml:space="preserve">
+    <value>(No description)</value>
+  </data>
   <data name="PipDefaultIndexName" xml:space="preserve">
     <value>PyPI</value>
   </data>
   <data name="PipExtensionDisplayName" xml:space="preserve">
-    <value>pip</value>
+    <value>Packages</value>
   </data>
   <data name="PipExtensionHelpContent" xml:space="preserve">
-    <value>These packages can be managed using pip. Type in the search box to install new packages, or use the buttons on the right to manage those that are already installed.</value>
+    <value>These packages can be managed using your environment's package manager. Type in the search box to install new packages, or use the buttons on the right to manage those that are already installed.</value>
   </data>
-  <data name="PythonToolsForVisualStudio" xml:space="preserve">
-    <value>Python Tools for Visual Studio</value>
+  <data name="ProductTitle" xml:space="preserve">
+    <value>Visual Studio</value>
   </data>
   <data name="UninstallationFailed" xml:space="preserve">
     <value>Uninstallation failed</value>
     <comment>Used as exception text</comment>
-  </data>
-  <data name="UninstallingPackageFailed" xml:space="preserve">
-    <value>----- Error while uninstalling '{0}' -----
-'{0}' may not have been uninstalled completely.
-</value>
-    <comment>Displayed in the output window</comment>
-  </data>
-  <data name="UninstallingPackageStarted" xml:space="preserve">
-    <value>----- Uninstalling '{0}' -----</value>
-    <comment>Displayed in the output window</comment>
-  </data>
-  <data name="UninstallingPackageSuccess" xml:space="preserve">
-    <value>----- Successfully uninstalled '{0}' -----
-</value>
-    <comment>Displayed in the output window</comment>
   </data>
 </root>

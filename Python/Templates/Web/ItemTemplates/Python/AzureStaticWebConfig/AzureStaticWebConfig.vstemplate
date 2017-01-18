@@ -1,0 +1,15 @@
+<VSTemplate Version="3.0.0" Type="Item" xmlns="http://schemas.microsoft.com/developer/vstemplate/2005">
+  <TemplateData>
+    <Name>Azure Static files web.config</Name>
+    <Description>A web.config file that disables Python handling for a subdirectory.
+
+This file should normally be deployed in your /static folder. See https://aka.ms/PythonOnAppService for more information.</Description>
+    <Icon Package="{6dbd7c1e-1f1b-496d-ac7c-c55dae66c783}" ID="412" />
+    <ProjectType>Python</ProjectType>
+    <DefaultName>web.config</DefaultName>
+    <SortOrder>320</SortOrder>
+  </TemplateData>
+  <TemplateContent>
+    <ProjectItem ReplaceParameters="true" TargetFileName="web.config" ItemType="Content">web.config</ProjectItem>
+  </TemplateContent>
+</VSTemplate>

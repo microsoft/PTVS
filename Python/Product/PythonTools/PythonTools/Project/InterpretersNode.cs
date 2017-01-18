@@ -21,9 +21,9 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
-using Microsoft.Build.Evaluation;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Logging;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Imaging.Interop;
@@ -47,9 +47,9 @@ namespace Microsoft.PythonTools.Project {
         private readonly bool _isReference;
         private readonly bool _canDelete, _canRemove;
         private readonly string _captionSuffix;
-        private readonly FileSystemWatcher _fileWatcher;
-        private readonly Timer _timer;
+        private bool _suppressPackageRefresh;
         private bool _checkedItems, _checkingItems, _disposed;
+        internal readonly string _absentId;
         internal readonly bool _isGlobalDefault;
 
         public static readonly object InstallPackageLockMoniker = new object();
@@ -73,29 +73,19 @@ namespace Microsoft.PythonTools.Project {
             _canRemove = canRemove.HasValue ? canRemove.Value : !isGlobalDefault;
             _captionSuffix = isGlobalDefault ? Strings.GlobalDefaultSuffix : "";
 
-            if (Directory.Exists(_factory.Configuration.LibraryPath)) {
-                // TODO: Need to handle watching for creation
-                try {
-                    _fileWatcher = new FileSystemWatcher(_factory.Configuration.LibraryPath);
-                } catch (ArgumentException) {
-                    // Path was not actually valid, despite Directory.Exists
-                    // returning true.
-                }
-                if (_fileWatcher != null) {
-                    try {
-                        _fileWatcher.IncludeSubdirectories = true;
-                        _fileWatcher.Deleted += PackagesChanged;
-                        _fileWatcher.Created += PackagesChanged;
-                        _fileWatcher.EnableRaisingEvents = true;
-                        // Only create the timer if the file watcher is running.
-                        _timer = new Timer(CheckPackages);
-                    } catch (IOException) {
-                        // Raced with directory deletion
-                        _fileWatcher.Dispose();
-                        _fileWatcher = null;
-                    }
-                }
+            if (_factory.PackageManager != null) {
+                _factory.PackageManager.InstalledPackagesChanged += InstalledPackagesChanged;
             }
+        }
+
+        private InterpretersNode(PythonProjectNode project, string id) : base(project, MakeElement(project)) {
+            _absentId = id;
+            _canRemove = true;
+            _captionSuffix = Strings.MissingSuffix;
+        }
+
+        public static InterpretersNode CreateAbsentInterpreterNode(PythonProjectNode project, string id) {
+            return new InterpretersNode(project, id);
         }
 
         public override int MenuCommandId {
@@ -111,14 +101,94 @@ namespace Microsoft.PythonTools.Project {
         }
 
         public override void Close() {
-            if (!_disposed && _fileWatcher != null) {
-                _fileWatcher.Dispose();
-                _timer.Dispose();
+            if (!_disposed) {
+                if (_factory?.PackageManager != null) {
+                    _factory.PackageManager.InstalledPackagesChanged -= InstalledPackagesChanged;
+                }
             }
             _disposed = true;
 
             base.Close();
         }
+
+        private void InstalledPackagesChanged(object sender, EventArgs e) {
+            RefreshPackages();
+        }
+
+        private void RefreshPackages() {
+            RefreshPackagesAsync(_factory?.PackageManager)
+                .SilenceException<OperationCanceledException>()
+                .HandleAllExceptions(ProjectMgr.Site, GetType())
+                .DoNotWait();
+        }
+
+        private async Task RefreshPackagesAsync(IPackageManager packageManager) {
+            if (_suppressPackageRefresh || packageManager == null) {
+                return;
+            }
+
+            bool prevChecked = _checkedItems;
+            // Use _checkingItems to prevent the expanded state from
+            // disappearing too quickly.
+            _checkingItems = true;
+            _checkedItems = true;
+
+            var packages = new Dictionary<string, PackageSpec>();
+            foreach (var p in await packageManager.GetInstalledPackagesAsync(CancellationToken.None)) {
+                packages[p.FullSpec] = p;
+            }
+
+            await ProjectMgr.Site.GetUIThread().InvokeAsync(() => {
+                if (ProjectMgr == null || ProjectMgr.IsClosed) {
+                    return;
+                }
+
+                try {
+                    var logger = ProjectMgr.Site.GetPythonToolsService().Logger;
+                    foreach (var p in packages) {
+                        logger.LogEvent(PythonLogEvent.PythonPackage, new PackageInfo { Name = p.Value.Name });
+                    }
+                } catch (Exception ex) {
+                    Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+                }
+
+                bool anyChanges = false;
+                var existing = AllChildren.OfType<InterpretersPackageNode>().ToDictionary(c => c.Url);
+
+                // remove the nodes which were uninstalled.
+                foreach (var keyValue in existing) {
+                    if (!packages.Remove(keyValue.Key)) {
+                        RemoveChild(keyValue.Value);
+                        anyChanges = true;
+                    }
+                }
+
+                // add the new nodes
+                foreach (var p in packages.OrderBy(kv => kv.Key)) {
+                    AddChild(new InterpretersPackageNode(ProjectMgr, p.Value));
+                    anyChanges = true;
+                }
+                _checkingItems = false;
+
+                ProjectMgr.OnInvalidateItems(this);
+                if (!prevChecked) {
+                    if (anyChanges) {
+                        ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Expandable, 0);
+                    }
+                    if (ProjectMgr.ParentHierarchy != null) {
+                        ExpandItem(EXPANDFLAGS.EXPF_CollapseFolder);
+                    }
+                }
+
+                if (prevChecked && anyChanges) {
+                    var withDb = _factory as IPythonInterpreterFactoryWithDatabase;
+                    if (withDb != null) {
+                        withDb.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
+                    }
+                }
+            });
+        }
+
 
         /// <summary>
         /// Disables the file watcher. This function may be called as many times
@@ -126,13 +196,7 @@ namespace Microsoft.PythonTools.Project {
         /// <see cref="ResumeWatching"/> to re-enable the watcher.
         /// </summary>
         public void StopWatching() {
-            if (!_disposed && _fileWatcher != null) {
-                try {
-                    _fileWatcher.EnableRaisingEvents = false;
-                } catch (IOException) {
-                } catch (ObjectDisposedException) {
-                }
-            }
+            _suppressPackageRefresh = true;
         }
 
         /// <summary>
@@ -141,113 +205,11 @@ namespace Microsoft.PythonTools.Project {
         /// enabled successfully, the list of packages is updated.
         /// </summary>
         public void ResumeWatching() {
-            if (!_disposed && _fileWatcher != null) {
-                try {
-                    _fileWatcher.EnableRaisingEvents = true;
-                    CheckPackages(null);
-                } catch (IOException) {
-                } catch (ObjectDisposedException) {
-                }
-            }
-        }
-
-        private void PackagesChanged(object sender, FileSystemEventArgs e) {
-            // have a delay before refreshing because there's probably more than one write,
-            // so we wait until things have been quiet for a second.
-            _timer.Change(1000, Timeout.Infinite);
-        }
-
-        private void CheckPackages(object arg) {
-            ProjectMgr.Site.GetUIThread().InvokeTask(() => CheckPackagesAsync())
+            _suppressPackageRefresh = false;
+            RefreshPackagesAsync(_factory?.PackageManager)
+                .SilenceException<OperationCanceledException>()
                 .HandleAllExceptions(ProjectMgr.Site, GetType())
                 .DoNotWait();
-        }
-
-        private async Task CheckPackagesAsync() {
-            var uiThread = ProjectMgr.Site.GetUIThread();
-            uiThread.MustBeCalledFromUIThreadOrThrow();
-
-            bool prevChecked = _checkedItems;
-            // Use _checkingItems to prevent the expanded state from
-            // disappearing too quickly.
-            _checkingItems = true;
-            _checkedItems = true;
-            if (!Directory.Exists(_factory.Configuration.LibraryPath)) {
-                _checkingItems = false;
-                ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Expandable, 0);
-                return;
-            }
-
-            HashSet<string> lines;
-            bool anyChanges = false;
-            try {
-                lines = await Pip.List(_factory).ConfigureAwait(true);
-            } catch (MissingInterpreterException) {
-                return;
-            } catch (NoInterpretersException) {
-                return;
-            } catch (FileNotFoundException) {
-                return;
-            }
-
-            // Ensure we are back on the UI thread
-            uiThread.MustBeCalledFromUIThread();
-
-            if (ProjectMgr == null || ProjectMgr.IsClosed) {
-                return;
-            }
-
-            var existing = AllChildren.ToDictionary(c => c.Url);
-
-            // remove the nodes which were uninstalled.
-            foreach (var keyValue in existing) {
-                if (!lines.Contains(keyValue.Key)) {
-                    RemoveChild(keyValue.Value);
-                    anyChanges = true;
-                }
-            }
-
-            // remove already existing nodes so we don't add them a 2nd time
-            lines.ExceptWith(existing.Keys);
-
-            // add the new nodes
-            foreach (var line in lines) {
-                AddChild(new InterpretersPackageNode(ProjectMgr, line));
-                anyChanges = true;
-
-                var packageInfo = PythonProjectNode.FindRequirementRegex.Match(line.ToLower());
-                if (packageInfo.Groups["name"].Success) {
-                    //Log the details of the Installation
-                    var packageDetails = new Logging.PackageInstallDetails(
-                        packageInfo.Groups["name"].Value,
-                        packageInfo.Groups["ver"].Success ? packageInfo.Groups["ver"].Value : String.Empty,
-                        _factory.GetType().Name,
-                        _factory.Configuration.Version.ToString(),
-                        _factory.Configuration.Architecture.ToString(),
-                        "Existing", //Installer if we tracked it
-                        false, //Installer was not run elevated
-                        0); //The installation already existed
-                    ProjectMgr.Site.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.PackageInstalled, packageDetails);
-                }
-            }
-            _checkingItems = false;
-
-            ProjectMgr.OnInvalidateItems(this);
-            if (!prevChecked) {
-                if (anyChanges) {
-                    ProjectMgr.OnPropertyChanged(this, (int)__VSHPROPID.VSHPROPID_Expandable, 0);
-                }
-                if (ProjectMgr.ParentHierarchy != null) {
-                    ExpandItem(EXPANDFLAGS.EXPF_CollapseFolder);
-                }
-            }
-
-            if (prevChecked && anyChanges) {
-                var withDb = _factory as IPythonInterpreterFactoryWithDatabase;
-                if (withDb != null) {
-                    withDb.GenerateDatabase(GenerateDatabaseOptions.SkipUnchanged);
-                }
-            }
         }
 
         public override Guid ItemTypeGuid {
@@ -275,7 +237,7 @@ namespace Microsoft.PythonTools.Project {
                             return pyProj.OpenCommandPrompt(
                                 _factory.Configuration.PrefixPath,
                                 _factory.Configuration,
-                                _factory.Configuration.FullDescription
+                                _factory.Configuration.Description
                             );
                         }
                         break;
@@ -295,7 +257,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         internal override bool CanDeleteItem(__VSDELETEITEMOPERATION deleteOperation) {
-            if (_interpreterService.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
+            if (_factory != null && _interpreterService.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
                 // Prevent the environment from being deleted while installing.
                 return false;
             }
@@ -323,7 +285,7 @@ namespace Microsoft.PythonTools.Project {
                 throw new NotSupportedException();
             }
 
-            if (_interpreterService.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
+            if (_factory != null && _interpreterService.IsInterpreterLocked(_factory, InstallPackageLockMoniker)) {
                 // Prevent the environment from being deleted while installing.
                 // This situation should not occur through the UI, but might be
                 // invocable through DTE.
@@ -331,13 +293,11 @@ namespace Microsoft.PythonTools.Project {
             }
 
             if (showPrompt && !Utilities.IsInAutomationFunction(ProjectMgr.Site)) {
-                string message = (removeFromStorage ?
-                        Strings.EnvironmentDeleteConfirmation :
-                        Strings.EnvironmentRemoveConfirmation
-                ).FormatUI(
-                    Caption,
-                    _factory.Configuration.PrefixPath
-                );
+                string message = !removeFromStorage ?
+                    Strings.EnvironmentRemoveConfirmation.FormatUI(Caption) :
+                    _factory == null ?
+                        Strings.EnvironmentDeleteConfirmation_NoPath.FormatUI(Caption) :
+                        Strings.EnvironmentDeleteConfirmation.FormatUI(Caption, _factory.Configuration.PrefixPath);
                 int res = VsShellUtilities.ShowMessageBox(
                     ProjectMgr.Site,
                     string.Empty,
@@ -355,6 +315,17 @@ namespace Microsoft.PythonTools.Project {
                 throw Marshal.GetExceptionForHR(VSConstants.OLE_E_PROMPTSAVECANCELLED);
             }
 
+            if (!string.IsNullOrEmpty(_absentId)) {
+                Debug.Assert(!removeFromStorage, "Cannot remove absent environment from storage");
+                ProjectMgr.RemoveInterpreterFactory(_absentId);
+                return true;
+            }
+
+            if (_factory == null) {
+                Debug.Fail("Attempted to remove null factory from project");
+                return true;
+            }
+
             ProjectMgr.RemoveInterpreter(_factory, !_isReference && removeFromStorage && _canDelete);
             return true;
         }
@@ -364,7 +335,21 @@ namespace Microsoft.PythonTools.Project {
         /// </summary>
         public override string Caption {
             get {
-                return _factory.Configuration.FullDescription + _captionSuffix;
+                if (!string.IsNullOrEmpty(_absentId)) {
+                    string company, tag;
+                    if (CPythonInterpreterFactoryConstants.TryParseInterpreterId(_absentId, out company, out tag)) {
+                        if (company == PythonRegistrySearch.PythonCoreCompany) {
+                            company = "Python";
+                        }
+                        return "{0} {1}{2}".FormatUI(company, tag, _captionSuffix);
+                    }
+                    return _absentId + _captionSuffix;
+                }
+                if (_factory == null) {
+                    Debug.Fail("null factory in interpreter node");
+                    return "(null)";
+                }
+                return _factory.Configuration.Description + _captionSuffix;
             }
         }
 
@@ -391,7 +376,7 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override ImageMoniker GetIconMoniker(bool open) {
-            if (!_factory.Configuration.IsAvailable()) {
+            if (_factory == null || !_factory.Configuration.IsAvailable()) {
                 // TODO: Find a better icon
                 return KnownMonikers.DocumentWarning;
             } else if (ProjectMgr.ActiveInterpreter == _factory) {
@@ -430,7 +415,7 @@ namespace Microsoft.PythonTools.Project {
                 switch (cmd) {
                     case PythonConstants.ActivateEnvironment:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_factory.Configuration.IsAvailable() &&
+                        if (_factory != null && _factory.Configuration.IsAvailable() &&
                             ProjectMgr.ActiveInterpreter != _factory &&
                             Directory.Exists(_factory.Configuration.PrefixPath)
                         ) {
@@ -439,7 +424,7 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                     case PythonConstants.InstallPythonPackage:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_factory.Configuration.IsAvailable() &&
+                        if (_factory != null && _factory.Configuration.IsAvailable() &&
                             Directory.Exists(_factory.Configuration.PrefixPath)
                         ) {
                             result |= QueryStatusResult.ENABLED;
@@ -447,19 +432,20 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                     case PythonConstants.InstallRequirementsTxt:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (File.Exists(PathUtils.GetAbsoluteFilePath(ProjectMgr.ProjectHome, "requirements.txt"))) {
+                        if (_factory != null && _factory.IsRunnable() &&
+                            File.Exists(PathUtils.GetAbsoluteFilePath(ProjectMgr.ProjectHome, "requirements.txt"))) {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;
                     case PythonConstants.GenerateRequirementsTxt:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_factory.Configuration.IsAvailable()) {
+                        if (_factory != null && _factory.Configuration.IsAvailable()) {
                             result |= QueryStatusResult.ENABLED;
                         }
                         return VSConstants.S_OK;
                     case PythonConstants.OpenInteractiveForEnvironment:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_factory.Configuration.IsAvailable() &&
+                        if (_factory != null && _factory.Configuration.IsAvailable() &&
                             File.Exists(_factory.Configuration.InterpreterPath)
                         ) {
                             result |= QueryStatusResult.ENABLED;
@@ -472,7 +458,7 @@ namespace Microsoft.PythonTools.Project {
                 switch ((SharedCommands)cmd) {
                     case SharedCommands.OpenCommandPromptHere:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_factory.Configuration.IsAvailable() &&
+                        if (_factory != null && _factory.Configuration.IsAvailable() &&
                             Directory.Exists(_factory.Configuration.PrefixPath) &&
                             File.Exists(_factory.Configuration.InterpreterPath)) {
                             result |= QueryStatusResult.ENABLED;
@@ -480,7 +466,7 @@ namespace Microsoft.PythonTools.Project {
                         return VSConstants.S_OK;
                     case SharedCommands.CopyFullPath:
                         result |= QueryStatusResult.SUPPORTED;
-                        if (_factory.Configuration.IsAvailable() &&
+                        if (_factory != null && _factory.Configuration.IsAvailable() &&
                             Directory.Exists(_factory.Configuration.PrefixPath) &&
                             File.Exists(_factory.Configuration.InterpreterPath)) {
                             result |= QueryStatusResult.ENABLED;
@@ -494,8 +480,17 @@ namespace Microsoft.PythonTools.Project {
 
         public override string Url {
             get {
+                if (!string.IsNullOrEmpty(_absentId)) {
+                    return "UnknownInterpreter\\{0}".FormatInvariant(_absentId);
+                }
+
+                if (_factory == null) {
+                    Debug.Fail("null factory in interpreter node");
+                    return "UnknownInterpreter";
+                }
+
                 if (!PathUtils.IsValidPath(_factory.Configuration.PrefixPath)) {
-                    return string.Format("UnknownInterpreter\\{0}", _factory.Configuration.Id);
+                    return "UnknownInterpreter\\{0}".FormatInvariant(_factory.Configuration.Id);
                 }
 
                 return _factory.Configuration.PrefixPath;
@@ -517,21 +512,22 @@ namespace Microsoft.PythonTools.Project {
         }
 
         protected override NodeProperties CreatePropertiesObject() {
-            if (_factory is DerivedInterpreterFactory) {
-                return new InterpretersNodeWithBaseInterpreterProperties(this);
-            } else {
-                return new InterpretersNodeProperties(this);
-            }
+            return new InterpretersNodeProperties(this);
         }
 
         public override object GetProperty(int propId) {
             if (propId == (int)__VSHPROPID.VSHPROPID_Expandable) {
+                if (_factory?.PackageManager == null) {
+                    // No package manager, so we are not expandable
+                    return false;
+                }
+
                 if (!_checkedItems) {
                     // We haven't checked if we have files on disk yet, report
                     // that we can expand until we do.
                     // We do this lazily so we don't need to spawn a process for
                     // each interpreter on project load.
-                    ThreadPool.QueueUserWorkItem(CheckPackages);
+                    ThreadPool.QueueUserWorkItem(_ => RefreshPackages());
                     return true;
                 } else if (_checkingItems) {
                     // Still checking, so keep reporting true.

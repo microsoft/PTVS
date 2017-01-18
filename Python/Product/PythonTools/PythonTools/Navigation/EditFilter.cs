@@ -163,9 +163,9 @@ namespace Microsoft.PythonTools.Language {
                     }
                 } else if (values.Count + definitions.Count == 0) {
                     if (String.IsNullOrWhiteSpace(defs.Expression)) {
-                        MessageBox.Show(String.Format("Cannot go to definition.  The cursor is not on a symbol."), "Python Tools for Visual Studio");
+                        MessageBox.Show(Strings.CannotGoToDefn, Strings.ProductTitle);
                     } else {
-                        MessageBox.Show(String.Format("Cannot go to definition \"{0}\"", defs.Expression), "Python Tools for Visual Studio");
+                        MessageBox.Show(Strings.CannotGoToDefn_Name.FormatUI(defs.Expression), Strings.ProductTitle);
                     }
                 } else if (definitions.Count == 0) {
                     ShowFindSymbolsDialog(defs.Expression, new SymbolList("Values", StandardGlyphGroup.GlyphForwardType, values.Values));
@@ -224,7 +224,7 @@ namespace Microsoft.PythonTools.Language {
             }
         }
 
-        internal static LocationCategory GetFindRefLocations(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, AnalysisVariable[] analysis) {
+        internal static LocationCategory GetFindRefLocations(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, IReadOnlyList<AnalysisVariable> analysis) {
             Dictionary<AnalysisLocation, SimpleLocationInfo> references, definitions, values;
             GetDefsRefsAndValues(analyzer, serviceProvider, expr, analysis, out definitions, out references, out values);
 
@@ -236,12 +236,21 @@ namespace Microsoft.PythonTools.Language {
             return locations;
         }
 
-        private static void GetDefsRefsAndValues(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, AnalysisVariable[] variables, out Dictionary<AnalysisLocation, SimpleLocationInfo> definitions, out Dictionary<AnalysisLocation, SimpleLocationInfo> references, out Dictionary<AnalysisLocation, SimpleLocationInfo> values) {
+        private static void GetDefsRefsAndValues(VsProjectAnalyzer analyzer, IServiceProvider serviceProvider, string expr, IReadOnlyList<AnalysisVariable> variables, out Dictionary<AnalysisLocation, SimpleLocationInfo> definitions, out Dictionary<AnalysisLocation, SimpleLocationInfo> references, out Dictionary<AnalysisLocation, SimpleLocationInfo> values) {
             references = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
             definitions = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
             values = new Dictionary<AnalysisLocation, SimpleLocationInfo>();
 
+            if (variables == null) {
+                Debug.Fail("unexpected null variables");
+                return;
+            }
+
             foreach (var v in variables) {
+                if (v?.Location == null) {
+                    Debug.Fail("unexpected null variable or location");
+                    continue;
+                }
                 if (v.Location.FilePath == null) {
                     // ignore references in the REPL
                     continue;
@@ -354,7 +363,7 @@ namespace Microsoft.PythonTools.Language {
                 _pathText = GetSearchDisplayText();
                 AnalysisEntry entry = analyzer.GetAnalysisEntryFromPath(_locationInfo.FilePath);
                 if (entry != null) {
-                    _lineText = entry.GetLine(_locationInfo.Line);
+                    _lineText = entry.GetLine(_locationInfo.Line) ?? "";
                 } else {
                     _lineText = "";
                 }
@@ -629,6 +638,15 @@ namespace Microsoft.PythonTools.Language {
         /// Called from VS when we should handle a command or pass it on.
         /// </summary>
         public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
+            try {
+                return ExecWorker(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
+            } catch (Exception ex) {
+                ex.ReportUnhandledException(_serviceProvider, GetType());
+                return VSConstants.E_FAIL;
+            }
+        }
+
+        private int ExecWorker(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut) {
             // preprocessing
             if (pguidCmdGroup == VSConstants.GUID_VSStandardCommandSet97) {
                 switch ((VSConstants.VSStd97CmdID)nCmdID) {
@@ -655,12 +673,27 @@ namespace Microsoft.PythonTools.Language {
                     case VSConstants.VSStd2KCmdID.RETURN:
                         pyPoint = _textView.GetPythonCaret();
                         if (pyPoint != null) {
+                            // https://github.com/Microsoft/PTVS/issues/241
+                            // If the current line is a full line comment and we
+                            // are splitting the text, automatically insert the
+                            // comment marker on the new line.
                             var line = pyPoint.Value.GetContainingLine();
-                            var lineText = line.GetText();
+                            var lineText = pyPoint.Value.Snapshot.GetText(line.Start, pyPoint.Value - line.Start);
                             int comment = lineText.IndexOf('#');
-                            if (comment >= 0 && pyPoint.Value < line.End && line.Start + comment < pyPoint.Value) {
-                                _editorOps.InsertNewLine();
-                                _editorOps.InsertText(lineText.Substring(0, comment + 1));
+                            if (comment >= 0 &&
+                                pyPoint.Value < line.End &&
+                                line.Start + comment < pyPoint.Value &&
+                                string.IsNullOrWhiteSpace(lineText.Remove(comment))
+                            ) {
+                                int extra = lineText.Skip(comment + 1).TakeWhile(char.IsWhiteSpace).Count() + 1;
+                                using (var edit = line.Snapshot.TextBuffer.CreateEdit()) {
+                                    edit.Insert(
+                                        pyPoint.Value.Position,
+                                        _textView.Options.GetNewLineCharacter() + lineText.Substring(0, comment + extra)
+                                    );
+                                    edit.Apply();
+                                }
+                                
                                 return VSConstants.S_OK;
                             }
                         }

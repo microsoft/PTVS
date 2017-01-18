@@ -51,14 +51,14 @@ namespace Microsoft.PythonTools.ImportWizard {
 
             var oleProvider = automationObject as Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
             if (oleProvider == null) {
-                MessageBox.Show("Unable to start wizard: no automation object available.", "Python Tools for Visual Studio");
+                MessageBox.Show("Unable to start wizard: no automation object available.", "Visual Studio");
                 throw new WizardBackoutException();
             }
 
             using (var serviceProvider = new ServiceProvider(oleProvider)) {
                 int hr = EnsurePackageLoaded(serviceProvider);
                 if (ErrorHandler.Failed(hr)) {
-                    MessageBox.Show(string.Format("Unable to start wizard: failed to load Python Tools Package (0x{0:X08})", hr), "Python Tools for Visual Studio");
+                    MessageBox.Show(string.Format("Unable to start wizard: failed to load Python support Package (0x{0:X08})", hr), "Visual Studio");
                     throw new WizardBackoutException();
                 }
                 var uiShell = (IVsUIShell)serviceProvider.GetService(typeof(SVsUIShell));
@@ -83,7 +83,7 @@ namespace Microsoft.PythonTools.ImportWizard {
                 var guid = GuidList.guidPythonToolsCmdSet;
                 hr = uiShell.PostExecCommand(ref guid, PkgCmdIDList.cmdidImportWizard, 0, ref inObj);
                 if (ErrorHandler.Failed(hr)) {
-                    MessageBox.Show(string.Format("Unable to start wizard: Unexpected error 0x{0:X08}", hr), "Python Tools for Visual Studio");
+                    MessageBox.Show(string.Format("Unable to start wizard: Unexpected error 0x{0:X08}", hr), "Visual Studio");
                 }
             }
             throw new WizardCancelledException();

@@ -33,18 +33,17 @@ using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Debugger.Remote;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
+using Microsoft.PythonTools.InteractiveWindow.Shell;
 using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.InterpreterList;
 using Microsoft.PythonTools.Navigation;
 using Microsoft.PythonTools.Options;
 using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.Project.Web;
+using Microsoft.PythonTools.Repl;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Debugger;
 using Microsoft.VisualStudio.Editor;
-using Microsoft.PythonTools.InteractiveWindow.Shell;
-using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Text;
@@ -54,7 +53,6 @@ using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Navigation;
 using Microsoft.VisualStudioTools.Project;
 using NativeMethods = Microsoft.VisualStudioTools.Project.NativeMethods;
-using Microsoft.PythonTools.Repl;
 
 namespace Microsoft.PythonTools {
     /// <summary>
@@ -176,7 +174,6 @@ namespace Microsoft.PythonTools {
         private PythonAutomation _autoObject;
         private PackageContainer _packageContainer;
         internal const string PythonExpressionEvaluatorGuid = "{D67D5DB8-3D44-4105-B4B8-47AB1BA66180}";
-        internal PythonToolsService _pyService;
 
         /// <summary>
         /// Default constructor of the package.
@@ -206,39 +203,6 @@ namespace Microsoft.PythonTools {
                 }
             };
 #endif
-
-            if (IsIpyToolsInstalled()) {
-                MessageBox.Show(
-                    @"WARNING: Both Python Tools for Visual Studio and IronPython Tools are installed.
-
-Only one extension can handle Python source files and having both installed will usually cause both to be broken.
-
-You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visual Studio"" option unchecked.",
-                    "Python Tools for Visual Studio",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Warning
-                );
-            }
-        }
-
-        internal static bool IsIpyToolsInstalled() {
-            // the component guid which IpyTools is installed under from IronPython 2.7
-            const string ipyToolsComponentGuid = "{2DF41B37-FAEF-4FD8-A2F5-46B57FF9E951}";
-
-            // Check if the IpyTools component is known...
-            StringBuilder productBuffer = new StringBuilder(39);
-            if (NativeMethods.MsiGetProductCode(ipyToolsComponentGuid, productBuffer) == 0) {
-                // If it is then make sure that it's installed locally...
-                StringBuilder buffer = new StringBuilder(1024);
-                uint charsReceived = (uint)buffer.Capacity;
-                var res = NativeMethods.MsiGetComponentPath(productBuffer.ToString(), ipyToolsComponentGuid, buffer, ref charsReceived);
-                switch (res) {
-                    case NativeMethods.MsiInstallState.Source:
-                    case NativeMethods.MsiInstallState.Local:
-                        return true;
-                }
-            }
-            return false;
         }
 
         protected override int CreateToolWindow(ref Guid toolWindowType, int id) {
@@ -314,6 +278,10 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 null;
         }
 
+        ToolWindowPane IPythonToolsToolWindowService.GetWindowPane(Type windowType, bool create) {
+            return FindWindowPane(windowType, 0, create) as ToolWindowPane;
+        }
+
         void IPythonToolsToolWindowService.ShowWindowPane(Type windowType, bool focus) {
             var window = FindWindowPane(windowType, 0, true) as ToolWindowPane;
             if (window != null) {
@@ -343,6 +311,9 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
         protected override object GetAutomationObject(string name) {
             if (name == "VsPython") {
+                if (_autoObject == null) {
+                    _autoObject = new PythonAutomation(this);
+                }
                 return _autoObject;
             }
 
@@ -357,30 +328,6 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             return typeof(IPythonLibraryManager);
         }
 
-        public string InteractiveOptions {
-            get {
-                // FIXME
-                return "";
-            }
-        }
-
-        public PythonGeneralOptionsPage GeneralOptionsPage {
-            get {
-                return (PythonGeneralOptionsPage)GetDialogPage(typeof(PythonGeneralOptionsPage));
-            }
-        }
-
-        public PythonDebuggingOptionsPage DebuggingOptionsPage {
-            get {
-                return (PythonDebuggingOptionsPage)GetDialogPage(typeof(PythonDebuggingOptionsPage));
-            }
-        }
-
-        public PythonAdvancedEditorOptionsPage AdvancedEditorOptionsPage {
-            get {
-                return (PythonAdvancedEditorOptionsPage)GetDialogPage(typeof(PythonAdvancedEditorOptionsPage));
-            }
-        }
 
         private new IComponentModel ComponentModel {
             get {
@@ -388,29 +335,8 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
             }
         }
 
-        /// <summary>
-        /// The analyzer which is used for loose files.
-        /// </summary>
-        internal VsProjectAnalyzer DefaultAnalyzer {
-            get {
-                return _pyService.DefaultAnalyzer;
-            }
-        }
-
-        internal PythonToolsService PythonService {
-            get {
-                return _pyService;
-            }
-        }
-
         internal override LibraryManager CreateLibraryManager(CommonPackage package) {
             return new PythonLibraryManager((PythonToolsPackage)package);
-        }
-
-        public IVsSolution Solution {
-            get {
-                return GetService(typeof(SVsSolution)) as IVsSolution;
-            }
         }
 
         /////////////////////////////////////////////////////////////////////////////
@@ -426,55 +352,18 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
 
             var services = (IServiceContainer)this;
 
-            // register our options service which provides registry access for various options
             services.AddService(typeof(IPythonToolsOptionsService), PythonToolsOptionsService.CreateService, promote: true);
-
             services.AddService(typeof(IClipboardService), new ClipboardService(), promote: true);
-
             services.AddService(typeof(IPythonToolsToolWindowService), this, promote: true);
-
-            // register our PythonToolsService which provides access to core PTVS functionality
-            PythonToolsService pyService;
-            try {
-                pyService = _pyService = new PythonToolsService(services);
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
-                ex.ReportUnhandledException(services, GetType(), allowUI: false);
-                throw;
-            }
-
-            services.AddService(typeof(PythonToolsService), pyService, promote: true);
-
-            _autoObject = new PythonAutomation(this);
-
-            services.AddService(
-                typeof(ErrorTaskProvider),
-                (container, serviceType) => {
-                    var errorList = GetService(typeof(SVsErrorList)) as IVsTaskList;
-                    var model = ComponentModel;
-                    var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
-                    return new ErrorTaskProvider(this, errorList, errorProvider);
-                },
-                promote: true);
-
-            services.AddService(
-                typeof(CommentTaskProvider),
-                (container, serviceType) => {
-                    var taskList = GetService(typeof(SVsTaskList)) as IVsTaskList;
-                    var model = ComponentModel;
-                    var errorProvider = model != null ? model.GetService<IErrorProviderFactory>() : null;
-                    return new CommentTaskProvider(this, taskList, errorProvider);
-                },
-                promote: true);
-
+            services.AddService(typeof(PythonLanguageInfo), (container, serviceType) => new PythonLanguageInfo(container), true);
+            services.AddService(typeof(PythonToolsService), PythonToolsService.CreateService, promote: true);
+            services.AddService(typeof(ErrorTaskProvider), ErrorTaskProvider.CreateService, promote: true);
+            services.AddService(typeof(CommentTaskProvider), CommentTaskProvider.CreateService, promote: true);
 
             var solutionEventListener = new SolutionEventsListener(this);
             solutionEventListener.StartListeningForChanges();
 
-            services.AddService(
-                typeof(SolutionEventsListener),
-                solutionEventListener,
-                promote: true
-            );
+            services.AddService(typeof(SolutionEventsListener), solutionEventListener, promote: true);
 
             // Register custom debug event service
             var customDebuggerEventHandler = new CustomDebuggerEventHandler(this);
@@ -505,14 +394,14 @@ You should uninstall IronPython 2.7 and re-install it with the ""Tools for Visua
                 new ShowNativePythonFrames(this),
                 new UsePythonStepping(this),
                 new AzureExplorerAttachDebuggerCommand(this),
+                new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832525", PkgCmdIDList.cmdidWebPythonAtMicrosoft),
+                new OpenWebUrlCommand(this, Strings.IssueTrackerUrl, PkgCmdIDList.cmdidWebPTVSSupport, false),
+                new OpenWebUrlCommand(this, "https://go.microsoft.com/fwlink/?linkid=832517", PkgCmdIDList.cmdidWebDGProducts),
             }, GuidList.guidPythonToolsCmdSet);
 
 
             // Enable the Python debugger UI context
             UIContext.FromUIContextGuid(AD7Engine.DebugEngineGuid).IsActive = true;
-
-            var interpreters = ComponentModel.GetService<IInterpreterRegistryService>();
-            var interpreterService = ComponentModel.GetService<IInterpreterOptionsService>();
 
             // The variable is inherited by child processes backing Test Explorer, and is used in PTVS
             // test discoverer and test executor to connect back to VS.

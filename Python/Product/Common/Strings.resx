@@ -406,9 +406,7 @@ The web.config file will be configured to resolve URIs matching this pattern to 
     <value>The project cannot be launched because the specified working directory "{0}" does not exist. Please check the Project Properties window and correct any configuration errors.</value>
   </data>
   <data name="ErrorOpeningInteractiveWindow" xml:space="preserve">
-    <value>An error occurred opening this interactive window:
-
-{0}</value>
+    <value>An error occurred opening this interactive window.</value>
   </data>
   <data name="ErrorStartingInteractiveProcess" xml:space="preserve">
     <value>Failed to start interactive process:
@@ -544,6 +542,7 @@ Packages that cannot be installed using pip may prevent all listed packages from
   </data>
   <data name="GlobalDefaultSuffix" xml:space="preserve">
     <value> (global default)</value>
+    <comment>Leading space is important</comment>
   </data>
   <data name="UpgradedRemoveCommonProps" xml:space="preserve">
     <value>This project has had old build references removed and may no longer work with prior PTVS versions.</value>
@@ -587,7 +586,7 @@ Packages that cannot be installed using pip may prevent all listed packages from
 {1}</value>
   </data>
   <data name="ProductTitle" xml:space="preserve">
-    <value>Python Tools for Visual Studio</value>
+    <value>Visual Studio - Python support</value>
   </data>
   <data name="UnhandledException" xml:space="preserve">
     <value>Unhandled exception in {3} ({1}:{2})
@@ -608,7 +607,7 @@ You can get more information by running Visual Studio with the /log parameter on
     <value>&amp;Retry</value>
   </data>
   <data name="AzureToolsInstallInstructions" xml:space="preserve">
-    <value>These tools are a free download for your version of Visual Studio that allow you to write, deploy and debug applications for Microsoft Azure in a range of programming languages.</value>
+    <value>These tools are an installable workload for your version of Visual Studio that allow you to write, deploy and debug applications for Microsoft Azure in a range of programming languages.</value>
   </data>
   <data name="AzureToolsRequired" xml:space="preserve">
     <value>This project requires Microsoft Azure Tools for Visual Studio.</value>
@@ -624,6 +623,9 @@ We recommend installing the latest version of Microsoft Azure Tools for Visual S
   <data name="ContinueWithoutAzureToolsUpgrade" xml:space="preserve">
     <value>&amp;Continue
 Some manual steps will be required to configure your project.</value>
+  </data>
+  <data name="CurrentInterpreterDescription" xml:space="preserve">
+    <value>your current environment</value>
   </data>
   <data name="DefaultInterpreterDescription" xml:space="preserve">
     <value>your default environment</value>
@@ -647,6 +649,10 @@ You will need to restart Visual Studio after installation.</value>
   </data>
   <data name="InstallRequirementsHidePackages" xml:space="preserve">
     <value>Hide required &amp;packages</value>
+  </data>
+  <data name="InstallRequirementsIntoCurrentEnv" xml:space="preserve">
+    <value>&amp;Install into {0}</value>
+    <comment>{0} is the localized (and/or user-provided) title of the destination environment</comment>
   </data>
   <data name="InstallRequirementsIntoGlobalEnv" xml:space="preserve">
     <value>&amp;Install into {0}</value>
@@ -791,13 +797,13 @@ modified from these scripts.</value>
     <value>&amp;Continue without Administrator privileges</value>
   </data>
   <data name="ElevateForInstallPackage_DoNotElevate_Note" xml:space="preserve">
-    <value>Package installation may fail if you do not have sufficient permissions</value>
+    <value>This operation may fail if you do not have sufficient permissions</value>
   </data>
   <data name="ElevateForInstallPackage_Elevate" xml:space="preserve">
     <value>&amp;Elevate now</value>
   </data>
   <data name="ElevateForInstallPackage_ElevateAlways" xml:space="preserve">
-    <value>&amp;Always elevate when installing packages</value>
+    <value>&amp;Always elevate when installing or removing packages</value>
   </data>
   <data name="ElevateForInstallPackage_ElevateAlways_Note" xml:space="preserve">
     <value>This dialog will not be shown again</value>
@@ -806,9 +812,264 @@ modified from these scripts.</value>
     <value>You may be prompted for credentials</value>
   </data>
   <data name="ElevateForInstallPackage_MainInstruction" xml:space="preserve">
-    <value>Administrator privileges may be required to install or update this package.</value>
+    <value>Administrator privileges may be required to install, update or remove packages for this environment.</value>
   </data>
   <data name="UpgradedWebBrowserUrlProperty" xml:space="preserve">
     <value>The web browser URL property has been set to a default value. It may be modified through Project Properties.</value>
+  </data>
+  <data name="Test_ErrorConnecting" xml:space="preserve">
+    <value>Error occurred connecting to debuggee.</value>
+  </data>
+  <data name="Test_FailedToStartExited" xml:space="preserve">
+    <value>Failed to execute tests because the process has already exited.</value>
+  </data>
+  <data name="Test_InterpreterDoesNotExist" xml:space="preserve">
+    <value>Interpreter path does not exist: {0}</value>
+  </data>
+  <data name="Test_NoCoverageProduced" xml:space="preserve">
+    <value>Code coverage file not produced...  have you installed coverage.py? http://go.microsoft.com/fwlink/?LinkId=808238</value>
+  </data>
+  <data name="Test_NoTestFinishedNotification" xml:space="preserve">
+    <value>Failed to receive test finish notification.  One or more test results may be missing.</value>
+  </data>
+  <data name="Test_UnableToDetermineInterpreter" xml:space="preserve">
+    <value>Unable to determine interpreter to use for {0}</value>
+  </data>
+  <data name="Test_UnexpectedResult" xml:space="preserve">
+    <value>Unexpected test result: {0}.{1}</value>
+    <comment>{0} is a class name from user code, {1} is a method name from user code</comment>
+  </data>
+  <data name="NoInterpretersDescription" xml:space="preserve">
+    <value>No interpreters</value>
+  </data>
+  <data name="InstallationFailed" xml:space="preserve">
+    <value>Installation failed</value>
+    <comment>Used as exception text</comment>
+  </data>
+  <data name="InstallingPackageFailed" xml:space="preserve">
+    <value>----- Failed to install '{0}' -----
+
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="InstallingPackageStarted" xml:space="preserve">
+    <value>----- Installing '{0}' -----
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="InstallingPackageSuccess" xml:space="preserve">
+    <value>----- Successfully installed '{0}' -----
+
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="InstallingPipFailed" xml:space="preserve">
+    <value>----- Failed to install pip -----
+
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="InstallingPipStarted" xml:space="preserve">
+    <value>----- Installing pip -----
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="InstallingPipSuccess" xml:space="preserve">
+    <value>----- Successfully installed pip -----
+
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="MisconfiguredEnvironment" xml:space="preserve">
+    <value>Operation cannot be started because the environment is not configured.</value>
+    <comment>Used as exception text</comment>
+  </data>
+  <data name="ExecutingCommandFailed" xml:space="preserve">
+    <value>----- Failed to run '{0}' -----
+
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="ExecutingCommandStarted" xml:space="preserve">
+    <value>----- Running '{0}' -----
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="ExecutingCommandSucceeded" xml:space="preserve">
+    <value>----- Successfully ran '{0}' -----
+
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="UninstallingPackageFailed" xml:space="preserve">
+    <value>----- Error while uninstalling '{0}' -----
+'{0}' may not have been uninstalled completely.
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="UninstallingPackageStarted" xml:space="preserve">
+    <value>----- Uninstalling '{0}' -----</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="UninstallingPackageSuccess" xml:space="preserve">
+    <value>----- Successfully uninstalled '{0}' -----
+</value>
+    <comment>Displayed in the output window</comment>
+  </data>
+  <data name="PackageManagementNotSupported_Package" xml:space="preserve">
+    <value>Unable to install {0} because the selected environment does not support package management.
+</value>
+    <comment>{0} is a package name</comment>
+  </data>
+  <data name="PackageManagementNotSupported" xml:space="preserve">
+    <value>The selected environment does not support package management.</value>
+  </data>
+  <data name="UnableToElevate" xml:space="preserve">
+    <value>Visual Studio was unable to launch the elevated process.</value>
+  </data>
+  <data name="InvalidSearchPath" xml:space="preserve">
+    <value>Search path '{0}' is not a valid directory or file.</value>
+  </data>
+  <data name="IssueTrackerUrl" xml:space="preserve">
+    <value>https://go.microsoft.com/fwlink/?LinkId=402428</value>
+    <comment>Should not be localized</comment>
+  </data>
+  <data name="PydReferenceDeprecated" xml:space="preserve">
+    <value>Direct references to .pyd files have been deprecated. We recommend replacing the reference with a Search Path.</value>
+  </data>
+  <data name="RefDeprecatedMessage" xml:space="preserve">
+    <value>[Deprecated]</value>
+  </data>
+  <data name="RefDeprecatedMessageDescription" xml:space="preserve">
+    <value>Explanation of this reference type's deprecation.</value>
+  </data>
+  <data name="WebPIReferenceDeprecated" xml:space="preserve">
+    <value>WebPI references have been deprecated. We recommend replacing the reference with a custom installation script.</value>
+  </data>
+  <data name="ReplProjectConfigurationChanged" xml:space="preserve">
+    <value>The associated project '{0}' has changed its configuration. These changes will not be reflected until you reset this interactive window.</value>
+  </data>
+  <data name="DebugLaunchScriptNameMissing" xml:space="preserve">
+    <value>The project cannot be launched because the startup file is not specified.</value>
+  </data>
+  <data name="PublishToAzure30" xml:space="preserve">
+    <value>Publishing Python projects has recently changed.</value>
+  </data>
+  <data name="PublishToAzure30Message" xml:space="preserve">
+    <value>These changes will allow you to deploy more reliably and quickly, but first you may need to configure your project or deployment target.
+
+When you publish, we will no longer automatically generate a web.config file. You can add one using Add New Item and customize as necessary for your site.
+
+There are no restrictions on the version of Python you may be using when you deploy, however, we will no longer include virtual environments or the Python runtime when you deploy. Only libraries that are directly included in your project will be published.
+
+Please refer to &lt;a href="https://aka.ms/pythononappservice"&gt;aka.ms/PythonOnAppService&lt;/a&gt; for information about configuring and publishing to Azure App Service.</value>
+  </data>
+  <data name="UninstallMessage" xml:space="preserve">
+    <value>Remove this package</value>
+  </data>
+  <data name="UninstallMessage_Package" xml:space="preserve">
+    <value>Remove {0}</value>
+    <comment>{0} is a package name</comment>
+  </data>
+  <data name="UpgradeMessage" xml:space="preserve">
+    <value>Upgrade to the latest version of this package</value>
+  </data>
+  <data name="UpgradeMessage_Package" xml:space="preserve">
+    <value>Upgrade to {0} version {1}</value>
+    <comment>{0} is a package name, {1} is the latest available version number</comment>
+  </data>
+  <data name="AdditionalInformation" xml:space="preserve">
+    <value>Additional information:</value>
+  </data>
+  <data name="CannotGoToDefn" xml:space="preserve">
+    <value>Cannot go to definition. The cursor is not on a recognized symbol.</value>
+  </data>
+  <data name="CannotGoToDefn_Name" xml:space="preserve">
+    <value>Cannot go to definition of "{0}".</value>
+  </data>
+  <data name="ConnErrorMessages_CannotInjectThread" xml:space="preserve">
+    <value>Cannot create thread in debuggee process</value>
+  </data>
+  <data name="ConnErrorMessages_CannotOpenProcess" xml:space="preserve">
+    <value>Cannot open process for debugging</value>
+  </data>
+  <data name="ConnErrorMessages_InterpreterNotInitialized" xml:space="preserve">
+    <value>Python interpreter has not been initialized in this process</value>
+  </data>
+  <data name="ConnErrorMessages_LoadDebuggerBadDebugger" xml:space="preserve">
+    <value>Failed to load debugging script (incorrect version of script?)</value>
+  </data>
+  <data name="ConnErrorMessages_LoadDebuggerFailed" xml:space="preserve">
+    <value>Failed to compile debugging script</value>
+  </data>
+  <data name="ConnErrorMessages_OutOfMemory" xml:space="preserve">
+    <value>Out of memory</value>
+  </data>
+  <data name="ConnErrorMessages_PyDebugAttachNotFound" xml:space="preserve">
+    <value>Cannot find PyDebugAttach.dll</value>
+  </data>
+  <data name="ConnErrorMessages_PythonNotFound" xml:space="preserve">
+    <value>Python interpreter not found</value>
+  </data>
+  <data name="ConnErrorMessages_RemoteAttachRejected" xml:space="preserve">
+    <value>Remote debugging server rejected request to attach</value>
+  </data>
+  <data name="ConnErrorMessages_RemoteInvalidUri" xml:space="preserve">
+    <value>Invalid remote debugging endpoint URI</value>
+  </data>
+  <data name="ConnErrorMessages_RemoteNetworkError" xml:space="preserve">
+    <value>Network error while connecting to remote debugging server</value>
+  </data>
+  <data name="ConnErrorMessages_RemoteSecretMismatch" xml:space="preserve">
+    <value>Secret specified in the Qualifier string did not match the remote secret</value>
+  </data>
+  <data name="ConnErrorMessages_RemoteSslError" xml:space="preserve">
+    <value>Could not establish a secure SSL connection to remote debugging server</value>
+  </data>
+  <data name="ConnErrorMessages_RemoteUnsupportedServer" xml:space="preserve">
+    <value>Remote server is not a supported Python debugging server</value>
+  </data>
+  <data name="ConnErrorMessages_RemoteUnsupportedTransport" xml:space="preserve">
+    <value>This remote debugging transport is not supported by this version of Windows.</value>
+  </data>
+  <data name="ConnErrorMessages_SysGetTraceNotFound" xml:space="preserve">
+    <value>gettrace not found in sys module</value>
+  </data>
+  <data name="ConnErrorMessages_SysNotFound" xml:space="preserve">
+    <value>sys module not found</value>
+  </data>
+  <data name="ConnErrorMessages_SysSetTraceNotFound" xml:space="preserve">
+    <value>settrace not found in sys module</value>
+  </data>
+  <data name="ConnErrorMessages_TimeOut" xml:space="preserve">
+    <value>Timeout while attaching</value>
+  </data>
+  <data name="ConnErrorMessages_UnknownError" xml:space="preserve">
+    <value>Unknown error</value>
+  </data>
+  <data name="ConnErrorMessages_UnknownVersion" xml:space="preserve">
+    <value>Unknown Python version loaded in process</value>
+  </data>
+  <data name="RemoteAzureServiceUnavailable_Host" xml:space="preserve">
+    <value>Could not connect to remote Python process at {0}. Make sure that web sockets are enabled for the corresponding web site in Azure portal.</value>
+  </data>
+  <data name="RemoteSecretMismatch_Host" xml:space="preserve">
+    <value>Secret did not match the server secret at {0}. Make sure that the secret is specified correctly in the Qualifier textbox, e.g. tcp://secret@localhost.</value>
+  </data>
+  <data name="RemoteServiceUnavailable_Host" xml:space="preserve">
+    <value>Could not connect to remote Python process at {0}. Make sure that the process is running, and has called ptvsd.enable_attach().</value>
+  </data>
+  <data name="RemoteUnsupportedServer_Host" xml:space="preserve">
+    <value>The remote server at {0} is not running a remote debugging server, or it is running an unsupported version.</value>
+  </data>
+  <data name="CustomEnvironmentLabel" xml:space="preserve">
+    <value>Custom environment</value>
+  </data>
+  <data name="EnvironmentDeleteConfirmation_NoPath" xml:space="preserve">
+    <value>'{0}' will be removed from the project and all its contents will be deleted from disk.</value>
+  </data>
+  <data name="MissingSuffix" xml:space="preserve">
+    <value> (missing)</value>
+    <comment>Leading space is important</comment>
   </data>
 </root>

@@ -18,10 +18,12 @@ using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
 using System.Reflection;
+using Microsoft.PythonTools.Infrastructure;
 
 namespace Microsoft.PythonTools.Interpreter
 {
     sealed class NotFoundInterpreter : IPythonInterpreter {
+        public void Dispose() { }
         public void Initialize(PythonAnalyzer state) { }
         public IPythonType GetBuiltinType(BuiltinTypeId id) { throw new KeyNotFoundException(); }
         public IList<string> GetModuleNames() { return new string[0]; }
@@ -36,26 +38,25 @@ namespace Microsoft.PythonTools.Interpreter
             Version version,
             string description = null,
             string prefixPath = null,
-            ProcessorArchitecture architecture = ProcessorArchitecture.None,
+            InterpreterArchitecture architecture = default(InterpreterArchitecture),
             string descriptionSuffix = null) {
             Configuration = new InterpreterConfiguration(
                 id,
-                string.IsNullOrEmpty(description) ? "Unknown Python" : description,
+                description ?? "Unknown Python {0}{1: ()} (unavailable)".FormatUI(version, architecture),
                 prefixPath,
-                null,
                 null,
                 null,
                 null,
                 architecture,
                 version,
-                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured,
-                "(unavailable)"
+                InterpreterUIMode.CannotBeDefault | InterpreterUIMode.CannotBeConfigured
             );
         }
 
         public string Description { get; private set; }
         public InterpreterConfiguration Configuration { get; private set; }
         public Guid Id { get; private set; }
+        public IPackageManager PackageManager => null;
 
         public IPythonInterpreter CreateInterpreter() {
             return new NotFoundInterpreter();

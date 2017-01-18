@@ -58,9 +58,10 @@ namespace Microsoft.PythonTools.Project {
         public static async Task ShowDialog(
             PythonProjectNode project,
             IInterpreterRegistryService service,
+            string requirementsPath,
             bool browseForExisting = false
         ) {
-            using (var view = new AddVirtualEnvironmentView(project, service, project.ActiveInterpreter)) {
+            using (var view = new AddVirtualEnvironmentView(project, service, project.ActiveInterpreter.Configuration.Id, requirementsPath)) {
                 var wnd = new AddVirtualEnvironment(project.Site, view);
 
                 if (browseForExisting) {
@@ -77,7 +78,7 @@ namespace Microsoft.PythonTools.Project {
                     }
 
                     view.ShowBrowsePathError = true;
-                    view.BrowseOrigPrefix = DerivedInterpreterFactory.GetOrigPrefixPath(path);
+                    view.BrowseOrigPrefix = VirtualEnv.GetOrigPrefixPath(path);
                 }
 
                 wnd.VirtualEnvPathTextBox.ScrollToEnd();

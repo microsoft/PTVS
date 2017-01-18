@@ -16,8 +16,8 @@
 
 using System;
 using System.ComponentModel.Design;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Settings;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Options {
     class PythonToolsOptionsService : IPythonToolsOptionsService {
@@ -38,10 +38,16 @@ namespace Microsoft.PythonTools.Options {
 
         public void SaveString(string name, string category, string value) {
             var path = GetCollectionPath(category);
-            if (!_settingsStore.CollectionExists(path)) {
-                _settingsStore.CreateCollection(path);
+            if (value == null) {
+                if (_settingsStore.CollectionExists(path)) {
+                    _settingsStore.DeleteProperty(path, name);
+                }
+            } else {
+                if (!_settingsStore.CollectionExists(path)) {
+                    _settingsStore.CreateCollection(path);
+                }
+                _settingsStore.SetString(path, name, value);
             }
-            _settingsStore.SetString(path, name, value);
         }
 
         private static string GetCollectionPath(string category) {

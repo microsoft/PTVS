@@ -16,7 +16,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio.Text;
 
 namespace Microsoft.PythonTools.Intellisense {
@@ -25,43 +29,136 @@ namespace Microsoft.PythonTools.Intellisense {
     /// the path to the file, the analyzer, and the buffer parser being used to track changes to edits
     /// amongst o
     /// </summary>
-    internal sealed class AnalysisEntry {
+    internal sealed class AnalysisEntry : IDisposable {
         private readonly int _fileId;
         private readonly string _path;
         public readonly VsProjectAnalyzer _analyzer;
         private readonly Dictionary<object, object> _properties = new Dictionary<object, object>();
 
         internal IIntellisenseCookie _cookie;
-        internal BufferParser BufferParser;
+        private readonly object _bufferParserLock = new object();
+        private BufferParser _bufferParser;
+        private TaskCompletionSource<BufferParser> _bufferParserTask, _createBufferParserTask;
 
         /// <summary>
         /// Raised when a new analysis is available for this AnalyisEntry
         /// </summary>
         public event EventHandler AnalysisComplete;
         public readonly bool IsTemporaryFile;
+        public readonly bool SuppressErrorList;
 
-        private static readonly object _searchPathEntryKey = new { Name = "SearchPathEntry" };
-
-        public AnalysisEntry(VsProjectAnalyzer analyzer, string path, int fileId, bool isTemporaryFile = false) {
+        public AnalysisEntry(VsProjectAnalyzer analyzer, string path, int fileId, bool isTemporaryFile = false, bool suppressErrorList = false) {
             _analyzer = analyzer;
             _path = path;
             _fileId = fileId;
             IsTemporaryFile = isTemporaryFile;
+            SuppressErrorList = suppressErrorList;
         }
 
-        internal void OnAnalysisComplete() {
+        public void Dispose() {
+            _bufferParser?.Dispose();
+        }
+
+        internal async void OnAnalysisComplete() {
             IsAnalyzed = true;
             AnalysisComplete?.Invoke(this, EventArgs.Empty);
 
-            var bufferParser = BufferParser;
-            if (bufferParser != null) {
-                foreach (var buffer in bufferParser.Buffers) {
-                    var events = buffer.GetNewAnalysisRegistrations();
-                    foreach (var notify in events) {
-                        notify(this);
+            BufferParser bufferParser;
+            try {
+                bufferParser = await GetBufferParserAsync();
+            } catch (OperationCanceledException) {
+                return;
+            }
+
+            foreach (var notify in bufferParser.Buffers.SelectMany(b => b.GetNewAnalysisRegistrations())) {
+                notify(this);
+            }
+        }
+
+        private void NotifyAllRegistrations(BufferParser bufferParser) {
+            foreach (var notify in bufferParser.Buffers.SelectMany(b => b.GetNewAnalysisEntryRegistrations())) {
+                notify(this);
+            }
+            foreach (var notify in bufferParser.Buffers.SelectMany(b => b.GetParseTreeRegistrations())) {
+                notify(this);
+            }
+            foreach (var notify in bufferParser.Buffers.SelectMany(b => b.GetNewAnalysisRegistrations())) {
+                notify(this);
+            }
+        }
+
+        internal BufferParser TryGetBufferParser() {
+            lock (_bufferParserLock) {
+                return _bufferParser;
+            }
+        }
+
+        internal Task<BufferParser> GetBufferParserAsync() {
+            lock (_bufferParserLock) {
+                if (_bufferParser != null) {
+                    return Task.FromResult(_bufferParser);
+                }
+                if (_bufferParserTask == null) {
+                    _bufferParserTask = new TaskCompletionSource<BufferParser>();
+                }
+                return _bufferParserTask.Task;
+            }
+        }
+
+        internal void ClearBufferParser(BufferParser expected) {
+            lock (_bufferParserLock) {
+                Debug.Assert(_bufferParser != null && expected == _bufferParser);
+                _bufferParser = null;
+                _bufferParserTask?.TrySetCanceled();
+                _bufferParserTask = null;
+                _createBufferParserTask?.TrySetCanceled();
+                _createBufferParserTask = null;
+            }
+        }
+
+        internal async Task<BufferParser> GetOrCreateBufferParser(
+            VsProjectAnalyzer analyzer,
+            ITextBuffer buffer,
+            Action<BufferParser> onCreate,
+            Action<BufferParser> onGet
+        ) {
+            BufferParser bp;
+            TaskCompletionSource<BufferParser> bpt = null, cbpt = null, tcs = null;
+
+            lock (_bufferParserLock) {
+                bp = _bufferParser;
+                if (bp == null) {
+                    cbpt = _createBufferParserTask;
+                    bpt = _bufferParserTask;
+                    if (cbpt == null) {
+                        _createBufferParserTask = tcs = new TaskCompletionSource<BufferParser>();
                     }
                 }
             }
+
+            // There is an existing task doing creation, so wait on it.
+            if (cbpt != null) {
+                bp = await cbpt.Task;
+            }
+
+            if (bp != null) {
+                onGet(bp);
+                return bp;
+            }
+
+            bp = await BufferParser.CreateAsync(this, analyzer, buffer);
+            lock (_bufferParserLock) {
+                _bufferParser = bp;
+                _bufferParserTask = null;
+                _createBufferParserTask = null;
+            }
+            onCreate(bp);
+            tcs.TrySetResult(bp);
+            bpt?.TrySetResult(bp);
+
+            NotifyAllRegistrations(bp);
+
+            return bp;
         }
 
         public VsProjectAnalyzer Analyzer => _analyzer;
@@ -80,46 +177,41 @@ namespace Microsoft.PythonTools.Intellisense {
         public Dictionary<object, object> Properties => _properties;
 
         public string GetLine(int line) {
-            return AnalysisCookie.GetLine(line);
+            return AnalysisCookie?.GetLine(line);
         }
 
-        internal void OnParseComplete() {
-            var bufferParser = BufferParser;
-            if (bufferParser != null) {
-                foreach (var buffer in bufferParser.Buffers) {
-                    var events = buffer.GetParseTreeRegistrations();
-                    foreach (var notify in events) {
-                        notify(this);
-                    }
+        internal async void OnParseComplete() {
+            BufferParser bufferParser;
+            try {
+                bufferParser = await GetBufferParserAsync();
+            } catch (OperationCanceledException) {
+                return;
+            }
+            foreach (var buffer in bufferParser.Buffers) {
+                var events = buffer.GetParseTreeRegistrations();
+                foreach (var notify in events) {
+                    notify(this);
                 }
             }
         }
 
-        internal void OnNewAnalysisEntry() {
-            var bufferParser = BufferParser;
-            if (bufferParser != null) {
-                foreach (var buffer in bufferParser.Buffers) {
-                    var events = buffer.GetNewAnalysisEntryRegistrations();
-                    foreach (var notify in events) {
-                        notify(this);
-                    }
+        internal async void OnNewAnalysisEntry() {
+            BufferParser bufferParser;
+            try {
+                bufferParser = await GetBufferParserAsync();
+            } catch (OperationCanceledException) {
+                return;
+            }
+            foreach (var buffer in bufferParser.Buffers) {
+                var events = buffer.GetNewAnalysisEntryRegistrations();
+                foreach (var notify in events) {
+                    notify(this);
                 }
-            }
-        }
-
-        public string SearchPathEntry {
-            get {
-                object result;
-                Properties.TryGetValue(_searchPathEntryKey, out result);
-                return (string)result;
-            }
-            set {
-                Properties[_searchPathEntryKey] = value;
             }
         }
 
         public int GetBufferId(ITextBuffer buffer) {
-            var bufferParser = BufferParser;
+            var bufferParser = _bufferParser;
             if (bufferParser != null) {
                 var res = bufferParser.GetBufferId(buffer);
                 if (res != null) {
@@ -139,7 +231,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public ITextVersion GetAnalysisVersion(ITextBuffer buffer) {
-            var bufferParser = BufferParser;
+            var bufferParser = _bufferParser;
             if (bufferParser != null) {
                 var res = bufferParser.GetAnalysisVersion(buffer);
                 if (res != null) {
@@ -155,10 +247,10 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         public async Task EnsureCodeSyncedAsync(ITextBuffer buffer) {
-            // See GetBufferId above, this is really just defense in depth...
-            var bufferParser = BufferParser;
-            if (bufferParser != null) {
-                await bufferParser.EnsureCodeSynced(buffer);
+            try {
+                var bufferParser = await GetBufferParserAsync();
+                await bufferParser.EnsureCodeSyncedAsync(buffer);
+            } catch (OperationCanceledException) {
             }
         }
     }

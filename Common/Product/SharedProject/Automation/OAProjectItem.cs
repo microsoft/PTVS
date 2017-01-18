@@ -164,12 +164,12 @@ namespace Microsoft.VisualStudioTools.Project.Automation {
                 if (parentNode is ProjectNode) {
                     // The root node for the project
                     return ((OAProject)parentNode.GetAutomationObject()).ProjectItems;
-                }
-                if (parentNode is FolderNode) {
+                } else if (parentNode is FolderNode) {
                     // The root node for the project
                     return ((OAFolderItem)parentNode.GetAutomationObject()).ProjectItems;
                 } else {
                     // Not supported. Override this method in derived classes to return appropriate collection object
+                    Debug.WriteLine("Do not know Collection for type {0} with parent {1}", GetType().FullName, parentNode.GetType().FullName);
                     throw new InvalidOperationException();
                 }
             }

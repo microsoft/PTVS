@@ -40,5 +40,11 @@ namespace Microsoft.PythonTools.Interpreter {
         /// Creates an IPythonInterpreter instance.
         /// </summary>
         IPythonInterpreter CreateInterpreter();
+
+        /// <summary>
+        /// Gets the associated package manager. This may be null,
+        /// and will not change after first access.
+        /// </summary>
+        IPackageManager PackageManager { get; }
     }
 }

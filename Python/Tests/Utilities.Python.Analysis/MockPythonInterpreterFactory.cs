@@ -36,13 +36,18 @@ namespace TestUtilities.Python {
         public const string InvalidReason = "Database is invalid";
         public const string MissingModulesReason = "Database is missing modules";
 
-        public MockPythonInterpreterFactory(InterpreterConfiguration config, bool withStatusUpdater = false) {
+        public MockPythonInterpreterFactory(
+            InterpreterConfiguration config,
+            bool withStatusUpdater = false,
+            IPackageManager packageManager = null
+        ) {
             _config = config;
 
             _isCurrent = false;
             IsCurrentReason = NoDatabaseReason;
 
             _useUpdater = withStatusUpdater;
+            PackageManager = packageManager;
         }
 
         public void Dispose() {
@@ -62,6 +67,8 @@ namespace TestUtilities.Python {
             return new MockPythonInterpreter(this);
         }
 
+        public IPackageManager PackageManager { get; set; }
+
         public void GenerateDatabase(GenerateDatabaseOptions options, Action<int> onExit = null) {
             IsCurrentReason = GeneratingReason;
             IsCurrent = false;
@@ -72,7 +79,7 @@ namespace TestUtilities.Python {
                 _updater = new AnalyzerStatusUpdater(_config.Id);
                 _updater.WaitForWorkerStarted();
                 _updater.ThrowPendingExceptions();
-                _updater.UpdateStatus(0, 0);
+                _updater.UpdateStatus(0, 0, 0);
             }
         }
 
@@ -83,7 +90,7 @@ namespace TestUtilities.Python {
         public void EndGenerateCompletionDatabase(string id, bool success) {
             if (_updater != null) {
                 for (int i = 0; i <= 100; i += 30) {
-                    _updater.UpdateStatus(i, 100);
+                    _updater.UpdateStatus(i, 100, 0);
                     // Need to sleep to allow the update to go through.
                     Thread.Sleep(500);
                 }
@@ -182,6 +189,10 @@ namespace TestUtilities.Python {
             object value = null;
             _properties?.TryGetValue(propName, out value);
             return value;
+        }
+
+        public IEnumerable<string> GetUpToDateModules() {
+            yield break;
         }
     }
 }

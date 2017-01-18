@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -25,7 +26,9 @@ using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Analysis.Analyzer;
 using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter.Ast;
 using Microsoft.PythonTools.Interpreter.Default;
+using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
@@ -141,19 +144,24 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <param name="interpreter">The Python interprefer which will be used
         /// to analyze the extension module.</param>
         /// <param name="moduleName">The module name of the extension module.</param>
-        public Task LoadExtensionModuleAsync(string moduleName, string extensionModuleFilename, CancellationToken cancellationToken = default(CancellationToken)) {
-            return Task.Factory.StartNew(
-                new ExtensionModuleLoader(
-                    this,
-                    _factory,
-                    moduleName,
-                    extensionModuleFilename,
-                    cancellationToken
-                ).LoadExtensionModule
+        public void LoadExtensionModule(
+            ModulePath moduleName,
+            CancellationToken cancellationToken = default(CancellationToken)
+        ) {
+            var loader = new ExtensionModuleLoader(
+                this,
+                _factory,
+                moduleName,
+                cancellationToken
             );
+            loader.LoadExtensionModule();
         }
 
-        public bool UnloadExtensionModule(string moduleName) {
+        public void AddModule(string moduleName, IPythonModule module) {
+            _sharedState.Modules[moduleName] = module;
+        }
+
+        public bool UnloadModule(string moduleName) {
             IPythonModule dummy;
             return _sharedState.Modules.TryRemove(moduleName, out dummy);
         }
@@ -164,20 +172,18 @@ namespace Microsoft.PythonTools.Interpreter {
             return res.Task;
         }
 
-        class ExtensionModuleLoader {
+        internal class ExtensionModuleLoader {
             private readonly PythonTypeDatabase _typeDb;
             private readonly IPythonInterpreterFactory _factory;
-            private readonly string _moduleName;
-            private readonly string _extensionFilename;
+            private readonly ModulePath _moduleName;
             private readonly CancellationToken _cancel;
 
             const string _extensionModuleInfoFile = "extensions.$list";
 
-            public ExtensionModuleLoader(PythonTypeDatabase typeDb, IPythonInterpreterFactory factory, string moduleName, string extensionFilename, CancellationToken cancel) {
+            public ExtensionModuleLoader(PythonTypeDatabase typeDb, IPythonInterpreterFactory factory, ModulePath moduleName, CancellationToken cancel) {
                 _typeDb = typeDb;
                 _factory = factory;
                 _moduleName = moduleName;
-                _extensionFilename = extensionFilename;
                 _cancel = cancel;
             }
 
@@ -186,17 +192,14 @@ namespace Microsoft.PythonTools.Interpreter {
                 string dbFile = null;
                 // open the file locking it - only one person can look at the "database" of per-project analysis.
                 using (var fs = OpenProjectExtensionList()) {
-                    dbFile = FindDbFile(_factory, _extensionFilename, existingModules, dbFile, fs);
+                    dbFile = FindDbFile(_factory, _moduleName.SourceFile, existingModules, dbFile, fs);
 
                     if (dbFile == null) {
-                        dbFile = GenerateDbFile(_factory, _moduleName, _extensionFilename, existingModules, dbFile, fs);
+                        dbFile = GenerateDbFile(_factory, _moduleName, existingModules, dbFile, fs);
                     }
                 }
 
-                _typeDb._sharedState.Modules[_moduleName] = new CPythonModule(_typeDb, _moduleName, dbFile, false);
-            }
-
-            private void PublishModule(object state) {
+                _typeDb._sharedState.Modules[_moduleName.FullName] = new CPythonModule(_typeDb, _moduleName.FullName, dbFile, false);
             }
 
             private FileStream OpenProjectExtensionList() {
@@ -209,7 +212,7 @@ namespace Microsoft.PythonTools.Interpreter {
                         if (_cancel.CanBeCanceled) {
                             _cancel.WaitHandle.WaitOne(100);
                         } else {
-                            System.Threading.Thread.Sleep(100);
+                            Thread.Sleep(100);
                         }
                     }
                 }
@@ -217,7 +220,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 throw new CannotAnalyzeExtensionException("Cannot access per-project extension registry.");
             }
 
-            private string GenerateDbFile(IPythonInterpreterFactory interpreter, string moduleName, string extensionModuleFilename, List<string> existingModules, string dbFile, FileStream fs) {
+            private string GenerateDbFile(IPythonInterpreterFactory interpreter, ModulePath moduleName, List<string> existingModules, string dbFile, FileStream fs) {
                 // we need to generate the DB file
                 dbFile = Path.Combine(ReferencesDatabasePath, moduleName + ".$project.idb");
                 int retryCount = 0;
@@ -225,13 +228,21 @@ namespace Microsoft.PythonTools.Interpreter {
                     dbFile = Path.Combine(ReferencesDatabasePath, moduleName + "." + ++retryCount + ".$project.idb");
                 }
 
-                using (var output = interpreter.Run(
+                var args = new List<string> {
                     PythonToolsInstallPath.GetFile("ExtensionScraper.py"),
                     "scrape",
-                    "-",                                    // do not use __import__
-                    extensionModuleFilename,                // extension module path
-                    Path.ChangeExtension(dbFile, null)      // output file path (minus .idb)
-                    )) {
+                };
+
+                if (moduleName.IsNativeExtension) {
+                    args.Add("-");
+                    args.Add(moduleName.SourceFile);
+                } else {
+                    args.Add(moduleName.ModuleName);
+                    args.Add(moduleName.LibraryPath);
+                }
+                args.Add(Path.ChangeExtension(dbFile, null));
+
+                using (var output = interpreter.Run(args.ToArray())) {
                     if (_cancel.CanBeCanceled) {
                         if (WaitHandle.WaitAny(new[] { _cancel.WaitHandle, output.WaitHandle }) != 1) {
                             // we were cancelled
@@ -246,9 +257,9 @@ namespace Microsoft.PythonTools.Interpreter {
                         // save the new entry in the DB file
                         existingModules.Add(
                             String.Format("{0}|{1}|{2}|{3}",
-                                extensionModuleFilename,
+                                moduleName.SourceFile,
                                 interpreter.Configuration.Id,
-                                new FileInfo(extensionModuleFilename).LastWriteTime.ToString("O"),
+                                new FileInfo(moduleName.SourceFile).LastWriteTime.ToString("O"),
                                 dbFile
                             )
                         );
@@ -272,11 +283,17 @@ namespace Microsoft.PythonTools.Interpreter {
             const int extensionTimeStamp = 2;
             const int dbFileIndex = 3;
 
+            internal static bool AlwaysGenerateDb = false;
+
             /// <summary>
             /// Finds the appropriate entry in our database file and returns the name of the .idb file to be loaded or null
             /// if we do not have a generated .idb file.
             /// </summary>
             private static string FindDbFile(IPythonInterpreterFactory interpreter, string extensionModuleFilename, List<string> existingModules, string dbFile, FileStream fs) {
+                if (AlwaysGenerateDb) {
+                    return null;
+                }
+
                 var reader = new StreamReader(fs);
 
                 string line;
@@ -326,6 +343,10 @@ namespace Microsoft.PythonTools.Interpreter {
 
         public static PythonTypeDatabase CreateDefaultTypeDatabase(PythonInterpreterFactoryWithDatabase factory) {
             return new PythonTypeDatabase(factory, BaselineDatabasePath, isDefaultDatabase: true);
+        }
+
+        internal static PythonTypeDatabase CreateDefaultTypeDatabase() {
+            return CreateDefaultTypeDatabase(new Version(2, 7));
         }
 
         internal static PythonTypeDatabase CreateDefaultTypeDatabase(Version languageVersion) {
@@ -380,10 +401,8 @@ namespace Microsoft.PythonTools.Interpreter {
         public static async Task<int> GenerateAsync(PythonTypeDatabaseCreationRequest request) {
             var fact = request.Factory;
             var evt = request.OnExit;
-            if (fact == null || !Directory.Exists(fact.Configuration.LibraryPath)) {
-                if (evt != null) {
-                    evt(NotSupportedExitCode);
-                }
+            if (fact == null) {
+                evt?.Invoke(NotSupportedExitCode);
                 return NotSupportedExitCode;
             }
             var outPath = request.OutputPath;
@@ -405,8 +424,6 @@ namespace Microsoft.PythonTools.Interpreter {
                 "/id", fact.Configuration.Id,
                 "/version", fact.Configuration.Version.ToString(),
                 "/python", fact.Configuration.InterpreterPath,
-                request.DetectLibraryPath ? null : "/library",
-                request.DetectLibraryPath ? null : fact.Configuration.LibraryPath,
                 "/outdir", outPath,
                 "/basedb", baseDb,
                 (request.SkipUnchanged ? null : "/all"),  // null will be filtered out; empty strings are quoted
@@ -649,6 +666,44 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         /// <summary>
+        /// Gets the set of search paths for the specified factory as
+        /// efficiently as possible. This may involve executing the
+        /// interpreter, and may cache the paths for retrieval later.
+        /// </summary>
+        public static async Task<IList<PythonLibraryPath>> GetDatabaseSearchPathsAsync(IPythonInterpreterFactory factory) {
+            var dbPath = (factory as PythonInterpreterFactoryWithDatabase)?.DatabasePath;
+            for (int retries = 5; retries > 0; --retries) {
+                if (!string.IsNullOrEmpty(dbPath)) {
+                    var paths = GetCachedDatabaseSearchPaths(dbPath);
+                    if (paths != null) {
+                        return paths;
+                    }
+                }
+
+                try {
+                    var paths = await GetUncachedDatabaseSearchPathsAsync(factory.Configuration.InterpreterPath);
+                    if (!string.IsNullOrEmpty(dbPath)) {
+                        WriteDatabaseSearchPaths(dbPath, paths);
+                    }
+                    return paths;
+                } catch (InvalidOperationException) {
+                    // Failed to get paths
+                    break;
+                } catch (IOException) {
+                    // Failed to write paths - sleep and then loop
+                    Thread.Sleep(50);
+                }
+            }
+
+            var ospy = PathUtils.FindFile(factory.Configuration.PrefixPath, "os.py", firstCheck: new[] { "Lib" });
+            if (!string.IsNullOrEmpty(ospy)) {
+                return GetDefaultDatabaseSearchPaths(PathUtils.GetParent(ospy));
+            }
+
+            return Array.Empty<PythonLibraryPath>();
+        }
+
+        /// <summary>
         /// Gets the set of search paths by running the interpreter.
         /// </summary>
         /// <param name="interpreter">Path to the interpreter.</param>
@@ -661,6 +716,9 @@ namespace Microsoft.PythonTools.Interpreter {
             // path that we can filter out later
             var tempWorkingDir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             Directory.CreateDirectory(tempWorkingDir);
+            var srcGetSearchPaths = PythonToolsInstallPath.GetFile("get_search_paths.py", typeof(PythonTypeDatabase).Assembly);
+            var getSearchPaths = PathUtils.GetAbsoluteFilePath(tempWorkingDir, PathUtils.GetFileOrDirectoryName(srcGetSearchPaths));
+            File.Copy(srcGetSearchPaths, getSearchPaths);
 
             try {
                 using (var proc = ProcessOutput.Run(
@@ -668,14 +726,19 @@ namespace Microsoft.PythonTools.Interpreter {
                     new[] {
                         "-S",   // don't import site - we do that in code
                         "-E",   // ignore environment
-                        "-c", "import sys;print('\\n'.join(sys.path));print('-');import site;site.main();print('\\n'.join(sys.path))"
+                        getSearchPaths
                     },
                     tempWorkingDir,
                     null,
                     false,
                     null
                 )) {
-                    if (await proc != 0) {
+                    int exitCode = -1;
+                    try {
+                        exitCode = await proc;
+                    } catch (OperationCanceledException) {
+                    }
+                    if (exitCode != 0) {
                         throw new InvalidOperationException(string.Format(
                             "Cannot obtain list of paths{0}{1}",
                             Environment.NewLine,
@@ -695,57 +758,17 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
             }
 
-            var result = new List<PythonLibraryPath>();
-            var treatPathsAsStandardLibrary = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            bool builtinLibraries = true;
-            foreach (var p in lines) {
-                if (p == "-") {
-                    if (builtinLibraries) {
-                        // Seen all the builtins
-                        builtinLibraries = false;
-                        continue;
-                    } else {
-                        // Extra hyphen, so stop processing
-                        break;
-                    }
+            return lines.Select(s => {
+                if (s.StartsWith(tempWorkingDir, StringComparison.OrdinalIgnoreCase)) {
+                    return null;
                 }
-
-                if (string.IsNullOrEmpty(p) || p == ".") {
-                    continue;
-                }
-
-                string path;
                 try {
-                    if (!Path.IsPathRooted(p)) {
-                        path = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(interpreter), p));
-                    } else {
-                        path = Path.GetFullPath(p);
-                    }
-                } catch (ArgumentException) {
-                    continue;
-                } catch (PathTooLongException) {
-                    continue;
+                    return PythonLibraryPath.Parse(s);
+                } catch (FormatException) {
+                    Debug.Fail("Invalid format for search path: " + s);
+                    return null;
                 }
-
-                if (string.Equals(p, tempWorkingDir, StringComparison.OrdinalIgnoreCase)) {
-                    continue;
-                }
-
-                if (Directory.Exists(path)) {
-                    if (builtinLibraries) {
-                        // Looking at first section of output, which are
-                        // considered to be the "standard library"
-                        treatPathsAsStandardLibrary.Add(path);
-                    } else {
-                        // Looking at second section of output, which
-                        // includes site-packages and .pth files
-                        result.Add(new PythonLibraryPath(path, treatPathsAsStandardLibrary.Contains(path), null));
-                    }
-                }
-            }
-
-            return result;
+            }).Where(p => p != null).ToList();
         }
 
         /// <summary>
@@ -755,10 +778,27 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <returns>The cached list of search paths.</returns>
         /// <remarks>Added in 2.2</remarks>
         public static List<PythonLibraryPath> GetCachedDatabaseSearchPaths(string databasePath) {
+            var cacheFile = Path.Combine(databasePath, "database.path");
+            if (!File.Exists(cacheFile)) {
+                return null;
+            }
+            if (!IsDatabaseVersionCurrent(databasePath)) {
+                // Cache file with no database is only valid for one hour
+                try {
+                    var time = File.GetLastWriteTimeUtc(cacheFile);
+                    if (time.AddHours(1) < DateTime.UtcNow) {
+                        File.Delete(cacheFile);
+                        return null;
+                    }
+                } catch (IOException) {
+                    return null;
+                }
+            }
+
+
             try {
                 var result = new List<PythonLibraryPath>();
-
-                using (var file = File.OpenText(Path.Combine(databasePath, "database.path"))) {
+                using (var file = File.OpenText(cacheFile)) {
                     string line;
                     while ((line = file.ReadLine()) != null) {
                         try {
@@ -782,6 +822,7 @@ namespace Microsoft.PythonTools.Interpreter {
         /// <param name="paths">The list of search paths.</param>
         /// <remarks>Added in 2.2</remarks>
         public static void WriteDatabaseSearchPaths(string databasePath, IEnumerable<PythonLibraryPath> paths) {
+            Directory.CreateDirectory(databasePath);
             using (var file = new StreamWriter(Path.Combine(databasePath, "database.path"))) {
                 foreach (var path in paths) {
                     file.WriteLine(path.ToString());

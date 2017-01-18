@@ -137,6 +137,7 @@ namespace TestUtilities.UI {
 
         public void Hide() {
             ErrorHandler.ThrowOnFailure(((IVsWindowFrame)_toolWindow.Frame).Hide());
+            ErrorHandler.ThrowOnFailure(((IVsWindowPane)_toolWindow.GetIVsWindowPane()).ClosePane());
         }
 
         public void Invoke(Action action) {
@@ -313,7 +314,7 @@ namespace TestUtilities.UI {
         private void WaitForTextInternal(IList<string> expected, bool matchAtStart, bool matchAtEnd, TimeSpan? timeout = null) {
             using (var cts = new CancellationTokenSource(timeout ?? TimeSpan.FromSeconds(15)))
             using (var changed = new ManualResetEventSlim()) {
-                EventHandler<TextContentChangedEventArgs> handler = (s, e) => changed.Set();
+                EventHandler<TextContentChangedEventArgs> handler = (s, e) => changed.SetIfNotDisposed();
                 Window.TextView.TextBuffer.Changed += handler;
                 try {
                     while (!MatchTextInternal(expected, matchAtStart, matchAtEnd, true)) {
@@ -478,7 +479,7 @@ namespace TestUtilities.UI {
                 }
 
                 using (var evt = new ManualResetEventSlim()) {
-                    Session.Dismissed += (s, e) => evt.Set();
+                    Session.Dismissed += (s, e) => evt.SetIfNotDisposed();
                     if (Session.IsDismissed) {
                         evt.Set();
                     }

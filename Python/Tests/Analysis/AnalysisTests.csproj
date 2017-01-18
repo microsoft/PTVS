@@ -43,15 +43,12 @@
   <ItemGroup>
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="Microsoft.Dynamic">
-      <HintPath>$(BuildRoot)Python\Product\IronPython\Microsoft.Dynamic.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="Microsoft.Scripting">
-      <HintPath>$(BuildRoot)Python\Product\IronPython\Microsoft.Scripting.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="Microsoft.Scripting.Metadata">
-      <HintPath>$(BuildRoot)Python\Product\IronPython\Microsoft.Scripting.Metadata.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
@@ -67,6 +64,7 @@
     <Compile Include="AnalysisTest.cs" />
     <Compile Include="AnalysisTest.Perf.cs" />
     <Compile Include="AnalyzerTests.cs" />
+    <Compile Include="AstAnalysisTests.cs" />
     <Compile Include="BaseAnalysisTest.cs" />
     <Compile Include="CompletionDBTest.cs" />
     <Compile Include="DatabaseTest.cs" />
@@ -103,6 +101,10 @@
     <ProjectReference Include="..\..\Product\Common\Common.csproj">
       <Project>{b3db0521-d9e3-4f48-9e2e-e5ecae886049}</Project>
       <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Product\RunElevated\RunElevated.csproj">
+      <Project>{4e18d41e-5e73-461f-9289-f6709257171a}</Project>
+      <Name>RunElevated</Name>
     </ProjectReference>
     <ProjectReference Include="..\Utilities.Python.Analysis\TestUtilities.Python.Analysis.csproj">
       <Project>{a731c4c3-3741-4080-a946-c47574c1f3bf}</Project>

@@ -1,3 +1,4 @@
+extern alias analysis;
 // Python Tools for Visual Studio
 // Copyright(c) Microsoft Corporation
 // All rights reserved.
@@ -16,9 +17,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Automation;
+using analysis::Microsoft.PythonTools.Parsing;
 using EnvDTE;
 using Microsoft.PythonTools;
 using Microsoft.VisualStudio.ComponentModelHost;
@@ -45,8 +48,7 @@ namespace PythonToolsUITests {
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void ToggleableOptionTest() {
             using (var app = new PythonVisualStudioApp()) {
-                var pyService = app.ServiceProvider.GetPythonToolsService();
-                pyService.SetFormattingOption("SpaceBeforeClassDeclarationParen", true);
+                app.PythonToolsService.SetFormattingOption("SpaceBeforeClassDeclarationParen", true);
                 foreach (var expectedResult in new bool?[] { false, null, true }) {
                     using (var dialog = ToolsOptionsDialog.FromDte(app)) {
                         dialog.SelectedView = "Text Editor/Python/Formatting/Spacing";
@@ -66,7 +68,7 @@ namespace PythonToolsUITests {
 
                         Assert.AreEqual(
                             expectedResult,
-                            pyService.GetFormattingOption("SpaceBeforeClassDeclarationParen")
+                            app.PythonToolsService.GetFormattingOption("SpaceBeforeClassDeclarationParen")
                         );
                     }
                 }
@@ -83,7 +85,19 @@ def f():
 
 # short comment
 def g():
-    pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) });
+    pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) }, null, null);
+        }
+
+        [TestMethod, Priority(1)]
+        [HostType("VSTestHost"), TestCategory("Installed")]
+        public void FormatAsyncDocument() {
+            FormattingTest("async.py", null, @"async  def f(x):
+    async  for  i in await  x:
+        pass
+    # comment before
+    async   with x:
+        pass
+", new Span[] { }, null, null, new Version(3, 5));
         }
 
 
@@ -97,7 +111,7 @@ def f():
 
 # short comment
 def g():
-    pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) });
+    pass", new[] { Span.FromBounds(0, 78), Span.FromBounds(80, 186) }, null, null);
         }
 
         [TestMethod, Priority(1)]
@@ -107,16 +121,24 @@ def g():
 
 y=2
 
-z=3", new Span[0]);
+z=3", new Span[0], null, null);
         }
 
         [TestMethod, Priority(1)]
         [HostType("VSTestHost"), TestCategory("Installed")]
         public void FormatReduceLines() {
-            var pyService = VSTestContext.ServiceProvider.GetPythonToolsService();
-            pyService.SetFormattingOption("SpacesAroundBinaryOperators", true);
-
-            FormattingTest("linereduction.py", null, "(a + b + c + d + e + f)\r\n", new[] { new Span(0, 23), Span.FromBounds(25, 50) });
+            FormattingTest(
+                "linereduction.py",
+                null,
+                "(a + b + c + d + e + f)\r\n",
+                new[] { new Span(0, 23), Span.FromBounds(25, 50) },
+                s => {
+                    var v = s.GetFormattingOption("SpacesAroundBinaryOperators");
+                    s.SetFormattingOption("SpacesAroundBinaryOperators", true);
+                    return v;
+                },
+                (s, v) => s.SetFormattingOption("SpacesAroundBinaryOperators", v)
+            );
         }
 
         /// <summary>
@@ -126,8 +148,22 @@ z=3", new Span[0]);
         /// <param name="selection">The selection to format, or null if formatting the entire document</param>
         /// <param name="expectedText">The expected source code after the formatting</param>
         /// <param name="changedSpans">The spans which should be marked as changed in the buffer after formatting</param>
-        private static void FormattingTest(string filename, Span? selection, string expectedText, Span[] changedSpans) {
-            using (var app = new VisualStudioApp()) {
+        private static void FormattingTest(
+            string filename,
+            Span? selection,
+            string expectedText,
+            Span[] changedSpans,
+            Func<PythonToolsService, object> updateSettings,
+            Action<PythonToolsService, object> revertSettings,
+            Version version = null
+        ) {
+            using (var app = new PythonVisualStudioApp())
+            using (version == null ? null : app.SelectDefaultInterpreter(PythonPaths.Versions.FirstOrDefault(v => v.Version.ToVersion() >= version))) {
+                var o = updateSettings?.Invoke(app.PythonToolsService);
+                if (revertSettings != null) {
+                    app.OnDispose(() => revertSettings(app.PythonToolsService, o));
+                }
+
                 var project = app.OpenProject(@"TestData\FormattingTests\FormattingTests.sln");
                 var item = project.ProjectItems.Item(filename);
                 var window = item.Open();
@@ -147,11 +183,16 @@ z=3", new Span[0]);
 
                 // verify the contents are correct
                 string actual = null;
+                int steady = 50;
                 for (int i = 0; i < 100; i++) {
                     actual = doc.TextView.TextBuffer.CurrentSnapshot.GetText();
 
                     if (expectedText == actual) {
-                        break;
+                        if (--steady <= 0) {
+                            break;
+                        }
+                    } else {
+                        steady = 50;
                     }
                     System.Threading.Thread.Sleep(100);
                 }

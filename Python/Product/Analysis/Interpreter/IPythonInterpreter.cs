@@ -23,7 +23,7 @@ using Microsoft.PythonTools.Analysis;
 namespace Microsoft.PythonTools.Interpreter {
     /// <summary>
     /// Interface for providing an interpreter implementation for plugging into
-    /// Python Tools for Visual Studio.
+    /// Python support for Visual Studio.
     /// 
     /// This interface provides information about Python types and modules,
     /// which will be used for program analysis and IntelliSense.
@@ -31,7 +31,7 @@ namespace Microsoft.PythonTools.Interpreter {
     /// An interpreter is provided by an object implementing 
     /// <see cref="IPythonInterpreterFactory"/>.
     /// </summary>
-    public interface IPythonInterpreter {
+    public interface IPythonInterpreter : IDisposable {
         /// <summary>
         /// Performs any interpreter-specific initialization that is required.
         /// </summary>

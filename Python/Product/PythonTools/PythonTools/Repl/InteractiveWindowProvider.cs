@@ -82,7 +82,35 @@ namespace Microsoft.PythonTools.Repl {
                 "session! Now you need to restart Visual Studio to open any more.");
         }
 
+        private bool EnsureInterpretersAvailable() {
+            var registry = _serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
+            if (registry.Configurations.Any()) {
+                return true;
+            }
+
+            PythonToolsPackage.OpenNoInterpretersHelpPage(_serviceProvider);
+            return false;
+        }
+
+        public IVsInteractiveWindow Open(string replId) {
+            EnsureInterpretersAvailable();
+
+            lock (_windows) {
+                foreach(var window in _windows.Values) {
+                    var eval = window.InteractiveWindow?.Evaluator as SelectableReplEvaluator;
+                    if (eval?.CurrentEvaluator == replId) {
+                        window.Show(true);
+                        return window;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         public IVsInteractiveWindow OpenOrCreate(string replId) {
+            EnsureInterpretersAvailable();
+
             IVsInteractiveWindow wnd;
             lock (_windows) {
                 foreach(var window in _windows.Values) {
@@ -100,6 +128,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IVsInteractiveWindow Create(string replId, int curId = -1) {
+            EnsureInterpretersAvailable();
+
             if (curId < 0) {
                 curId = GetNextId();
             }
@@ -134,6 +164,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IVsInteractiveWindow OpenOrCreateTemporary(string replId, string title, out bool wasCreated) {
+            EnsureInterpretersAvailable();
+
             IVsInteractiveWindow wnd;
             lock (_windows) {
                 int curId;
@@ -154,6 +186,8 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public IVsInteractiveWindow CreateTemporary(string replId, string title) {
+            EnsureInterpretersAvailable();
+
             int curId = GetNextId();
 
             var window = CreateInteractiveWindowInternal(
@@ -224,6 +258,13 @@ namespace Microsoft.PythonTools.Repl {
         internal static void Close(object obj) {
             var frame = ((obj as ToolWindowPane)?.Frame as IVsWindowFrame);
             frame?.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
+        }
+
+        internal static void CloseIfEvaluatorMatches(object obj, string evalId) {
+            var eval = (obj as IVsInteractiveWindow)?.InteractiveWindow.Evaluator as SelectableReplEvaluator;
+            if (eval?.CurrentEvaluator == evalId) {
+                Close(obj);
+            }
         }
     }
 }

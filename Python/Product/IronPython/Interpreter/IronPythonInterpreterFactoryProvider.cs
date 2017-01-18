@@ -139,7 +139,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
             if (_interpreterX64 == null) {
                 lock (this) {
                     if (_interpreterX64 == null) {
-                        _interpreterX64 = new IronPythonInterpreterFactory(_configX64.Architecture);
+                        var fact = new IronPythonInterpreterFactory(_configX64.Architecture);
+                        fact.BeginRefreshIsCurrent();
+                        _interpreterX64 = fact;
                     }
                 }
             }
@@ -149,7 +151,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
             if (_interpreter == null) {
                 lock (this) {
                     if (_interpreter == null) {
-                        _interpreter = new IronPythonInterpreterFactory(_config.Architecture);
+                        var fact = new IronPythonInterpreterFactory(_config.Architecture);
+                        fact.BeginRefreshIsCurrent();
+                        _interpreter = fact;
                     }
                 }
             }
@@ -157,9 +161,9 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         private void DiscoverInterpreterFactories() {
             if (_config == null && IronPythonResolver.GetPythonInstallDir() != null) {
-                _config = IronPythonInterpreterFactory.GetConfiguration(ProcessorArchitecture.X86);
+                _config = IronPythonInterpreterFactory.GetConfiguration(InterpreterArchitecture.x86);
                 if (Environment.Is64BitOperatingSystem) {
-                    _configX64 = IronPythonInterpreterFactory.GetConfiguration(ProcessorArchitecture.Amd64);
+                    _configX64 = IronPythonInterpreterFactory.GetConfiguration(InterpreterArchitecture.x64);
                 }
                 var evt = InterpreterFactoriesChanged;
                 if (evt != null) {
@@ -172,8 +176,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         public object GetProperty(string id, string propName) {
             switch (propName) {
-                case "Vendor":
+                // Should match PythonRegistrySearch.CompanyPropertyKey
+                case "Company":
                     return "IronPython team";
+                // Should match PythonRegistrySearch.SupportUrlPropertyKey
                 case "SupportUrl":
                     return "http://ironpython.net/";
                 case "PersistInteractive":
