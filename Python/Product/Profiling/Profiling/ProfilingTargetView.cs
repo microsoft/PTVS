@@ -14,6 +14,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+// Copyright (c) 2017 Intel Corporation.  All rights reserved.
+
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -56,7 +58,7 @@ namespace Microsoft.PythonTools.Profiling {
                 availableProjects.Add(new ProjectTargetView((IVsHierarchy)project));
             }
             _availableProjects = new ReadOnlyCollection<ProjectTargetView>(availableProjects);
-	        _isVTuneAvailable = CheckForVTune();
+            _isVTuneAvailable = CheckForVTune();
 
             _project = null;
             _standalone = new StandaloneTargetView(serviceProvider);
@@ -286,7 +288,7 @@ namespace Microsoft.PythonTools.Profiling {
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
 
-	    private static bool CheckForVTune() {
+        private static bool CheckForVTune() {
 	        // NOTE: Right now this is the 'sanctioned' way to check for VTune 2017 install dir,
 	        //       the name of the envvar will almost surely change for VTune 2018, and probably
 	        //       as soon as VTune 2017 update 3

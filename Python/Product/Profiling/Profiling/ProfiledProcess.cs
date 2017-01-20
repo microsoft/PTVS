@@ -16,6 +16,8 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+// Copyright (c) 2017 Intel Corporation.  All rights reserved
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
