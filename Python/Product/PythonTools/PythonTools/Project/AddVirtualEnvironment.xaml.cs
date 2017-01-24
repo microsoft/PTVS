@@ -58,9 +58,10 @@ namespace Microsoft.PythonTools.Project {
         public static async Task ShowDialog(
             PythonProjectNode project,
             IInterpreterRegistryService service,
+            string requirementsPath,
             bool browseForExisting = false
         ) {
-            using (var view = new AddVirtualEnvironmentView(project, service, project.ActiveInterpreter)) {
+            using (var view = new AddVirtualEnvironmentView(project, service, project.ActiveInterpreter.Configuration.Id, requirementsPath)) {
                 var wnd = new AddVirtualEnvironment(project.Site, view);
 
                 if (browseForExisting) {

@@ -53,16 +53,16 @@ namespace PythonToolsTests {
 
                 Assert.IsTrue(id.StartsWith("Global|"), "Expected 'Global' prefix on '{0}'".FormatInvariant(factory.Configuration.Id));
 
-                var sysVersion = factory.Configuration.Version;
-                Assert.IsTrue(sysVersion.Major == 2 || sysVersion.Major == 3, "unknown SysVersion '{0}'".FormatInvariant(factory.Configuration.Version));
-
                 Assert.IsNotNull(factory.CreateInterpreter(), "failed to create interpreter");
 
                 if (id.StartsWith("Global|PythonCore|")) {
                     var description = factory.Configuration.Description;
+                    var sysVersion = factory.Configuration.Version;
                     var sysArch = factory.Configuration.Architecture;
 
                     AssertUtil.Contains(description, "Python", sysVersion.ToString(), sysArch.ToString());
+
+                    Assert.IsTrue(sysVersion.Major == 2 || sysVersion.Major == 3, "unknown SysVersion '{0}'".FormatInvariant(sysVersion));
 
                     Assert.AreEqual(PythonRegistrySearch.PythonCoreCompanyDisplayName, provider.GetProperty(id, PythonRegistrySearch.CompanyPropertyKey));
                     Assert.AreEqual(PythonRegistrySearch.PythonCoreSupportUrl, provider.GetProperty(id, PythonRegistrySearch.SupportUrlPropertyKey));

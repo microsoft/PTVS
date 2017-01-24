@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.ExceptionServices;
 using System.Threading;
@@ -179,9 +180,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
 
     sealed class PipEnvironmentView : DependencyObject, IDisposable {
         private readonly EnvironmentView _view;
-        private ObservableCollection<PipPackageView> _installed;
-        private List<PackageResultView> _installable;
-        private List<PackageResultView> _installableFiltered;
+        private readonly ObservableCollection<PipPackageView> _installed;
+        private readonly List<PackageResultView> _installable;
+        private readonly ObservableCollection<PackageResultView> _installableFiltered;
         private CollectionViewSource _installedView;
         private CollectionViewSource _installableView;
         private readonly Timer _installableViewRefreshTimer;
@@ -198,6 +199,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _provider.OperationStarted += PipExtensionProvider_UpdateStarted;
             _provider.OperationFinished += PipExtensionProvider_UpdateComplete;
             _provider.IsPipInstalledChanged += PipExtensionProvider_IsPipInstalledChanged;
+            _provider.InstalledPackagesChanged += PipExtensionProvider_InstalledPackagesChanged;
+
             _installCommandView = new InstallPackageView(this);
 
             _matcher = new FuzzyStringMatcher(FuzzyMatchMode.FuzzyIgnoreCase);
@@ -207,7 +210,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _installedView.Filter += InstalledView_Filter;
             _installedView.View.CurrentChanged += InstalledView_CurrentChanged;
             _installable = new List<PackageResultView>();
-            _installableFiltered = new List<PackageResultView>();
+            _installableFiltered = new ObservableCollection<PackageResultView>();
             _installableView = new CollectionViewSource { Source = _installableFiltered };
             _installableView.View.CurrentChanged += InstallableView_CurrentChanged;
             _installableViewRefreshTimer = new Timer(InstallablePackages_Refresh);
@@ -244,6 +247,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _provider.OperationStarted -= PipExtensionProvider_UpdateStarted;
             _provider.OperationFinished -= PipExtensionProvider_UpdateComplete;
             _provider.IsPipInstalledChanged -= PipExtensionProvider_IsPipInstalledChanged;
+            _provider.InstalledPackagesChanged -= PipExtensionProvider_InstalledPackagesChanged;
             _installableViewRefreshTimer.Dispose();
         }
 
@@ -264,6 +268,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private async void PipExtensionProvider_UpdateComplete(object sender, EventArgs e) {
+            try {
+                await RefreshPackages();
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                ToolWindow.SendUnhandledException(_provider.WpfObject, ExceptionDispatchInfo.Capture(ex));
+            }
+        }
+
+        private async void PipExtensionProvider_InstalledPackagesChanged(object sender, EventArgs e) {
             try {
                 await RefreshPackages();
             } catch (Exception ex) when (!ex.IsCriticalException()) {
@@ -320,22 +332,27 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 ToolWindow.SendUnhandledException(_provider.WpfObject, ExceptionDispatchInfo.Capture(ex));
             }
 
+            PackageResultView[] installable = null;
+
             lock (_installable) {
-                _installableFiltered.Clear();
                 if (_installable.Any() && !string.IsNullOrEmpty(query)) {
-                    _installableFiltered.AddRange(
-                        _installable
-                            .Select(p => Tuple.Create(_matcher.GetSortKey(p.Package.PackageSpec, query), p))
-                            .Where(t => _matcher.IsCandidateMatch(t.Item2.Package.PackageSpec, query, t.Item1))
-                            .OrderByDescending(t => t.Item1)
-                            .Select(t => t.Item2)
-                            .Take(20)
-                    );
+                    installable = _installable
+                        .Select(p => Tuple.Create(_matcher.GetSortKey(p.Package.PackageSpec, query), p))
+                        .Where(t => _matcher.IsCandidateMatch(t.Item2.Package.PackageSpec, query, t.Item1))
+                        .OrderByDescending(t => t.Item1)
+                        .Select(t => t.Item2)
+                        .Take(20)
+                        .ToArray();
                 }
             }
 
             try {
                 await Dispatcher.InvokeAsync(() => {
+                    if (installable != null && installable.Any()) {
+                        _installableFiltered.Merge(installable, PackageViewComparer.Instance, PackageViewComparer.Instance);
+                    } else {
+                        _installableFiltered.Clear();
+                    }
                     _installableView.View.Refresh();
                 });
             } catch (OperationCanceledException) {
@@ -378,12 +395,14 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private async Task RefreshPackages() {
+            bool isPipInstalled = true;
             await Dispatcher.InvokeAsync(() => {
+                isPipInstalled = IsPipInstalled;
                 IsListRefreshing = true;
                 CommandManager.InvalidateRequerySuggested();
             });
             try {
-                if (IsPipInstalled) {
+                if (isPipInstalled) {
                     await Task.WhenAll(
                         RefreshInstalledPackages(),
                         RefreshInstallablePackages()
@@ -510,5 +529,36 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public string IndexName => View._provider.IndexName;
         public string DisplayName => Package.DisplayName;
         public string Description => Package.Description;
+    }
+
+    class UpgradeMessageConverter : IMultiValueConverter {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) {
+            if (values.Length != 2) {
+                return Strings.UpgradeMessage;
+            }
+
+            var name = (string)values[0];
+            var version = (PackageVersion)values[1];
+            return Strings.UpgradeMessage_Package.FormatUI(name, version);
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
+        }
+    }
+
+    [ValueConversion(typeof(PipPackageView), typeof(string))]
+    class UninstallMessageConverter : IValueConverter {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+            var p = value as PipPackageView;
+            if (p == null) {
+                return Strings.UninstallMessage;
+            }
+            return Strings.UninstallMessage_Package.FormatUI(p.Name);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+            throw new NotImplementedException();
+        }
     }
 }

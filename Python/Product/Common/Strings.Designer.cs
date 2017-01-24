@@ -280,6 +280,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The project cannot be launched because the startup file is not specified..
+        /// </summary>
+        public static string DebugLaunchScriptNameMissing {
+            get {
+                return ResourceManager.GetString("DebugLaunchScriptNameMissing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The project cannot be launched because the no working directory was provided. Please check the Project Properties window and correct any configuration errors..
         /// </summary>
         public static string DebugLaunchWorkingDirectoryMissing {
@@ -1294,6 +1303,28 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Publishing Python projects has recently changed..
+        /// </summary>
+        public static string PublishToAzure30 {
+            get {
+                return ResourceManager.GetString("PublishToAzure30", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to These changes will allow you to deploy more reliably and quickly, but first you may need to configure your project or deployment target.
+        ///
+        ///When you publish, we will no longer automatically generate a web.config file. You can add one using Add New Item and customize as necessary for your site.
+        ///
+        ///There are no restrictions on the version of Python you may be using when you deploy, however, we will no longer include virtual environments or the Python runtime when you deploy. Only libraries that are directly i [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string PublishToAzure30Message {
+            get {
+                return ResourceManager.GetString("PublishToAzure30Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Direct references to .pyd files have been deprecated. We recommend replacing the reference with a Search Path..
         /// </summary>
         public static string PydReferenceDeprecated {
@@ -1513,6 +1544,15 @@ namespace Microsoft.PythonTools {
         public static string ReplOpeningError {
             get {
                 return ResourceManager.GetString("ReplOpeningError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The associated project &apos;{0}&apos; has changed its configuration. These changes will not be reflected until you reset this interactive window..
+        /// </summary>
+        public static string ReplProjectConfigurationChanged {
+            get {
+                return ResourceManager.GetString("ReplProjectConfigurationChanged", resourceCulture);
             }
         }
         
@@ -1955,11 +1995,11 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Failed to attach debugger because the process has already exited..
+        ///   Looks up a localized string similar to Failed to execute tests because the process has already exited..
         /// </summary>
-        public static string Test_FailedToAttachExited {
+        public static string Test_FailedToStartExited {
             get {
-                return ResourceManager.GetString("Test_FailedToAttachExited", resourceCulture);
+                return ResourceManager.GetString("Test_FailedToStartExited", resourceCulture);
             }
         }
         

@@ -1,9 +1,5 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <!-- Include ML by default, and force to false for VS "15" -->
-    <IncludeML Condition="'$(IncludeML)' == ''">true</IncludeML>
-    <IncludeML Condition="'$(VSTarget)' == '15.0'">false</IncludeML>
-    
     <!-- Include Django by default -->
     <IncludeDjango Condition="'$(IncludeDjango)' == ''">true</IncludeDjango>
     

@@ -207,6 +207,26 @@
 
                     <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="EnvironmentLinks">
                         <StackPanel Orientation="Vertical">
+                            <Button Name="ConfigureEnvironment"
+                                    Command="{x:Static l:EnvironmentPathsExtension.ConfigureEnvironment}"
+                                    CommandParameter="{Binding Mode=OneWay}"
+                                    Style="{StaticResource NavigationButton}"
+                                    Margin="6"
+                                    HorizontalAlignment="Left">
+                                <Grid Background="Transparent">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="auto" />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <ContentControl Grid.Column="0"
+                                                    Margin="3 0"
+                                                    Style="{StaticResource SettingsImage}" />
+                                    <TextBlock Grid.Column="1" TextWrapping="WrapWithOverflow">
+                                        Configure or remove environment
+                                    </TextBlock>
+                                </Grid>
+                            </Button>
+                            
                             <Button Command="{x:Static l:EnvironmentPathsExtension.OpenInFileExplorer}"
                                     CommandParameter="{Binding PrefixPath,Mode=OneWay}"
                                     ToolTip="{Binding PrefixPath,Mode=OneWay}"
@@ -306,6 +326,12 @@
                                 </Button.ContextMenu>
                             </Button>
                         </StackPanel>
+
+                        <DataTemplate.Triggers>
+                            <DataTrigger Binding="{Binding IsConfigurable,Mode=OneWay}" Value="False">
+                                <Setter TargetName="ConfigureEnvironment" Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </DataTemplate.Triggers>
                     </DataTemplate>
 
                     <DataTemplate DataType="{x:Type l:EnvironmentView}" x:Key="SupportInformation">

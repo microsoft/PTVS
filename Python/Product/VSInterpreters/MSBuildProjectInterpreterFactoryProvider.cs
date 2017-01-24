@@ -136,11 +136,24 @@ namespace Microsoft.PythonTools.Interpreter {
         }
 
         public object GetProperty(string id, string propName) {
+            Match m;
+            string moniker;
+
             switch (propName) {
                 case "ProjectMoniker":
-                    var m = InterpreterIdRegex.Match(id);
-                    if (m.Success && PathUtils.IsValidPath(m.Groups["moniker"].Value)) {
-                        return m.Groups["moniker"].Value;
+                    m = InterpreterIdRegex.Match(id);
+                    if (m.Success && PathUtils.IsValidPath(moniker = m.Groups["moniker"].Value)) {
+                        return moniker;
+                    }
+                    break;
+                case PythonRegistrySearch.CompanyPropertyKey:
+                    m = InterpreterIdRegex.Match(id);
+                    if (m.Success && PathUtils.IsValidPath(moniker = m.Groups["moniker"].Value)) {
+                        try {
+                            return Path.GetFileNameWithoutExtension(moniker);
+                        } catch (ArgumentException) {
+                            return PathUtils.GetFileOrDirectoryName(moniker);
+                        }
                     }
                     break;
             }
@@ -151,7 +164,7 @@ namespace Microsoft.PythonTools.Interpreter {
             return String.Join("|", MSBuildProviderName, id, file);
         }
 
-        public static string GetProjectiveRelativeId(string file, string id) {
+        public static string GetProjectRelativeId(string file, string id) {
             var m = InterpreterIdRegex.Match(id);
             if (m.Success && (m.Groups["moniker"].Value?.Equals(file, StringComparison.OrdinalIgnoreCase) ?? false)) {
                 return m.Groups["id"].Value;

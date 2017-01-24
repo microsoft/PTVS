@@ -234,7 +234,7 @@ namespace Microsoft.PythonTools.Project {
 
                 var textBuffer = GetTextBuffer(false);
 
-                BufferParser parser = analysis?.BufferParser;
+                BufferParser parser = analysis?.TryGetBufferParser();
                 if (parser != null) {
                     analyzer.ReAnalyzeTextBuffers(parser);
                 }

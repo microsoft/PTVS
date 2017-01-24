@@ -119,10 +119,10 @@ permissions and limitations under the License.
             PropertyName="Isvalid" />
   </ValidateRegexPattern>
   -->
-  
+
   <UsingTask AssemblyFile="$([MSBuild]::Unescape($(_PythonToolsPath)Microsoft.PythonTools.BuildTasks.dll))"
              TaskName="ValidateRegexPattern" />
-  
+
   <!-- Gets the fully qualified path to the project home.  -->
   <PropertyGroup>
     <QualifiedProjectHome>$(MSBuildProjectDirectory)</QualifiedProjectHome>
@@ -137,7 +137,7 @@ permissions and limitations under the License.
     <ConvertPathToModuleName Paths="$(StartupPath)" PathLimit="$(QualifiedProjectHome)" IgnoreErrors="true">
       <Output TaskParameter="ModuleNames" PropertyName="StartupModule" />
     </ConvertPathToModuleName>
-    
+
     <Message Importance="low" Text="StartupModule: $(StartupModule)" />
   </Target>
 
@@ -146,7 +146,7 @@ permissions and limitations under the License.
   <PropertyGroup>
     <PythonCommands>$(PythonCommands);PythonRunPyLintCommand</PythonCommands>
     <PyLintWarningRegex>
-    <![CDATA[^(?<filename>.+?)\((?<line>\d+),(?<column>\d+)\): warning (?<msg_id>.+?): (?<message>.+?)$]]>
+      <![CDATA[^(?<filename>.+?)\((?<line>\d+),(?<column>\d+)\): warning (?<msg_id>.+?): (?<message>.+?)$]]>
     </PyLintWarningRegex>
   </PropertyGroup>
 
@@ -169,7 +169,7 @@ permissions and limitations under the License.
   <PropertyGroup>
     <BypassFrameworkInstallChecks Condition="'$(TargetFrameworkVersion)' == ''">true</BypassFrameworkInstallChecks>
   </PropertyGroup>
-  
+
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" />
 
   <!-- We don't have an intermediate assembly, but the common targets will set
@@ -200,36 +200,20 @@ permissions and limitations under the License.
   <Target Name="CreateManifestResourceNames" />
   <Target Name="_CopyAppConfigFile" />
 
-  <PropertyGroup>
-    <BuiltProjectOutputGroupDependsOn>
-      BuiltProjectOutputGroupFast;
-      $(BuiltProjectOutputGroupDependsOn)
-    </BuiltProjectOutputGroupDependsOn>
-  </PropertyGroup>
-  
-  <Target Name="BuiltProjectOutputGroupFast"
-          Returns="@(BuiltProjectOutputGroupFastOutput)"
-          DependsOnTargets="$(BuiltProjectOutputGroupFastDependsOn)">
-    <ItemGroup>
-      <BuiltProjectOutputGroupFastOutput Remove="@(BuiltProjectOutputGroupFastOutput)" />
-      <_BuiltProjectOutputGroupFastOutput Remove="@(_BuiltProjectOutputGroupFastOutput)" />
-    </ItemGroup>
-
-    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);@(OutputFiles);$(MSBuildProjectFile)">
-      <Output TaskParameter="AssignedFiles" ItemName="_BuiltProjectOutputGroupFastOutput" />
-    </AssignTargetPath>
-
-    <ItemGroup>
-      <BuiltProjectOutputGroupFastOutput Include="@(_BuiltProjectOutputGroupFastOutput->'%(FullPath)')" />
-    </ItemGroup>
-  </Target>
-
   <Target Name="BuiltProjectOutputGroup"
           Returns="@(BuiltProjectOutputGroupOutput)"
           DependsOnTargets="$(BuiltProjectOutputGroupDependsOn)">
     <ItemGroup>
       <BuiltProjectOutputGroupOutput Remove="@(BuiltProjectOutputGroupOutput)" />
-      <BuiltProjectOutputGroupOutput Include="@(BuiltProjectOutputGroupFastOutput)" />
+      <_BuiltProjectOutputGroupOutput Remove="@(_BuiltProjectOutputGroupOutput)" />
+    </ItemGroup>
+
+    <AssignTargetPath RootFolder="$(QualifiedProjectHome)" Files="@(Compile);@(Content);@(OutputFiles);$(MSBuildProjectFile)">
+      <Output TaskParameter="AssignedFiles" ItemName="_BuiltProjectOutputGroupOutput" />
+    </AssignTargetPath>
+
+    <ItemGroup>
+      <BuiltProjectOutputGroupOutput Include="@(_BuiltProjectOutputGroupOutput->'%(FullPath)')" />
     </ItemGroup>
   </Target>
 

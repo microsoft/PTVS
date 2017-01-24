@@ -15,9 +15,11 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -52,14 +54,8 @@ namespace Microsoft.PythonTools.Project {
 
             var solution = (IVsSolution)ProjectMgr.Site.GetService(typeof(SVsSolution));
             var guid = ReferencedProjectGuid;
-            try {
-                var searchPath = PathUtils.GetParent(ReferencedProjectOutputPath);
-                (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(searchPath, this);
-            } catch (COMException ex) {
-                // Project is not loaded yet. We will update the search path on
-                // load, build or run.
-                ex.ReportUnhandledException(ProjectMgr.Site, GetType());
-            }
+
+            UpdateSearchPathAsync().DoNotWait();
         }
 
         private void Invalidate() {
@@ -68,14 +64,27 @@ namespace Microsoft.PythonTools.Project {
             }
             ProjectMgr.OnInvalidateItems(Parent);
 
-            try {
-                var searchPath = PathUtils.GetParent(ReferencedProjectOutputPath);
-                (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(searchPath, this);
-            } catch (COMException ex) {
-                // Failed to get output path for some reason. Remove the
-                // existing search path for now.
-                ex.ReportUnhandledException(ProjectMgr.Site, GetType());
-                (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(null, this);
+            UpdateSearchPathAsync().DoNotWait();
+        }
+
+        private async Task UpdateSearchPathAsync(int retries = 10) {
+            while (true) {
+                await Task.Delay(50);
+                try {
+                    var searchPath = PathUtils.GetParent(ReferencedProjectOutputPath);
+                    (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(searchPath, this);
+                    return;
+                } catch (COMException ex) {
+                    Debug.WriteLine(ex.ToUnhandledExceptionMessage(GetType()));
+                }
+
+                if (--retries < 0) {
+                    // Failed to get output path for some reason. Remove the
+                    // existing search path for now.
+                    Debug.Fail("failed to get output path");
+                    (ProjectMgr as PythonProjectNode)?.OnInvalidateSearchPath(null, this);
+                    return;
+                }
             }
         }
 

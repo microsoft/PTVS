@@ -47,7 +47,7 @@ namespace Microsoft.PythonTools.TestAdapter {
         private static readonly Guid NativeDebugEngineGuid = new Guid("3B476D35-A401-11D2-AAD4-00C04F990171");
 
         private static readonly string TestLauncherPath = PythonToolsInstallPath.GetFile("visualstudio_py_testlauncher.py");
-        internal static Uri PythonCodeCoverageUri = new Uri("datacollector://Microsoft/PythonCodeCoverage/1.0");
+        internal static readonly Uri PythonCodeCoverageUri = new Uri("datacollector://Microsoft/PythonCodeCoverage/1.0");
 
         private readonly ManualResetEvent _cancelRequested = new ManualResetEvent(false);
 
@@ -276,10 +276,42 @@ namespace Microsoft.PythonTools.TestAdapter {
             return false;
         }
 
+        /// <summary>
+        /// Returns true if this is a dry run. Dry runs require a
+        /// &lt;DryRun value="true" /&gt; element under RunSettings/Python.
+        /// </summary>
+        private static bool IsDryRun(IRunSettings settings) {
+            var doc = new XPathDocument(new StringReader(settings.SettingsXml));
+            try {
+                var node = doc.CreateNavigator().SelectSingleNode("/RunSettings/Python/DryRun[@value='true']");
+                return node != null;
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(TestExecutor)));
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Returns true if the console should be shown. This is the default
+        /// unless a &lt;ShowConsole value="false" /&gt; element exists under
+        /// RunSettings/Python.
+        /// </summary>
+        private static bool ShouldShowConsole(IRunSettings settings) {
+            var doc = new XPathDocument(new StringReader(settings.SettingsXml));
+            try {
+                var node = doc.CreateNavigator().SelectSingleNode("/RunSettings/Python/ShowConsole[@value='false']");
+                return node == null;
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(typeof(TestExecutor)));
+                return true;
+            }
+        }
+
+
         sealed class TestRunner : IDisposable {
             private readonly IFrameworkHandle _frameworkHandle;
             private readonly IRunContext _context;
-            private readonly IEnumerable<TestCase> _tests;
+            private readonly TestCase[] _tests;
             private readonly string _codeCoverageFile;
             private readonly PythonProjectSettings _settings;
             private readonly PythonDebugMode _debugMode;
@@ -295,6 +327,7 @@ namespace Microsoft.PythonTools.TestAdapter {
             private readonly Socket _socket;
             private readonly StringBuilder _stdOut = new StringBuilder(), _stdErr = new StringBuilder();
             private TestCase _curTest;
+            private readonly bool _dryRun, _showConsole;
 
             public TestRunner(
                 IFrameworkHandle frameworkHandle,
@@ -307,11 +340,13 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                 _frameworkHandle = frameworkHandle;
                 _context = runContext;
-                _tests = tests;
+                _tests = tests.ToArray();
                 _codeCoverageFile = codeCoverageFile;
                 _settings = settings;
                 _app = app;
                 _cancelRequested = cancelRequested;
+                _dryRun = IsDryRun(runContext.RunSettings);
+                _showConsole = ShouldShowConsole(runContext.RunSettings);
 
                 _env = new Dictionary<string, string>();
 
@@ -380,20 +415,9 @@ namespace Microsoft.PythonTools.TestAdapter {
                     case TP.StartEvent.Name:
                         var start = (TP.StartEvent)e.Event;
                         _curTest = null;
-                        foreach (var test in _tests) {
-                            string testFile, testClass, testMethod;
-                            TestReader.ParseFullyQualifiedTestName(
-                                test.FullyQualifiedName,
-                                out testFile,
-                                out testClass,
-                                out testMethod
-                            );
-
-                            string testFilePath = PathUtils.GetAbsoluteFilePath(_settings.ProjectHome, test.CodeFilePath);
-                            var modulePath = ModulePath.FromFullPath(testFilePath);
-
-                            if (start.test == modulePath.ModuleName + "." + testClass + "." + testMethod) { 
-                                _curTest = test;
+                        foreach (var test in GetTestCases()) {
+                            if (test.Key == start.test) {
+                                _curTest = test.Value;
                                 break;
                             }
                         }
@@ -478,7 +502,15 @@ namespace Microsoft.PythonTools.TestAdapter {
 
                     var pythonPath = InitializeEnvironment();
 
-                    var arguments = GetArguments();
+                    string testList = null;
+                    // For a small set of tests, we'll pass them on the command
+                    // line. Once we exceed a certain (arbitrary) number, create
+                    // a test list on disk so that we do not overflow the 
+                    // 32K argument limit.
+                    if (_tests.Length > 5) {
+                        testList = CreateTestList();
+                    }
+                    var arguments = GetArguments(testList);
 
                     ////////////////////////////////////////////////////////////
                     // Do the test run
@@ -487,7 +519,7 @@ namespace Microsoft.PythonTools.TestAdapter {
                         arguments,
                         _settings.WorkingDirectory,
                         _env,
-                        true,
+                        _showConsole,
                         null
                     )) {
                         bool killed = false;
@@ -497,18 +529,18 @@ namespace Microsoft.PythonTools.TestAdapter {
                         DebugInfo(proc.Arguments);
 
                         _connected.WaitOne();
-                        if (_debugMode != PythonDebugMode.None) {
-                            if (proc.ExitCode.HasValue) {
-                                // Process has already exited
-                                Error(Strings.Test_FailedToAttachExited);
-                                if (proc.StandardErrorLines.Any()) {
-                                    Error("Standard error from Python:");
-                                    foreach (var line in proc.StandardErrorLines) {
-                                        Error(line);
-                                    }
+                        if (proc.ExitCode.HasValue) {
+                            // Process has already exited
+                            proc.Wait();
+                            Error(Strings.Test_FailedToStartExited);
+                            if (proc.StandardErrorLines.Any()) {
+                                foreach (var line in proc.StandardErrorLines) {
+                                    Error(line);
                                 }
                             }
+                        }
 
+                        if (_debugMode != PythonDebugMode.None) {
                             try {
                                 if (_debugMode == PythonDebugMode.PythonOnly) {
                                     string qualifierUri = string.Format("tcp://{0}@localhost:{1}", _debugSecret, _debugPort);
@@ -573,6 +605,12 @@ namespace Microsoft.PythonTools.TestAdapter {
                             }
                         }
                     }
+                    if (File.Exists(testList)) {
+                        try {
+                            File.Delete(testList);
+                        } catch (IOException) {
+                        }
+                    }
                 } catch (Exception e) {
                     Error(e.ToString());
                 }
@@ -622,11 +660,10 @@ namespace Microsoft.PythonTools.TestAdapter {
                 return new KeyValuePair<string, string>(pythonPathVar, pythonPath);
             }
 
-            private string[] GetArguments() {
-                var arguments = new List<string>();
-                arguments.Add(TestLauncherPath);
+            private IEnumerable<KeyValuePair<string, TestCase>> GetTestCases() {
+                var moduleCache = new Dictionary<string, ModulePath>();
+
                 foreach (var test in _tests) {
-                    arguments.Add("-t");
                     string testFile, testClass, testMethod;
                     TestReader.ParseFullyQualifiedTestName(
                         test.FullyQualifiedName,
@@ -635,16 +672,48 @@ namespace Microsoft.PythonTools.TestAdapter {
                         out testMethod
                     );
 
-                    string testFilePath = PathUtils.GetAbsoluteFilePath(_settings.ProjectHome, testFile);
-                    var module = ModulePath.FromFullPath(testFilePath);
+                    ModulePath module;
+                    if (!moduleCache.TryGetValue(testFile, out module)) {
+                        string testFilePath = PathUtils.GetAbsoluteFilePath(_settings.ProjectHome, testFile);
+                        moduleCache[testFile] = module = ModulePath.FromFullPath(testFilePath);
+                    }
 
-                    arguments.Add(
-                        string.Format("{0}.{1}.{2}", 
-                            module.ModuleName, 
-                            testClass, 
-                            testMethod
-                        )
-                    );
+                    yield return new KeyValuePair<string, TestCase>("{0}.{1}.{2}".FormatInvariant(
+                        module.ModuleName,
+                        testClass,
+                        testMethod
+                    ), test);
+                }
+            }
+
+            private string CreateTestList() {
+                var testList = Path.GetTempFileName();
+
+                using (var writer = new StreamWriter(testList, false, new UTF8Encoding(false))) {
+                    foreach (var test in GetTestCases()) {
+                        writer.WriteLine(test.Key);
+                    }
+                }
+
+                return testList;
+            }
+
+            private string[] GetArguments(string testList = null) {
+                var arguments = new List<string>();
+                arguments.Add(TestLauncherPath);
+
+                if (string.IsNullOrEmpty(testList)) {
+                    foreach (var test in GetTestCases()) {
+                        arguments.Add("-t");
+                        arguments.Add(test.Key);
+                    }
+                } else {
+                    arguments.Add("--test-list");
+                    arguments.Add(testList);
+                }
+
+                if (_dryRun) {
+                    arguments.Add("--dry-run");
                 }
 
                 if (_codeCoverageFile != null) {

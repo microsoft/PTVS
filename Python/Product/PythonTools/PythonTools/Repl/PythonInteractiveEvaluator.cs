@@ -60,6 +60,8 @@ namespace Microsoft.PythonTools.Repl {
         protected readonly IServiceProvider _serviceProvider;
         private readonly StringBuilder _deferredOutput;
 
+        private PythonProjectNode _projectWithHookedEvents;
+
         protected CommandProcessorThread _thread;
         private IInteractiveWindowCommands _commands;
         private IInteractiveWindow _window;
@@ -84,8 +86,14 @@ namespace Microsoft.PythonTools.Repl {
             if (_isDisposed) {
                 return;
             }
-
             _isDisposed = true;
+
+            if (_projectWithHookedEvents != null) {
+                _projectWithHookedEvents.ActiveInterpreterChanged -= Project_ConfigurationChanged;
+                _projectWithHookedEvents._searchPaths.Changed -= Project_ConfigurationChanged;
+                _projectWithHookedEvents = null;
+            }
+
             if (disposing) {
                 var thread = Interlocked.Exchange(ref _thread, null);
                 if (thread != null) {
@@ -123,6 +131,8 @@ namespace Microsoft.PythonTools.Repl {
         internal virtual void OnConnected() { }
         internal virtual void OnAttach() { }
         internal virtual void OnDetach() { }
+
+        internal bool AssociatedProjectHasChanged { get; set; }
 
         private PythonProjectNode GetAssociatedPythonProject(InterpreterConfiguration interpreter = null) {
             _serviceProvider.GetUIThread().MustBeCalledFromUIThread();
@@ -308,7 +318,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public bool CanExecuteCode(string text) {
-            if (text.EndsWith("\n")) {
+            if (text.EndsWith("\n") || string.IsNullOrEmpty(text)) {
                 return true;
             }
 
@@ -316,7 +326,7 @@ namespace Microsoft.PythonTools.Repl {
             using (var parser = Parser.CreateParser(new StringReader(text), LanguageVersion)) {
                 ParseResult pr;
                 parser.ParseInteractiveCode(out pr);
-                if (pr == ParseResult.IncompleteToken || pr == ParseResult.IncompleteStatement) {
+                if (pr == ParseResult.Empty || pr == ParseResult.IncompleteToken || pr == ParseResult.IncompleteStatement) {
                     return false;
                 }
             }
@@ -399,6 +409,13 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         internal void UpdatePropertiesFromProjectMoniker() {
+            if (_projectWithHookedEvents != null) {
+                _projectWithHookedEvents.ActiveInterpreterChanged -= Project_ConfigurationChanged;
+                _projectWithHookedEvents._searchPaths.Changed -= Project_ConfigurationChanged;
+                _projectWithHookedEvents = null;
+            }
+
+            AssociatedProjectHasChanged = false;
             var pyProj = GetAssociatedPythonProject();
             if (pyProj == null) {
                 return;
@@ -408,8 +425,26 @@ namespace Microsoft.PythonTools.Repl {
             ScriptsPath = GetScriptsPath(
                 _serviceProvider,
                 PathUtils.GetAbsoluteDirectoryPath(pyProj.ProjectHome, "Scripts"),
-                pyProj.GetInterpreterFactory()?.Configuration
+                Configuration.Interpreter
             );
+
+            _projectWithHookedEvents = pyProj;
+            pyProj.ActiveInterpreterChanged += Project_ConfigurationChanged;
+            pyProj._searchPaths.Changed += Project_ConfigurationChanged;
+        }
+
+        private void Project_ConfigurationChanged(object sender, EventArgs e) {
+            var pyProj = _projectWithHookedEvents;
+            _projectWithHookedEvents = null;
+
+            if (pyProj != null) {
+                Debug.Assert(pyProj == sender || pyProj._searchPaths == sender, "Unexpected project raised the event");
+                // Only warn once
+                pyProj.ActiveInterpreterChanged -= Project_ConfigurationChanged;
+                pyProj._searchPaths.Changed -= Project_ConfigurationChanged;
+                WriteError(Strings.ReplProjectConfigurationChanged.FormatUI(pyProj.Caption));
+                AssociatedProjectHasChanged = true;
+            }
         }
 
         internal static string GetScriptsPath(

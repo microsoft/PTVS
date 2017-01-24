@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Intellisense {
         private readonly Timer _timer;
         internal readonly AnalysisEntry AnalysisEntry;
 
-        internal VsProjectAnalyzer _parser;
+        internal readonly VsProjectAnalyzer _parser;
         private IList<ITextBuffer> _buffers;
         private bool _parsing, _requeue, _textChange;
         private ITextDocument _document;
@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
         public static readonly object DoNotParse = new object();
 
-        public static async Task<BufferParser> CreateAsync(AnalysisEntry analysis, VsProjectAnalyzer parser, ITextBuffer buffer) {
+        internal static async Task<BufferParser> CreateAsync(AnalysisEntry analysis, VsProjectAnalyzer parser, ITextBuffer buffer) {
             var res = new BufferParser(analysis, parser, buffer);
 
             using (new DebugTimer("BufferParser.ParseBuffers", 100)) {
@@ -76,8 +76,6 @@ namespace Microsoft.PythonTools.Intellisense {
             _timer = new Timer(ReparseTimer, null, Timeout.Infinite, Timeout.Infinite);
             _buffers = new[] { buffer };
             AnalysisEntry = analysis;
-
-            analysis.BufferParser = this;
 
             InitBuffer(buffer, 0);
         }
@@ -191,7 +189,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 UninitBuffer(buffer);
             }
             _timer.Dispose();
-            AnalysisEntry.BufferParser = null;
+            AnalysisEntry.ClearBufferParser(this);
         }
 
         public ITextBuffer[] Buffers {
@@ -247,7 +245,7 @@ namespace Microsoft.PythonTools.Intellisense {
                 _document.EncodingChanged -= EncodingChanged;
                 _document = null;
             }
-            if (buffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out _document) && _document != null) {
+            if (buffer.Properties.TryGetProperty(typeof(ITextDocument), out _document) && _document != null) {
                 _document.EncodingChanged += EncodingChanged;
             }
         }
@@ -291,7 +289,7 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        public async Task EnsureCodeSynced(ITextBuffer buffer) {
+        public async Task EnsureCodeSyncedAsync(ITextBuffer buffer) {
             var lastSent = GetLastSentSnapshot(buffer);
             if (lastSent != buffer.CurrentSnapshot) {
                 await ParseBuffers(
@@ -501,7 +499,15 @@ namespace Microsoft.PythonTools.Intellisense {
     }
 
     static class BufferParserExtensions {
-        private static object _newAnalysisKey = new object(), _newAnalysisEntryKey = new object(), _newParseTree = new object();
+#if DEBUG
+        private static object _newAnalysisKey = new { Name = "OnNewAnalysis" };
+        private static object _newAnalysisEntryKey = new { Name = "OnNewAnalysisEntry" };
+        private static object _newParseTreeKey = new { Name = "OnNewParseTree" };
+#else
+        private static object _newAnalysisKey = new object();
+        private static object _newAnalysisEntryKey = new object();
+        private static object _newParseTreeKey = new object();
+#endif
 
 
         /// <summary>
@@ -553,15 +559,15 @@ namespace Microsoft.PythonTools.Intellisense {
         /// and the classifier would continue to receive new analysis events.
         /// </summary>
         public static void RegisterForParseTree(this ITextBuffer buffer, Action<AnalysisEntry> handler) {
-            buffer.RegisterFor(_newParseTree, handler);
+            buffer.RegisterFor(_newParseTreeKey, handler);
         }
 
         public static void UnregisterForParseTree(this ITextBuffer buffer, Action<AnalysisEntry> handler) {
-            buffer.UnregisterFor(_newParseTree, handler);
+            buffer.UnregisterFor(_newParseTreeKey, handler);
         }
 
         public static IEnumerable<Action<AnalysisEntry>> GetParseTreeRegistrations(this ITextBuffer buffer) {
-            return buffer.GetRegistrations(_newParseTree);
+            return buffer.GetRegistrations(_newParseTreeKey);
         }
 
         private static void RegisterFor(this ITextBuffer buffer, object key, Action<AnalysisEntry> handler) {

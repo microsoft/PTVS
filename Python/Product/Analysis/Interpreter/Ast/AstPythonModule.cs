@@ -14,20 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
-    class AstPythonModule : IPythonModule, IProjectEntry, ILocatedMember {
+    public sealed class AstPythonModule : IPythonModule, IProjectEntry, ILocatedMember {
         private readonly Dictionary<object, object> _properties;
         private readonly List<string> _childModules;
         private readonly Dictionary<string, IMember> _members;
@@ -52,6 +48,15 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
             return new AstPythonModule(interpreter, ast, fileName);
         }
 
+        internal AstPythonModule() {
+            Name = string.Empty;
+            Documentation = string.Empty;
+            FilePath = string.Empty;
+            _properties = new Dictionary<object, object>();
+            _childModules = new List<string>();
+            _members = new Dictionary<string, IMember>();
+        }
+
         internal AstPythonModule(IPythonInterpreter interpreter, PythonAst ast, string filePath) {
             Name = ast.Name;
             Documentation = ast.Documentation;
@@ -67,8 +72,12 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         }
 
         internal void AddChildModule(string name, IPythonModule module) {
-            _childModules.Add(name);
-            _members[name] = module;
+            lock (_childModules) {
+                _childModules.Add(name);
+            }
+            lock (_members) {
+                _members[name] = module;
+            }
         }
 
         public string Name { get; }
@@ -83,16 +92,24 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
         public bool IsAnalyzed => true;
         public void Analyze(CancellationToken cancel) { }
 
-        public IEnumerable<string> GetChildrenModules() => _childModules;
+        public IEnumerable<string> GetChildrenModules() {
+            lock (_childModules) {
+                return _childModules.ToArray();
+            }
+        }
 
         public IMember GetMember(IModuleContext context, string name) {
-            IMember member;
-            _members.TryGetValue(name, out member);
+            IMember member = null;
+            lock (_members) {
+                _members.TryGetValue(name, out member);
+            }
             return member;
         }
 
         public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
-            return _members.Keys.ToArray();
+            lock (_members) {
+                return _members.Keys.ToArray();
+            }
         }
 
         public void Imported(IModuleContext context) { }

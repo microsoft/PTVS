@@ -1,0 +1,10 @@
+{
+  "project_name": "Default Project Name",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_') }}",
+  "_visual_studio_post_cmds": [
+    {
+      "name": "View.WebBrowser",
+      "args": "https://docs.microsoft.com"
+    }
+  ]
+}

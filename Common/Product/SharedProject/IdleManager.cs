@@ -15,11 +15,13 @@
 // permissions and limitations under the License.
 
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
+using IServiceProvider = System.IServiceProvider;
+
 namespace Microsoft.VisualStudioTools {
-    using IServiceProvider = System.IServiceProvider;
 
     /// <summary>
     /// Provides access to Visual Studio's idle processing using a simple .NET event
@@ -31,33 +33,34 @@ namespace Microsoft.VisualStudioTools {
     /// Disposing of the IdleManager will disconnect from Visual Studio idle processing.
     /// </summary>
     sealed class IdleManager : IOleComponent, IDisposable {
-        private uint _compId = VSConstants.VSCOOKIE_NIL;
+        private Lazy<uint> _compId;
         private readonly IServiceProvider _serviceProvider;
-        private IOleComponentManager _compMgr;
+        private Lazy<IOleComponentManager> _compMgr;
         private EventHandler<ComponentManagerEventArgs> _onIdle;
 
         public IdleManager(IServiceProvider serviceProvider) {
             _serviceProvider = serviceProvider;
-        }
 
-        private void EnsureInit() {
-            if (_compId == VSConstants.VSCOOKIE_NIL) {
-                lock (this) {
-                    if (_compId == VSConstants.VSCOOKIE_NIL) {
-                        if (_compMgr == null) {
-                            _compMgr = (IOleComponentManager)_serviceProvider.GetService(typeof(SOleComponentManager));
-                            OLECRINFO[] crInfo = new OLECRINFO[1];
-                            crInfo[0].cbSize = (uint)Marshal.SizeOf(typeof(OLECRINFO));
-                            crInfo[0].grfcrf = (uint)_OLECRF.olecrfNeedIdleTime;
-                            crInfo[0].grfcadvf = (uint)0;
-                            crInfo[0].uIdleTimeInterval = 0;
-                            if (ErrorHandler.Failed(_compMgr.FRegisterComponent(this, crInfo, out _compId))) {
-                                _compId = VSConstants.VSCOOKIE_NIL;
-                            }
-                        }
-                    }
+            _compMgr = new Lazy<IOleComponentManager>(() =>
+                (IOleComponentManager)serviceProvider?.GetService(typeof(SOleComponentManager))
+            );
+
+            _compId = new Lazy<uint>(() => {
+                var compMgr = _compMgr.Value;
+                if (compMgr == null) {
+                    return VSConstants.VSCOOKIE_NIL;
                 }
-            }
+                uint compId;
+                OLECRINFO[] crInfo = new OLECRINFO[1];
+                crInfo[0].cbSize = (uint)Marshal.SizeOf(typeof(OLECRINFO));
+                crInfo[0].grfcrf = (uint)_OLECRF.olecrfNeedIdleTime;
+                crInfo[0].grfcadvf = (uint)0;
+                crInfo[0].uIdleTimeInterval = 0;
+                if (ErrorHandler.Failed(compMgr.FRegisterComponent(this, crInfo, out compId))) {
+                    return VSConstants.VSCOOKIE_NIL;
+                }
+                return compId;
+            });
         }
 
         #region IOleComponent Members
@@ -67,25 +70,34 @@ namespace Microsoft.VisualStudioTools {
         }
 
         public int FDoIdle(uint grfidlef) {
-            var onIdle = _onIdle;
-            if (onIdle != null) {
-                onIdle(this, new ComponentManagerEventArgs(_compMgr));
-            }
+            _onIdle?.Invoke(this, new ComponentManagerEventArgs(_compMgr.Value));
 
             return 0;
         }
 
         internal event EventHandler<ComponentManagerEventArgs> OnIdle {
             add {
+                if (_serviceProvider == null) {
+                    return;
+                }
                 _serviceProvider.GetUIThread().Invoke(() => {
-                    EnsureInit();
-                    _onIdle += value;
+                    if (_compId.Value != VSConstants.VSCOOKIE_NIL) {
+                        _onIdle += value;
+                    } else {
+                        Trace.TraceWarning("Component Manager is not available - event will not run");
+                    }
                 });
             }
             remove {
+                if (_serviceProvider == null) {
+                    return;
+                }
                 _serviceProvider.GetUIThread().Invoke(() => {
-                    EnsureInit();
-                    _onIdle -= value;
+                    if (_compId.Value != VSConstants.VSCOOKIE_NIL) {
+                        _onIdle -= value;
+                    } else {
+                        Trace.TraceWarning("Component Manager is not available - event will not run");
+                    }
                 });
             }
         }
@@ -124,9 +136,8 @@ namespace Microsoft.VisualStudioTools {
         #endregion
 
         public void Dispose() {
-            if (_compId != VSConstants.VSCOOKIE_NIL) {
-                _compMgr.FRevokeComponent(_compId);
-                _compId = VSConstants.VSCOOKIE_NIL;
+            if (_compId.IsValueCreated && _compId.Value != VSConstants.VSCOOKIE_NIL) {
+                _compMgr.Value.FRevokeComponent(_compId.Value);
             }
         }
     }

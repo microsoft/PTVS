@@ -5,8 +5,8 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Django.Analysis")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("Visual Studio - Django analysis extension")]
+[assembly: AssemblyDescription("Provides analysis support for Django projects")]
 [assembly: AssemblyConfiguration("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 

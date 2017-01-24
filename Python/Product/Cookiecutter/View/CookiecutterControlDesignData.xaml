@@ -1,6 +1,8 @@
 ﻿<!-- Fake data for use with xaml designer -->
 <vm:CookiecutterViewModel xmlns:vm="clr-namespace:Microsoft.CookiecutterTools.ViewModel"
-                                 xmlns:System="clr-namespace:System;assembly=mscorlib">
+                          xmlns:System="clr-namespace:System;assembly=mscorlib"
+                          HasPostCommands="True"
+                          ShouldExecutePostCommands="True">
     <vm:CookiecutterViewModel.SelectedTemplate>
         <vm:TemplateViewModel
             DisplayName="python-azure-web-app-cookiecutter"

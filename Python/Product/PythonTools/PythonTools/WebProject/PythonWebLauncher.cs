@@ -90,9 +90,17 @@ namespace Microsoft.PythonTools.Project.Web {
 
             config.Environment = PathUtils.MergeEnvironments(env, config.Environment);
 
-            if (debug) {
-                _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 1);
+            try {
+                _serviceProvider.GetPythonToolsService().Logger.LogEvent(Logging.PythonLogEvent.Launch, new Logging.LaunchInfo {
+                    IsDebug = debug,
+                    IsWeb = true,
+                    Version = config.Interpreter?.Version.ToString() ?? ""
+                });
+            } catch (Exception ex) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+            }
 
+            if (debug) {
                 if (url != null) {
                     config.LaunchOptions[PythonConstants.WebBrowserUrlSetting] = url.AbsoluteUri;
                 }
@@ -100,8 +108,6 @@ namespace Microsoft.PythonTools.Project.Web {
                     dsi.Launch();
                 }
             } else {
-                _pyService.Logger.LogEvent(Logging.PythonLogEvent.Launch, 0);
-
                 var psi = DebugLaunchHelper.CreateProcessStartInfo(_serviceProvider, config);
 
                 var process = Process.Start(psi);

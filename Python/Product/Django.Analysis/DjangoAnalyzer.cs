@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Django.Analysis {
         internal const string Name = "django";
         internal readonly Dictionary<string, TagInfo> _tags = new Dictionary<string, TagInfo>();
         internal readonly Dictionary<string, TagInfo> _filters = new Dictionary<string, TagInfo>();
-        internal readonly ISet<DjangoUrl> _urls = new SortedSet<DjangoUrl>();
+        internal readonly IList<DjangoUrl> _urls = new List<DjangoUrl>();
         private readonly HashSet<IPythonProjectEntry> _hookedEntries = new HashSet<IPythonProjectEntry>();
         internal readonly Dictionary<string, TemplateVariables> _templateFiles = new Dictionary<string, TemplateVariables>(StringComparer.OrdinalIgnoreCase);
         private ConditionalWeakTable<Node, ContextMarker> _contextTable = new ConditionalWeakTable<Node, ContextMarker>();
@@ -97,7 +97,8 @@ namespace Microsoft.PythonTools.Django.Analysis {
 
                     return serializer.Serialize(res);
                 case Commands.GetUrls:
-                    return serializer.Serialize(_urls.ToArray());
+                    // GroupBy + Select have the same effect as Distinct with a long EqualityComparer
+                    return serializer.Serialize(_urls.GroupBy(url => url.FullName).Select(urlGroup => urlGroup.First()));
                 case Commands.GetMembers:
                     string[] args = serializer.Deserialize<string[]>(body);
                     var file = args[0];

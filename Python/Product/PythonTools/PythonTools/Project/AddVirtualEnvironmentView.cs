@@ -26,18 +26,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.InterpreterList;
-using Microsoft.VisualStudio.PlatformUI;
-using Microsoft.VisualStudioTools;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
     sealed class AddVirtualEnvironmentView : DependencyObject, INotifyPropertyChanged, IDisposable {
         readonly IInterpreterRegistryService _interpreterService;
         private readonly PythonProjectNode _project;
+        private readonly string _requirementsPath;
         internal readonly string _projectHome;
         private readonly SemaphoreSlim _ready = new SemaphoreSlim(1);
         private InterpreterView _lastUserSelectedBaseInterpreter;
@@ -45,15 +41,17 @@ namespace Microsoft.PythonTools.Project {
         public AddVirtualEnvironmentView(
             PythonProjectNode project,
             IInterpreterRegistryService interpreterService,
-            IPythonInterpreterFactory selectInterpreter
+            string selectInterpreterId,
+            string requirementsPath
         ) {
             _interpreterService = interpreterService;
             _project = project;
+            _requirementsPath = requirementsPath;
             VirtualEnvBasePath = _projectHome = project.ProjectHome;
-            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(project.Site, project));
-            var selection = Interpreters.FirstOrDefault(v => v.Interpreter == selectInterpreter);
+            Interpreters = new ObservableCollection<InterpreterView>(InterpreterView.GetInterpreters(project.Site, null, true));
+            var selection = Interpreters.FirstOrDefault(v => v.Id == selectInterpreterId);
             if (selection == null) {
-                selection = Interpreters.FirstOrDefault(v => v.Interpreter == project.GetInterpreterFactory())
+                selection = Interpreters.FirstOrDefault(v => v.Id == project.ActiveInterpreter?.Configuration.Id)
                     ?? Interpreters.LastOrDefault();
             }
             BaseInterpreter = selection;
@@ -66,7 +64,7 @@ namespace Microsoft.PythonTools.Project {
             }
             VirtualEnvName = venvName;
 
-            CanInstallRequirementsTxt = File.Exists(PathUtils.GetAbsoluteFilePath(_projectHome, "requirements.txt"));
+            CanInstallRequirementsTxt = File.Exists(_requirementsPath);
             WillInstallRequirementsTxt = CanInstallRequirementsTxt;
         }
 
@@ -74,25 +72,14 @@ namespace Microsoft.PythonTools.Project {
             _ready.Dispose();
         }
 
-        private void OnInterpretersChanged(object sender, EventArgs e) {
-            if (!Dispatcher.CheckAccess()) {
-                Dispatcher.BeginInvoke((Action)(() => OnInterpretersChanged(sender, e)));
-                return;
-            }
-
-            var existing = Interpreters.Where(iv => iv.Interpreter != null).ToDictionary(iv => iv.Interpreter);
-            var def = _project.GetInterpreterFactory();
-
-            int i = 0;
-            foreach (var interp in InterpreterView.GetInterpreters(_project.Site, _project).Select(x => x.Interpreter)) {
-                if (!existing.Remove(interp)) {
-                    Interpreters.Insert(i, new InterpreterView(interp, interp.Configuration.Description, interp == def));
-                }
-                i += 1;
-            }
-            foreach (var kv in existing) {
-                Interpreters.Remove(kv.Value);
-            }
+        private async void OnInterpretersChanged(object sender, EventArgs e) {
+            await Dispatcher.InvokeAsync(() => {
+                Interpreters.Merge(
+                    InterpreterView.GetInterpreters(_project.Site, _project),
+                    InterpreterView.EqualityComparer,
+                    InterpreterView.Comparer
+                );
+            });
         }
 
 
@@ -223,10 +210,8 @@ namespace Microsoft.PythonTools.Project {
 
                 var config = VirtualEnv.FindInterpreterConfiguration(null, path, _interpreterService);
                 if (config != null && File.Exists(config.InterpreterPath)) {
-                    var baseInterp = _interpreterService.FindInterpreter(config.Id);
-                    InterpreterView baseInterpView;
-                    if (baseInterp != null &&
-                        (baseInterpView = Interpreters.FirstOrDefault(iv => iv.Interpreter == baseInterp)) != null) {
+                    var baseInterpView = Interpreters.FirstOrDefault(v => v.Id == config.Id);
+                    if (baseInterpView != null) {
                         if (_lastUserSelectedBaseInterpreter == null) {
                             _lastUserSelectedBaseInterpreter = BaseInterpreter;
                         }
@@ -404,7 +389,8 @@ namespace Microsoft.PythonTools.Project {
                     return;
                 }
 
-                var interp = view.Interpreter;
+                var registry = _project.Site.GetComponentModel().GetService<IInterpreterRegistryService>();
+                var interp = registry.FindInterpreter(view.Id);
                 Debug.Assert(interp != null);
                 if (interp == null) {
                     return;
@@ -522,10 +508,11 @@ namespace Microsoft.PythonTools.Project {
                 var op = new AddVirtualEnvironmentOperation(
                     _project,
                     VirtualEnvPath,
-                    BaseInterpreter.Interpreter,
+                    BaseInterpreter.Id,
                     WillCreateVirtualEnv,
                     UseVEnv,
                     WillInstallRequirementsTxt,
+                    _requirementsPath,
                     OutputWindowRedirector.GetGeneral(_project.Site)
                 );
                 await op.Run();
@@ -574,7 +561,7 @@ namespace Microsoft.PythonTools.Project {
             }
         }
 
-        public void SelectInterpreter(IPythonInterpreterFactory selection) {
+        public void SelectInterpreter(string selection) {
             if (selection == null) {
                 return;
             }
@@ -584,7 +571,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var sel = Interpreters.FirstOrDefault(iv => iv.Interpreter == selection);
+            var sel = Interpreters.FirstOrDefault(iv => iv.Id == selection);
             if (sel != null) {
                 BaseInterpreter = sel;
             }

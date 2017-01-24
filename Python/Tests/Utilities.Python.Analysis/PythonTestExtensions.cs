@@ -17,11 +17,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-using Microsoft.PythonTools.Analysis;
-using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Infrastructure;
-using Microsoft.PythonTools.Parsing;
 using System.Threading.Tasks;
+using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
+using Microsoft.PythonTools.Interpreter;
+using Microsoft.PythonTools.Parsing;
 
 namespace TestUtilities.Python {
     public static class PythonTestExtensions {

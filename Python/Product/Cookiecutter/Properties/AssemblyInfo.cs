@@ -20,8 +20,8 @@ using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Cookiecutter integration")]
-[assembly: AssemblyDescription("Provides support for Cookiecutter.")]
+[assembly: AssemblyTitle("Visual Studio - Cookiecutter integration")]
+[assembly: AssemblyDescription("Provides tools for finding, instantiating and customizing templates in cookiecutter format.")]
 [assembly: ComVisible(false)]     
 [assembly: CLSCompliant(false)]
 [assembly: NeutralResourcesLanguage("en-US")]

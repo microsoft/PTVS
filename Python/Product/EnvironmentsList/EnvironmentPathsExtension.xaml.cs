@@ -52,6 +52,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         public static readonly ICommand OpenInFileExplorer = new RoutedCommand();
         public static readonly ICommand StartInterpreter = new RoutedCommand();
         public static readonly ICommand StartWindowsInterpreter = new RoutedCommand();
+        public static readonly ICommand ConfigureEnvironment = new RoutedCommand();
 
         public EnvironmentPathsExtension() {
             InitializeComponent();

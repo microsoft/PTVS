@@ -224,30 +224,32 @@ namespace Microsoft.PythonTools.Commands {
                 res.AppendLine();
             }
 
-            try {
-                res.AppendLine("System events:");
+            if (!skipAnalysisLog) {
+                try {
+                    res.AppendLine("System events:");
 
-                var application = new EventLog("Application");
-                var lastWeek = DateTime.Now.Subtract(TimeSpan.FromDays(7));
-                foreach (var entry in application.Entries.Cast<EventLogEntry>()
-                    .Where(e => e.InstanceId == 1026L)  // .NET Runtime
-                    .Where(e => e.TimeGenerated >= lastWeek)
-                    .Where(e => InterestingApplicationLogEntries.IsMatch(e.Message))
-                    .OrderByDescending(e => e.TimeGenerated)
-                ) {
-                    res.AppendLine(string.Format("Time: {0:s}", entry.TimeGenerated));
-                    using (var reader = new StringReader(entry.Message.TrimEnd())) {
-                        for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
-                            res.AppendLine(line);
+                    var application = new EventLog("Application");
+                    var lastWeek = DateTime.Now.Subtract(TimeSpan.FromDays(7));
+                    foreach (var entry in application.Entries.Cast<EventLogEntry>()
+                        .Where(e => e.InstanceId == 1026L)  // .NET Runtime
+                        .Where(e => e.TimeGenerated >= lastWeek)
+                        .Where(e => InterestingApplicationLogEntries.IsMatch(e.Message))
+                        .OrderByDescending(e => e.TimeGenerated)
+                    ) {
+                        res.AppendLine(string.Format("Time: {0:s}", entry.TimeGenerated));
+                        using (var reader = new StringReader(entry.Message.TrimEnd())) {
+                            for (var line = reader.ReadLine(); line != null; line = reader.ReadLine()) {
+                                res.AppendLine(line);
+                            }
                         }
+                        res.AppendLine();
                     }
+
+                } catch (Exception ex) when (!ex.IsCriticalException()) {
+                    res.AppendLine("  Failed to access event log.");
+                    res.AppendLine(ex.ToString());
                     res.AppendLine();
                 }
-
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
-                res.AppendLine("  Failed to access event log.");
-                res.AppendLine(ex.ToString());
-                res.AppendLine();
             }
 
             res.AppendLine("Loaded assemblies:");

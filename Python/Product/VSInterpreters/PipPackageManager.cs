@@ -24,6 +24,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
 using Microsoft.PythonTools.Infrastructure;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.PythonTools.Interpreter {
     class PipPackageManager : IPackageManager, IDisposable {
@@ -38,6 +39,7 @@ namespace Microsoft.PythonTools.Interpreter {
 
         internal readonly SemaphoreSlim _working = new SemaphoreSlim(1);
 
+        private bool _pipListHasFormatOption;
         private int _suppressCount;
         private bool _isDisposed;
 
@@ -59,6 +61,7 @@ namespace Microsoft.PythonTools.Interpreter {
         ) {
             _packages = new List<PackageSpec>();
             _extraInterpreterArgs = extraInterpreterArgs?.ToArray() ?? Array.Empty<string>();
+            _pipListHasFormatOption = true;
 
             if (allowFileSystemWatchers) {
                 _libWatchers = new List<FileSystemWatcher>();
@@ -264,7 +267,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     var msg = success ? Strings.ExecutingCommandSucceeded : Strings.ExecutingCommandFailed;
                     ui?.OnOutputTextReceived(this, msg.FormatUI(arguments));
                     ui?.OnOperationFinished(this, operation, success);
-                    await CacheInstalledPackagesAsync(true, cancellationToken);
+                    await CacheInstalledPackagesAsync(true, false, cancellationToken);
                 }
             }
         }
@@ -322,7 +325,7 @@ namespace Microsoft.PythonTools.Interpreter {
                     var msg = success ? Strings.InstallingPackageSuccess : Strings.InstallingPackageFailed;
                     ui?.OnOutputTextReceived(this, msg.FormatUI(name));
                     ui?.OnOperationFinished(this, operation, success);
-                    await CacheInstalledPackagesAsync(true, cancellationToken);
+                    await CacheInstalledPackagesAsync(true, false, cancellationToken);
                 }
             }
         }
@@ -351,7 +354,7 @@ namespace Microsoft.PythonTools.Interpreter {
             try {
                 using (await _working.LockAsync(cancellationToken)) {
                     ui?.OnOperationStarted(this, operation);
-                    ui?.OnOutputTextReceived(this, Strings.InstallingPackageStarted.FormatUI(name));
+                    ui?.OnOutputTextReceived(this, Strings.UninstallingPackageStarted.FormatUI(name));
 
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
@@ -380,7 +383,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 }
 
                 if (IsReady) {
-                    await CacheInstalledPackagesAsync(false, cancellationToken);
+                    await CacheInstalledPackagesAsync(false, false, cancellationToken);
                     if (!success) {
                         // Double check whether the package has actually
                         // been uninstalled, to avoid reporting errors 
@@ -403,7 +406,11 @@ namespace Microsoft.PythonTools.Interpreter {
 
         private bool SupportsDashMPip => _factory.Configuration.Version > new Version(2, 7);
 
-        private async Task CacheInstalledPackagesAsync(bool alreadyHasLock, CancellationToken cancellationToken) {
+        private async Task CacheInstalledPackagesAsync(
+            bool alreadyHasLock,
+            bool alreadyHasConcurrencyLock,
+            CancellationToken cancellationToken
+        ) {
             if (!IsReady) {
                 await UpdateIsReadyAsync(alreadyHasLock, cancellationToken);
                 if (!IsReady) {
@@ -425,8 +432,12 @@ namespace Microsoft.PythonTools.Interpreter {
                     args.Add("pip");
                 }
                 args.Add("list");
+                if (_pipListHasFormatOption) {
+                    args.Add("--format=json");
+                }
 
-                using (await _concurrencyLock.LockAsync(cancellationToken)) {
+                var concurrencyLock = alreadyHasConcurrencyLock ? null : await _concurrencyLock.LockAsync(cancellationToken);
+                try {
                     using (var proc = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
                         args,
@@ -436,12 +447,34 @@ namespace Microsoft.PythonTools.Interpreter {
                         null
                     )) {
                         try {
-                            if (await proc == 0) {
-                                packages = proc.StandardOutputLines
-                                    .Select(i => PackageSpec.FromPipList(i))
-                                    .Where(p => p.IsValid)
-                                    .OrderBy(p => p.Name)
-                                    .ToList();
+                            if ((await proc) == 0) {
+                                if (_pipListHasFormatOption) {
+                                    var json = string.Join(Environment.NewLine, proc.StandardOutputLines);
+                                    try {
+                                        var data = JArray.Parse(json);
+                                        packages = data
+                                            .Select(j => new PackageSpec(j.Value<string>("name"), j.Value<string>("version")))
+                                            .Where(p => p.IsValid)
+                                            .OrderBy(p => p.Name)
+                                            .ToList();
+                                    } catch (Newtonsoft.Json.JsonException ex) {
+                                        Debug.WriteLine("Failed to parse: {0}".FormatInvariant(ex.Message));
+                                        Debug.WriteLine(json);
+                                    }
+                                } else {
+                                    packages = proc.StandardOutputLines
+                                        .Select(i => PackageSpec.FromPipList(i))
+                                        .Where(p => p.IsValid)
+                                        .OrderBy(p => p.Name)
+                                        .ToList();
+                                }
+                            } else if (_pipListHasFormatOption) {
+                                // Actually, pip probably doesn't have the --format option
+                                Debug.WriteLine("{0} does not support --format".FormatInvariant(_factory.Configuration.InterpreterPath));
+                                _pipListHasFormatOption = false;
+                                await CacheInstalledPackagesAsync(true, true, cancellationToken);
+                                return;
+                            } else {
                             }
                         } catch (OperationCanceledException) {
                             // Process failed to run
@@ -464,6 +497,8 @@ namespace Microsoft.PythonTools.Interpreter {
                             .OrderBy(p => p.Name)
                             .ToList());
                     }
+                } finally {
+                    concurrencyLock?.Dispose();
                 }
 
                 // Outside of concurrency lock, still in working lock
@@ -481,7 +516,7 @@ namespace Microsoft.PythonTools.Interpreter {
         public async Task<IList<PackageSpec>> GetInstalledPackagesAsync(CancellationToken cancellationToken) {
             using (await _working.LockAsync(cancellationToken)) {
                 if (!_everCached) {
-                    await CacheInstalledPackagesAsync(true, cancellationToken);
+                    await CacheInstalledPackagesAsync(true, false, cancellationToken);
                 }
                 return _packages.ToArray();
             }
@@ -493,7 +528,7 @@ namespace Microsoft.PythonTools.Interpreter {
             }
             using (await _working.LockAsync(cancellationToken)) {
                 if (!_everCached) {
-                    await CacheInstalledPackagesAsync(true, cancellationToken);
+                    await CacheInstalledPackagesAsync(true, false, cancellationToken);
                 }
                 return _packages.FirstOrDefault(p => p.Name == package.Name) ?? new PackageSpec(null);
             }
@@ -640,9 +675,14 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void RefreshIsCurrentTimer_Elapsed(object state) {
+        private async void RefreshIsCurrentTimer_Elapsed(object state) {
             if (_isDisposed) {
                 return;
+            }
+
+            try {
+                _refreshIsCurrentTrigger.Change(Timeout.Infinite, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
             }
 
             InstalledFilesChanged?.Invoke(this, EventArgs.Empty);
@@ -652,25 +692,44 @@ namespace Microsoft.PythonTools.Interpreter {
             var oldCts = Interlocked.Exchange(ref _currentRefresh, cts);
             try {
                 oldCts?.Cancel();
+                oldCts?.Dispose();
             } catch (ObjectDisposedException) {
             }
-            oldCts?.Dispose();
 
-            CacheInstalledPackagesAsync(false, cancellationToken)
-                .SilenceException<OperationCanceledException>()
-                .DoNotWait();
+            try {
+                await CacheInstalledPackagesAsync(false, false, cancellationToken);
+            } catch (OperationCanceledException) {
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+            }
         }
 
         public void NotifyPackagesChanged() {
-            _refreshIsCurrentTrigger.Change(100, Timeout.Infinite);
+            try {
+                _refreshIsCurrentTrigger.Change(100, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
+            }
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e) {
-            _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+            if (Directory.Exists(e.FullPath) ||
+                ModulePath.IsPythonFile(e.FullPath, false, true, false) ||
+                ModulePath.IsPythonFile(e.OldFullPath, false, true, false)) {
+                try {
+                    _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+                } catch (ObjectDisposedException) {
+                }
+            }
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e) {
-            _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+            if ((Directory.Exists(e.FullPath) && !"__pycache__".Equals(PathUtils.GetFileOrDirectoryName(e.FullPath))) ||
+                ModulePath.IsPythonFile(e.FullPath, false, true, false)) {
+                try {
+                    _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+                } catch (ObjectDisposedException) {
+                }
+            }
         }
     }
 }

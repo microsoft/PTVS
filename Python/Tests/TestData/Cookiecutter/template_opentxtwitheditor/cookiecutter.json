@@ -1,0 +1,14 @@
+{
+  "project_name": "Default Project Name",
+  "project_slug": "{{ cookiecutter.project_name.lower().replace(' ', '_') }}",
+  "_visual_studio_post_cmds": [
+    {
+      "name": "File.OpenFile",
+      "args": [
+        "{{cookiecutter._output_folder_path}}\\read me.txt",
+        "/e:",
+        "Source Code (text) Editor"
+      ]
+    }
+  ]
+}

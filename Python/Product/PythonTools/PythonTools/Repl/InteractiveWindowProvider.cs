@@ -92,6 +92,22 @@ namespace Microsoft.PythonTools.Repl {
             return false;
         }
 
+        public IVsInteractiveWindow Open(string replId) {
+            EnsureInterpretersAvailable();
+
+            lock (_windows) {
+                foreach(var window in _windows.Values) {
+                    var eval = window.InteractiveWindow?.Evaluator as SelectableReplEvaluator;
+                    if (eval?.CurrentEvaluator == replId) {
+                        window.Show(true);
+                        return window;
+                    }
+                }
+            }
+
+            return null;
+        }
+
         public IVsInteractiveWindow OpenOrCreate(string replId) {
             EnsureInterpretersAvailable();
 
@@ -242,6 +258,13 @@ namespace Microsoft.PythonTools.Repl {
         internal static void Close(object obj) {
             var frame = ((obj as ToolWindowPane)?.Frame as IVsWindowFrame);
             frame?.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
+        }
+
+        internal static void CloseIfEvaluatorMatches(object obj, string evalId) {
+            var eval = (obj as IVsInteractiveWindow)?.InteractiveWindow.Evaluator as SelectableReplEvaluator;
+            if (eval?.CurrentEvaluator == evalId) {
+                Close(obj);
+            }
         }
     }
 }

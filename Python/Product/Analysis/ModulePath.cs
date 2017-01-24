@@ -366,7 +366,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// not raise exceptions.
         /// </summary>
         public static bool IsPythonFile(string path) {
-            return IsPythonFile(path, true, true);
+            return IsPythonFile(path, true, true, true);
         }
 
         /// <summary>
@@ -381,7 +381,7 @@ namespace Microsoft.PythonTools.Analysis {
         /// ensure the module can be imported.
         /// </remarks>
         public static bool IsPythonSourceFile(string path) {
-            return IsPythonFile(path, false, false);
+            return IsPythonFile(path, false, false, false);
         }
         
         /// <summary>
@@ -396,9 +396,12 @@ namespace Microsoft.PythonTools.Analysis {
         /// names.
         /// </param>
         /// <param name="allowCompiled">
-        /// True if pyd, pyc and pyo files should be allowed.
+        /// True if pyd files should be allowed.
         /// </param>
-        public static bool IsPythonFile(string path, bool strict, bool allowCompiled) {
+        /// <param name="allowCache">
+        /// True if pyc and pyo files should be allowed.
+        /// </param>
+        public static bool IsPythonFile(string path, bool strict, bool allowCompiled, bool allowCache) {
             if (string.IsNullOrEmpty(path)) {
                 return false;
             }
@@ -424,8 +427,8 @@ namespace Microsoft.PythonTools.Analysis {
                 var ext = name.Substring(name.LastIndexOf('.') + 1);
                 return "py".Equals(ext, StringComparison.OrdinalIgnoreCase) ||
                     "pyw".Equals(ext, StringComparison.OrdinalIgnoreCase) ||
-                    (allowCompiled && (
-                        "pyd".Equals(ext, StringComparison.OrdinalIgnoreCase) ||
+                    (allowCompiled && "pyd".Equals(ext, StringComparison.OrdinalIgnoreCase)) ||
+                    (allowCache && (
                         "pyc".Equals(ext, StringComparison.OrdinalIgnoreCase) ||
                         "pyo".Equals(ext, StringComparison.OrdinalIgnoreCase)
                     ));

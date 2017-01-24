@@ -119,5 +119,12 @@ namespace Microsoft.PythonTools.Options {
             pyService.GeneralOptions.UnresolvedImportWarning = _unresolvedImportWarning.Checked;
             pyService.GeneralOptions.ClearGlobalPythonPath = _clearGlobalPythonPath.Checked;
         }
+
+        private void _resetSuppressDialog_Click(object sender, EventArgs e) {
+            System.Diagnostics.Debug.Assert(ResetSuppressDialog != null, "No listener for ResetSuppressDialog event");
+            ResetSuppressDialog?.Invoke(this, EventArgs.Empty);
+        }
+
+        public event EventHandler ResetSuppressDialog;
     }
 }

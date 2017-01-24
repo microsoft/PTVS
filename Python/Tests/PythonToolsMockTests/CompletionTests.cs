@@ -677,7 +677,7 @@ lambda larg1, larg2: None";
                 TestQuickInfo(view, code.IndexOf("x = ") + 4, code.IndexOf("x = ") + 4 + 28, "\"ABCDEFGHIJKLMNOPQRSTUVWYXZ\": str");
 
                 // trailing new lines don't show up in quick info
-                TestQuickInfo(view, code.IndexOf("def f") + 4, code.IndexOf("def f") + 5, "f: def f()\r\nhelpful information");
+                TestQuickInfo(view, code.IndexOf("def f") + 4, code.IndexOf("def f") + 5, "f: def file.f()\r\nhelpful information");
 
                 // keywords don't show up in quick info
                 TestQuickInfo(view, code.IndexOf("while True:"), code.IndexOf("while True:") + 5);
@@ -1117,7 +1117,7 @@ async def g():
                 ManualResetEvent mre = new ManualResetEvent(false);
                 view.View.TextView.TextBuffer.RegisterForNewAnalysis(entry => {
                     if (afterEditVersion != null &&
-                    entry.BufferParser.GetAnalysisVersion(snapshot.TextBuffer).VersionNumber >= afterEditVersion.VersionNumber) {
+                    entry.TryGetBufferParser().GetAnalysisVersion(snapshot.TextBuffer).VersionNumber >= afterEditVersion.VersionNumber) {
                         mre.Set();
                     }
                 });

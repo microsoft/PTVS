@@ -1,4 +1,20 @@
-﻿using Microsoft.PythonTools.Django.Analysis;
+﻿// Python Tools for Visual Studio
+// Copyright(c) Microsoft Corporation
+// All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the License); you may not use
+// this file except in compliance with the License. You may obtain a copy of the
+// License at http://www.apache.org/licenses/LICENSE-2.0
+//
+// THIS CODE IS PROVIDED ON AN  *AS IS* BASIS, WITHOUT WARRANTIES OR CONDITIONS
+// OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION ANY
+// IMPLIED WARRANTIES OR CONDITIONS OF TITLE, FITNESS FOR A PARTICULAR PURPOSE,
+// MERCHANTABLITY OR NON-INFRINGEMENT.
+//
+// See the Apache Version 2.0 License for specific language governing
+// permissions and limitations under the License.
+
+using Microsoft.PythonTools.Django.Analysis;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 using System;
@@ -10,32 +26,48 @@ namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks {
         public readonly BlockClassification[] Args;
         private readonly string _urlName;
         private readonly string[] _definedNamedParameters;
+        private readonly uint _nbDefinedParameters;
 
-        public DjangoUrlBlock(BlockParseInfo parseInfo, BlockClassification[] args, string urlName = null, string[] definedNamedParameters = null)
+        public DjangoUrlBlock(BlockParseInfo parseInfo, BlockClassification[] args, string urlName = null, string[] definedNamedParameters = null, uint nbDefinedParameters = 0)
             : base(parseInfo) {
             Args = args;
             _urlName = urlName;
             _definedNamedParameters = definedNamedParameters != null ? definedNamedParameters : Array.Empty<string>();
+            _nbDefinedParameters = nbDefinedParameters;
         }
 
         public static DjangoBlock Parse(BlockParseInfo parseInfo) {
             string[] words = parseInfo.Args.Split(' ');
             IList<BlockClassification> argClassifications = new List<BlockClassification>();
             IList<string> usedNamedParameters = new List<string>();
+            uint nbParameters = 0;
+            bool afterUrl = false, beforeAsKeyword = true;
 
             int wordStart = parseInfo.Start + parseInfo.Command.Length;
             string urlName = null;
             foreach (string word in words) {
                 if (!string.IsNullOrEmpty(word)) {
-                    Classification currentArgKind = word.Equals("as") ? Classification.Keyword : Classification.Identifier;
+                    Classification currentArgKind;
+                    if (word.Equals("as")) {
+                        currentArgKind = Classification.Keyword;
+                        beforeAsKeyword = false;
+                    } else {
+                        currentArgKind = Classification.Identifier;
+                    }
                     argClassifications.Add(new BlockClassification(new Span(wordStart, word.Length), currentArgKind));
+
+                    if (afterUrl && beforeAsKeyword) {
+                        ++nbParameters;
+                    }
 
                     // Get url name
                     if (urlName == null) {
                         if (word.StartsWith("'")) {
                             urlName = word.TrimStart('\'').TrimEnd('\'');
+                            afterUrl = true;
                         } else if (word.StartsWith("\"")) {
                             urlName = word.TrimStart('"').TrimEnd('"');
+                            afterUrl = true;
                         }
                     }
 
@@ -47,7 +79,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks {
                 wordStart += word.Length + 1;
             }
 
-            return new DjangoUrlBlock(parseInfo, argClassifications.ToArray(), urlName, usedNamedParameters.ToArray());
+            return new DjangoUrlBlock(parseInfo, argClassifications.ToArray(), urlName, usedNamedParameters.ToArray(), nbParameters);
         }
 
         public override IEnumerable<BlockClassification> GetSpans() {
@@ -72,10 +104,15 @@ namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks {
             if (IsAfterAsKeyword(argBeforePosition, argPenultimateBeforePosition))
                 return Enumerable.Empty<CompletionInfo>();
 
-            // TODO detect completion if completing a named parameters (param=) (and return base.GetCompletions(context, position))
+            DjangoUrl url = FindCurrentDjangoUrl(context);
+            // Too many parameters are already in the statement
+            if (_nbDefinedParameters >= url.Parameters.Count) {
+                return new[] {
+                    new CompletionInfo("as", StandardGlyphGroup.GlyphKeyword),
+                };
+            }
 
             // Completion proposes unused named parameters, template variables and the 'as' keyword
-            DjangoUrl url = FindCurrentDjangoUrl(context);
             return Enumerable.Concat(
                 Enumerable.Concat(
                     GetUnusedNamedParameters(url),
@@ -88,7 +125,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks {
         }
 
         private IEnumerable<CompletionInfo> GetUrlCompletion(IDjangoCompletionContext context) {
-            return CompletionInfo.ToCompletionInfo(context.Urls.Select(url => string.Format("'{0}'", url.FullUrlName)), StandardGlyphGroup.GlyphGroupField);
+            return CompletionInfo.ToCompletionInfo(context.Urls.Select(url => string.Format("'{0}'", url.FullName)), StandardGlyphGroup.GlyphGroupField);
         }
 
         private BlockClassification? GetArgBeforePosition(int position) {
@@ -128,7 +165,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing.DjangoBlocks {
         }
 
         private DjangoUrl FindCurrentDjangoUrl(IDjangoCompletionContext context) {
-            return context.Urls.Where(url => url.FullUrlName.Equals(_urlName)).FirstOrDefault();
+            return context.Urls.Where(url => url.FullName.Equals(_urlName)).FirstOrDefault();
         }
 
         private IEnumerable<CompletionInfo> GetUnusedNamedParameters(DjangoUrl url) {

@@ -89,5 +89,10 @@ namespace Microsoft.PythonTools.Interpreter {
         /// in the database.
         /// </summary>
         IEnumerable<string> GetUpToDateModules();
+
+        /// <summary>
+        /// Raised when a new database is available. 
+        /// </summary>
+        event EventHandler NewDatabaseAvailable;
     }
 }

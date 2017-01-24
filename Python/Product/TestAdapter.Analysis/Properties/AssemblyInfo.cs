@@ -21,8 +21,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 
-[assembly: AssemblyTitle("Python Tools for Visual Studio - TestAdapter Analysis Extension")]
-[assembly: AssemblyDescription("Provides Python support within Visual Studio.")]
+[assembly: AssemblyTitle("Visual Studio - Python unit test analysis extension")]
+[assembly: AssemblyDescription("Provides analysis support for discovering unit tests in Python code.")]
 
 [assembly: ComVisible(false)]
 [assembly: CLSCompliant(false)]

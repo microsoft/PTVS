@@ -43,7 +43,7 @@ namespace Microsoft.PythonTools.Refactoring {
             var analysis = analyzer.GetAnalysisEntryFromPath(locationInfo.FilePath);
             _type = type;
             if (analysis != null) {
-                string text = analysis.GetLine(locationInfo.Line);
+                string text = analysis.GetLine(locationInfo.Line) ?? "";
                 string trimmed = text.TrimStart(_whitespace);
                 _text = trimmed;
                 _span = new Span(_columnNo - (text.Length - trimmed.Length) - 1, parent.Engine.OriginalName.Length);

@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Interpreter {
                 throw new ArgumentException(ex.Message, ex);
             }
 
-            if (options.WatchFileSystem && !string.IsNullOrEmpty(DatabasePath)) {
+            if (!GlobalInterpreterOptions.SuppressFileSystemWatchers && options.WatchFileSystem && !string.IsNullOrEmpty(DatabasePath)) {
                 // Assume the database is valid if the version is up to date, then
                 // switch to invalid after we've checked.
                 _isValid = PythonTypeDatabase.IsDatabaseVersionCurrent(DatabasePath);
@@ -110,14 +110,16 @@ namespace Microsoft.PythonTools.Interpreter {
                 _isValid = true;
             }
 
-            try {
-                var pm = options.PackageManager;
-                if (pm != null) {
-                    pm.SetInterpreterFactory(this);
-                    pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
-                    PackageManager = pm;
+            if (!GlobalInterpreterOptions.SuppressPackageManagers) {
+                try {
+                    var pm = options.PackageManager;
+                    if (pm != null) {
+                        pm.SetInterpreterFactory(this);
+                        pm.InstalledFilesChanged += PackageManager_InstalledFilesChanged;
+                        PackageManager = pm;
+                    }
+                } catch (NotSupportedException) {
                 }
-            } catch (NotSupportedException) {
             }
         }
 
@@ -344,7 +346,7 @@ namespace Microsoft.PythonTools.Interpreter {
             _hasEverCheckedDatabase = true;
 #endif
 
-            if (string.IsNullOrEmpty(DatabasePath)) {
+            if (GlobalInterpreterOptions.SuppressFileSystemWatchers || string.IsNullOrEmpty(DatabasePath)) {
                 _isCheckingDatabase = false;
                 _isValid = true;
                 _missingModules = null;

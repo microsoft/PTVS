@@ -213,7 +213,7 @@ namespace Microsoft.VisualStudioTools.Navigation {
         }
 
         internal async Task VisitNodesAsync(ILibraryNodeVisitor visitor, CancellationToken ct = default(CancellationToken)) {
-            await _searching.WaitAsync();
+            await _searching.WaitAsync(ct);
             try {
                 await Task.Run(() => _root.Visit(visitor, ct));
                 ApplyUpdates(true);

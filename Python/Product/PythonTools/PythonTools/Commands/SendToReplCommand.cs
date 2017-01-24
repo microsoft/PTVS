@@ -222,19 +222,13 @@ namespace Microsoft.PythonTools.Commands {
 
                     MoveCaretToEndOfCurrentInput();
 
-                    List<string> statements;
-                    var analyzer = textView.GetAnalyzerAtCaret(_serviceProvider);
-                    if (analyzer == null) {
-                        statements = new List<string> { current };
-                    } else {
-                        statements = RecombineInput(
-                            current,
-                            _window.CurrentLanguageBuffer?.CurrentSnapshot.GetText(),
-                            supportsMultipleStatements,
-                            analyzer.LanguageVersion,
-                            textView.Options.GetNewLineCharacter()
-                        );
-                    }
+                    var statements = RecombineInput(
+                        current,
+                        _window.CurrentLanguageBuffer?.CurrentSnapshot.GetText(),
+                        supportsMultipleStatements,
+                        textView.GetLanguageVersion(_serviceProvider),
+                        textView.Options.GetNewLineCharacter()
+                    );
 
                     if (statements.Count > 0) {
                         // If there was more than one statement then save those for execution later...

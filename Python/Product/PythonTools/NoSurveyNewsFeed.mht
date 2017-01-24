@@ -1,15 +1,15 @@
 From: "Saved by Internet Explorer 11"
-Subject: Python Tools for Visual Studio
-Date: Mon, 26 Oct 2015 15:23:19 -0700
+Subject: Error getting survey/news
+Date: Thu, 8 Dec 2016 11:35:27 -0800
 MIME-Version: 1.0
 Content-Type: multipart/related;
 	type="text/html";
-	boundary="----=_NextPart_000_0005_01D11002.3E9360C0"
-X-MimeOLE: Produced By Microsoft MimeOLE V10.0.10011.16384
+	boundary="----=_NextPart_000_000A_01D25147.2C519E40"
+X-MimeOLE: Produced By Microsoft MimeOLE
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0005_01D11002.3E9360C0
+------=_NextPart_000_000A_01D25147.2C519E40
 Content-Type: text/html;
 	charset="utf-8"
 Content-Transfer-Encoding: quoted-printable
@@ -41,18 +41,16 @@ lang=3D"en" xmlns=3D"http://www.w3.org/1999/xhtml"><HEAD><META =
 content=3D"IE=3D11.0000"=20
 http-equiv=3D"X-UA-Compatible">
     =20
-<META charset=3D"utf-8">     <TITLE>Python Tools for Visual =
-Studio</TITLE>    =20
-<LINK =
+<META charset=3D"utf-8">     <TITLE>Error getting survey/news</TITLE>    =
+ <LINK=20
 href=3D"file:///D:/PTVS/PTVS/Python/Product/PythonTools/ReadmeStyle.css" =
-
-rel=3D"stylesheet" type=3D"text/css">=20
-<META name=3D"GENERATOR" content=3D"MSHTML 11.00.10240.16542"></HEAD>=20
+rel=3D"stylesheet"=20
+type=3D"text/css">=20
+<META name=3D"GENERATOR" content=3D"MSHTML 11.00.10570.1001"></HEAD>=20
 <BODY>
 <H1 class=3D"top">We couldn't contact the survey/news server</H1>
-<P>        There was a problem contacting the Python Tools for Visual =
-Studio    =20
-    survey/news server.     </P>
+<P>        A problem occurred while contacting our survey/news server.   =
+  </P>
 <P>        Please make sure your internet connection is available.     =
 </P>
 <H2><A href=3D"http://go.microsoft.com/fwlink/?LinkId=3D309204">         =
@@ -66,7 +64,7 @@ you can=20
 find more         documentation, discussion forums, and updates.    =20
 </P></BODY></HTML>
 
-------=_NextPart_000_0005_01D11002.3E9360C0
+------=_NextPart_000_000A_01D25147.2C519E40
 Content-Type: text/css;
 	charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
@@ -114,4 +112,4 @@ li > img {
 	vertical-align: middle;
 }
 
-------=_NextPart_000_0005_01D11002.3E9360C0--
+------=_NextPart_000_000A_01D25147.2C519E40--

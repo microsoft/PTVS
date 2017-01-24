@@ -48,6 +48,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Infrastructure\CancellationTokens.cs" />
+    <Compile Include="Infrastructure\COMEnumerator.cs" />
     <Compile Include="Infrastructure\ICatalogLog.cs" />
     <Compile Include="Infrastructure\InterpreterCatalog.cs" />
     <Compile Include="Infrastructure\NativeMethods.cs" />
@@ -72,6 +73,7 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Strings.Designer.cs</LastGenOutput>
       <CustomToolNamespace>Microsoft.PythonTools</CustomToolNamespace>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="..\ProjectAfter.settings" />

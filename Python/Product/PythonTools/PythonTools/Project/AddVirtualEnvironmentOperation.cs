@@ -25,27 +25,30 @@ namespace Microsoft.PythonTools.Project {
     sealed class AddVirtualEnvironmentOperation {
         private readonly PythonProjectNode _project;
         private readonly string _virtualEnvPath;
-        private readonly IPythonInterpreterFactory _baseInterpreter;
+        private readonly string _baseInterpreter;
         private readonly bool _create;
         private readonly bool _useVEnv;
         private readonly bool _installRequirements;
+        private readonly string _requirementsPath;
         private readonly Redirector _output;
         
         public AddVirtualEnvironmentOperation(
             PythonProjectNode project,
             string virtualEnvPath,
-            IPythonInterpreterFactory baseInterpreter,
+            string baseInterpreterId,
             bool create,
             bool useVEnv,
             bool installRequirements,
+            string requirementsPath,
             Redirector output = null
         ) {
             _project = project;
             _virtualEnvPath = virtualEnvPath;
-            _baseInterpreter = baseInterpreter;
+            _baseInterpreter = baseInterpreterId;
             _create = create;
             _useVEnv = useVEnv;
             _installRequirements = installRequirements;
+            _requirementsPath = requirementsPath;
             _output = output;
         }
 
@@ -66,11 +69,13 @@ namespace Microsoft.PythonTools.Project {
 
             IPythonInterpreterFactory factory;
             try {
+                var baseInterp = service.FindInterpreter(_baseInterpreter);
+
                 factory = await _project.CreateOrAddVirtualEnvironment(
                     service,
                     _create,
                     _virtualEnvPath,
-                    _baseInterpreter,
+                    baseInterp,
                     _useVEnv
                 );
             } catch (Exception ex) when (!ex.IsCriticalException()) {
@@ -82,7 +87,7 @@ namespace Microsoft.PythonTools.Project {
                 return;
             }
 
-            var txt = PathUtils.GetAbsoluteFilePath(_project.ProjectHome, "requirements.txt");
+            var txt = _requirementsPath;
             if (!_installRequirements || !File.Exists(txt)) {
                 return;
             }

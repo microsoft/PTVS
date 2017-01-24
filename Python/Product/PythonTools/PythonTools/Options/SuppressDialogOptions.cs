@@ -15,18 +15,17 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.PythonTools.Options {
+    public static class SuppressDialog {
+        public const string Category = "SuppressDialog";
+
+        public const string SwitchEvaluatorSetting = "SwitchEvaluator";
+        public const string PublishToAzure30Setting = "PublishToAzure30";
+    }
+
     sealed class SuppressDialogOptions {
         private readonly PythonToolsService _service;
-
-        private const string Category = "SuppressDialog";
-
-        private const string SwitchEvaluatorSetting = "SwitchEvaluator";
 
         internal SuppressDialogOptions(PythonToolsService service) {
             _service = service;
@@ -34,22 +33,26 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public void Load() {
-            SwitchEvaluator = _service.LoadString(SwitchEvaluatorSetting, Category);
+            SwitchEvaluator = _service.LoadString(SuppressDialog.SwitchEvaluatorSetting, SuppressDialog.Category);
+            PublishToAzure30 = _service.LoadString(SuppressDialog.PublishToAzure30Setting, SuppressDialog.Category);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Save() {
-            _service.SaveString(SwitchEvaluatorSetting, Category, SwitchEvaluator);
+            _service.SaveString(SuppressDialog.SwitchEvaluatorSetting, SuppressDialog.Category, SwitchEvaluator);
+            _service.SaveString(SuppressDialog.PublishToAzure30Setting, SuppressDialog.Category, PublishToAzure30);
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public void Reset() {
             SwitchEvaluator = null;
+            PublishToAzure30 = null;
             Changed?.Invoke(this, EventArgs.Empty);
         }
 
         public event EventHandler Changed;
 
         public string SwitchEvaluator { get; set; }
+        public string PublishToAzure30 { get; set; }
     }
 }

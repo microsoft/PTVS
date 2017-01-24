@@ -21,14 +21,19 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools.Infrastructure;
+using Microsoft.VisualStudio;
+using Microsoft.VisualStudio.Shell.Interop;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.CookiecutterTools.Model {
     class CookiecutterClient : ICookiecutterClient {
+        private readonly IServiceProvider _provider;
         private readonly CookiecutterPythonInterpreter _interpreter;
         private readonly string _envFolderPath;
         private readonly string _envInterpreterPath;
         private readonly Redirector _redirector;
+
+        internal string DefaultBasePath { get; set; } = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
         public bool CookiecutterInstalled {
             get {
@@ -40,7 +45,8 @@ namespace Microsoft.CookiecutterTools.Model {
             }
         }
 
-        public CookiecutterClient(CookiecutterPythonInterpreter interpreter, Redirector redirector) {
+        public CookiecutterClient(IServiceProvider provider, CookiecutterPythonInterpreter interpreter, Redirector redirector) {
+            _provider = provider;
             _interpreter = interpreter;
             var localAppDataFolderPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             _envFolderPath = Path.Combine(localAppDataFolderPath, "Microsoft", "CookiecutterTools", "env");
@@ -141,6 +147,26 @@ namespace Microsoft.CookiecutterTools.Model {
             MoveToDesiredFolder(outputFolderPath, tempFolder);
         }
 
+        public Task<string> GetDefaultOutputFolderAsync(string shortName) {
+            var shell = _provider?.GetService(typeof(SVsShell)) as IVsShell;
+            object o;
+            string vspp, baseName;
+            if (shell != null &&
+                ErrorHandler.Succeeded(shell.GetProperty((int)__VSSPROPID.VSSPROPID_VisualStudioProjDir, out o)) &&
+                PathUtils.IsValidPath((vspp = o as string))) {
+                baseName = vspp;
+            } else {
+                baseName = DefaultBasePath;
+            }
+
+            var candidate = PathUtils.GetAbsoluteDirectoryPath(baseName, shortName);
+            int counter = 1;
+            while (Directory.Exists(candidate) || File.Exists(PathUtils.TrimEndSeparator(candidate))) {
+                candidate = PathUtils.GetAbsoluteDirectoryPath(baseName, "{0}{1}".FormatInvariant(shortName, ++counter));
+            }
+            return Task.FromResult(candidate);
+        }
+
         private void LoadVisualStudioSpecificContext(List<ContextItem> items, JProperty vsExtrasProp) {
             // This section reads additional metadata for Visual Studio.
             // All fields are optional, but if they are specified, they are validated.
@@ -155,6 +181,7 @@ namespace Microsoft.CookiecutterTools.Model {
             //   "var2" : {
             //     "label" : "Variable 2",
             //     "description" : "Description for variable 2",
+            //     "url" : "http://azure.microsoft.com",
             //     "selector" : "odbcConnection"
             //   }
             // }
@@ -173,6 +200,7 @@ namespace Microsoft.CookiecutterTools.Model {
                             var itemObj = (JObject)prop.Value;
                             ReadLabel(item, itemObj);
                             ReadDescription(item, itemObj);
+                            ReadUrl(item, itemObj);
                             ReadSelector(item, itemObj);
                         } else {
                             WrongJsonType(prop.Name, JTokenType.Object, prop.Value.Type);
@@ -212,6 +240,29 @@ namespace Microsoft.CookiecutterTools.Model {
             return descriptionToken;
         }
 
+        private JToken ReadUrl(ContextItem item, JObject itemObj) {
+            var urlToken = itemObj.SelectToken("url");
+            if (urlToken != null) {
+                if (urlToken.Type == JTokenType.String) {
+                    var val = urlToken.Value<string>();
+                    Uri uri;
+                    if (Uri.TryCreate(val, UriKind.Absolute, out uri)) {
+                        if (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps) {
+                            item.Url = val;
+                        } else {
+                            InvalidUrl(val);
+                        }
+                    } else {
+                        InvalidUrl(val);
+                    }
+                } else {
+                    WrongJsonType("url", JTokenType.String, urlToken.Type);
+                }
+            }
+
+            return urlToken;
+        }
+
         private void ReadSelector(ContextItem item, JObject itemObj) {
             var selectorToken = itemObj.SelectToken("selector");
             if (selectorToken != null) {
@@ -221,6 +272,10 @@ namespace Microsoft.CookiecutterTools.Model {
                     WrongJsonType("selector", JTokenType.String, selectorToken.Type);
                 }
             }
+        }
+
+        private void InvalidUrl(string url) {
+            _redirector.WriteErrorLine(string.Format("'{0}' from _visual_studio section in context file should be an absolute http or https url.", url));
         }
 
         private void WrongJsonType(string name, JTokenType expected, JTokenType actual) {

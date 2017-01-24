@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.CookiecutterTools.Infrastructure;
 
@@ -39,16 +40,37 @@ namespace Microsoft.CookiecutterTools.Model {
                 ShellUtils.DeleteDirectory(localTemplateFolder);
             }
 
+            // Ensure we always capture the output, because we need to check for errors in stderr
+            var stdOut = new List<string>();
+            var stdErr = new List<string>();
+
+            Redirector redirector;
+            if (_redirector != null) {
+                redirector = new TeeRedirector(_redirector, new ListRedirector(stdOut, stdErr));
+            } else {
+                redirector = new ListRedirector(stdOut, stdErr);
+            }
+
             var arguments = new string[] { "clone", repoUrl };
-            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, null, false, _redirector)) {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, targetParentFolderPath, null, false, redirector)) {
                 await output;
 
                 var r = new ProcessOutputResult() {
                     ExeFileName = _gitExeFilePath,
                     ExitCode = output.ExitCode,
+                    StandardOutputLines = stdOut.ToArray(),
+                    StandardErrorLines = stdErr.ToArray(),
                 };
 
-                if (r.ExitCode < 0) {
+                if (output.ExitCode < 0 || HasFatalError(stdErr)) {
+                    if (Directory.Exists(localTemplateFolder)) {
+                        // Don't leave a failed clone on disk
+                        try {
+                            ShellUtils.DeleteDirectory(localTemplateFolder);
+                        } catch (Exception ex) when (!ex.IsCriticalException()) {
+                        }
+                    }
+
                     throw new ProcessException(r);
                 }
 
@@ -100,11 +122,14 @@ namespace Microsoft.CookiecutterTools.Model {
 
         public async Task FetchAsync(string repoFolderPath) {
             var arguments = new string[] { "fetch" };
-            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, _redirector)) {
-                if (await output < 0) {
+            using (var output = ProcessOutput.Run(_gitExeFilePath, arguments, repoFolderPath, null, false, null)) {
+                await output;
+                if (output.ExitCode < 0 || HasFatalError(output.StandardErrorLines)) {
                     throw new ProcessException(new ProcessOutputResult() {
                         ExeFileName = _gitExeFilePath,
                         ExitCode = output.ExitCode,
+                        StandardErrorLines = output.StandardErrorLines.ToArray(),
+                        StandardOutputLines = output.StandardOutputLines.ToArray(),
                     });
                 }
             }
@@ -120,6 +145,10 @@ namespace Microsoft.CookiecutterTools.Model {
                     });
                 }
             }
+        }
+
+        private static bool HasFatalError(IEnumerable<string> standardErrorLines) {
+            return standardErrorLines.Any(line => line.StartsWith("fatal:", StringComparison.InvariantCultureIgnoreCase));
         }
 
         private static string GetClonedFolder(string repoUrl, string targetParentFolderPath) {

@@ -21,7 +21,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,6 +44,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private IInterpreterRegistryService _interpreters;
         private IInterpreterOptionsService _service;
         private IServiceProvider _site;
+
+        private EnvironmentView _addNewEnvironmentView;
+        private IEnumerable<EnvironmentView> _addNewEnvironmentViewOnce;
 
         private AnalyzerStatusListener _listener;
         private readonly object _listenerLock = new object();
@@ -108,6 +110,9 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     var compModel = _site.GetService(typeof(SComponentModel)) as IComponentModel;
                     Service = compModel.GetService<IInterpreterOptionsService>();
                     Interpreters = compModel.GetService<IInterpreterRegistryService>();
+                } else {
+                    Service = null;
+                    Interpreters = null;
                 }
             }
         }
@@ -137,10 +142,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 return;
             }
 
-            if (width <= height * 0.9 || width < 400) {
+            if (width < 500) {
                 SwitchToVerticalLayout();
-            } else if (width >= height * 1.1) {
+            } else if (width >= 600) {
                 SwitchToHorizontalLayout();
+            } else if (VerticalLayout.Visibility != Visibility.Visible) {
+                SwitchToVerticalLayout();
             }
         }
 
@@ -365,7 +372,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                         OnViewCreated(view);
                         return view;
                     })
-                    .Concat(EnvironmentView.AddNewEnvironmentViewOnce.Value)
+                    .Concat(_addNewEnvironmentViewOnce ?? Enumerable.Empty<EnvironmentView>())
                     .Concat(EnvironmentView.OnlineHelpViewOnce.Value),
                     EnvironmentComparer.Instance,
                     EnvironmentComparer.Instance
@@ -397,10 +404,7 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         }
 
         private void OnViewCreated(EnvironmentView view) {
-            var evt = ViewCreated;
-            if (evt != null) {
-                evt(this, new EnvironmentViewEventArgs(view));
-            }
+            ViewCreated?.Invoke(this, new EnvironmentViewEventArgs(view));
         }
 
         public event EventHandler<EnvironmentViewEventArgs> ViewCreated;
@@ -434,6 +438,11 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 _service = value;
                 if (_service != null) {
                     _service.DefaultInterpreterChanged += Service_DefaultInterpreterChanged;
+                    _addNewEnvironmentView = EnvironmentView.CreateAddNewEnvironmentView(_service);
+                    _addNewEnvironmentViewOnce = new[] { _addNewEnvironmentView };
+                } else {
+                    _addNewEnvironmentView = null;
+                    _addNewEnvironmentViewOnce = null;
                 }
                 if (_interpreters != null) {
                     Dispatcher.InvokeAsync(FirstUpdateEnvironments).Task.DoNotWait();
@@ -466,52 +475,53 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-        private void AddCustomEnvironment_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
-            if (_service == null) {
-                e.CanExecute = false;
-                e.Handled = true;
-                return;
-            }
-
-            e.CanExecute = true;
-            // Not handled, in case another handler wants to suppress
-            return;
+        private void ConfigurableViewAdded_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = e.Parameter is string;
+            e.Handled = true;
         }
 
-        private async void AddCustomEnvironment_Executed(object sender, ExecutedRoutedEventArgs e) {
-            if (_service == null) {
-                return;
-            }
+        private async void ConfigurableViewAdded_Executed(object sender, ExecutedRoutedEventArgs e) {
+            var id = (string)e.Parameter;
+            e.Handled = true;
 
-            const string baseName = "New Environment";
-            string name = baseName;
-            int count = 2;
-            while (_interpreters.FindConfiguration(CPythonInterpreterFactoryConstants.GetInterpreterId("VisualStudio", name)) != null) {
-                name = baseName + " " + count++;
-            }
-
-            var factory = _service.AddConfigurableInterpreter(
-                name,
-                new InterpreterConfiguration(
-                    "",
-                    name,
-                    "",
-                    "python\\python.exe",
-                    arch : InterpreterArchitecture.x86
-                )
-            );
-
-            UpdateEnvironments(factory);
-
-            await Dispatcher.InvokeAsync(() => {
-                var coll = TryFindResource("SortedExtensions") as CollectionViewSource;
-                if (coll != null) {
-                    var select = coll.View.OfType<ConfigurationExtensionProvider>().FirstOrDefault();
-                    if (select != null) {
-                        coll.View.MoveCurrentTo(select);
-                    }
+            for (int retries = 10; retries > 0; --retries) {
+                var env = _environments.FirstOrDefault(ev => ev.Factory?.Configuration?.Id == id);
+                if (env != null) {
+                    Environments.MoveCurrentTo(env);
+                    return;
                 }
-            }, DispatcherPriority.Normal);
+                await Task.Delay(50).ConfigureAwait(continueOnCapturedContext: true);
+            }
+            Debug.Fail("Failed to switch to added environment");
+        }
+
+        private void ConfigureEnvironment_CanExecute(object sender, CanExecuteRoutedEventArgs e) {
+            e.CanExecute = (e.Parameter as EnvironmentView)?.IsConfigurable ?? false;
+            e.Handled = true;
+        }
+
+        private void ConfigureEnvironment_Executed(object sender, ExecutedRoutedEventArgs e) {
+            e.Handled = true;
+
+            var env = (EnvironmentView)e.Parameter;
+            if (Environments.CurrentItem != env) {
+                Environments.MoveCurrentTo(env);
+                if (Environments.CurrentItem != env) {
+                    return;
+                }
+            }
+            var ext = env.Extensions.OfType<ConfigurationExtensionProvider>().FirstOrDefault();
+            if (ext != null) {
+                Extensions.MoveCurrentTo(ext);
+            }
+        }
+
+        private void EnvironmentsList_SelectionChanged(object sender, SelectionChangedEventArgs e) {
+            var list = sender as ListBox;
+            if (list != null && e.AddedItems.Count > 0) {
+                list.ScrollIntoView(e.AddedItems[0]);
+                e.Handled = true;
+            }
         }
 
         class EnvironmentComparer : IEqualityComparer<EnvironmentView>, IComparer<EnvironmentView> {
@@ -534,12 +544,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     return 0;
                 }
 
-                if (EnvironmentView.AddNewEnvironmentView.IsValueCreated) {
-                    if (object.ReferenceEquals(x, EnvironmentView.AddNewEnvironmentView.Value)) {
-                        return 1;
-                    } else if (object.ReferenceEquals(y, EnvironmentView.AddNewEnvironmentView.Value)) {
-                        return -1;
-                    }
+                if (x != null && x._addNewEnvironmentView) {
+                    return 1;
+                } else if (y != null && y._addNewEnvironmentView) {
+                    return -1;
                 }
                 if (EnvironmentView.OnlineHelpView.IsValueCreated) {
                     if (object.ReferenceEquals(x, EnvironmentView.OnlineHelpView.Value)) {
@@ -549,18 +557,28 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                     }
                 }
 
-                return StringComparer.CurrentCultureIgnoreCase.Compare(
+                int result = StringComparer.CurrentCultureIgnoreCase.Compare(
                     x.Description,
                     y.Description
                 );
-            }
-        }
 
-        private void EnvironmentsList_SelectionChanged(object sender, SelectionChangedEventArgs e) {
-            var list = sender as ListBox;
-            if (list != null && e.AddedItems.Count > 0) {
-                list.ScrollIntoView(e.AddedItems[0]);
-                e.Handled = true;
+                if (result == 0) {
+                    // Any missing information means not equal, so we need to
+                    // pick a winner. We arbitrarily sort the non-null entry
+                    // first, or x if they both have nulls.
+                    if (y.Factory?.Configuration?.Id == null) {
+                        result = -1;
+                    } else if (x.Factory?.Configuration?.Id == null) {
+                        result = 1;
+                    } else {
+                        result = StringComparer.Ordinal.Compare(
+                            x.Factory.Configuration.Id,
+                            y.Factory.Configuration.Id
+                        );
+                    }
+                }
+
+                return result;
             }
         }
     }

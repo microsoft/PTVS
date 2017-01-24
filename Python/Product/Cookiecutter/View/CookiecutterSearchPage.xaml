@@ -280,7 +280,7 @@
                         Visibility="{Binding Path=CheckingUpdateStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
                 <Separator/>
                 <TextBlock Text="Checking for updates..."/>
-                <ProgressBar Margin="4" IsIndeterminate="True"/>
+                <ProgressBar Margin="4" Value="{Binding Path=CheckingUpdatePercentComplete,Mode=OneWay}" Maximum="100"/>
             </StackPanel>
 
             <StackPanel Margin="4 4 4 8"
@@ -359,14 +359,17 @@
                     <Button Margin="8"
                     Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
                     CommandParameter="{Binding SelectedTemplate.GitHubHomeUrl,Mode=OneWay}"
+                    ToolTip="{Binding SelectedTemplate.GitHubHomeUrl,Mode=OneWay}"
                     Style="{StaticResource NavigationButton}">GitHub</Button>
                     <Button Margin="8"
                     Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
                     CommandParameter="{Binding SelectedTemplate.GitHubIssuesUrl,Mode=OneWay}"
+                    ToolTip="{Binding SelectedTemplate.GitHubIssuesUrl,Mode=OneWay}"
                     Style="{StaticResource NavigationButton}">Issues</Button>
                     <Button Margin="8"
                     Command="{x:Static vm:CookiecutterViewModel.OpenInBrowser}"
                     CommandParameter="{Binding SelectedTemplate.GitHubWikiUrl,Mode=OneWay}"
+                    ToolTip="{Binding SelectedTemplate.GitHubWikiUrl,Mode=OneWay}"
                     Style="{StaticResource NavigationButton}">Wiki</Button>
                 </StackPanel>
             </Grid>

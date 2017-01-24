@@ -23,10 +23,10 @@ using Microsoft.CookiecutterTools.Interpreters;
 
 namespace Microsoft.CookiecutterTools.Model {
     static class CookiecutterClientProvider {
-        public static ICookiecutterClient Create(Redirector redirector) {
+        public static ICookiecutterClient Create(IServiceProvider provider, Redirector redirector) {
             var interpreter = FindCompatibleInterpreter();
             if (interpreter != null) {
-                return new CookiecutterClient(interpreter, redirector);
+                return new CookiecutterClient(provider, interpreter, redirector);
             }
 
             return null;

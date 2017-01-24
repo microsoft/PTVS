@@ -79,7 +79,7 @@ namespace PythonToolsMockTests {
 
                 var cts = new CancellationTokenSource(TimeSpan.FromSeconds(60));
                 using (var mre = new ManualResetEventSlim()) {
-                    EventHandler evt = (s, e) => mre.Set();
+                    EventHandler evt = (s, e) => mre.SetIfNotDisposed();
                     analyzer.AnalysisStarted += evt;
                     view = vs.CreateTextView(PythonCoreConstants.ContentType, content ?? "", v => {
                         v.TextView.TextBuffer.Properties.AddProperty(typeof(VsProjectAnalyzer), analyzer);
@@ -129,19 +129,17 @@ namespace PythonToolsMockTests {
             get { return View.Text; }
             set {
                 using (var mre = new ManualResetEventSlim()) {
-                    EventHandler evt = (s, e) => mre.Set();
                     using (var edit = View.TextView.TextBuffer.CreateEdit()) {
                         edit.Delete(0, edit.Snapshot.Length);
                         edit.Apply();
                     }
-                    mre.Reset();
 
                     var buffer = View.TextView.TextBuffer;
                     var oldVersion = buffer.CurrentSnapshot;
                     buffer.GetPythonAnalysisClassifier().ClassificationChanged += (s, e) => {
                         var entry = View.TextView.GetAnalysisEntry(buffer, VS.ServiceProvider);
-                        if (entry.BufferParser.GetAnalysisVersion(buffer).VersionNumber > oldVersion.Version.VersionNumber) {
-                            mre.Set();
+                        if (entry.TryGetBufferParser()?.GetAnalysisVersion(buffer).VersionNumber > oldVersion.Version.VersionNumber) {
+                            mre.SetIfNotDisposed();
                         }
                     };
                     
@@ -151,7 +149,7 @@ namespace PythonToolsMockTests {
                     }
 
                     var analysis = View.TextView.GetAnalysisEntry(buffer, VS.ServiceProvider);
-                    analysis.BufferParser.Requeue();    // force the reparse to happen quickly...
+                    analysis.TryGetBufferParser().Requeue();    // force the reparse to happen quickly...
 
                     if (!mre.Wait(10000)) {
                         throw new TimeoutException("Failed to see buffer start analyzing");

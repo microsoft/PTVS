@@ -31,7 +31,15 @@ namespace Microsoft.PythonTools.XamlDesignerSupport {
     /// </summary>
     [Export(typeof(IXamlDesignerSupport))]
     class XamlDesignerSupport : IXamlDesignerSupport {
-        public Guid DesignerContextTypeGuid => typeof(DesignerContext).GUID;
+        private readonly Lazy<Guid> _DesignerContextTypeGuid = new Lazy<Guid>(() => {
+            try {
+                return typeof(DesignerContext).GUID;
+            } catch {
+                return Guid.Empty;
+            }
+        });
+
+        public Guid DesignerContextTypeGuid => _DesignerContextTypeGuid.Value;
 
         public object CreateDesignerContext() {
             var context = new DesignerContext();

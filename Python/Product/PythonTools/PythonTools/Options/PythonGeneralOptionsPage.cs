@@ -32,10 +32,16 @@ namespace Microsoft.PythonTools.Options {
             get {
                 if (_window == null) {
                     _window = new PythonGeneralOptionsControl();
+                    _window.ResetSuppressDialog += ResetSuppressDialog;
                     LoadSettingsFromStorage();
                 }
                 return _window;
             }
+        }
+
+        private void ResetSuppressDialog(object sender, EventArgs e) {
+            PyService.SuppressDialogOptions.Reset();
+            PyService.SuppressDialogOptions.Save();
         }
 
         /// <summary>

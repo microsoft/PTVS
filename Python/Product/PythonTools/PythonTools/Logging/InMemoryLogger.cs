@@ -42,7 +42,7 @@ namespace Microsoft.PythonTools.Logging {
 
             switch (logEvent) {
                 case PythonLogEvent.Launch:
-                    if ((int)argument != 0) {
+                    if (((LaunchInfo)argument).IsDebug) {
                         _debugLaunchCount++;
                     } else {
                         _normalLaunchCount++;
@@ -60,13 +60,10 @@ namespace Microsoft.PythonTools.Logging {
                     _analysisInfo.Add(argument as AnalysisInfo);
                     break;
                 case PythonLogEvent.AnalysisExitedAbnormally:
-                    _analysisAbnormalities.Add(DateTime.Now + " Abnormal exit: " + argument);
-                    break;
                 case PythonLogEvent.AnalysisOperationCancelled:
-                    _analysisAbnormalities.Add(DateTime.Now + " Operation Cancelled");
-                    break;
                 case PythonLogEvent.AnalysisOperationFailed:
-                    _analysisAbnormalities.Add(DateTime.Now + " Operation Failed " + argument);
+                case PythonLogEvent.AnalysisWarning:
+                    _analysisAbnormalities.Add("[{0}] {1}: {2}".FormatInvariant(DateTime.Now, logEvent, argument as string ?? ""));
                     break;
             }
         }

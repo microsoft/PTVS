@@ -66,6 +66,7 @@
     <Compile Include="Interpreter\Ast\AstPythonFunctionOverload.cs" />
     <Compile Include="Interpreter\Ast\AstPythonModule.cs" />
     <Compile Include="Interpreter\Ast\AstPythonParameterInfo.cs" />
+    <Compile Include="Interpreter\GlobalInterpreterOptions.cs" />
     <Compile Include="Interpreter\InterpreterArchitecture.cs" />
     <Compile Include="Interpreter\IPackageManager.cs" />
     <Compile Include="Interpreter\IPackageManagerUI.cs" />
