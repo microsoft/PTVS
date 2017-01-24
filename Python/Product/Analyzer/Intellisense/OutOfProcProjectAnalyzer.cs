@@ -2206,7 +2206,7 @@ namespace Microsoft.PythonTools.Intellisense {
                         request.column
                     ),
                     request.options
-                );
+                ).MaybeEnumerate();
 
                 return new AP.CompletionsResponse() {
                     completions = ToCompletions(members.ToArray(), request.options)
