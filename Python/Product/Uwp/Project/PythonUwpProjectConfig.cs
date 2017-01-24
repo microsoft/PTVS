@@ -958,7 +958,7 @@ namespace Microsoft.PythonTools.Uwp.Project {
             if (string.IsNullOrEmpty(targets[0].bstrRemoteMachine)) {
                 MessageBox.Show(
                     "The project cannot be deployed or debugged because there is not a remote machine specified in Debug settings.",
-                    "Python Tools for Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    "Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return VSConstants.E_ABORT;
             }
 

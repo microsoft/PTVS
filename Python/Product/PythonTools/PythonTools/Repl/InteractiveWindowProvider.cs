@@ -259,5 +259,12 @@ namespace Microsoft.PythonTools.Repl {
             var frame = ((obj as ToolWindowPane)?.Frame as IVsWindowFrame);
             frame?.CloseFrame((uint)__FRAMECLOSE.FRAMECLOSE_NoSave);
         }
+
+        internal static void CloseIfEvaluatorMatches(object obj, string evalId) {
+            var eval = (obj as IVsInteractiveWindow)?.InteractiveWindow.Evaluator as SelectableReplEvaluator;
+            if (eval?.CurrentEvaluator == evalId) {
+                Close(obj);
+            }
+        }
     }
 }

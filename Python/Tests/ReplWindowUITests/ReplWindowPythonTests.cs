@@ -83,7 +83,7 @@ namespace ReplWindowUITests {
             using (var interactive = Prepare())
             using (var newClassifications = new AutoResetEvent(false)) {
                 const string code = "raise Exception()";
-                interactive.Classifier.ClassificationChanged += (s, e) => newClassifications.Set();
+                interactive.Classifier.ClassificationChanged += (s, e) => newClassifications.SetIfNotDisposed();
 
                 interactive.SubmitCode(code);
 

@@ -20,8 +20,8 @@ using System.Resources;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Python Tools for Visual Studio - Common VS Infrastructure")]
-[assembly: AssemblyDescription("Private VS infrastructure helpers for Python Tools for Visual Studio.")]
+[assembly: AssemblyTitle("Visual Studio - Python VS infrastructure")]
+[assembly: AssemblyDescription("Private Visual Studio infrastructure helpers for Python support.")]
 
 [assembly: ComVisible(false)]
 [assembly: CLSCompliant(false)]

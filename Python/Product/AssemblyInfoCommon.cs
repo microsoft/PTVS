@@ -12,7 +12,7 @@ using System.Runtime.InteropServices;
 // Properties\AssemblyInfo.cs file and remove any lines duplicating the ones below.
 // (See also AssemblyVersion.cs in this same directory.)
 [assembly: AssemblyCompany("Microsoft Corporation")]
-[assembly: AssemblyProduct("Python Tools for Visual Studio")]
-[assembly: AssemblyCopyright("Copyright © Microsoft 2015")]
+[assembly: AssemblyProduct("Python support for Visual Studio")]
+[assembly: AssemblyCopyright("Copyright © Microsoft 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

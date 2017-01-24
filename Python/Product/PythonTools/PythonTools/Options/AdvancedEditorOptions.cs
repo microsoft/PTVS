@@ -40,7 +40,6 @@ namespace Microsoft.PythonTools.Options {
 
         internal AdvancedEditorOptions(PythonToolsService service) {
             _service = service;
-            Load();
         }
 
         public void Load() {

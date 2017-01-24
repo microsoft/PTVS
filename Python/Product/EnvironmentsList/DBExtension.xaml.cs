@@ -204,6 +204,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _isUpToDate = true;
         }
 
+        public override string ToString() => Name;
+
         public static IEnumerable<DBPackageView> FromModuleList(
             IList<string> modules,
             IList<string> stdLibModules,

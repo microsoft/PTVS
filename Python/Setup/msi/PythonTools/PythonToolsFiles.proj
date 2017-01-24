@@ -55,7 +55,7 @@
                    visualstudio_py_util.py" />
 
     <!-- Resources -->
-    <File Include="Python Tools for VS License.rtf;
+    <File Include="License_en-US.rtf;
                    NoInterpreters.mht;
                    NoSurveyNewsFeed.mht" />
     <File Include="PythonFile.ico;

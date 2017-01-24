@@ -142,16 +142,19 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="Commands\AddFromCookiecutterCommand.cs" />
-    <Compile Include="Commands\CreateFromCookiecutterCommand.cs" />
     <Compile Include="Commands\DeleteInstalledTemplateCommand.cs" />
     <Compile Include="Commands\GitHubHomeCommand.cs" />
     <Compile Include="Commands\RunCommand.cs" />
     <Compile Include="Commands\CheckForUpdatesCommand.cs" />
     <Compile Include="Commands\UpdateCommand.cs" />
+    <Compile Include="Model\IProjectSystemClient.cs" />
+    <Compile Include="Model\ProjectSystemClient.cs" />
+    <Compile Include="Model\CreateFilesOperationResult.cs" />
     <Compile Include="Model\GitClientProvider.cs" />
     <Compile Include="Model\Selectors.cs" />
     <Compile Include="Model\ILocalTemplateSource.cs" />
+    <Compile Include="Model\TemplateContext.cs" />
+    <Compile Include="Model\DteCommand.cs" />
     <Compile Include="View\LoadingPage.xaml.cs">
       <DependentUpon>LoadingPage.xaml</DependentUpon>
     </Compile>
@@ -236,7 +239,6 @@
     <Compile Include="Model\GitHubClient.cs" />
     <Compile Include="Model\ICookiecutterClient.cs" />
     <Compile Include="Model\IGitHubClient.cs" />
-    <Compile Include="Commands\CookiecutterExplorerCommand.cs" />
     <Compile Include="Strings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -306,8 +308,12 @@
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>
-    <Content Include="..\PythonTools\Python Tools for VS License.rtf">
+    <Content Include="cookiecutter_render.py">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <IncludeInVSIX>true</IncludeInVSIX>
+    </Content>
+    <Content Include="License_en-US.rtf">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
       <VSIXSubPath>.</VSIXSubPath>
     </Content>

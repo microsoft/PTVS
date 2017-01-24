@@ -44,6 +44,8 @@ namespace CookiecutterTests {
 
         private static string NonExistingLocalTemplatePath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "notemplate");
         private static string TestLocalTemplatePath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "template");
+        private static string TestLocalTemplateOpenTxtPath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "template_opentxt");
+        private static string TestLocalTemplateOpenTxtWithEditorPath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "template_opentxtwitheditor");
         private static string TestInstalledTemplateFolderPath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "installed");
         private static string TestUserConfigFilePath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "userconfig.yaml");
         private static string TestFeedPath => Path.Combine(TestData.GetPath("TestData"), "Cookiecutter", "feed.txt");
@@ -57,7 +59,9 @@ namespace CookiecutterTests {
         private ILocalTemplateSource _installedTemplateSource;
         private ITemplateSource _gitHubTemplateSource;
         private ITemplateSource _feedTemplateSource;
+        private MockProjectSystemClient _projectSystemClient;
         private string _openedFolder;
+        private string _openedFileArgs;
 
         private string DefaultBasePath => ((CookiecutterClient)_cutterClient)?.DefaultBasePath;
 
@@ -98,15 +102,31 @@ namespace CookiecutterTests {
             _installedTemplateSource = new LocalTemplateSource(installedPath, _gitClient);
             _gitHubTemplateSource = new GitHubTemplateSource(_gitHubClient);
             _feedTemplateSource = new FeedTemplateSource(feedUrl);
+            _projectSystemClient = new MockProjectSystemClient();
 
+            _vm = new CookiecutterViewModel(
+                _cutterClient,
+                _gitHubClient,
+                _gitClient,
+                _telemetry,
+                _redirector,
+                _installedTemplateSource,
+                _feedTemplateSource,
+                _gitHubTemplateSource,
+                ExecuteCommand,
+                _projectSystemClient
+            );
 
-            _vm = new CookiecutterViewModel(_cutterClient, _gitHubClient, _gitClient, _telemetry, _redirector, _installedTemplateSource, _feedTemplateSource, _gitHubTemplateSource, OpenFolder);
             _vm.UserConfigFilePath = userConfigFilePath;
             ((CookiecutterClient)_cutterClient).DefaultBasePath = outputProjectFolder;
         }
 
-        private void OpenFolder(string folderPath) {
-            _openedFolder = folderPath;
+        private void ExecuteCommand(string name, string args) {
+            if (name == "File.OpenFolder") {
+                _openedFolder = args.Trim('"');
+            } else if (name == "File.OpenFile") {
+                _openedFileArgs = args;
+            }
         }
 
         [TestMethod]
@@ -124,7 +144,7 @@ namespace CookiecutterTests {
             Assert.IsNotNull(continuationVM);
             Assert.IsFalse(string.IsNullOrEmpty(continuationVM.ContinuationToken));
 
-            await _vm.LoadMoreTemplates(continuationVM.ContinuationToken);
+            await _vm.LoadMoreTemplatesAsync(continuationVM.ContinuationToken);
             Assert.AreEqual(53, _vm.GitHub.Templates.Count);
             Assert.AreEqual(52, _vm.GitHub.Templates.OfType<TemplateViewModel>().Count());
             Assert.AreEqual(1, _vm.GitHub.Templates.OfType<ContinuationViewModel>().Count());
@@ -219,21 +239,7 @@ namespace CookiecutterTests {
         public async Task CreateFromLocalTemplate() {
             await EnsureCookiecutterInstalledAsync();
 
-            _vm.SearchTerm = TestLocalTemplatePath;
-            await _vm.SearchAsync();
-
-            var template = _vm.Custom.Templates[0] as TemplateViewModel;
-            await _vm.SelectTemplate(template);
-
-            Assert.IsNull(_vm.SelectedImage);
-            Assert.IsTrue(string.IsNullOrEmpty(_vm.SelectedDescription));
-
-            await _vm.LoadTemplateAsync();
-
-            // Local template doesn't need to be cloned
-            Assert.AreEqual(OperationStatus.NotStarted, _vm.CloningStatus);
-
-            PrintContextItems(_vm.ContextItems);
+            await LoadLocalTemplate(TestLocalTemplatePath);
             CollectionAssert.AreEqual(LocalTemplateWithUserConfigContextItems, _vm.ContextItems, new ContextItemViewModelComparer());
 
             _vm.ContextItems.Single(item => item.Name == "full_name").Val = "Integration Test User";
@@ -246,29 +252,198 @@ namespace CookiecutterTests {
 
             try {
                 await _vm.CreateFilesAsync();
-
                 Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
-
-                var reportFilePath = Path.Combine(_vm.OutputFolderPath, "report.txt");
-                Assert.IsTrue(File.Exists(reportFilePath), "Failed to generate some project files.");
-                var report = CookiecutterClientTests.ReadReport(reportFilePath);
-
-                var expected = new Dictionary<string, string>() {
-                { "full_name", "Integration Test User" },
-                { "email", "configured@email" },
-                { "github_username", "configuredgithubuser" },
-                { "project_name", "Default Project Name" },
-                { "project_slug", "default_project_name" },
-                { "pypi_username", "configuredgithubuser" },
-                { "version", "0.1.0" },
-                { "use_azure", "y" },
-                { "open_source_license", "Apache Software License 2.0" },
-                { "port", "5000" },
-            };
-                CollectionAssert.AreEqual(expected, report);
+                VerifyLocalTemplateReport(
+                    fullNameOverride: "Integration Test User",
+                    licenseOverride: "Apache Software License 2.0"
+                );
             } finally {
                 FileUtils.DeleteDirectory(targetPath);
             }
+        }
+
+        [TestMethod]
+        public async Task CreateFromLocalTemplateWithCommand() {
+            await EnsureCookiecutterInstalledAsync();
+
+            await LoadLocalTemplate(TestLocalTemplateOpenTxtPath);
+            Assert.AreEqual(true, _vm.HasPostCommands);
+            Assert.AreEqual(true, _vm.ShouldExecutePostCommands);
+
+            var targetPath = _vm.OutputFolderPath;
+            try {
+                await _vm.CreateFilesAsync();
+                _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
+            } finally {
+                FileUtils.DeleteDirectory(targetPath);
+            }
+
+            var expectedArgs = string.Format("\"{0}\"", Path.Combine(targetPath, "read me.txt"));
+            Assert.AreEqual(expectedArgs, _openedFileArgs);
+        }
+
+        [TestMethod]
+        public async Task CreateFromLocalTemplateWithCommandSwitchValue() {
+            await EnsureCookiecutterInstalledAsync();
+
+            await LoadLocalTemplate(TestLocalTemplateOpenTxtWithEditorPath);
+            Assert.AreEqual(true, _vm.HasPostCommands);
+            Assert.AreEqual(true, _vm.ShouldExecutePostCommands);
+
+            var targetPath = _vm.OutputFolderPath;
+            try {
+                await _vm.CreateFilesAsync();
+                _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
+            } finally {
+                FileUtils.DeleteDirectory(targetPath);
+            }
+
+            var expectedArgs = string.Format("\"{0}\" /e:\"Source Code (text) Editor\"", Path.Combine(targetPath, "read me.txt"));
+            Assert.AreEqual(expectedArgs, _openedFileArgs);
+        }
+
+        [TestMethod]
+        public async Task CreateFromLocalTemplateWithCommandSkipped() {
+            await EnsureCookiecutterInstalledAsync();
+
+            await LoadLocalTemplate(TestLocalTemplateOpenTxtPath);
+            Assert.AreEqual(true, _vm.HasPostCommands);
+            Assert.AreEqual(true, _vm.ShouldExecutePostCommands);
+
+            _vm.ShouldExecutePostCommands = false;
+
+            var targetPath = _vm.OutputFolderPath;
+            try {
+                await _vm.CreateFilesAsync();
+                _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
+            } finally {
+                FileUtils.DeleteDirectory(targetPath);
+            }
+
+            Assert.AreEqual(null, _openedFileArgs);
+        }
+
+        [TestMethod]
+        public async Task AddFromLocalTemplate() {
+            await EnsureCookiecutterInstalledAsync();
+
+            var targetPath = ((CookiecutterClient)_cutterClient).DefaultBasePath;
+            Directory.CreateDirectory(targetPath);
+            try {
+                await AddFromTemplateAsync(targetPath, "Project1/Project1", "MockProjectKind", TestLocalTemplatePath);
+
+                var addedLocation = _projectSystemClient.Added[0].Item1;
+                Assert.AreEqual(targetPath, addedLocation.FolderPath);
+                Assert.AreEqual("Project1/Project1", addedLocation.ProjectUniqueName);
+
+                var createdFiles = _projectSystemClient.Added[0].Item2;
+                CollectionAssert.AreEquivalent(
+                    createdFiles.FilesCreated,
+                    new string[] {
+                        "report.txt",
+                        "media\\test.bmp"
+                    }
+                );
+                CollectionAssert.AreEquivalent(
+                    createdFiles.FoldersCreated,
+                    new string[] {
+                        "media"
+                    }
+                );
+                Assert.AreEqual(0, createdFiles.FilesReplaced.Length);
+
+                // Check the contents of the generated files
+                VerifyLocalTemplateReport();
+
+                var log = ((ITelemetryTestSupport)_telemetry.TelemetryService).SessionLog;
+
+                Assert.IsTrue(log.Contains("Test/Cookiecutter/Template/AddToProject"));
+                Assert.IsTrue(log.Contains("MockProjectKind"));
+
+            } finally {
+                FileUtils.DeleteDirectory(targetPath);
+            }
+        }
+
+        [TestMethod]
+        public async Task AddFromLocalTemplateReplaceAndBackup() {
+            await EnsureCookiecutterInstalledAsync();
+
+            var targetPath = ((CookiecutterClient)_cutterClient).DefaultBasePath;
+            Directory.CreateDirectory(targetPath);
+            try {
+                // Create some existing files under the output folder to force a
+                // backup of those existing files by cookiecutter client before
+                // it replaces them.
+                Directory.CreateDirectory(Path.Combine(targetPath, "media"));
+
+                var oldReportContent = "this report.txt will be overwritten";
+                var oldMediaContent = "this test.bmp will be overwritten";
+
+                File.WriteAllText(Path.Combine(targetPath, "report.txt"), oldReportContent);
+                File.WriteAllText(Path.Combine(targetPath, "media", "test.bmp"), oldMediaContent);
+
+                await AddFromTemplateAsync(targetPath, "Project1/Project1", "MockProjectKind", TestLocalTemplatePath);
+
+                var addedLocation = _projectSystemClient.Added[0].Item1;
+                Assert.AreEqual(targetPath, addedLocation.FolderPath);
+                Assert.AreEqual("Project1/Project1", addedLocation.ProjectUniqueName);
+
+                var createdFiles = _projectSystemClient.Added[0].Item2;
+                CollectionAssert.AreEquivalent(
+                    createdFiles.FilesCreated,
+                    new string[] {
+                        "report.txt",
+                        "media\\test.bmp"
+                    }
+                );
+                CollectionAssert.AreEquivalent(
+                    createdFiles.FoldersCreated,
+                    new string[] {
+                        "media"
+                    }
+                );
+                CollectionAssert.AreEqual(
+                    createdFiles.FilesReplaced,
+                    new ReplacedFile[] {
+                        new ReplacedFile("report.txt", "report.bak.txt"),
+                        new ReplacedFile("media\\test.bmp", "media\\test.bak.bmp"),
+                    },
+                    new ReplacedFileComparer()
+                );
+
+                // Check that the contents of the backup files is as expected
+                Assert.AreEqual(oldReportContent, File.ReadAllText(Path.Combine(targetPath, "report.bak.txt")));
+                Assert.AreEqual(oldMediaContent, File.ReadAllText(Path.Combine(targetPath, "media", "test.bak.bmp")));
+
+                // Check the contents of the generated files
+                VerifyLocalTemplateReport();
+            } finally {
+                FileUtils.DeleteDirectory(targetPath);
+            }
+        }
+
+        private async Task AddFromTemplateAsync(string targetPath, string projectUniqueName, string projectKind, string templateLocation) {
+            _vm.OutputFolderPath = targetPath;
+            _vm.TargetProjectLocation = new ProjectLocation() { FolderPath = targetPath, ProjectUniqueName = projectUniqueName, ProjectKind = projectKind };
+            _vm.FixedOutputFolder = true;
+            _vm.SearchTerm = templateLocation;
+            await _vm.SearchAsync();
+
+            var template = _vm.Custom.Templates[0] as TemplateViewModel;
+            await _vm.SelectTemplateAsync(template);
+            await _vm.LoadTemplateAsync();
+
+            await _vm.CreateFilesAsync();
+
+            // Succeeded message doesn't appear for add to project
+            Assert.AreEqual(OperationStatus.NotStarted, _vm.CreatingStatus);
+
+            // Check that we're calling the project system to add the files we generated
+            Assert.AreEqual(1, _projectSystemClient.Added.Count);
+
+            // Output folder should not have been changed automatically, since we specified it was a fixed path
+            Assert.AreEqual(targetPath, _vm.OutputFolderPath);
         }
 
         [TestMethod]
@@ -279,7 +454,7 @@ namespace CookiecutterTests {
             await _vm.SearchAsync();
 
             var template = _vm.Custom.Templates[0] as TemplateViewModel;
-            await _vm.SelectTemplate(template);
+            await _vm.SelectTemplateAsync(template);
 
             Assert.IsNotNull(_vm.SelectedImage);
             Assert.IsFalse(string.IsNullOrEmpty(_vm.SelectedDescription));
@@ -301,14 +476,14 @@ namespace CookiecutterTests {
                 await _vm.CreateFilesAsync();
 
                 Assert.AreEqual(OperationStatus.Succeeded, _vm.CreatingStatus);
-                Assert.AreEqual(_vm.OutputFolderPath, _vm.OpenInExplorerFolderPath);
+                Assert.AreEqual(targetPath, _vm.OpenInExplorerFolderPath);
 
-                Assert.IsTrue(Directory.Exists(Path.Combine(_vm.OutputFolderPath, "static_files")));
-                Assert.IsTrue(Directory.Exists(Path.Combine(_vm.OutputFolderPath, "post-deployment")));
-                Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "web.config")));
-                Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "static_files", "web.config")));
-                Assert.IsTrue(File.Exists(Path.Combine(_vm.OutputFolderPath, "post-deployment", "install-requirements.ps1")));
-                Assert.IsFalse(File.Exists(Path.Combine(_vm.OutputFolderPath, "install-requirements.ps1")));
+                Assert.IsTrue(Directory.Exists(Path.Combine(targetPath, "static_files")));
+                Assert.IsTrue(Directory.Exists(Path.Combine(targetPath, "post-deployment")));
+                Assert.IsTrue(File.Exists(Path.Combine(targetPath, "web.config")));
+                Assert.IsTrue(File.Exists(Path.Combine(targetPath, "static_files", "web.config")));
+                Assert.IsTrue(File.Exists(Path.Combine(targetPath, "post-deployment", "install-requirements.ps1")));
+                Assert.IsFalse(File.Exists(Path.Combine(targetPath, "install-requirements.ps1")));
 
                 var log = ((ITelemetryTestSupport)_telemetry.TelemetryService).SessionLog;
 
@@ -327,7 +502,7 @@ namespace CookiecutterTests {
 
                 Assert.AreEqual(null, _openedFolder);
                 _vm.OpenFolderInExplorer(_vm.OpenInExplorerFolderPath);
-                Assert.AreEqual(_vm.OpenInExplorerFolderPath, _openedFolder);
+                Assert.AreEqual(targetPath, _openedFolder);
             } finally {
                 FileUtils.DeleteDirectory(targetPath);
             }
@@ -342,7 +517,7 @@ namespace CookiecutterTests {
                 await _vm.SearchAsync();
 
                 var template = _vm.Custom.Templates[0] as TemplateViewModel;
-                await _vm.SelectTemplate(template);
+                await _vm.SelectTemplateAsync(template);
                 await _vm.LoadTemplateAsync();
                 Assert.AreEqual(OperationStatus.Succeeded, _vm.CloningStatus);
             }
@@ -353,6 +528,44 @@ namespace CookiecutterTests {
             // After cloning the same template multiple times, make sure it only appears once in the installed section
             var installed = _vm.Installed.Templates.OfType<TemplateViewModel>().Where(t => t.DisplayName == OnlineTemplateRepoName).ToArray();
             Assert.AreEqual(1, installed.Length);
+        }
+
+        private async Task LoadLocalTemplate(string templatePath) {
+            _vm.SearchTerm = templatePath;
+            await _vm.SearchAsync();
+
+            var template = _vm.Custom.Templates[0] as TemplateViewModel;
+            await _vm.SelectTemplateAsync(template);
+
+            Assert.IsNull(_vm.SelectedImage);
+            Assert.IsTrue(string.IsNullOrEmpty(_vm.SelectedDescription));
+
+            await _vm.LoadTemplateAsync();
+
+            // Local template doesn't need to be cloned
+            Assert.AreEqual(OperationStatus.NotStarted, _vm.CloningStatus);
+
+            PrintContextItems(_vm.ContextItems);
+        }
+
+        private void VerifyLocalTemplateReport(string fullNameOverride = null, string licenseOverride = null) {
+            var reportFilePath = Path.Combine(_vm.OutputFolderPath, "report.txt");
+            Assert.IsTrue(File.Exists(reportFilePath), "Failed to generate some project files.");
+            var report = CookiecutterClientTests.ReadReport(reportFilePath);
+
+            var expected = new Dictionary<string, string>() {
+                { "full_name", fullNameOverride ?? "Configured User" },
+                { "email", "configured@email" },
+                { "github_username", "configuredgithubuser" },
+                { "project_name", "Default Project Name" },
+                { "project_slug", "default_project_name" },
+                { "pypi_username", "configuredgithubuser" },
+                { "version", "0.1.0" },
+                { "use_azure", "y" },
+                { "open_source_license", licenseOverride ?? "BSD license" },
+                { "port", "5000" },
+            };
+            CollectionAssert.AreEqual(expected, report);
         }
 
         private static string PII(string text) {
@@ -386,6 +599,37 @@ namespace CookiecutterTests {
 
         private static void PrintTemplate(TemplateViewModel template) {
             Console.WriteLine($"DisplayName: '{template.DisplayName}', RemoteUrl: '{template.RemoteUrl}', ClonedPath: '{template.ClonedPath}', Desc: '{template.Description}'");
+        }
+
+        class ReplacedFileComparer : IComparer {
+            public int Compare(object x, object y) {
+                if (x == y) {
+                    return 0;
+                }
+
+                if (x == null) {
+                    return -1;
+                }
+
+                if (y == null) {
+                    return 1;
+                }
+
+                var a = x as ReplacedFile;
+                var b = y as ReplacedFile;
+
+                var res = a.OriginalFilePath.CompareTo(b.OriginalFilePath);
+                if (res != 0) {
+                    return res;
+                }
+
+                res = a.BackupFilePath.CompareTo(b.BackupFilePath);
+                if (res != 0) {
+                    return res;
+                }
+
+                return 0;
+            }
         }
 
         class ContextItemViewModelComparer : IComparer {

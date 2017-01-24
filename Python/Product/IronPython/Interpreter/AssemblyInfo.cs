@@ -18,7 +18,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Python Tools for Visual Studio IronPython interpreters")]
+[assembly: AssemblyTitle("Visual Studio - IronPython interpreters")]
 [assembly: AssemblyDescription("Provides support for IronPython interpreters.")]
 
 [assembly: ComVisible(false)]

@@ -23,12 +23,11 @@
 
     <_PythonToolsPath Condition="!Exists($(_PythonToolsPath)) and $(VsInstallRoot) != ''">$(VsInstallRoot)\Common7\IDE\Extensions\Microsoft\Python\Core\</_PythonToolsPath>
     <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\PythonTools\$(VisualStudioVersion)', 'InstallDir', null, RegistryView.Registry32))</_PythonToolsPath>
-    <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)\Extensions\Microsoft\Python Tools for Visual Studio\3.0</_PythonToolsPath>
-    <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft Corporation\Python Tools for Visual Studio\3.0</_PythonToolsPath>
+    <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)Exp\Extensions\Microsoft Corporation\Python\3.0</_PythonToolsPath>
     <_PythonToolsPath Condition="!HasTrailingSlash('$(_PythonToolsPath)')">$(_PythonToolsPath)\</_PythonToolsPath>
 
     <_PythonToolsUwpPath Condition="!Exists($(_PythonToolsUwpPath))">$(_PythonToolsPath)..\Uwp\</_PythonToolsUwpPath>
-    <_PythonToolsUwpPath Condition="!Exists($(_PythonToolsUwpPath))">$(_PythonToolsPath)..\..\Python Tools for Visual Studio - UWP\3.0\</_PythonToolsUwpPath>
+    <_PythonToolsUwpPath Condition="!Exists($(_PythonToolsUwpPath))">$(_PythonToolsPath)..\..\Python - UWP\3.0\</_PythonToolsUwpPath>
     <_PythonToolsUwpPath Condition="!HasTrailingSlash('$(_PythonToolsUwpPath)')">$(_PythonToolsUwpPath)\</_PythonToolsUwpPath>
 
     <PythonArguments Condition="'$(PythonArguments)'==''">$(StartupFile)</PythonArguments>

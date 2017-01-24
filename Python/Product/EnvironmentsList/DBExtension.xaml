@@ -71,7 +71,8 @@
                                     Command="{x:Static l:DBExtension.StartRefreshDB}"
                                     CommandParameter="{Binding EnvironmentView}"
                                     HorizontalAlignment="Center"
-                                    VerticalAlignment="Center">
+                                    VerticalAlignment="Center"
+                                    AutomationProperties.Name="Refresh completion DB">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="auto" />

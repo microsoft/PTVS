@@ -289,6 +289,7 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public string path;
             public string addingFromDir;
+            public bool isTemporaryFile, suppressErrorLists;
 
             public override string command => Command;
         }
@@ -585,6 +586,8 @@ namespace Microsoft.PythonTools.Intellisense {
 
             public int fileId;
 
+            public bool isTemporaryFile, suppressErrorList;
+
             public override string name => Name;
         }
 
@@ -606,12 +609,21 @@ namespace Microsoft.PythonTools.Intellisense {
             public override string command => Command;
         }
 
-        public class GetModuleMembers : Request<CompletionsResponse> {
+        public class GetModuleMembersRequest : Request<CompletionsResponse> {
             public const string Command = "getModuleMembers";
 
             public int fileId;
             public string[] package;
             public bool includeMembers;
+
+            public override string command => Command;
+        }
+
+        public class GetAllMembersRequest : Request<CompletionsResponse> {
+            public const string Command = "getAllMembers";
+
+            public string prefix;
+            public GetMemberOptions options;
 
             public override string command => Command;
         }

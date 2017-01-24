@@ -354,7 +354,7 @@ namespace Microsoft.PythonTools.Interpreter {
             try {
                 using (await _working.LockAsync(cancellationToken)) {
                     ui?.OnOperationStarted(this, operation);
-                    ui?.OnOutputTextReceived(this, Strings.InstallingPackageStarted.FormatUI(name));
+                    ui?.OnOutputTextReceived(this, Strings.UninstallingPackageStarted.FormatUI(name));
 
                     using (var output = ProcessOutput.Run(
                         _factory.Configuration.InterpreterPath,
@@ -675,9 +675,14 @@ namespace Microsoft.PythonTools.Interpreter {
             }
         }
 
-        private void RefreshIsCurrentTimer_Elapsed(object state) {
+        private async void RefreshIsCurrentTimer_Elapsed(object state) {
             if (_isDisposed) {
                 return;
+            }
+
+            try {
+                _refreshIsCurrentTrigger.Change(Timeout.Infinite, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
             }
 
             InstalledFilesChanged?.Invoke(this, EventArgs.Empty);
@@ -687,25 +692,44 @@ namespace Microsoft.PythonTools.Interpreter {
             var oldCts = Interlocked.Exchange(ref _currentRefresh, cts);
             try {
                 oldCts?.Cancel();
+                oldCts?.Dispose();
             } catch (ObjectDisposedException) {
             }
-            oldCts?.Dispose();
 
-            CacheInstalledPackagesAsync(false, false, cancellationToken)
-                .SilenceException<OperationCanceledException>()
-                .DoNotWait();
+            try {
+                await CacheInstalledPackagesAsync(false, false, cancellationToken);
+            } catch (OperationCanceledException) {
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                Debug.Fail(ex.ToUnhandledExceptionMessage(GetType()));
+            }
         }
 
         public void NotifyPackagesChanged() {
-            _refreshIsCurrentTrigger.Change(100, Timeout.Infinite);
+            try {
+                _refreshIsCurrentTrigger.Change(100, Timeout.Infinite);
+            } catch (ObjectDisposedException) {
+            }
         }
 
         private void OnRenamed(object sender, RenamedEventArgs e) {
-            _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+            if (Directory.Exists(e.FullPath) ||
+                ModulePath.IsPythonFile(e.FullPath, false, true, false) ||
+                ModulePath.IsPythonFile(e.OldFullPath, false, true, false)) {
+                try {
+                    _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+                } catch (ObjectDisposedException) {
+                }
+            }
         }
 
         private void OnChanged(object sender, FileSystemEventArgs e) {
-            _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+            if ((Directory.Exists(e.FullPath) && !"__pycache__".Equals(PathUtils.GetFileOrDirectoryName(e.FullPath))) ||
+                ModulePath.IsPythonFile(e.FullPath, false, true, false)) {
+                try {
+                    _refreshIsCurrentTrigger.Change(1000, Timeout.Infinite);
+                } catch (ObjectDisposedException) {
+                }
+            }
         }
     }
 }

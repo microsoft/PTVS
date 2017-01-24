@@ -123,9 +123,6 @@
   <data name="InfoBarMessageLink" xml:space="preserve">
     <value>Learn more.</value>
   </data>
-  <data name="OutputFolderNotEmpty" xml:space="preserve">
-    <value>Output folder is not empty. Some files may be replaced.</value>
-  </data>
   <data name="ProductTitle" xml:space="preserve">
     <value>Cookiecutter</value>
   </data>
@@ -205,6 +202,12 @@ Please delete the installed template and try again.</value>
   <data name="RunningTemplateFailed" xml:space="preserve">
     <value>----- Failed to create files using template '{0}' -----</value>
   </data>
+  <data name="ReplacedFilesHeader" xml:space="preserve">
+    <value>The following files were replaced, and a backup of the original file was created:</value>
+  </data>
+  <data name="ReplacedFile" xml:space="preserve">
+    <value> - '{0}' was saved as '{1}'.</value>
+  </data>
   <data name="DeletingTemplateStarted" xml:space="preserve">
     <value>----- Deleting template '{0}' -----</value>
   </data>
@@ -249,6 +252,12 @@ Please delete the installed template and try again.</value>
   </data>
   <data name="UpdatingTemplateFailed" xml:space="preserve">
     <value>----- Failed to update template '{0}' -----</value>
+  </data>
+  <data name="AddToProjectError" xml:space="preserve">
+    <value>Files were successfully created, but there was an issue adding the files to your project.\n{0}</value>
+  </data>
+  <data name="ProjectNotFound" xml:space="preserve">
+    <value>Project with unique name '{0}' was not found in the current solution.</value>
   </data>
   <data name="TemplateCategoryInstalled" xml:space="preserve">
     <value>Installed</value>

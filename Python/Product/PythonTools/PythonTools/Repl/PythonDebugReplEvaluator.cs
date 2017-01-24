@@ -152,11 +152,12 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public void AbortExecution() {
-            CurrentWindow.WriteError("Abort is not supported." + Environment.NewLine);
+            CurrentWindow.WriteErrorLine("Abort is not supported.");
         }
 
         public Task<ExecutionResult> Reset() {
-            throw new NotSupportedException();
+            CurrentWindow.WriteErrorLine("Reset is not supported.");
+            return ExecutionResult.Succeeded;
         }
 
         public string FormatClipboard() {

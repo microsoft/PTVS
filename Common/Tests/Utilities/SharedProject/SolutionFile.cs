@@ -64,6 +64,8 @@ namespace TestUtilities.SharedProject {
             System.IO.Directory.CreateDirectory(location);
 
             MSBuild.ProjectCollection collection = new MSBuild.ProjectCollection();
+            // VisualStudioVersion property may not be set in mock tests
+            collection.SetGlobalProperty("VisualStudioVersion", AssemblyVersionInfo.VSVersion);
             foreach (var project in toGenerate) {
                 projects.Add(project.Save(collection, location));
             }

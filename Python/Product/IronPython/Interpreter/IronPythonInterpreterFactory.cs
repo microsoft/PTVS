@@ -33,6 +33,10 @@ namespace Microsoft.IronPythonTools.Interpreter {
 
         internal static InterpreterConfiguration GetConfiguration(InterpreterArchitecture arch) {
             var prefixPath = IronPythonResolver.GetPythonInstallDir();
+            if (string.IsNullOrEmpty(prefixPath)) {
+                return null;
+            }
+
             return new InterpreterConfiguration(
                 GetInterpreterId(arch),
                 string.Format("IronPython 2.7{0: ()}", arch),

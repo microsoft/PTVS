@@ -36,6 +36,7 @@ namespace Microsoft.PythonTools.Options {
             this._elevateEasyInstall = new System.Windows.Forms.CheckBox();
             this._unresolvedImportWarning = new System.Windows.Forms.CheckBox();
             this._clearGlobalPythonPath = new System.Windows.Forms.CheckBox();
+            this._resetSuppressDialog = new System.Windows.Forms.Button();
             this.tableLayoutPanel3.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -58,11 +59,13 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel3.Controls.Add(this._elevateEasyInstall, 0, 3);
             this.tableLayoutPanel3.Controls.Add(this._unresolvedImportWarning, 0, 7);
             this.tableLayoutPanel3.Controls.Add(this._clearGlobalPythonPath, 0, 5);
+            this.tableLayoutPanel3.Controls.Add(this._resetSuppressDialog, 0, 10);
             this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel3.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel3.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
-            this.tableLayoutPanel3.RowCount = 11;
+            this.tableLayoutPanel3.RowCount = 12;
+            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
@@ -234,6 +237,20 @@ namespace Microsoft.PythonTools.Options {
             this._clearGlobalPythonPath.Text = "&Ignore system-wide PYTHONPATH variables";
             this._clearGlobalPythonPath.UseVisualStyleBackColor = true;
             // 
+            // _resetSuppressDialog
+            // 
+            this._resetSuppressDialog.Anchor = System.Windows.Forms.AnchorStyles.Top;
+            this._resetSuppressDialog.AutoSize = true;
+            this._resetSuppressDialog.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.tableLayoutPanel3.SetColumnSpan(this._resetSuppressDialog, 2);
+            this._resetSuppressDialog.Location = new System.Drawing.Point(96, 241);
+            this._resetSuppressDialog.Name = "_resetSuppressDialog";
+            this._resetSuppressDialog.Size = new System.Drawing.Size(189, 23);
+            this._resetSuppressDialog.TabIndex = 11;
+            this._resetSuppressDialog.Text = "Reset all permanently hidden dialogs";
+            this._resetSuppressDialog.UseVisualStyleBackColor = true;
+            this._resetSuppressDialog.Click += new System.EventHandler(this._resetSuppressDialog_Click);
+            // 
             // PythonGeneralOptionsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -246,6 +263,7 @@ namespace Microsoft.PythonTools.Options {
             this.tableLayoutPanel3.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
+
         }
 
         #endregion
@@ -263,5 +281,6 @@ namespace Microsoft.PythonTools.Options {
         private System.Windows.Forms.CheckBox _elevateEasyInstall;
         private System.Windows.Forms.CheckBox _unresolvedImportWarning;
         private System.Windows.Forms.CheckBox _clearGlobalPythonPath;
+        private System.Windows.Forms.Button _resetSuppressDialog;
     }
 }

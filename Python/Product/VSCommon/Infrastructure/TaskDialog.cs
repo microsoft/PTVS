@@ -160,6 +160,10 @@ namespace Microsoft.PythonTools.Infrastructure {
             config.pRadioButtons = IntPtr.Zero;
 
             var uiShell = (IVsUIShell)_provider.GetService(typeof(SVsUIShell));
+            if (uiShell == null) {
+                // We are shutting down, so return the default
+                return SelectedButton;
+            }
             uiShell.GetDialogOwnerHwnd(out config.hwndParent);
             uiShell.EnableModeless(0);
 

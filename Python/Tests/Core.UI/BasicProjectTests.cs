@@ -127,7 +127,7 @@ namespace PythonToolsUITests {
                 });
 
                 using (var mre = new ManualResetEvent(false)) {
-                    EventHandler onChange = (o, e) => mre.Set();
+                    EventHandler onChange = (o, e) => mre.SetIfNotDisposed();
                     service.DefaultInterpreterChanged += onChange;
                     try {
                         foreach (var fact in registry.Interpreters) {

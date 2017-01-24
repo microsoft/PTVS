@@ -14,34 +14,55 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Parsing.Ast;
 
 namespace Microsoft.PythonTools.Interpreter.Ast {
     class AstPythonType : IPythonType, IMemberContainer, ILocatedMember {
         private readonly Dictionary<string, IMember> _members;
 
-        public AstPythonType(PythonAst ast, IPythonModule declModule, ClassDefinition def, string doc, LocationInfo loc) {
+        private static readonly IPythonModule NoDeclModule = new AstPythonModule();
+
+        public AstPythonType(string name) {
+            _members = new Dictionary<string, IMember>();
+            Name = name;
+            DeclaringModule = NoDeclModule;
+            Mro = Array.Empty<IPythonType>();
+            Locations = Array.Empty<LocationInfo>();
+        }
+
+        public AstPythonType(
+            PythonAst ast,
+            IPythonModule declModule,
+            ClassDefinition def,
+            string doc,
+            LocationInfo loc,
+            IEnumerable<IPythonType> mro
+        ) {
             _members = new Dictionary<string, IMember>();
 
             Name = def.Name;
             Documentation = doc;
             DeclaringModule = declModule;
-            Mro = new IPythonType[0];
+            Mro = mro.MaybeEnumerate().ToArray();
             Locations = new[] { loc };
         }
 
         internal void AddMembers(IEnumerable<KeyValuePair<string, IMember>> members, bool overwrite) {
-            foreach (var kv in members) {
-                if (!overwrite) {
-                    IMember existing;
-                    if (_members.TryGetValue(kv.Key, out existing)) {
-                        continue;
+            lock (_members) {
+                foreach (var kv in members) {
+                    if (!overwrite) {
+                        IMember existing;
+                        if (_members.TryGetValue(kv.Key, out existing)) {
+                            continue;
+                        }
                     }
+                    _members[kv.Key] = kv.Value;
                 }
-                _members[kv.Key] = kv.Value;
             }
         }
 
@@ -57,14 +78,18 @@ namespace Microsoft.PythonTools.Interpreter.Ast {
 
         public IMember GetMember(IModuleContext context, string name) {
             IMember member;
-            _members.TryGetValue(name, out member);
+            lock (_members) {
+                _members.TryGetValue(name, out member);
+            }
             return member;
         }
 
         public IPythonFunction GetConstructors() => GetMember(null, "__init__") as IPythonFunction;
 
         public IEnumerable<string> GetMemberNames(IModuleContext moduleContext) {
-            return _members.Keys.ToArray();
+            lock (_members) {
+                return _members.Keys.ToArray();
+            }
         }
     }
 }

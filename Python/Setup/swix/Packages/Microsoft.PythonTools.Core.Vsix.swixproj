@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <Package Include="file_associations.swr" />
+    <Package Include="debug_symbols.swr" Condition="$(Configuration) == 'Release'" />
     <Package Include="targets.swr" />
   </ItemGroup>
 

@@ -45,7 +45,6 @@
         Microsoft.PythonTools.IronPython.dll;
         Microsoft.PythonTools.IronPython.Interpreter.dll;
         " Condition="$(IncludeIronPython)" />
-    <ManagedFiles Include="Microsoft.PythonTools.ML.dll" Condition="$(IncludeML)" />
     <ManagedFiles Include="
         Microsoft.PythonTools.Uwp.dll;
         Microsoft.PythonTools.Uwp.Interpreter.dll;

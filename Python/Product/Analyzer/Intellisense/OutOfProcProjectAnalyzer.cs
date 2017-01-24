@@ -32,6 +32,7 @@ using Microsoft.PythonTools.Interpreter;
 using Microsoft.PythonTools.Parsing;
 using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.PythonTools.Projects;
+using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Intellisense {
     using AP = AnalysisProtocol;
@@ -75,6 +76,7 @@ namespace Microsoft.PythonTools.Intellisense {
         internal OutOfProcProjectAnalyzer(Stream writer, Stream reader) {
             _analysisQueue = new AnalysisQueue(this);
             _analysisQueue.AnalysisComplete += AnalysisQueue_Complete;
+            _analysisQueue.AnalysisAborted += AnalysisQueue_Aborted;
             _options = new AP.OptionsChangedEvent() {
                 indentation_inconsistency_severity = Severity.Ignore
             };
@@ -83,10 +85,18 @@ namespace Microsoft.PythonTools.Intellisense {
             _connection = new Connection(writer, reader, RequestHandler, AP.RegisteredTypes);
             _connection.EventReceived += ConectionReceivedEvent;
 
+            GlobalInterpreterOptions.SuppressFileSystemWatchers = true;
+            GlobalInterpreterOptions.SuppressPackageManagers = true;
+
             _catalog = new AggregateCatalog();
             _container = new CompositionContainer(_catalog);
             _container.ExportsChanged += ContainerExportsChanged;
         }
+
+        private void AnalysisQueue_Aborted(object sender, EventArgs e) {
+            _connection.Dispose();
+        }
+
 
         private void ContainerExportsChanged(object sender, ExportsChangeEventArgs e) {
             // figure out the new extensions...
@@ -148,8 +158,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 case AP.AddBulkFileRequest.Command: response = AnalyzeFile((AP.AddBulkFileRequest)request); break;
                 case AP.TopLevelCompletionsRequest.Command: response = GetTopLevelCompletions(request); break;
                 case AP.CompletionsRequest.Command: response = GetCompletions(request); break;
+                case AP.GetAllMembersRequest.Command: response = GetAllMembers(request); break;
                 case AP.GetModulesRequest.Command: response = GetModules(request); break;
-                case AP.GetModuleMembers.Command: response = GeModuleMembers(request); break;
+                case AP.GetModuleMembersRequest.Command: response = GeModuleMembers(request); break;
                 case AP.SignaturesRequest.Command: response = GetSignatures((AP.SignaturesRequest)request); break;
                 case AP.QuickInfoRequest.Command: response = GetQuickInfo((AP.QuickInfoRequest)request); break;
                 case AP.AnalyzeExpressionRequest.Command: response = AnalyzeExpression((AP.AnalyzeExpressionRequest)request); break;
@@ -188,9 +199,23 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         internal void ReportUnhandledException(Exception ex) {
-            _connection.SendEventAsync(
-                new AP.UnhandledExceptionEvent(ex)
-            ).Wait();
+            SendUnhandledException(ex);
+            // Allow some time for the other threads to write the event before
+            // we (probably) come crashing down.
+            Thread.Sleep(100);
+        }
+
+        private async void SendUnhandledException(Exception ex) {
+            try {
+                Debug.Fail(ex.ToString());
+                await _connection.SendEventAsync(
+                    new AP.UnhandledExceptionEvent(ex)
+                ).ConfigureAwait(false);
+            } catch (Exception) {
+                // We're in pretty bad state, but nothing useful we can do about
+                // it.
+                Debug.Fail("Unhandled exception reporting unhandled exception");
+            }
         }
 
         private async Task<Response> Initialize(AP.InitializeRequest request) {
@@ -273,15 +298,15 @@ namespace Microsoft.PythonTools.Intellisense {
             _interpreterFactory = factory;
             _allConfigs = registry.Configurations.ToArray();
 
-            var interpreter = factory.CreateInterpreter();
-            if (interpreter != null) {
-                try {
+            try {
+                var interpreter = factory.CreateInterpreter();
+                if (interpreter != null) {
                     _pyAnalyzer = PythonAnalyzer.Create(factory, interpreter);
                     await _pyAnalyzer.ReloadModulesAsync();
                     interpreter.ModuleNamesChanged += OnModulesChanged;
-                } catch (InvalidOperationException ex) {
-                    error = ex.ToString();
                 }
+            } catch (Exception ex) when (!ex.IsCriticalException()) {
+                error = ex.ToString();
             }
 
             return new AP.InitializeResponse() {
@@ -1333,10 +1358,12 @@ namespace Microsoft.PythonTools.Intellisense {
             var pyEntry = _projectFiles[request.fileId] as IPythonProjectEntry;
             IEnumerable<IOverloadResult> sigs;
             if (pyEntry.Analysis != null) {
-                sigs = pyEntry.Analysis.GetSignaturesByIndex(
-                    request.text,
-                    request.location
-                );
+                using (new DebugTimer("GetSignaturesByIndex")) {
+                    sigs = pyEntry.Analysis.GetSignaturesByIndex(
+                        request.text,
+                        request.location
+                    );
+                }
             } else {
                 sigs = Enumerable.Empty<IOverloadResult>();
             }
@@ -1344,7 +1371,6 @@ namespace Microsoft.PythonTools.Intellisense {
             return new AP.SignaturesResponse() {
                 sigs = ToSignatures(sigs)
             };
-
         }
 
         private Response GetTopLevelCompletions(Request request) {
@@ -1368,7 +1394,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response GeModuleMembers(Request request) {
-            var getModuleMembers = (AP.GetModuleMembers)request;
+            var getModuleMembers = (AP.GetModuleMembersRequest)request;
 
             return new AP.CompletionsResponse() {
                 completions = ToCompletions(
@@ -1411,6 +1437,30 @@ namespace Microsoft.PythonTools.Intellisense {
 
             return new AP.CompletionsResponse() {
                 completions = ToCompletions(members.ToArray(), completions.options)
+            };
+        }
+
+        private Response GetAllMembers(Request request) {
+            var req = (AP.GetAllMembersRequest)request;
+
+            var members = Enumerable.Empty<MemberResult>();
+            var opts = GetMemberOptions.ExcludeBuiltins | GetMemberOptions.DeclaredOnly | req.options;
+
+            foreach (var entry in _projectFiles) {
+                var analysis = (entry.Value as IPythonProjectEntry)?.Analysis;
+                if (analysis != null) {
+                    members = members.Concat(analysis.GetAllAvailableMembers(SourceLocation.None, opts)
+                        .Where(mr => mr.Values.Any(v => v.DeclaringModule == entry.Value)));
+                }
+            }
+
+            if (!string.IsNullOrEmpty(req.prefix)) {
+                members = members.Where(mr => mr.Name.StartsWith(req.prefix));
+            }
+            members = members.GroupBy(mr => mr.Name).Select(g => g.First());
+
+            return new AP.CompletionsResponse() {
+                completions = ToCompletions(members.ToArray(), opts)
             };
         }
 
@@ -1472,7 +1522,7 @@ namespace Microsoft.PythonTools.Intellisense {
         }
 
         private Response AnalyzeFile(AP.AddFileRequest request) {
-            var entry = AnalyzeFile(request.path, request.addingFromDir);
+            var entry = AnalyzeFile(request.path, request.addingFromDir, request.isTemporaryFile, request.suppressErrorLists);
 
             if (entry != null) {
                 return new AP.AddFileResponse() {
@@ -1491,7 +1541,7 @@ namespace Microsoft.PythonTools.Intellisense {
             };
 
             for(int i = 0; i < request.path.Length; ++i) {
-                var entry = AnalyzeFile(request.path[i], request.addingFromDir);
+                var entry = AnalyzeFile(request.path[i], request.addingFromDir, false, false);
 
                 if (entry != null) {
                     response.fileId[i] = ProjectEntryMap.GetId(entry);
@@ -1695,7 +1745,9 @@ namespace Microsoft.PythonTools.Intellisense {
                 throw new InvalidOperationException("Unknown project entry");
             }
 
-            return GetNormalCompletions(file, request);
+            using (new DebugTimer("GetCompletions")) {
+                return GetNormalCompletions(file, request);
+            }
         }
 
         internal Task ProcessMessages() {
@@ -1708,8 +1760,11 @@ namespace Microsoft.PythonTools.Intellisense {
             }
         }
 
-        private void AnalysisQueue_Complete(object sender, EventArgs e) {
-            _connection?.SendEventAsync(new AP.AnalysisCompleteEvent());
+        private async void AnalysisQueue_Complete(object sender, EventArgs e) {
+            if (_connection == null) {
+                return;
+            }
+            await _connection.SendEventAsync(new AP.AnalysisCompleteEvent()).ConfigureAwait(false);
         }
 
         private async void OnModulesChanged(object sender, EventArgs args) {
@@ -1780,7 +1835,7 @@ namespace Microsoft.PythonTools.Intellisense {
             return item;
         }
 
-        internal IProjectEntry AnalyzeFile(string path, string addingFromDirectory) {
+        internal IProjectEntry AnalyzeFile(string path, string addingFromDirectory, bool isTemporaryFile, bool suppressErrorList) {
             if (_pyAnalyzer == null) {
                 // We aren't able to analyze code, so don't create an entry.
                 return null;
@@ -1801,7 +1856,9 @@ namespace Microsoft.PythonTools.Intellisense {
                     // response.
                     _connection.SendEventAsync(new AP.ChildFileAnalyzed() {
                         fileId = ProjectEntryMap.GetId(module),
-                        filename = module.FilePath
+                        filename = module.FilePath,
+                        isTemporaryFile = isTemporaryFile,
+                        suppressErrorList = suppressErrorList
                     }).WaitAndUnwrapExceptions();
                 }
                 EnqueueFile(item, path);

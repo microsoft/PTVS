@@ -241,23 +241,17 @@ namespace Microsoft.PythonTools.Analysis.Analyzer {
         }
 
         public virtual VariableDef CreateVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
-            var res = GetVariable(node, unit, name, addRef);
-            if (res == null) {
-                res = AddVariable(name);
-                if (addRef) {
-                    res.AddReference(node, unit);
-                }
+            var res = GetVariable(node, unit, name, false) ?? AddVariable(name);
+            if (addRef) {
+                res.AddReference(node, unit);
             }
             return res;
         }
 
         public VariableDef CreateEphemeralVariable(Node node, AnalysisUnit unit, string name, bool addRef = true) {
-            var res = GetVariable(node, unit, name, addRef);
-            if (res == null) {
-                res = AddVariable(name, new EphemeralVariableDef());
-                if (addRef) {
-                    res.AddReference(node, unit);
-                }
+            var res = GetVariable(node, unit, name, false) ?? AddVariable(name, new EphemeralVariableDef());
+            if (addRef) {
+                res.AddReference(node, unit);
             }
             return res;
         }

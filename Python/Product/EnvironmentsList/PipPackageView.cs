@@ -35,6 +35,8 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             _isInstalled = isInstalled;
         }
 
+        public override string ToString() => DisplayName;
+
         private async void TriggerUpdate() {
             if (_upgradeVersion.HasValue && !string.IsNullOrEmpty(_package.Description)) {
                 return;

@@ -60,5 +60,50 @@ namespace Microsoft.CookiecutterTools.Infrastructure {
                 left.Insert(index, item);
             }
         }
+
+        public static void Merge<TLeft, TRight, TKey>(
+            this ObservableCollection<TLeft> left,
+            IEnumerable<TRight> right,
+            Func<TLeft, TKey> getLeftKey,
+            Func<TRight, TKey> getRightKey,
+            Func<TRight, TLeft> project,
+            IEqualityComparer<TKey> compareId,
+            IComparer<TKey> compareSortKey
+        ) {
+            var toAdd = new SortedList<TKey, TRight>(compareSortKey);
+            var toRemove = new Dictionary<TKey, int>(compareId);
+            var alsoRemove = new List<int>();
+            int index = 0;
+            foreach (var item in left) {
+                var key = getLeftKey(item);
+                if (toRemove.ContainsKey(key)) {
+                    alsoRemove.Add(index);
+                } else {
+                    toRemove[key] = index;
+                }
+                index += 1;
+            }
+
+            foreach (var r in right.OrderBy(getRightKey, compareSortKey)) {
+                var key = getRightKey(r);
+                if (toRemove.TryGetValue(key, out index)) {
+                    toRemove.Remove(key);
+                } else {
+                    toAdd[key] = r;
+                }
+            }
+
+            foreach (var removeAt in toRemove.Values.Concat(alsoRemove).OrderByDescending(i => i)) {
+                left.RemoveAt(removeAt);
+            }
+
+            index = 0;
+            foreach (var item in toAdd.Values) {
+                while (index < left.Count && compareSortKey.Compare(getLeftKey(left[index]), getRightKey(item)) <= 0) {
+                    index += 1;
+                }
+                left.Insert(index, project(item));
+            }
+        }
     }
 }

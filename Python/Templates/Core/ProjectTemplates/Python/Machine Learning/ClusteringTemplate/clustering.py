@@ -18,7 +18,7 @@ correct.
 ============
 Example Data
 ============
-The example is from http://archive.ics.uci.edu/ml/datasets/Water+Treatment+Plant
+The example is from http://mlr.cs.umass.edu/ml/datasets/Water+Treatment+Plant
 It contains a range of continuous values from sensors at a water
 treatment plant, and the aim is to use unsupervised learners to
 determine whether the plant is operating correctly. See the linked page
@@ -30,7 +30,7 @@ classes.
 '''
 
 # Remember to update the script for the new data when you change this URL
-URL = "http://archive.ics.uci.edu/ml/machine-learning-databases/water-treatment/water-treatment.data"
+URL = "http://mlr.cs.umass.edu/ml/machine-learning-databases/water-treatment/water-treatment.data"
 
 # Uncomment this call when using matplotlib to generate images
 # rather than displaying interactive UI.

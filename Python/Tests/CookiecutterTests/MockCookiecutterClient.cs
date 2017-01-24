@@ -35,7 +35,7 @@ namespace CookiecutterTests {
             throw new NotImplementedException();
         }
 
-        public Task GenerateProjectAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
+        public Task<CreateFilesOperationResult> CreateFilesAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
             throw new NotImplementedException();
         }
 
@@ -51,7 +51,11 @@ namespace CookiecutterTests {
             throw new NotImplementedException();
         }
 
-        public Task<ContextItem[]> LoadContextAsync(string localTemplateFolder, string userConfigFilePath) {
+        public Task<TemplateContext> LoadUnrenderedContextAsync(string localTemplateFolder, string userConfigFilePath) {
+            throw new NotImplementedException();
+        }
+
+        public Task<TemplateContext> LoadRenderedContextAsync(string localTemplateFolder, string userConfigFilePath, string contextFilePath, string outputFolderPath) {
             throw new NotImplementedException();
         }
     }

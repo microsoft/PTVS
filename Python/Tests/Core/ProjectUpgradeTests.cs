@@ -356,9 +356,9 @@ namespace PythonToolsTests {
 
             var upgrade = (IVsProjectUpgradeViaFactory)factory;
             foreach (var testCase in new[] {
-                new { Name = "CPythonInterpreterId.pyproj", Expected = 1, Id = "Global|PythonCore|2.7|x86" },
-                new { Name = "CPython35InterpreterId.pyproj", Expected = 1, Id = "Global|PythonCore|3.5-32|x86" },
-                new { Name = "CPythonx64InterpreterId.pyproj", Expected = 1, Id = "Global|PythonCore|3.5|x64" },
+                new { Name = "CPythonInterpreterId.pyproj", Expected = 1, Id = "Global|PythonCore|2.7-32" },
+                new { Name = "CPython35InterpreterId.pyproj", Expected = 1, Id = "Global|PythonCore|3.5-32" },
+                new { Name = "CPythonx64InterpreterId.pyproj", Expected = 1, Id = "Global|PythonCore|3.5" },
                 new { Name = "MSBuildInterpreterId.pyproj", Expected = 1, Id = "MSBuild|env|$(MSBuildProjectFullPath)" },
                 new { Name = "IronPythonInterpreterId.pyproj", Expected = 1, Id = "IronPython|2.7-32" },
             }) {
@@ -403,7 +403,7 @@ namespace PythonToolsTests {
 
             var upgrade = (IVsProjectUpgradeViaFactory)factory;
             foreach (var testCase in new[] {
-                new { Name = "CPythonInterpreterReference.pyproj", Expected = 1, Id = "Global|PythonCore|3.5-32|x86" },
+                new { Name = "CPythonInterpreterReference.pyproj", Expected = 1, Id = "Global|PythonCore|3.5-32" },
                 new { Name = "IronPythonInterpreterReference.pyproj", Expected = 1, Id = "IronPython|2.7-32" },
             }) {
                 int actual;
@@ -447,7 +447,7 @@ namespace PythonToolsTests {
 
             var upgrade = (IVsProjectUpgradeViaFactory)factory;
             foreach (var testCase in new[] {
-                new { Name = "CPythonBaseInterpreter.pyproj", Expected = 1, Id = "Global|PythonCore|3.4|x86" },
+                new { Name = "CPythonBaseInterpreter.pyproj", Expected = 1, Id = "Global|PythonCore|3.4-32" },
             }) {
                 int actual;
                 Guid factoryGuid;

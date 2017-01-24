@@ -18,7 +18,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("Python Tools for Visual Studio IronPython resolver")]
+[assembly: AssemblyTitle("Visual Studio - IronPython resolver")]
 [assembly: AssemblyDescription("Provides IronPython services for use within custom AppDomains.")]
 
 [assembly: ComVisible(false)]

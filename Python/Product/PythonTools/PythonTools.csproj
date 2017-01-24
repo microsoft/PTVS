@@ -266,6 +266,7 @@
     <Compile Include="PythonTools\Intellisense\AnalysisVariable.cs" />
     <Compile Include="PythonTools\Intellisense\BufferParser.cs" />
     <Compile Include="PythonTools\Intellisense\CodeCellAnalysis.cs" />
+    <Compile Include="PythonTools\Intellisense\ExpansionCompletionSource.cs" />
     <Compile Include="PythonTools\Intellisense\PreviewChangesService.cs" />
     <Compile Include="PythonTools\Intellisense\CompletionResult.cs" />
     <Compile Include="PythonTools\Intellisense\ExtractMethodSuggestedActionSourceProvider.cs" />
@@ -315,7 +316,6 @@
     <Compile Include="PythonTools\Repl\SelectableReplEvaluator.cs" />
     <Compile Include="PythonTools\Repl\ZoomableInlineAdornment.cs" />
     <Compile Include="PythonTools\SurveyNewsService.cs" />
-    <Compile Include="PythonTools\Options\GlobalInterpreterOptions.cs" />
     <Compile Include="PythonTools\Options\GeneralOptions.cs" />
     <Compile Include="PythonTools\Options\DebuggerOptions.cs" />
     <Compile Include="PythonTools\Options\AdvancedEditorOptions.cs" />
@@ -547,7 +547,6 @@
     <Compile Include="PythonTools\Intellisense\MonitoredBufferResult.cs" />
     <Compile Include="PythonTools\ISnapshotTextReader.cs" />
     <Compile Include="PythonTools\PythonAutomation.cs" />
-    <Compile Include="PythonTools\Options\InterpreterOptions.cs" />
     <Compile Include="PythonTools\Options\IPythonOptions.cs" />
     <Compile Include="PythonTools\Options\NewInterpreter.cs">
       <SubType>Form</SubType>
@@ -838,7 +837,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>
-    <Content Include="Python Tools for VS License.rtf">
+    <Content Include="License_en-US.rtf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <IncludeInVSIX>true</IncludeInVSIX>
     </Content>

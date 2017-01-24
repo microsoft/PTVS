@@ -1,0 +1,4 @@
+﻿
+folder "InstallDir:\Common7\IDE\Extensions\Microsoft\Python\Core"
+  file source="$(LayoutOutputPath)\Microsoft.PythonTools.Core\Microsoft.PythonTools.Debugger.Helper.x64.pdb"
+  file source="$(LayoutOutputPath)\Microsoft.PythonTools.Core\Microsoft.PythonTools.Debugger.Helper.x86.pdb"
