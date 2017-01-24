@@ -110,12 +110,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
 
         public string Url {
             get {
-                return _url ?? string.Empty;
+                return _url;
             }
 
             set {
                 if (value != _url) {
-                    _url = value ?? string.Empty;
+                    _url = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Url)));
                 }
             }

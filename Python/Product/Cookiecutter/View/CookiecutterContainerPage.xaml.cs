@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
@@ -52,7 +51,7 @@ namespace Microsoft.CookiecutterTools.View {
             InitializeComponent();
         }
 
-        public CookiecutterContainerPage(IServiceProvider provider, Redirector outputWindow, ICookiecutterTelemetry telemetry, IGitClient gitClient, Uri feedUrl, Action<string, string> executeCommand, IProjectSystemClient projectSystemClient, Action updateCommandUI) {
+        public CookiecutterContainerPage(IServiceProvider provider, Redirector outputWindow, ICookiecutterTelemetry telemetry, IGitClient gitClient, Uri feedUrl, Action<string> openFolder, Action updateCommandUI) {
             _updateCommandUI = updateCommandUI;
 
             _checkForUpdatesTimer = new DispatcherTimer();
@@ -68,8 +67,7 @@ namespace Microsoft.CookiecutterTools.View {
                 new LocalTemplateSource(CookiecutterViewModel.DefaultInstalledFolderPath, gitClient),
                 new FeedTemplateSource(feedUrl),
                 new GitHubTemplateSource(gitHubClient),
-                executeCommand,
-                projectSystemClient
+                openFolder
             );
 
             ViewModel.UserConfigFilePath = CookiecutterViewModel.GetUserConfigPath();
@@ -99,11 +97,7 @@ namespace Microsoft.CookiecutterTools.View {
             _searchPage.SelectedTemplateChanged += SearchPage_SelectedTemplateChanged;
         }
 
-        public async Task InitializeAsync(bool checkForUpdates, ProjectLocation location) {
-            if (location != null) {
-                SetProjectLocation(location);
-            }
-
+        public async Task InitializeAsync(bool checkForUpdates) {
             await ViewModel.SearchAsync();
 
             if (checkForUpdates) {
@@ -191,8 +185,6 @@ namespace Microsoft.CookiecutterTools.View {
             PageSequence.MoveCurrentToFirst();
             _updateCommandUI();
 
-            ViewModel.FixedOutputFolder = false;
-            ViewModel.TargetProjectLocation = null;
             ViewModel.SearchTerm = string.Empty;
             ViewModel.SearchAsync().DoNotWait();
         }
@@ -253,20 +245,6 @@ namespace Microsoft.CookiecutterTools.View {
             _checkForUpdatesTimer.Stop();
 
             _searchPage.CheckForUpdates();
-        }
-
-        internal void NewSession(ProjectLocation location) {
-            Home();
-
-            if (location != null) {
-                SetProjectLocation(location);
-            }
-        }
-
-        private void SetProjectLocation(ProjectLocation location) {
-            ViewModel.OutputFolderPath = location.FolderPath;
-            ViewModel.FixedOutputFolder = true;
-            ViewModel.TargetProjectLocation = location;
         }
 
         private void UserControl_MouseRightButtonUp(object sender, MouseButtonEventArgs e) {

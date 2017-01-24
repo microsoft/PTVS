@@ -95,6 +95,10 @@ namespace Microsoft.PythonTools.Commands {
         private string GetData(UIThreadBase ui, bool skipAnalysisLog, CancellationToken cancel) {
             StringBuilder res = new StringBuilder();
 
+            if (PythonToolsPackage.IsIpyToolsInstalled()) {
+                res.AppendLine("WARNING: IpyTools is installed on this machine.  Having both IpyTools and Python Tools for Visual Studio installed will break Python editing.");
+            }
+
             string pythonPathIsMasked = "";
             EnvDTE.DTE dte = null;
             IPythonInterpreterFactoryProvider[] knownProviders = null;

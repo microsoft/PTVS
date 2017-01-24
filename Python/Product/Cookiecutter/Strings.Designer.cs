@@ -61,15 +61,6 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Files were successfully created, but there was an issue adding the files to your project.\n{0}.
-        /// </summary>
-        internal static string AddToProjectError {
-            get {
-                return ResourceManager.GetString("AddToProjectError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to ----- Check for template updates canceled -----.
         /// </summary>
         internal static string CheckingForAllUpdatesCanceled {
@@ -371,6 +362,15 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Output folder is not empty. Some files may be replaced..
+        /// </summary>
+        internal static string OutputFolderNotEmpty {
+            get {
+                return ResourceManager.GetString("OutputFolderNotEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} returned an exit code of {1}..
         /// </summary>
         internal static string ProcessExitCodeMessage {
@@ -385,33 +385,6 @@ namespace Microsoft.CookiecutterTools {
         internal static string ProductTitle {
             get {
                 return ResourceManager.GetString("ProductTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Project with unique name &apos;{0}&apos; was not found in the current solution..
-        /// </summary>
-        internal static string ProjectNotFound {
-            get {
-                return ResourceManager.GetString("ProjectNotFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to  - &apos;{0}&apos; was saved as &apos;{1}&apos;..
-        /// </summary>
-        internal static string ReplacedFile {
-            get {
-                return ResourceManager.GetString("ReplacedFile", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The following files were replaced, and a backup of the original file was created:.
-        /// </summary>
-        internal static string ReplacedFilesHeader {
-            get {
-                return ResourceManager.GetString("ReplacedFilesHeader", resourceCulture);
             }
         }
         

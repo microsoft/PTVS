@@ -51,8 +51,7 @@
                         <TextBlock Text="{Binding}"
                                    TextTrimming="CharacterEllipsis"
                                    Margin="0"
-                                   FontSize="10"
-                                   Opacity="0.9" />
+                                   Foreground="{DynamicResource {x:Static wpf:Controls.GrayTextKey}}" />
                     </Grid>
 
                     <ProgressBar x:Name="RefreshDBProgress"
@@ -79,8 +78,6 @@
                             Margin="1"
                             Command="{x:Static l:DBExtension.StartRefreshDB}"
                             CommandParameter="{Binding}"
-                            AutomationProperties.Name="Refresh completion DB"
-                            AutomationProperties.HelpText="Completion DB is not up to date. Click to start refreshing"
                             Visibility="Hidden">
                         <Control Style="{StaticResource RefreshImage}" />
                         <Button.ToolTip>
@@ -94,8 +91,7 @@
                             Cursor="Hand"
                             Margin="1"
                             Command="{x:Static l:EnvironmentView.OpenInteractiveWindow}"
-                            CommandParameter="{Binding}"
-                            AutomationProperties.Name="Open Interactive Window">
+                            CommandParameter="{Binding}">
                         <Control Style="{StaticResource InteractiveWindowImage}" />
                         <Button.ToolTip>
                             Open Interactive Window
@@ -145,8 +141,7 @@
                           Data="{StaticResource AddGeometry}"
                           Fill="{Binding Foreground,ElementName=CustomLabel}">
                     </Path>
-                    <Label Grid.Column="1" VerticalAlignment="Center" Name="CustomLabel"
-                           AutomationProperties.Name="Add new environment">
+                    <Label Grid.Column="1" VerticalAlignment="Center" Name="CustomLabel">
                         Custom...
                     </Label>
                 </Grid>

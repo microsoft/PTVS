@@ -39,9 +39,9 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private readonly IGitHubClient _githubClient;
         private readonly IGitClient _gitClient;
         private readonly ICookiecutterTelemetry _telemetry;
-        private readonly IProjectSystemClient _projectSystemClient;
         private readonly Redirector _outputWindow;
-        private readonly Action<string, string> _executeCommand;
+        private readonly Action<string> _openFolder;
+
         public static readonly ICommand LoadMore = new RoutedCommand();
         public static readonly ICommand OpenInBrowser = new RoutedCommand();
         public static readonly ICommand OpenInExplorer = new RoutedCommand();
@@ -57,11 +57,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private ImageSource _selectedImage;
         private string _selectedLocation;
         private int _checkingUpdatePercentComplete;
-        private bool _fixedOutputFolder;
-        private ProjectLocation _targetProjectLocation;
-        private DteCommand[] _postCommands;
-        private bool _hasPostCommands;
-        private bool _shouldExecutePostCommands;
 
         private OperationStatus _installingStatus;
         private OperationStatus _cloningStatus;
@@ -109,7 +104,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         public CookiecutterViewModel() {
         }
 
-        public CookiecutterViewModel(ICookiecutterClient cutter, IGitHubClient githubClient, IGitClient gitClient, ICookiecutterTelemetry telemetry, Redirector outputWindow, ILocalTemplateSource installedTemplateSource, ITemplateSource feedTemplateSource, ITemplateSource gitHubTemplateSource, Action<string, string> executeCommand, IProjectSystemClient projectSystemClient) {
+        public CookiecutterViewModel(ICookiecutterClient cutter, IGitHubClient githubClient, IGitClient gitClient, ICookiecutterTelemetry telemetry, Redirector outputWindow, ILocalTemplateSource installedTemplateSource, ITemplateSource feedTemplateSource, ITemplateSource gitHubTemplateSource, Action<string> openFolder) {
             _cutterClient = cutter;
             _githubClient = githubClient;
             _gitClient = gitClient;
@@ -118,8 +113,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             _recommendedSource = feedTemplateSource;
             _installedSource = installedTemplateSource;
             _githubSource = gitHubTemplateSource;
-            _executeCommand = executeCommand;
-            _projectSystemClient = projectSystemClient;
+            _openFolder = openFolder;
 
             Installed = new CategorizedViewModel(Strings.TemplateCategoryInstalled);
             Recommended = new CategorizedViewModel(Strings.TemplateCategoryRecommended);
@@ -310,57 +304,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
-        public bool FixedOutputFolder {
-            get {
-                return _fixedOutputFolder;
-            }
-            set {
-                if (value != _fixedOutputFolder) {
-                    _fixedOutputFolder = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(FixedOutputFolder)));
-                }
-            }
-        }
-
-        public bool HasPostCommands {
-            get {
-                return _hasPostCommands;
-            }
-
-            set {
-                if (value != _hasPostCommands) {
-                    _hasPostCommands = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(HasPostCommands)));
-                }
-            }
-        }
-
-        public bool ShouldExecutePostCommands {
-            get {
-                return _shouldExecutePostCommands;
-            }
-
-            set {
-                if (value != _shouldExecutePostCommands) {
-                    _shouldExecutePostCommands = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ShouldExecutePostCommands)));
-                }
-            }
-        }
-
-        public ProjectLocation TargetProjectLocation {
-            get {
-                return _targetProjectLocation;
-            }
-
-            set {
-                if (value != _targetProjectLocation) {
-                    _targetProjectLocation = value;
-                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(TargetProjectLocation)));
-                }
-            }
-        }
-
         public TemplateViewModel SelectedTemplate {
             get {
                 return _selectedTemplate;
@@ -476,9 +419,9 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             SearchResults.Add(Recommended);
             SearchResults.Add(GitHub);
 
-            var recommendedTask = AddFromSourceAsync(_recommendedSource, searchTerm, Recommended, ct);
-            var installedTask = AddFromSourceAsync(_installedSource, searchTerm, Installed, ct);
-            var githubTask = AddFromSourceAsync(_githubSource, searchTerm, GitHub, ct);
+            var recommendedTask = AddFromSource(_recommendedSource, searchTerm, Recommended, ct);
+            var installedTask = AddFromSource(_installedSource, searchTerm, Installed, ct);
+            var githubTask = AddFromSource(_githubSource, searchTerm, GitHub, ct);
 
             await Task.WhenAll(recommendedTask, installedTask, githubTask);
         }
@@ -579,13 +522,13 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     _templateRefreshCancelTokenSource = new CancellationTokenSource();
                     try {
                         Installed.Templates.Clear();
-                        await AddFromSourceAsync(_installedSource, SearchTerm, Installed, CancellationToken.None);
+                        await AddFromSource(_installedSource, SearchTerm, Installed, CancellationToken.None);
                     } catch (OperationCanceledException) {
                     }
 
                     _templateLocalFolderPath = selection.ClonedPath;
 
-                    await SetDefaultOutputFolderAsync(_templateLocalFolderPath);
+                    await SetDefaultOutputFolder(_templateLocalFolderPath);
                     await RefreshContextAsync(selection);
                 } catch (Exception ex) when (!ex.IsCriticalException()) {
                     CloningStatus = OperationStatus.Failed;
@@ -598,13 +541,13 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             } else {
                 Debug.Assert(!string.IsNullOrEmpty(selection.ClonedPath));
                 _templateLocalFolderPath = selection.ClonedPath;
-                await SetDefaultOutputFolderAsync(_templateLocalFolderPath);
+                await SetDefaultOutputFolder(_templateLocalFolderPath);
                 await RefreshContextAsync(selection);
             }
         }
 
         public async Task CheckForUpdatesAsync() {
-            CheckingUpdateStatus = OperationStatus.NotStarted;
+            ResetStatus();
 
             bool anyError = false;
             try {
@@ -760,40 +703,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 _outputWindow.WriteLine(String.Empty);
                 _outputWindow.WriteLine(Strings.RunningTemplateStarted.FormatUI(selection.DisplayName));
 
-                var operationResult = await _cutterClient.CreateFilesAsync(_templateLocalFolderPath, UserConfigFilePath, contextFilePath, OutputFolderPath);
-
-                if (operationResult.FilesReplaced.Length > 0) {
-                    _outputWindow.WriteLine(Strings.ReplacedFilesHeader);
-                    foreach (var replacedfile in operationResult.FilesReplaced) {
-                        _outputWindow.WriteLine(Strings.ReplacedFile.FormatUI(replacedfile.OriginalFilePath, replacedfile.BackupFilePath));
-                    }
-                }
-
-                var renderedContext = await _cutterClient.LoadRenderedContextAsync(_templateLocalFolderPath, UserConfigFilePath, contextFilePath, OutputFolderPath);
-                _postCommands = renderedContext.Commands.ToArray();
+                await _cutterClient.GenerateProjectAsync(_templateLocalFolderPath, UserConfigFilePath, contextFilePath, OutputFolderPath);
 
                 try {
                     File.Delete(contextFilePath);
                 } catch (UnauthorizedAccessException) {
                 } catch (IOException) {
-                }
-
-                if (TargetProjectLocation != null) {
-                    try {
-                        var location = new ProjectLocation() {
-                            FolderPath = OutputFolderPath,
-                            ProjectUniqueName = TargetProjectLocation.ProjectUniqueName,
-                        };
-                        _projectSystemClient.AddToProject(location, operationResult);
-
-                        RunPostCommands();
-
-                        ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.AddToProject, selection);
-                    } catch (Exception ex) when (!ex.IsCriticalException()) {
-                        _outputWindow.WriteErrorLine(Strings.AddToProjectError.FormatUI(ex.Message));
-
-                        ReportTemplateEvent(CookiecutterTelemetry.TelemetryArea.Template, CookiecutterTelemetry.TemplateEvents.AddToProject, selection, ex);
-                    }
                 }
 
                 _outputWindow.WriteLine(Strings.RunningTemplateSuccess.FormatUI(selection.DisplayName, OutputFolderPath));
@@ -805,11 +720,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 _templateLocalFolderPath = null;
                 OpenInExplorerFolderPath = OutputFolderPath;
                 CreatingStatus = OperationStatus.Succeeded;
-
-                if (TargetProjectLocation != null) {
-                    // Don't show the succeeded message and open in solution explorer link when adding to project
-                    CreatingStatus = OperationStatus.NotStarted;
-                }
 
                 Home();
             } catch (Exception ex) when (!ex.IsCriticalException()) {
@@ -854,39 +764,16 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             Process.Start(UrlConstants.HelpUrl)?.Dispose();
         }
 
-        private void RunPostCommands() {
-            if (_postCommands == null || !ShouldExecutePostCommands) {
-                return;
-            }
-
-            foreach (var cmd in _postCommands) {
-                _executeCommand?.Invoke(cmd.Name, cmd.Args);
-            }
-        }
-
         public void OpenFolderInExplorer(string path) {
-            try {
-                RunOpenInSolutionExplorerCommands(path);
-                RunPostCommands();
-
-                CreatingStatus = OperationStatus.NotStarted;
-                OpenInExplorerFolderPath = null;
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
-                _outputWindow.WriteErrorLine(ex.Message);
-            }
+            _openFolder(path);
         }
 
-        private void RunOpenInSolutionExplorerCommands(string path) {
-            _executeCommand("File.OpenFolder", path);
-            _executeCommand("View.SolutionExplorer", null);
-        }
-
-        public async Task SelectTemplateAsync(TemplateViewModel template) {
+        public async Task SelectTemplate(TemplateViewModel template) {
             SelectedTemplate = template;
             await RefreshSelectedDescriptionAsync(template);
         }
 
-        public async Task LoadMoreTemplatesAsync(string continuationToken) {
+        public async Task LoadMoreTemplates(string continuationToken) {
             var last = GitHub.Templates.LastOrDefault();
             if (last is ContinuationViewModel) {
                 _templateRefreshCancelTokenSource?.Cancel();
@@ -894,13 +781,13 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 try {
                     GitHub.Templates.Remove(last);
                     ReportEvent(CookiecutterTelemetry.TelemetryArea.Search, CookiecutterTelemetry.SearchEvents.More);
-                    await AddFromSourceAsync(_githubSource, null, GitHub, _templateRefreshCancelTokenSource.Token, continuationToken);
+                    await AddFromSource(_githubSource, null, GitHub, _templateRefreshCancelTokenSource.Token, continuationToken);
                 } catch (OperationCanceledException) {
                 }
             }
         }
 
-        private async Task<bool> EnsureCookiecutterIsInstalledAsync() {
+        private async Task<bool> EnsureCookiecutterIsInstalled() {
             if (await _cutterClient.IsCookiecutterInstalled()) {
                 return true;
             }
@@ -933,7 +820,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
-        private async Task AddFromSourceAsync(
+        private async Task AddFromSource(
             ITemplateSource source,
             string searchTerm,
             CategorizedViewModel parent,
@@ -976,17 +863,13 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
-        private async Task SetDefaultOutputFolderAsync(string localTemplatePath) {
-            if (FixedOutputFolder) {
-                return;
-            }
-
+        private async Task SetDefaultOutputFolder(string localTemplatePath) {
             OutputFolderPath = await _cutterClient.GetDefaultOutputFolderAsync(PathUtils.GetFileOrDirectoryName(_templateLocalFolderPath));
             Debug.Assert(!Directory.Exists(OutputFolderPath) && !File.Exists(PathUtils.TrimEndSeparator(OutputFolderPath)));
         }
 
         private async Task RefreshContextAsync(TemplateViewModel selection) {
-            if (!await EnsureCookiecutterIsInstalledAsync()) {
+            if (!await EnsureCookiecutterIsInstalled()) {
                 return;
             }
 
@@ -996,15 +879,12 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 _outputWindow.ShowAndActivate();
                 _outputWindow.WriteLine(Strings.LoadingTemplateStarted.FormatUI(selection.DisplayName));
 
-                var unrenderedContext = await _cutterClient.LoadUnrenderedContextAsync(selection.ClonedPath, UserConfigFilePath);
+                var result = await _cutterClient.LoadContextAsync(selection.ClonedPath, UserConfigFilePath);
 
                 ContextItems.Clear();
-                foreach (var item in unrenderedContext.Items.Where(it => !it.Name.StartsWith("_", StringComparison.InvariantCulture))) {
+                foreach (var item in result) {
                     ContextItems.Add(new ContextItemViewModel(item.Name, item.Selector, item.Label, item.Description, item.Url, item.DefaultValue, item.Values));
                 }
-
-                HasPostCommands = unrenderedContext.Commands.Count > 0;
-                ShouldExecutePostCommands = HasPostCommands;
 
                 LoadingStatus = OperationStatus.Succeeded;
 
@@ -1032,7 +912,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
 
             if (!selection.HasDetails) {
-                await InitializeDetailsAsync(selection);
+                await InitializeDetails(selection);
             }
 
             SelectedDescription = selection.Description ?? string.Empty;
@@ -1044,7 +924,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
-        private async Task InitializeDetailsAsync(TemplateViewModel selection) {
+        private async Task InitializeDetails(TemplateViewModel selection) {
             if (!string.IsNullOrEmpty(selection.RemoteUrl)) {
                 try {
                     var repo = await _githubClient.GetRepositoryDetails(selection.RepositoryOwner, selection.RepositoryName);
@@ -1082,11 +962,10 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     return;
                 }
 
-                var repoUrl = selection.RemoteUrl?.ToLowerInvariant() ?? string.Empty;
-                var repoFullName = selection.RepositoryFullName?.ToLowerInvariant() ?? string.Empty;
-                var repoOwner = selection.RepositoryOwner?.ToLowerInvariant() ?? string.Empty;
-                var repoName = selection.RepositoryName?.ToLowerInvariant() ?? string.Empty;
-                var projKind = TargetProjectLocation?.ProjectKind ?? string.Empty;
+                var repoUrl = selection.RemoteUrl?.ToLowerInvariant();
+                var repoFullName = selection.RepositoryFullName?.ToLowerInvariant();
+                var repoOwner = selection.RepositoryOwner?.ToLowerInvariant();
+                var repoName = selection.RepositoryName?.ToLowerInvariant();
 
                 var obj = new {
                     Success = error == null,
@@ -1094,7 +973,6 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     RepoFullName = new TelemetryPiiProperty(repoFullName),
                     RepoOwner = new TelemetryPiiProperty(repoOwner),
                     RepoName = new TelemetryPiiProperty(repoName),
-                    ProjectKind = projKind,
                 };
                 ReportEvent(area, eventName, obj);
             } catch (Exception ex) {

@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Commands {
                         // We have an existing window, but it needs to be reset.
                         // Let's create a new one
                         window = provider.Create(projectId);
-                        project.AddActionOnClose(window, w => InteractiveWindowProvider.CloseIfEvaluatorMatches(w, projectId));
+                        project.AddActionOnClose(window, InteractiveWindowProvider.Close);
                     }
 
                     return window;
@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Commands {
             // No window found, so let's create one
             if (!string.IsNullOrEmpty(projectId)) {
                 window = provider.Create(projectId);
-                project.AddActionOnClose(window, w => InteractiveWindowProvider.CloseIfEvaluatorMatches(w, projectId));
+                project.AddActionOnClose(window, InteractiveWindowProvider.Close);
             } else if (!string.IsNullOrEmpty(configId)) {
                 window = provider.Create(configId);
             } else {
@@ -140,8 +140,8 @@ namespace Microsoft.PythonTools.Commands {
 
             var config = pyProj?.GetLaunchConfigurationOrThrow();
             if (config == null && textView != null) {
-                var interpreters = _serviceProvider.GetComponentModel().GetService<IInterpreterOptionsService>();
-                config = new LaunchConfiguration(interpreters.DefaultInterpreter.Configuration) {
+                var pyService = _serviceProvider.GetPythonToolsService();
+                config = new LaunchConfiguration(pyService.DefaultInterpreterConfiguration) {
                     ScriptName = textView.GetFilePath(),
                     WorkingDirectory = PathUtils.GetParent(textView.GetFilePath())
                 };

@@ -45,7 +45,6 @@ namespace Microsoft.CookiecutterTools {
         private IVsInfoBarUIElement _infoBar;
         private IVsInfoBar _infoBarModel;
         private uint _infoBarAdviseCookie;
-        private ProjectLocation _pendingNewSessionProjectLocation;
 
         private readonly object _commandsLock = new object();
         private readonly Dictionary<Command, MenuCommand> _commands = new Dictionary<Command, MenuCommand>();
@@ -129,7 +128,6 @@ namespace Microsoft.CookiecutterTools {
             ErrorHandler.ThrowOnFailure(shell.GetProperty((int)__VSSPROPID.VSSPROPID_InstallDirectory, out commonIdeFolderPath));
 
             var gitClient = GitClientProvider.Create(outputWindow, commonIdeFolderPath as string);
-            var projectSystemClient = new ProjectSystemClient((EnvDTE80.DTE2)GetService(typeof(EnvDTE.DTE)));
 
             _cookiecutterPage = new CookiecutterContainerPage(
                 this,
@@ -137,16 +135,11 @@ namespace Microsoft.CookiecutterTools {
                 CookiecutterTelemetry.Current,
                 gitClient,
                 new Uri(feedUrl),
-                ExecuteCommand,
-                projectSystemClient,
+                OpenGeneratedFolder,
                 UpdateCommandUI
             );
             _cookiecutterPage.ContextMenuRequested += OnContextMenuRequested;
-
-            var projectLocation = _pendingNewSessionProjectLocation;
-            _pendingNewSessionProjectLocation = null;
-
-            _cookiecutterPage.InitializeAsync(CookiecutterPackage.Instance.CheckForTemplateUpdate, projectLocation).HandleAllExceptions(this, GetType()).DoNotWait();
+            _cookiecutterPage.InitializeAsync(CookiecutterPackage.Instance.CheckForTemplateUpdate).HandleAllExceptions(this, GetType()).DoNotWait();
 
             ((Frame)Content).Content = _cookiecutterPage;
         }
@@ -214,19 +207,21 @@ namespace Microsoft.CookiecutterTools {
             _uiShell.UpdateCommandUI(0);
         }
 
-        private void ExecuteCommand(string name, string args) {
-            try {
-                _dte.ExecuteCommand(name, args ?? string.Empty);
-            } catch (Exception ex) when (!ex.IsCriticalException()) {
-#if !DEV15_OR_LATER
-                if (name == "File.OpenFolder") {
-                    OpenInWindowsExplorer(args.Trim('"'));
-                    return;
-                }
+        private void OpenGeneratedFolder(string folderPath) {
+#if DEV15_OR_LATER
+            OpenInSolutionExplorer(folderPath);
+#else
+            OpenInWindowsExplorer(folderPath);
 #endif
-                var outputWindow = OutputWindowRedirector.GetGeneral(this);
-                outputWindow.WriteErrorLine(ex.Message);
-            }
+        }
+
+        internal static Guid openFolderCommandGroupGuid = new Guid("CFB400F1-5C60-4F3C-856E-180D28DEF0B7");
+        internal const int OpenFolderCommandId = 260;
+        internal const string vsWindowKindSolutionExplorer = "{3AE79031-E1BC-11D0-8F78-00A0C9110057}";
+
+        private void OpenInSolutionExplorer(string folderPath) {
+            _uiShell.PostExecCommand(ref openFolderCommandGroupGuid, OpenFolderCommandId, 0, folderPath);
+            _dte.Windows.Item(vsWindowKindSolutionExplorer)?.Activate();
         }
 
         private void OpenInWindowsExplorer(string folderPath) {
@@ -297,20 +292,6 @@ namespace Microsoft.CookiecutterTools {
 
         internal bool CanUpdateSelection() {
             return _cookiecutterPage != null ? _cookiecutterPage.CanUpdateSelection() : false;
-        }
-
-        internal void NewSession(ProjectLocation location) {
-            if (_cookiecutterPage != null) {
-                _cookiecutterPage.NewSession(location);
-            } else {
-                // This method may be called immediately after showing the tool
-                // window for the first time, which triggers a delayed initialization
-                // of the cookiecutter page on idle, causing the page to be temporarily null.
-                // Store the desired location so that when the page is initialized,
-                // it sets the project location. Doing it in one step in init ensures only
-                // one automatic search is triggered.
-                _pendingNewSessionProjectLocation = location;
-            }
         }
 
         private void OnContextMenuRequested(object sender, PointEventArgs e) {

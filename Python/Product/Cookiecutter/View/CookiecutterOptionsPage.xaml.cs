@@ -72,6 +72,13 @@ namespace Microsoft.CookiecutterTools.View {
                 return;
             }
 
+            if (!ViewModel.IsOutputFolderEmpty()) {
+                var result = MessageBox.Show(Strings.OutputFolderNotEmpty, Strings.ProductTitle, MessageBoxButton.OKCancel, MessageBoxImage.Warning);
+                if (result == MessageBoxResult.Cancel) {
+                    return;
+                }
+            }
+
             ViewModel.CreateFilesAsync().DoNotWait();
         }
 

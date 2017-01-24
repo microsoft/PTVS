@@ -20,6 +20,7 @@ permissions and limitations under the License.
   <PropertyGroup>
     <_PythonToolsPath Condition="!Exists($(_PythonToolsPath)) and $(VsInstallRoot) != ''">$(VsInstallRoot)\Common7\IDE\Extensions\Microsoft\Python\Core\</_PythonToolsPath>
     <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\Software\Microsoft\PythonTools\$(VisualStudioVersion)', 'InstallDir', null, RegistryView.Registry32))</_PythonToolsPath>
+    <_PythonToolsPath Condition="!Exists($(_PythonToolsPath))">$(LocalAppData)\Microsoft\VisualStudio\$(VisualStudioVersion)\Extensions\Microsoft\Python Tools for Visual Studio\3.0</_PythonToolsPath>
     <_PythonToolsPath Condition="!HasTrailingSlash('$(_PythonToolsPath)')">$(_PythonToolsPath)\</_PythonToolsPath>
     <_PTVSSupportPath Condition="'$(_PTVSSupportPath)' == ''">$(MSBuildThisFileDirectory)</_PTVSSupportPath>
     <_PTVSSupportPath Condition="!HasTrailingSlash('$(_PTVSSupportPath)')">$(_PTVSSupportPath)\</_PTVSSupportPath>

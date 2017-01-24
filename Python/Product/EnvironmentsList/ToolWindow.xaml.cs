@@ -46,11 +46,12 @@ namespace Microsoft.PythonTools.EnvironmentsList {
         private IServiceProvider _site;
 
         private EnvironmentView _addNewEnvironmentView;
+        private IEnumerable<EnvironmentView> _addNewEnvironmentViewOnce;
 
         private AnalyzerStatusListener _listener;
         private readonly object _listenerLock = new object();
         private int _listenerTimeToLive;
-        const int _listenerDefaultTimeToLive = 1200;
+        const int _listenerDefaultTimeToLive = 120;
 
         // lock(_environments) when accessing _currentlyRefreshing
         private readonly Dictionary<IPythonInterpreterFactory, AnalysisProgress> _currentlyRefreshing;
@@ -360,31 +361,21 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             lock (_environments) {
                 if (select == null) {
                     var selectView = _environmentsView.View.CurrentItem as EnvironmentView;
-                    select = selectView?.Configuration?.Id;
-                }
-
-                var configs = _interpreters.Configurations.Where(f => f.IsUIVisible());
-                configs = configs.Concat(Enumerable.Repeat(EnvironmentView.OnlineHelpView.Configuration, 1));
-                if (_addNewEnvironmentView != null) {
-                    configs = configs.Concat(Enumerable.Repeat(_addNewEnvironmentView.Configuration, 1));
+                    select = selectView?.Factory?.Configuration.Id;
                 }
 
                 _environments.Merge(
-                    configs,
-                    ev => ev.Configuration,
-                    c => c,
-                    c => {
-                        if (EnvironmentView.IsAddNewEnvironmentView(c.Id)) {
-                            return _addNewEnvironmentView;
-                        } else if (EnvironmentView.IsOnlineHelpView(c.Id)) {
-                            return EnvironmentView.OnlineHelpView;
-                        }
-                        var view = new EnvironmentView(_service, _interpreters, _interpreters.FindInterpreter(c.Id), null);
+                    _interpreters.Interpreters
+                    .Where(f => f.IsUIVisible())
+                    .Select(f => {
+                        var view = new EnvironmentView(_service, _interpreters, f, null);
                         OnViewCreated(view);
                         return view;
-                    },
-                    InterpreterConfigurationComparer.Instance,
-                    InterpreterConfigurationComparer.Instance
+                    })
+                    .Concat(_addNewEnvironmentViewOnce ?? Enumerable.Empty<EnvironmentView>())
+                    .Concat(EnvironmentView.OnlineHelpViewOnce.Value),
+                    EnvironmentComparer.Instance,
+                    EnvironmentComparer.Instance
                 );
 
                 if (select != null) {
@@ -448,8 +439,10 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 if (_service != null) {
                     _service.DefaultInterpreterChanged += Service_DefaultInterpreterChanged;
                     _addNewEnvironmentView = EnvironmentView.CreateAddNewEnvironmentView(_service);
+                    _addNewEnvironmentViewOnce = new[] { _addNewEnvironmentView };
                 } else {
                     _addNewEnvironmentView = null;
+                    _addNewEnvironmentViewOnce = null;
                 }
                 if (_interpreters != null) {
                     Dispatcher.InvokeAsync(FirstUpdateEnvironments).Task.DoNotWait();
@@ -531,31 +524,37 @@ namespace Microsoft.PythonTools.EnvironmentsList {
             }
         }
 
-        class InterpreterConfigurationComparer : IEqualityComparer<InterpreterConfiguration>, IComparer<InterpreterConfiguration> {
-            public static readonly InterpreterConfigurationComparer Instance = new InterpreterConfigurationComparer();
+        class EnvironmentComparer : IEqualityComparer<EnvironmentView>, IComparer<EnvironmentView> {
+            public static readonly EnvironmentComparer Instance = new EnvironmentComparer();
 
-            public bool Equals(InterpreterConfiguration x, InterpreterConfiguration y) => x == y;
-            public int GetHashCode(InterpreterConfiguration obj) => obj.GetHashCode();
+            public bool Equals(EnvironmentView x, EnvironmentView y) {
+                return object.ReferenceEquals(x, y) || (
+                    x.Factory != null && x.Factory.Configuration != null &&
+                    y.Factory != null && y.Factory.Configuration != null &&
+                    x.Factory.Configuration.Id == y.Factory.Configuration.Id
+                );
+            }
 
-            public int Compare(InterpreterConfiguration x, InterpreterConfiguration y) {
+            public int GetHashCode(EnvironmentView obj) {
+                return obj.Factory != null ? obj.Factory.GetHashCode() : 0;
+            }
+
+            public int Compare(EnvironmentView x, EnvironmentView y) {
                 if (object.ReferenceEquals(x, y)) {
                     return 0;
                 }
-                if (x == null) {
-                    return y == null ? 0 : 1;
-                } else if (y == null) {
-                    return -1;
-                }
 
-                if (EnvironmentView.IsAddNewEnvironmentView(x.Id)) {
+                if (x != null && x._addNewEnvironmentView) {
                     return 1;
-                } else if (EnvironmentView.IsAddNewEnvironmentView(y.Id)) {
+                } else if (y != null && y._addNewEnvironmentView) {
                     return -1;
                 }
-                if (EnvironmentView.IsOnlineHelpView(x.Id)) {
-                    return 1;
-                } else if (EnvironmentView.IsOnlineHelpView(y.Id)) {
-                    return -1;
+                if (EnvironmentView.OnlineHelpView.IsValueCreated) {
+                    if (object.ReferenceEquals(x, EnvironmentView.OnlineHelpView.Value)) {
+                        return 1;
+                    } else if (object.ReferenceEquals(y, EnvironmentView.OnlineHelpView.Value)) {
+                        return -1;
+                    }
                 }
 
                 int result = StringComparer.CurrentCultureIgnoreCase.Compare(
@@ -564,10 +563,19 @@ namespace Microsoft.PythonTools.EnvironmentsList {
                 );
 
                 if (result == 0) {
-                    result = StringComparer.Ordinal.Compare(
-                        x.Id,
-                        y.Id
-                    );
+                    // Any missing information means not equal, so we need to
+                    // pick a winner. We arbitrarily sort the non-null entry
+                    // first, or x if they both have nulls.
+                    if (y.Factory?.Configuration?.Id == null) {
+                        result = -1;
+                    } else if (x.Factory?.Configuration?.Id == null) {
+                        result = 1;
+                    } else {
+                        result = StringComparer.Ordinal.Compare(
+                            x.Factory.Configuration.Id,
+                            y.Factory.Configuration.Id
+                        );
+                    }
                 }
 
                 return result;
