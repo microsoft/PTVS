@@ -1399,12 +1399,11 @@ namespace Microsoft.PythonTools.Intellisense {
             var pyEntry = _projectFiles[completions.fileId] as IPythonProjectEntry;
             IEnumerable<MemberResult> members;
             if (pyEntry.Analysis != null) {
-
                 members = pyEntry.Analysis.GetMembersByIndex(
                     completions.text,
                     completions.location,
                     completions.options
-                );
+                ).MaybeEnumerate();
             } else {
                 members = Enumerable.Empty<MemberResult>();
             }
