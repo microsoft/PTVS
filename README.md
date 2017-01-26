@@ -1,6 +1,5 @@
 # Python Tools for Visual Studio
-
-PTVS is a free, open source plugin that turns Visual Studio into a Python IDE. 
+Open source plugin that turns Visual Studio into a Python IDE. 
 
 [![Join the chat at https://gitter.im/Microsoft/PTVS](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Microsoft/PTVS?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -15,3 +14,6 @@ Visit our page on [VisualStudio.com](https://www.visualstudio.com/en-us/features
 Our [documentation](https://github.com/Microsoft/PTVS/wiki) is now on the wiki (feel free to help us improve it), and we manage all of our issues here on the [issue tracker](http://github.com/Microsoft/PTVS/issues). Pull requests and feature suggestions are welcome - see the [Contributing](https://github.com/Microsoft/PTVS/wiki#contributing) section for information or chat with us on gitter though the button above.
 
 Thank you for using and supporting Python Tools for Visual Studio.
+The development version of the Python 3.0 documentation: http://docs.python.org/dev/3.0/
+
+PTVS is free... Enjoy using Tools !
