@@ -295,6 +295,9 @@ Please delete the installed template and try again.</value>
   <data name="CookiecutterClient_MissingProperty" xml:space="preserve">
     <value>'{0}' property is required on '{1}'.</value>
   </data>
+  <data name="CookiecutterClient_UnsupportedJsonElementTypeForPorperty" xml:space="preserve">
+    <value>Unsupported json element type in context file for property '{0}'.</value>
+  </data>
   <data name="SearchPage_SearchWatermark" xml:space="preserve">
     <value>Enter search terms or template location</value>
   </data>
@@ -380,6 +383,12 @@ Please delete the installed template and try again.</value>
   <data name="SearchPage_LoadingSearchResults" xml:space="preserve">
     <value>Loading...</value>
   </data>
+  <data name="SearchPage_Creator" xml:space="preserve">
+    <value>the creator</value>
+  </data>
+  <data name="SearchPage_VisitOwnerOnGitHub" xml:space="preserve">
+    <value>Visit {0} on GitHub</value>
+  </data>
   <data name="OptionsPage_TemplateCloneSuccessfully" xml:space="preserve">
     <value>Template cloned successfully.</value>
   </data>
@@ -421,15 +430,6 @@ Please delete the installed template and try again.</value>
   </data>
   <data name="OptionsPage_Name" xml:space="preserve">
     <value>Name</value>
-  </data>
-  <data name="SearchPage_Creator" xml:space="preserve">
-    <value>the creator</value>
-  </data>
-  <data name="SearchPage_VisitOwnerOnGitHub" xml:space="preserve">
-    <value>Visit {0} on GitHub</value>
-  </data>
-  <data name="CookiecutterClient_UnsupportedJsonElementTypeForPorperty" xml:space="preserve">
-    <value>Unsupported json element type in context file for property '{0}'.</value>
   </data>
   <data name="Settings_General_Category" xml:space="preserve">
     <value>General</value>
