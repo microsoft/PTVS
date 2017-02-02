@@ -66,7 +66,7 @@ namespace Microsoft.CookiecutterTools.Model {
 
         private static string GetTeamExplorerGitFilePathFromIdeFolderPath(string ideFolderPath) {
             // git.exe is in a folder path with a symlink to the actual extension dir with random name
-            var gitFolder = Path.Combine(ideFolderPath, @"CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\cmd");
+            var gitFolder = Path.Combine(ideFolderPath, @"CommonExtensions\Microsoft\TeamFoundation\Team Explorer\Git\mingw32\bin");
             var finalGitFolder = PathUtils.GetFinalPathName(gitFolder);
             var gitExe = Path.Combine(finalGitFolder, GitExecutableName);
             return gitExe;
