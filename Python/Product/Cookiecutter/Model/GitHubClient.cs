@@ -17,6 +17,7 @@
 using System;
 using System.Net;
 using System.Threading.Tasks;
+using static System.FormattableString;
 using Newtonsoft.Json;
 
 namespace Microsoft.CookiecutterTools.Model {
@@ -43,7 +44,7 @@ namespace Microsoft.CookiecutterTools.Model {
             }
 
             var q = string.Join("+", terms);
-            var queryUrl = string.Format("https://api.github.com/search/repositories?q={0}&sort=stars&order=desc&fork=false", q);
+            var queryUrl = Invariant($"https://api.github.com/search/repositories?q={q}&sort=stars&order=desc&fork=false");
             return await SearchRepositoriesAsync(queryUrl);
         }
 
@@ -57,14 +58,14 @@ namespace Microsoft.CookiecutterTools.Model {
             }
 
             var wc = CreateClient();
-            var queryUrl = string.Format("https://api.github.com/repos/{0}/{1}", owner, name);
+            var queryUrl = Invariant($"https://api.github.com/repos/{owner}/{name}");
             var json = await wc.DownloadStringTaskAsync(queryUrl);
             return JsonConvert.DeserializeObject<GitHubRepoSearchItem>(json);
         }
 
         public async Task<bool> FileExistsAsync(GitHubRepoSearchItem repo, string filePath) {
             var wc = new WebClient();
-            var url = $"https://raw.githubusercontent.com/{repo.FullName}/master/{filePath}";
+            var url = Invariant($"https://raw.githubusercontent.com/{repo.FullName}/master/{filePath}");
             try {
                 var json = await wc.DownloadDataTaskAsync(url);
                 return true;

@@ -428,4 +428,7 @@ Please delete the installed template and try again.</value>
   <data name="SearchPage_VisitOwnerOnGitHub" xml:space="preserve">
     <value>Visit {0} on GitHub</value>
   </data>
+  <data name="CookiecutterClient_UnsupportedJsonElementTypeForPorperty" xml:space="preserve">
+    <value>Unsupported json element type in context file for property '{0}'.</value>
+  </data>
 </root>

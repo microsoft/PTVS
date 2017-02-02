@@ -234,6 +234,15 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unsupported json element type in context file for property &apos;{0}&apos;..
+        /// </summary>
+        public static string CookiecutterClient_UnsupportedJsonElementTypeForPorperty {
+            get {
+                return ResourceManager.GetString("CookiecutterClient_UnsupportedJsonElementTypeForPorperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; from _visual_studio section in context file should be of type &apos;{1}&apos;, instead of &apos;{2}&apos;..
         /// </summary>
         public static string CookiecutterClient_WrongJsonType {

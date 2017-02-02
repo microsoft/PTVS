@@ -113,7 +113,7 @@ namespace Microsoft.CookiecutterTools.Model {
                             }
                             unrenderedContext.Items.Add(new ContextItem(prop.Name, Selectors.List, elements[0], elements.ToArray()));
                         } else {
-                            throw new InvalidOperationException(string.Format("Unsupported json element type in context file for property '{0}'.", prop.Name));
+                            throw new InvalidOperationException(Strings.CookiecutterClient_UnsupportedJsonElementTypeForPorperty.FormatUI(prop.Name));
                         }
                     } else if (prop.Name == "_visual_studio") {
                         vsExtrasProp = prop;
@@ -165,7 +165,7 @@ namespace Microsoft.CookiecutterTools.Model {
                             }
                             renderedContext.Items.Add(new ContextItem(prop.Name, Selectors.List, elements[0], elements.ToArray()));
                         } else {
-                            throw new InvalidOperationException(string.Format("Unsupported json element type in context file for property '{0}'.", prop.Name));
+                            throw new InvalidOperationException(Strings.CookiecutterClient_UnsupportedJsonElementTypeForPorperty.FormatUI(prop.Name));
                         }
                     } else if (prop.Name == "_visual_studio_post_cmds") {
                         // List of commands to run after the folder is opened,
@@ -468,12 +468,12 @@ namespace Microsoft.CookiecutterTools.Model {
 
         private static async Task<ProcessOutputResult> RunGenerateContextScript(Redirector redirector, string interpreterPath, string templateFolderPath, string userConfigFilePath) {
             var scriptPath = PythonToolsInstallPath.GetFile("cookiecutter_load.py");
-            return await RunPythonScript(redirector, interpreterPath, scriptPath, string.Format("\"{0}\" \"{1}\"", templateFolderPath, userConfigFilePath));
+            return await RunPythonScript(redirector, interpreterPath, scriptPath, "\"{0}\" \"{1}\"".FormatInvariant(templateFolderPath, userConfigFilePath));
         }
 
         private static async Task<ProcessOutputResult> RunRenderContextScript(Redirector redirector, string interpreterPath, string templateFolderPath, string userConfigFilePath, string outputFolderPath, string contextPath) {
             var scriptPath = PythonToolsInstallPath.GetFile("cookiecutter_render.py");
-            return await RunPythonScript(redirector, interpreterPath, scriptPath, string.Format("\"{0}\" \"{1}\" \"{2}\" \"{3}\"", templateFolderPath, userConfigFilePath, PathUtils.TrimEndSeparator(outputFolderPath), contextPath));
+            return await RunPythonScript(redirector, interpreterPath, scriptPath, "\"{0}\" \"{1}\" \"{2}\" \"{3}\"".FormatInvariant(templateFolderPath, userConfigFilePath, PathUtils.TrimEndSeparator(outputFolderPath), contextPath));
         }
 
         private static async Task<ProcessOutputResult> RunCheckScript(string interpreterPath) {
@@ -488,7 +488,7 @@ namespace Microsoft.CookiecutterTools.Model {
         }
 
         private static string GetRunArguments(string templateFolderPath, string userConfigFilePath, string outputFolderPath, string contextFilePath) {
-            return string.Format("\"{0}\" \"{1}\" \"{2}\" \"{3}\"", contextFilePath, templateFolderPath, outputFolderPath, userConfigFilePath);
+            return "\"{0}\" \"{1}\" \"{2}\" \"{3}\"".FormatInvariant(contextFilePath, templateFolderPath, outputFolderPath, userConfigFilePath);
         }
 
         private static async Task<ProcessOutputResult> RunPythonScript(Redirector redirector, string interpreterPath, string script, string parameters) {
@@ -496,7 +496,7 @@ namespace Microsoft.CookiecutterTools.Model {
             var errorLines = new List<string>();
 
             ProcessOutput output = null;
-            var arguments = string.Format("\"{0}\" {1}", script, parameters);
+            var arguments = "\"{0}\" {1}".FormatInvariant(script, parameters);
             var listRedirector = new ListRedirector(outputLines, errorLines);
             var outerRedirector = new TeeRedirector(redirector, listRedirector);
 

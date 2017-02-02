@@ -22,7 +22,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.CookiecutterTools.Model {
     class FeedTemplateSource : ITemplateSource {
-        private Uri _feedLocation;
+        private readonly Uri _feedLocation;
         private List<Template> _cache;
 
         public FeedTemplateSource(Uri feedLocation) {
