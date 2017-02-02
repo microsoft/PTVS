@@ -116,7 +116,7 @@ namespace Microsoft.PythonTools.Debugger.DebugEngine {
             return string.IsNullOrEmpty(_exception.ExceptionObjectExpression) ? VSConstants.S_FALSE : VSConstants.S_OK;
         }
 
-        int IDebugExceptionDetails.GetFormattedDescription(out string pbstrDescription) {
+        int IDebugExceptionDetails.GetFormattedDescription(IDebugStackFrame2 pStackFrameContext, out string pbstrDescription) {
             pbstrDescription = _exception.GetDescription(true);
             return VSConstants.S_OK;
         }

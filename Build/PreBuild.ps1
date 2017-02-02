@@ -2,7 +2,7 @@ param ($vstarget, $source, [switch] $clean, [switch] $full)
 
 # This is the list of packages we require to build, and the version to use for each supported $vstarget
 $packages = @(
-    @{ name="Microsoft.VSSDK.BuildTools"; version=@{ "14.0"="14.2.25201"; "15.0"="15.0.25604-Preview4" }; required=$true },
+    @{ name="Microsoft.VSSDK.BuildTools"; version=@{ "14.0"="14.2.25201"; "15.0"="15.0.26124-RC3" }; required=$true },
     @{ name="Newtonsoft.Json"; version=@{ "14.0"="6.0.8"; "15.0"="8.0.3" }; required=$true },
     @{ name="MicroBuild.Core"; version=@{ "14.0"="0.2.0"; "15.0"="0.2.0" }; required=$false },
     @{ name="DataConnectionDialog"; version=@{ "14.0"="1.2.0"; "15.0"="1.2.0" }; required=$true },
