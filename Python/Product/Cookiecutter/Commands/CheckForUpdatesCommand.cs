@@ -22,7 +22,7 @@ namespace Microsoft.CookiecutterTools.Commands {
     /// Provides the command for opening the cookiecutter window.
     /// </summary>
     class CheckForUpdatesCommand : Command {
-        private CookiecutterToolWindow _window;
+        private readonly CookiecutterToolWindow _window;
 
         public CheckForUpdatesCommand(CookiecutterToolWindow window) {
             _window = window;
@@ -32,11 +32,6 @@ namespace Microsoft.CookiecutterTools.Commands {
             _window.CheckForUpdates();
         }
 
-        public string Description {
-            get {
-                return "Cookiecutter";
-            }
-        }
         public override EventHandler BeforeQueryStatus {
             get {
                 return (sender, args) => {

@@ -22,7 +22,7 @@ namespace Microsoft.CookiecutterTools.Commands {
     /// Provides the command for opening the cookiecutter window.
     /// </summary>
     class UpdateCommand : Command {
-        private CookiecutterToolWindow _window;
+        private readonly CookiecutterToolWindow _window;
 
         public UpdateCommand(CookiecutterToolWindow window) {
             _window = window;
@@ -30,12 +30,6 @@ namespace Microsoft.CookiecutterTools.Commands {
 
         public override void DoCommand(object sender, EventArgs args) {
             _window.UpdateSelection();
-        }
-
-        public string Description {
-            get {
-                return "Cookiecutter";
-            }
         }
 
         public override EventHandler BeforeQueryStatus {
