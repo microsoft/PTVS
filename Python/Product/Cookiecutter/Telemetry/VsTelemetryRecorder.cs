@@ -23,8 +23,8 @@ namespace Microsoft.CookiecutterTools.Telemetry {
     /// Implements telemetry recording in Visual Studio environment
     /// </summary>
     internal sealed class VsTelemetryRecorder : ITelemetryRecorder {
-        private TelemetrySession _session;
-        private static Lazy<VsTelemetryRecorder> _instance = new Lazy<VsTelemetryRecorder>(() => new VsTelemetryRecorder());
+        private readonly TelemetrySession _session;
+        private static readonly Lazy<VsTelemetryRecorder> _instance = new Lazy<VsTelemetryRecorder>(() => new VsTelemetryRecorder());
 
         private VsTelemetryRecorder() {
             _session = TelemetryService.DefaultSession;

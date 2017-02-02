@@ -16,7 +16,6 @@
 
 using System.ComponentModel;
 using Microsoft.CookiecutterTools.Model;
-using Microsoft.VisualStudio.Imaging.Interop;
 
 namespace Microsoft.CookiecutterTools.ViewModel {
     class TemplateViewModel : INotifyPropertyChanged {

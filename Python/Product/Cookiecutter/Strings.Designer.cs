@@ -198,6 +198,51 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; from _visual_studio section in context file should be an absolute http or https url..
+        /// </summary>
+        internal static string CookiecutterClient_Invalidurl {
+            get {
+                return ResourceManager.GetString("CookiecutterClient_Invalidurl", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; property is required on &apos;{1}&apos;..
+        /// </summary>
+        internal static string CookiecutterClient_MissingProperty {
+            get {
+                return ResourceManager.GetString("CookiecutterClient_MissingProperty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cookiecutter generated files must have a templated folder..
+        /// </summary>
+        internal static string CookiecutterClient_MoveToDesiredFolderTemplatedFolderNotFound {
+            get {
+                return ResourceManager.GetString("CookiecutterClient_MoveToDesiredFolderTemplatedFolderNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; is referenced from _visual_studio section in context file but was not found..
+        /// </summary>
+        internal static string CookiecutterClient_ReferenceNotFound {
+            get {
+                return ResourceManager.GetString("CookiecutterClient_ReferenceNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;{0}&apos; from _visual_studio section in context file should be of type &apos;{1}&apos;, instead of &apos;{2}&apos;..
+        /// </summary>
+        internal static string CookiecutterClient_WrongJsonType {
+            get {
+                return ResourceManager.GetString("CookiecutterClient_WrongJsonType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are you sure you want to delete the template from this folder?
         ///
         ///{0}.

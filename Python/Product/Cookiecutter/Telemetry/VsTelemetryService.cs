@@ -22,7 +22,7 @@ namespace Microsoft.CookiecutterTools.Telemetry {
         public static readonly string EventNamePrefixString = "VS/Cookiecutter/";
         public static readonly string PropertyNamePrefixString = "VS.Cookiecutter.";
 
-        private static Lazy<VsTelemetryService> _instance = new Lazy<VsTelemetryService>(() => new VsTelemetryService());
+        private static readonly Lazy<VsTelemetryService> _instance = new Lazy<VsTelemetryService>(() => new VsTelemetryService());
 
         public VsTelemetryService()
             : base(VsTelemetryService.EventNamePrefixString, VsTelemetryService.PropertyNamePrefixString, VsTelemetryRecorder.Current) {

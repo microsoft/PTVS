@@ -26,7 +26,7 @@ namespace Microsoft.CookiecutterTools.Telemetry {
     /// VS telemetry Web service.
     /// </summary>
     internal sealed class StringTelemetryRecorder : ITelemetryRecorder, ITelemetryLog, IDisposable {
-        private StringBuilder _stringBuilder = new StringBuilder();
+        private readonly StringBuilder _stringBuilder = new StringBuilder();
 
         #region ITelemetryRecorder
         public bool IsEnabled {
