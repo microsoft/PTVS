@@ -295,4 +295,137 @@ Please delete the installed template and try again.</value>
   <data name="CookiecutterClient_MissingProperty" xml:space="preserve">
     <value>'{0}' property is required on '{1}'.</value>
   </data>
+  <data name="SearchPage_SearchWatermark" xml:space="preserve">
+    <value>Enter search terms or template location</value>
+  </data>
+  <data name="SearchPage_SearchTooltip" xml:space="preserve">
+    <value>Enter search terms or template location (git repository URL or path to local folder)</value>
+  </data>
+  <data name="SearchPage_OpenInSolutionExplorer" xml:space="preserve">
+    <value>Open in Solution Explorer</value>
+  </data>
+  <data name="SearchPage_UpdateAvailableTooltip" xml:space="preserve">
+    <value>An update is available.</value>
+  </data>
+  <data name="SearchPage_EnumeratingTemplatesTooltip" xml:space="preserve">
+    <value>Enumerating templates. This may take a few seconds.</value>
+  </data>
+  <data name="SearchPage_LoadMore" xml:space="preserve">
+    <value>Load more...</value>
+  </data>
+  <data name="SearchPage_FilesCreatedSuccessfully" xml:space="preserve">
+    <value>Files created successfully.</value>
+  </data>
+  <data name="SearchPage_Search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="SearchPage_PreparingFirstTime" xml:space="preserve">
+    <value>Preparing cookiecutter for first time use...</value>
+  </data>
+  <data name="SearchPage_PreparingFirstTimeTooltip" xml:space="preserve">
+    <value>Downloading and installing the cookiecutter package from the Python Package Index. This may take a few minutes.</value>
+  </data>
+  <data name="SearchPage_ErrorInstallingCookiecutter" xml:space="preserve">
+    <value>Error installing cookiecutter. See output window for details.</value>
+  </data>
+  <data name="SearchPage_CloningRepository" xml:space="preserve">
+    <value>Cloning repository...</value>
+  </data>
+  <data name="SearchPage_ErrorCloningRepository" xml:space="preserve">
+    <value>Error cloning repository. See output window for details.</value>
+  </data>
+  <data name="SearchPage_LoadingTemplate" xml:space="preserve">
+    <value>Loading template...</value>
+  </data>
+  <data name="SearchPage_ErrorLoadingTemplate" xml:space="preserve">
+    <value>Error loading template. See output window for details.</value>
+  </data>
+  <data name="SearchPage_CheckingUpdates" xml:space="preserve">
+    <value>Checking for updates...</value>
+  </data>
+  <data name="SearchPage_CheckingUpdatesCompleted" xml:space="preserve">
+    <value>Check for updates completed.</value>
+  </data>
+  <data name="SearchPage_ErrorCheckingUpdates" xml:space="preserve">
+    <value>Error checking for updates. See output window for details.</value>
+  </data>
+  <data name="SearchPage_UpdatingTemplate" xml:space="preserve">
+    <value>Updating template...</value>
+  </data>
+  <data name="SearchPage_UpdatingTemplateCompleted" xml:space="preserve">
+    <value>Template updated.</value>
+  </data>
+  <data name="SearchPage_UpdatingTemplateError" xml:space="preserve">
+    <value>Error updating template. See output window for details.</value>
+  </data>
+  <data name="SearchPage_LinksGitHub" xml:space="preserve">
+    <value>GitHub</value>
+    <comment>Label for the link to the main GitHub page.</comment>
+  </data>
+  <data name="SearchPage_LinksGitHubIssues" xml:space="preserve">
+    <value>Issues</value>
+    <comment>Label for the link to the GitHub issues page</comment>
+  </data>
+  <data name="SearchPage_LinksGitHubWiki" xml:space="preserve">
+    <value>Wiki</value>
+    <comment>Label for the link to the GitHub wiki page.</comment>
+  </data>
+  <data name="SearchPage_NoTemplateDescriptionAvailable" xml:space="preserve">
+    <value>No description available.</value>
+  </data>
+  <data name="SearchPage_NextButton" xml:space="preserve">
+    <value>_Next</value>
+    <comment>Prefix accelerator key with underscore</comment>
+  </data>
+  <data name="SearchPage_LoadingSearchResults" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
+  <data name="OptionsPage_TemplateCloneSuccessfully" xml:space="preserve">
+    <value>Template cloned successfully.</value>
+  </data>
+  <data name="OptionsPage_CreateTo" xml:space="preserve">
+    <value>Create To</value>
+  </data>
+  <data name="OptionsPage_CreateToWatermark" xml:space="preserve">
+    <value>e.g. C:\Projects\Project1</value>
+  </data>
+  <data name="OptionsPage_CreateToTooltip" xml:space="preserve">
+    <value>Folder location where the files will be created. Files may be replaced if the folder is not empty, but a backup of the existing files will be created as needed.</value>
+  </data>
+  <data name="OptionsPage_AddingToProject" xml:space="preserve">
+    <value>Files will be added to your project.</value>
+  </data>
+  <data name="OptionsPage_AddingToProjectTooltip" xml:space="preserve">
+    <value>Cookiecutter was invoked using the Add From Cookiecutter command. To return to the global mode where files are not added to an existing project, click on Cancel or Home.</value>
+  </data>
+  <data name="OptionsPage_RunAdditionalTasks" xml:space="preserve">
+    <value>Run additional tasks on completion</value>
+  </data>
+  <data name="OptionsPage_AddToProject" xml:space="preserve">
+    <value>Add to Project</value>
+  </data>
+  <data name="OptionsPage_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="OptionsPage_CreatingFiles" xml:space="preserve">
+    <value>Creating files...</value>
+  </data>
+  <data name="OptionsPage_CreatingFilesError" xml:space="preserve">
+    <value>Error creating files. See output window for details.</value>
+  </data>
+  <data name="OptionsPage_Create" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="OptionsPage_Options" xml:space="preserve">
+    <value>Options</value>
+  </data>
+  <data name="OptionsPage_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="SearchPage_Creator" xml:space="preserve">
+    <value>the creator</value>
+  </data>
+  <data name="SearchPage_VisitOwnerOnGitHub" xml:space="preserve">
+    <value>Visit {0} on GitHub</value>
+  </data>
 </root>

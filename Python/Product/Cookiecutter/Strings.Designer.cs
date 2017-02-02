@@ -22,7 +22,7 @@ namespace Microsoft.CookiecutterTools {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "4.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Strings {
+    public class Strings {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace Microsoft.CookiecutterTools {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("Microsoft.CookiecutterTools.Strings", typeof(Strings).Assembly);
@@ -51,7 +51,7 @@ namespace Microsoft.CookiecutterTools {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Files were successfully created, but there was an issue adding the files to your project.\n{0}.
         /// </summary>
-        internal static string AddToProjectError {
+        public static string AddToProjectError {
             get {
                 return ResourceManager.GetString("AddToProjectError", resourceCulture);
             }
@@ -72,7 +72,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Check for template updates canceled -----.
         /// </summary>
-        internal static string CheckingForAllUpdatesCanceled {
+        public static string CheckingForAllUpdatesCanceled {
             get {
                 return ResourceManager.GetString("CheckingForAllUpdatesCanceled", resourceCulture);
             }
@@ -81,7 +81,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Failed to check for template updates -----.
         /// </summary>
-        internal static string CheckingForAllUpdatesFailed {
+        public static string CheckingForAllUpdatesFailed {
             get {
                 return ResourceManager.GetString("CheckingForAllUpdatesFailed", resourceCulture);
             }
@@ -90,7 +90,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Checking for template updates -----.
         /// </summary>
-        internal static string CheckingForAllUpdatesStarted {
+        public static string CheckingForAllUpdatesStarted {
             get {
                 return ResourceManager.GetString("CheckingForAllUpdatesStarted", resourceCulture);
             }
@@ -99,7 +99,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Successfully checked for template updates -----.
         /// </summary>
-        internal static string CheckingForAllUpdatesSuccess {
+        public static string CheckingForAllUpdatesSuccess {
             get {
                 return ResourceManager.GetString("CheckingForAllUpdatesSuccess", resourceCulture);
             }
@@ -108,7 +108,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Error checking for an update..
         /// </summary>
-        internal static string CheckingTemplateUpdateError {
+        public static string CheckingTemplateUpdateError {
             get {
                 return ResourceManager.GetString("CheckingTemplateUpdateError", resourceCulture);
             }
@@ -117,7 +117,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to An update is available..
         /// </summary>
-        internal static string CheckingTemplateUpdateFound {
+        public static string CheckingTemplateUpdateFound {
             get {
                 return ResourceManager.GetString("CheckingTemplateUpdateFound", resourceCulture);
             }
@@ -126,7 +126,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Could not determine if an update is available..
         /// </summary>
-        internal static string CheckingTemplateUpdateInconclusive {
+        public static string CheckingTemplateUpdateInconclusive {
             get {
                 return ResourceManager.GetString("CheckingTemplateUpdateInconclusive", resourceCulture);
             }
@@ -135,7 +135,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Template is already up-to-date..
         /// </summary>
-        internal static string CheckingTemplateUpdateNotFound {
+        public static string CheckingTemplateUpdateNotFound {
             get {
                 return ResourceManager.GetString("CheckingTemplateUpdateNotFound", resourceCulture);
             }
@@ -144,7 +144,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Checking for update to template &apos;{0}&apos; from &apos;{1}&apos; -----.
         /// </summary>
-        internal static string CheckingTemplateUpdateStarted {
+        public static string CheckingTemplateUpdateStarted {
             get {
                 return ResourceManager.GetString("CheckingTemplateUpdateStarted", resourceCulture);
             }
@@ -155,7 +155,7 @@ namespace Microsoft.CookiecutterTools {
         ///
         ///Please delete the installed template and try again..
         /// </summary>
-        internal static string CloneCollisionMessage {
+        public static string CloneCollisionMessage {
             get {
                 return ResourceManager.GetString("CloneCollisionMessage", resourceCulture);
             }
@@ -164,7 +164,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Failed to clone template &apos;{0}&apos; -----.
         /// </summary>
-        internal static string CloningTemplateFailed {
+        public static string CloningTemplateFailed {
             get {
                 return ResourceManager.GetString("CloningTemplateFailed", resourceCulture);
             }
@@ -173,7 +173,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Cloning template &apos;{0}&apos; -----.
         /// </summary>
-        internal static string CloningTemplateStarted {
+        public static string CloningTemplateStarted {
             get {
                 return ResourceManager.GetString("CloningTemplateStarted", resourceCulture);
             }
@@ -182,7 +182,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Successfully cloned template &apos;{0}&apos; to &apos;{1}&apos; -----.
         /// </summary>
-        internal static string CloningTemplateSuccess {
+        public static string CloningTemplateSuccess {
             get {
                 return ResourceManager.GetString("CloningTemplateSuccess", resourceCulture);
             }
@@ -191,7 +191,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to The connection string appears to be in incorrect format. Would you like to re-create it?.
         /// </summary>
-        internal static string ConnectionStringFormatIncorrect {
+        public static string ConnectionStringFormatIncorrect {
             get {
                 return ResourceManager.GetString("ConnectionStringFormatIncorrect", resourceCulture);
             }
@@ -200,7 +200,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; from _visual_studio section in context file should be an absolute http or https url..
         /// </summary>
-        internal static string CookiecutterClient_Invalidurl {
+        public static string CookiecutterClient_Invalidurl {
             get {
                 return ResourceManager.GetString("CookiecutterClient_Invalidurl", resourceCulture);
             }
@@ -209,7 +209,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; property is required on &apos;{1}&apos;..
         /// </summary>
-        internal static string CookiecutterClient_MissingProperty {
+        public static string CookiecutterClient_MissingProperty {
             get {
                 return ResourceManager.GetString("CookiecutterClient_MissingProperty", resourceCulture);
             }
@@ -218,7 +218,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Cookiecutter generated files must have a templated folder..
         /// </summary>
-        internal static string CookiecutterClient_MoveToDesiredFolderTemplatedFolderNotFound {
+        public static string CookiecutterClient_MoveToDesiredFolderTemplatedFolderNotFound {
             get {
                 return ResourceManager.GetString("CookiecutterClient_MoveToDesiredFolderTemplatedFolderNotFound", resourceCulture);
             }
@@ -227,7 +227,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; is referenced from _visual_studio section in context file but was not found..
         /// </summary>
-        internal static string CookiecutterClient_ReferenceNotFound {
+        public static string CookiecutterClient_ReferenceNotFound {
             get {
                 return ResourceManager.GetString("CookiecutterClient_ReferenceNotFound", resourceCulture);
             }
@@ -236,7 +236,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to &apos;{0}&apos; from _visual_studio section in context file should be of type &apos;{1}&apos;, instead of &apos;{2}&apos;..
         /// </summary>
-        internal static string CookiecutterClient_WrongJsonType {
+        public static string CookiecutterClient_WrongJsonType {
             get {
                 return ResourceManager.GetString("CookiecutterClient_WrongJsonType", resourceCulture);
             }
@@ -247,7 +247,7 @@ namespace Microsoft.CookiecutterTools {
         ///
         ///{0}.
         /// </summary>
-        internal static string DeleteConfirmation {
+        public static string DeleteConfirmation {
             get {
                 return ResourceManager.GetString("DeleteConfirmation", resourceCulture);
             }
@@ -256,7 +256,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Failed to delete template &apos;{0}&apos; -----.
         /// </summary>
-        internal static string DeletingTemplateFailed {
+        public static string DeletingTemplateFailed {
             get {
                 return ResourceManager.GetString("DeletingTemplateFailed", resourceCulture);
             }
@@ -265,7 +265,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Deleting template &apos;{0}&apos; -----.
         /// </summary>
-        internal static string DeletingTemplateStarted {
+        public static string DeletingTemplateStarted {
             get {
                 return ResourceManager.GetString("DeletingTemplateStarted", resourceCulture);
             }
@@ -274,7 +274,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Successfully deleted template &apos;{0}&apos; -----.
         /// </summary>
-        internal static string DeletingTemplateSuccess {
+        public static string DeletingTemplateSuccess {
             get {
                 return ResourceManager.GetString("DeletingTemplateSuccess", resourceCulture);
             }
@@ -283,7 +283,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Could not retrieve results from feed.
         /// </summary>
-        internal static string FeedLoadError {
+        public static string FeedLoadError {
             get {
                 return ResourceManager.GetString("FeedLoadError", resourceCulture);
             }
@@ -292,7 +292,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Could not retrieve results from GitHub.
         /// </summary>
-        internal static string GitHubSearchError {
+        public static string GitHubSearchError {
             get {
                 return ResourceManager.GetString("GitHubSearchError", resourceCulture);
             }
@@ -301,7 +301,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Cookiecutter makes it easy to generate code from a template..
         /// </summary>
-        internal static string InfoBarMessage {
+        public static string InfoBarMessage {
             get {
                 return ResourceManager.GetString("InfoBarMessage", resourceCulture);
             }
@@ -310,7 +310,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Learn more..
         /// </summary>
-        internal static string InfoBarMessageLink {
+        public static string InfoBarMessageLink {
             get {
                 return ResourceManager.GetString("InfoBarMessageLink", resourceCulture);
             }
@@ -319,7 +319,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Install Git.
         /// </summary>
-        internal static string InstallGitInfoBarLink {
+        public static string InstallGitInfoBarLink {
             get {
                 return ResourceManager.GetString("InstallGitInfoBarLink", resourceCulture);
             }
@@ -328,7 +328,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Failed to install cookiecutter -----.
         /// </summary>
-        internal static string InstallingCookiecutterFailed {
+        public static string InstallingCookiecutterFailed {
             get {
                 return ResourceManager.GetString("InstallingCookiecutterFailed", resourceCulture);
             }
@@ -337,7 +337,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Installing cookiecutter -----.
         /// </summary>
-        internal static string InstallingCookiecutterStarted {
+        public static string InstallingCookiecutterStarted {
             get {
                 return ResourceManager.GetString("InstallingCookiecutterStarted", resourceCulture);
             }
@@ -346,7 +346,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Successfully installed cookiecutter -----.
         /// </summary>
-        internal static string InstallingCookiecutterSuccess {
+        public static string InstallingCookiecutterSuccess {
             get {
                 return ResourceManager.GetString("InstallingCookiecutterSuccess", resourceCulture);
             }
@@ -355,7 +355,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Install Python 3.
         /// </summary>
-        internal static string InstallPythonInfoBarLink {
+        public static string InstallPythonInfoBarLink {
             get {
                 return ResourceManager.GetString("InstallPythonInfoBarLink", resourceCulture);
             }
@@ -364,7 +364,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Please enter a valid output folder in the &apos;Create To&apos; field..
         /// </summary>
-        internal static string InvalidOutputFolder {
+        public static string InvalidOutputFolder {
             get {
                 return ResourceManager.GetString("InvalidOutputFolder", resourceCulture);
             }
@@ -373,7 +373,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Failed to load template &apos;{0}&apos; -----.
         /// </summary>
-        internal static string LoadingTemplateFailed {
+        public static string LoadingTemplateFailed {
             get {
                 return ResourceManager.GetString("LoadingTemplateFailed", resourceCulture);
             }
@@ -382,7 +382,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Loading template &apos;{0}&apos; -----.
         /// </summary>
-        internal static string LoadingTemplateStarted {
+        public static string LoadingTemplateStarted {
             get {
                 return ResourceManager.GetString("LoadingTemplateStarted", resourceCulture);
             }
@@ -391,7 +391,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Successfully loaded template &apos;{0}&apos; -----.
         /// </summary>
-        internal static string LoadingTemplateSuccess {
+        public static string LoadingTemplateSuccess {
             get {
                 return ResourceManager.GetString("LoadingTemplateSuccess", resourceCulture);
             }
@@ -400,7 +400,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Some external dependencies are missing. Click the links to install them..
         /// </summary>
-        internal static string MissingDependenciesInfoBarMessage {
+        public static string MissingDependenciesInfoBarMessage {
             get {
                 return ResourceManager.GetString("MissingDependenciesInfoBarMessage", resourceCulture);
             }
@@ -409,16 +409,142 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Would you like to open the generated folder in Solution Explorer?.
         /// </summary>
-        internal static string OpenInSolutionExplorerQuestion {
+        public static string OpenInSolutionExplorerQuestion {
             get {
                 return ResourceManager.GetString("OpenInSolutionExplorerQuestion", resourceCulture);
             }
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Files will be added to your project..
+        /// </summary>
+        public static string OptionsPage_AddingToProject {
+            get {
+                return ResourceManager.GetString("OptionsPage_AddingToProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cookiecutter was invoked using the Add From Cookiecutter command. To return to the global mode where files are not added to an existing project, click on Cancel or Home..
+        /// </summary>
+        public static string OptionsPage_AddingToProjectTooltip {
+            get {
+                return ResourceManager.GetString("OptionsPage_AddingToProjectTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add to Project.
+        /// </summary>
+        public static string OptionsPage_AddToProject {
+            get {
+                return ResourceManager.GetString("OptionsPage_AddToProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cancel.
+        /// </summary>
+        public static string OptionsPage_Cancel {
+            get {
+                return ResourceManager.GetString("OptionsPage_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create.
+        /// </summary>
+        public static string OptionsPage_Create {
+            get {
+                return ResourceManager.GetString("OptionsPage_Create", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create To.
+        /// </summary>
+        public static string OptionsPage_CreateTo {
+            get {
+                return ResourceManager.GetString("OptionsPage_CreateTo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Folder location where the files will be created. Files may be replaced if the folder is not empty, but a backup of the existing files will be created as needed..
+        /// </summary>
+        public static string OptionsPage_CreateToTooltip {
+            get {
+                return ResourceManager.GetString("OptionsPage_CreateToTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to e.g. C:\Projects\Project1.
+        /// </summary>
+        public static string OptionsPage_CreateToWatermark {
+            get {
+                return ResourceManager.GetString("OptionsPage_CreateToWatermark", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Creating files....
+        /// </summary>
+        public static string OptionsPage_CreatingFiles {
+            get {
+                return ResourceManager.GetString("OptionsPage_CreatingFiles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error creating files. See output window for details..
+        /// </summary>
+        public static string OptionsPage_CreatingFilesError {
+            get {
+                return ResourceManager.GetString("OptionsPage_CreatingFilesError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name.
+        /// </summary>
+        public static string OptionsPage_Name {
+            get {
+                return ResourceManager.GetString("OptionsPage_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Options.
+        /// </summary>
+        public static string OptionsPage_Options {
+            get {
+                return ResourceManager.GetString("OptionsPage_Options", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Run additional tasks on completion.
+        /// </summary>
+        public static string OptionsPage_RunAdditionalTasks {
+            get {
+                return ResourceManager.GetString("OptionsPage_RunAdditionalTasks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Template cloned successfully..
+        /// </summary>
+        public static string OptionsPage_TemplateCloneSuccessfully {
+            get {
+                return ResourceManager.GetString("OptionsPage_TemplateCloneSuccessfully", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} returned an exit code of {1}..
         /// </summary>
-        internal static string ProcessExitCodeMessage {
+        public static string ProcessExitCodeMessage {
             get {
                 return ResourceManager.GetString("ProcessExitCodeMessage", resourceCulture);
             }
@@ -427,7 +553,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Cookiecutter.
         /// </summary>
-        internal static string ProductTitle {
+        public static string ProductTitle {
             get {
                 return ResourceManager.GetString("ProductTitle", resourceCulture);
             }
@@ -436,7 +562,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Project with unique name &apos;{0}&apos; was not found in the current solution..
         /// </summary>
-        internal static string ProjectNotFound {
+        public static string ProjectNotFound {
             get {
                 return ResourceManager.GetString("ProjectNotFound", resourceCulture);
             }
@@ -445,7 +571,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to  - &apos;{0}&apos; was saved as &apos;{1}&apos;..
         /// </summary>
-        internal static string ReplacedFile {
+        public static string ReplacedFile {
             get {
                 return ResourceManager.GetString("ReplacedFile", resourceCulture);
             }
@@ -454,7 +580,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to The following files were replaced, and a backup of the original file was created:.
         /// </summary>
-        internal static string ReplacedFilesHeader {
+        public static string ReplacedFilesHeader {
             get {
                 return ResourceManager.GetString("ReplacedFilesHeader", resourceCulture);
             }
@@ -463,7 +589,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Failed to create files using template &apos;{0}&apos; -----.
         /// </summary>
-        internal static string RunningTemplateFailed {
+        public static string RunningTemplateFailed {
             get {
                 return ResourceManager.GetString("RunningTemplateFailed", resourceCulture);
             }
@@ -472,7 +598,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Creating files using template &apos;{0}&apos; -----.
         /// </summary>
-        internal static string RunningTemplateStarted {
+        public static string RunningTemplateStarted {
             get {
                 return ResourceManager.GetString("RunningTemplateStarted", resourceCulture);
             }
@@ -481,9 +607,270 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Successfully created files using template &apos;{0}&apos; into &apos;{1}&apos; -----.
         /// </summary>
-        internal static string RunningTemplateSuccess {
+        public static string RunningTemplateSuccess {
             get {
                 return ResourceManager.GetString("RunningTemplateSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checking for updates....
+        /// </summary>
+        public static string SearchPage_CheckingUpdates {
+            get {
+                return ResourceManager.GetString("SearchPage_CheckingUpdates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Check for updates completed..
+        /// </summary>
+        public static string SearchPage_CheckingUpdatesCompleted {
+            get {
+                return ResourceManager.GetString("SearchPage_CheckingUpdatesCompleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cloning repository....
+        /// </summary>
+        public static string SearchPage_CloningRepository {
+            get {
+                return ResourceManager.GetString("SearchPage_CloningRepository", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the creator.
+        /// </summary>
+        public static string SearchPage_Creator {
+            get {
+                return ResourceManager.GetString("SearchPage_Creator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enumerating templates. This may take a few seconds..
+        /// </summary>
+        public static string SearchPage_EnumeratingTemplatesTooltip {
+            get {
+                return ResourceManager.GetString("SearchPage_EnumeratingTemplatesTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error checking for updates. See output window for details..
+        /// </summary>
+        public static string SearchPage_ErrorCheckingUpdates {
+            get {
+                return ResourceManager.GetString("SearchPage_ErrorCheckingUpdates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error cloning repository. See output window for details..
+        /// </summary>
+        public static string SearchPage_ErrorCloningRepository {
+            get {
+                return ResourceManager.GetString("SearchPage_ErrorCloningRepository", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error installing cookiecutter. See output window for details..
+        /// </summary>
+        public static string SearchPage_ErrorInstallingCookiecutter {
+            get {
+                return ResourceManager.GetString("SearchPage_ErrorInstallingCookiecutter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error loading template. See output window for details..
+        /// </summary>
+        public static string SearchPage_ErrorLoadingTemplate {
+            get {
+                return ResourceManager.GetString("SearchPage_ErrorLoadingTemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Files created successfully..
+        /// </summary>
+        public static string SearchPage_FilesCreatedSuccessfully {
+            get {
+                return ResourceManager.GetString("SearchPage_FilesCreatedSuccessfully", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to GitHub.
+        /// </summary>
+        public static string SearchPage_LinksGitHub {
+            get {
+                return ResourceManager.GetString("SearchPage_LinksGitHub", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Issues.
+        /// </summary>
+        public static string SearchPage_LinksGitHubIssues {
+            get {
+                return ResourceManager.GetString("SearchPage_LinksGitHubIssues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wiki.
+        /// </summary>
+        public static string SearchPage_LinksGitHubWiki {
+            get {
+                return ResourceManager.GetString("SearchPage_LinksGitHubWiki", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading....
+        /// </summary>
+        public static string SearchPage_LoadingSearchResults {
+            get {
+                return ResourceManager.GetString("SearchPage_LoadingSearchResults", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading template....
+        /// </summary>
+        public static string SearchPage_LoadingTemplate {
+            get {
+                return ResourceManager.GetString("SearchPage_LoadingTemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Load more....
+        /// </summary>
+        public static string SearchPage_LoadMore {
+            get {
+                return ResourceManager.GetString("SearchPage_LoadMore", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Next.
+        /// </summary>
+        public static string SearchPage_NextButton {
+            get {
+                return ResourceManager.GetString("SearchPage_NextButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No description available..
+        /// </summary>
+        public static string SearchPage_NoTemplateDescriptionAvailable {
+            get {
+                return ResourceManager.GetString("SearchPage_NoTemplateDescriptionAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Open in Solution Explorer.
+        /// </summary>
+        public static string SearchPage_OpenInSolutionExplorer {
+            get {
+                return ResourceManager.GetString("SearchPage_OpenInSolutionExplorer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Preparing cookiecutter for first time use....
+        /// </summary>
+        public static string SearchPage_PreparingFirstTime {
+            get {
+                return ResourceManager.GetString("SearchPage_PreparingFirstTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Downloading and installing the cookiecutter package from the Python Package Index. This may take a few minutes..
+        /// </summary>
+        public static string SearchPage_PreparingFirstTimeTooltip {
+            get {
+                return ResourceManager.GetString("SearchPage_PreparingFirstTimeTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Search.
+        /// </summary>
+        public static string SearchPage_Search {
+            get {
+                return ResourceManager.GetString("SearchPage_Search", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter search terms or template location (git repository URL or path to local folder).
+        /// </summary>
+        public static string SearchPage_SearchTooltip {
+            get {
+                return ResourceManager.GetString("SearchPage_SearchTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter search terms or template location.
+        /// </summary>
+        public static string SearchPage_SearchWatermark {
+            get {
+                return ResourceManager.GetString("SearchPage_SearchWatermark", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An update is available..
+        /// </summary>
+        public static string SearchPage_UpdateAvailableTooltip {
+            get {
+                return ResourceManager.GetString("SearchPage_UpdateAvailableTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Updating template....
+        /// </summary>
+        public static string SearchPage_UpdatingTemplate {
+            get {
+                return ResourceManager.GetString("SearchPage_UpdatingTemplate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Template updated..
+        /// </summary>
+        public static string SearchPage_UpdatingTemplateCompleted {
+            get {
+                return ResourceManager.GetString("SearchPage_UpdatingTemplateCompleted", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error updating template. See output window for details..
+        /// </summary>
+        public static string SearchPage_UpdatingTemplateError {
+            get {
+                return ResourceManager.GetString("SearchPage_UpdatingTemplateError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Visit {0} on GitHub.
+        /// </summary>
+        public static string SearchPage_VisitOwnerOnGitHub {
+            get {
+                return ResourceManager.GetString("SearchPage_VisitOwnerOnGitHub", resourceCulture);
             }
         }
         
@@ -492,7 +879,7 @@ namespace Microsoft.CookiecutterTools {
         ///
         ///You can get more information by running Visual Studio with the /log parameter on the command line, and then examining the file &apos;{0}&apos;, or by checking the Event Log..
         /// </summary>
-        internal static string SeeActivityLog {
+        public static string SeeActivityLog {
             get {
                 return ResourceManager.GetString("SeeActivityLog", resourceCulture);
             }
@@ -501,7 +888,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Custom.
         /// </summary>
-        internal static string TemplateCategoryCustom {
+        public static string TemplateCategoryCustom {
             get {
                 return ResourceManager.GetString("TemplateCategoryCustom", resourceCulture);
             }
@@ -510,7 +897,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to GitHub.
         /// </summary>
-        internal static string TemplateCategoryGitHub {
+        public static string TemplateCategoryGitHub {
             get {
                 return ResourceManager.GetString("TemplateCategoryGitHub", resourceCulture);
             }
@@ -519,7 +906,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Installed.
         /// </summary>
-        internal static string TemplateCategoryInstalled {
+        public static string TemplateCategoryInstalled {
             get {
                 return ResourceManager.GetString("TemplateCategoryInstalled", resourceCulture);
             }
@@ -528,7 +915,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Recommended.
         /// </summary>
-        internal static string TemplateCategoryRecommended {
+        public static string TemplateCategoryRecommended {
             get {
                 return ResourceManager.GetString("TemplateCategoryRecommended", resourceCulture);
             }
@@ -537,7 +924,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to Cookiecutter.
         /// </summary>
-        internal static string ToolWindowCaption {
+        public static string ToolWindowCaption {
             get {
                 return ResourceManager.GetString("ToolWindowCaption", resourceCulture);
             }
@@ -547,7 +934,7 @@ namespace Microsoft.CookiecutterTools {
         ///   Looks up a localized string similar to Unhandled exception in {3} ({1}:{2})
         ///{0}.
         /// </summary>
-        internal static string UnhandledException {
+        public static string UnhandledException {
             get {
                 return ResourceManager.GetString("UnhandledException", resourceCulture);
             }
@@ -556,7 +943,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Failed to update template &apos;{0}&apos; -----.
         /// </summary>
-        internal static string UpdatingTemplateFailed {
+        public static string UpdatingTemplateFailed {
             get {
                 return ResourceManager.GetString("UpdatingTemplateFailed", resourceCulture);
             }
@@ -565,7 +952,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Updating template &apos;{0}&apos; -----.
         /// </summary>
-        internal static string UpdatingTemplateStarted {
+        public static string UpdatingTemplateStarted {
             get {
                 return ResourceManager.GetString("UpdatingTemplateStarted", resourceCulture);
             }
@@ -574,7 +961,7 @@ namespace Microsoft.CookiecutterTools {
         /// <summary>
         ///   Looks up a localized string similar to ----- Successfully updated template &apos;{0}&apos; -----.
         /// </summary>
-        internal static string UpdatingTemplateSuccess {
+        public static string UpdatingTemplateSuccess {
             get {
                 return ResourceManager.GetString("UpdatingTemplateSuccess", resourceCulture);
             }

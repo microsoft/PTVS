@@ -15,6 +15,7 @@
 // permissions and limitations under the License.
 
 using System.ComponentModel;
+using Microsoft.CookiecutterTools.Infrastructure;
 using Microsoft.CookiecutterTools.Model;
 
 namespace Microsoft.CookiecutterTools.ViewModel {
@@ -22,6 +23,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
         private string _displayName;
         private string _remoteUrl;
         private string _ownerUrl;
+        private string _ownerTooltip;
         private string _clonedPath;
         private string _description;
         private string _avatarUrl;
@@ -125,6 +127,8 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     _remoteUrl = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(RemoteUrl)));
                 }
+
+                RefreshOwnerTooltip();
             }
         }
 
@@ -172,10 +176,24 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 return _ownerUrl;
             }
 
-            set {
+            set
+            {
                 if (value != _ownerUrl) {
                     _ownerUrl = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OwnerUrl)));
+                }
+            }
+        }
+
+        public string OwnerTooltip {
+            get {
+                return _ownerTooltip;
+            }
+
+            set {
+                if (value != _ownerTooltip) {
+                    _ownerTooltip = value;
+                    PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OwnerTooltip)));
                 }
             }
         }
@@ -204,6 +222,15 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(IsUpdateAvailable)));
                 }
             }
+        }
+
+        private void RefreshOwnerTooltip() {
+            var owner = RepositoryOwner;
+            if (string.IsNullOrEmpty(owner)) {
+                owner = Strings.SearchPage_Creator;
+            }
+
+            OwnerTooltip = Strings.SearchPage_VisitOwnerOnGitHub.FormatUI(owner);
         }
     }
 }
