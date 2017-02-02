@@ -895,6 +895,69 @@ namespace Microsoft.CookiecutterTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Automatically check online for updates to installed templates..
+        /// </summary>
+        public static string Settings_CheckForTemplateUpdate_Description {
+            get {
+                return ResourceManager.GetString("Settings_CheckForTemplateUpdate_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Check for Template Update.
+        /// </summary>
+        public static string Settings_CheckForTemplateUpdate_Name {
+            get {
+                return ResourceManager.GetString("Settings_CheckForTemplateUpdate_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Location of the feed. The contents of the feed consists of line separated URLs of template locations..
+        /// </summary>
+        public static string Settings_FeedUrl_Description {
+            get {
+                return ResourceManager.GetString("Settings_FeedUrl_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Recommended Feed URL.
+        /// </summary>
+        public static string Settings_FeedUrl_Name {
+            get {
+                return ResourceManager.GetString("Settings_FeedUrl_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to General.
+        /// </summary>
+        public static string Settings_General_Category {
+            get {
+                return ResourceManager.GetString("Settings_General_Category", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show the help information bar..
+        /// </summary>
+        public static string Settings_ShowHelp_Description {
+            get {
+                return ResourceManager.GetString("Settings_ShowHelp_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Show Help.
+        /// </summary>
+        public static string Settings_ShowHelp_Name {
+            get {
+                return ResourceManager.GetString("Settings_ShowHelp_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Custom.
         /// </summary>
         public static string TemplateCategoryCustom {

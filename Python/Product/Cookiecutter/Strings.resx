@@ -431,4 +431,25 @@ Please delete the installed template and try again.</value>
   <data name="CookiecutterClient_UnsupportedJsonElementTypeForPorperty" xml:space="preserve">
     <value>Unsupported json element type in context file for property '{0}'.</value>
   </data>
+  <data name="Settings_General_Category" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Settings_ShowHelp_Name" xml:space="preserve">
+    <value>Show Help</value>
+  </data>
+  <data name="Settings_ShowHelp_Description" xml:space="preserve">
+    <value>Show the help information bar.</value>
+  </data>
+  <data name="Settings_FeedUrl_Name" xml:space="preserve">
+    <value>Recommended Feed URL</value>
+  </data>
+  <data name="Settings_FeedUrl_Description" xml:space="preserve">
+    <value>Location of the feed. The contents of the feed consists of line separated URLs of template locations.</value>
+  </data>
+  <data name="Settings_CheckForTemplateUpdate_Name" xml:space="preserve">
+    <value>Check for Template Update</value>
+  </data>
+  <data name="Settings_CheckForTemplateUpdate_Description" xml:space="preserve">
+    <value>Automatically check online for updates to installed templates.</value>
+  </data>
 </root>

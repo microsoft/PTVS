@@ -142,6 +142,8 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="ProjectResources.cs" />
+    <Compile Include="Attributes.cs" />
     <Compile Include="Commands\DeleteInstalledTemplateCommand.cs" />
     <Compile Include="Commands\GitHubHomeCommand.cs" />
     <Compile Include="Commands\RunCommand.cs" />
