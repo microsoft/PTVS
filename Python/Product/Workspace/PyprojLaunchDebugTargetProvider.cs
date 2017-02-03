@@ -61,7 +61,7 @@ namespace Microsoft.PythonTools.Workspace {
     ""configuration"": ""#/definitions/pyprojFile""
 }";
 
-        public void LaunchDebugTarget(IServiceProvider serviceProvider, DebugLaunchActionContext debugLaunchActionContext) {
+        public void LaunchDebugTarget(IWorkspace workspace, IServiceProvider serviceProvider, DebugLaunchActionContext debugLaunchActionContext) {
             var settings = debugLaunchActionContext.LaunchConfiguration;
             var moniker = settings.GetValue(ProjectKey, string.Empty);
             if (string.IsNullOrEmpty(moniker)) {
@@ -87,7 +87,7 @@ namespace Microsoft.PythonTools.Workspace {
             ErrorHandler.ThrowOnFailure(proj.GetLauncher().LaunchProject(true));
         }
 
-        public bool SupportsContext(string filePath) {
+        public bool SupportsContext(IWorkspace workspace, string filePath) {
             throw new NotImplementedException();
         }
     }
