@@ -142,6 +142,8 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="ProjectResources.cs" />
+    <Compile Include="Attributes.cs" />
     <Compile Include="Commands\DeleteInstalledTemplateCommand.cs" />
     <Compile Include="Commands\GitHubHomeCommand.cs" />
     <Compile Include="Commands\RunCommand.cs" />
@@ -270,7 +272,7 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Strings.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>Strings.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>

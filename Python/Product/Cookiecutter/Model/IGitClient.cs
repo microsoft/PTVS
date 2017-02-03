@@ -16,7 +16,6 @@
 
 using System;
 using System.Threading.Tasks;
-using Microsoft.CookiecutterTools.Infrastructure;
 
 namespace Microsoft.CookiecutterTools.Model {
     interface IGitClient {

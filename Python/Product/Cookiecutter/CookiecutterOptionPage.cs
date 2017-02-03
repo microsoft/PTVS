@@ -14,7 +14,6 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
-using System;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.Shell;
@@ -29,25 +28,28 @@ namespace Microsoft.CookiecutterTools {
         public CookiecutterOptionPage() {
         }
 
-        [Category("General")]
-        [DisplayName("Show Help")]
-        [Description("Show the help information bar.")]
+        [SRCategory(SR.SettingsGeneralCategory)]
+        [SRDisplayName(SR.SettingsShowHelpName)]
+        [SRDescription(SR.SettingsShowHelpDescription)]
+        [DefaultValue(true)]
         public bool ShowHelp {
             get { return _showHelp; }
             set { _showHelp = value; }
         }
 
-        [Category("General")]
-        [DisplayName("Recommended Feed URL")]
-        [Description("Location of the feed. The contents of the feed consists of line separated URLs of template locations.")]
+        [SRCategory(SR.SettingsGeneralCategory)]
+        [SRDisplayName(SR.SettingsFeedUrlName)]
+        [SRDescription(SR.SettingsFeedUrlDescription)]
+        [DefaultValue(UrlConstants.DefaultRecommendedFeed)]
         public string FeedUrl {
             get { return _feedUrl; }
             set { _feedUrl = value; }
         }
 
-        [Category("General")]
-        [DisplayName("Check for Template Update")]
-        [Description("Automatically check online for updates to installed templates.")]
+        [SRCategory(SR.SettingsGeneralCategory)]
+        [SRDisplayName(SR.SettingsCheckForTemplateUpdateName)]
+        [SRDescription(SR.SettingsCheckForTemplateUpdateDescription)]
+        [DefaultValue(true)]
         public bool CheckForTemplateUpdate {
             get { return _checkForTemplateUpdate; }
             set { _checkForTemplateUpdate = value; }

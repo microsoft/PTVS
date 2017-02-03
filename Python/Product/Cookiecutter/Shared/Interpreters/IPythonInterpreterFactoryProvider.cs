@@ -57,17 +57,4 @@ namespace Microsoft.CookiecutterTools.Interpreters {
         /// of the property. Values will be compared by ordinal.</param>
         object GetProperty(string id, string propName);
     }
-
-    public static class PythonInterpreterExtensions {
-        public static bool IsAvailable(this InterpreterConfiguration configuration) {
-            // TODO: Differs from original by not checking for base interpreter
-            // configuration
-            return File.Exists(configuration.InterpreterPath) &&
-                File.Exists(configuration.WindowsInterpreterPath);
-        }
-
-        public static IEnumerable<IPythonInterpreterFactory> GetInterpreterFactories(this IPythonInterpreterFactoryProvider self) {
-            return self.GetInterpreterConfigurations().Select(x => self.GetInterpreterFactory(x.Id));
-        }
-    }
 }

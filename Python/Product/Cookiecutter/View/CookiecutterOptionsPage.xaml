@@ -10,6 +10,7 @@
       xmlns:imaging="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.Imaging"
       xmlns:img="clr-namespace:Microsoft.VisualStudio.PlatformUI;assembly=Microsoft.VisualStudio.Imaging"
       xmlns:imagecatalog="clr-namespace:Microsoft.VisualStudio.Imaging;assembly=Microsoft.VisualStudio.ImageCatalog"
+      xmlns:cct="clr-namespace:Microsoft.CookiecutterTools"
       xmlns:sys="clr-namespace:System;assembly=mscorlib"
       wpf:LambdaProperties.ImportedNamespaces="System.Windows Microsoft.CookiecutterTools Microsoft.CookiecutterTools.ViewModel Microsoft.CookiecutterTools.Model"
       mc:Ignorable="d" 
@@ -177,28 +178,18 @@
         <StackPanel Grid.Row="0" Margin="4" Orientation="Vertical">
             <StackPanel Margin="4 4 4 8" Orientation="Horizontal" Visibility="{Binding CloningStatus, Converter={StaticResource OperationStatusSucceededToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusOK}"/>
-                <TextBlock Margin="4 0 0 0" Text="Template cloned successfully."/>
+                <TextBlock Margin="4 0 0 0" Text="{x:Static cct:Strings.OptionsPage_TemplateCloneSuccessfully}"/>
             </StackPanel>
-            <Label FontWeight="Bold">Name</Label>
+            <Label FontWeight="Bold" Content="{x:Static cct:Strings.OptionsPage_Name}"></Label>
             <TextBlock Margin="4 0 4 4" Text="{Binding Path=SelectedTemplate.DisplayName}"/>
-            <!--<Label FontWeight="Bold">Local path</Label>
-            <TextBlock Margin="4 0 4 4" Text="{Binding Path=SelectedTemplate.ClonedPath}"/>
-            <Label FontWeight="Bold">Remote url</Label>
-            <TextBlock Margin="4 0 4 4" Text="{Binding Path=SelectedTemplate.RemoteUrl}"/>
-            <Label FontWeight="Bold">Description</Label>
-            <TextBlock Margin="4 0 4 4" Text="{Binding Path=SelectedDescription}"/>-->
-            <Label FontWeight="Bold">Create To</Label>
+            <Label FontWeight="Bold" Content="{x:Static cct:Strings.OptionsPage_CreateTo}"></Label>
             <wpf:ConfigurationTextBoxWithHelp Margin="4 0 4 0"
                                               Text="{Binding Path=OutputFolderPath,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
                                               IsReadOnly="{Binding Path=FixedOutputFolder}"
-                                              Watermark="e.g. C:\Projects\Project1"
+                                              Watermark="{x:Static cct:Strings.OptionsPage_CreateToWatermark}"
                                               BrowseButtonStyle="{StaticResource BrowseFolderButton}"
-                                              AutomationProperties.Name="Output folder path">
-                <wpf:ConfigurationTextBoxWithHelp.HelpText>
-                    Folder location where the files will be created.
-                    Files may be replaced if the folder is not empty,
-                    but a backup of the existing files will be created as needed.
-                </wpf:ConfigurationTextBoxWithHelp.HelpText>
+                                              AutomationProperties.Name="Output folder path"
+                                              HelpText="{x:Static cct:Strings.OptionsPage_CreateToTooltip}">
                 <wpf:ConfigurationTextBoxWithHelp.Resources>
                     <Style TargetType="{x:Type Button}">
                         <Setter Property="Height" Value="12"/>
@@ -207,24 +198,19 @@
             </wpf:ConfigurationTextBoxWithHelp>
             <StackPanel Margin="4 4 4 8" Orientation="Horizontal" Visibility="{Binding FixedOutputFolder, Converter={StaticResource BoolToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusInformation}"/>
-                <TextBlock Margin="4 0 0 0" Text="Files will be added to your project.">
-                    <TextBlock.ToolTip>
-                        Cookiecutter was invoked using the Add From Cookiecutter command.
-                        To return to the global mode where files are not added to
-                        an existing project, click on Cancel or Home.
-                    </TextBlock.ToolTip>
-                </TextBlock>
+                <TextBlock Margin="4 0 0 0"
+                           Text="{x:Static cct:Strings.OptionsPage_AddingToProject}"
+                           ToolTip="{x:Static cct:Strings.OptionsPage_AddingToProjectTooltip}"/>
             </StackPanel>
-            <Label FontWeight="Bold">Options</Label>
+            <Label FontWeight="Bold" Content="{x:Static cct:Strings.OptionsPage_Options}"/>
             <CheckBox Margin="8 4 4 4"
                       IsChecked="{Binding ShouldExecutePostCommands}"
-                      Visibility="{Binding HasPostCommands, Converter={StaticResource BoolToVisibleOrCollapsed}}">
-                Run additional tasks on completion
-            </CheckBox>
+                      Visibility="{Binding HasPostCommands, Converter={StaticResource BoolToVisibleOrCollapsed}}"
+                      Content="{x:Static cct:Strings.OptionsPage_RunAdditionalTasks}"/>
         </StackPanel>
         <ScrollViewer Grid.Row="1" Margin="4">
             <ItemsControl ItemsSource="{Binding Path=ContextItems}"
-                            ItemTemplateSelector="{StaticResource contextItemSelector}" />
+                          ItemTemplateSelector="{StaticResource contextItemSelector}" />
         </ScrollViewer>
         <StackPanel Grid.Row="2" Margin="4" Orientation="Vertical">
             <StackPanel Grid.Row="2" Orientation="Horizontal">
@@ -232,23 +218,24 @@
                         Command="{x:Static vm:CookiecutterViewModel.CreateFilesCommand}">
                     <Button.Style>
                         <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-                            <Setter Property="Content" Value="Create"/>
+                            <Setter Property="Content" Value="{x:Static cct:Strings.OptionsPage_Create}"/>
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding Path=TargetProjectLocation, Converter={StaticResource TargetProjectLocationUniqueProjectNameNotEmpty}}" Value="True">
-                                    <Setter Property="Content" Value="Add to Project"/>
+                                    <Setter Property="Content" Value="{x:Static cct:Strings.OptionsPage_AddToProject}"/>
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
                     </Button.Style>
                 </Button>
                 <Button MinWidth="100"
-                        Command="{x:Static vm:CookiecutterViewModel.HomeCommand}">Cancel</Button>
+                        Command="{x:Static vm:CookiecutterViewModel.HomeCommand}"
+                        Content="{x:Static cct:Strings.OptionsPage_Cancel}"/>
             </StackPanel>
 
             <StackPanel Margin="4 4 4 8"
                         Orientation="Vertical"
                         Visibility="{Binding Path=CreatingStatus, Converter={StaticResource OperationStatusInProgressToVisibleOrCollapsed}}">
-                <TextBlock Text="Creating files..."/>
+                <TextBlock Text="{x:Static cct:Strings.OptionsPage_CreatingFiles}"/>
                 <ProgressBar Margin="4" IsIndeterminate="True"/>
             </StackPanel>
 
@@ -256,7 +243,9 @@
                         Orientation="Horizontal"
                         Visibility="{Binding Path=CreatingStatus, Converter={StaticResource OperationStatusFailedToVisibleOrCollapsed}}">
                 <imaging:CrispImage Width="16" Height="16" Moniker="{x:Static imagecatalog:KnownMonikers.StatusError}"/>
-                <TextBlock Margin="4 0 0 0" TextWrapping="Wrap" Text="Error creating files. See output window for details."/>
+                <TextBlock Margin="4 0 0 0"
+                           TextWrapping="Wrap"
+                           Text="{x:Static cct:Strings.OptionsPage_CreatingFilesError}"/>
             </StackPanel>
 
         </StackPanel>

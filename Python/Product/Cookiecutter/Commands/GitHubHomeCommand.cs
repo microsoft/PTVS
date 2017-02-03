@@ -22,8 +22,8 @@ namespace Microsoft.CookiecutterTools.Commands {
     /// Provides the command for opening the cookiecutter window.
     /// </summary>
     class GitHubCommand : Command {
-        private CookiecutterToolWindow _window;
-        private int _commandId;
+        private readonly CookiecutterToolWindow _window;
+        private readonly int _commandId;
 
         public GitHubCommand(CookiecutterToolWindow window, int commandId) {
             _window = window;
@@ -32,12 +32,6 @@ namespace Microsoft.CookiecutterTools.Commands {
 
         public override void DoCommand(object sender, EventArgs args) {
             _window.NavigateToGitHub(_commandId);
-        }
-
-        public string Description {
-            get {
-                return "Cookiecutter";
-            }
         }
 
         public override EventHandler BeforeQueryStatus {

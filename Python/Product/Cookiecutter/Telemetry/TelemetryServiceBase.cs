@@ -63,7 +63,6 @@ namespace Microsoft.CookiecutterTools.Telemetry {
         /// Either string/object dictionary or anonymous
         /// collection of string/object pairs.
         /// </param>
-        /// <summary>
         public void ReportEvent(string area, string eventName, object parameters = null) {
             if (string.IsNullOrEmpty(area)) {
                 throw new ArgumentException(nameof(area));

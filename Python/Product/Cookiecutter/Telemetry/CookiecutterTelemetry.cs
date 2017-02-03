@@ -26,6 +26,7 @@ namespace Microsoft.CookiecutterTools.Telemetry {
         /// <summary>
         /// Area names show up as part of telemetry event names like:
         ///   VS/CookiecutterTools/[area]/[event]
+        /// </summary>
         internal static class TelemetryArea {
             public const string Prereqs = "Prereqs";
             public const string Search = "Search";

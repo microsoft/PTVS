@@ -23,7 +23,7 @@ namespace Microsoft.CookiecutterTools.Commands {
     /// Provides the command for opening the cookiecutter window.
     /// </summary>
     class DeleteInstalledTemplateCommand : Command {
-        private CookiecutterToolWindow _window;
+        private readonly CookiecutterToolWindow _window;
 
         public DeleteInstalledTemplateCommand(CookiecutterToolWindow window) {
             _window = window;
@@ -31,12 +31,6 @@ namespace Microsoft.CookiecutterTools.Commands {
 
         public override void DoCommand(object sender, EventArgs args) {
             _window.DeleteSelection();
-        }
-
-        public string Description {
-            get {
-                return "Delete";
-            }
         }
 
         public override EventHandler BeforeQueryStatus {

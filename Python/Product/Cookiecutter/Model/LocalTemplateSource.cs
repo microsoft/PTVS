@@ -24,8 +24,8 @@ using Microsoft.CookiecutterTools.Infrastructure;
 
 namespace Microsoft.CookiecutterTools.Model {
     class LocalTemplateSource : ILocalTemplateSource {
-        private string _installedFolderPath;
-        private IGitClient _gitClient;
+        private readonly string _installedFolderPath;
+        private readonly IGitClient _gitClient;
         private List<Template> _cache;
 
         public LocalTemplateSource(string installedFolderPath, IGitClient gitClient) {
