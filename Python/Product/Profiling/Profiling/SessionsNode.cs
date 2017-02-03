@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Profiling {
         internal SessionNode OpenTarget(ProfilingTarget target, string filename) {
             for (int i = 0; i < _sessions.Count; i++) {
                 if (_sessions[i].Filename == filename) {
-                    throw new InvalidOperationException(Strings.SessionsNode_PerformanceSessionAlreadyOpen.FormatUI(filename));
+                    throw new InvalidOperationException(Strings.PerformanceSessionAlreadyOpen.FormatUI(filename));
                 }
             }
 

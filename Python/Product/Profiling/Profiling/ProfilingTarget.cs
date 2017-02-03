@@ -57,7 +57,7 @@ namespace Microsoft.PythonTools.Profiling {
             }
 
             if (baseName == null) {
-                baseName = Strings.ProfilingTarget_PerformanceBaseFileName;
+                baseName = Strings.PerformanceBaseFileName;
             }
 
             baseName = baseName + ".pyperf";

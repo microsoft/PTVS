@@ -308,7 +308,7 @@ namespace Microsoft.PythonTools.Profiling {
             var item = GetReport(itemid);
 
             if (!File.Exists(item.Filename)) {
-                MessageBox.Show(Strings.SessionNode_PerformanceReportNotFound.FormatUI(item.Filename), Strings.ProductTitle);
+                MessageBox.Show(Strings.PerformanceReportNotFound.FormatUI(item.Filename), Strings.ProductTitle);
             } else {
                 var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
                 dte.ItemOperations.OpenFile(item.Filename);

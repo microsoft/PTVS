@@ -374,7 +374,7 @@ namespace Microsoft.PythonTools.Profiling {
 
         private void AddPerformanceSession(object sender, EventArgs e) {
             var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
-            string filename = Strings.ProfilingTarget_PerformanceBaseFileName + ".pyperf";
+            string filename = Strings.PerformanceBaseFileName + ".pyperf";
             bool save = false;
             if (dte.Solution.IsOpen && !String.IsNullOrEmpty(dte.Solution.FullName)) {
                 filename = Path.Combine(Path.GetDirectoryName(dte.Solution.FullName), filename);

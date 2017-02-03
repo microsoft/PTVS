@@ -120,51 +120,51 @@
   <data name="ProductTitle" xml:space="preserve">
     <value>Visual Studio - Python support</value>
   </data>
-  <data name="ProfiledProcess_CannotLocatePerformanceTools" xml:space="preserve">
+  <data name="CannotLocatePerformanceTools" xml:space="preserve">
     <value>Cannot locate performance tools.</value>
   </data>
-  <data name="ProfiledProcess_StartPerfCmdError" xml:space="preserve">
+  <data name="StartPerfCmdError" xml:space="preserve">
     <value>Starting perf cmd failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}</value>
   </data>
-  <data name="ProfiledProcess_StopPerfMonError" xml:space="preserve">
+  <data name="StopPerfMonError" xml:space="preserve">
     <value>Shutting down perf cmd failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}</value>
   </data>
-  <data name="ProfiledProcess_CannotOpenSystemRegistry" xml:space="preserve">
+  <data name="CannotOpenSystemRegistry" xml:space="preserve">
     <value>Cannot open system registry</value>
   </data>
-  <data name="ProfiledProcess_CannotFindShellFolder" xml:space="preserve">
+  <data name="CannotFindShellFolder" xml:space="preserve">
     <value>Cannot find shell folder for Visual Studio</value>
   </data>
-  <data name="ProfiledProcess_UnsupportedArchitecture" xml:space="preserve">
+  <data name="UnsupportedArchitecture" xml:space="preserve">
     <value>Unsupported architecture: {0}</value>
   </data>
-  <data name="ProfiledProcess_UnableToStopPerfMon" xml:space="preserve">
+  <data name="UnableToStopPerfMon" xml:space="preserve">
     <value>Unable to stop performance monitor: {0}</value>
   </data>
-  <data name="ProfilingSessionEditorFactory_FailedToOpenFile" xml:space="preserve">
+  <data name="FailedToOpenPerformanceSessionFile" xml:space="preserve">
     <value>Failed to open file {0}
 
 {1}</value>
   </data>
-  <data name="ProfilingSessionEditorFactory_FailedToReadPerformanceSession" xml:space="preserve">
+  <data name="FailedToReadPerformanceSession" xml:space="preserve">
     <value>Failed to read performance session {0}
 
 {1}</value>
   </data>
-  <data name="ProfilingTarget_PerformanceBaseFileName" xml:space="preserve">
+  <data name="PerformanceBaseFileName" xml:space="preserve">
     <value>Performance</value>
     <comment>This is a valid file name, without extension</comment>
   </data>
-  <data name="ProjectTargetView_UnknownName" xml:space="preserve">
+  <data name="ProjectTargetUnknownName" xml:space="preserve">
     <value>(Unknown name)</value>
   </data>
-  <data name="SessionNode_PerformanceReportNotFound" xml:space="preserve">
-    <value>Performance report no longer exits: {0}</value>
+  <data name="PerformanceReportNotFound" xml:space="preserve">
+    <value>Performance report no longer exists: {0}</value>
   </data>
   <data name="PerformanceComparisonTitle" xml:space="preserve">
     <value>Performance Comparison</value>
   </data>
-  <data name="SessionsNode_PerformanceSessionAlreadyOpen" xml:space="preserve">
+  <data name="PerformanceSessionAlreadyOpen" xml:space="preserve">
     <value>Performance '{0}' session is already open</value>
   </data>
   <data name="SessionAlreadyRemoved" xml:space="preserve">

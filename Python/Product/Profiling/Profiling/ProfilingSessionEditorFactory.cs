@@ -183,10 +183,10 @@ namespace Microsoft.PythonTools.Profiling {
                     fs.Close();
                 }
             } catch (IOException e) {
-                MessageBox.Show(Strings.ProfilingSessionEditorFactory_FailedToOpenFile.FormatUI(pszMkDocument, e.Message), Strings.ProductTitle);
+                MessageBox.Show(Strings.FailedToOpenPerformanceSessionFile.FormatUI(pszMkDocument, e.Message), Strings.ProductTitle);
                 return VSConstants.E_FAIL;
             } catch (InvalidOperationException e) {
-                MessageBox.Show(Strings.ProfilingSessionEditorFactory_FailedToReadPerformanceSession.FormatUI(pszMkDocument, e.Message), Strings.ProductTitle);
+                MessageBox.Show(Strings.FailedToReadPerformanceSession.FormatUI(pszMkDocument, e.Message), Strings.ProductTitle);
                 return VSConstants.E_FAIL;
             }
 

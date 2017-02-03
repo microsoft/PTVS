@@ -36,7 +36,7 @@ namespace Microsoft.PythonTools.Profiling {
                 (int)__VSHPROPID.VSHPROPID_Name,
                 out value
             ));
-            _name = value as string ?? Strings.ProjectTargetView_UnknownName;
+            _name = value as string ?? Strings.ProjectTargetUnknownName;
             ErrorHandler.ThrowOnFailure(project.GetGuidProperty(
                 (uint)VSConstants.VSITEMID.Root,
                 (int)__VSHPROPID.VSHPROPID_ProjectIDGuid,

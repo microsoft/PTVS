@@ -34,7 +34,7 @@ namespace Microsoft.PythonTools.Profiling {
         public ProfiledProcess(PythonToolsService pyService, string exe, string args, string dir, Dictionary<string, string> envVars) {
             var arch = NativeMethods.GetBinaryType(exe);
             if (arch != ProcessorArchitecture.X86 && arch != ProcessorArchitecture.Amd64) {
-                throw new InvalidOperationException(Strings.ProfiledProcess_UnsupportedArchitecture.FormatUI(arch));
+                throw new InvalidOperationException(Strings.UnsupportedArchitecture.FormatUI(arch));
             }
 
             dir = PathUtils.TrimEndSeparator(dir);
@@ -95,7 +95,7 @@ namespace Microsoft.PythonTools.Profiling {
                     // Exited event is fired on a random thread pool thread, we need to handle exceptions.
                     StopPerfMon();
                 } catch (InvalidOperationException e) {
-                    MessageBox.Show(Strings.ProfiledProcess_UnableToStopPerfMon.FormatUI(e.Message), Strings.ProductTitle);
+                    MessageBox.Show(Strings.UnableToStopPerfMon.FormatUI(e.Message), Strings.ProductTitle);
                 }
                 var procExited = ProcessExited;
                 if (procExited != null) {
@@ -114,7 +114,7 @@ namespace Microsoft.PythonTools.Profiling {
             string perfMonPath = Path.Combine(perfToolsPath, "VSPerfMon.exe");
 
             if (!File.Exists(perfMonPath)) {
-                throw new InvalidOperationException(Strings.ProfiledProcess_CannotLocatePerformanceTools);
+                throw new InvalidOperationException(Strings.CannotLocatePerformanceTools);
             }
 
             var psi = new ProcessStartInfo(perfMonPath, "/trace /output:" + ProcessOutput.QuoteSingleArgument(filename));
@@ -128,7 +128,7 @@ namespace Microsoft.PythonTools.Profiling {
             using (var p = ProcessOutput.RunHiddenAndCapture(perfCmdPath, "/waitstart")) {
                 p.Wait();
                 if (p.ExitCode != 0) {
-                    throw new InvalidOperationException(Strings.ProfiledProcess_StartPerfCmdError.FormatUI(
+                    throw new InvalidOperationException(Strings.StartPerfCmdError.FormatUI(
                         Environment.NewLine,
                         string.Join(Environment.NewLine, p.StandardOutputLines),
                         string.Join(Environment.NewLine, p.StandardErrorLines)
@@ -145,7 +145,7 @@ namespace Microsoft.PythonTools.Profiling {
             using (var p = ProcessOutput.RunHiddenAndCapture(perfMonPath, "/shutdown")) {
                 p.Wait();
                 if (p.ExitCode != 0) {
-                    throw new InvalidOperationException(Strings.ProfiledProcess_StopPerfMonError.FormatUI(
+                    throw new InvalidOperationException(Strings.StopPerfMonError.FormatUI(
                         Environment.NewLine,
                         string.Join(Environment.NewLine, p.StandardOutputLines),
                         string.Join(Environment.NewLine, p.StandardErrorLines)
@@ -157,7 +157,7 @@ namespace Microsoft.PythonTools.Profiling {
         private string GetPerfToolsPath() {
             using (var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry32)) {
                 if (baseKey == null) {
-                    throw new InvalidOperationException(Strings.ProfiledProcess_CannotOpenSystemRegistry);
+                    throw new InvalidOperationException(Strings.CannotOpenSystemRegistry);
                 }
 
                 using (var key = baseKey.OpenSubKey(@"Software\Microsoft\VisualStudio\VSPerf")) {
@@ -189,13 +189,13 @@ namespace Microsoft.PythonTools.Profiling {
 
             string shFolder;
             if (!_pyService.Site.TryGetShellProperty(__VSSPROPID.VSSPROPID_InstallDirectory, out shFolder)) {
-                throw new InvalidOperationException(Strings.ProfiledProcess_CannotFindShellFolder);
+                throw new InvalidOperationException(Strings.CannotFindShellFolder);
             }
 
             try {
                 shFolder = Path.GetDirectoryName(Path.GetDirectoryName(shFolder));
             } catch (ArgumentException) {
-                throw new InvalidOperationException(Strings.ProfiledProcess_CannotFindShellFolder);
+                throw new InvalidOperationException(Strings.CannotFindShellFolder);
             }
 
             string perfToolsPath;

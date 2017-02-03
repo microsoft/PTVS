@@ -61,6 +61,33 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Cannot find shell folder for Visual Studio.
+        /// </summary>
+        public static string CannotFindShellFolder {
+            get {
+                return ResourceManager.GetString("CannotFindShellFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot locate performance tools..
+        /// </summary>
+        public static string CannotLocatePerformanceTools {
+            get {
+                return ResourceManager.GetString("CannotLocatePerformanceTools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot open system registry.
+        /// </summary>
+        public static string CannotOpenSystemRegistry {
+            get {
+                return ResourceManager.GetString("CannotOpenSystemRegistry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0} *.
         /// </summary>
         public static string CaptionDirty {
@@ -120,6 +147,28 @@ namespace Microsoft.PythonTools {
         public static string ExecutableFilesFilter {
             get {
                 return ResourceManager.GetString("ExecutableFilesFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to open file {0}
+        ///
+        ///{1}.
+        /// </summary>
+        public static string FailedToOpenPerformanceSessionFile {
+            get {
+                return ResourceManager.GetString("FailedToOpenPerformanceSessionFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to read performance session {0}
+        ///
+        ///{1}.
+        /// </summary>
+        public static string FailedToReadPerformanceSession {
+            get {
+                return ResourceManager.GetString("FailedToReadPerformanceSession", resourceCulture);
             }
         }
         
@@ -277,6 +326,15 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Performance.
+        /// </summary>
+        public static string PerformanceBaseFileName {
+            get {
+                return ResourceManager.GetString("PerformanceBaseFileName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Performance Comparison.
         /// </summary>
         public static string PerformanceComparisonTitle {
@@ -291,6 +349,24 @@ namespace Microsoft.PythonTools {
         public static string PerformanceReportFilesFilter {
             get {
                 return ResourceManager.GetString("PerformanceReportFilesFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Performance report no longer exists: {0}.
+        /// </summary>
+        public static string PerformanceReportNotFound {
+            get {
+                return ResourceManager.GetString("PerformanceReportNotFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Performance &apos;{0}&apos; session is already open.
+        /// </summary>
+        public static string PerformanceSessionAlreadyOpen {
+            get {
+                return ResourceManager.GetString("PerformanceSessionAlreadyOpen", resourceCulture);
             }
         }
         
@@ -313,91 +389,6 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot find shell folder for Visual Studio.
-        /// </summary>
-        public static string ProfiledProcess_CannotFindShellFolder {
-            get {
-                return ResourceManager.GetString("ProfiledProcess_CannotFindShellFolder", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cannot locate performance tools..
-        /// </summary>
-        public static string ProfiledProcess_CannotLocatePerformanceTools {
-            get {
-                return ResourceManager.GetString("ProfiledProcess_CannotLocatePerformanceTools", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cannot open system registry.
-        /// </summary>
-        public static string ProfiledProcess_CannotOpenSystemRegistry {
-            get {
-                return ResourceManager.GetString("ProfiledProcess_CannotOpenSystemRegistry", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Starting perf cmd failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}.
-        /// </summary>
-        public static string ProfiledProcess_StartPerfCmdError {
-            get {
-                return ResourceManager.GetString("ProfiledProcess_StartPerfCmdError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Shutting down perf cmd failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}.
-        /// </summary>
-        public static string ProfiledProcess_StopPerfMonError {
-            get {
-                return ResourceManager.GetString("ProfiledProcess_StopPerfMonError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unable to stop performance monitor: {0}.
-        /// </summary>
-        public static string ProfiledProcess_UnableToStopPerfMon {
-            get {
-                return ResourceManager.GetString("ProfiledProcess_UnableToStopPerfMon", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Unsupported architecture: {0}.
-        /// </summary>
-        public static string ProfiledProcess_UnsupportedArchitecture {
-            get {
-                return ResourceManager.GetString("ProfiledProcess_UnsupportedArchitecture", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to open file {0}
-        ///
-        ///{1}.
-        /// </summary>
-        public static string ProfilingSessionEditorFactory_FailedToOpenFile {
-            get {
-                return ResourceManager.GetString("ProfilingSessionEditorFactory_FailedToOpenFile", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failed to read performance session {0}
-        ///
-        ///{1}.
-        /// </summary>
-        public static string ProfilingSessionEditorFactory_FailedToReadPerformanceSession {
-            get {
-                return ResourceManager.GetString("ProfilingSessionEditorFactory_FailedToReadPerformanceSession", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Profiling session is not configured - would you like to configure now and then launch?.
         /// </summary>
         public static string ProfilingSessionNotConfigured {
@@ -412,15 +403,6 @@ namespace Microsoft.PythonTools {
         public static string ProfilingSupportMissingError {
             get {
                 return ResourceManager.GetString("ProfilingSupportMissingError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Performance.
-        /// </summary>
-        public static string ProfilingTarget_PerformanceBaseFileName {
-            get {
-                return ResourceManager.GetString("ProfilingTarget_PerformanceBaseFileName", resourceCulture);
             }
         }
         
@@ -445,9 +427,9 @@ namespace Microsoft.PythonTools {
         /// <summary>
         ///   Looks up a localized string similar to (Unknown name).
         /// </summary>
-        public static string ProjectTargetView_UnknownName {
+        public static string ProjectTargetUnknownName {
             get {
-                return ResourceManager.GetString("ProjectTargetView_UnknownName", resourceCulture);
+                return ResourceManager.GetString("ProjectTargetUnknownName", resourceCulture);
             }
         }
         
@@ -470,20 +452,38 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Performance report no longer exits: {0}.
+        ///   Looks up a localized string similar to Starting perf cmd failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}.
         /// </summary>
-        public static string SessionNode_PerformanceReportNotFound {
+        public static string StartPerfCmdError {
             get {
-                return ResourceManager.GetString("SessionNode_PerformanceReportNotFound", resourceCulture);
+                return ResourceManager.GetString("StartPerfCmdError", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Performance &apos;{0}&apos; session is already open.
+        ///   Looks up a localized string similar to Shutting down perf cmd failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}.
         /// </summary>
-        public static string SessionsNode_PerformanceSessionAlreadyOpen {
+        public static string StopPerfMonError {
             get {
-                return ResourceManager.GetString("SessionsNode_PerformanceSessionAlreadyOpen", resourceCulture);
+                return ResourceManager.GetString("StopPerfMonError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to stop performance monitor: {0}.
+        /// </summary>
+        public static string UnableToStopPerfMon {
+            get {
+                return ResourceManager.GetString("UnableToStopPerfMon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported architecture: {0}.
+        /// </summary>
+        public static string UnsupportedArchitecture {
+            get {
+                return ResourceManager.GetString("UnsupportedArchitecture", resourceCulture);
             }
         }
     }
