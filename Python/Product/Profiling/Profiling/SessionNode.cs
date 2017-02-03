@@ -21,8 +21,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows;
-using System.Windows.Interop;
-using Microsoft.PythonTools;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
@@ -47,8 +45,8 @@ namespace Microsoft.PythonTools.Profiling {
     ///         Session #2
     /// </summary>
     class SessionNode : BaseHierarchyNode, IVsHierarchyDeleteHandler, IVsPersistHierarchyItem {
-        private string _filename;
-        private uint _docCookie;
+        private readonly string _filename;
+        private readonly uint _docCookie;
         internal bool _isDirty, _neverSaved;
         private bool _isReportsExpanded;
         private readonly SessionsNode _parent;
@@ -118,7 +116,7 @@ namespace Microsoft.PythonTools.Profiling {
             get {
                 string name = Name;
                 if (_isDirty) {
-                    return name + " *";
+                    return Strings.CaptionDirty.FormatUI(name);
                 }
                 return name;
             }
@@ -310,7 +308,7 @@ namespace Microsoft.PythonTools.Profiling {
             var item = GetReport(itemid);
 
             if (!File.Exists(item.Filename)) {
-                MessageBox.Show("Performance report no longer exits: {0}".FormatUI(item.Filename), Strings.ProductTitle);
+                MessageBox.Show(Strings.SessionNode_PerformanceReportNotFound.FormatUI(item.Filename), Strings.ProductTitle);
             } else {
                 var dte = (EnvDTE.DTE)_serviceProvider.GetService(typeof(EnvDTE.DTE));
                 dte.ItemOperations.OpenFile(item.Filename);
@@ -369,7 +367,7 @@ namespace Microsoft.PythonTools.Profiling {
                                     ref guid,
                                     null,
                                     ref guidNull,
-                                    "Performance Comparison",
+                                    Strings.PerformanceComparisonTitle,
                                     _node,
                                     _itemid,
                                     IntPtr.Zero,

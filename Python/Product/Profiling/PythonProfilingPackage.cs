@@ -44,7 +44,7 @@ namespace Microsoft.PythonTools.Profiling {
     // This attribute tells the PkgDef creation utility (CreatePkgDef.exe) that this class is
     // a package.
     [PackageRegistration(UseManagedResourcesOnly = true)]
-    [Description("Python Tools Profiling Package")]
+    [Description("Python Tools Profiling Package")] // TODO: Localization: does this do anything?
     // This attribute is used to register the informations needed to show the this package
     // in the Help/About dialog of Visual Studio.
     [InstalledProductRegistration("#110", "#112", AssemblyVersionInfo.Version, IconResourceID = 400)]
@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Profiling {
     [Guid(GuidList.guidPythonProfilingPkgString)]
     // set the window to dock where Toolbox/Performance Explorer dock by default
     [ProvideToolWindow(typeof(PerfToolWindow), Orientation = ToolWindowOrientation.Left, Style = VsDockStyle.Tabbed, Window = EnvDTE.Constants.vsWindowKindToolbox)]
-    [ProvideFileFilterAttribute("{81da0100-e6db-4783-91ea-c38c3fa1b81e}", "/1", "Python Performance Session (*.pyperf);*.pyperf", 100)]
+    [ProvideFileFilterAttribute("{81da0100-e6db-4783-91ea-c38c3fa1b81e}", "/1", "Python Performance Session (*.pyperf);*.pyperf", 100)] // TODO: Localization
     [ProvideEditorExtension(typeof(ProfilingSessionEditorFactory), ".pyperf", 50,
           ProjectGuid = "{81da0100-e6db-4783-91ea-c38c3fa1b81e}",
           NameResourceID = 105,
@@ -63,7 +63,7 @@ namespace Microsoft.PythonTools.Profiling {
         internal static PythonProfilingPackage Instance;
         private static ProfiledProcess _profilingProcess;   // process currently being profiled
         internal static string PythonProjectGuid = "{888888a0-9f3d-457c-b088-3a5042f75d52}";
-        internal const string PerformanceFileFilter = "Performance Report Files|*.vsp;*.vsps";
+        internal static string PerformanceFileFilter = Strings.PerformanceReportFilesFilter;
         private AutomationProfiling _profilingAutomation;
         private static OleMenuCommand _stopCommand, _startCommand;
 
@@ -177,7 +177,7 @@ namespace Microsoft.PythonTools.Profiling {
         /// </summary>
         private void StartProfilingWizard(object sender, EventArgs e) {
             if (!IsProfilingInstalled()) {
-                MessageBox.Show("Profiling support seems to be missing or corrupt. Try repairing your Visual Studio installation.");
+                MessageBox.Show(Strings.ProfilingSupportMissingError);
                 return;
             }
 
@@ -215,7 +215,7 @@ namespace Microsoft.PythonTools.Profiling {
                 } else if (target.StandaloneTarget != null) {
                     ProfileStandaloneTarget(session, target.StandaloneTarget, openReport);
                 } else {
-                    if (MessageBox.Show("Profiling session is not configured - would you like to configure now and then launch?", "No Profiling Target", MessageBoxButton.YesNo) == MessageBoxResult.Yes) {
+                    if (MessageBox.Show(Strings.ProfilingSessionNotConfigured, Strings.NoProfilingTargetTitle, MessageBoxButton.YesNo) == MessageBoxResult.Yes) {
                         var newTarget = session.OpenTargetProperties();
                         if (newTarget != null && (newTarget.ProjectTarget != null || newTarget.StandaloneTarget != null)) {
                             StartProfiling(newTarget, session, openReport);
@@ -247,7 +247,7 @@ namespace Microsoft.PythonTools.Profiling {
             if (projectToProfile != null) {
                 ProfileProject(session, projectToProfile, openReport);
             } else {
-                MessageBox.Show("Project could not be found in current solution.", Strings.ProductTitle);
+                MessageBox.Show(Strings.ProjectNotFoundInSolution, Strings.ProductTitle);
             }
         }
 
@@ -256,12 +256,12 @@ namespace Microsoft.PythonTools.Profiling {
 
             var config = project?.GetLaunchConfigurationOrThrow();
             if (config == null) {
-                MessageBox.Show("Could not find interpreter for project {0}".FormatUI(projectToProfile.Name), Strings.ProductTitle);
+                MessageBox.Show(Strings.ProjectInterpreterNotFound.FormatUI(projectToProfile.Name), Strings.ProductTitle);
                 return;
             }
 
             if (string.IsNullOrEmpty(config.ScriptName)) {
-                MessageBox.Show("Project has no configured startup file, cannot start profiling.", Strings.ProductTitle);
+                MessageBox.Show(Strings.NoProjectStartupFile, Strings.ProductTitle);
                 return;
             }
 
@@ -351,7 +351,7 @@ namespace Microsoft.PythonTools.Profiling {
             try {
                 ShowPerformanceExplorer();
             } catch (Exception ex) when (!ex.IsCriticalException()) {
-                MessageBox.Show("Profiling support seems to be missing or corrupt. Try repairing your Visual Studio installation.");
+                MessageBox.Show(Strings.ProfilingSupportMissingError);
             }
         }
 
@@ -374,7 +374,7 @@ namespace Microsoft.PythonTools.Profiling {
 
         private void AddPerformanceSession(object sender, EventArgs e) {
             var dte = (EnvDTE.DTE)GetService(typeof(EnvDTE.DTE));
-            string filename = "Performance.pyperf";
+            string filename = Strings.ProfilingTarget_PerformanceBaseFileName + ".pyperf";
             bool save = false;
             if (dte.Solution.IsOpen && !String.IsNullOrEmpty(dte.Solution.FullName)) {
                 filename = Path.Combine(Path.GetDirectoryName(dte.Solution.FullName), filename);

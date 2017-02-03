@@ -17,11 +17,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Drawing;
 using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
-using Microsoft.PythonTools.Project;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -41,7 +40,6 @@ namespace Microsoft.PythonTools.Profiling {
         private readonly IVsUIHierarchyWindow _window;
         internal uint _activeSession = VSConstants.VSITEMID_NIL;
         internal static ImageList _imageList = InitImageList();
-        const string _rootName = "Python Performance Sessions";
 
         internal SessionsNode(IServiceProvider serviceProvider, IVsUIHierarchyWindow window) {
             _serviceProvider = serviceProvider;
@@ -97,7 +95,7 @@ namespace Microsoft.PythonTools.Profiling {
         internal SessionNode OpenTarget(ProfilingTarget target, string filename) {
             for (int i = 0; i < _sessions.Count; i++) {
                 if (_sessions[i].Filename == filename) {
-                    throw new InvalidOperationException(String.Format("Performance '{0}' session is already open", filename));
+                    throw new InvalidOperationException(Strings.SessionsNode_PerformanceSessionAlreadyOpen.FormatUI(filename));
                 }
             }
 

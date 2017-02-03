@@ -94,6 +94,7 @@
         <Parent guid="guidPythonToolsCmdSet" id="ToolsGroup"/>
         <Strings>
           <ButtonText>Launch &amp;Python Profiling...</ButtonText>
+          <CanonicalName>.Python.LaunchProfiling</CanonicalName>
           <LocCanonicalName>.Python.LaunchProfiling</LocCanonicalName>
         </Strings>
       </Button>
@@ -105,6 +106,7 @@
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Python Performance Explorer</ButtonText>
+          <CanonicalName>.Python.PerformanceExplorer</CanonicalName>
           <LocCanonicalName>.Python.PerformanceExplorer</LocCanonicalName>
         </Strings>
       </Button>
@@ -116,6 +118,7 @@
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Add Performance Session</ButtonText>
+          <CanonicalName>.Python.AddPerformanceSession</CanonicalName>
           <LocCanonicalName>.Python.AddPerformanceSession</LocCanonicalName>
         </Strings>
       </Button>
@@ -126,6 +129,7 @@
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Start Profiling</ButtonText>
+          <CanonicalName>.Python.StartProfiling</CanonicalName>
           <LocCanonicalName>.Python.StartProfiling</LocCanonicalName>
         </Strings>
       </Button>
@@ -136,6 +140,7 @@
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>Stop Profiling</ButtonText>
+          <CanonicalName>.Python.StopProfiling</CanonicalName>
           <LocCanonicalName>.Python.StopProfiling</LocCanonicalName>
         </Strings>
       </Button>
@@ -161,6 +166,7 @@
         <Parent guid="guidPythonProfilingCmdSet" id="perfReportsCtxMenuGroup"/>
         <Strings>
           <ButtonText>&amp;Add Report...</ButtonText>
+          <CanonicalName>.Python.AddPerformanceReport</CanonicalName>
           <LocCanonicalName>.Python.AddPerformanceReport</LocCanonicalName>
         </Strings>
       </Button>
@@ -170,6 +176,7 @@
         <CommandFlag>IconIsMoniker</CommandFlag>
         <Strings>
           <ButtonText>&amp;Compare Performance Reports...</ButtonText>
+          <CanonicalName>.Python.ComparePerformanceReports</CanonicalName>
           <LocCanonicalName>.Python.ComparePerformanceReports</LocCanonicalName>
         </Strings>
       </Button>
@@ -179,6 +186,7 @@
         <Parent guid="guidPythonProfilingCmdSet" id="perfSingleReportCtxMenuGroup"/>
         <Strings>
           <ButtonText>&amp;Open</ButtonText>
+          <CanonicalName>.Python.OpenPerformanceReport</CanonicalName>
           <LocCanonicalName>.Python.OpenPerformanceReport</LocCanonicalName>
         </Strings>
       </Button>
