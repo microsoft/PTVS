@@ -18,12 +18,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Html.Editor.Document;
-using Microsoft.PythonTools.Django.Project;
 using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Text.Projection;
 using Microsoft.Web.Core.Text;
 
 namespace Microsoft.PythonTools.Django.Intellisense {

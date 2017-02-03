@@ -15,12 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
-using Microsoft.PythonTools.Django.TemplateParsing;
 using Microsoft.PythonTools.Project;
-using Microsoft.PythonTools.Project.Automation;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudioTools.Project.Automation;
 
 namespace Microsoft.PythonTools.Django {

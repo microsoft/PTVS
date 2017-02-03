@@ -31,7 +31,6 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
         /// <summary>
         /// Creates a new DjangoBlock capturing the start index of the block command (for, debug, etc...).
         /// </summary>
-        /// <param name="blockStart"></param>
         public DjangoBlock(BlockParseInfo parseInfo) {
             ParseInfo = parseInfo;
         }

@@ -106,7 +106,7 @@ namespace Microsoft.PythonTools.Django.TemplateParsing {
                 case TemplateTokenKind.Comment:
                     return new TemplateCommentArtifact(range, isClosed);
                 default:
-                    throw new ArgumentException("Unsupported TemplateTokenKind", "kind");
+                    throw new ArgumentException(Resources.UnsupportedTemplateTokenKind, nameof(kind));
             }
         }
     }
