@@ -158,7 +158,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
             }
         }
 
-        public string AvatarUrl{
+        public string AvatarUrl {
             get {
                 return _avatarUrl;
             }
@@ -176,8 +176,7 @@ namespace Microsoft.CookiecutterTools.ViewModel {
                 return _ownerUrl;
             }
 
-            set
-            {
+            set {
                 if (value != _ownerUrl) {
                     _ownerUrl = value;
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(OwnerUrl)));
