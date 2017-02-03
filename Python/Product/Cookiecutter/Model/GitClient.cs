@@ -150,7 +150,7 @@ namespace Microsoft.CookiecutterTools.Model {
         private Dictionary<string, string> GetEnvironment() {
             var path =
                 Path.GetDirectoryName(_gitExeFilePath) + ";" +
-                Environment.GetEnvironmentVariable("PATH");
+                Environment.GetEnvironmentVariable("PATH") ?? "";
 
             return new Dictionary<string, string>() {
                 { "PATH", path },
