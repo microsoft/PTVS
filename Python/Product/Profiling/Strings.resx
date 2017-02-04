@@ -1,0 +1,279 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ProductTitle" xml:space="preserve">
+    <value>Visual Studio - Python support</value>
+  </data>
+  <data name="CannotLocatePerformanceTools" xml:space="preserve">
+    <value>Cannot locate performance tools.</value>
+  </data>
+  <data name="StartPerfCmdError" xml:space="preserve">
+    <value>Starting perf cmd failed
+
+Output:
+{0}
+
+Error:
+{1}</value>
+  </data>
+  <data name="StopPerfMonError" xml:space="preserve">
+    <value>Shutting down perf cmd failed
+
+Output:
+{0}
+
+Error:
+{1}</value>
+  </data>
+  <data name="CannotOpenSystemRegistry" xml:space="preserve">
+    <value>Cannot open system registry</value>
+  </data>
+  <data name="CannotFindShellFolder" xml:space="preserve">
+    <value>Cannot find shell folder for Visual Studio</value>
+  </data>
+  <data name="UnsupportedArchitecture" xml:space="preserve">
+    <value>Unsupported architecture: {0}</value>
+  </data>
+  <data name="UnableToStopPerfMon" xml:space="preserve">
+    <value>Unable to stop performance monitor: {0}</value>
+  </data>
+  <data name="FailedToOpenPerformanceSessionFile" xml:space="preserve">
+    <value>Failed to open file {0}
+
+{1}</value>
+  </data>
+  <data name="FailedToReadPerformanceSession" xml:space="preserve">
+    <value>Failed to read performance session {0}
+
+{1}</value>
+  </data>
+  <data name="PerformanceBaseFileName" xml:space="preserve">
+    <value>Performance</value>
+    <comment>This is a valid file name, without extension</comment>
+  </data>
+  <data name="ProjectTargetUnknownName" xml:space="preserve">
+    <value>(Unknown name)</value>
+  </data>
+  <data name="PerformanceReportNotFound" xml:space="preserve">
+    <value>Performance report no longer exists: {0}</value>
+  </data>
+  <data name="PerformanceComparisonTitle" xml:space="preserve">
+    <value>Performance Comparison</value>
+  </data>
+  <data name="PerformanceSessionAlreadyOpen" xml:space="preserve">
+    <value>Performance '{0}' session is already open</value>
+  </data>
+  <data name="SessionAlreadyRemoved" xml:space="preserve">
+    <value>Session has already been removed</value>
+  </data>
+  <data name="PerformanceToolWindowTitle" xml:space="preserve">
+    <value>Python Performance</value>
+  </data>
+  <data name="ExecutableFilesFilter" xml:space="preserve">
+    <value>Executable files (*.exe;*.bat;*.cmd)|*.exe;*.bat;*.cmd|All Files (*.*)|*.*</value>
+  </data>
+  <data name="PythonFilesFilter" xml:space="preserve">
+    <value>Python files (*.py;*.pyw)|*.py;*.pyw|All Files (*.*)|*.*</value>
+  </data>
+  <data name="PerformanceReportFilesFilter" xml:space="preserve">
+    <value>Performance Report Files|*.vsp;*.vsps</value>
+  </data>
+  <data name="ProfilingSupportMissingError" xml:space="preserve">
+    <value>Profiling support seems to be missing or corrupt. Try repairing your Visual Studio installation.</value>
+  </data>
+  <data name="ProfilingSessionNotConfigured" xml:space="preserve">
+    <value>Profiling session is not configured - would you like to configure now and then launch?</value>
+  </data>
+  <data name="NoProfilingTargetTitle" xml:space="preserve">
+    <value>No Profiling Target</value>
+  </data>
+  <data name="ProjectNotFoundInSolution" xml:space="preserve">
+    <value>Project could not be found in current solution.</value>
+  </data>
+  <data name="ProjectInterpreterNotFound" xml:space="preserve">
+    <value>Could not find interpreter for project {0}</value>
+  </data>
+  <data name="NoProjectStartupFile" xml:space="preserve">
+    <value>Project has no configured startup file, cannot start profiling.</value>
+  </data>
+  <data name="CaptionDirty" xml:space="preserve">
+    <value>{0} *</value>
+    <comment>{0} is a filename, and the asterisk indicates that the file has unsaved changes.</comment>
+  </data>
+  <data name="CompareReports_BaselineFile" xml:space="preserve">
+    <value>_Baseline File:</value>
+  </data>
+  <data name="CompareReports_ComparisonFile" xml:space="preserve">
+    <value>Co_mparison File:</value>
+  </data>
+  <data name="CompareReports_OK" xml:space="preserve">
+    <value>_OK</value>
+  </data>
+  <data name="CompareReports_Cancel" xml:space="preserve">
+    <value>_Cancel</value>
+  </data>
+  <data name="CompareReports_WindowTitle" xml:space="preserve">
+    <value>Select analysis files for comparison</value>
+  </data>
+  <data name="LaunchProfiling_WindowTitle" xml:space="preserve">
+    <value>Profiling Settings</value>
+  </data>
+  <data name="LaunchProfiling_WhatToProfile" xml:space="preserve">
+    <value>What would you like to profile?</value>
+  </data>
+  <data name="LaunchProfiling_OpenProject" xml:space="preserve">
+    <value>_Open project</value>
+  </data>
+  <data name="LaunchProfiling_StandaloneScript" xml:space="preserve">
+    <value>S_tandalone script</value>
+  </data>
+  <data name="LaunchProfiling_ScriptOptions" xml:space="preserve">
+    <value>Script Options</value>
+  </data>
+  <data name="LaunchProfiling_PythonInterpreter" xml:space="preserve">
+    <value>Python _Interpreter:</value>
+  </data>
+  <data name="LaunchProfiling_OtherInterpreter" xml:space="preserve">
+    <value>Other...</value>
+  </data>
+  <data name="LaunchProfiling_InterpreterPath" xml:space="preserve">
+    <value>I_nterpreter Path:</value>
+  </data>
+  <data name="LaunchProfiling_BrowseButton" xml:space="preserve">
+    <value>...</value>
+  </data>
+  <data name="LaunchProfiling_Script" xml:space="preserve">
+    <value>Sc_ript:</value>
+  </data>
+  <data name="LaunchProfiling_WorkingDirectory" xml:space="preserve">
+    <value>_Working Directory:</value>
+  </data>
+  <data name="LaunchProfiling_CommandLineArguments" xml:space="preserve">
+    <value>Command Line _Arguments:</value>
+  </data>
+  <data name="LaunchProfiling_Cancel" xml:space="preserve">
+    <value>_Cancel</value>
+  </data>
+  <data name="LaunchProfiling_OK" xml:space="preserve">
+    <value>_OK</value>
+  </data>
+  <data name="LaunchProfiling_Start" xml:space="preserve">
+    <value>_Start</value>
+  </data>
+</root>
