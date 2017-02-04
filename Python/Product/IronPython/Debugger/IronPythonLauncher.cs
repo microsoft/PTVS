@@ -98,7 +98,7 @@ namespace Microsoft.IronPythonTools.Debugger {
                 try {
                     StartSilverlightApp(config, debug);
                 } catch (ChironNotFoundException ex) {
-                    MessageBox.Show(ex.Message, "Visual Studio");
+                    MessageBox.Show(ex.Message, Strings.ProductTitle);
                 }
                 return VSConstants.S_OK;
             }
@@ -318,7 +318,7 @@ namespace Microsoft.IronPythonTools.Debugger {
         [Serializable]
         class ChironNotFoundException : Exception {
             public ChironNotFoundException()
-                : this("Chiron.exe was not found. Ensure the Silverlight Tools component of IronPython has been installed.") {
+                : this(Strings.IronPythonSilverlightToolsNotFound) {
             }
 
             public ChironNotFoundException(string message) : base(message) { }
