@@ -28,7 +28,21 @@
     <ProjectFile Include="Microsoft.PythonTools.Uwp.Vsix.swixproj" Condition="'$(IncludeUwp)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.Uwp.Templates.Vsix.swixproj" Condition="'$(IncludeUwp)' == 'True'"/>
     <ProjectFile Include="Microsoft.PythonTools.Web.Templates.Vsix.swixproj"/>
+    <LocProjectFile Include="Microsoft.PythonTools.Core.Vsix.Resources.swixproj" />
+    <LocProjectFile Include="Microsoft.PythonTools.Django.Vsix.Resources.swixproj" />
+    <LocProjectFile Include="Microsoft.PythonTools.IronPython.Vsix.Resources.swixproj" />
+    <LocProjectFile Include="Microsoft.PythonTools.Profiling.Vsix.Resources.swixproj" />
+    <LocProjectFile Include="Microsoft.PythonTools.Uwp.Vsix.Resources.swixproj" />
   </ItemGroup>
+
+  <Target Name="AddLocProjects" BeforeTargets="PrepareForBuild">
+    <ItemGroup>
+      <_Langs Include="$([msbuild]::Unescape($(OutputLanguages)))" />
+      <ProjectFile Include="@(LocProjectFile)">
+        <Properties>Lang=%(_Langs.Identity)</Properties>
+      </ProjectFile>
+    </ItemGroup>
+  </Target>
 
   <Import Project="$(TargetsPath)\Common.Build.Traversal.targets" />
 </Project>

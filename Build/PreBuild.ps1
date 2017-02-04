@@ -13,7 +13,7 @@ $packages = @(
     @{ name="Microsoft.VisualStudio.TextManager.Interop.12.1.DesignTime"; version=@{ "14.0"="12.1.30328"; "15.0"="12.1.30328" }; required=$true },
     @{ name="Microsoft.VisualStudio.Workspaces"; version=@{ "14.0"="15.0.198-pre"; "15.0"="15.0.198-pre" }; required=$true },
     @{ name="Microsoft.VisualStudio.Workspace.VSIntegration"; version=@{ "14.0"="15.0.198-pre"; "15.0"="15.0.198-pre" }; required=$true },
-    @{ name="Python"; version=@{ "14.0"="3.5.3"; "15.0"="3.5.3" }; required=$true }
+    @{ name="Python"; version=@{ "14.0"="3.6.0"; "15.0"="3.6.0" }; required=$true }
 )
 
 if ($full) {

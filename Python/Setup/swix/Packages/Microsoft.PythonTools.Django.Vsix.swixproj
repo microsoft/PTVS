@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageSearchPaths Include="$(SourcePath)" />
     <Dependency Include="Microsoft.PythonTools.Core.Vsix" />
     <Package Include="targets.django.swr" />
   </ItemGroup>
