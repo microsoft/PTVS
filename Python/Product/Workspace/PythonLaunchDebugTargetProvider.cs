@@ -75,7 +75,7 @@ namespace Microsoft.PythonTools.Workspace {
     ""configuration"": ""#/definitions/pythonFile""
 }";
 
-        public void LaunchDebugTarget(IServiceProvider serviceProvider, DebugLaunchActionContext debugLaunchActionContext) {
+        public void LaunchDebugTarget(IWorkspace workspace, IServiceProvider serviceProvider, DebugLaunchActionContext debugLaunchActionContext) {
             var registry = serviceProvider.GetComponentModel().GetService<IInterpreterRegistryService>();
 
             var settings = debugLaunchActionContext.LaunchConfiguration;
@@ -146,7 +146,7 @@ namespace Microsoft.PythonTools.Workspace {
             (launcher ?? new DefaultPythonLauncher(serviceProvider, launchConfig)).LaunchProject(debug);
         }
 
-        public bool SupportsContext(string filePath) {
+        public bool SupportsContext(IWorkspace workspace, string filePath) {
             throw new NotImplementedException();
         }
     }

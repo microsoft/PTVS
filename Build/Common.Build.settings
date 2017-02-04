@@ -62,6 +62,7 @@
     <BuildRoot Condition="!HasTrailingSlash($(BuildRoot))">$(BuildRoot)\</BuildRoot>
     <TargetsPath>$(BuildRoot)Build</TargetsPath>
 
+    <PackagesPath Condition="Exists('$(BuildRoot)\packages.$(VSTarget)')">$(BuildRoot)\packages.$(VSTarget)\</PackagesPath>
     <PackagesPath Condition="'$(PackagesPath)' == ''">$(BUILD_BINARIESDIRECTORY)</PackagesPath>
     <PackagesPath Condition="'$(PackagesPath)' == ''">$(BuildRoot)\packages\</PackagesPath>
     <PackagesPath Condition="!HasTrailingSlash($(PackagesPath))">$(PackagesPath)\</PackagesPath>
