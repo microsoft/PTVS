@@ -11,7 +11,6 @@ $install_dirs = @(
     "Common7\IDE\ProjectTemplatesCache\Python",
     "Common7\IDE\ItemTemplates\Python",
     "Common7\IDE\ItemTemplatesCache\Python",
-    "MSBuild\Microsoft\VisualStudio\v14.0\Python Tools",
     "MSBuild\Microsoft\VisualStudio\v15.0\Python Tools"
 )
 
