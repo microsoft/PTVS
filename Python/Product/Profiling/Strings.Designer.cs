@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Microsoft.PythonTools {
+namespace Microsoft.PythonTools.Profiling {
     using System;
     
     
