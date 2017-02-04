@@ -62,8 +62,8 @@ namespace Microsoft.PythonTools.Profiling {
     sealed class PythonProfilingPackage : Package {
         internal static PythonProfilingPackage Instance;
         private static ProfiledProcess _profilingProcess;   // process currently being profiled
-        internal static string PythonProjectGuid = "{888888a0-9f3d-457c-b088-3a5042f75d52}";
-        internal static string PerformanceFileFilter = Strings.PerformanceReportFilesFilter;
+        internal static readonly string PythonProjectGuid = "{888888a0-9f3d-457c-b088-3a5042f75d52}";
+        internal static readonly string PerformanceFileFilter = Strings.PerformanceReportFilesFilter;
         private AutomationProfiling _profilingAutomation;
         private static OleMenuCommand _stopCommand, _startCommand;
 
