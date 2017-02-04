@@ -31,7 +31,6 @@ using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Flavor;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Django.Project {
     [Guid("564253E9-EF07-4A40-89CF-790E61F53368")]
@@ -44,8 +43,8 @@ namespace Microsoft.PythonTools.Django.Project {
         IVsFilterAddProjectItemDlg
     {
         internal DjangoPackage _package;
-        internal IVsProject _innerProject;
-        internal IVsProject3 _innerProject3;
+        private IVsProject _innerProject;
+        private IVsProject3 _innerProject3;
         private IVsProjectFlavorCfgProvider _innerVsProjectFlavorCfgProvider;
         private static Guid PythonProjectGuid = new Guid(PythonConstants.ProjectFactoryGuid);
         private OleMenuCommandService _menuService;
