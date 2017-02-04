@@ -124,10 +124,22 @@
     <value>Cannot locate performance tools.</value>
   </data>
   <data name="StartPerfCmdError" xml:space="preserve">
-    <value>Starting perf cmd failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}</value>
+    <value>Starting perf cmd failed
+
+Output:
+{0}
+
+Error:
+{1}</value>
   </data>
   <data name="StopPerfMonError" xml:space="preserve">
-    <value>Shutting down perf cmd failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}</value>
+    <value>Shutting down perf cmd failed
+
+Output:
+{0}
+
+Error:
+{1}</value>
   </data>
   <data name="CannotOpenSystemRegistry" xml:space="preserve">
     <value>Cannot open system registry</value>

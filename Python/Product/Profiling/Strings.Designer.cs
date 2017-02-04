@@ -452,7 +452,13 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Starting perf cmd failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}.
+        ///   Looks up a localized string similar to Starting perf cmd failed
+        ///
+        ///Output:
+        ///{0}
+        ///
+        ///Error:
+        ///{1}.
         /// </summary>
         public static string StartPerfCmdError {
             get {
@@ -461,7 +467,13 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Shutting down perf cmd failed{0}{0}Output:{0}{1}{0}{0}Error:{0}{2}.
+        ///   Looks up a localized string similar to Shutting down perf cmd failed
+        ///
+        ///Output:
+        ///{0}
+        ///
+        ///Error:
+        ///{1}.
         /// </summary>
         public static string StopPerfMonError {
             get {

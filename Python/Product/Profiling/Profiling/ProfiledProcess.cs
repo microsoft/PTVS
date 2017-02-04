@@ -129,7 +129,6 @@ namespace Microsoft.PythonTools.Profiling {
                 p.Wait();
                 if (p.ExitCode != 0) {
                     throw new InvalidOperationException(Strings.StartPerfCmdError.FormatUI(
-                        Environment.NewLine,
                         string.Join(Environment.NewLine, p.StandardOutputLines),
                         string.Join(Environment.NewLine, p.StandardErrorLines)
                     ));
@@ -146,7 +145,6 @@ namespace Microsoft.PythonTools.Profiling {
                 p.Wait();
                 if (p.ExitCode != 0) {
                     throw new InvalidOperationException(Strings.StopPerfMonError.FormatUI(
-                        Environment.NewLine,
                         string.Join(Environment.NewLine, p.StandardOutputLines),
                         string.Join(Environment.NewLine, p.StandardErrorLines)
                     ));
