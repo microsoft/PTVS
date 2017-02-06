@@ -38,7 +38,7 @@
 
   <Target Name="AddLocProjects" BeforeTargets="PrepareForBuild">
     <ItemGroup>
-      <_Langs Include="$([msbuild]::Unescape($(OutputLanguages)))" />
+      <_Langs Include="$([msbuild]::Unescape($(Languages.Replace(`,`, `;`))))" />
       <ProjectFile Include="@(LocProjectFile)">
         <Properties>Lang=%(_Langs.Identity)</Properties>
       </ProjectFile>
