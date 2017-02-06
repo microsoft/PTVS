@@ -18,9 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.PythonTools.Parsing;
-using Microsoft.PythonTools.Parsing.Ast;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -42,14 +42,14 @@ namespace Microsoft.PythonTools.Refactoring {
 
         public async Task RenameVariable(IRenameVariableInput input, IVsPreviewChangesService previewChanges) {
             if (IsModuleName(input)) {
-                input.CannotRename("Cannot rename a module name");
+                input.CannotRename(Strings.RenameVariable_CannotRenameModuleName);
                 return;
             }
 
             var caret = _view.GetPythonCaret();
             var analysis = await VsProjectAnalyzer.AnalyzeExpressionAsync(_serviceProvider, _view, caret.Value);
             if (analysis == null) {
-                input.CannotRename("Unable to get analysis for current text view.");
+                input.CannotRename(Strings.RenameVariable_UnableGetAnalysisCurrentTextView);
                 return;
             }
             
@@ -72,7 +72,7 @@ namespace Microsoft.PythonTools.Refactoring {
             }
 
             if (originalName == null) {
-                input.CannotRename("Please select a symbol to be renamed.");
+                input.CannotRename(Strings.RenameVariable_SelectSymbol);
                 return;
             }
 
@@ -89,7 +89,7 @@ namespace Microsoft.PythonTools.Refactoring {
                 List<AnalysisVariable> paramVars = await GetKeywordParameters(analysis.Expression, originalName);
 
                 if (paramVars.Count == 0) {
-                    input.CannotRename(string.Format("No information is available for the variable '{0}'.", originalName));
+                    input.CannotRename(Strings.RenameVariable_NoInformationAvailableForVariable.FormatUI(originalName));
                     return;
                 }
 
