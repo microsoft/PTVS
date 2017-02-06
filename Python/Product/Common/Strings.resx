@@ -346,6 +346,85 @@ See the Python Environments window for details.</value>
   <data name="UpgradedToolsVersion" xml:space="preserve">
     <value>The tools version has been changed to 4.0. This will not affect compatibility with other versions of Visual Studio.</value>
   </data>
+  <data name="ImportWizard_SelectProjectFileLocation" xml:space="preserve">
+    <value>Select where to save your project file.</value>
+  </data>
+  <data name="ImportWizard_SelectProjectFileLocationHelp" xml:space="preserve">
+    <value>We won't move any files, and you can use Save As to move the project file later.</value>
+  </data>
+  <data name="ImportWizard_ProjectFileFilter" xml:space="preserve">
+    <value>Python Project Files (*.pyproj)|*.pyproj|All Files (*.*)|*.*</value>
+  </data>
+  <data name="ImportWizard_SelectFeatures" xml:space="preserve">
+    <value>Select any other features for your project.</value>
+  </data>
+  <data name="ImportWizard_SelectFeaturesHelp" xml:space="preserve">
+    <value>These can not be changed later without creating a new project.</value>
+  </data>
+  <data name="ImportWizard_DetectVirtualEnvironment" xml:space="preserve">
+    <value>Detect _Virtual Environments</value>
+  </data>
+  <data name="ImportWizard_CustomizeProjectType" xml:space="preserve">
+    <value>Customize Project _Type:</value>
+  </data>
+  <data name="ImportWizard_SaveProjectPageTitle" xml:space="preserve">
+    <value>Save Project</value>
+  </data>
+  <data name="ImportWizard_SelectInterpreter" xml:space="preserve">
+    <value>Select the Python interpreter and version to use.</value>
+  </data>
+  <data name="ImportWizard_SelectInterpreterHelp" xml:space="preserve">
+    <value>This setting can be changed later in Project Properties.</value>
+  </data>
+  <data name="ImportWizard_SelectStartupFile" xml:space="preserve">
+    <value>Choose which file to run when F5 is pressed.</value>
+  </data>
+  <data name="ImportWizard_SelectStartupFileHelp" xml:space="preserve">
+    <value>If it is not in this list, you can right-click any file in your project and choose "Set as startup file"</value>
+    <comment>"Set as startup file" is the text of a command and must match the translation of that command.</comment>
+  </data>
+  <data name="ImportWizard_CreateProjectFromExistingCodeTitle" xml:space="preserve">
+    <value>Create New Project from Existing Python Code</value>
+  </data>
+  <data name="ImportWizard_CreateProjectFromExistingCodeDescription" xml:space="preserve">
+    <value>Welcome to the Create New Project from Existing Python Code Wizard</value>
+  </data>
+  <data name="ImportWizard_BackButton" xml:space="preserve">
+    <value>_Back</value>
+  </data>
+  <data name="ImportWizard_NextButton" xml:space="preserve">
+    <value>_Next</value>
+  </data>
+  <data name="ImportWizard_FinishButton" xml:space="preserve">
+    <value>_Finish</value>
+  </data>
+  <data name="ImportWizard_CancelButton" xml:space="preserve">
+    <value>_Cancel</value>
+  </data>
+  <data name="ImportWizard_FileSourceLocation" xml:space="preserve">
+    <value>Enter or browse to the folder containing your Python code.</value>
+  </data>
+  <data name="ImportWizard_FileSourceLocationHelp" xml:space="preserve">
+    <value>We won't move any files from where they are now.</value>
+  </data>
+  <data name="ImportWizard_FileSourceLocationDoesntExistHelp" xml:space="preserve">
+    <value>Specified path does not exist</value>
+  </data>
+  <data name="ImportWizard_FileSourceFilter" xml:space="preserve">
+    <value>Enter the filter for files to include.</value>
+  </data>
+  <data name="ImportWizard_FileSourceFilterHelp" xml:space="preserve">
+    <value>Files with the .py extension are always included.</value>
+  </data>
+  <data name="ImportWizard_SearchPath" xml:space="preserve">
+    <value>Enter any search paths your project needs.</value>
+  </data>
+  <data name="ImportWizard_SearchPathHelp" xml:space="preserve">
+    <value>One on each line, and we'll make them relative to the project file for you.</value>
+  </data>
+  <data name="ImportWizard_GlobalOrAutoDetectedVirtualEnvironment" xml:space="preserve">
+    <value>(Global default or an auto-detected virtual environment)</value>
+  </data>
   <data name="ImportWizardBottleProjectCustomization" xml:space="preserve">
     <value>Bottle Web Project</value>
   </data>

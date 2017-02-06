@@ -17,16 +17,13 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Interop;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudioTools;
 using WpfCommands = Microsoft.VisualStudioTools.Wpf.Commands;
 
