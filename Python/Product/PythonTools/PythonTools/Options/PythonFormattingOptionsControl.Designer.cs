@@ -24,40 +24,32 @@ namespace Microsoft.PythonTools.Options {
         /// </summary>
         private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonFormattingOptionsControl));
             this._optionsTree = new Microsoft.PythonTools.Options.OptionsTreeView();
             this._editorHost = new System.Windows.Forms.Integration.ElementHost();
             this.SuspendLayout();
             // 
             // _optionsTree
             // 
-            this._optionsTree.Dock = System.Windows.Forms.DockStyle.Top;
+            resources.ApplyResources(this._optionsTree, "_optionsTree");
             this._optionsTree.DrawMode = System.Windows.Forms.TreeViewDrawMode.OwnerDrawText;
             this._optionsTree.HotTracking = true;
-            this._optionsTree.Location = new System.Drawing.Point(0, 0);
-            this._optionsTree.Margin = new System.Windows.Forms.Padding(0);
             this._optionsTree.Name = "_optionsTree";
             this._optionsTree.ShowLines = false;
-            this._optionsTree.Size = new System.Drawing.Size(383, 174);
-            this._optionsTree.TabIndex = 0;
             // 
             // _editorHost
             // 
-            this._editorHost.Dock = System.Windows.Forms.DockStyle.Fill;
-            this._editorHost.Location = new System.Drawing.Point(0, 174);
+            resources.ApplyResources(this._editorHost, "_editorHost");
             this._editorHost.Name = "_editorHost";
-            this._editorHost.Size = new System.Drawing.Size(383, 106);
-            this._editorHost.TabIndex = 2;
-            this._editorHost.Text = "elementHost1";
             this._editorHost.Child = null;
             // 
             // PythonFormattingOptionsControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.Controls.Add(this._editorHost);
             this.Controls.Add(this._optionsTree);
             this.Name = "PythonFormattingOptionsControl";
-            this.Size = new System.Drawing.Size(383, 280);
             this.ResumeLayout(false);
 
         }

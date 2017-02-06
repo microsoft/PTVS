@@ -23,10 +23,6 @@ namespace Microsoft.PythonTools.Options {
     public class PythonGeneralOptionsPage : PythonDialogPage {
         private PythonGeneralOptionsControl _window;
 
-        public PythonGeneralOptionsPage()
-            : base("General") {
-        }
-
         // replace the default UI of the dialog page w/ our own UI.
         protected override System.Windows.Forms.IWin32Window Window {
             get {

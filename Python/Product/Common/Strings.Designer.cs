@@ -982,6 +982,91 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to # The existing formatting will not be altered:
+        ///
+        ///{0}
+        ///    # or
+        ///{1}.
+        /// </summary>
+        public static string FormattingOptionPreviewNotAltered {
+            get {
+                return ResourceManager.GetString("FormattingOptionPreviewNotAltered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Class Definitions.
+        /// </summary>
+        public static string FormattingOptionsCategoryClassDefinitions {
+            get {
+                return ResourceManager.GetString("FormattingOptionsCategoryClassDefinitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expression Spacing.
+        /// </summary>
+        public static string FormattingOptionsCategoryExpressionSpacing {
+            get {
+                return ResourceManager.GetString("FormattingOptionsCategoryExpressionSpacing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Function Definitions.
+        /// </summary>
+        public static string FormattingOptionsCategoryFunctionDefinitions {
+            get {
+                return ResourceManager.GetString("FormattingOptionsCategoryFunctionDefinitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Operators.
+        /// </summary>
+        public static string FormattingOptionsCategoryOperators {
+            get {
+                return ResourceManager.GetString("FormattingOptionsCategoryOperators", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Statements.
+        /// </summary>
+        public static string FormattingOptionsCategoryStatements {
+            get {
+                return ResourceManager.GetString("FormattingOptionsCategoryStatements", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wrapping.
+        /// </summary>
+        public static string FormattingOptionsCategoryWrapping {
+            get {
+                return ResourceManager.GetString("FormattingOptionsCategoryWrapping", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Class Declarations.
+        /// </summary>
+        public static string FormattingOptionsClassDeclarations {
+            get {
+                return ResourceManager.GetString("FormattingOptionsClassDeclarations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to # Select an option to see a preview.
+        /// </summary>
+        public static string FormattingOptionsDefaultText {
+            get {
+                return ResourceManager.GetString("FormattingOptionsDefaultText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Python Function.
         /// </summary>
         public static string FunctionClassificationType {

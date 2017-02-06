@@ -22,10 +22,8 @@ namespace Microsoft.PythonTools.Options {
     public class PythonFormattingWrappingOptionsPage : PythonFormattingOptionsPage {
         public PythonFormattingWrappingOptionsPage()
             : base( 
-            new OptionCategory("Wrapping", OptionCategory.GetOptions(CodeFormattingCategory.Wrapping))
-            )
-        
-        {
+            new OptionCategory(Strings.FormattingOptionsCategoryWrapping, OptionCategory.GetOptions(CodeFormattingCategory.Wrapping))
+            ) {
         }
     }
 }

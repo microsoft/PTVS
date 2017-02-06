@@ -22,11 +22,6 @@ namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public class PythonAdvancedEditorOptionsPage : PythonDialogPage {
         private PythonAdvancedEditorOptionsControl _window;
-        private const string _defaultCompletionChars = "{}[]().,:;+-*/%&|^~=<>#'\"\\";
-
-        public PythonAdvancedEditorOptionsPage()
-            : base("Advanced") {
-        }
 
         // replace the default UI of the dialog page w/ our own UI.
         protected override System.Windows.Forms.IWin32Window Window {
