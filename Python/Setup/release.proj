@@ -15,7 +15,7 @@
       <Name>PTVS$(_CBI.Replace(` `, `_`).Replace(`.`, `_`).Replace(`-`, `_`))_VS_$(VSTargetName).msi</Name>
     </ReleaseFile>
 
-    <ReleaseFile Include="$(SetupOutputPath)swix\*.vsix;$(SetupOutputPath)swix\*.vsman;$(SetupOutputPath)swix\*.ps1">
+    <ReleaseFile Include="$(SetupOutputPath)swix\*.vsix;$(SetupOutputPath)swix\*.vsman">
       <Name>%(Filename)%(Extension)</Name>
     </ReleaseFile>
     <ReleaseFile Include="swix\install.ps1">

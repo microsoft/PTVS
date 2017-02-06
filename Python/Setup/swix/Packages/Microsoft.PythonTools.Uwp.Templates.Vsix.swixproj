@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageSearchPaths Include="$(SourcePath)" />
     <Dependency Include="Microsoft.PythonTools.Uwp.Vsix" />
   </ItemGroup>
 

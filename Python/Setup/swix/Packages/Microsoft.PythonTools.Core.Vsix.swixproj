@@ -6,10 +6,11 @@
     <BaseInstall>InstallDir:\Common7\IDE\Extensions\Microsoft\Python\Core</BaseInstall>
     <SourcePath>$(LayoutOutputPath)Microsoft.PythonTools.Core</SourcePath>
 
-    <ExtraOptions>-x "\.targets$" -x "wfastcgi\.py$" -x "Microsoft\.PythonTools\.Core\.dll$"</ExtraOptions>
+    <ExtraOptions>-x "\.targets$" -x "wfastcgi\.py$" -x "Microsoft\.PythonTools\.Core\.(dll|pdb)$"</ExtraOptions>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageSearchPaths Include="$(SourcePath)" />
     <Package Include="file_associations.swr" />
     <Package Include="debug_symbols.swr" Condition="$(Configuration) == 'Release'" />
     <Package Include="targets.swr" />

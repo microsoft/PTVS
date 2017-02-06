@@ -1,0 +1,71 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <IntermediateOutputPathSuffix>loclayout\</IntermediateOutputPathSuffix>
+    <LocLanguages Condition="$(LocLanguages) == ''">VS</LocLanguages>
+  </PropertyGroup>
+  
+  <Import Project="SetupProjectBefore.settings" />
+  <Import Project="$(TargetsPath)\Common.Shim.targets" />
+  
+  <PropertyGroup>
+    <OutputPath>$(BinariesOutputPath)</OutputPath>
+    <OutDir>$(BinariesOutputPath)</OutDir>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <ManagedFiles Include="
+        Microsoft.PythonTools.Analysis.dll;
+        Microsoft.PythonTools.Analyzer.exe;
+        Microsoft.PythonTools.Attacher.exe;
+        Microsoft.PythonTools.AttacherX86.exe;
+        Microsoft.PythonTools.BuildTasks.dll;
+        Microsoft.PythonTools.Common.dll;
+        Microsoft.PythonTools.Debugger.dll;
+        Microsoft.PythonTools.dll;
+        Microsoft.PythonTools.EnvironmentsList.dll;
+        Microsoft.PythonTools.ImportWizard.dll;
+        Microsoft.PythonTools.Ipc.Json.dll;
+        Microsoft.PythonTools.Profiling.dll;
+        Microsoft.PythonTools.ProjectWizards.dll;
+        Microsoft.PythonTools.RunElevated.exe;
+        Microsoft.PythonTools.TestAdapter.dll;
+        Microsoft.PythonTools.TestAdapter.Analysis.dll;
+        Microsoft.PythonTools.TestAdapter.Executor.dll;
+        Microsoft.PythonTools.VSCommon.dll;
+        Microsoft.PythonTools.VSInterpreters.dll;
+        Microsoft.PythonTools.WebRole.dll;
+        Microsoft.PythonTools.Workspace.dll;
+        Microsoft.PythonTools.XamlDesignerSupport.dll;
+        Microsoft.CookiecutterTools.dll;
+        "/>
+    
+    <ManagedFiles Include="
+        Microsoft.PythonTools.Django.Analysis.dll;
+        Microsoft.PythonTools.Django.dll;
+        " Condition="$(IncludeDjango)" />
+    <ManagedFiles Include="
+        Microsoft.IronPythonTools.Resolver.dll;
+        Microsoft.PythonTools.IronPython.dll;
+        Microsoft.PythonTools.IronPython.Interpreter.dll;
+        " Condition="$(IncludeIronPython)" />
+    <ManagedFiles Include="
+        Microsoft.PythonTools.Uwp.dll;
+        Microsoft.PythonTools.Uwp.Interpreter.dll;
+        Microsoft.PythonTools.Uwp.Wizards.dll;
+        " Condition="$(IncludeUwp)" />
+
+    <FilesToLocalize Include="@(ManagedFiles->'$(BinariesOutputPath)%(Identity)')">
+      <TranslationFile>$(BuildRoot)loc\lcl\{Lang}\%(Filename).lcl</TranslationFile>
+      <LciCommentFile>$(BuildRoot)loc\lci\%(Filename).lci</LciCommentFile>
+      <SettingsFile>$(LSBuildRoot)\MCP_excludeBaml.lss</SettingsFile>
+    </FilesToLocalize>
+  </ItemGroup>
+  
+  <Target Name="ListFiles">
+    <Message Text="OutputPath: $(OutputPath)" Importance="high" />
+    <Message Text="@(FilesToLocalize->'%(Identity) (%(TranslationFile), %(LciCommentFile))', '
+')" Importance="high" />
+  </Target>
+
+  <Import Project="$(TargetsPath)\MicroBuild.targets" />
+</Project>
