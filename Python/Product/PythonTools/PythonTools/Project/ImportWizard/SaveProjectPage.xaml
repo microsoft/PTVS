@@ -6,9 +6,10 @@
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
       xmlns:l="clr-namespace:Microsoft.PythonTools.Project.ImportWizard"
       xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
+      xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="500"
-      Title="Save Project"
+      Title="{x:Static common:Strings.ImportWizard_SaveProjectPageTitle}"
       FocusManager.FocusedElement="{Binding ElementName=ProjectPathTextBox}">
 
     <Page.Resources>
@@ -21,8 +22,8 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         
-        <wpf:LabelledControl Title="Select where to save your project file."
-                           HelpText="We won't move any files, and you can use Save As to move the project file later."
+        <wpf:LabelledControl Title="{x:Static common:Strings.ImportWizard_SelectProjectFileLocation}"
+                           HelpText="{x:Static common:Strings.ImportWizard_SelectProjectFileLocationHelp}"
                            Grid.Row="0">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -34,19 +35,18 @@
                 </Grid.RowDefinitions>
                 <TextBox Grid.Column="0" Text="{Binding Path=ProjectPath,Mode=TwoWay}" Name="ProjectPathTextBox" />
                 <Button Grid.Column="1" Style="{StaticResource BrowseSaveFileButton}"
-                        CommandParameter="Python Project Files (*.pyproj)|*.pyproj|All Files (*.*)|*.*"
+                        CommandParameter="{x:Static common:Strings.ImportWizard_ProjectFileFilter}"
                         CommandTarget="{Binding ElementName=ProjectPathTextBox}" />
             </Grid>
         </wpf:LabelledControl>
 
-        <wpf:LabelledControl Title="Select any other features for your project."
-                           HelpText="These can not be changed later without creating a new project."
+        <wpf:LabelledControl Title="{x:Static common:Strings.ImportWizard_SelectFeatures}"
+                           HelpText="{x:Static common:Strings.ImportWizard_SelectFeaturesHelp}"
                            Grid.Row="1">
             <StackPanel Orientation="Vertical">
                 <CheckBox IsChecked="{Binding DetectVirtualEnv}"
-                          Margin="3">
-                    Detect _Virtual Environments
-                </CheckBox>
+                          Content="{x:Static common:Strings.ImportWizard_DetectVirtualEnvironment}"
+                          Margin="3"/>
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="auto" />
@@ -55,9 +55,8 @@
                     <CheckBox Grid.Column="0"
                               Name="CustomizationEnabled"
                               IsChecked="{Binding UseCustomization}"
-                              Margin="3">
-                        Customize Project _Type:
-                    </CheckBox>
+                              Content="{x:Static common:Strings.ImportWizard_CustomizeProjectType}"
+                              Margin="3"/>
 
                     <ComboBox Grid.Column="1"
                               ItemsSource="{Binding SupportedProjectCustomizations,Mode=OneTime}"

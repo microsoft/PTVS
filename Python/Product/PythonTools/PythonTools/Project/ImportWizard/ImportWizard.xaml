@@ -5,21 +5,19 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:l="clr-namespace:Microsoft.PythonTools.Project.ImportWizard"
     xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
+    xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
     xmlns:pt="clr-namespace:Microsoft.PythonTools"
     xmlns:ui="clr-namespace:Microsoft.VisualStudioTools"
     Height="525" Width="700"
     MinHeight="500" MinWidth="500"
     ResizeMode="CanResizeWithGrip"
+    Title="{x:Static common:Strings.ImportWizard_CreateProjectFromExistingCodeTitle}"
     HasMaximizeButton="True"
     UseLayoutRounding="True"
     SnapsToDevicePixels="True"
     ShowInTaskbar="False"
     WindowStartupLocation="CenterOwner">
 
-    <Window.Title>
-        Create New Project from Existing Python Code
-    </Window.Title>
-    
     <Window.Resources>
         <ResourceDictionary Source="ImportWizardDictionary.xaml" />
     </Window.Resources>
@@ -53,10 +51,12 @@
                      HorizontalAlignment="Center"
                      VerticalAlignment="Top"/>
         </Grid>
-        
-        <TextBlock Grid.Row="0" Grid.Column="1" Style="{StaticResource Title}" Margin="8">
-            Welcome to the Create New Project from Existing Python Code Wizard
-        </TextBlock>
+
+        <TextBlock Grid.Row="0"
+                   Grid.Column="1"
+                   Style="{StaticResource Title}"
+                   Margin="8"
+                   Text="{x:Static common:Strings.ImportWizard_CreateProjectFromExistingCodeDescription}"/>
         
         <Frame Grid.Row="1" Grid.Column="1"
                Content="{Binding PageSequence.CurrentItem}"
@@ -77,10 +77,10 @@
                         <Setter Property="HorizontalAlignment" Value="Stretch" />
                     </Style>
                 </Grid.Resources>
-                <Button Grid.Column="0" Command="NavigationCommands.BrowseBack">_Back</Button>
-                <Button Grid.Column="1" Command="NavigationCommands.BrowseForward" IsDefault="{Binding IsNextDefault}">_Next</Button>
-                <Button Grid.Column="2" Command="ApplicationCommands.Save" IsDefault="{Binding IsFinishDefault}">_Finish</Button>
-                <Button Grid.Column="3" Command="ApplicationCommands.Close">_Cancel</Button>
+                <Button Grid.Column="0" Command="NavigationCommands.BrowseBack" Content="{x:Static common:Strings.ImportWizard_BackButton}"/>
+                <Button Grid.Column="1" Command="NavigationCommands.BrowseForward" Content="{x:Static common:Strings.ImportWizard_NextButton}"  IsDefault="{Binding IsNextDefault}"/>
+                <Button Grid.Column="2" Command="ApplicationCommands.Save" Content="{x:Static common:Strings.ImportWizard_FinishButton}" IsDefault="{Binding IsFinishDefault}"/>
+                <Button Grid.Column="3" Command="ApplicationCommands.Close" Content="{x:Static common:Strings.ImportWizard_CancelButton}"/>
             </Grid>
         </StackPanel>
     </Grid>

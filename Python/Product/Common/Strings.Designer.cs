@@ -1094,6 +1094,240 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to _Back.
+        /// </summary>
+        public static string ImportWizard_BackButton {
+            get {
+                return ResourceManager.GetString("ImportWizard_BackButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Cancel.
+        /// </summary>
+        public static string ImportWizard_CancelButton {
+            get {
+                return ResourceManager.GetString("ImportWizard_CancelButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Welcome to the Create New Project from Existing Python Code Wizard.
+        /// </summary>
+        public static string ImportWizard_CreateProjectFromExistingCodeDescription {
+            get {
+                return ResourceManager.GetString("ImportWizard_CreateProjectFromExistingCodeDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Create New Project from Existing Python Code.
+        /// </summary>
+        public static string ImportWizard_CreateProjectFromExistingCodeTitle {
+            get {
+                return ResourceManager.GetString("ImportWizard_CreateProjectFromExistingCodeTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Customize Project _Type:.
+        /// </summary>
+        public static string ImportWizard_CustomizeProjectType {
+            get {
+                return ResourceManager.GetString("ImportWizard_CustomizeProjectType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Detect _Virtual Environments.
+        /// </summary>
+        public static string ImportWizard_DetectVirtualEnvironment {
+            get {
+                return ResourceManager.GetString("ImportWizard_DetectVirtualEnvironment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter the filter for files to include..
+        /// </summary>
+        public static string ImportWizard_FileSourceFilter {
+            get {
+                return ResourceManager.GetString("ImportWizard_FileSourceFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Files with the .py extension are always included..
+        /// </summary>
+        public static string ImportWizard_FileSourceFilterHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_FileSourceFilterHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter or browse to the folder containing your Python code..
+        /// </summary>
+        public static string ImportWizard_FileSourceLocation {
+            get {
+                return ResourceManager.GetString("ImportWizard_FileSourceLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified path does not exist.
+        /// </summary>
+        public static string ImportWizard_FileSourceLocationDoesntExistHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_FileSourceLocationDoesntExistHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We won&apos;t move any files from where they are now..
+        /// </summary>
+        public static string ImportWizard_FileSourceLocationHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_FileSourceLocationHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Finish.
+        /// </summary>
+        public static string ImportWizard_FinishButton {
+            get {
+                return ResourceManager.GetString("ImportWizard_FinishButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (Global default or an auto-detected virtual environment).
+        /// </summary>
+        public static string ImportWizard_GlobalOrAutoDetectedVirtualEnvironment {
+            get {
+                return ResourceManager.GetString("ImportWizard_GlobalOrAutoDetectedVirtualEnvironment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Next.
+        /// </summary>
+        public static string ImportWizard_NextButton {
+            get {
+                return ResourceManager.GetString("ImportWizard_NextButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Project Files (*.pyproj)|*.pyproj|All Files (*.*)|*.*.
+        /// </summary>
+        public static string ImportWizard_ProjectFileFilter {
+            get {
+                return ResourceManager.GetString("ImportWizard_ProjectFileFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Save Project.
+        /// </summary>
+        public static string ImportWizard_SaveProjectPageTitle {
+            get {
+                return ResourceManager.GetString("ImportWizard_SaveProjectPageTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Enter any search paths your project needs..
+        /// </summary>
+        public static string ImportWizard_SearchPath {
+            get {
+                return ResourceManager.GetString("ImportWizard_SearchPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to One on each line, and we&apos;ll make them relative to the project file for you..
+        /// </summary>
+        public static string ImportWizard_SearchPathHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_SearchPathHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select any other features for your project..
+        /// </summary>
+        public static string ImportWizard_SelectFeatures {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectFeatures", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to These can not be changed later without creating a new project..
+        /// </summary>
+        public static string ImportWizard_SelectFeaturesHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectFeaturesHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select the Python interpreter and version to use..
+        /// </summary>
+        public static string ImportWizard_SelectInterpreter {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectInterpreter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This setting can be changed later in Project Properties..
+        /// </summary>
+        public static string ImportWizard_SelectInterpreterHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectInterpreterHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select where to save your project file..
+        /// </summary>
+        public static string ImportWizard_SelectProjectFileLocation {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectProjectFileLocation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to We won&apos;t move any files, and you can use Save As to move the project file later..
+        /// </summary>
+        public static string ImportWizard_SelectProjectFileLocationHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectProjectFileLocationHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Choose which file to run when F5 is pressed..
+        /// </summary>
+        public static string ImportWizard_SelectStartupFile {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectStartupFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If it is not in this list, you can right-click any file in your project and choose &quot;Set as startup file&quot;.
+        /// </summary>
+        public static string ImportWizard_SelectStartupFileHelp {
+            get {
+                return ResourceManager.GetString("ImportWizard_SelectStartupFileHelp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Bottle Web Project.
         /// </summary>
         public static string ImportWizardBottleProjectCustomization {

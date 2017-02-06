@@ -19,7 +19,6 @@ using System.IO;
 using System.Windows.Controls;
 using System.Windows.Data;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Project.ImportWizard {
     /// <summary>

@@ -7,6 +7,7 @@
       xmlns:pt="clr-namespace:Microsoft.PythonTools"
       xmlns:l="clr-namespace:Microsoft.PythonTools.Project.ImportWizard"
       xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
+      xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="500"
       Title="Interpreter Selection"
@@ -21,8 +22,8 @@
             <RowDefinition />
         </Grid.RowDefinitions>
 
-        <wpf:LabelledControl Title="Select the Python interpreter and version to use."
-                           HelpText="This setting can be changed later in Project Properties."
+        <wpf:LabelledControl Title="{x:Static common:Strings.ImportWizard_SelectInterpreter}"
+                           HelpText="{x:Static common:Strings.ImportWizard_SelectInterpreterHelp}"
                            Grid.Row="0">
             <ComboBox Name="InterpretersComboBox"
                       ItemsSource="{Binding AvailableInterpreters}"
@@ -30,8 +31,8 @@
                       DisplayMemberPath="Name" />
         </wpf:LabelledControl>
 
-        <wpf:LabelledControl Title="Choose which file to run when F5 is pressed."
-                           HelpText="If it is not in this list, you can right-click any file in your project and choose &quot;Set as startup file&quot;"
+        <wpf:LabelledControl Title="{x:Static common:Strings.ImportWizard_SelectStartupFile}"
+                           HelpText="{x:Static common:Strings.ImportWizard_SelectStartupFileHelp}"
                            Grid.Row="1">
             <ListView Name="listView"
                       ItemsSource="{Binding TopLevelPythonFiles}"

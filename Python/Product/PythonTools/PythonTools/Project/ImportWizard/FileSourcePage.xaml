@@ -5,6 +5,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf"
+      xmlns:common="clr-namespace:Microsoft.PythonTools;assembly=Microsoft.PythonTools.Common"
       xmlns:l="clr-namespace:Microsoft.PythonTools.Project.ImportWizard"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="500"
@@ -21,8 +22,8 @@
             <RowDefinition />
         </Grid.RowDefinitions>
         
-        <wpf:LabelledControl Title="Enter or browse to the folder containing your Python code."
-                           HelpText="We won't move any files from where they are now."
+        <wpf:LabelledControl Title="{x:Static common:Strings.ImportWizard_FileSourceLocation}"
+                           HelpText="{x:Static common:Strings.ImportWizard_FileSourceLocationHelp}"
                            Grid.Row="0">
             <Grid>
                 <Grid.ColumnDefinitions>
@@ -39,7 +40,7 @@
                          SourceUpdated="SourcePathTextBox_SourceUpdated"
                          Name="SourcePathTextBox" />
                 <AdornerDecorator Grid.Column="1"
-                                  ToolTip="Specified path does not exist"
+                                  ToolTip="{x:Static common:Strings.ImportWizard_FileSourceLocationDoesntExistHelp}"
                                   Visibility="Collapsed"
                                   Name="SourcePathDoesNotExist">
                     <Grid VerticalAlignment="Stretch" Width="{Binding ActualHeight,RelativeSource={RelativeSource Self}}">
@@ -56,14 +57,14 @@
             </Grid>
         </wpf:LabelledControl>
 
-        <wpf:LabelledControl Title="Enter the filter for files to include."
-                           HelpText="Files with the .py extension are always included."
+        <wpf:LabelledControl Title="{x:Static common:Strings.ImportWizard_FileSourceFilter}"
+                           HelpText="{x:Static common:Strings.ImportWizard_FileSourceFilterHelp}"
                            Grid.Row="1">
             <TextBox Text="{Binding Path=Filters,Mode=TwoWay}" />
         </wpf:LabelledControl>
         
-        <wpf:LabelledControl Title="Enter any search paths your project needs."
-                           HelpText="One on each line, and we'll make them relative to the project file for you."
+        <wpf:LabelledControl Title="{x:Static common:Strings.ImportWizard_SearchPath}"
+                           HelpText="{x:Static common:Strings.ImportWizard_SearchPathHelp}"
                            Grid.Row="2">
             <Grid>
                 <Grid.ColumnDefinitions>
