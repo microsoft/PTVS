@@ -16,7 +16,6 @@
 
 using System;
 using System.Windows.Forms;
-using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Options {
     public partial class PythonDebuggingOptionsControl : UserControl {

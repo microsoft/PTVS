@@ -681,6 +681,39 @@ You will need to restart Visual Studio after installation.</value>
 
 Your web browser will not be opened.</value>
   </data>
+  <data name="FormattingOptionPreviewNotAltered" xml:space="preserve">
+    <value># The existing formatting will not be altered:
+
+{0}
+    # or
+{1}</value>
+    <comment>{0} and {1} are Python code snippets, and the whole string is valid Python code, # indicates a comment.</comment>
+  </data>
+  <data name="FormattingOptionsDefaultText" xml:space="preserve">
+    <value># Select an option to see a preview</value>
+    <comment>This is valid Python code, # indicates a comment.</comment>
+  </data>
+  <data name="FormattingOptionsClassDeclarations" xml:space="preserve">
+    <value>Class Declarations</value>
+  </data>
+  <data name="FormattingOptionsCategoryClassDefinitions" xml:space="preserve">
+    <value>Class Definitions</value>
+  </data>
+  <data name="FormattingOptionsCategoryFunctionDefinitions" xml:space="preserve">
+    <value>Function Definitions</value>
+  </data>
+  <data name="FormattingOptionsCategoryOperators" xml:space="preserve">
+    <value>Operators</value>
+  </data>
+  <data name="FormattingOptionsCategoryExpressionSpacing" xml:space="preserve">
+    <value>Expression Spacing</value>
+  </data>
+  <data name="FormattingOptionsCategoryStatements" xml:space="preserve">
+    <value>Statements</value>
+  </data>
+  <data name="FormattingOptionsCategoryWrapping" xml:space="preserve">
+    <value>Wrapping</value>
+  </data>
   <data name="ReplCannotReadFile" xml:space="preserve">
     <value>Unable to read file '{0}'</value>
   </data>

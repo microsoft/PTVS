@@ -19,7 +19,6 @@ using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Options {
     class OptionsTreeView : TreeView {

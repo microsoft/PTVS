@@ -117,4 +117,499 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <assembly alias="mscorlib" name="mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="tableLayoutPanel3.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="tableLayoutPanel3.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="tableLayoutPanel3.ColumnCount" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="_showOutputWindowForVirtualEnvCreate.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="_showOutputWindowForVirtualEnvCreate.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 3</value>
+  </data>
+  <data name="_showOutputWindowForVirtualEnvCreate.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_showOutputWindowForVirtualEnvCreate.Size" type="System.Drawing.Size, System.Drawing">
+    <value>294, 17</value>
+  </data>
+  <data name="_showOutputWindowForVirtualEnvCreate.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="_showOutputWindowForVirtualEnvCreate.Text" xml:space="preserve">
+    <value>Show Output window when creating &amp;virtual environments</value>
+  </data>
+  <data name="&gt;&gt;_showOutputWindowForVirtualEnvCreate.Name" xml:space="preserve">
+    <value>_showOutputWindowForVirtualEnvCreate</value>
+  </data>
+  <data name="&gt;&gt;_showOutputWindowForVirtualEnvCreate.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_showOutputWindowForVirtualEnvCreate.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_showOutputWindowForVirtualEnvCreate.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="_showOutputWindowForPackageInstallation.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_showOutputWindowForPackageInstallation.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 26</value>
+  </data>
+  <data name="_showOutputWindowForPackageInstallation.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_showOutputWindowForPackageInstallation.Size" type="System.Drawing.Size, System.Drawing">
+    <value>307, 17</value>
+  </data>
+  <data name="_showOutputWindowForPackageInstallation.TabIndex" type="System.Int32, mscorlib">
+    <value>1</value>
+  </data>
+  <data name="_showOutputWindowForPackageInstallation.Text" xml:space="preserve">
+    <value>Show Output window when &amp;installing or removing packages</value>
+  </data>
+  <data name="&gt;&gt;_showOutputWindowForPackageInstallation.Name" xml:space="preserve">
+    <value>_showOutputWindowForPackageInstallation</value>
+  </data>
+  <data name="&gt;&gt;_showOutputWindowForPackageInstallation.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_showOutputWindowForPackageInstallation.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_showOutputWindowForPackageInstallation.ZOrder" xml:space="preserve">
+    <value>1</value>
+  </data>
+  <data name="_autoAnalysis.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_autoAnalysis.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_autoAnalysis.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 95</value>
+  </data>
+  <data name="_autoAnalysis.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_autoAnalysis.Size" type="System.Drawing.Size, System.Drawing">
+    <value>259, 17</value>
+  </data>
+  <data name="_autoAnalysis.TabIndex" type="System.Int32, mscorlib">
+    <value>4</value>
+  </data>
+  <data name="_autoAnalysis.Text" xml:space="preserve">
+    <value>&amp;Automatically generate completion DB on first use</value>
+  </data>
+  <data name="&gt;&gt;_autoAnalysis.Name" xml:space="preserve">
+    <value>_autoAnalysis</value>
+  </data>
+  <data name="&gt;&gt;_autoAnalysis.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_autoAnalysis.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_autoAnalysis.ZOrder" xml:space="preserve">
+    <value>2</value>
+  </data>
+  <data name="_updateSearchPathsForLinkedFiles.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_updateSearchPathsForLinkedFiles.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_updateSearchPathsForLinkedFiles.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 141</value>
+  </data>
+  <data name="_updateSearchPathsForLinkedFiles.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_updateSearchPathsForLinkedFiles.Size" type="System.Drawing.Size, System.Drawing">
+    <value>241, 17</value>
+  </data>
+  <data name="_updateSearchPathsForLinkedFiles.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="_updateSearchPathsForLinkedFiles.Text" xml:space="preserve">
+    <value>&amp;Update search paths when adding linked files</value>
+  </data>
+  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.Name" xml:space="preserve">
+    <value>_updateSearchPathsForLinkedFiles</value>
+  </data>
+  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_updateSearchPathsForLinkedFiles.ZOrder" xml:space="preserve">
+    <value>3</value>
+  </data>
+  <data name="_indentationInconsistentLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_indentationInconsistentLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_indentationInconsistentLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 191</value>
+  </data>
+  <data name="_indentationInconsistentLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_indentationInconsistentLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>167, 13</value>
+  </data>
+  <data name="_indentationInconsistentLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>7</value>
+  </data>
+  <data name="_indentationInconsistentLabel.Text" xml:space="preserve">
+    <value>&amp;Report inconsistent indentation as</value>
+  </data>
+  <data name="_indentationInconsistentLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentLabel.Name" xml:space="preserve">
+    <value>_indentationInconsistentLabel</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentLabel.ZOrder" xml:space="preserve">
+    <value>4</value>
+  </data>
+  <data name="_indentationInconsistentCombo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="_indentationInconsistentCombo.Items" xml:space="preserve">
+    <value>Errors</value>
+  </data>
+  <data name="_indentationInconsistentCombo.Items1" xml:space="preserve">
+    <value>Warnings</value>
+  </data>
+  <data name="_indentationInconsistentCombo.Items2" xml:space="preserve">
+    <value>Don't</value>
+  </data>
+  <data name="_indentationInconsistentCombo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>185, 187</value>
+  </data>
+  <data name="_indentationInconsistentCombo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_indentationInconsistentCombo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 21</value>
+  </data>
+  <data name="_indentationInconsistentCombo.TabIndex" type="System.Int32, mscorlib">
+    <value>8</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentCombo.Name" xml:space="preserve">
+    <value>_indentationInconsistentCombo</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentCombo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentCombo.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_indentationInconsistentCombo.ZOrder" xml:space="preserve">
+    <value>5</value>
+  </data>
+  <data name="_surveyNewsCheckLabel.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_surveyNewsCheckLabel.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_surveyNewsCheckLabel.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 218</value>
+  </data>
+  <data name="_surveyNewsCheckLabel.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 0, 6, 0</value>
+  </data>
+  <data name="_surveyNewsCheckLabel.Size" type="System.Drawing.Size, System.Drawing">
+    <value>117, 13</value>
+  </data>
+  <data name="_surveyNewsCheckLabel.TabIndex" type="System.Int32, mscorlib">
+    <value>9</value>
+  </data>
+  <data name="_surveyNewsCheckLabel.Text" xml:space="preserve">
+    <value>&amp;Check for survey/news</value>
+  </data>
+  <data name="_surveyNewsCheckLabel.TextAlign" type="System.Drawing.ContentAlignment, System.Drawing">
+    <value>MiddleLeft</value>
+  </data>
+  <data name="&gt;&gt;_surveyNewsCheckLabel.Name" xml:space="preserve">
+    <value>_surveyNewsCheckLabel</value>
+  </data>
+  <data name="&gt;&gt;_surveyNewsCheckLabel.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Label, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_surveyNewsCheckLabel.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_surveyNewsCheckLabel.ZOrder" xml:space="preserve">
+    <value>6</value>
+  </data>
+  <data name="_surveyNewsCheckCombo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left, Right</value>
+  </data>
+  <data name="_surveyNewsCheckCombo.Items" xml:space="preserve">
+    <value>Never</value>
+  </data>
+  <data name="_surveyNewsCheckCombo.Items1" xml:space="preserve">
+    <value>Once a day</value>
+  </data>
+  <data name="_surveyNewsCheckCombo.Items2" xml:space="preserve">
+    <value>Once a week</value>
+  </data>
+  <data name="_surveyNewsCheckCombo.Items3" xml:space="preserve">
+    <value>Once a month</value>
+  </data>
+  <data name="_surveyNewsCheckCombo.Location" type="System.Drawing.Point, System.Drawing">
+    <value>185, 214</value>
+  </data>
+  <data name="_surveyNewsCheckCombo.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_surveyNewsCheckCombo.Size" type="System.Drawing.Size, System.Drawing">
+    <value>190, 21</value>
+  </data>
+  <data name="_surveyNewsCheckCombo.TabIndex" type="System.Int32, mscorlib">
+    <value>10</value>
+  </data>
+  <data name="&gt;&gt;_surveyNewsCheckCombo.Name" xml:space="preserve">
+    <value>_surveyNewsCheckCombo</value>
+  </data>
+  <data name="&gt;&gt;_surveyNewsCheckCombo.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ComboBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_surveyNewsCheckCombo.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_surveyNewsCheckCombo.ZOrder" xml:space="preserve">
+    <value>7</value>
+  </data>
+  <data name="_elevatePip.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_elevatePip.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 49</value>
+  </data>
+  <data name="_elevatePip.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_elevatePip.Size" type="System.Drawing.Size, System.Drawing">
+    <value>170, 17</value>
+  </data>
+  <data name="_elevatePip.TabIndex" type="System.Int32, mscorlib">
+    <value>2</value>
+  </data>
+  <data name="_elevatePip.Text" xml:space="preserve">
+    <value>Always run &amp;pip as administrator</value>
+  </data>
+  <data name="&gt;&gt;_elevatePip.Name" xml:space="preserve">
+    <value>_elevatePip</value>
+  </data>
+  <data name="&gt;&gt;_elevatePip.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_elevatePip.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_elevatePip.ZOrder" xml:space="preserve">
+    <value>8</value>
+  </data>
+  <data name="_elevateEasyInstall.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_elevateEasyInstall.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 72</value>
+  </data>
+  <data name="_elevateEasyInstall.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_elevateEasyInstall.Size" type="System.Drawing.Size, System.Drawing">
+    <value>210, 17</value>
+  </data>
+  <data name="_elevateEasyInstall.TabIndex" type="System.Int32, mscorlib">
+    <value>3</value>
+  </data>
+  <data name="_elevateEasyInstall.Text" xml:space="preserve">
+    <value>Always run &amp;easy_install as administrator</value>
+  </data>
+  <data name="&gt;&gt;_elevateEasyInstall.Name" xml:space="preserve">
+    <value>_elevateEasyInstall</value>
+  </data>
+  <data name="&gt;&gt;_elevateEasyInstall.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_elevateEasyInstall.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_elevateEasyInstall.ZOrder" xml:space="preserve">
+    <value>9</value>
+  </data>
+  <data name="_unresolvedImportWarning.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_unresolvedImportWarning.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_unresolvedImportWarning.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 164</value>
+  </data>
+  <data name="_unresolvedImportWarning.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_unresolvedImportWarning.Size" type="System.Drawing.Size, System.Drawing">
+    <value>242, 17</value>
+  </data>
+  <data name="_unresolvedImportWarning.TabIndex" type="System.Int32, mscorlib">
+    <value>6</value>
+  </data>
+  <data name="_unresolvedImportWarning.Text" xml:space="preserve">
+    <value>&amp;Warn when imported module cannot be found</value>
+  </data>
+  <data name="&gt;&gt;_unresolvedImportWarning.Name" xml:space="preserve">
+    <value>_unresolvedImportWarning</value>
+  </data>
+  <data name="&gt;&gt;_unresolvedImportWarning.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_unresolvedImportWarning.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_unresolvedImportWarning.ZOrder" xml:space="preserve">
+    <value>10</value>
+  </data>
+  <data name="_clearGlobalPythonPath.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Left</value>
+  </data>
+  <data name="_clearGlobalPythonPath.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_clearGlobalPythonPath.Location" type="System.Drawing.Point, System.Drawing">
+    <value>6, 118</value>
+  </data>
+  <data name="_clearGlobalPythonPath.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 3, 6, 3</value>
+  </data>
+  <data name="_clearGlobalPythonPath.Size" type="System.Drawing.Size, System.Drawing">
+    <value>238, 17</value>
+  </data>
+  <data name="_clearGlobalPythonPath.TabIndex" type="System.Int32, mscorlib">
+    <value>5</value>
+  </data>
+  <data name="_clearGlobalPythonPath.Text" xml:space="preserve">
+    <value>&amp;Ignore system-wide PYTHONPATH variables</value>
+  </data>
+  <data name="&gt;&gt;_clearGlobalPythonPath.Name" xml:space="preserve">
+    <value>_clearGlobalPythonPath</value>
+  </data>
+  <data name="&gt;&gt;_clearGlobalPythonPath.Type" xml:space="preserve">
+    <value>System.Windows.Forms.CheckBox, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_clearGlobalPythonPath.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_clearGlobalPythonPath.ZOrder" xml:space="preserve">
+    <value>11</value>
+  </data>
+  <data name="_resetSuppressDialog.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Top</value>
+  </data>
+  <data name="_resetSuppressDialog.AutoSize" type="System.Boolean, mscorlib">
+    <value>True</value>
+  </data>
+  <data name="_resetSuppressDialog.AutoSizeMode" type="System.Windows.Forms.AutoSizeMode, System.Windows.Forms">
+    <value>GrowAndShrink</value>
+  </data>
+  <data name="_resetSuppressDialog.Location" type="System.Drawing.Point, System.Drawing">
+    <value>96, 241</value>
+  </data>
+  <data name="_resetSuppressDialog.Size" type="System.Drawing.Size, System.Drawing">
+    <value>189, 23</value>
+  </data>
+  <data name="_resetSuppressDialog.TabIndex" type="System.Int32, mscorlib">
+    <value>11</value>
+  </data>
+  <data name="_resetSuppressDialog.Text" xml:space="preserve">
+    <value>Reset all permanently hidden dialogs</value>
+  </data>
+  <data name="&gt;&gt;_resetSuppressDialog.Name" xml:space="preserve">
+    <value>_resetSuppressDialog</value>
+  </data>
+  <data name="&gt;&gt;_resetSuppressDialog.Type" xml:space="preserve">
+    <value>System.Windows.Forms.Button, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;_resetSuppressDialog.Parent" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;_resetSuppressDialog.ZOrder" xml:space="preserve">
+    <value>12</value>
+  </data>
+  <data name="tableLayoutPanel3.Dock" type="System.Windows.Forms.DockStyle, System.Windows.Forms">
+    <value>Fill</value>
+  </data>
+  <data name="tableLayoutPanel3.Location" type="System.Drawing.Point, System.Drawing">
+    <value>0, 0</value>
+  </data>
+  <data name="tableLayoutPanel3.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>3, 4, 3, 4</value>
+  </data>
+  <data name="tableLayoutPanel3.RowCount" type="System.Int32, mscorlib">
+    <value>12</value>
+  </data>
+  <data name="tableLayoutPanel3.Size" type="System.Drawing.Size, System.Drawing">
+    <value>381, 290</value>
+  </data>
+  <data name="tableLayoutPanel3.TabIndex" type="System.Int32, mscorlib">
+    <value>0</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel3.Name" xml:space="preserve">
+    <value>tableLayoutPanel3</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel3.Type" xml:space="preserve">
+    <value>System.Windows.Forms.TableLayoutPanel, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel3.Parent" xml:space="preserve">
+    <value>$this</value>
+  </data>
+  <data name="&gt;&gt;tableLayoutPanel3.ZOrder" xml:space="preserve">
+    <value>0</value>
+  </data>
+  <data name="tableLayoutPanel3.LayoutSettings" type="System.Windows.Forms.TableLayoutSettings, System.Windows.Forms">
+    <value>&lt;?xml version="1.0" encoding="utf-16"?&gt;&lt;TableLayoutSettings&gt;&lt;Controls&gt;&lt;Control Name="_showOutputWindowForVirtualEnvCreate" Row="0" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_showOutputWindowForPackageInstallation" Row="1" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_autoAnalysis" Row="4" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_updateSearchPathsForLinkedFiles" Row="6" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_indentationInconsistentLabel" Row="8" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_indentationInconsistentCombo" Row="8" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_surveyNewsCheckLabel" Row="9" RowSpan="1" Column="0" ColumnSpan="1" /&gt;&lt;Control Name="_surveyNewsCheckCombo" Row="9" RowSpan="1" Column="1" ColumnSpan="1" /&gt;&lt;Control Name="_elevatePip" Row="2" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_elevateEasyInstall" Row="3" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_unresolvedImportWarning" Row="7" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_clearGlobalPythonPath" Row="5" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;Control Name="_resetSuppressDialog" Row="10" RowSpan="1" Column="0" ColumnSpan="2" /&gt;&lt;/Controls&gt;&lt;Columns Styles="AutoSize,0,Percent,100" /&gt;&lt;Rows Styles="AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,AutoSize,0,Absolute,20" /&gt;&lt;/TableLayoutSettings&gt;</value>
+  </data>
+  <metadata name="$this.Localizable" type="System.Boolean, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>True</value>
+  </metadata>
+  <data name="$this.AutoScaleDimensions" type="System.Drawing.SizeF, System.Drawing">
+    <value>6, 13</value>
+  </data>
+  <data name="$this.Margin" type="System.Windows.Forms.Padding, System.Windows.Forms">
+    <value>6, 8, 6, 8</value>
+  </data>
+  <data name="$this.Size" type="System.Drawing.Size, System.Drawing">
+    <value>381, 290</value>
+  </data>
+  <data name="&gt;&gt;$this.Name" xml:space="preserve">
+    <value>PythonGeneralOptionsControl</value>
+  </data>
+  <data name="&gt;&gt;$this.Type" xml:space="preserve">
+    <value>System.Windows.Forms.UserControl, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

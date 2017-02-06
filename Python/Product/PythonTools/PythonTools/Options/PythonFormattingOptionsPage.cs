@@ -15,8 +15,6 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using Microsoft.PythonTools.Parsing;
 
@@ -25,17 +23,15 @@ namespace Microsoft.PythonTools.Options {
     public class PythonFormattingOptionsPage : PythonDialogPage {
         private PythonFormattingOptionsControl _window;
         private readonly OptionCategory[] _categories;
-        private const string _formattingCat = "Formatting";
 
         internal PythonFormattingOptionsPage()
             : this(new OptionCategory(
-                    "Class Declarations",
+                    Strings.FormattingOptionsClassDeclarations,
                     OptionCategory.GetOptions(CodeFormattingCategory.Classes)
                 )) {
         }
 
-        internal PythonFormattingOptionsPage(params OptionCategory[] categories)
-            : base(_formattingCat) {
+        internal PythonFormattingOptionsPage(params OptionCategory[] categories) {
             _categories = categories;
         }
 

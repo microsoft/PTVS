@@ -16,17 +16,12 @@
 
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
 using Microsoft.PythonTools.Parsing;
 
 namespace Microsoft.PythonTools.Options {
     [ComVisible(true)]
     public class PythonDebuggingOptionsPage : PythonDialogPage {
         private PythonDebuggingOptionsControl _window;
-
-        public PythonDebuggingOptionsPage()
-            : base("Advanced") {
-        }
 
         // replace the default UI of the dialog page w/ our own UI.
         protected override System.Windows.Forms.IWin32Window Window {

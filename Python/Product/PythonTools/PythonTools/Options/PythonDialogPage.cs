@@ -15,11 +15,9 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Globalization;
 using System.Runtime.InteropServices;
 using Microsoft.VisualStudio.ComponentModelHost;
 using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 
 namespace Microsoft.PythonTools.Options {
     /// <summary>
@@ -31,13 +29,6 @@ namespace Microsoft.PythonTools.Options {
     /// </summary>
     [ComVisible(true)]
     public class PythonDialogPage : DialogPage {
-        private readonly string _category;
-        private const string _optionsKey = "Options";
-
-        internal PythonDialogPage(string category) {
-            _category = category;
-        }
-
         internal PythonToolsService PyService {
             get {
                 return ((IServiceProvider)Site).GetPythonToolsService();

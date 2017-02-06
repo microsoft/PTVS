@@ -23,6 +23,7 @@ namespace Microsoft.PythonTools.Options {
         /// the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent() {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonAdvancedEditorOptionsControl));
             this._completionCommitedBy = new System.Windows.Forms.TextBox();
             this._completionCommitedByLabel = new System.Windows.Forms.Label();
             this._enterCommits = new System.Windows.Forms.CheckBox();
@@ -33,13 +34,13 @@ namespace Microsoft.PythonTools.Options {
             this._completionResultsGroupBox = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             this._filterCompletions = new System.Windows.Forms.CheckBox();
+            this._autoListIdentifiers = new System.Windows.Forms.CheckBox();
             this._miscOptionsGroupBox = new System.Windows.Forms.GroupBox();
             this.tableLayoutPanel4 = new System.Windows.Forms.TableLayoutPanel();
             this._outliningOnOpen = new System.Windows.Forms.CheckBox();
             this._pasteRemovesReplPrompts = new System.Windows.Forms.CheckBox();
             this._colorNames = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this._autoListIdentifiers = new System.Windows.Forms.CheckBox();
             this._selectionInCompletionGroupBox.SuspendLayout();
             this.tableLayoutPanel3.SuspendLayout();
             this._completionResultsGroupBox.SuspendLayout();
@@ -51,257 +52,123 @@ namespace Microsoft.PythonTools.Options {
             // 
             // _completionCommitedBy
             // 
-            this._completionCommitedBy.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this._completionCommitedBy.Location = new System.Drawing.Point(6, 16);
-            this._completionCommitedBy.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            resources.ApplyResources(this._completionCommitedBy, "_completionCommitedBy");
             this._completionCommitedBy.Name = "_completionCommitedBy";
-            this._completionCommitedBy.Size = new System.Drawing.Size(458, 20);
-            this._completionCommitedBy.TabIndex = 1;
             // 
             // _completionCommitedByLabel
             // 
-            this._completionCommitedByLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            resources.ApplyResources(this._completionCommitedByLabel, "_completionCommitedByLabel");
             this._completionCommitedByLabel.AutoEllipsis = true;
-            this._completionCommitedByLabel.AutoSize = true;
-            this._completionCommitedByLabel.Location = new System.Drawing.Point(6, 0);
-            this._completionCommitedByLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
             this._completionCommitedByLabel.Name = "_completionCommitedByLabel";
-            this._completionCommitedByLabel.Size = new System.Drawing.Size(219, 13);
-            this._completionCommitedByLabel.TabIndex = 0;
-            this._completionCommitedByLabel.Text = "Committed by &typing the following characters:";
-            this._completionCommitedByLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // _enterCommits
             // 
-            this._enterCommits.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._enterCommits.AutoSize = true;
-            this._enterCommits.Location = new System.Drawing.Point(6, 42);
-            this._enterCommits.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            resources.ApplyResources(this._enterCommits, "_enterCommits");
             this._enterCommits.Name = "_enterCommits";
-            this._enterCommits.Size = new System.Drawing.Size(182, 17);
-            this._enterCommits.TabIndex = 2;
-            this._enterCommits.Text = "&Enter commits current completion";
             this._enterCommits.UseVisualStyleBackColor = true;
             // 
             // _intersectMembers
             // 
-            this._intersectMembers.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._intersectMembers.AutoSize = true;
-            this._intersectMembers.Location = new System.Drawing.Point(6, 3);
-            this._intersectMembers.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            resources.ApplyResources(this._intersectMembers, "_intersectMembers");
             this._intersectMembers.Name = "_intersectMembers";
-            this._intersectMembers.Size = new System.Drawing.Size(272, 17);
-            this._intersectMembers.TabIndex = 0;
-            this._intersectMembers.Text = "Member completion displays &intersection of members";
             this._intersectMembers.UseVisualStyleBackColor = true;
             // 
             // _selectionInCompletionGroupBox
             // 
-            this._selectionInCompletionGroupBox.AutoSize = true;
-            this._selectionInCompletionGroupBox.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            resources.ApplyResources(this._selectionInCompletionGroupBox, "_selectionInCompletionGroupBox");
             this._selectionInCompletionGroupBox.Controls.Add(this.tableLayoutPanel3);
-            this._selectionInCompletionGroupBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this._selectionInCompletionGroupBox.Location = new System.Drawing.Point(6, 97);
-            this._selectionInCompletionGroupBox.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._selectionInCompletionGroupBox.Name = "_selectionInCompletionGroupBox";
-            this._selectionInCompletionGroupBox.Size = new System.Drawing.Size(476, 104);
-            this._selectionInCompletionGroupBox.TabIndex = 1;
             this._selectionInCompletionGroupBox.TabStop = false;
-            this._selectionInCompletionGroupBox.Text = "Selection in Completion List";
             // 
             // tableLayoutPanel3
             // 
-            this.tableLayoutPanel3.AutoSize = true;
-            this.tableLayoutPanel3.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel3.ColumnCount = 1;
-            this.tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            resources.ApplyResources(this.tableLayoutPanel3, "tableLayoutPanel3");
             this.tableLayoutPanel3.Controls.Add(this._completionCommitedByLabel, 0, 0);
             this.tableLayoutPanel3.Controls.Add(this._completionCommitedBy, 0, 1);
             this.tableLayoutPanel3.Controls.Add(this._enterCommits, 0, 2);
             this.tableLayoutPanel3.Controls.Add(this._newLineAfterCompleteCompletion, 0, 3);
-            this.tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel3.Location = new System.Drawing.Point(3, 16);
             this.tableLayoutPanel3.Name = "tableLayoutPanel3";
-            this.tableLayoutPanel3.RowCount = 4;
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(470, 85);
-            this.tableLayoutPanel3.TabIndex = 0;
             // 
             // _newLineAfterCompleteCompletion
             // 
-            this._newLineAfterCompleteCompletion.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._newLineAfterCompleteCompletion.AutoSize = true;
-            this._newLineAfterCompleteCompletion.Location = new System.Drawing.Point(6, 65);
-            this._newLineAfterCompleteCompletion.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            resources.ApplyResources(this._newLineAfterCompleteCompletion, "_newLineAfterCompleteCompletion");
             this._newLineAfterCompleteCompletion.Name = "_newLineAfterCompleteCompletion";
-            this._newLineAfterCompleteCompletion.Size = new System.Drawing.Size(250, 17);
-            this._newLineAfterCompleteCompletion.TabIndex = 3;
-            this._newLineAfterCompleteCompletion.Text = "&Add new line on enter at end of fully typed word";
             this._newLineAfterCompleteCompletion.UseVisualStyleBackColor = true;
             // 
             // _completionResultsGroupBox
             // 
-            this._completionResultsGroupBox.AutoSize = true;
-            this._completionResultsGroupBox.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            resources.ApplyResources(this._completionResultsGroupBox, "_completionResultsGroupBox");
             this._completionResultsGroupBox.Controls.Add(this.tableLayoutPanel2);
-            this._completionResultsGroupBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this._completionResultsGroupBox.Location = new System.Drawing.Point(6, 3);
-            this._completionResultsGroupBox.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._completionResultsGroupBox.Name = "_completionResultsGroupBox";
-            this._completionResultsGroupBox.Size = new System.Drawing.Size(476, 88);
-            this._completionResultsGroupBox.TabIndex = 0;
             this._completionResultsGroupBox.TabStop = false;
-            this._completionResultsGroupBox.Text = "Completion Results";
             // 
             // tableLayoutPanel2
             // 
-            this.tableLayoutPanel2.AutoSize = true;
-            this.tableLayoutPanel2.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel2.ColumnCount = 1;
-            this.tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            resources.ApplyResources(this.tableLayoutPanel2, "tableLayoutPanel2");
             this.tableLayoutPanel2.Controls.Add(this._intersectMembers, 0, 0);
             this.tableLayoutPanel2.Controls.Add(this._filterCompletions, 0, 1);
             this.tableLayoutPanel2.Controls.Add(this._autoListIdentifiers, 0, 2);
-            this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 16);
-            this.tableLayoutPanel2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
-            this.tableLayoutPanel2.RowCount = 3;
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(470, 69);
-            this.tableLayoutPanel2.TabIndex = 0;
             // 
             // _filterCompletions
             // 
-            this._filterCompletions.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._filterCompletions.AutoSize = true;
-            this._filterCompletions.Location = new System.Drawing.Point(6, 26);
-            this._filterCompletions.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            resources.ApplyResources(this._filterCompletions, "_filterCompletions");
             this._filterCompletions.Name = "_filterCompletions";
-            this._filterCompletions.Size = new System.Drawing.Size(173, 17);
-            this._filterCompletions.TabIndex = 1;
-            this._filterCompletions.Text = "&Filter list based on search string";
             this._filterCompletions.UseVisualStyleBackColor = true;
+            // 
+            // _autoListIdentifiers
+            // 
+            resources.ApplyResources(this._autoListIdentifiers, "_autoListIdentifiers");
+            this._autoListIdentifiers.Name = "_autoListIdentifiers";
+            this._autoListIdentifiers.UseVisualStyleBackColor = true;
             // 
             // _miscOptionsGroupBox
             // 
-            this._miscOptionsGroupBox.AutoSize = true;
-            this._miscOptionsGroupBox.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            resources.ApplyResources(this._miscOptionsGroupBox, "_miscOptionsGroupBox");
             this._miscOptionsGroupBox.Controls.Add(this.tableLayoutPanel4);
-            this._miscOptionsGroupBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this._miscOptionsGroupBox.Location = new System.Drawing.Point(6, 207);
-            this._miscOptionsGroupBox.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
             this._miscOptionsGroupBox.Name = "_miscOptionsGroupBox";
-            this._miscOptionsGroupBox.Size = new System.Drawing.Size(476, 88);
-            this._miscOptionsGroupBox.TabIndex = 2;
             this._miscOptionsGroupBox.TabStop = false;
-            this._miscOptionsGroupBox.Text = "Miscellaneous Options";
             // 
             // tableLayoutPanel4
             // 
-            this.tableLayoutPanel4.AutoSize = true;
-            this.tableLayoutPanel4.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel4.ColumnCount = 1;
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel4.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            resources.ApplyResources(this.tableLayoutPanel4, "tableLayoutPanel4");
             this.tableLayoutPanel4.Controls.Add(this._outliningOnOpen, 0, 0);
             this.tableLayoutPanel4.Controls.Add(this._pasteRemovesReplPrompts, 0, 1);
             this.tableLayoutPanel4.Controls.Add(this._colorNames, 0, 2);
-            this.tableLayoutPanel4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel4.Location = new System.Drawing.Point(3, 16);
             this.tableLayoutPanel4.Name = "tableLayoutPanel4";
-            this.tableLayoutPanel4.RowCount = 3;
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel4.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel4.Size = new System.Drawing.Size(470, 69);
-            this.tableLayoutPanel4.TabIndex = 0;
             // 
             // _outliningOnOpen
             // 
-            this._outliningOnOpen.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._outliningOnOpen.AutoSize = true;
-            this._outliningOnOpen.Location = new System.Drawing.Point(6, 3);
-            this._outliningOnOpen.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            resources.ApplyResources(this._outliningOnOpen, "_outliningOnOpen");
             this._outliningOnOpen.Name = "_outliningOnOpen";
-            this._outliningOnOpen.Size = new System.Drawing.Size(199, 17);
-            this._outliningOnOpen.TabIndex = 0;
-            this._outliningOnOpen.Text = "Enter &outlining mode when files open";
             this._outliningOnOpen.UseVisualStyleBackColor = true;
             // 
             // _pasteRemovesReplPrompts
             // 
-            this._pasteRemovesReplPrompts.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._pasteRemovesReplPrompts.AutoSize = true;
-            this._pasteRemovesReplPrompts.Location = new System.Drawing.Point(6, 26);
-            this._pasteRemovesReplPrompts.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            resources.ApplyResources(this._pasteRemovesReplPrompts, "_pasteRemovesReplPrompts");
             this._pasteRemovesReplPrompts.Name = "_pasteRemovesReplPrompts";
-            this._pasteRemovesReplPrompts.Size = new System.Drawing.Size(167, 17);
-            this._pasteRemovesReplPrompts.TabIndex = 1;
-            this._pasteRemovesReplPrompts.Text = "&Paste removes REPL prompts";
             this._pasteRemovesReplPrompts.UseVisualStyleBackColor = true;
             // 
             // _colorNames
             // 
-            this._colorNames.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._colorNames.AutoSize = true;
-            this._colorNames.Location = new System.Drawing.Point(6, 49);
-            this._colorNames.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
+            resources.ApplyResources(this._colorNames, "_colorNames");
             this._colorNames.Name = "_colorNames";
-            this._colorNames.Size = new System.Drawing.Size(159, 17);
-            this._colorNames.TabIndex = 1;
-            this._colorNames.Text = "Color &names based on types";
             this._colorNames.UseVisualStyleBackColor = true;
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.AutoSize = true;
-            this.tableLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.tableLayoutPanel1.ColumnCount = 1;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            resources.ApplyResources(this.tableLayoutPanel1, "tableLayoutPanel1");
             this.tableLayoutPanel1.Controls.Add(this._completionResultsGroupBox, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this._selectionInCompletionGroupBox, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this._miscOptionsGroupBox, 0, 2);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 4;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 22F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(488, 320);
-            this.tableLayoutPanel1.TabIndex = 0;
-            // 
-            // _autoListIdentifiers
-            // 
-            this._autoListIdentifiers.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._autoListIdentifiers.AutoSize = true;
-            this._autoListIdentifiers.Location = new System.Drawing.Point(6, 49);
-            this._autoListIdentifiers.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this._autoListIdentifiers.Name = "_autoListIdentifiers";
-            this._autoListIdentifiers.Size = new System.Drawing.Size(250, 17);
-            this._autoListIdentifiers.TabIndex = 2;
-            this._autoListIdentifiers.Text = "A&utomatically show completions for all identifiers";
-            this._autoListIdentifiers.UseVisualStyleBackColor = true;
             // 
             // PythonAdvancedEditorOptionsControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoSize = true;
-            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.Controls.Add(this.tableLayoutPanel1);
-            this.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.Name = "PythonAdvancedEditorOptionsControl";
-            this.Size = new System.Drawing.Size(488, 320);
             this._selectionInCompletionGroupBox.ResumeLayout(false);
             this._selectionInCompletionGroupBox.PerformLayout();
             this.tableLayoutPanel3.ResumeLayout(false);
