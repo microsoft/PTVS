@@ -18,6 +18,8 @@ class StdOutContext(object):
     def __exit__(self, et, ev, etb): pass
 
 def get_dirs(root):
+    if not root:
+        return
     yield root
     for d in root.glob("*"):
         if d.is_dir():
@@ -36,15 +38,18 @@ def main():
     parser.add_argument('--include', '-i', dest='inclusions', type=str, action='append', help='regex patterns for filenames to include')
     parser.add_argument('--exclude', '-x', dest='exclusions', type=str, action='append', help='regex patterns for filenames to skip')
     parser.add_argument('--resource-source', '-r', dest='rsrc', type=Path, default=None, help='collect .resources.dll files from here')
-    
+
     args = parser.parse_args()
     root = args.source
     target = args.install
     rsrc = args.rsrc
-    
+
+    if not root:
+        raise RuntimeError("no source directory provided")
+
     inclusions = [re.compile(pattern, re.I) for pattern in (args.inclusions or [])]
     exclusions = [re.compile(pattern, re.I) for pattern in (args.exclusions or [])]
-    
+
     with open_or_stdout(args.output) as out:
         for d in get_dirs(root):
             files = [f for f in d.glob('*')

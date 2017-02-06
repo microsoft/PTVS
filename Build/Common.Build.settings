@@ -107,7 +107,6 @@
     <IntDir>$(IntermediateOutputPath)</IntDir>
 
     <Languages Condition="$(Languages) == ''">ENU,CHS,CHT,DEU,ESN,FRA,ITA,JPN,KOR,RUS,CSY,PTB,PLK,TRK</Languages>
-    <OutputLanguages Condition="$(OutputLanguages) == ''">$(Languages.Replace(`,`, `;`))</OutputLanguages>
 
     <!-- Allows assemblies to specify their own version -->
     <SuppressCommonAssemblyVersion Condition="'$(SuppressCommonAssemblyVersion)' == ''">false</SuppressCommonAssemblyVersion>
