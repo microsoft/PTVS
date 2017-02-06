@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.PythonTools.Analysis;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Intellisense;
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
@@ -124,7 +125,7 @@ namespace Microsoft.PythonTools.Refactoring {
 
         public int ApplyChanges() {
             _input.ClearRefactorPane();
-            _input.OutputLog(String.Format("Renaming '{0}' to '{1}'", _originalName, _renameReq.Name));
+            _input.OutputLog(Strings.RefactorPreviewChangesRenaming.FormatUI(_originalName, _renameReq.Name));
 
             var undo = _input.BeginGlobalUndo();
             try {
@@ -144,12 +145,12 @@ namespace Microsoft.PythonTools.Refactoring {
         /// Gets the text of the OK button
         /// </summary>
         public int GetConfirmation(out string pbstrConfirmation) {
-            pbstrConfirmation = "Apply";
+            pbstrConfirmation = Strings.RefactorPreviewChangesRenamingConfirmationButton;
             return VSConstants.S_OK;
         }
 
         public int GetDescription(out string pbstrDescription) {
-            pbstrDescription = String.Format("&Rename '{0}' to '{1}'", _expr, _renameReq.Name);
+            pbstrDescription = Strings.RefactorPreviewChangesRenamingDescription.FormatUI(_expr, _renameReq.Name);
             return VSConstants.S_OK;
         }
 
@@ -163,12 +164,12 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         public int GetTextViewDescription(out string pbstrTextViewDescription) {
-            pbstrTextViewDescription = "&Preview Code Changes:";
+            pbstrTextViewDescription = Strings.RefactorPreviewChangesTextViewDescription;
             return VSConstants.S_OK;
         }
 
         public int GetTitle(out string pbstrTitle) {
-            pbstrTitle = "Rename variable";
+            pbstrTitle = Strings.RefactorPreviewChangesRenameVariableTitle;
             return VSConstants.S_OK;
         }
 

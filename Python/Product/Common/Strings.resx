@@ -1072,4 +1072,114 @@ Please refer to &lt;a href="https://aka.ms/pythononappservice"&gt;aka.ms/PythonO
     <value> (missing)</value>
     <comment>Leading space is important</comment>
   </data>
+  <data name="RenameVariable_NewName" xml:space="preserve">
+    <value>_New name:</value>
+  </data>
+  <data name="RenameVariable_PreviewReferenceChanges" xml:space="preserve">
+    <value>Pre_view reference changes</value>
+  </data>
+  <data name="RenameVariable_SearchComments" xml:space="preserve">
+    <value>Search in _comments</value>
+  </data>
+  <data name="RenameVariable_SearchStrings" xml:space="preserve">
+    <value>Search in _strings</value>
+  </data>
+  <data name="RenameVariable_OK" xml:space="preserve">
+    <value>_OK</value>
+  </data>
+  <data name="RenameVariable_Cancel" xml:space="preserve">
+    <value>_Cancel</value>
+  </data>
+  <data name="RenameVariable_Title" xml:space="preserve">
+    <value>Rename</value>
+  </data>
+  <data name="RenameVariable_CannotRenameTitle" xml:space="preserve">
+    <value>Cannot rename</value>
+  </data>
+  <data name="RenameVariable_CannotRenameModuleName" xml:space="preserve">
+    <value>Cannot rename a module name</value>
+  </data>
+  <data name="RenameVariable_UnableGetAnalysisCurrentTextView" xml:space="preserve">
+    <value>Unable to get analysis for current text view.</value>
+  </data>
+  <data name="RenameVariable_SelectSymbol" xml:space="preserve">
+    <value>Please select a symbol to be renamed.</value>
+  </data>
+  <data name="RenameVariable_NoInformationAvailableForVariable" xml:space="preserve">
+    <value>No information is available for the variable '{0}'.</value>
+  </data>
+  <data name="ExtractMethod_Title" xml:space="preserve">
+    <value>Extract Method</value>
+  </data>
+  <data name="ExtractMethod_NewMethodName" xml:space="preserve">
+    <value>New method _name:</value>
+  </data>
+  <data name="ExtractMethod_ExtractTo" xml:space="preserve">
+    <value>Extract _to:</value>
+  </data>
+  <data name="ExtractMethod_Preview" xml:space="preserve">
+    <value>_Preview:</value>
+  </data>
+  <data name="ExtractMethod_OK" xml:space="preserve">
+    <value>_OK</value>
+  </data>
+  <data name="ExtractMethod_Cancel" xml:space="preserve">
+    <value>_Cancel</value>
+  </data>
+  <data name="ExtractMethod_ClosureVariables" xml:space="preserve">
+    <value>Closure _Variables:</value>
+  </data>
+  <data name="ExtractMethod_InvalidMethodName" xml:space="preserve">
+    <value>The method name is not valid.</value>
+  </data>
+  <data name="ExtractMethod_FailedToGetPreview" xml:space="preserve">
+    <value>&lt;failed to get preview&gt;</value>
+  </data>
+  <data name="ExtractMethod_ShouldExpandSelection" xml:space="preserve">
+    <value>The selected text does not cover an entire expression.
+
+Would you like the selection to be extended to a valid expression?</value>
+  </data>
+  <data name="ExtractMethod_ShouldExpandSelectionTitle" xml:space="preserve">
+    <value>Expand extract method selection?</value>
+  </data>
+  <data name="ExtractMethod_CannotExtractMethod" xml:space="preserve">
+    <value>Cannot extract method</value>
+  </data>
+  <data name="RefactorPaneName" xml:space="preserve">
+    <value>Refactor</value>
+  </data>
+  <data name="RefactorRenameVariableUndoDescription" xml:space="preserve">
+    <value>Rename Variable</value>
+  </data>
+  <data name="RefactorPreviewChangesRenaming" xml:space="preserve">
+    <value>Renaming '{0}' to '{1}'</value>
+    <comment>{0} and {1} are Python variable names</comment>
+  </data>
+  <data name="RefactorPreviewChangesRenamingConfirmationButton" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="RefactorPreviewChangesRenamingDescription" xml:space="preserve">
+    <value>&amp;Rename '{0}' to '{1}'</value>
+    <comment>{0} and {1} are Python variable names</comment>
+  </data>
+  <data name="RefactorPreviewChangesTextViewDescription" xml:space="preserve">
+    <value>&amp;Preview Code Changes:</value>
+  </data>
+  <data name="RefactorPreviewChangesRenameVariableTitle" xml:space="preserve">
+    <value>Rename variable</value>
+  </data>
+  <data name="RefactorPreviewUpdatedLogEntry" xml:space="preserve">
+    <value>{0}({1},{2}): updated {3}</value>
+    <comment>{0} is a file name
+{1} is the line number
+{2} is the column number
+{3} is either 'definition' or 'reference' </comment>
+  </data>
+  <data name="RefactorPreviewUpdatedLogEntryDefinition" xml:space="preserve">
+    <value>definition</value>
+  </data>
+  <data name="RefactorPreviewUpdatedLogEntryReference" xml:space="preserve">
+    <value>reference</value>
+  </data>
 </root>

@@ -26,10 +26,8 @@ namespace Microsoft.PythonTools.Refactoring {
         }
 
         public bool ShouldExpandSelection() {
-            var res = MessageBox.Show(@"The selected text does not cover an entire expression.
-
-Would you like the selection to be extended to a valid expression?",
-                        "Expand extract method selection?",
+            var res = MessageBox.Show(Strings.ExtractMethod_ShouldExpandSelection,
+                        Strings.ExtractMethod_ShouldExpandSelectionTitle,
                         MessageBoxButton.YesNo
                     );
 
@@ -50,7 +48,7 @@ Would you like the selection to be extended to a valid expression?",
         }
 
         public void CannotExtract(string reason) {
-            MessageBox.Show(reason, "Cannot extract method", MessageBoxButton.OK);
+            MessageBox.Show(reason, Strings.ExtractMethod_CannotExtractMethod, MessageBoxButton.OK);
         }
     }
 }

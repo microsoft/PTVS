@@ -257,10 +257,10 @@ namespace Microsoft.PythonTools.Refactoring {
             var info = GetRequest();
             if (info != null) {
                 _previewer.GetExtractionResult(info).ContinueWith(
-                    x => PreviewText = x?.WaitOrDefault(1000)?.methodBody ?? "<failed to get preview>"
+                    x => PreviewText = x?.WaitOrDefault(1000)?.methodBody ?? Strings.ExtractMethod_FailedToGetPreview
                 ).DoNotWait();
             } else {
-                PreviewText = "The method name is not valid.";
+                PreviewText = Strings.ExtractMethod_InvalidMethodName;
             }
         }
 
