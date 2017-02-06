@@ -112,8 +112,7 @@ namespace Microsoft.PythonTools.Options {
         }
 
         public override string GetPreviewText(object optionValue) {
-            if (optionValue == null)
-            {
+            if (optionValue == null) {
                 return Strings.FormattingOptionPreviewNotAltered.FormatUI(PreviewOn, PreviewOff);
             } else {
                 return ((bool)optionValue) ? PreviewOn : PreviewOff;
