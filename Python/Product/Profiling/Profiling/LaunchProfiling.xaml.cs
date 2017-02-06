@@ -38,7 +38,7 @@ namespace Microsoft.PythonTools.Profiling {
             if (standalone != null) {
                 var path = _serviceProvider.BrowseForFileOpen(
                     new System.Windows.Interop.WindowInteropHelper(this).Handle,
-                    "Executable files (*.exe;*.bat;*.cmd)|*.exe;*.bat;*.cmd|All Files (*.*)|*.*",
+                    Strings.ExecutableFilesFilter,
                     standalone.InterpreterPath
                 );
                 if (File.Exists(path)) {
@@ -52,7 +52,7 @@ namespace Microsoft.PythonTools.Profiling {
             if (standalone != null) {
                 var path = _serviceProvider.BrowseForFileOpen(
                     new System.Windows.Interop.WindowInteropHelper(this).Handle,
-                    "Python files (*.py;*.pyw)|*.py;*.pyw|All Files (*.*)|*.*",
+                    Strings.PythonFilesFilter,
                     standalone.ScriptPath
                 );
                 if (File.Exists(path)) {

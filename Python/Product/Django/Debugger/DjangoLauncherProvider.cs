@@ -58,7 +58,7 @@ namespace Microsoft.PythonTools.Django.Debugger {
             var webLauncher = _providers.FirstOrDefault(p => p.Value.Name == PythonConstants.WebLauncherName);
 
             if (webLauncher == null) {
-                throw new InvalidOperationException("Cannot find Python Web launcher");
+                throw new InvalidOperationException(Resources.CannotFindPythonWebLauncher);
             }
 
             return webLauncher.Value.CreateLauncher(project);

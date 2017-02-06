@@ -81,7 +81,7 @@ namespace Microsoft.PythonTools.Profiling {
                     return;
                 }
             }
-            throw new InvalidOperationException("Session has already been removed");
+            throw new InvalidOperationException(Strings.SessionAlreadyRemoved);
         }
 
         public bool IsProfiling {

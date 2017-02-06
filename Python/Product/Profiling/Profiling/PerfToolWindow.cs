@@ -23,16 +23,15 @@ using Microsoft.VisualStudio.Shell.Interop;
 namespace Microsoft.PythonTools.Profiling {
     [Guid(WindowGuid)]
     class PerfToolWindow : ToolWindowPane {
-        internal const string Title = "Python Performance";
         internal const string WindowGuid = "328AF5EC-350F-4A96-B847-90F38B18E9BF";
         private SessionsNode _sessions;
 
         public PerfToolWindow() {
             ToolClsid = GuidList.VsUIHierarchyWindow_guid;
-            Caption = Title;
+            Caption = Strings.PerformanceToolWindowTitle;
         }
         
-        public override void OnToolWindowCreated() {            
+        public override void OnToolWindowCreated() {
             base.OnToolWindowCreated();
 
             var frame = (IVsWindowFrame)Frame;

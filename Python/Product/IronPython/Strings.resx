@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -117,5 +117,28 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
+  <data name="Launcher_SearchPathHelp" xml:space="preserve">
+    <value>Specifies additional directories which are added to sys.path for making libraries available for importing.</value>
+  </data>
+  <data name="Launcher_ArgumentsHelp" xml:space="preserve">
+    <value>Specifies arguments which are passed to the script and available via sys.argv.</value>
+  </data>
+  <data name="Launcher_InterpreterArgsHelp" xml:space="preserve">
+    <value>Specifies arguments which alter how the interpreter is started (for example, -O to generate optimized byte code).</value>
+  </data>
+  <data name="Launcher_InterpreterPathHelp" xml:space="preserve">
+    <value>Overrides the interpreter executable which is used for launching the project.</value>
+  </data>
+  <data name="ProductTitle" xml:space="preserve">
+    <value>Visual Studio - Python support</value>
+  </data>
+  <data name="IronPythonSilverlightToolsNotFound" xml:space="preserve">
+    <value>Chiron.exe was not found. Ensure the Silverlight Tools component of IronPython has been installed.</value>
+  </data>
+  <data name="IronPythonLauncherDescription" xml:space="preserve">
+    <value>Launches IronPython scripts using the .NET debugger.  This enables debugging both IronPython code as well as other .NET code such as C# or VB.NET.</value>
+  </data>
+  <data name="IronPythonLauncherName" xml:space="preserve">
+    <value>IronPython (.NET) launcher</value>
+  </data>
 </root>

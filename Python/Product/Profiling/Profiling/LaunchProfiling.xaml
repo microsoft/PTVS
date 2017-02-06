@@ -4,7 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="clr-namespace:Microsoft.PythonTools.Profiling"
     xmlns:wpf="clr-namespace:Microsoft.VisualStudioTools.Wpf;assembly=Microsoft.PythonTools"
-    Title="Profiling Settings" 
+    Title="{x:Static ui:Strings.LaunchProfiling_WindowTitle}" 
     MinHeight="440" Width="700" 
     MinWidth="400"
     SizeToContent="Height"
@@ -32,10 +32,10 @@
                 <RowDefinition Height="auto" />
             </Grid.RowDefinitions>
                     
-            <Label Grid.Row="0" Content="What would you like to profile?" Margin="6 12 6 0" FontWeight="Bold" />
+            <Label Grid.Row="0" Content="{x:Static ui:Strings.LaunchProfiling_WhatToProfile}" Margin="6 12 6 0" FontWeight="Bold" />
 
             <RadioButton Grid.Row="1" Margin="12 12 12 4"
-                         Content="_Open project"
+                         Content="{x:Static ui:Strings.LaunchProfiling_OpenProject}"
                          AutomationProperties.AutomationId="ProfileProject"
                          GroupName="ProjectOrStandalone"
                          IsEnabled="{Binding IsAnyAvailableProjects}"
@@ -49,11 +49,11 @@
                       AutomationProperties.AutomationId="Project" />
 
             <RadioButton Grid.Row="3" Margin="12 12 12 4"
-                         Content="S_tandalone script" 
+                         Content="{x:Static ui:Strings.LaunchProfiling_StandaloneScript}" 
                          AutomationProperties.AutomationId="ProfileScript"
                          GroupName="ProjectOrStandalone"
                          IsChecked="{Binding IsStandaloneSelected}" />
-            <GroupBox Grid.Row="4" Header="Script Options"
+            <GroupBox Grid.Row="4" Header="{x:Static ui:Strings.LaunchProfiling_ScriptOptions}"
                       IsEnabled="{Binding IsStandaloneSelected}">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -67,7 +67,7 @@
                         <RowDefinition Height="auto" />
                         <RowDefinition Height="auto" />
                     </Grid.RowDefinitions>
-                    <Label Grid.Row="0" Grid.Column="0" Content="Python _Interpreter:"
+                    <Label Grid.Row="0" Grid.Column="0" Content="{x:Static ui:Strings.LaunchProfiling_PythonInterpreter}"
                             Padding="0" VerticalAlignment="Center" />
                     <ComboBox Grid.Row="0" Grid.Column="1" Margin="4 4"
                                 ItemsSource="{Binding Standalone.AvailableInterpreters}"
@@ -76,7 +76,7 @@
                                 DisplayMemberPath="Name"
                                 AutomationProperties.AutomationId="Standalone.Interpreter" />
 
-                    <Label Grid.Row="1" Grid.Column="0" Content="I_nterpreter Path:"
+                    <Label Grid.Row="1" Grid.Column="0" Content="{x:Static ui:Strings.LaunchProfiling_InterpreterPath}"
                             Padding="0" VerticalAlignment="Center" />
                     <Grid Grid.Row="1" Grid.Column="1" Margin="4"
                             IsEnabled="{Binding Standalone.CanSpecifyInterpreterPath}">
@@ -87,12 +87,12 @@
                         <TextBox Grid.Column="0" 
                                     Text="{Binding Standalone.InterpreterPath,UpdateSourceTrigger=PropertyChanged}"
                                     AutomationProperties.AutomationId="Standalone.InterpreterPath" />
-                        <Button Grid.Column="1" Margin="4 0 0 0" Content="..."
+                        <Button Grid.Column="1" Margin="4 0 0 0" Content="{x:Static ui:Strings.LaunchProfiling_BrowseButton}"
                                 Click="FindInterpreterClick"
                                 Width="{Binding RelativeSource={RelativeSource Self},Path=ActualHeight}" />
                     </Grid>
 
-                    <Label Grid.Row="2" Grid.Column="0" Content="Sc_ript:"
+                    <Label Grid.Row="2" Grid.Column="0" Content="{x:Static ui:Strings.LaunchProfiling_Script}"
                             Padding="0" VerticalAlignment="Center" />
                     <Grid Grid.Row="2" Grid.Column="1" Margin="4">
                         <Grid.ColumnDefinitions>
@@ -102,12 +102,12 @@
                         <TextBox Grid.Column="0" 
                                     Text="{Binding Standalone.ScriptPath,UpdateSourceTrigger=PropertyChanged}"
                                     AutomationProperties.AutomationId="Standalone.ScriptPath" />
-                        <Button Grid.Column="1" Margin="4 0 0 0" Content="..."
+                        <Button Grid.Column="1" Margin="4 0 0 0" Content="{x:Static ui:Strings.LaunchProfiling_BrowseButton}"
                                 Click="FindScriptClick"
                                 Width="{Binding RelativeSource={RelativeSource Self},Path=ActualHeight}" />
                     </Grid>
 
-                    <Label Grid.Row="3" Grid.Column="0" Content="_Working Directory:"
+                    <Label Grid.Row="3" Grid.Column="0" Content="{x:Static ui:Strings.LaunchProfiling_WorkingDirectory}"
                             Padding="0" VerticalAlignment="Center" />
                     <Grid Grid.Row="3" Grid.Column="1" Margin="4">
                         <Grid.ColumnDefinitions>
@@ -117,12 +117,12 @@
                         <TextBox Grid.Column="0" 
                                     Text="{Binding Standalone.WorkingDirectory,UpdateSourceTrigger=PropertyChanged}" 
                                     AutomationProperties.AutomationId="Standalone.WorkingDirectory" />
-                        <Button Grid.Column="1" Margin="4 0 0 0" Content="..." 
+                        <Button Grid.Column="1" Margin="4 0 0 0" Content="{x:Static ui:Strings.LaunchProfiling_BrowseButton}" 
                                 Click="FindWorkingDirectoryClick"
                                 Width="{Binding RelativeSource={RelativeSource Self},Path=ActualHeight}" />
                     </Grid>
 
-                    <Label Grid.Row="4" Grid.Column="0" Content="Command Line _Arguments:"
+                    <Label Grid.Row="4" Grid.Column="0" Content="{x:Static ui:Strings.LaunchProfiling_CommandLineArguments}"
                             Padding="0" VerticalAlignment="Center" />
                     <TextBox Grid.Row="4" Grid.Column="1" Margin="4"
                                 Text="{Binding Standalone.Arguments,UpdateSourceTrigger=PropertyChanged}"
@@ -135,9 +135,8 @@
                     MinWidth="86" MinHeight="24"
                     AutomationProperties.AutomationId="OK" Content="{Binding StartText}"/>
             <Button IsCancel="True" Click="CancelClick" MinWidth="86" MinHeight="24"
-                    AutomationProperties.AutomationId="Cancel">
-                _Cancel
-            </Button>
+                    Content="{x:Static ui:Strings.LaunchProfiling_Cancel}"
+                    AutomationProperties.AutomationId="Cancel"/>
         </StackPanel>
     </Grid>
 </ui:DialogWindowVersioningWorkaround>
