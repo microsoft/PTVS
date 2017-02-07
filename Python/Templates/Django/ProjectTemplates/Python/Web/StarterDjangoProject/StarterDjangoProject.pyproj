@@ -84,7 +84,7 @@
     <Content Include="app\templates\app\loginpartial.html" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="readme.mht">
+    <None Include="readme.html">
       <SubType>WebBrowser</SubType>
     </None>
   </ItemGroup>

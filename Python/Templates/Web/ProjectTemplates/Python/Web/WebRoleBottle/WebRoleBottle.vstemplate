@@ -17,7 +17,7 @@
       <ProjectItem>requirements.txt</ProjectItem>
       <ProjectItem>web.config</ProjectItem>
       <Folder Name="Bin">
-        <ProjectItem OpenInWebBrowser="true" TargetFileName="Readme.mht">WebRoleConfiguration.mht</ProjectItem>
+        <ProjectItem OpenInWebBrowser="true">readme.html</ProjectItem>
         <ProjectItem>ConfigureCloudService.ps1</ProjectItem>
         <ProjectItem>ps.cmd</ProjectItem>
       </Folder>

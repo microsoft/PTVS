@@ -299,7 +299,7 @@ namespace Microsoft.PythonTools {
         }
 
         internal static void OpenNoInterpretersHelpPage(System.IServiceProvider serviceProvider, string page = null) {
-            OpenVsWebBrowser(serviceProvider, page ?? PythonToolsInstallPath.GetFile("NoInterpreters.mht"));
+            OpenVsWebBrowser(serviceProvider, page ?? PythonToolsInstallPath.GetFile("NoInterpreters.html"));
         }
 
         public static string InterpreterHelpUrl {
