@@ -123,7 +123,7 @@ namespace Microsoft.PythonTools {
                     if (available != null) {
                         BrowseSurveyNews(_serviceProvider.GetPythonToolsService().GeneralOptions.SurveyNewsIndexUrl);
                     } else {
-                        BrowseSurveyNews(PythonToolsInstallPath.GetFile("NoSurveyNewsFeed.mht"));
+                        BrowseSurveyNews(PythonToolsInstallPath.GetFile("NoSurveyNewsFeed.html"));
                     }
                 }
 

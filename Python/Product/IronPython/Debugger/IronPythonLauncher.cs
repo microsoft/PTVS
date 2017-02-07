@@ -54,7 +54,7 @@ namespace Microsoft.IronPythonTools.Debugger {
         private static readonly Lazy<string> NoIronPythonHelpPage = new Lazy<string>(() => {
             try {
                 var path = Path.GetDirectoryName(typeof(IronPythonLauncher).Assembly.Location);
-                return Path.Combine(path, "NoIronPython.mht");
+                return Path.Combine(path, "NoIronPython.html");
             } catch (ArgumentException) {
             } catch (NotSupportedException) {
             }

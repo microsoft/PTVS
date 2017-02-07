@@ -15,7 +15,7 @@
   <TemplateContent>
     <Project File="PyvotProject.pyproj" ReplaceParameters="true">
       <ProjectItem ReplaceParameters="true" TargetFileName="$safeprojectname$.py">Program.py</ProjectItem>
-      <ProjectItem OpenInWebBrowser="true">readme.mht</ProjectItem>
+      <ProjectItem OpenInWebBrowser="true">readme.html</ProjectItem>
       <ProjectItem>PyvotSample.xlsx</ProjectItem>
       <ProjectItem>requirements.txt</ProjectItem>
     </Project>

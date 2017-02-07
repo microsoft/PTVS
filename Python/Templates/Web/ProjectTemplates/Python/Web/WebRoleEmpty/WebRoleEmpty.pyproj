@@ -32,7 +32,7 @@
     <Content Include="bin\web.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="bin\Readme.mht">
+    <None Include="bin\readme.html">
       <SubType>WebBrowser</SubType>
     </None>
   </ItemGroup>

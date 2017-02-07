@@ -338,7 +338,7 @@ namespace PythonToolsUITests {
                 AssertUtil.ContainsExactly(newItems.Select(i => i.Name), "bin");
 
                 var children = newItems[0].ProjectItems.Cast<ProjectItem>().Select(i => i.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
-                AssertUtil.ContainsExactly(children, "ConfigureCloudService.ps1", "ps.cmd", "Readme.mht");
+                AssertUtil.ContainsExactly(children, "ConfigureCloudService.ps1", "ps.cmd", "readme.html");
             }
         }
 
@@ -365,7 +365,7 @@ namespace PythonToolsUITests {
                 AssertUtil.ContainsExactly(newItems.Select(i => i.Name), "bin");
 
                 var children = newItems[0].ProjectItems.Cast<ProjectItem>().Select(i => i.Name).ToSet(StringComparer.CurrentCultureIgnoreCase);
-                AssertUtil.ContainsExactly(children, "ConfigureCloudService.ps1", "LaunchWorker.ps1", "ps.cmd", "Readme.mht");
+                AssertUtil.ContainsExactly(children, "ConfigureCloudService.ps1", "LaunchWorker.ps1", "ps.cmd", "readme.html");
             }
         }
 
