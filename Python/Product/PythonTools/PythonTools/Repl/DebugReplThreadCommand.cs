@@ -14,18 +14,16 @@
 // See the Apache Version 2.0 License for specific language governing
 // permissions and limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.PythonTools.Debugger.DebugEngine;
-using System;
-using Microsoft.PythonTools.Debugger;
-using Microsoft.VisualStudio.Text.Classification;
-using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Utilities;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.InteractiveWindow;
 using Microsoft.PythonTools.InteractiveWindow.Commands;
+using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Utilities;
 
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IInteractiveWindowCommand))]
@@ -42,7 +40,7 @@ namespace Microsoft.PythonTools.Repl {
                     if (long.TryParse(arguments, out id)) {
                         eval.ChangeActiveThread(id, true);
                     } else {
-                        window.WriteError(String.Format("Invalid arguments '{0}'. Expected thread id.", arguments));
+                        window.WriteError(Strings.DebugReplThreadCommandInvalidArguments.FormatUI(arguments));
                     }
                 }
             }
@@ -50,7 +48,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string Description {
-            get { return "Switches the current thread to the specified thread id."; }
+            get { return Strings.DebugReplThreadCommandDescription; }
         }
 
         public string Command {

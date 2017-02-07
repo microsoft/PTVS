@@ -28,7 +28,6 @@ using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Text.Editor.OptionsExtensionMethods;
 using Microsoft.VisualStudio.Utilities;
-using Microsoft.VisualStudioTools;
 
 namespace Microsoft.PythonTools.Repl {
     [Export(typeof(IInteractiveWindowCommand))]
@@ -100,7 +99,7 @@ namespace Microsoft.PythonTools.Repl {
         }
 
         public string Description {
-            get { return "Loads commands from file and executes until complete"; }
+            get { return Strings.ReplLoadCommandDescription; }
         }
 
         public string Command {
@@ -213,7 +212,7 @@ namespace Microsoft.PythonTools.Repl {
             [DebuggerStepThrough, DebuggerHidden]
             public void ThrowIfNotFound() {
                 if (!Found) {
-                    throw new FileNotFoundException("Cannot find file.", _baseName);
+                    throw new FileNotFoundException(Strings.ReplLoadCommandFileNotFoundException, _baseName);
                 }
             }
 

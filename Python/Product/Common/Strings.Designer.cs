@@ -541,11 +541,299 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Abort is not supported..
+        /// </summary>
+        public static string DebugReplAbortNotSupported {
+            get {
+                return ResourceManager.GetString("DebugReplAbortNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot change current thread to {0}, because it does not have any visible frames..
+        /// </summary>
+        public static string DebugReplCannotChangeCurrentThreadNoFrame {
+            get {
+                return ResourceManager.GetString("DebugReplCannotChangeCurrentThreadNoFrame", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to =&gt; .
+        /// </summary>
+        public static string DebugReplCurrentIndicator {
+            get {
+                return ResourceManager.GetString("DebugReplCurrentIndicator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Debug.
         /// </summary>
         public static string DebugReplDisplayName {
             get {
                 return ResourceManager.GetString("DebugReplDisplayName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Current frame changed to {0}.
+        /// </summary>
+        public static string DebugReplFrameChanged {
+            get {
+                return ResourceManager.GetString("DebugReplFrameChanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Switches the current frame to the specified frame id..
+        /// </summary>
+        public static string DebugReplFrameCommandDescription {
+            get {
+                return ResourceManager.GetString("DebugReplFrameCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid arguments &apos;{0}&apos;. Expected frame id..
+        /// </summary>
+        public static string DebugReplFrameCommandInvalidArguments {
+            get {
+                return ResourceManager.GetString("DebugReplFrameCommandInvalidArguments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move the current frame one level down in the stack trace..
+        /// </summary>
+        public static string DebugReplFrameDownCommandDescription {
+            get {
+                return ResourceManager.GetString("DebugReplFrameDownCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lists the frames for the current thread..
+        /// </summary>
+        public static string DebugReplFramesCommandDescription {
+            get {
+                return ResourceManager.GetString("DebugReplFramesCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {2}Frame id={0}, function={1}.
+        /// </summary>
+        public static string DebugReplFramesOutput {
+            get {
+                return ResourceManager.GetString("DebugReplFramesOutput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Move the current frame one level up in the stack trace..
+        /// </summary>
+        public static string DebugReplFrameUpCommandDescription {
+            get {
+                return ResourceManager.GetString("DebugReplFrameUpCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Starts executing the program from the current statement..
+        /// </summary>
+        public static string DebugReplGoCommandDescription {
+            get {
+                return ResourceManager.GetString("DebugReplGoCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python debug interactive window. Type $help for a list of commands..
+        /// </summary>
+        public static string DebugReplHelpMessage {
+            get {
+                return ResourceManager.GetString("DebugReplHelpMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid frame id &apos;{0}&apos;..
+        /// </summary>
+        public static string DebugReplInvalidFrameId {
+            get {
+                return ResourceManager.GetString("DebugReplInvalidFrameId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid process id &apos;{0}&apos;..
+        /// </summary>
+        public static string DebugReplInvalidProcessId {
+            get {
+                return ResourceManager.GetString("DebugReplInvalidProcessId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid thread id &apos;{0}&apos;..
+        /// </summary>
+        public static string DebugReplInvalidThreadId {
+            get {
+                return ResourceManager.GetString("DebugReplInvalidThreadId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Code can only be executed while stopped in debugger..
+        /// </summary>
+        public static string DebugReplNoExecutionIfNotStoppedInDebuggerError {
+            get {
+                return ResourceManager.GetString("DebugReplNoExecutionIfNotStoppedInDebuggerError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Command only available when a process is being debugged..
+        /// </summary>
+        public static string DebugReplNoProcessError {
+            get {
+                return ResourceManager.GetString("DebugReplNoProcessError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to    .
+        /// </summary>
+        public static string DebugReplNotCurrentIndicator {
+            get {
+                return ResourceManager.GetString("DebugReplNotCurrentIndicator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Switches the current process to the specified process id..
+        /// </summary>
+        public static string DebugReplProcessCommandDescription {
+            get {
+                return ResourceManager.GetString("DebugReplProcessCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid arguments &apos;{0}&apos;. Expected process id..
+        /// </summary>
+        public static string DebugReplProcessCommandInvalidArguments {
+            get {
+                return ResourceManager.GetString("DebugReplProcessCommandInvalidArguments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lists the processes currently being debugged..
+        /// </summary>
+        public static string DebugReplProcessesCommandDescription {
+            get {
+                return ResourceManager.GetString("DebugReplProcessesCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {2}Process id={0}, Language version={1}.
+        /// </summary>
+        public static string DebugReplProcessesOutput {
+            get {
+                return ResourceManager.GetString("DebugReplProcessesOutput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Reset is not supported..
+        /// </summary>
+        public static string DebugReplResetNotSupported {
+            get {
+                return ResourceManager.GetString("DebugReplResetNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Steps into the next function call, if possible..
+        /// </summary>
+        public static string DebugReplStepIntoCommandDescription {
+            get {
+                return ResourceManager.GetString("DebugReplStepIntoCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Steps out of the current function..
+        /// </summary>
+        public static string DebugReplStepOutCommandDescription {
+            get {
+                return ResourceManager.GetString("DebugReplStepOutCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Steps over the next function call..
+        /// </summary>
+        public static string DebugReplStepOverCommandDescription {
+            get {
+                return ResourceManager.GetString("DebugReplStepOverCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Current process changed to {0}.
+        /// </summary>
+        public static string DebugReplSwitchProcessOutput {
+            get {
+                return ResourceManager.GetString("DebugReplSwitchProcessOutput", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Current thread changed to {0}, frame {1}.
+        /// </summary>
+        public static string DebugReplThreadChanged {
+            get {
+                return ResourceManager.GetString("DebugReplThreadChanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Switches the current thread to the specified thread id..
+        /// </summary>
+        public static string DebugReplThreadCommandDescription {
+            get {
+                return ResourceManager.GetString("DebugReplThreadCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid arguments &apos;{0}&apos;. Expected thread id..
+        /// </summary>
+        public static string DebugReplThreadCommandInvalidArguments {
+            get {
+                return ResourceManager.GetString("DebugReplThreadCommandInvalidArguments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lists the threads currently being debugged..
+        /// </summary>
+        public static string DebugReplThreadsCommandDescription {
+            get {
+                return ResourceManager.GetString("DebugReplThreadsCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {2}Thread id={0}, name={1}.
+        /// </summary>
+        public static string DebugReplThreadsOutput {
+            get {
+                return ResourceManager.GetString("DebugReplThreadsOutput", resourceCulture);
             }
         }
         
@@ -2375,11 +2663,29 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A comment marker.
+        /// </summary>
+        public static string ReplCommentCommandDescription {
+            get {
+                return ResourceManager.GetString("ReplCommentCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Current interactive window is disconnected..
         /// </summary>
         public static string ReplDisconnected {
             get {
                 return ResourceManager.GetString("ReplDisconnected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The interactive window has become disconnected from the remote process. Please reset the window..
+        /// </summary>
+        public static string ReplDisconnectedFromRemoteProcessError {
+            get {
+                return ResourceManager.GetString("ReplDisconnectedFromRemoteProcessError", resourceCulture);
             }
         }
         
@@ -2434,6 +2740,24 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Loads commands from file and executes until complete.
+        /// </summary>
+        public static string ReplLoadCommandDescription {
+            get {
+                return ResourceManager.GetString("ReplLoadCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot find file..
+        /// </summary>
+        public static string ReplLoadCommandFileNotFoundException {
+            get {
+                return ResourceManager.GetString("ReplLoadCommandFileNotFoundException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Cannot change module, interactive window is disconnected.
         /// </summary>
         public static string ReplModuleCannotChange {
@@ -2477,6 +2801,15 @@ namespace Microsoft.PythonTools {
         public static string ReplProjectConfigurationChanged {
             get {
                 return ResourceManager.GetString("ReplProjectConfigurationChanged", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Project: {0}.
+        /// </summary>
+        public static string ReplProjectProjectCaption {
+            get {
+                return ResourceManager.GetString("ReplProjectProjectCaption", resourceCulture);
             }
         }
         
@@ -2589,11 +2922,47 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Switches the current scope to the specified module name..
+        /// </summary>
+        public static string ReplSwitchModuleCommandDescription {
+            get {
+                return ResourceManager.GetString("ReplSwitchModuleCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown command &apos;{0}&apos;, use &apos;$help&apos; for a list of commands..
         /// </summary>
         public static string ReplUnknownCommand {
             get {
                 return ResourceManager.GetString("ReplUnknownCommand", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Wait for at least the specified number of milliseconds.
+        /// </summary>
+        public static string ReplWaitCommandDescription {
+            get {
+                return ResourceManager.GetString("ReplWaitCommandDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Milliseconds to wait before continuing.
+        /// </summary>
+        public static string ReplWaitCommandTimeoutParameterDescription {
+            get {
+                return ResourceManager.GetString("ReplWaitCommandTimeoutParameterDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Congratulations, you opened over 2 billion interactive windows this session! Now you need to restart Visual Studio to open any more..
+        /// </summary>
+        public static string ReplWindowOutOfIds {
+            get {
+                return ResourceManager.GetString("ReplWindowOutOfIds", resourceCulture);
             }
         }
         
