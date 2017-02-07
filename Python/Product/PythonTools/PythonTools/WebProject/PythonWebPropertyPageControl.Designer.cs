@@ -25,11 +25,12 @@ namespace Microsoft.PythonTools.Project.Web {
         private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
             System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonWebPropertyPageControl));
             System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
             System.Windows.Forms.TableLayoutPanel tableLayoutPanel3;
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PythonWebPropertyPageControl));
             this._wsgiHandlerLabel = new System.Windows.Forms.Label();
             this._wsgiHandler = new System.Windows.Forms.TextBox();
+            this._deprecatedLabel = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this._staticPatternLabel = new System.Windows.Forms.Label();
             this._staticPattern = new System.Windows.Forms.TextBox();
@@ -38,7 +39,6 @@ namespace Microsoft.PythonTools.Project.Web {
             this._webGroup = new System.Windows.Forms.GroupBox();
             this._toolTip = new System.Windows.Forms.ToolTip(this.components);
             this._errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
-            this._deprecatedLabel = new System.Windows.Forms.Label();
             tableLayoutPanel2 = new System.Windows.Forms.TableLayoutPanel();
             tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             tableLayoutPanel3 = new System.Windows.Forms.TableLayoutPanel();
@@ -52,192 +52,94 @@ namespace Microsoft.PythonTools.Project.Web {
             // 
             // tableLayoutPanel2
             // 
-            tableLayoutPanel2.AutoSize = true;
-            tableLayoutPanel2.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            tableLayoutPanel2.ColumnCount = 2;
-            tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            tableLayoutPanel2.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            resources.ApplyResources(tableLayoutPanel2, "tableLayoutPanel2");
             tableLayoutPanel2.Controls.Add(this._wsgiHandlerLabel, 0, 0);
             tableLayoutPanel2.Controls.Add(this._wsgiHandler, 1, 0);
-            tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            tableLayoutPanel2.Location = new System.Drawing.Point(6, 21);
             tableLayoutPanel2.Name = "tableLayoutPanel2";
-            tableLayoutPanel2.RowCount = 1;
-            tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 26F));
-            tableLayoutPanel2.Size = new System.Drawing.Size(437, 26);
-            tableLayoutPanel2.TabIndex = 0;
             // 
             // _wsgiHandlerLabel
             // 
-            this._wsgiHandlerLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._wsgiHandlerLabel.AutoSize = true;
-            this._wsgiHandlerLabel.Location = new System.Drawing.Point(6, 6);
-            this._wsgiHandlerLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            resources.ApplyResources(this._wsgiHandlerLabel, "_wsgiHandlerLabel");
             this._wsgiHandlerLabel.Name = "_wsgiHandlerLabel";
-            this._wsgiHandlerLabel.Size = new System.Drawing.Size(79, 13);
-            this._wsgiHandlerLabel.TabIndex = 2;
-            this._wsgiHandlerLabel.Text = "&WSGI Handler:";
-            this._wsgiHandlerLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // _wsgiHandler
             // 
-            this._wsgiHandler.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this._wsgiHandler.Location = new System.Drawing.Point(97, 3);
-            this._wsgiHandler.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this._wsgiHandler.MinimumSize = new System.Drawing.Size(50, 4);
+            resources.ApplyResources(this._wsgiHandler, "_wsgiHandler");
             this._wsgiHandler.Name = "_wsgiHandler";
-            this._wsgiHandler.Size = new System.Drawing.Size(334, 20);
-            this._wsgiHandler.TabIndex = 3;
             this._wsgiHandler.TextChanged += new System.EventHandler(this.Setting_TextChanged);
             // 
             // tableLayoutPanel1
             // 
-            tableLayoutPanel1.AutoSize = true;
-            tableLayoutPanel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            tableLayoutPanel1.ColumnCount = 1;
-            tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            resources.ApplyResources(tableLayoutPanel1, "tableLayoutPanel1");
             tableLayoutPanel1.Controls.Add(this._deprecatedLabel, 0, 0);
             tableLayoutPanel1.Controls.Add(this.groupBox1, 0, 2);
             tableLayoutPanel1.Controls.Add(this._webGroup, 0, 1);
-            tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             tableLayoutPanel1.Name = "tableLayoutPanel1";
-            tableLayoutPanel1.RowCount = 4;
-            tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            tableLayoutPanel1.Size = new System.Drawing.Size(461, 213);
-            tableLayoutPanel1.TabIndex = 0;
+            // 
+            // _deprecatedLabel
+            // 
+            resources.ApplyResources(this._deprecatedLabel, "_deprecatedLabel");
+            this._errorProvider.SetError(this._deprecatedLabel, resources.GetString("_deprecatedLabel.Error"));
+            this._errorProvider.SetIconAlignment(this._deprecatedLabel, ((System.Windows.Forms.ErrorIconAlignment)(resources.GetObject("_deprecatedLabel.IconAlignment"))));
+            this._deprecatedLabel.Name = "_deprecatedLabel";
             // 
             // groupBox1
             // 
-            this.groupBox1.AutoSize = true;
-            this.groupBox1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            resources.ApplyResources(this.groupBox1, "groupBox1");
             this.groupBox1.Controls.Add(tableLayoutPanel3);
-            this.groupBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.groupBox1.Location = new System.Drawing.Point(6, 104);
-            this.groupBox1.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Padding = new System.Windows.Forms.Padding(6, 8, 6, 8);
-            this.groupBox1.Size = new System.Drawing.Size(449, 81);
-            this.groupBox1.TabIndex = 2;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Static Files";
             // 
             // tableLayoutPanel3
             // 
-            tableLayoutPanel3.AutoSize = true;
-            tableLayoutPanel3.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            tableLayoutPanel3.ColumnCount = 2;
-            tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle());
-            tableLayoutPanel3.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            resources.ApplyResources(tableLayoutPanel3, "tableLayoutPanel3");
             tableLayoutPanel3.Controls.Add(this._staticPatternLabel, 0, 0);
             tableLayoutPanel3.Controls.Add(this._staticPattern, 1, 0);
             tableLayoutPanel3.Controls.Add(this._staticRewriteLabel, 0, 1);
             tableLayoutPanel3.Controls.Add(this._staticRewrite, 1, 1);
-            tableLayoutPanel3.Dock = System.Windows.Forms.DockStyle.Fill;
-            tableLayoutPanel3.Location = new System.Drawing.Point(6, 21);
             tableLayoutPanel3.Name = "tableLayoutPanel3";
-            tableLayoutPanel3.RowCount = 2;
-            tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle());
-            tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 26F));
-            tableLayoutPanel3.Size = new System.Drawing.Size(437, 52);
-            tableLayoutPanel3.TabIndex = 0;
             // 
             // _staticPatternLabel
             // 
-            this._staticPatternLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._staticPatternLabel.AutoSize = true;
-            this._staticPatternLabel.Location = new System.Drawing.Point(6, 6);
-            this._staticPatternLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            resources.ApplyResources(this._staticPatternLabel, "_staticPatternLabel");
             this._staticPatternLabel.Name = "_staticPatternLabel";
-            this._staticPatternLabel.Size = new System.Drawing.Size(66, 13);
-            this._staticPatternLabel.TabIndex = 0;
-            this._staticPatternLabel.Text = "&URI Pattern:";
-            this._staticPatternLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // _staticPattern
             // 
-            this._staticPattern.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this._errorProvider.SetIconPadding(this._staticPattern, -20);
-            this._staticPattern.Location = new System.Drawing.Point(86, 3);
-            this._staticPattern.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this._staticPattern.MinimumSize = new System.Drawing.Size(50, 4);
+            resources.ApplyResources(this._staticPattern, "_staticPattern");
+            this._errorProvider.SetIconPadding(this._staticPattern, ((int)(resources.GetObject("_staticPattern.IconPadding"))));
             this._staticPattern.Name = "_staticPattern";
-            this._staticPattern.Size = new System.Drawing.Size(345, 20);
-            this._staticPattern.TabIndex = 1;
             this._staticPattern.TextChanged += new System.EventHandler(this.Setting_TextChanged);
             // 
             // _staticRewriteLabel
             // 
-            this._staticRewriteLabel.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this._staticRewriteLabel.AutoSize = true;
-            this._staticRewriteLabel.Location = new System.Drawing.Point(6, 32);
-            this._staticRewriteLabel.Margin = new System.Windows.Forms.Padding(6, 0, 6, 0);
+            resources.ApplyResources(this._staticRewriteLabel, "_staticRewriteLabel");
             this._staticRewriteLabel.Name = "_staticRewriteLabel";
-            this._staticRewriteLabel.Size = new System.Drawing.Size(68, 13);
-            this._staticRewriteLabel.TabIndex = 2;
-            this._staticRewriteLabel.Text = "URI Re&write:";
-            this._staticRewriteLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // _staticRewrite
             // 
-            this._staticRewrite.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this._staticRewrite.Location = new System.Drawing.Point(86, 29);
-            this._staticRewrite.Margin = new System.Windows.Forms.Padding(6, 3, 6, 3);
-            this._staticRewrite.MinimumSize = new System.Drawing.Size(50, 4);
+            resources.ApplyResources(this._staticRewrite, "_staticRewrite");
             this._staticRewrite.Name = "_staticRewrite";
-            this._staticRewrite.Size = new System.Drawing.Size(345, 20);
-            this._staticRewrite.TabIndex = 3;
             this._staticRewrite.TextChanged += new System.EventHandler(this.Setting_TextChanged);
             // 
             // _webGroup
             // 
-            this._webGroup.AutoSize = true;
-            this._webGroup.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            resources.ApplyResources(this._webGroup, "_webGroup");
             this._webGroup.Controls.Add(tableLayoutPanel2);
-            this._webGroup.Dock = System.Windows.Forms.DockStyle.Fill;
-            this._webGroup.Location = new System.Drawing.Point(6, 33);
-            this._webGroup.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this._webGroup.Name = "_webGroup";
-            this._webGroup.Padding = new System.Windows.Forms.Padding(6, 8, 6, 8);
-            this._webGroup.Size = new System.Drawing.Size(449, 55);
-            this._webGroup.TabIndex = 1;
             this._webGroup.TabStop = false;
-            this._webGroup.Text = "Web";
             // 
             // _errorProvider
             // 
             this._errorProvider.ContainerControl = this;
-            this._errorProvider.Icon = ((System.Drawing.Icon)(resources.GetObject("_errorProvider.Icon")));
-            // 
-            // _deprecatedLabel
-            // 
-            this._deprecatedLabel.AutoSize = true;
-            this._errorProvider.SetError(this._deprecatedLabel, "Deprecated");
-            this._errorProvider.SetIconAlignment(this._deprecatedLabel, System.Windows.Forms.ErrorIconAlignment.MiddleLeft);
-            this._deprecatedLabel.Location = new System.Drawing.Point(24, 6);
-            this._deprecatedLabel.Margin = new System.Windows.Forms.Padding(24, 6, 3, 6);
-            this._deprecatedLabel.Name = "_deprecatedLabel";
-            this._deprecatedLabel.Size = new System.Drawing.Size(434, 13);
-            this._deprecatedLabel.TabIndex = 0;
-            this._deprecatedLabel.Text = "These options are no longer used. To configure them, add a web.config file to you" +
-    "r project.";
+            resources.ApplyResources(this._errorProvider, "_errorProvider");
             // 
             // PythonWebPropertyPageControl
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoSize = true;
-            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.Controls.Add(tableLayoutPanel1);
-            this.Margin = new System.Windows.Forms.Padding(6, 8, 6, 8);
             this.Name = "PythonWebPropertyPageControl";
-            this.Size = new System.Drawing.Size(461, 213);
             tableLayoutPanel2.ResumeLayout(false);
             tableLayoutPanel2.PerformLayout();
             tableLayoutPanel1.ResumeLayout(false);
