@@ -15,12 +15,8 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 using OleConstants = Microsoft.VisualStudio.OLE.Interop.Constants;

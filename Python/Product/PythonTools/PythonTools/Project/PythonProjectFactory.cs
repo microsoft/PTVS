@@ -20,7 +20,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using Microsoft.Build.Construction;
 using Microsoft.PythonTools.Infrastructure;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 

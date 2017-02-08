@@ -15,22 +15,11 @@
 // permissions and limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Windows.Forms;
 using Microsoft.PythonTools.Debugger;
-using Microsoft.PythonTools.Debugger.DebugEngine;
 using Microsoft.PythonTools.Infrastructure;
 using Microsoft.PythonTools.Interpreter;
-using Microsoft.PythonTools.Parsing;
 using Microsoft.VisualStudio;
-using Microsoft.VisualStudio.Debugger;
-using Microsoft.VisualStudio.Shell;
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {

@@ -16,11 +16,8 @@
 
 using System;
 using System.Runtime.InteropServices;
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
-using Microsoft.VisualStudioTools;
 using Microsoft.VisualStudioTools.Project;
-using VsCommands = Microsoft.VisualStudio.VSConstants.VSStd97CmdID;
 
 namespace Microsoft.PythonTools.Project {
     /// <summary>

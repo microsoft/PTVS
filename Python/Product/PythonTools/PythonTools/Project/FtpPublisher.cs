@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Net;
+using Microsoft.PythonTools.Infrastructure;
 using Microsoft.VisualStudioTools.Project;
 
 namespace Microsoft.PythonTools.Project {
@@ -75,7 +76,7 @@ namespace Microsoft.PythonTools.Project {
 
             var response = (FtpWebResponse)request.GetResponse();
             if (response.StatusCode != FtpStatusCode.ClosingData) {
-                throw new IOException(String.Format("Failed to upload file: {0}", response.StatusDescription));
+                throw new IOException(Strings.FtpPublisherUploadFileException.FormatUI(response.StatusDescription));
             }
         }
 
@@ -102,7 +103,7 @@ namespace Microsoft.PythonTools.Project {
 
             using (var response = (FtpWebResponse)request.GetResponse()) {
                 if (response.StatusCode != FtpStatusCode.PathnameCreated) {
-                    throw new IOException(String.Format("Failed to create directory: {0}", response.StatusDescription));
+                    throw new IOException(Strings.FtpPublisherDirCreateException.FormatUI(response.StatusDescription));
                 }
             }
         }
@@ -114,7 +115,7 @@ namespace Microsoft.PythonTools.Project {
             try {
                 using (var response = (FtpWebResponse)request.GetResponse()) {
                     if (response.StatusCode != FtpStatusCode.DataAlreadyOpen) {
-                        throw new IOException(String.Format("Failed to check if directory exists: {0}", response.StatusDescription));
+                        throw new IOException(Strings.FtpPublisherDirExistsCheckException.FormatUI(response.StatusDescription));
                     }
                     return true;
                 }
@@ -124,13 +125,9 @@ namespace Microsoft.PythonTools.Project {
 
         }
 
-        public string DestinationDescription {
-            get { return "ftp server"; }
-        }
+        public string DestinationDescription => Strings.FtpPublisherDestinationDescription;
 
-        public string Schema {
-            get { return "ftp"; }
-        }
+        public string Schema => "ftp";
 
         #endregion
     }
