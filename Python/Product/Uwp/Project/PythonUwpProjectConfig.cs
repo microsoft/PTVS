@@ -193,7 +193,12 @@ namespace Microsoft.PythonTools.Uwp.Project {
             }
 
             if (pythonDebuggee == null && !stoppedDebugging) {
-                MessageBox.Show("Could not attach to remote Python debug session.", null, MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(
+                    Resources.CouldNotAttachToRemotePythonDebugSession,
+                    Resources.ProductTitle,
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
             }
         }
 
@@ -729,7 +734,7 @@ namespace Microsoft.PythonTools.Uwp.Project {
             }
 
             if (projectUniqueName == null) {
-                throw new Exception("Failed to get an unique project name.");
+                throw new Exception(Resources.FailedToGetUniqueProjectNameException);
             }
             return projectUniqueName;
         }
@@ -957,8 +962,11 @@ namespace Microsoft.PythonTools.Uwp.Project {
 
             if (string.IsNullOrEmpty(targets[0].bstrRemoteMachine)) {
                 MessageBox.Show(
-                    "The project cannot be deployed or debugged because there is not a remote machine specified in Debug settings.",
-                    "Visual Studio", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    Resources.NoRemoteMachine,
+                    Resources.ProductTitle,
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
                 return VSConstants.E_ABORT;
             }
 
