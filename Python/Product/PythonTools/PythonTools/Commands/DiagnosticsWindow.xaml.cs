@@ -98,10 +98,10 @@ namespace Microsoft.PythonTools.Commands {
         private void Save_Executed(object sender, ExecutedRoutedEventArgs e) {
             var path = _provider.BrowseForFileSave(
                 new WindowInteropHelper(this).Handle,
-                "Text Files (*.txt)|*.txt|All Files (*.*)|*.*",
+                Strings.DiagnosticsWindow_TextFileFilter,
                 PathUtils.GetAbsoluteFilePath(
                     Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments),
-                    string.Format("Diagnostic Info {0:yyyy-MM-dd'T'HHmmss}.txt", DateTime.Now)
+                    Strings.DiagnosticsWindow_DefaultFileName.FormatUI(DateTime.Now)
                 )
             );
 

@@ -586,6 +586,289 @@ namespace Microsoft.PythonTools {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to   {0}, FileVersion={1}.
+        /// </summary>
+        public static string DiagnosticsWindow_AssemblyDetails {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_AssemblyDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0}: {1}.
+        /// </summary>
+        public static string DiagnosticsWindow_AssemblyDetailsException {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_AssemblyDetailsException", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to C_lose.
+        /// </summary>
+        public static string DiagnosticsWindow_Close {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_Close", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Copy all....
+        /// </summary>
+        public static string DiagnosticsWindow_CopyAll {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_CopyAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Diagnostic Info {0:yyyy-MM-dd&apos;T&apos;HHmmss}.txt.
+        /// </summary>
+        public static string DiagnosticsWindow_DefaultFileName {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_DefaultFileName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Environment Analysis Logs: .
+        /// </summary>
+        public static string DiagnosticsWindow_EnvironmentAnalysisLogsHeader {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_EnvironmentAnalysisLogsHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Environments: .
+        /// </summary>
+        public static string DiagnosticsWindow_EnvironmentsHeader {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_EnvironmentsHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error reading the global analysis log.
+        ///Please wait for analysis to complete and try again.
+        ///{0}
+        ///.
+        /// </summary>
+        public static string DiagnosticsWindow_ErrorReadingGlobalAnalysisLog {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_ErrorReadingGlobalAnalysisLog", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to   Failed to access event log..
+        /// </summary>
+        public static string DiagnosticsWindow_FailedToAccessEventLog {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_FailedToAccessEventLog", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Global Analysis:.
+        /// </summary>
+        public static string DiagnosticsWindow_GlobalAnalysisHeader {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_GlobalAnalysisHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to         Id: {0}
+        ///        Factory: {1}
+        ///        Version: {2}
+        ///        Arch: {3}
+        ///        Prefix Path: {4}
+        ///        Path: {5}
+        ///        Windows Path: {6}
+        ///        Path Env: {7}
+        ///.
+        /// </summary>
+        public static string DiagnosticsWindow_InterpreterConfigurationDetails {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_InterpreterConfigurationDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to         Interpreter: {0}
+        ///            Id: {1}
+        ///            Version: {2}
+        ///            Arch: {3}
+        ///            Prefix Path: {4}
+        ///            Path: {5}
+        ///            Windows Path: {6}
+        ///            Path Env: {7}={8}{9}
+        ///.
+        /// </summary>
+        public static string DiagnosticsWindow_InterpreterFactoryDetails {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_InterpreterFactoryDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to     {0}.
+        /// </summary>
+        public static string DiagnosticsWindow_InterpreterProviderHeader {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_InterpreterProviderHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to     Launcher: {0}
+        ///        {1}
+        ///        {2}
+        ///.
+        /// </summary>
+        public static string DiagnosticsWindow_LauncherDetails {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_LauncherDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Launchers:.
+        /// </summary>
+        public static string DiagnosticsWindow_LaunchersHeader {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_LaunchersHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loaded assemblies:.
+        /// </summary>
+        public static string DiagnosticsWindow_LoadedAssembliesHeader {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_LoadedAssembliesHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Logged events/stats:.
+        /// </summary>
+        public static string DiagnosticsWindow_LoggedEventsStatsHeader {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_LoggedEventsStatsHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to  (masked).
+        /// </summary>
+        public static string DiagnosticsWindow_MaskedValue {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_MaskedValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to (null).
+        /// </summary>
+        public static string DiagnosticsWindow_NullValue {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_NullValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to         Kind: {0}.
+        /// </summary>
+        public static string DiagnosticsWindow_ProjectKind {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_ProjectKind", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to     Project: {0}.
+        /// </summary>
+        public static string DiagnosticsWindow_ProjectName {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_ProjectName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Projects: .
+        /// </summary>
+        public static string DiagnosticsWindow_ProjectsHeader {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_ProjectsHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to         {0}: {1}.
+        /// </summary>
+        public static string DiagnosticsWindow_PropertyNameAndValueEntry {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_PropertyNameAndValueEntry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to _Save all....
+        /// </summary>
+        public static string DiagnosticsWindow_SaveAll {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_SaveAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to System events:.
+        /// </summary>
+        public static string DiagnosticsWindow_SystemEventsHeader {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_SystemEventsHeader", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Text Files (*.txt)|*.txt|All Files (*.*)|*.*.
+        /// </summary>
+        public static string DiagnosticsWindow_TextFileFilter {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_TextFileFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Time: {0:s}.
+        /// </summary>
+        public static string DiagnosticsWindow_TimeEntry {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_TimeEntry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Visual Studio - Python Diagnostic Info.
+        /// </summary>
+        public static string DiagnosticsWindow_Title {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;undefined&gt;.
+        /// </summary>
+        public static string DiagnosticsWindow_UndefinedValue {
+            get {
+                return ResourceManager.GetString("DiagnosticsWindow_UndefinedValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do not show this warning again..
         /// </summary>
         public static string DontShowAgain {
@@ -879,6 +1162,33 @@ namespace Microsoft.PythonTools {
         public static string ErrorStartingInteractiveProcess {
             get {
                 return ResourceManager.GetString("ErrorStartingInteractiveProcess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Execute File in P&amp;ython Interactive.
+        /// </summary>
+        public static string ExecuteInReplCommand_ExecuteFile {
+            get {
+                return ResourceManager.GetString("ExecuteInReplCommand_ExecuteFile", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Execute Project in P&amp;ython Interactive.
+        /// </summary>
+        public static string ExecuteInReplCommand_ExecuteProject {
+            get {
+                return ResourceManager.GetString("ExecuteInReplCommand_ExecuteProject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Running {0}.
+        /// </summary>
+        public static string ExecuteInReplCommand_RunningMessage {
+            get {
+                return ResourceManager.GetString("ExecuteInReplCommand_RunningMessage", resourceCulture);
             }
         }
         
@@ -1200,6 +1510,15 @@ namespace Microsoft.PythonTools {
         public static string GroupingClassificationType {
             get {
                 return ResourceManager.GetString("GroupingClassificationType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*.
+        /// </summary>
+        public static string ImportCoverageCommandFileFilter {
+            get {
+                return ResourceManager.GetString("ImportCoverageCommandFileFilter", resourceCulture);
             }
         }
         

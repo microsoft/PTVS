@@ -1184,6 +1184,162 @@ Please refer to &lt;a href="https://aka.ms/pythononappservice"&gt;aka.ms/PythonO
     <value> (missing)</value>
     <comment>Leading space is important</comment>
   </data>
+  <data name="DiagnosticsWindow_SaveAll" xml:space="preserve">
+    <value>_Save all...</value>
+  </data>
+  <data name="DiagnosticsWindow_CopyAll" xml:space="preserve">
+    <value>_Copy all...</value>
+  </data>
+  <data name="DiagnosticsWindow_Close" xml:space="preserve">
+    <value>C_lose</value>
+  </data>
+  <data name="DiagnosticsWindow_Title" xml:space="preserve">
+    <value>Visual Studio - Python Diagnostic Info</value>
+  </data>
+  <data name="DiagnosticsWindow_MaskedValue" xml:space="preserve">
+    <value> (masked)</value>
+  </data>
+  <data name="DiagnosticsWindow_UndefinedValue" xml:space="preserve">
+    <value>&lt;undefined&gt;</value>
+  </data>
+  <data name="DiagnosticsWindow_NullValue" xml:space="preserve">
+    <value>(null)</value>
+    <comment>Indicates a null reference</comment>
+  </data>
+  <data name="DiagnosticsWindow_ProjectsHeader" xml:space="preserve">
+    <value>Projects: </value>
+  </data>
+  <data name="DiagnosticsWindow_EnvironmentsHeader" xml:space="preserve">
+    <value>Environments: </value>
+  </data>
+  <data name="DiagnosticsWindow_LaunchersHeader" xml:space="preserve">
+    <value>Launchers:</value>
+  </data>
+  <data name="DiagnosticsWindow_LoggedEventsStatsHeader" xml:space="preserve">
+    <value>Logged events/stats:</value>
+  </data>
+  <data name="DiagnosticsWindow_SystemEventsHeader" xml:space="preserve">
+    <value>System events:</value>
+  </data>
+  <data name="DiagnosticsWindow_LoadedAssembliesHeader" xml:space="preserve">
+    <value>Loaded assemblies:</value>
+  </data>
+  <data name="DiagnosticsWindow_GlobalAnalysisHeader" xml:space="preserve">
+    <value>Global Analysis:</value>
+  </data>
+  <data name="DiagnosticsWindow_EnvironmentAnalysisLogsHeader" xml:space="preserve">
+    <value>Environment Analysis Logs: </value>
+  </data>
+  <data name="DiagnosticsWindow_InterpreterFactoryDetails" xml:space="preserve">
+    <value>        Interpreter: {0}
+            Id: {1}
+            Version: {2}
+            Arch: {3}
+            Prefix Path: {4}
+            Path: {5}
+            Windows Path: {6}
+            Path Env: {7}={8}{9}
+</value>
+    <comment>{0} is description
+{1} is identifier
+{2} is version
+{3} is architecture
+{4} is prefix path
+{5} is console exe path
+{6} is windows exe path
+{7} is name of environment variable
+{8} is value of environment variable
+{9} is either empty or ' masked'</comment>
+  </data>
+  <data name="DiagnosticsWindow_InterpreterConfigurationDetails" xml:space="preserve">
+    <value>        Id: {0}
+        Factory: {1}
+        Version: {2}
+        Arch: {3}
+        Prefix Path: {4}
+        Path: {5}
+        Windows Path: {6}
+        Path Env: {7}
+</value>
+    <comment>{0} is identifier
+{1} is description
+{2} is version
+{3} is architecture
+{4} is prefix path
+{5} is console exe path
+{6} is windows exe path
+{7} is environment variable name</comment>
+  </data>
+  <data name="DiagnosticsWindow_LauncherDetails" xml:space="preserve">
+    <value>    Launcher: {0}
+        {1}
+        {2}
+</value>
+    <comment>{0} is full name of launcher
+{1} is description of launcher
+{2} is name of launcher</comment>
+  </data>
+  <data name="DiagnosticsWindow_InterpreterProviderHeader" xml:space="preserve">
+    <value>    {0}</value>
+    <comment>{0} is full name of provider</comment>
+  </data>
+  <data name="DiagnosticsWindow_FailedToAccessEventLog" xml:space="preserve">
+    <value>  Failed to access event log.</value>
+  </data>
+  <data name="DiagnosticsWindow_ErrorReadingGlobalAnalysisLog" xml:space="preserve">
+    <value>Error reading the global analysis log.
+Please wait for analysis to complete and try again.
+{0}
+</value>
+    <comment>{0} is the exception details</comment>
+  </data>
+  <data name="DiagnosticsWindow_ProjectKind" xml:space="preserve">
+    <value>        Kind: {0}</value>
+    <comment>{0} is the project type</comment>
+  </data>
+  <data name="DiagnosticsWindow_ProjectName" xml:space="preserve">
+    <value>    Project: {0}</value>
+    <comment>{0} is a project name, or error details</comment>
+  </data>
+  <data name="DiagnosticsWindow_TimeEntry" xml:space="preserve">
+    <value>Time: {0:s}</value>
+    <comment>{0} is the time for the entry</comment>
+  </data>
+  <data name="DiagnosticsWindow_PropertyNameAndValueEntry" xml:space="preserve">
+    <value>        {0}: {1}</value>
+    <comment>{0} is property name, {1} is its value</comment>
+  </data>
+  <data name="DiagnosticsWindow_TextFileFilter" xml:space="preserve">
+    <value>Text Files (*.txt)|*.txt|All Files (*.*)|*.*</value>
+  </data>
+  <data name="DiagnosticsWindow_DefaultFileName" xml:space="preserve">
+    <value>Diagnostic Info {0:yyyy-MM-dd'T'HHmmss}.txt</value>
+  </data>
+  <data name="DiagnosticsWindow_AssemblyDetails" xml:space="preserve">
+    <value>  {0}, FileVersion={1}</value>
+    <comment>{0} is the assembly full name
+{1} is the assembly version, or error details</comment>
+  </data>
+  <data name="DiagnosticsWindow_AssemblyDetailsException" xml:space="preserve">
+    <value>{0}: {1}</value>
+    <comment>{0} is exception type
+{1} is exception message</comment>
+  </data>
+  <data name="ExecuteInReplCommand_ExecuteProject" xml:space="preserve">
+    <value>Execute Project in P&amp;ython Interactive</value>
+    <comment>Use ampersand for accelerator key</comment>
+  </data>
+  <data name="ExecuteInReplCommand_ExecuteFile" xml:space="preserve">
+    <value>Execute File in P&amp;ython Interactive</value>
+    <comment>Use ampersand for accelerator key</comment>
+  </data>
+  <data name="ExecuteInReplCommand_RunningMessage" xml:space="preserve">
+    <value>Running {0}</value>
+    <comment>{0} is the name of the script that is being run</comment>
+  </data>
+  <data name="ImportCoverageCommandFileFilter" xml:space="preserve">
+    <value>Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*</value>
+  </data>
   <data name="RenameVariable_NewName" xml:space="preserve">
     <value>_New name:</value>
   </data>

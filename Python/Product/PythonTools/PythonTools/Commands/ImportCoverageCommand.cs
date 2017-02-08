@@ -53,7 +53,7 @@ namespace Microsoft.PythonTools.Commands {
             if (file == null) {
                 file = _serviceProvider.BrowseForFileOpen(
                     IntPtr.Zero,
-                    "Coverage XML (*.xml)|*.xml|All Files (*.*)|*.*"
+                    Strings.ImportCoverageCommandFileFilter
                 );
             }
 
